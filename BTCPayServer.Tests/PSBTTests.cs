@@ -17,52 +17,48 @@ using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {
-    public class PSBTTests : UnitTestBase
+    public class PSBTTests(ITestOutputHelper helper) : UnitTestBase(helper)
     {
-        public PSBTTests(ITestOutputHelper helper) : base(helper)
-        {
-        }
-
         [Fact]
-        [Trait("Selenium", "Selenium")]
+        [Trait("Playwright", "Playwright")]
         public async Task CanPlayWithPSBT()
         {
-            using var s = CreateSeleniumTester(newDb: true);
+            await using var s = CreatePlaywrightTester(newDb: true);
             await s.StartAsync();
 
-            s.RegisterNewUser(true);
-            var hot = s.CreateNewStore();
-            var seed = s.GenerateWallet(isHotWallet: true);
-            var cold = s.CreateNewStore();
-            s.GenerateWallet(isHotWallet: false, seed: seed.ToString());
+            await s.RegisterNewUser(true);
+            var hot = await s.CreateNewStore();
+            var seed = await s.GenerateWallet(isHotWallet: true);
+            var cold = await s.CreateNewStore();
+            await s.GenerateWallet(isHotWallet: false, seed: seed.ToString());
 
             // Scenario 1: one user has two stores sharing same seed
             // one store is hot wallet, the other not.
 
             // Here, the cold wallet create a PSBT, then we switch to hot wallet to sign
             // the PSBT and broadcast
-            s.GoToStore(cold.storeId);
+            await s.GoToStore(cold.storeId);
             var address = await s.FundStoreWallet();
-            Thread.Sleep(1000);
-            s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.Send);
-            SendAllTo(s, address);
-            s.Driver.FindElement(By.Id("SignWithPSBT")).Click();
+            await Task.Delay(1000);
+            await s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.Send);
+            await SendAllTo(s, address);
+            await s.Page.ClickAsync("#SignWithPSBT");
 
-            var psbt = ExtractPSBT(s);
+            var psbt = await ExtractPSBT(s);
 
-            s.GoToStore(hot.storeId);
-            s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.PSBT);
-            s.Driver.FindElement(By.Name("PSBT")).SendKeys(psbt);
-            s.Driver.FindElement(By.Id("Decode")).Click();
-            s.Driver.FindElement(By.Id("SignTransaction")).Click();
-            s.Driver.FindElement(By.Id("BroadcastTransaction")).Click();
-            s.FindAlertMessage();
+            await s.GoToStore(hot.storeId);
+            await s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.PSBT);
+            await s.Page.Locator("[name='PSBT']").FillAsync(psbt);
+            await s.Page.ClickAsync("#Decode");
+            await s.Page.ClickAsync("#SignTransaction");
+            await s.Page.ClickAsync("#BroadcastTransaction");
+            await s.FindAlertMessage();
 
             // Scenario 2: Same as scenario 1, except we create a PSBT from hot wallet, then sign by manually
             // entering the seed on the cold wallet.
-            s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.Send);
-            SendAllTo(s, address);
-            psbt = ExtractPSBT(s);
+            await s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.Send);
+            await SendAllTo(s, address);
+            psbt = await ExtractPSBT(s);
 
             // Let's check it has been signed, then remove the signature.
             // Also remove the hdkeys so we can test the update later
@@ -75,53 +71,52 @@ namespace BTCPayServer.Tests
             psbtParsed.Inputs[0].HDKeyPaths.Clear();
             var skeletonPSBT = psbtParsed;
 
-            s.GoToStore(cold.storeId);
-            s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.PSBT);
-            s.Driver.FindElement(By.Name("PSBT")).SendKeys(skeletonPSBT.ToBase64());
-            s.Driver.FindElement(By.Id("Decode")).Click();
-            s.Driver.FindElement(By.Id("SignTransaction")).Click();
-            s.Driver.FindElement(By.Id("SignWithSeed")).Click();
-            s.Driver.FindElement(By.Name("SeedOrKey")).SendKeys(seed.ToString());
-            s.Driver.FindElement(By.Id("Submit")).Click();
-            s.Driver.FindElement(By.Id("BroadcastTransaction")).Click();
-            s.FindAlertMessage();
+            await s.GoToStore(cold.storeId);
+            await s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.PSBT);
+            await s.Page.Locator("[name='PSBT']").FillAsync(skeletonPSBT.ToBase64());
+            await s.Page.ClickAsync("#Decode");
+            await s.Page.ClickAsync("#SignTransaction");
+            await s.Page.ClickAsync("#SignWithSeed");
+            await s.Page.Locator("[name='SeedOrKey']").FillAsync(seed.ToString());
+            await s.Page.ClickAsync("#Submit");
+            await s.Page.ClickAsync("#BroadcastTransaction");
+            await s.FindAlertMessage();
 
             // Let's check if the update feature works
-            s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.PSBT);
-            s.Driver.FindElement(By.Name("PSBT")).SendKeys(skeletonPSBT.ToBase64());
-            s.Driver.FindElement(By.Id("Decode")).Click();
-            s.Driver.FindElement(By.Id("PSBTOptionsAdvancedHeader")).Click();
-            s.Driver.WaitForElement(By.Id("update-psbt")).Click();
+            await s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.PSBT);
+            await s.Page.Locator("[name='PSBT']").FillAsync(skeletonPSBT.ToBase64());
+            await s.Page.ClickAsync("#Decode");
+            await s.Page.ClickAsync("#PSBTOptionsAdvancedHeader");
+            await s.Page.ClickAsync("#update-psbt");
 
-            psbt = ExtractPSBT(s);
+            psbt = await ExtractPSBT(s);
             psbtParsed = PSBT.Parse(psbt, s.Server.NetworkProvider.BTC.NBitcoinNetwork);
             Assert.Single(psbtParsed.Inputs[0].HDKeyPaths);
             Assert.Empty(psbtParsed.Inputs[0].PartialSigs);
 
             // Let's if we can combine the updated psbt (which has hdkeys, but no sig)
             // with the signed psbt (which has sig, but no hdkeys)
-            s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.PSBT);
-            s.Driver.FindElement(By.Name("PSBT")).SendKeys(psbtParsed.ToBase64());
-            s.Driver.FindElement(By.Id("Decode")).Click();
-            s.Driver.FindElement(By.Id("PSBTOptionsAdvancedHeader")).Click();
-            s.Driver.WaitForElement(By.Id("combine-psbt")).Click();
+            await s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.PSBT);
+            await s.Page.Locator("[name='PSBT']").FillAsync(psbtParsed.ToBase64());
+            await s.Page.ClickAsync("#Decode");
+            await s.Page.ClickAsync("#PSBTOptionsAdvancedHeader");
+            await s.Page.ClickAsync("#combine-psbt");
             signedPSBT.Inputs[0].HDKeyPaths.Clear();
-            s.Driver.FindElement(By.Name("PSBT")).SendKeys(signedPSBT.ToBase64());
-            s.Driver.WaitForElement(By.Id("Submit")).Click();
-
-            psbt = ExtractPSBT(s);
+            await s.Page.Locator("[name='PSBT']").FillAsync(signedPSBT.ToBase64());
+            await s.Page.ClickAsync("#Submit");
+            psbt = await ExtractPSBT(s);
             psbtParsed = PSBT.Parse(psbt, s.Server.NetworkProvider.BTC.NBitcoinNetwork);
             Assert.Single(psbtParsed.Inputs[0].HDKeyPaths);
             Assert.Single(psbtParsed.Inputs[0].PartialSigs);
         }
 
-        private static void SendAllTo(SeleniumTester s, string address)
+        private static async Task SendAllTo(PlaywrightTester s, string address)
         {
-            s.Driver.FindElement(By.Name("Outputs[0].DestinationAddress")).SendKeys(address);
-            s.Driver.FindElement(By.ClassName("crypto-balance-link")).Click();
-            s.Driver.FindElement(By.Id("SignTransaction")).Click();
+            await s.Page.Locator("[name='Outputs[0].DestinationAddress']").FillAsync(address);
+            await s.Page.ClickAsync(".crypto-balance-link");
+            await s.Page.ClickAsync("#SignTransaction");
         }
 
-        private string ExtractPSBT(SeleniumTester s) => s.Driver.FindElement(By.Id("psbt-base64")).GetAttribute("innerText");
+        private Task<string> ExtractPSBT(PlaywrightTester s) => s.Page.Locator("#psbt-base64").TextContentAsync();
     }
 }

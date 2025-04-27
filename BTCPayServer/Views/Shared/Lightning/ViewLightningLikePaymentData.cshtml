@@ -36,7 +36,7 @@
 				{
 					Type = prettyName.PrettyName(payment.PaymentMethodId),
 					BOLT11 = offChainPaymentData.BOLT11,
-					PaymentProof = offChainPaymentData.Preimage?.ToString(),
+					PaymentProof = offChainPaymentData.Preimage,
 					Amount = DisplayFormatter.Currency(payment.Value, handler.Network.CryptoCode, divisibility: payment.Divisibility)
 				};
 			})

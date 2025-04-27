@@ -198,7 +198,7 @@ namespace BTCPayServer.Controllers
             var store = await _StoreRepository.GetStoreByInvoiceId(i.Id);
             if (store is null)
                 return NotFound();
-            
+
             if (!await ValidateAccessForArchivedInvoice(i))
                 return NotFound();
 
@@ -228,13 +228,13 @@ namespace BTCPayServer.Controllers
             {
                 return View(vm);
             }
-            
+
             var metaData = PosDataParser.ParsePosData(i.Metadata?.ToJObject());
             var additionalData = metaData
                 .Where(dict => !InvoiceAdditionalDataExclude.Contains(dict.Key))
                 .ToDictionary(dict => dict.Key, dict => dict.Value);
-                
-            // Split receipt data into cart and additional data 
+
+            // Split receipt data into cart and additional data
             if (additionalData.TryGetValue("receiptData", out object? combinedReceiptData))
             {
                 var receiptData = new Dictionary<string, object>((Dictionary<string, object>)combinedReceiptData, StringComparer.OrdinalIgnoreCase);
@@ -251,7 +251,7 @@ namespace BTCPayServer.Controllers
                         receiptData.Remove(key);
                     }
                 }
-                // assign the rest to additional data and remove empty values 
+                // assign the rest to additional data and remove empty values
                 if (receiptData.Any())
                 {
                     vm.AdditionalData = receiptData
@@ -732,7 +732,7 @@ namespace BTCPayServer.Controllers
 
             if (!await ValidateAccessForArchivedInvoice(invoice))
                 return null;
-            
+
             var store = await _StoreRepository.FindStore(invoice.StoreId);
             if (store == null)
                 return null;
@@ -744,7 +744,7 @@ namespace BTCPayServer.Controllers
                 .Where(p => !excludedPaymentMethodIds.Contains(p.PaymentMethodId))
                 .Select(p => p.PaymentMethodId).ToHashSet();
 
-            
+
             var btcId = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
             var lnurlId = PaymentTypes.LNURL.GetPaymentMethodId("BTC");
             var lnId = PaymentTypes.LN.GetPaymentMethodId("BTC");
@@ -781,13 +781,12 @@ namespace BTCPayServer.Controllers
                     return null;
                 var paymentMethodTemp = invoice
                     .GetPaymentPrompts()
-                    .Where(p => displayedPaymentMethods.Contains(p.PaymentMethodId))
-                    .FirstOrDefault();
+                    .FirstOrDefault(p => displayedPaymentMethods.Contains(p.PaymentMethodId));
                 if (paymentMethodTemp is null)
                     return null;
                 paymentMethodId = paymentMethodTemp.PaymentMethodId;
             }
-            if (!_handlers.TryGetValue(paymentMethodId, out var handler))
+            if (!_handlers.TryGetValue(paymentMethodId, out _))
                 return null;
 
             // We activate the default payment method, and also those which aren't displayed (as they can't be set as default)
@@ -1006,10 +1005,10 @@ namespace BTCPayServer.Controllers
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice == null || invoice.Status == InvoiceStatus.Settled || invoice.Status == InvoiceStatus.Invalid || invoice.Status == InvoiceStatus.Expired)
                 return NotFound();
-            
+
             if (!await ValidateAccessForArchivedInvoice(invoice))
                 return NotFound();
-            
+
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             CompositeDisposable leases = new CompositeDisposable();
             try
@@ -1019,7 +1018,7 @@ namespace BTCPayServer.Controllers
                 leases.Add(_EventAggregator.SubscribeAsync<Events.InvoiceEvent>(async o => await NotifySocket(webSocket, o.Invoice.Id, invoiceId)));
                 while (true)
                 {
-                    var message = await webSocket.ReceiveAndPingAsync(DummyBuffer);
+                    var message = await webSocket.ReceiveAndPingAsync(DummyBuffer, cancellationToken);
                     if (message.MessageType == WebSocketMessageType.Close)
                         break;
                 }
@@ -1184,7 +1183,6 @@ namespace BTCPayServer.Controllers
                 return NoPaymentMethodResult(store.Id);
             }
 
-            var storeBlob = store.GetStoreBlob();
             model.AvailablePaymentMethods = GetPaymentMethodsSelectList(store);
 
             JObject? metadataObj = null;
@@ -1324,7 +1322,7 @@ namespace BTCPayServer.Controllers
             });
             return RedirectToAction(nameof(ListInvoices), new { storeId });
         }
-        
+
         private async Task<bool> ValidateAccessForArchivedInvoice(InvoiceEntity invoice)
         {
             if (!invoice.Archived) return true;

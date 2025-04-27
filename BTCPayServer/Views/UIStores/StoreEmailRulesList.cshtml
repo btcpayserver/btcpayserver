@@ -1,3 +1,4 @@
+@using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Client
 @using BTCPayServer.TagHelpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
@@ -38,7 +39,7 @@
                 <th>Customer Email</th>
                 <th>To</th>
                 <th>Subject</th>
-                <th>Actions</th>
+                <th class="actions-col" permission="@Policies.CanModifyStoreSettings"></th>
             </tr>
             </thead>
             <tbody>
@@ -49,12 +50,11 @@
                     <td>@(rule.value.CustomerEmail ? "Yes" : "No")</td>
                     <td>@rule.value.To</td>
                     <td>@rule.value.Subject</td>
-                    <td>
-                        <a asp-action="StoreEmailRulesEdit" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index">Edit</a>
-                        -
-                        <form asp-action="StoreEmailRulesDelete" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index" method="post" style="display:inline;">
-                            <a href="#" class="text-danger" onclick="event.preventDefault(); this.closest('form').submit();">Delete</a>
-                        </form>
+                    <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
+                        <div class="d-inline-flex align-items-center gap-3">
+                            <a asp-action="StoreEmailRulesEdit" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index">Edit</a>
+                            <a asp-action="StoreEmailRulesDelete" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@ViewLocalizer["This action will remove the rule with the trigger <b>{0}</b>.", Html.Encode(rule.value.Trigger)]" data-confirm-input="@StringLocalizer["REMOVE"]" text-translate="true">Remove</a>
+                        </div>
                     </td>
                 </tr>
             }
@@ -68,3 +68,5 @@ else
         There are no rules yet.
     </p>
 }
+
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Remove email rule"], StringLocalizer["This action will remove this rule. Are you sure?"], StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />

@@ -4,26 +4,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments.PayJoin;
-using BTCPayServer.Plugins.Altcoins;
-using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBitcoin.Altcoins;
 using NBitcoin.RPC;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
@@ -171,8 +166,6 @@ namespace BTCPayServer.Payments.Bitcoin
                                         var invoice = await _InvoiceRepository.GetInvoiceFromAddress(pmi, key);
                                         if (invoice != null)
                                         {
-                                            var address = output.matchedOutput.Address ?? network.NBXplorerNetwork.CreateAddress(evt.DerivationStrategy,
-                                                output.Item1.KeyPath, output.Item1.ScriptPubKey);
                                             var handler = _handlers[pmi];
                                             var details = new BitcoinLikePaymentData(output.outPoint, evt.TransactionData.Transaction.RBF, output.matchedOutput.KeyPath)
                                             {
@@ -192,8 +185,6 @@ namespace BTCPayServer.Payments.Bitcoin
                                                 .GetPayments(false).Any(c => c.Id == paymentData.Id && c.PaymentMethodId == pmi);
                                             if (!alreadyExist)
                                             {
-
-                                                var prompt = invoice.GetPaymentPrompt(pmi);
                                                 var payment = await _paymentService.AddPayment(paymentData, [output.outPoint.Hash.ToString()]);
                                                 if (payment != null)
                                                     await ReceivedPayment(wallet, invoice, payment,
@@ -263,7 +254,6 @@ namespace BTCPayServer.Payments.Bitcoin
                     .ToArray(), true);
             bool? originalPJBroadcasted = null;
             bool? originalPJBroadcastable = null;
-            bool cjPJBroadcasted = false;
             PayjoinInformation payjoinInformation = null;
             var paymentEntitiesByPrevOut = new Dictionary<OutPoint, PaymentEntity>();
             foreach (var payment in invoice.GetPayments(false).Where(p => p.PaymentMethodId == pmi))
@@ -312,7 +302,6 @@ namespace BTCPayServer.Payments.Bitcoin
                 bool updated = false;
                 if (paymentData.ConfirmationCount != tx.Confirmations)
                 {
-                    var oldStatus = payment.Status;
                     var oldConfCount = paymentData.ConfirmationCount;
                     paymentData.ConfirmationCount = Math.Min(tx.Confirmations, wallet.Network.MaxTrackedConfirmation);
                     if (oldConfCount != paymentData.ConfirmationCount)
@@ -335,7 +324,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                 pj.CoinjoinTransactionHash == tx.TransactionHash)
                             {
                                 // This payment is a coinjoin, so the value of
-                                // the payment output is different from the real value of the payment 
+                                // the payment output is different from the real value of the payment
                                 payment.Value = pj.CoinjoinValue.ToDecimal(MoneyUnit.BTC);
                                 payment.SetDetails(handler, paymentData);
                             }
@@ -362,9 +351,10 @@ namespace BTCPayServer.Payments.Bitcoin
             // If the origin tx of a payjoin has been broadcasted, then we know we can
             // reuse our outpoint for another PJ
             if (originalPJBroadcasted is true ||
-                // If the original tx is not broadcastable anymore and nor does the coinjoin
-                // reuse our outpoint for another PJ
-                (originalPJBroadcastable is false && !cjPJBroadcasted))
+                // If the original tx is not broadcastable anymore, we can just unlock the utxos
+                // If the PJ succeeded those outpoints won't be selected anymore.
+                // If the PJ didn't, then those endpoints are reusable.
+                originalPJBroadcastable is false)
             {
                 await _utxoLocker.TryUnlock(payjoinInformation.ContributedOutPoints);
             }
@@ -420,8 +410,6 @@ namespace BTCPayServer.Payments.Bitcoin
                         continue;
                     var transaction = await wallet.GetTransactionAsync(coin.OutPoint.Hash);
 
-                    var address = network.NBXplorerNetwork.CreateAddress(strategy, coin.KeyPath, coin.ScriptPubKey);
-
                     var paymentData = new Data.PaymentData()
                     {
                         Id = coin.OutPoint.ToString(),
@@ -455,7 +443,7 @@ namespace BTCPayServer.Payments.Bitcoin
             if (invoice == null)
                 return null;
             var prompt = invoice.GetPaymentPrompt(payment.PaymentMethodId);
-            if (!_handlers.TryGetValue(prompt.PaymentMethodId, out var handler))
+            if (!_handlers.TryGetValue(prompt.PaymentMethodId, out _))
                 return null;
             var bitcoinPaymentMethod = (Payments.Bitcoin.BitcoinPaymentPromptDetails)_handlers.ParsePaymentPromptDetails(prompt);
             if (bitcoinPaymentMethod.FeeMode == NetworkFeeMode.MultiplePaymentsOnly &&

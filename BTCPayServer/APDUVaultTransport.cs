@@ -36,7 +36,7 @@ namespace BTCPayServer
                     ["apdu"] = Encoders.Hex.EncodeData(apdu)
                 }, cancellationToken);
             var data = Encoders.Hex.DecodeData(resp["data"].Value<string>());
-            return new NtagResponse(data, resp["status"].Value<ushort>());
+            return new NtagResponse(data, resp["status"]!.Value<ushort>());
         }
     }
 }

@@ -1,0 +1,81 @@
+﻿@using NBitcoin
+@inherits VaultElement
+
+<div id="vault-xpub" class="mt-4">
+    <div class="form-group">
+        <label for="addressType" class="form-label">@ui.StringLocalizer["Address type"]</label>
+        <select id="addressType" @bind="AddressType" name="addressType" class="form-select w-auto">
+            @if (CanUseSegwit)
+            {
+                <option value="segwit">@ui.StringLocalizer["Segwit (Recommended, cheapest fee)"]</option>
+                <option value="segwitWrapped">@ui.StringLocalizer["Segwit wrapped (Compatible with old wallets)"]</option>
+            }
+            <option value="legacy">@ui.StringLocalizer["Legacy (Not recommended)"]</option>
+            @if (CanUseTaproot)
+            {
+                <option value="taproot" text-translate="true">@ui.StringLocalizer["Taproot"]</option>
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="accountNumber" class="form-label" text-translate="true">Account</label>
+        <input id="accountNumber" @bind="AccountNumber" class="form-control" name="accountNumber" type="number" min="0" step="1"
+               style="max-width:12ch;" />
+    </div>
+</div>
+<button id="vault-confirm" class="btn btn-primary mt-4" type="button" @onclick="OnConfirmXPubClick">@ui.StringLocalizer["Confirm"]</button>
+
+@code {
+    private readonly VaultBridgeUI ui;
+
+    public XPubSelect(VaultBridgeUI ui, Network network)
+    {
+        this.ui = ui;
+        CanUseTaproot = network.Consensus.SupportTaproot;
+        CanUseSegwit = network.Consensus.SupportSegwit;
+        AddressType = CanUseSegwit ? "segwit" : "legacy";
+    }
+
+    public KeyPath ToKeyPath()
+        => ToScriptPubKeyType() switch
+        {
+            ScriptPubKeyType.TaprootBIP86 => new KeyPath("86'"),
+            ScriptPubKeyType.Segwit => new KeyPath("84'"),
+            ScriptPubKeyType.SegwitP2SH => new KeyPath("49'"),
+            _ => new KeyPath("44'"),
+        };
+
+    public ScriptPubKeyType ToScriptPubKeyType()
+        => AddressType switch
+        {
+            "segwit" => ScriptPubKeyType.Segwit,
+            "segwitWrapped" => ScriptPubKeyType.SegwitP2SH,
+            "taproot" => ScriptPubKeyType.TaprootBIP86,
+            _ => ScriptPubKeyType.Legacy
+        };
+
+    public string AddressType { get; set; }
+    public int AccountNumber { get; set; }
+    public bool CanUseTaproot { get; }
+    public bool CanUseSegwit { get; }
+    TaskCompletionSource<XPubSelect> _cts;
+
+    public Task<XPubSelect> GetXPubSelect()
+    {
+        ui.ShowFeedback(FeedbackType.Loading, ui.StringLocalizer["Select your address type and account"]);
+        ui.AddElement(this);
+        _cts = new TaskCompletionSource<XPubSelect>(TaskCreationOptions.RunContinuationsAsynchronously);
+        return _cts.Task;
+    }
+
+    public void OnConfirmXPubClick()
+    {
+        ui.Elements.Remove(this);
+        ui.Elements.RemoveAt(ui.Elements.Count - 1);
+        ui.StateHasChanged();
+        _cts?.TrySetResult(this);
+        _cts = null;
+    }
+
+    public void Dispose() => _cts?.TrySetCanceled();
+}

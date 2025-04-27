@@ -23,7 +23,7 @@ namespace BTCPayServer.Services.Rates
             .Where(c => Regex.IsMatch(c["id"].Value<string>(),"^[a-zA-Z]"))
             .ToDictionary(c =>
                 c["id"].Value<string>(),
-                c => new RateSourceInfo(c["id"].ToString().ToLowerInvariant(), c["name"].ToString() + " (via CoinGecko)", $"https://api.coingecko.com/api/v3/exchanges/{c["id"]}/tickers", RateSource.Coingecko));
+                c => new RateSourceInfo(c["id"].ToString().ToLowerInvariant(), c["name"] + " (via CoinGecko)", $"https://api.coingecko.com/api/v3/exchanges/{c["id"]}/tickers", RateSource.Coingecko));
         }
 
         private readonly HttpClient Client;

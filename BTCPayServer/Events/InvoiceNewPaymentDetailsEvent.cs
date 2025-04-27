@@ -17,7 +17,7 @@ namespace BTCPayServer.Events
         public PaymentMethodId PaymentMethodId { get; }
         public override string ToString()
         {
-            return $"{PaymentMethodId.ToString()}: New payment details {Details?.GetType().Name} for invoice {InvoiceId}";
+            return $"{PaymentMethodId}: New payment details {Details?.GetType().Name} for invoice {InvoiceId}";
         }
     }
 }

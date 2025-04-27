@@ -8,6 +8,14 @@ jobs:
       - run:
           command: |
             cd .circleci && ./run-tests.sh "Fast=Fast|ThirdParty=ThirdParty" && ./can-build.sh
+  playwright_tests:
+    machine:
+      image: ubuntu-2004:2024.11.1
+    steps:
+      - checkout
+      - run:
+          command: |
+            cd .circleci && ./run-tests.sh "Playwright=Playwright"
   selenium_tests:
     machine:
       image: ubuntu-2004:2024.11.1
@@ -52,6 +60,7 @@ workflows:
   build_and_test:
     jobs:
       - fast_tests
+      - playwright_tests 
       - selenium_tests
       - integration_tests
   publish:

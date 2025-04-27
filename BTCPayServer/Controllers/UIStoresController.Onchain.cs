@@ -152,7 +152,7 @@ public partial class UIStoresController
         {
             try
             {
-                strategy = handler.ParsePaymentMethodConfig(JToken.Parse(UnprotectString(vm.Config)));
+                strategy = handler.ParsePaymentMethodConfig(JToken.Parse(_dataProtector.UnprotectString(vm.Config)));
             }
             catch
             {
@@ -167,7 +167,7 @@ public partial class UIStoresController
             return View(vm.ViewName, vm);
         }
 
-        vm.Config = ProtectString(JToken.FromObject(strategy, handler.Serializer).ToString());
+        vm.Config = _dataProtector.ProtectString(JToken.FromObject(strategy, handler.Serializer).ToString());
         ModelState.Remove(nameof(vm.Config));
 
         var storeBlob = store.GetStoreBlob();
@@ -195,15 +195,6 @@ public partial class UIStoresController
             return RedirectToAction(nameof(WalletSettings), new { storeId = vm.StoreId, cryptoCode = vm.CryptoCode });
         }
         return ConfirmAddresses(vm, strategy, network.NBXplorerNetwork);
-    }
-
-    private string ProtectString(string str)
-    {
-        return Convert.ToBase64String(_dataProtector.Protect(Encoding.UTF8.GetBytes(str)));
-    }
-    private string UnprotectString(string str)
-    {
-        return Encoding.UTF8.GetString(_dataProtector.Unprotect(Convert.FromBase64String(str)));
     }
 
     [HttpGet("{storeId}/onchain/{cryptoCode}/generate/{method?}")]
@@ -278,7 +269,6 @@ public partial class UIStoresController
             Network = network,
             Source = isImport ? "SeedImported" : "NBXplorerGenerated",
             IsHotWallet = isImport ? request.SavePrivateKeys : method == WalletSetupMethod.HotWallet,
-            DerivationSchemeFormat = "BTCPay",
             SupportTaproot = network.NBitcoinNetwork.Consensus.SupportTaproot,
             SupportSegwit = network.NBitcoinNetwork.Consensus.SupportSegwit
         };
@@ -320,7 +310,7 @@ public partial class UIStoresController
             derivationSchemeSettings.IsHotWallet = method == WalletSetupMethod.HotWallet;
         }
 
-        var accountSettings = derivationSchemeSettings.GetSigningAccountKeySettings();
+        var accountSettings = derivationSchemeSettings.AccountKeySettings[0];
         accountSettings.AccountKeyPath = response.AccountKeyPath.KeyPath;
         accountSettings.RootFingerprint = response.AccountKeyPath.MasterFingerprint;
         derivationSchemeSettings.AccountOriginal = response.DerivationScheme.ToString();
@@ -329,7 +319,7 @@ public partial class UIStoresController
         vm.RootFingerprint = response.AccountKeyPath.MasterFingerprint.ToString();
         vm.AccountKey = response.AccountHDKey.Neuter().ToWif();
         vm.KeyPath = response.AccountKeyPath.KeyPath.ToString();
-        vm.Config = ProtectString(JToken.FromObject(derivationSchemeSettings, handler.Serializer).ToString());
+        vm.Config = _dataProtector.ProtectString(JToken.FromObject(derivationSchemeSettings, handler.Serializer).ToString());
 
         var result = await UpdateWallet(vm);
 
@@ -434,7 +424,7 @@ public partial class UIStoresController
                     MasterFingerprint = e.RootFingerprint is { } fp ? fp.ToString() : null,
                     AccountKeyPath = e.AccountKeyPath == null ? "" : $"m/{e.AccountKeyPath}"
                 }).ToList(),
-            Config = ProtectString(JToken.FromObject(derivation, handler.Serializer).ToString()),
+            Config = _dataProtector.ProtectString(JToken.FromObject(derivation, handler.Serializer).ToString()),
             PayJoinEnabled = storeBlob.PayJoinEnabled,
             CanUsePayJoin = perm.CanCreateHotWallet && network.SupportPayJoin && derivation.IsHotWallet,
             CanUseHotWallet = perm.CanCreateHotWallet,
@@ -717,8 +707,8 @@ public partial class UIStoresController
                 var derivation = line.Derive(i);
                 var address = network.CreateAddress(strategy.AccountDerivation,
                     line.KeyPathTemplate.GetKeyPath(i),
-                    derivation.ScriptPubKey).ToString();
-                vm.AddressSamples.Add((keyPath.ToString(), address, rootedKeyPath));
+                    derivation.ScriptPubKey);
+                vm.AddressSamples.Add((keyPath.ToString(), address.ToString(), rootedKeyPath));
             }
         }
 
@@ -790,17 +780,7 @@ public partial class UIStoresController
         var isOD = Regex.Match(derivationScheme, @"\(.*?\)");
         if (isOD.Success)
         {
-            var derivationSchemeSettings = new DerivationSchemeSettings();
-            var result = parser.ParseOutputDescriptor(derivationScheme);
-            derivationSchemeSettings.AccountOriginal = derivationScheme.Trim();
-            derivationSchemeSettings.AccountDerivation = result.Item1;
-            derivationSchemeSettings.AccountKeySettings = result.Item2?.Select((path, i) => new AccountKeySettings()
-            {
-                RootFingerprint = path?.MasterFingerprint,
-                AccountKeyPath = path?.KeyPath,
-                AccountKey = result.Item1.GetExtPubKeys().ElementAt(i).GetWif(parser.Network)
-            }).ToArray() ?? new AccountKeySettings[result.Item1.GetExtPubKeys().Count()];
-            return derivationSchemeSettings;
+            return parser.ParseOD(derivationScheme);
         }
 
         var strategy = parser.Parse(derivationScheme);

@@ -107,7 +107,7 @@
             else if (Model.SigningContext.PendingTransactionId is not null)
             {
                 <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId" 
-                   asp-route-transactionId="@Model.SigningContext.PendingTransactionId" class="btn btn-danger">Cancel</a>
+                   asp-route-pendingTransactionId="@Model.SigningContext.PendingTransactionId" class="btn btn-danger">Cancel</a>
             }
         </div>
     </form>
@@ -213,7 +213,14 @@ else
                             <input asp-for="UploadedPSBTFile" type="file" class="form-control">
                         </div>
                         <div class="d-flex flex-column flex-sm-row flex-wrap align-items-sm-center">
-                            <button type="submit" name="command" value="decode" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" id="Decode" text-translate="true">Decode PSBT</button>
+                            @if (this.Model.SigningContext.PendingTransactionId is not null)
+                            {
+                                <button type="submit" name="command" value="collect" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" id="Collect" text-translate="true">Collect signatures</button>
+                            }
+                            else
+                            {
+                                <button type="submit" name="command" value="decode" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" id="Decode" text-translate="true">Decode PSBT</button>
+                            }
                             <button type="button" id="scanqrcode" class="btn btn-primary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" text-translate="true">Scan wallet QR with camera</button>
                         </div>
                     </form>

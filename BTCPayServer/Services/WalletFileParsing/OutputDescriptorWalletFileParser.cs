@@ -12,21 +12,11 @@ public class OutputDescriptorWalletFileParser : IWalletFileParser
         var maybeOutputDesc = !data.Trim().StartsWith("{", StringComparison.OrdinalIgnoreCase);
         if (!maybeOutputDesc)
             return false;
+        if (!DerivationSchemeParser.MaybeOD(data))
+            return false;
         var derivationSchemeParser = network.GetDerivationSchemeParser();
-        var descriptor = derivationSchemeParser.ParseOutputDescriptor(data);
-        derivationSchemeSettings = new DerivationSchemeSettings()
-        {
-            Source = "OutputDescriptor",
-            AccountOriginal = data.Trim(),
-            AccountDerivation = descriptor.Item1,
-            AccountKeySettings = descriptor.Item2.Select((path, i) => new AccountKeySettings()
-            {
-                RootFingerprint = path?.MasterFingerprint,
-                AccountKeyPath = path?.KeyPath,
-                AccountKey =
-                    descriptor.Item1.GetExtPubKeys().ElementAt(i).GetWif(derivationSchemeParser.Network)
-            }).ToArray()
-        };
+        derivationSchemeSettings = derivationSchemeParser.ParseOD(data);
+        derivationSchemeSettings.Source = "OutputDescriptor";
         return true;
     }
 }

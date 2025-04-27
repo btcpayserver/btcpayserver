@@ -1,0 +1,18 @@
+﻿@inherits VaultElement
+
+<button id="vault-retry" class="btn btn-secondary mt-4" type="button" @onclick="OnRetryClick">@ui.StringLocalizer["Retry"]</button>
+
+@code {
+    private readonly VaultBridgeUI ui;
+
+    public Retry(VaultBridgeUI ui)
+    {
+        this.ui = ui;
+    }
+    
+    private async Task OnRetryClick()
+    {
+        ui.Elements.Clear();
+        await ui.Connect();
+    }
+}

@@ -61,7 +61,7 @@ namespace BTCPayServer.Payments.PayJoin
         public Task<bool> TryLock(OutPoint outpoint)
             => TryLockInputs([outpoint.ToString()]);
         public Task<bool> TryLockInputs(OutPoint[] outPoints)
-            => TryLockInputs(outPoints.Select(o => "K-" + o.ToString()).ToArray());
+            => TryLockInputs(outPoints.Select(o => "K-" + o).ToArray());
 
         public async Task<HashSet<OutPoint>> FindLocks(OutPoint[] outpoints)
         {

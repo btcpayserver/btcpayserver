@@ -270,7 +270,6 @@ retry:
         {
             if (_InstanceListeners.TryGetValue((cryptoCode, connStr), out var instance))
             {
-                
                 instance.RemoveExpiredInvoices();
                 if (!instance.Empty)
                     instance.EnsureListening(_Cts.Token);
@@ -592,7 +591,9 @@ retry:
                 return false;
 
             var handler = _handlers[paymentMethodId];
-            var paymentHash = BOLT11PaymentRequest.Parse(notification.BOLT11, _network.NBitcoinNetwork).PaymentHash;
+            var paymentHash = notification.PaymentHash != null ?
+                uint256.Parse(notification.PaymentHash) :
+                BOLT11PaymentRequest.Parse(notification.BOLT11, _network.NBitcoinNetwork).PaymentHash;
             var paymentData = new PaymentData()
             {
                 Id = paymentHash?.ToString() ?? notification.BOLT11,

@@ -24,7 +24,12 @@ namespace BTCPayServer.Controllers
     public partial class UIWalletsController
     {
         [NonAction]
-        public async Task<CreatePSBTResponse> CreatePSBT(BTCPayNetwork network, DerivationSchemeSettings derivationSettings, WalletSendModel sendModel, CancellationToken cancellationToken)
+        [Obsolete("Use CreatePSBT(string storeId, BTCPayNetwork network, DerivationSchemeSettings derivationSettings, WalletSendModel sendModel, CancellationToken cancellationToken) instead")]
+        public Task<CreatePSBTResponse> CreatePSBT(BTCPayNetwork network, DerivationSchemeSettings derivationSettings, WalletSendModel sendModel,
+            CancellationToken cancellationToken)
+            => CreatePSBT(null, network, derivationSettings, sendModel, cancellationToken);
+        [NonAction]
+        public async Task<CreatePSBTResponse> CreatePSBT(string storeId, BTCPayNetwork network, DerivationSchemeSettings derivationSettings, WalletSendModel sendModel, CancellationToken cancellationToken)
         {
             var nbx = ExplorerClientProvider.GetExplorerClient(network);
             var psbtRequest = new CreatePSBTRequest()
@@ -46,6 +51,8 @@ namespace BTCPayServer.Controllers
                 psbtDestination.SubstractFees = transactionOutput.SubtractFeesFromOutput;
             }
 
+            var pending = await _pendingTransactionService.GetPendingTransactions(network.CryptoCode, storeId ?? "");
+            psbtRequest.ExcludeOutpoints = pending.SelectMany(p => p.OutpointsUsed).Select(OutPoint.Parse).ToList();
             psbtRequest.FeePreference = new FeePreference();
             if (sendModel.FeeSatoshiPerByte is decimal v and > decimal.Zero)
             {

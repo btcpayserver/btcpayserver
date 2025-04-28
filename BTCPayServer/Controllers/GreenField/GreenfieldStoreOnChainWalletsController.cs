@@ -535,7 +535,7 @@ namespace BTCPayServer.Controllers.Greenfield
             CreatePSBTResponse psbt;
             try
             {
-                psbt = await _walletsController.CreatePSBT(network, derivationScheme,
+                psbt = await _walletsController.CreatePSBT(storeId, network, derivationScheme,
                     new WalletSendModel()
                     {
                         SelectedInputs = request.SelectedInputs?.Select(point => point.ToString()),

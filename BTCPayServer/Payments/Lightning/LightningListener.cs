@@ -527,8 +527,7 @@ retry:
                         continue;
                     if (notification.Id == listenedInvoice.PaymentMethodDetails.InvoiceId &&
                         (notification.BOLT11 == listenedInvoice.PaymentMethod.Destination ||
-                         BOLT11PaymentRequest.Parse(notification.BOLT11, _network.NBitcoinNetwork).PaymentHash ==
-                         GetPaymentHash(listenedInvoice)))
+                        notification.GetPaymentHash(_network.NBitcoinNetwork) == GetPaymentHash(listenedInvoice)))
                     {
                         if (notification.Status == LightningInvoiceStatus.Paid &&
                             notification.PaidAt.HasValue && notification.Amount != null)
@@ -559,7 +558,8 @@ retry:
 
         private uint256? GetPaymentHash(ListenedInvoice listenedInvoice)
         {
-            return listenedInvoice.PaymentMethodDetails.PaymentHash ?? BOLT11PaymentRequest.Parse(listenedInvoice.PaymentMethod.Destination, _network.NBitcoinNetwork).PaymentHash;
+            return listenedInvoice.PaymentMethodDetails.PaymentHash ??
+                   BOLT11PaymentRequest.Parse(listenedInvoice.PaymentMethod.Destination, _network.NBitcoinNetwork).PaymentHash;
         }
 
         public DateTimeOffset? LastFullPoll { get; set; }
@@ -591,9 +591,7 @@ retry:
                 return false;
 
             var handler = _handlers[paymentMethodId];
-            var paymentHash = notification.PaymentHash != null ?
-                uint256.Parse(notification.PaymentHash) :
-                BOLT11PaymentRequest.Parse(notification.BOLT11, _network.NBitcoinNetwork).PaymentHash;
+            var paymentHash = notification.GetPaymentHash(_network.NBitcoinNetwork);
             var paymentData = new PaymentData()
             {
                 Id = paymentHash?.ToString() ?? notification.BOLT11,

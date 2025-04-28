@@ -345,37 +345,35 @@ namespace BTCPayServer.Tests
 
 
         [Fact]
-        [Trait("Selenium", "Selenium")]
+        [Trait("Playwright", "Playwright")]
         [Trait("Altcoins", "Altcoins")]
         public async Task CanCreateRefunds()
         {
-            using (var s = CreateSeleniumTester())
-            {
-                s.Server.ActivateLTC();
-                await s.StartAsync();
-                var user = s.Server.NewAccount();
-                await user.GrantAccessAsync();
-                s.GoToLogin();
-                s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
-                user.RegisterDerivationScheme("BTC");
-                await s.Server.ExplorerNode.GenerateAsync(1);
+            await using var s = CreatePlaywrightTester();
+            s.Server.ActivateLTC();
+            await s.StartAsync();
+            var user = s.Server.NewAccount();
+            await user.GrantAccessAsync();
+            await s.GoToLogin();
+            await s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
+            await user.RegisterDerivationSchemeAsync("BTC");
+            await s.Server.ExplorerNode.GenerateAsync(1);
 
-                foreach (var multiCurrency in new[] { false, true })
+            foreach (var multiCurrency in new[] { false, true })
+            {
+                if (multiCurrency)
+                    await user.RegisterDerivationSchemeAsync("LTC");
+                foreach (var rateSelection in new[] { "FiatOption", "CurrentRateOption", "RateThenOption", "CustomOption" })
                 {
-                    if (multiCurrency)
-                        user.RegisterDerivationScheme("LTC");
-                    foreach (var rateSelection in new[] { "FiatOption", "CurrentRateOption", "RateThenOption", "CustomOption" })
-                    {
-                        TestLogs.LogInformation((multiCurrency, rateSelection).ToString());
-                        await CanCreateRefundsCore(s, user, multiCurrency, rateSelection);
-                    }
+                    TestLogs.LogInformation((multiCurrency, rateSelection).ToString());
+                    await CanCreateRefundsCore(s, user, multiCurrency, rateSelection);
                 }
             }
         }
 
-        private static async Task CanCreateRefundsCore(SeleniumTester s, TestAccount user, bool multiCurrency, string rateSelection)
+        private static async Task CanCreateRefundsCore(PlaywrightTester s, TestAccount user, bool multiCurrency, string rateSelection)
         {
-            s.GoToHome();
+            await s.GoToHome();
             s.Server.PayTester.ChangeRate("BTC_USD", new Rating.BidAsk(5000.0m, 5100.0m));
             var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice
             {
@@ -395,41 +393,45 @@ namespace BTCPayServer.Tests
 
             // BTC crash by 50%
             s.Server.PayTester.ChangeRate("BTC_USD", new Rating.BidAsk(5000.0m / 2.0m, 5100.0m / 2.0m));
-            s.GoToStore();
-            s.Driver.FindElement(By.Id("BOLT11Expiration")).Clear();
-            s.Driver.FindElement(By.Id("BOLT11Expiration")).SendKeys("5" + Keys.Enter);
-            s.GoToInvoice(invoice.Id);
-            s.Driver.FindElement(By.Id("IssueRefund")).Click();
+            await s.GoToStore();
+            await s.Page.FillAsync("#BOLT11Expiration", "5");
+
+            await s.Page.FillAsync("#BOLT11Expiration", "5");
+            await s.Page.PressAsync("#BOLT11Expiration", "Enter");
+            await s.GoToInvoice(invoice.Id);
+            await s.Page.ClickAsync("#IssueRefund");
 
             if (multiCurrency)
             {
-                s.Driver.WaitUntilAvailable(By.Id("RefundForm"), TimeSpan.FromSeconds(1));
-                s.Driver.WaitUntilAvailable(By.Id("SelectedPayoutMethod"), TimeSpan.FromSeconds(1));
-                s.Driver.FindElement(By.Id("SelectedPayoutMethod")).SendKeys("BTC" + Keys.Enter);
-                s.Driver.FindElement(By.Id("ok")).Click();
+                await s.Page.SelectOptionAsync("#SelectedPayoutMethod", "BTC-CHAIN");
+                await s.Page.ClickAsync("#ok");
             }
-            s.Driver.WaitUntilAvailable(By.Id("RefundForm"), TimeSpan.FromSeconds(1));
-            Assert.Contains("5,500.00 USD", s.Driver.PageSource); // Should propose reimburse in fiat
-            Assert.Contains("1.10000000 BTC", s.Driver.PageSource); // Should propose reimburse in BTC at the rate of before
-            Assert.Contains("2.20000000 BTC", s.Driver.PageSource); // Should propose reimburse in BTC at the current rate
-            s.Driver.WaitForAndClick(By.Id(rateSelection));
-            s.Driver.FindElement(By.Id("ok")).Click();
+            await s.Page.WaitForSelectorAsync("#RefundForm");
 
-            s.Driver.WaitUntilAvailable(By.Id("Destination"), TimeSpan.FromSeconds(1));
-            Assert.Contains("pull-payments", s.Driver.Url);
+            var content = await s.Page.ContentAsync();
+            Assert.Contains("5,500.00 USD", content); // Should propose reimburse in fiat
+            Assert.Contains("1.10000000 BTC", content); // Should propose reimburse in BTC at the rate of before
+            Assert.Contains("2.20000000 BTC", content); // Should propose reimburse in BTC at the current rate
+
+            await s.Page.ClickAsync("#" + rateSelection);
+            await s.Page.ClickAsync("#ok");
+
+            await s.Page.WaitForSelectorAsync("#Destination");
+            content = await s.Page.ContentAsync();
+            Assert.Contains("pull-payments", s.Page.Url);
             if (rateSelection == "FiatOption")
-                Assert.Contains("5,500.00 USD", s.Driver.PageSource);
+                Assert.Contains("5,500.00 USD", content);
             if (rateSelection == "CurrentOption")
-                Assert.Contains("2.20000000 BTC", s.Driver.PageSource);
+                Assert.Contains("2.20000000 BTC", content);
             if (rateSelection == "RateThenOption")
-                Assert.Contains("1.10000000 BTC", s.Driver.PageSource);
+                Assert.Contains("1.10000000 BTC", content);
 
-            s.GoToInvoice(invoice.Id);
-            s.Driver.FindElement(By.Id("IssueRefund")).Click();
-            s.Driver.WaitUntilAvailable(By.Id("Destination"), TimeSpan.FromSeconds(1));
-            Assert.Contains("pull-payments", s.Driver.Url);
+            await s.GoToInvoice(invoice.Id);
+            await s.Page.ClickAsync("#IssueRefund");
+            await s.Page.WaitForSelectorAsync("#Destination");
+            Assert.Contains("pull-payments", s.Page.Url);
             var client = await user.CreateClient();
-            var ppid = s.Driver.Url.Split('/').Last();
+            var ppid = s.Page.Url.Split('/').Last();
             var pps = await client.GetPullPayments(user.StoreId);
             var pp = Assert.Single(pps, p => p.Id == ppid);
             Assert.Equal(TimeSpan.FromDays(5.0), pp.BOLT11Expiration);

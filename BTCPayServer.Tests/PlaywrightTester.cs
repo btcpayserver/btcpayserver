@@ -491,5 +491,7 @@ namespace BTCPayServer.Tests
             await Page.Locator("#CancelWizard").ClickAsync();
             return addressStr;
         }
+
+        public Task GoToInvoice(string invoiceId) => GoToUrl($"/invoices/{invoiceId}/");
     }
 }

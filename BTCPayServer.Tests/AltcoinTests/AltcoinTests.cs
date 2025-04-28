@@ -408,23 +408,21 @@ namespace BTCPayServer.Tests
             }
             await s.Page.WaitForSelectorAsync("#RefundForm");
 
-            var content = await s.Page.ContentAsync();
-            Assert.Contains("5,500.00 USD", content); // Should propose reimburse in fiat
-            Assert.Contains("1.10000000 BTC", content); // Should propose reimburse in BTC at the rate of before
-            Assert.Contains("2.20000000 BTC", content); // Should propose reimburse in BTC at the current rate
+            Assert.Equal("5,500.00 USD", await s.Page.TextContentAsync("label[for='FiatOption']"));
+            Assert.Equal("1.10000000 BTC", await s.Page.TextContentAsync("label[for='RateThenOption']"));
+            Assert.Equal("2.20000000 BTC", await s.Page.TextContentAsync("label[for='CurrentRateOption']"));
 
             await s.Page.ClickAsync("#" + rateSelection);
             await s.Page.ClickAsync("#ok");
 
-            await s.Page.WaitForSelectorAsync("#Destination");
-            content = await s.Page.ContentAsync();
+            var limit = await s.Page.Locator("#claimLimit").TextContentAsync();
             Assert.Contains("pull-payments", s.Page.Url);
             if (rateSelection == "FiatOption")
-                Assert.Contains("5,500.00 USD", content);
+                Assert.Equal("5,500.00 USD", limit);
             if (rateSelection == "CurrentOption")
-                Assert.Contains("2.20000000 BTC", content);
+                Assert.Equal("2.20000000 BTC", limit);
             if (rateSelection == "RateThenOption")
-                Assert.Contains("1.10000000 BTC", content);
+                Assert.Equal("1.10000000 BTC", limit);
 
             await s.GoToInvoice(invoice.Id);
             await s.Page.ClickAsync("#IssueRefund");

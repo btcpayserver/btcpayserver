@@ -15,7 +15,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Playwright;
 using NBitcoin;
 using NBitcoin.RPC;
-using OpenQA.Selenium;
 using Xunit;
 
 namespace BTCPayServer.Tests
@@ -225,20 +224,28 @@ namespace BTCPayServer.Tests
             return new TestAccount(Server) { StoreId = StoreId, Email = CreatedUser, Password = Password, RegisterDetails = new Models.AccountViewModels.RegisterViewModel() { Password = "123456", Email = CreatedUser }, IsAdmin = IsAdmin };
         }
 
-        public async Task<(string storeName, string storeId)> CreateNewStore(bool keepId = true)
+        public async Task<(string storeName, string storeId)> CreateNewStore(bool keepId = true, string preferredExchange = "CoinGecko")
         {
-            if (await Page.Locator("#StoreSelectorToggle").IsVisibleAsync())
+            if (!Page.Url.EndsWith("stores/create"))
             {
-                await Page.Locator("#StoreSelectorToggle").ClickAsync();
+                if (await Page.Locator("#StoreSelectorToggle").IsVisibleAsync())
+                {
+                    await Page.ClickAsync("#StoreSelectorToggle");
+                    await Page.ClickAsync("#StoreSelectorCreate");
+                }
+                else
+                {
+                    await GoToUrl("/stores/create");
+                }
             }
-            await GoToUrl("/stores/create");
+
             var name = "Store" + RandomUtils.GetUInt64();
             TestLogs.LogInformation($"Created store {name}");
             await Page.FillAsync("#Name", name);
 
             var selectedOption = await Page.Locator("#PreferredExchange option:checked").TextContentAsync();
             Assert.Equal("Recommendation (Kraken)", selectedOption.Trim());
-            await Page.Locator("#PreferredExchange").SelectOptionAsync(new SelectOptionValue { Label = "CoinGecko" });
+            await Page.Locator("#PreferredExchange").SelectOptionAsync(new SelectOptionValue { Label = preferredExchange });
             await Page.ClickAsync("#Create");
             await Page.ClickAsync("#StoreNav-General");
             var storeId = await Page.InputValueAsync("#Id");

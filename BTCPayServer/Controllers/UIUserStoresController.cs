@@ -71,12 +71,15 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> CreateStore(bool skipWizard)
         {
             var stores = await _repo.GetStoresByUserId(GetUserId());
-            var defaultCurrency = (await _settingsRepository.GetSettingAsync<PoliciesSettings>())?.DefaultCurrency ?? StoreBlob.StandardDefaultCurrency;
+            var defaultTemplate = await _repo.GetDefaultStoreTemplate();
+            var blob = defaultTemplate.GetStoreBlob();
             var vm = new CreateStoreViewModel
             {
+                Name = defaultTemplate.StoreName,
                 IsFirstStore = !(stores.Any() || skipWizard),
-                DefaultCurrency = defaultCurrency,
-                Exchanges = GetExchangesSelectList(defaultCurrency, null)
+                DefaultCurrency = blob.DefaultCurrency,
+                Exchanges = GetExchangesSelectList(blob.DefaultCurrency, null),
+                PreferredExchange = blob.GetRateSettings(false)?.PreferredExchange
             };
 
             return View(vm);
@@ -90,12 +93,14 @@ namespace BTCPayServer.Controllers
             {
                 var stores = await _repo.GetStoresByUserId(GetUserId());
                 vm.IsFirstStore = !stores.Any();
-                var defaultCurrency = (await _settingsRepository.GetSettingAsync<PoliciesSettings>())?.DefaultCurrency ?? StoreBlob.StandardDefaultCurrency;
+                var template = await _repo.GetDefaultStoreTemplate();
+                var defaultCurrency = template?.GetStoreBlob()?.DefaultCurrency ?? StoreBlob.StandardDefaultCurrency;
                 vm.Exchanges = GetExchangesSelectList(defaultCurrency, null);
                 return View(vm);
             }
 
-            var store = new StoreData { StoreName = vm.Name };
+            var store = await _repo.GetDefaultStoreTemplate();
+            store.StoreName = vm.Name;
             var blob = store.GetStoreBlob();
             blob.DefaultCurrency = vm.DefaultCurrency;
             blob.GetOrCreateRateSettings(false).PreferredExchange = vm.PreferredExchange;

@@ -45,7 +45,7 @@
                     "Stores"
                 ],
                 "summary": "Create a new store",
-                "description": "Create a new store",
+                "description": "Create a new store (default values can be different if the server settings use a default store template)",
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -143,7 +143,7 @@
                         "$ref": "#/components/parameters/StoreId"
                     }
                 ],
-                "description": "Update the specified store",
+                "description": "Update the specified store (default values can be different if the server settings use a default store template)",
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -541,7 +541,7 @@
                         ]
                     },
                     "monitoringExpiration": {
-                        "default": 3600,
+                        "default": 86400,
                         "minimum": 600,
                         "maximum": 2073600,
                         "description": "The time after which an invoice which has been paid but not confirmed will be considered invalid. The value will be rounded down to a minute.",

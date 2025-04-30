@@ -89,7 +89,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="mb-5">
                     <h4 class="mb-3" text-translate="true">Users</h4>
                     <div class="d-flex my-3">
@@ -173,7 +173,7 @@
                             </div>
                         </div>
                     }
-                    @* 
+                    @*
 					    Let's uncomment this when we have new experimental features.
 					    <div class="d-flex align-items-center my-3">
                         <input asp-for="Experimental" type="checkbox" class="btcpay-toggle me-3" />
@@ -202,8 +202,22 @@
 
                 <h4 class="mt-5" text-translate="true">Customization</h4>
                 <div class="form-group mb-3">
-                    <label asp-for="DefaultCurrency" class="form-label"></label>
-                    <input asp-for="DefaultCurrency" placeholder="@StoreBlob.StandardDefaultCurrency" class="form-control" currency-selection />
+                    <label asp-for="DefaultStoreTemplate" class="form-label"></label>
+                    @if (Model.DefaultStoreTemplate is null)
+                    {
+                        <div class="input-group">
+                            <input value="@StringLocalizer["Not configured"]" type="text" readonly class="form-control"/>
+                            <button type="submit" class="btn btn-primary" name="command" value="SetTemplate" id="SetTemplate" text-translate="true">Create template from selected store</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="input-group">
+                            <input value="@StringLocalizer["Configured"]" type="text" readonly class="form-control"/>
+                            <button type="submit" class="btn btn-primary" name="command" value="SetTemplate" id="SetTemplate" text-translate="true">Replace template from selected store</button>
+                            <button type="submit" class="btn btn-danger" name="command" value="ResetTemplate" id="ResetTemplate" text-translate="true">Remove store template</button>
+                        </div>
+                    }
                 </div>
                 <div class="form-group mb-5">
                     <label asp-for="RootAppId" class="form-label"></label>
@@ -290,7 +304,7 @@
         for (let element of document.getElementsByClassName("collapse-on-js")){
             if (element.classList.contains("show")){
                 element.classList.remove("show");
-            }    
+            }
         }
     </script>
 }

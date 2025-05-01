@@ -130,7 +130,7 @@ namespace BTCPayServer.Payments.Lightning
             paymentPrompt.Destination = lightningInvoice.BOLT11;
             var details = new LigthningPaymentPromptDetails
             {
-                PaymentHash = BOLT11PaymentRequest.Parse(lightningInvoice.BOLT11, _Network.NBitcoinNetwork).PaymentHash,
+                PaymentHash = lightningInvoice.GetPaymentHash(_Network.NBitcoinNetwork),
                 Preimage = string.IsNullOrEmpty(lightningInvoice.Preimage) ? null : uint256.Parse(lightningInvoice.Preimage),
                 InvoiceId = lightningInvoice.Id,
                 NodeInfo = (await nodeInfo).FirstOrDefault()?.ToString()

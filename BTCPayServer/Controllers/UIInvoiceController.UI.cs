@@ -340,7 +340,7 @@ namespace BTCPayServer.Controllers
             var store = GetCurrentStore();
             var pmi = PayoutMethodId.Parse(model.SelectedPayoutMethod);
             var cdCurrency = _CurrencyNameTable.GetCurrencyData(invoice.Currency, true);
-            RateRules rules;
+            RateRulesCollection rules;
             RateResult rateResult;
             CreatePullPaymentRequest createPullPayment;
 

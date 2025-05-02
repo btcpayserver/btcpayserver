@@ -1,194 +1,216 @@
 @using BTCPayServer.Abstractions.Models
-@using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Client
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Models.StoreViewModels.RatesViewModel
 @{
     ViewData.SetActivePage(StoreNavPages.Rates, StringLocalizer["Rates"], Context.GetStoreData().Id);
 }
 
+
+
 <form method="post" permissioned="@Policies.CanModifyStoreSettings">
     <div class="sticky-header">
         <h2>@ViewData["Title"]</h2>
-		<button id="page-primary" name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
+        <button id="page-primary" name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
     </div>
     <partial name="_StatusMessage" />
+    @if (!ViewContext.ModelState.IsValid)
+    {
+        <div asp-validation-summary="All"></div>
+    }
+
     <div class="row">
         <div class="col-xxl-constrain col-xl-8">
-            @if (!ViewContext.ModelState.IsValid)
-            {
-                <div asp-validation-summary="All"></div>
-            }
-            <input type="hidden" asp-for="ShowScripting" />
-            @if (Model.ShowScripting)
-            {
-                <div class="form-group">
-					<h5 text-translate="true">Scripting</h5>
-					<p html-translate="true">Rate script allows you to express precisely how you want to calculate rates for currency pairs.</p>
-                    <p>
-                        <span text-translate="true">We are retrieving the rate of each exchange either directly, or via CoinGecko (free).</span>
-                        <a href="https://www.coingecko.com/" target="_blank" rel="noreferrer noopener">
-                            <vc:icon symbol="info"/>
-                        </a>
-                    </p>
-                    
-                    <div class="accordion" id="accordion-info">
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="direct-header">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#direct-content" aria-expanded="false" aria-controls="direct-content">
-									<span text-translate="true">Direct integration</span>
-                                    <vc:icon symbol="caret-down"/>
-                                </button>
-                            </h2>
-                            <div id="direct-content" class="accordion-collapse collapse" aria-labelledby="direct-header" data-bs-parent="#accordion-info">
-                                <div class="accordion-body">
-                                    @foreach (var exchange in Model.AvailableExchanges.Where(a => a.Source == BTCPayServer.Rating.RateSource.Direct))
-                                    {
-                                        <a href="@exchange.Url" rel="noreferrer noopener">@exchange.Id</a><span>&nbsp;</span>
-                                    }
+            <fieldset>
+                <legend text-translate="true" class="mb-3">Rate Source</legend>
+
+                @if (Model.PrimarySource.ShowScripting || Model.FallbackSource?.ShowScripting is true)
+                {
+                    <div class="form-group">
+                        <h5 text-translate="true">Scripting</h5>
+                        <p html-translate="true">Rate script allows you to express precisely how you want to calculate rates for currency pairs.</p>
+                        <p>
+                            <span text-translate="true">We are retrieving the rate of each exchange either directly, or via CoinGecko (free).</span>
+                            <a href="https://www.coingecko.com/" target="_blank" rel="noreferrer noopener">
+                                <vc:icon symbol="info" />
+                            </a>
+                        </p>
+
+                        <div class="accordion" id="accordion-info">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="direct-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#direct-content"
+                                            aria-expanded="false" aria-controls="direct-content">
+                                        <span text-translate="true">Direct integration</span>
+                                        <vc:icon symbol="caret-down" />
+                                    </button>
+                                </h2>
+                                <div id="direct-content" class="accordion-collapse collapse" aria-labelledby="direct-header" data-bs-parent="#accordion-info">
+                                    <div class="accordion-body">
+                                        @foreach (var exchange in Model.AvailableExchanges.Where(a => a.Source == BTCPayServer.Rating.RateSource.Direct))
+                                        {
+                                            <a href="@exchange.Url" rel="noreferrer noopener">@exchange.Id</a>
+                                            <span>&nbsp;</span>
+                                        }
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="coingecko-header">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#coingecko-content" aria-expanded="false" aria-controls="coingecko-content">
-									<span text-translate="true">Coingecko integration</span>
-                                    <vc:icon symbol="caret-down"/>
-                                </button>
-                            </h2>
-                            <div id="coingecko-content" class="accordion-collapse collapse" aria-labelledby="coingecko-header" data-bs-parent="#accordion-info">
-                                <div class="accordion-body">
-                                    @foreach (var exchange in Model.AvailableExchanges.Where(a => a.Source == BTCPayServer.Rating.RateSource.Coingecko))
-                                    {
-                                        <a href="@exchange.Url" rel="noreferrer noopener">@exchange.Id</a><span>&nbsp;</span>
-                                    }
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="coingecko-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#coingecko-content"
+                                            aria-expanded="false" aria-controls="coingecko-content">
+                                        <span text-translate="true">Coingecko integration</span>
+                                        <vc:icon symbol="caret-down" />
+                                    </button>
+                                </h2>
+                                <div id="coingecko-content" class="accordion-collapse collapse" aria-labelledby="coingecko-header"
+                                     data-bs-parent="#accordion-info">
+                                    <div class="accordion-body">
+                                        @foreach (var exchange in Model.AvailableExchanges.Where(a => a.Source == BTCPayServer.Rating.RateSource.Coingecko))
+                                        {
+                                            <a href="@exchange.Url" rel="noreferrer noopener">@exchange.Id</a>
+                                            <span>&nbsp;</span>
+                                        }
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            }
-            @if (Model.TestRateRules != null)
-            {
-				<h5 text-translate="true">Test Results:</h5>
-                <div class="table-responsive-md">
-                    <table class="table table-hover">
-                        <tbody>
-                        @foreach (var result in Model.TestRateRules)
-                        {
-                            <tr>
-                                @if (result.Error)
-                                {
-                                    <th class="small">
-                                        <vc:icon symbol="cross" css-class="text-danger" />
-                                        @result.CurrencyPair
-                                    </th>
-                                }
-                                else
-                                {
-                                    <th class="small">
-                                        <vc:icon symbol="checkmark" css-class="text-success" />
-                                        @result.CurrencyPair
-                                    </th>
-                                }
-                                <td class="small">@result.Rule</td>
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
-                </div>
-            }
-            @if (Model.ShowScripting)
-            {
-                <div id="help" class="collapse text-start">
-					<p html-translate="true">The script language is composed of several rules composed of a currency pair and a mathematical expression. The example below will use <code>kraken</code> for both <code>LTC_USD</code> and <code>BTC_USD</code> pairs.</p>
-                    <pre><code class="text hljs">LTC_USD = kraken(LTC_USD);
+                    <div id="help" class="collapse text-start">
+                        <p html-translate="true">The script language is composed of several rules composed of a currency pair and a mathematical expression. The
+                            example below will use <code>kraken</code> for both <code>LTC_USD</code> and <code>BTC_USD</code> pairs.</p>
+                        <pre><code class="text hljs">LTC_USD = kraken(LTC_USD);
 BTC_USD = kraken(BTC_USD);</code></pre>
-					<p html-translate="true">However, explicitely setting specific pairs like this can be a bit difficult. Instead, you can define a rule <code>X_X</code> which will match any currency pair. The following example will use <code>kraken</code> for getting the rate of any currency pair.</p>
-                    <pre><code class="text hljs">X_X = kraken(X_X);</code></pre>
-					<p html-translate="true">However, <code>kraken</code> does not support the <code>BTC_CAD</code> pair. For this reason you can add a rule mapping all <code>X_CAD</code> to <code>ndax</code>, a Canadian exchange.</p>
-                    <pre><code class="text hljs">X_CAD = ndax(X_CAD);
+                        <p html-translate="true">However, explicitely setting specific pairs like this can be a bit difficult. Instead, you can define a rule
+                            <code>X_X</code>
+                            which will match any currency pair. The following example will use <code>kraken</code> for getting the rate of any currency pair.
+                        </p>
+                        <pre><code class="text hljs">X_X = kraken(X_X);</code></pre>
+                        <p html-translate="true">However, <code>kraken</code> does not support the <code>BTC_CAD</code> pair. For this reason you can add a rule
+                            mapping all <code>X_CAD</code> to <code>ndax</code>, a Canadian exchange.</p>
+                        <pre><code class="text hljs">X_CAD = ndax(X_CAD);
 X_X = kraken(X_X);</code></pre>
-					<p html-translate="true">A given currency pair match the most specific rule. If two rules are matching and are as specific, the first rule will be chosen.</p>
-					<p html-translate="true">But now, what if you want to support <code>DOGE</code>? The problem with <code>DOGE</code> is that most exchange do not have any pair for it. But <code>bitpay</code> has a <code>DOGE_BTC</code> pair.<br />Luckily, the rule engine allow you to reference rules:</p>
-                    <pre><code class="text hljs">DOGE_X = bitpay(DOGE_BTC) * BTC_X;
+                        <p html-translate="true">A given currency pair match the most specific rule. If two rules are matching and are as specific, the first
+                            rule
+                            will be chosen.</p>
+                        <p html-translate="true">But now, what if you want to support <code>DOGE</code>? The problem with <code>DOGE</code> is that most
+                            exchange do
+                            not have any pair for it. But <code>bitpay</code> has a <code>DOGE_BTC</code> pair.<br />Luckily, the rule engine allow you to
+                            reference
+                            rules:</p>
+                        <pre><code class="text hljs">DOGE_X = bitpay(DOGE_BTC) * BTC_X;
 X_CAD = ndax(X_CAD);
 X_X = kraken(X_X);</code></pre>
-					<p html-translate="true">With <code>DOGE_USD</code> will be expanded to <code>bitpay(DOGE_BTC) * kraken(BTC_USD)</code>. And <code>DOGE_CAD</code> will be expanded to <code>bitpay(DOGE_BTC) * ndax(BTC_CAD)</code>.<br />However, we advise you to write it that way to increase coverage so that <code>DOGE_BTC</code> is also supported:</p>
-                    <pre><code class="text hljs">DOGE_X = DOGE_BTC * BTC_X;
+                        <p html-translate="true">With <code>DOGE_USD</code> will be expanded to <code>bitpay(DOGE_BTC) * kraken(BTC_USD)</code>. And
+                            <code>DOGE_CAD</code> will be expanded to <code>bitpay(DOGE_BTC) * ndax(BTC_CAD)</code>.<br />However, we advise you to write it
+                            that
+                            way to increase coverage so that <code>DOGE_BTC</code> is also supported:</p>
+                        <pre><code class="text hljs">DOGE_X = DOGE_BTC * BTC_X;
 DOGE_BTC = bitpay(DOGE_BTC);
 X_CAD = ndax(X_CAD);
 X_X = kraken(X_X);</code></pre>
-					<p html-translate="true">It is worth noting that the inverses of those pairs are automatically supported as well.<br />It means that the rule <code>USD_DOGE = 1 / DOGE_USD</code> implicitly exists.</p>
-                </div>
-                <div class="form-group">
-                    <label asp-for="Script" class="form-label"></label>
-                    <a href="#help" data-bs-toggle="collapse" title="@StringLocalizer["More information..."]">
-                        <vc:icon symbol="info"/>
-                    </a>
-                    <textarea asp-for="Script" rows="20" cols="80" class="form-control"></textarea>
-                    <span asp-validation-for="Script" class="text-danger"></span>
-                    <p>
-						<button type="button" class="btn btn-link text-secondary px-0" id="ResetDefaults" text-translate="true">Set to default settings</button>
-                    </p>
-                </div>
-            }
-            else
-            {
-                <div class="form-group">
-                    <label asp-for="PreferredExchange" class="form-label"></label>
-                    <select asp-for="PreferredExchange" asp-items="Model.Exchanges" class="form-select"></select>
-                    <span asp-validation-for="PreferredExchange" class="text-danger"></span>
-                    <div id="PreferredExchangeHelpBlock" class="form-text">
-                        <span text-translate="true">Current Rates source is</span> <a href="@Model.RateSource" target="_blank" rel="noreferrer noopener">@Model.PreferredResolvedExchange</a>.
+                        <p html-translate="true">It is worth noting that the inverses of those pairs are automatically supported as well.<br />It means that the
+                            rule <code>USD_DOGE = 1 / DOGE_USD</code> implicitly exists.</p>
                     </div>
-                </div>
-            }
-            <div class="form-group">
-                <label class="d-flex align-items-center">
-                    <button type="submit" id="ShowScripting" class="btcpay-toggle me-3 @if (Model.ShowScripting) { @("btcpay-toggle--active") }" value="scripting-@(Model.ShowScripting ? "off" : "on")" name="command" data-bs-toggle="modal" data-bs-target="#ConfirmModal" permission="@Policies.CanModifyStoreSettings">@(Model.ShowScripting ? "Disable" : "Enable") advanced rate rule scripting</button>
-                    <div>
-                        <span text-translate="true">Advanced rate rule scripting</span>
-                        @if (Model.ShowScripting)
-                        {
-                            <div class="form-text" text-translate="true">Disabling will delete your rate script.</div>
-                        }
-                        else
-                        {
-                            <div class="form-text" text-translate="true">Enabling will modify your current rate sources. This is a feature for advanced users.</div>
-                        }
+                }
+
+                <fieldset>
+                    <legend text-translate="true">Primary rate source</legend>
+                    @Html.EditorFor(m => m.PrimarySource, "/Views/UIStores/Rates.Source.cshtml")
+                </fieldset>
+                <fieldset>
+                    <legend text-translate="true">Fallback rate source</legend>
+                    <div class="form-group d-flex align-items-center pt-2">
+                        <input asp-for="HasFallback" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#FallbackSection"
+                               aria-expanded="@Model.HasFallback" aria-controls="FallbackSection" />
+                        <div>
+                            <label asp-for="HasFallback" class="form-check-label"></label>
+                            <div class="form-text" text-translate="true">Fallback rates will be used in case the primary rates are not available.</div>
+                        </div>
                     </div>
-                </label>
-            </div>
-            <div class="form-group">
-                <label asp-for="Spread" class="form-label"></label>
-                <div class="input-group">
-                    <input inputmode="decimal" asp-for="Spread" class="form-control" />
-                    <span class="input-group-text">%</span>
+                    <div class="collapse @(Model.HasFallback ? "show" : "")" id="FallbackSection">
+                        @Html.EditorFor(m => m.FallbackSource, "/Views/UIStores/Rates.Source.cshtml")
+                    </div>
+                </fieldset>
+            </fieldset>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xxl-constrain col-xl-8">
+            <fieldset>
+                <legend text-translate="true" class="mb-3">Rate Spread</legend>
+                <div class="form-group">
+                    <label asp-for="Spread" class="form-label"></label>
+                    <div class="input-group">
+                        <input inputmode="decimal" asp-for="Spread" class="form-control" />
+                        <span class="input-group-text">%</span>
+                    </div>
+                    <span asp-validation-for="Spread" class="text-danger"></span>
                 </div>
-                <span asp-validation-for="Spread" class="text-danger"></span>
-            </div>
-			<h3 class="mt-5 mb-3" text-translate="true">Testing</h3>
-
-            <div class="form-group">
-                <label asp-for="ScriptTest" class="form-label"><span text-translate="true">Currency pairs to test against your rule</span> (<code>DOGE_USD,DOGE_CAD,BTC_CAD,BTC_USD</code>)</label>
-                <div class="d-flex">
-                    <input asp-for="ScriptTest" class="form-control" placeholder="BTC_USD, BTC_CAD" />
-                    <button name="command" value="Test" type="submit" class="btn btn-secondary ms-3" title="@StringLocalizer["Test"]" permission="@Policies.CanModifyStoreSettings" text-translate="true">Test</button>
+            </fieldset>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xxl-constrain col-xl-8">
+            <fieldset class="mb-3">
+                <legend text-translate="true">Currency Pair Testing</legend>
+                <div class="form-group">
+                    <label asp-for="ScriptTest" class="form-label"><span text-translate="true">Currency pairs to test against your rule</span> (<code>DOGE_USD,DOGE_CAD,BTC_CAD,BTC_USD</code>)</label>
+                    <div class="d-flex">
+                        <input asp-for="ScriptTest" class="form-control" placeholder="BTC_USD, BTC_CAD" />
+                        <button name="command" value="Test" type="submit" class="btn btn-secondary ms-3" title="@StringLocalizer["Test"]"
+                                permission="@Policies.CanModifyStoreSettings" text-translate="true">Test
+                        </button>
+                    </div>
+                    <span asp-validation-for="ScriptTest" class="text-danger"></span>
                 </div>
-                <span asp-validation-for="ScriptTest" class="text-danger"></span>
-            </div>
 
-			<h3 class="mt-5 mb-3" text-translate="true">Default Currency Pairs</h3>
+                @if (Model.TestRateRules != null)
+                {
+                    <h5 text-translate="true" id="TestResult">Test Results:</h5>
+                    <div class="table-responsive-md">
+                        <table class="table table-hover">
+                            <tbody>
+                            @foreach (var result in Model.TestRateRules)
+                            {
+                                <tr class="testresult">
+                                    @if (result.Error)
+                                    {
+                                        <th class="small">
+                                            <vc:icon symbol="cross" css-class="text-danger testresult_failed" />
+                                            <span class="testresult_pair">@result.CurrencyPair</span>
+                                        </th>
+                                    }
+                                    else
+                                    {
+                                        <th class="small">
+                                            <vc:icon symbol="checkmark" css-class="text-success testresult_success" />
+                                            <span class="testresult_pair">@result.CurrencyPair</span>
+                                        </th>
+                                    }
+                                    <td class="small testresult_rule">@result.Rule</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </fieldset>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xxl-constrain col-xl-8">
             <div class="form-group">
-                <label asp-for="DefaultCurrencyPairs" class="form-label">@ViewLocalizer["Query pairs via REST by querying {0} without the need to specify currencyPairs.", Html.ActionLink(StringLocalizer["this link"], "GetRates2", "BitpayRate", new { storeId = Model.StoreId }, new { target = "_blank" })]</label>
-                <input asp-for="DefaultCurrencyPairs" class="form-control" placeholder="BTC_USD, BTC_CAD" />
-                <span asp-validation-for="DefaultCurrencyPairs" class="text-danger"></span>
+                <fieldset class="mb-3">
+                    <legend text-translate="true">Default Currency Pairs</legend>
+                    <label asp-for="DefaultCurrencyPairs"
+                           class="form-label">@ViewLocalizer["Query pairs via REST by querying {0} without the need to specify currencyPairs.", Html.ActionLink(StringLocalizer["this link"], "GetRates2", "BitpayRate", new { storeId = Model.StoreId }, new { target = "_blank" })]</label>
+                    <input asp-for="DefaultCurrencyPairs" class="form-control" placeholder="BTC_USD, BTC_CAD" />
+                    <span asp-validation-for="DefaultCurrencyPairs" class="text-danger"></span>
+                </fieldset>
             </div>
         </div>
     </div>
 </form>
-<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Rate rule scripting"], Model.ShowScripting ? StringLocalizer["This action will delete your rate script. Are you sure to turn off rate rules scripting?"] : StringLocalizer["This action will modify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)"], StringLocalizer["Continue"], Model.ShowScripting ? "btn-danger" : "btn-primary"))" permission="@Policies.CanModifyStoreSettings" />
 
 @section PageHeadContent {
     <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">
@@ -196,15 +218,24 @@ X_X = kraken(X_X);</code></pre>
 
 @section PageFootContent {
     <script>
-        const commandButton = document.querySelector('[data-bs-target="#ConfirmModal"]')
-        commandButton.dataset.action = window.location.href + '/confirm?scripting=@(!Model.ShowScripting)'
-        commandButton.addEventListener('click', event => {
-            event.preventDefault()
+        const modalButtons = document.querySelectorAll('button[data-bs-target]')
+        modalButtons.forEach(modalButton => {
+            modalButton.addEventListener('click', e => {
+                e.preventDefault()
+            });
         });
 
-        delegate('click', '#ResetDefaults', () => {
-            document.getElementById('Script').value = @Safe.Json(Model.DefaultScript);
+        delegate('click', '.ResetDefaults', (e) => {
+            const defaultScript = e.target.getAttribute('data-defaultScript');
+            const target = e.target.getAttribute('data-target');
+            document.querySelector(target).value = defaultScript;
         });
     </script>
-    <partial name="_ValidationScriptsPartial"/>
+    @if (Model.Hash is not null)
+    {
+        <script>
+            location.hash = @Safe.Json(Model.Hash);
+        </script>
+    }
+    <partial name="_ValidationScriptsPartial" />
 }

@@ -712,7 +712,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return GetFromActionResult<OnChainWalletOverviewData>(
                 await GetController<GreenfieldStoreOnChainWalletsController>().ShowOnChainWalletOverview(storeId, cryptoCode));
         }
-        
+
         public override async Task<HistogramData> GetOnChainWalletHistogram(string storeId, string cryptoCode, HistogramType? type = null, CancellationToken token = default)
         {
             return GetFromActionResult<HistogramData>(
@@ -1199,9 +1199,15 @@ namespace BTCPayServer.Controllers.Greenfield
             return Task.FromResult(GetFromActionResult(GetController<GreenfieldStoreRateConfigurationController>().GetRateSources()));
         }
 
-        public override Task<StoreRateConfiguration> GetStoreRateConfiguration(string storeId, CancellationToken token = default)
+        public override Task<StoreRateConfiguration> GetStoreRateConfiguration(string storeId, bool? fallback = null, CancellationToken token = default)
         {
-            return Task.FromResult(GetFromActionResult<StoreRateConfiguration>(GetController<GreenfieldStoreRateConfigurationController>().GetStoreRateConfiguration()));
+            var ctrl = GetController<GreenfieldStoreRateConfigurationController>();
+            var res = fallback switch
+            {
+                null or true => ctrl.GetStoreFallbackRateConfiguration(),
+                false => ctrl.GetStoreRateConfiguration()
+            };
+            return Task.FromResult(GetFromActionResult<StoreRateConfiguration>(res));
         }
 
         public override async Task<List<StoreRateResult>> GetStoreRates(string storeId,
@@ -1220,9 +1226,15 @@ namespace BTCPayServer.Controllers.Greenfield
                     currencyPair));
         }
 
-        public override async Task<StoreRateConfiguration> UpdateStoreRateConfiguration(string storeId, StoreRateConfiguration request, CancellationToken token = default)
+        public override async Task<StoreRateConfiguration> UpdateStoreRateConfiguration(string storeId, StoreRateConfiguration request, bool? fallback = null, CancellationToken token = default)
         {
-            return GetFromActionResult<StoreRateConfiguration>(await GetController<GreenfieldStoreRateConfigurationController>().UpdateStoreRateConfiguration(request));
+            var ctrl = GetController<GreenfieldStoreRateConfigurationController>();
+            var res = fallback switch
+            {
+                null or true => await ctrl.UpdateStoreRateConfiguration(request),
+                false => await ctrl.UpdateStoreRateFallbackConfiguration(request)
+            };
+            return GetFromActionResult<StoreRateConfiguration>(res);
         }
 
         public override async Task MarkPayoutPaid(string storeId, string payoutId, CancellationToken cancellationToken = default)

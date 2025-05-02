@@ -1,3 +1,4 @@
+#nullable enable
 using BTCPayServer.Configuration;
 using BTCPayServer.Lightning;
 using BTCPayServer.Services;
@@ -25,7 +26,6 @@ namespace BTCPayServer.Payments.Lightning
                 return connectionString;
             }
         }
-
         public static uint256? GetPaymentHash(this LightningInvoice lightningInvoice, Network btcpayNetwork)
         {
             return lightningInvoice.PaymentHash != null ?

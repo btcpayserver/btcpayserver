@@ -168,11 +168,11 @@ namespace BTCPayServer.Payments
             return Task.WhenAll(PaymentMethodContexts.Select(c => c.Value.ActivatingPaymentPrompt()));
         }
 
-        public async Task FetchingRates(RateFetcher rateFetcher, RateRules rateRules, CancellationToken cancellationToken)
+        public async Task FetchingRates(RateFetcher rateFetcher, RateRulesCollection rateRules, CancellationToken cancellationToken)
         {
             var currencyPairsToFetch = GetCurrenciesToFetch();
             var fetchingRates = rateFetcher.FetchRates(currencyPairsToFetch, rateRules, new StoreIdRateContext(InvoiceEntity.StoreId), cancellationToken);
-            HashSet<CurrencyPair> failedRates = new HashSet<CurrencyPair>();
+            var failedRates = new HashSet<CurrencyPair>();
             foreach (var fetching in fetchingRates)
             {
                 try
@@ -187,7 +187,15 @@ namespace BTCPayServer.Payments
                     Logs.Write($"Rate for {fetching.Key}: {rateResult.Rule} = {rateResult.EvaluatedRule} = {bidLog}", InvoiceEventData.EventSeverity.Info);
                     if (rateResult is RateResult { BidAsk: { } bidAsk })
                     {
-                        InvoiceEntity.AddRate(fetching.Key, bidAsk.Bid);
+                        if (bidAsk.Bid == 0.0m)
+                        {
+                            failedRates.Add(fetching.Key);
+                            Logs.Write($"The calculated rate should not be 0.", InvoiceEventData.EventSeverity.Error);
+                        }
+                        else
+                        {
+                            InvoiceEntity.AddRate(fetching.Key, bidAsk.Bid);
+                        }
                     }
                     else
                     {
@@ -301,7 +309,7 @@ namespace BTCPayServer.Payments
             var currency = Prompt.Currency;
             if (currency is not null)
                 RequiredRates.Add(currency);
-            if (currency is not null 
+            if (currency is not null
                  && Status is PaymentMethodContext.ContextStatus.WaitingForCreation or PaymentMethodContext.ContextStatus.WaitingForActivation)
             {
                 foreach (var paymentMethodCriteria in StoreBlob.PaymentMethodCriteria

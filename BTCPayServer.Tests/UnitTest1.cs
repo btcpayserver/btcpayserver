@@ -77,6 +77,7 @@ using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 using Microsoft.Extensions.Caching.Memory;
 using PosViewType = BTCPayServer.Client.Models.PosViewType;
 using BTCPayServer.PaymentRequest;
+using BTCPayServer.Views.Stores;
 
 namespace BTCPayServer.Tests
 {
@@ -1380,68 +1381,184 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
+        [Trait("Playwright", "Playwright")]
         public async Task CanModifyRates()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreatePlaywrightTester();
             await tester.StartAsync();
-            var user = tester.NewAccount();
-            user.GrantAccess();
-            user.RegisterDerivationScheme("BTC");
+            await tester.RegisterNewUser(true);
+            await tester.CreateNewStore();
+            await tester.GoToStore();
+            await tester.GoToStore(StoreNavPages.Rates);
 
-            var store = user.GetController<UIStoresController>();
-            var rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates()).Model);
-            Assert.False(rateVm.ShowScripting);
-            Assert.Equal(CoinGeckoRateProvider.CoinGeckoName, rateVm.PreferredExchange);
-            Assert.Equal(0.0, rateVm.Spread);
-            Assert.Null(rateVm.TestRateRules);
+            async Task Test(string pairs)
+            {
+                await tester.Page.FillAsync("#ScriptTest", pairs);
+                await tester.Page.ClickAsync("button[value='Test']");
+            }
 
-            rateVm.PreferredExchange = "bitflyer";
-            Assert.IsType<RedirectToActionResult>(await store.Rates(rateVm, "Save"));
-            rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates()).Model);
-            Assert.Equal("bitflyer", rateVm.PreferredExchange);
+            foreach (var fallback in new[] { false, true })
+            {
+                tester.TestLogs.LogInformation($"Testing rates (fallback={fallback})");
+                var source = fallback ? "FallbackSource" : "PrimarySource";
+                var toggleScriptSelector = $"#{source}_ShowScripting_submit";
 
-            rateVm.ScriptTest = "BTC_JPY,BTC_CAD";
-            rateVm.Spread = 10;
-            store = user.GetController<UIStoresController>();
-            rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(await store.Rates(rateVm, "Test"))
-                .Model);
-            Assert.NotNull(rateVm.TestRateRules);
-            Assert.Equal(2, rateVm.TestRateRules.Count);
-            Assert.False(rateVm.TestRateRules[0].Error);
-            Assert.StartsWith("(bitflyer(BTC_JPY)) * (0.9, 1.1) =", rateVm.TestRateRules[0].Rule,
-                StringComparison.OrdinalIgnoreCase);
-            Assert.True(rateVm.TestRateRules[1].Error);
-            Assert.IsType<RedirectToActionResult>(await store.Rates(rateVm, "Save"));
+                var l = tester.Page.Locator(toggleScriptSelector);
+                await l.WaitForAsync();
+                Assert.DoesNotContain("btcpay-toggle--active", await l.GetAttributeAsync("class"));
+                if (fallback)
+                {
+                    Assert.Equal("", await tester.Page.Locator($"#{source}_PreferredExchange").InputValueAsync());
+                }
+                else
+                {
+                    Assert.Equal(CoinGeckoRateProvider.CoinGeckoName, await tester.Page.Locator($"#{source}_PreferredExchange").InputValueAsync());
+                }
 
-            Assert.IsType<RedirectToActionResult>(store.ShowRateRulesPost(true).Result);
-            Assert.IsType<RedirectToActionResult>(await store.Rates(rateVm, "Save"));
-            store = user.GetController<UIStoresController>();
-            rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates()).Model);
-            Assert.Equal(rateVm.StoreId, user.StoreId);
-            Assert.Equal(rateVm.DefaultScript, rateVm.Script);
-            Assert.True(rateVm.ShowScripting);
-            rateVm.ScriptTest = "BTC_JPY";
-            rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(await store.Rates(rateVm, "Test"))
-                .Model);
-            Assert.True(rateVm.ShowScripting);
-            Assert.Contains("(bitflyer(BTC_JPY)) * (0.9, 1.1) = ", rateVm.TestRateRules[0].Rule,
-                StringComparison.OrdinalIgnoreCase);
+                Assert.Equal("0", await tester.Page.InputValueAsync("#Spread"));
+                await tester.Page.SelectOptionAsync($"#{source}_PreferredExchange", "bitflyer");
+                await tester.ClickPagePrimary();
+                await tester.FindAlertMessage();
 
-            rateVm.ScriptTest = "BTC_USD,BTC_CAD,DOGE_USD,DOGE_CAD";
-            rateVm.Script = "DOGE_X = bitpay(DOGE_BTC) * BTC_X;\n" +
-                            "X_CAD = ndax(X_CAD);\n" +
-                            "X_X = coingecko(X_X);";
-            rateVm.Spread = 50;
-            rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(await store.Rates(rateVm, "Test"))
-                .Model);
-            Assert.True(rateVm.TestRateRules.All(t => !t.Error));
-            Assert.IsType<RedirectToActionResult>(await store.Rates(rateVm, "Save"));
-            store = user.GetController<UIStoresController>();
-            rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates()).Model);
-            Assert.Equal(50, rateVm.Spread);
-            Assert.True(rateVm.ShowScripting);
-            Assert.Contains("DOGE_X", rateVm.Script, StringComparison.OrdinalIgnoreCase);
+                await tester.Page.FillAsync("#Spread", "10");
+                await Test("BTC_JPY,BTC_CAD");
+                var rules = await tester.Page.Locator(".testresult .testresult_rule").AllAsync();
+                if (fallback)
+                {
+                    // If fallback is set, we should see the results of the fallback too
+                    Assert.Contains("(coingecko(BTC_CAD)) * (0.9, 1.1) = 4050.0", await rules[0].InnerTextAsync());
+                    Assert.Contains("(ERR_RATE_UNAVAILABLE(bitflyer, BTC_CAD)) * (0.9, 1.1)", await rules[1].InnerTextAsync());
+                    Assert.Contains("(ERR_RATE_UNAVAILABLE(coingecko, BTC_JPY)) * (0.9, 1.1)", await rules[2].InnerTextAsync());
+                    Assert.Contains("(bitflyer(BTC_JPY)) * (0.9, 1.1) = 630000.0", await rules[3].InnerTextAsync());
+                }
+                else
+                {
+                    Assert.Contains("(ERR_RATE_UNAVAILABLE(bitflyer, BTC_CAD))", await rules[0].InnerTextAsync());
+                    Assert.Contains("(bitflyer(BTC_JPY)) * (0.9, 1.1) =", await rules[1].InnerTextAsync());
+                }
+
+                await tester.ClickPagePrimary();
+                await tester.FindAlertMessage();
+
+                await tester.Page.ClickAsync(toggleScriptSelector);
+                await tester.FindAlertMessage(partialText: "Rate rules scripting activated");
+
+                l = tester.Page.Locator(toggleScriptSelector);
+                await l.WaitForAsync();
+                Assert.Contains("btcpay-toggle--active", await l.GetAttributeAsync("class"));
+
+                var script = await tester.Page.InputValueAsync($"#{source}_Script");
+                var defaultScript = await tester.Page.GetAttributeAsync($"#{source}_DefaultScript", "data-defaultScript");
+                Assert.Equal(script, defaultScript);
+
+                await Test("BTC_JPY");
+                rules = await tester.Page.Locator(".testresult .testresult_rule").AllAsync();
+                if (fallback)
+                {
+                    Assert.Contains("(ERR_RATE_UNAVAILABLE(coingecko, BTC_JPY)) * (0.9, 1.1)", await rules[0].InnerTextAsync());
+                    Assert.Contains("(bitflyer(BTC_JPY)) * (0.9, 1.1) = 630000.0", await rules[1].InnerTextAsync());
+                }
+                else
+                {
+                    Assert.Contains("(bitflyer(BTC_JPY)) * (0.9, 1.1) =", await rules[0].InnerTextAsync());
+                }
+
+                await tester.Page.FillAsync("#Spread", "50");
+                await tester.Page.FillAsync($"#{source}_Script","""
+                                                                DOGE_X = bitpay(DOGE_BTC) * BTC_X;
+                                                                X_CAD = ndax(X_CAD);
+                                                                X_X = coingecko(X_X);
+                                                                """);
+                await Test("BTC_USD,BTC_CAD,DOGE_USD,DOGE_CAD");
+                rules = await tester.Page.Locator(".testresult").AllAsync();
+                if (fallback)
+                {
+                    Assert.Equal(8, rules.Count);
+                }
+                else
+                {
+                    Assert.Equal(4, rules.Count);
+                    foreach (var rule in rules)
+                    {
+                        await rule.Locator(".testresult_success").WaitForAsync();
+                        Assert.Contains("(0.5, 1.5)", await rule.InnerTextAsync());
+                    }
+                }
+
+                await tester.ClickPagePrimary();
+                Assert.Equal("50", await tester.Page.InputValueAsync("#Spread"));
+                var beforeReset = await tester.Page.InputValueAsync($"#{source}_Script");
+                Assert.Contains("X_CAD = ndax(X_CAD);", beforeReset);
+                await tester.Page.ClickAsync($"#{source}_DefaultScript");
+                var afterReset = await tester.Page.InputValueAsync($"#{source}_Script");
+                Assert.NotEqual(beforeReset, afterReset);
+
+                await tester.Page.ClickAsync(toggleScriptSelector);
+                await tester.ConfirmModal();
+                await tester.FindAlertMessage(partialText: "Rate rules scripting deactivated");
+
+                l = tester.Page.Locator(toggleScriptSelector);
+                await l.WaitForAsync();
+                Assert.DoesNotContain("btcpay-toggle--active", await l.GetAttributeAsync("class"));
+
+                if (fallback)
+                {
+                    await tester.Page.ClickAsync("#HasFallback");
+                    await tester.ClickPagePrimary();
+                    await tester.Page.FillAsync("#Spread", "0");
+                    await tester.ClickPagePrimary();
+                }
+                else
+                {
+                    await tester.Page.ClickAsync("#HasFallback");
+                    await tester.ClickPagePrimary();
+                    await tester.FindAlertMessage();
+                    await tester.Page.SelectOptionAsync($"#{source}_PreferredExchange", CoinGeckoRateProvider.CoinGeckoName);
+                    await tester.Page.FillAsync("#Spread", "0");
+                    await tester.ClickPagePrimary();
+                }
+            }
+
+            await tester.Page.ClickAsync("#HasFallback");
+            await tester.ClickPagePrimary();
+            await tester.FindAlertMessage();
+            await tester.Page.SelectOptionAsync($"#PrimarySource_PreferredExchange", CoinGeckoRateProvider.CoinGeckoName);
+            await tester.Page.SelectOptionAsync($"#FallbackSource_PreferredExchange", "bitflyer");
+
+            await tester.Page.FillAsync("#DefaultCurrencyPairs", "BTC_JPY,BTC_CAD");
+            await tester.ClickPagePrimary();
+
+            using var req = await tester.Server.PayTester.HttpClient.GetAsync($"/api/rates?storeId={tester.StoreId}");
+            var rates = JArray.Parse(await req.Content.ReadAsStringAsync());
+            foreach (var expected in new[]
+                     {
+                         (name: "BTC_JPY", rate: 700000m),
+                         (name: "BTC_CAD", rate: 4500m)
+                     })
+            {
+                // JPY is handled by the fallback, CAD by the primary
+                var r = rates.First(r => r["currencyPair"].ToString() == expected.name);
+                Assert.Equal(expected.rate, r["rate"]!.Value<decimal>());
+            }
+
+            await tester.GenerateWallet();
+            var invoiceId = await tester.CreateInvoice(currency: "JPY", amount: 700000m);
+            var client = await tester.AsTestAccount().CreateClient();
+            var paymentMethods = await client.GetInvoicePaymentMethods(tester.StoreId, invoiceId);
+            Assert.Equal(1.0m, paymentMethods[0].Amount);
+
+            // The fallback doesn't support JPY anymore
+            var a = await client.GetStoreRateConfiguration(tester.StoreId, fallback: false);
+            var b = await client.GetStoreRateConfiguration(tester.StoreId, fallback: true);
+            Assert.Equal("coingecko", a.PreferredSource);
+            Assert.Equal("bitflyer", b.PreferredSource);
+            await client.UpdateStoreRateConfiguration(tester.StoreId, new()
+            {
+                PreferredSource = "coingecko"
+            }, true);
+            b = await client.GetStoreRateConfiguration(tester.StoreId, fallback: true);
+            Assert.Equal("coingecko", b.PreferredSource);
+            await tester.CreateInvoice(currency: "JPY", amount: 700000m, expectedSeverity: StatusMessageModel.StatusSeverity.Error);
         }
 
 
@@ -2824,14 +2941,14 @@ namespace BTCPayServer.Tests
             using var ctx = db.CreateContext();
             var store = (await ctx.Stores.AsNoTracking().ToListAsync())[0];
             var b = store.GetStoreBlob();
-            b.PreferredExchange = "coinaverage";
+            b.GetOrCreateRateSettings(false).PreferredExchange = "coinaverage";
             store.SetStoreBlob(b);
             await ctx.SaveChangesAsync();
             await ctx.Database.ExecuteSqlRawAsync("DELETE FROM \"__EFMigrationsHistory\" WHERE \"MigrationId\"='20230123062447_migrateoldratesource'");
             await ctx.Database.MigrateAsync();
             store = (await ctx.Stores.AsNoTracking().ToListAsync())[0];
             b = store.GetStoreBlob();
-            Assert.Equal("coingecko", b.PreferredExchange);
+            Assert.Equal("coingecko", b.GetOrCreateRateSettings(false).PreferredExchange);
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]

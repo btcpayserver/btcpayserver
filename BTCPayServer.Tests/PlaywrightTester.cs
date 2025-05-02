@@ -493,5 +493,10 @@ namespace BTCPayServer.Tests
         }
 
         public Task GoToInvoice(string invoiceId) => GoToUrl($"/invoices/{invoiceId}/");
+
+        public async Task ConfirmModal()
+        {
+            await Page.ClickAsync(".modal.fade.show .modal-confirm");
+        }
     }
 }

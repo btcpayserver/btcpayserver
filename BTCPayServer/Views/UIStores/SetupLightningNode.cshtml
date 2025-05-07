@@ -64,10 +64,13 @@
             <div class="form-group">
                 <label asp-for="ConnectionString" class="form-label" text-translate="true">Connection configuration for your custom Lightning node:</label>
                 <div class="d-sm-flex">
-                    <input asp-for="ConnectionString" class="form-control mb-2 me-2" placeholder="type=…;server=…;"
-                           value="@(Model.LightningNodeType == LightningNodeType.Internal ? "" : Model.ConnectionString)" />
-                    <button id="test" name="command" type="submit" value="test" class="btn btn-secondary text-nowrap mb-2" text-translate="true">Test
-                        connection
+                    <textarea asp-for="ConnectionString" class="form-control mb-2 me-2" rows="4" placeholder="type=…;server=…;"
+                               value="@(Model.LightningNodeType == LightningNodeType.Internal ? "" : Model.ConnectionString)">
+                    </textarea>
+                </div>
+                <div class="d-sm-flex">
+                    <button id="test" name="command" type="submit" value="test" class="btn btn-secondary text-nowrap mb-2" text-translate="true">
+                        Test connection
                     </button>
                 </div>
                 <span asp-validation-for="ConnectionString" class="text-danger"></span>

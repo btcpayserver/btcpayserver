@@ -71,13 +71,15 @@
                             <h5 class="mb-0 text-success" text-translate="true">Set up a Lightning node</h5>
                         </div>
                     </div>
-                    <a asp-controller="UIStores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center">
+                    <a asp-controller="UIStores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode"
+                       id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center">
                         <vc:icon symbol="wallet-new" />
                         <div class="content">
                             <h5 class="mb-0" text-translate="true">Set up a wallet</h5>
                         </div>
                         <vc:icon symbol="caret-right" />
                     </a>
+                    <vc:ui-extension-point location="dashboard-setup-guide-payment" model="@Model" />
                 </div>
             </div>
         }
@@ -112,10 +114,10 @@ else
         </div>
         @if (Model.Network is BTCPayNetwork)
         {
-
             @if (!Model.WalletEnabled)
             {
-                <a asp-controller="UIStores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center order-1">
+                <a asp-controller="UIStores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode"
+                   id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center order-1">
                     <vc:icon symbol="wallet-new" />
                     <div class="content">
                         <h5 class="mb-0" text-translate="true">Set up a wallet</h5>
@@ -137,7 +139,8 @@ else
         {
             if (!Model.LightningEnabled)
             {
-                <a asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupGuide-Lightning" class="list-group-item list-group-item-action d-flex align-items-center order-1">
+                <a asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode"
+                   id="SetupGuide-Lightning" class="list-group-item list-group-item-action d-flex align-items-center order-1">
                     <vc:icon symbol="wallet-new" />
                     <div class="content">
                         <h5 class="mb-0" text-translate="true">Set up a Lightning node</h5>
@@ -155,6 +158,7 @@ else
                 </div>
             }
         }
+        <vc:ui-extension-point location="dashboard-setup-guide-payment" model="@Model" />
     </div>
 }
 

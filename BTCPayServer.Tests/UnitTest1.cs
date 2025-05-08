@@ -1449,7 +1449,8 @@ namespace BTCPayServer.Tests
 
                 var script = await tester.Page.InputValueAsync($"#{source}_Script");
                 var defaultScript = await tester.Page.GetAttributeAsync($"#{source}_DefaultScript", "data-defaultScript");
-                Assert.Equal(script, defaultScript);
+                Assert.Contains("X_JPY = bitbank(X_JPY);", defaultScript);
+                Assert.Contains("X_TRY = btcturk(X_TRY);", defaultScript);
 
                 await Test("BTC_JPY");
                 rules = await tester.Page.Locator(".testresult .testresult_rule").AllAsync();

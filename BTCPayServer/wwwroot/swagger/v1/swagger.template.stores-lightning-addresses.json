@@ -229,5 +229,11 @@
                 }
             }
         }
-    }
+    },
+    "tags": [
+        {
+            "name": "Lightning address",
+            "description": "Lightning address configuration"
+        }
+    ]
 }

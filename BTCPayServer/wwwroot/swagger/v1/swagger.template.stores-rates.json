@@ -75,7 +75,7 @@
                 "tags": [
                     "Stores (Rates)"
                 ],
-                "summary": "Get store rate settings",
+                "summary": "Get store rate settings for the specified rate source",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/StoreId"
@@ -84,7 +84,7 @@
                         "$ref": "#/components/parameters/RateSource"
                     }
                 ],
-                "description": "View rate settings of the specified store",
+                "description": "View rate settings for the specified store and rate source (`primary` or `fallback`).",
                 "operationId": "Stores_GetStoreRateConfiguration",
                 "responses": {
                     "200": {
@@ -125,8 +125,8 @@
                         "$ref": "#/components/parameters/RateSource"
                     }
                 ],
-                "summary": "Update store rate settings",
-                "description": "Update a store's rate settings",
+                "summary": "Get store rate settings for the specified rate source",
+                "description": "Update rate settings for the specified store and rate source (`primary` or `fallback`).",
                 "operationId": "Stores_UpdateStoreRateConfiguration",
                 "requestBody": {
                     "x-name": "request",
@@ -317,5 +317,11 @@
                 }
             }
         }
-    }
+    },
+    "tags": [
+        {
+            "name": "Stores (Rates)",
+            "description": "Stores rate information and configuration"
+        }
+    ]
 }

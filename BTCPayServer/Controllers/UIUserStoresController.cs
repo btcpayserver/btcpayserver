@@ -101,7 +101,12 @@ namespace BTCPayServer.Controllers
             store.StoreName = vm.Name;
             var blob = store.GetStoreBlob();
             blob.DefaultCurrency = vm.DefaultCurrency;
-            blob.GetOrCreateRateSettings(false).PreferredExchange = vm.PreferredExchange;
+            if (vm.CanEditPreferredExchange)
+            {
+                var rate = blob.GetOrCreateRateSettings(false);
+                rate.PreferredExchange = vm.PreferredExchange;
+                rate.RateScripting = false;
+            }
             store.SetStoreBlob(blob);
             await _repo.CreateStore(GetUserId(), store);
             CreatedStoreId = store.Id;

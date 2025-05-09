@@ -72,8 +72,18 @@ public partial class UIStoresController
         {
             var isFallback = command is "scripting-toggle-fallback";
             var rateSettings = storeBlob.GetOrCreateRateSettings(isFallback);
-            rateSettings.RateScripting = !rateSettings.RateScripting;
-            rateSettings.RateScript = rateSettings.GetDefaultRateRules(_defaultRules, storeBlob.Spread).ToString();
+
+            if (!rateSettings.RateScripting)
+            {
+                rateSettings.RateScript = rateSettings.GetDefaultRateRules(_defaultRules, storeBlob.Spread).ToString();
+                rateSettings.RateScripting = true;
+            }
+            else
+            {
+                rateSettings.RateScripting = false;
+                rateSettings.RateScript = null;
+            }
+
             CurrentStore.SetStoreBlob(storeBlob);
             await _storeRepo.UpdateStore(CurrentStore);
             if (rateSettings.RateScripting)
@@ -179,7 +189,7 @@ public partial class UIStoresController
         }
     }
 
-    private void SetViewModel(RatesViewModel.Source vm, StoreBlob.RateSettings? rateSettings, StoreBlob storeBlob)
+    private async Task SetViewModel(RatesViewModel.Source vm, StoreBlob.RateSettings? rateSettings, StoreBlob storeBlob)
     {
         if (rateSettings is null)
             return;
@@ -191,7 +201,9 @@ public partial class UIStoresController
         vm.PreferredResolvedExchange = chosenSource.Id;
         vm.RateSource = chosenSource.Url;
         vm.Script = rateSettings.GetRateRules(_defaultRules, storeBlob.Spread).ToString();
-        vm.DefaultScript = rateSettings.GetDefaultRateRules(_defaultRules, storeBlob.Spread).ToString();
+
+        var defaultRateSettings = (await _storeRepo.GetDefaultStoreTemplate()).GetStoreBlob()?.GetRateSettings(false) ?? new();
+        vm.DefaultScript =  defaultRateSettings.GetDefaultRateRules(_defaultRules, storeBlob.Spread).ToString();
         vm.ShowScripting = rateSettings.RateScripting;
 
         vm.ScriptingConfirm = new()

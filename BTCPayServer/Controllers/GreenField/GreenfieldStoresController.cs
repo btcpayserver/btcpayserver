@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
-using Amazon.Runtime.Internal;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
@@ -19,7 +19,9 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers.Greenfield
@@ -34,12 +36,14 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IFileService _fileService;
         private readonly UriResolver _uriResolver;
+        private readonly JsonSerializerSettings _serializedSettings;
 
         public GreenfieldStoresController(
             StoreRepository storeRepository,
             CurrencyNameTable currencyNameTable,
             UserManager<ApplicationUser> userManager,
             IFileService fileService,
+            IOptions<MvcNewtonsoftJsonOptions> jsonOptions,
             UriResolver uriResolver)
         {
             _storeRepository = storeRepository;
@@ -47,8 +51,9 @@ namespace BTCPayServer.Controllers.Greenfield
             _userManager = userManager;
             _fileService = fileService;
             _uriResolver = uriResolver;
+            _serializedSettings = jsonOptions.Value.SerializerSettings;
         }
-        
+
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores")]
         public async Task<ActionResult<IEnumerable<Client.Models.StoreData>>> GetStores()
@@ -77,7 +82,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var store = HttpContext.GetStoreData();
             if (store == null) return StoreNotFound();
 
-            await _storeRepository.RemoveStore(storeId, _userManager.GetUserId(User));
+            await _storeRepository.RemoveStore(storeId, _userManager.GetUserId(User) ?? "");
             return Ok();
         }
 
@@ -85,14 +90,27 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettingsUnscoped, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreateStore(CreateStoreRequest request)
         {
+            var store = await _storeRepository.GetDefaultStoreTemplate();
+            request = await MergeStoreRequestWithTemplate(request, store);
             var validationResult = Validate(request);
             if (validationResult != null) return validationResult;
-
-            var store = new StoreData();
-            PaymentMethodId.TryParse(request.DefaultPaymentMethod, out var defaultPaymentMethodId);
-            ToModel(request, store, defaultPaymentMethodId);
-            await _storeRepository.CreateStore(_userManager.GetUserId(User), store);
+            ToModel(request, store);
+            await _storeRepository.CreateStore(_userManager.GetUserId(User) ?? "", store);
             return Ok(await FromModel(store));
+        }
+
+        private async Task<T> MergeStoreRequestWithTemplate<T>(T request, StoreData store) where T: StoreBaseData
+        {
+            var serializer = JsonSerializer.Create(_serializedSettings);
+            var requestRaw = JObject.FromObject(request, serializer);
+            var templateRaw = JObject.FromObject(await FromModel(store), serializer);
+            templateRaw.Merge(requestRaw,
+                new()
+                {
+                    MergeNullValueHandling = MergeNullValueHandling.Ignore,
+                    MergeArrayHandling = MergeArrayHandling.Replace
+                });
+            return templateRaw.ToObject<T>(serializer);
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -101,11 +119,10 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var store = HttpContext.GetStoreData();
             if (store == null) return StoreNotFound();
+            request = await MergeStoreRequestWithTemplate(request, store);
             var validationResult = Validate(request);
             if (validationResult != null) return validationResult;
-
-            PaymentMethodId.TryParse(request.DefaultPaymentMethod, out var defaultPaymentMethodId);
-            ToModel(request, store, defaultPaymentMethodId);
+            ToModel(request, store);
             await _storeRepository.UpdateStore(store);
             return Ok(await FromModel(store));
         }
@@ -117,7 +134,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var user = await _userManager.GetUserAsync(User);
             var store = HttpContext.GetStoreData();
             if (user == null || store == null) return StoreNotFound();
-            
+
             UploadImageResultModel upload = null;
             if (file is null)
                 ModelState.AddModelError(nameof(file), "Invalid file");
@@ -129,7 +146,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            
+
             try
             {
                 var storedFile = upload!.StoredFile!;
@@ -152,7 +169,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var store = HttpContext.GetStoreData();
             if (store == null) return StoreNotFound();
-            
+
             var blob = store.GetStoreBlob();
             var fileId = (blob.LogoUrl as UnresolvedUri.FileIdUri)?.FileId;
             if (!string.IsNullOrEmpty(fileId))
@@ -223,13 +240,16 @@ namespace BTCPayServer.Controllers.Greenfield
             };
         }
 
-        private void ToModel(StoreBaseData restModel, StoreData model, PaymentMethodId defaultPaymentMethod)
+        [SuppressMessage("ReSharper", "PossibleInvalidOperationException")]
+        private void ToModel(StoreBaseData restModel, StoreData model)
         {
+            // Dereference on .Value is fine. Those values should be set by the template
             var blob = model.GetStoreBlob();
             model.StoreName = restModel.Name;
             model.StoreWebsite = restModel.Website;
-            model.Archived = restModel.Archived;
-            model.SpeedPolicy = restModel.SpeedPolicy;
+            model.Archived = restModel.Archived.Value;
+            model.SpeedPolicy = restModel.SpeedPolicy.Value;
+            PaymentMethodId.TryParse(restModel.DefaultPaymentMethod, out var defaultPaymentMethod);
             model.SetDefaultPaymentId(defaultPaymentMethod);
             //we do not include the default payment method in this model and instead opt to set it in the stores/storeid/payment-methods endpoints
             //blob
@@ -237,31 +257,31 @@ namespace BTCPayServer.Controllers.Greenfield
             //we do not include ExcludedPaymentMethods in this model and instead opt to set it in stores/storeid/payment-methods endpoints
             //we do not include EmailSettings in this model and instead opt to set it in stores/storeid/email endpoints
             //we do not include OnChainMinValue and LightningMaxValue because moving the CurrencyValueJsonConverter to the Client csproj is hard and requires a refactor (#1571 & #1572)
-            blob.NetworkFeeMode = restModel.NetworkFeeMode;
+            blob.NetworkFeeMode = restModel.NetworkFeeMode.Value;
             blob.DefaultCurrency = restModel.DefaultCurrency;
             blob.ReceiptOptions = InvoiceDataBase.ReceiptOptions.Merge(restModel.Receipt, null);
-            blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi;
-            blob.LightningPrivateRouteHints = restModel.LightningPrivateRouteHints;
-            blob.OnChainWithLnInvoiceFallback = restModel.OnChainWithLnInvoiceFallback;
-            blob.LazyPaymentMethods = restModel.LazyPaymentMethods;
-            blob.RedirectAutomatically = restModel.RedirectAutomatically;
-            blob.ShowRecommendedFee = restModel.ShowRecommendedFee;
-            blob.RecommendedFeeBlockTarget = restModel.RecommendedFeeBlockTarget;
+            blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi.Value;
+            blob.LightningPrivateRouteHints = restModel.LightningPrivateRouteHints.Value;
+            blob.OnChainWithLnInvoiceFallback = restModel.OnChainWithLnInvoiceFallback.Value;
+            blob.LazyPaymentMethods = restModel.LazyPaymentMethods.Value;
+            blob.RedirectAutomatically = restModel.RedirectAutomatically.Value;
+            blob.ShowRecommendedFee = restModel.ShowRecommendedFee.Value;
+            blob.RecommendedFeeBlockTarget = restModel.RecommendedFeeBlockTarget.Value;
             blob.DefaultLang = restModel.DefaultLang;
             blob.StoreSupportUrl = restModel.SupportUrl;
-            blob.MonitoringExpiration = restModel.MonitoringExpiration;
-            blob.InvoiceExpiration = restModel.InvoiceExpiration;
-            blob.DisplayExpirationTimer = restModel.DisplayExpirationTimer;
+            blob.MonitoringExpiration = restModel.MonitoringExpiration.Value;
+            blob.InvoiceExpiration = restModel.InvoiceExpiration.Value;
+            blob.DisplayExpirationTimer = restModel.DisplayExpirationTimer.Value;
             blob.HtmlTitle = restModel.HtmlTitle;
-            blob.AnyoneCanInvoice = restModel.AnyoneCanCreateInvoice;
+            blob.AnyoneCanInvoice = restModel.AnyoneCanCreateInvoice.Value;
             blob.LightningDescriptionTemplate = restModel.LightningDescriptionTemplate;
-            blob.PaymentTolerance = restModel.PaymentTolerance;
-            blob.PayJoinEnabled = restModel.PayJoinEnabled;
+            blob.PaymentTolerance = restModel.PaymentTolerance.Value;
+            blob.PayJoinEnabled = restModel.PayJoinEnabled.Value;
             blob.BrandColor = restModel.BrandColor;
-            blob.ApplyBrandColorToBackend = restModel.ApplyBrandColorToBackend;
+            blob.ApplyBrandColorToBackend = restModel.ApplyBrandColorToBackend.Value;
             blob.LogoUrl = restModel.LogoUrl is null ? null : UnresolvedUri.Create(restModel.LogoUrl);
             blob.CssUrl = restModel.CssUrl is null ? null : UnresolvedUri.Create(restModel.CssUrl);
-            blob.RefundBOLT11Expiration = restModel.RefundBOLT11Expiration;
+            blob.RefundBOLT11Expiration = restModel.RefundBOLT11Expiration.Value;
             blob.PaymentSoundUrl = restModel.PaymentSoundUrl is null ? null : UnresolvedUri.Create(restModel.PaymentSoundUrl);
             if (restModel.AutoDetectLanguage.HasValue)
                 blob.AutoDetectLanguage = restModel.AutoDetectLanguage.Value;
@@ -336,24 +356,25 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 for (int index = 0; index < request.PaymentMethodCriteria.Count; index++)
                 {
+                    var i = index;
                     PaymentMethodCriteriaData pmc = request.PaymentMethodCriteria[index];
                     if (string.IsNullOrEmpty(pmc.CurrencyCode))
                     {
-                        request.AddModelError(data => data.PaymentMethodCriteria[index].CurrencyCode, "CurrencyCode is required", this);
+                        request.AddModelError(data => data.PaymentMethodCriteria[i].CurrencyCode, "CurrencyCode is required", this);
                     }
                     else if (_currencyNameTable.GetCurrencyData(pmc.CurrencyCode, false) is null)
                     {
-                        request.AddModelError(data => data.PaymentMethodCriteria[index].CurrencyCode, "CurrencyCode is invalid", this);
+                        request.AddModelError(data => data.PaymentMethodCriteria[i].CurrencyCode, "CurrencyCode is invalid", this);
                     }
 
                     if (string.IsNullOrEmpty(pmc.PaymentMethodId) || PaymentMethodId.TryParse(pmc.PaymentMethodId) is null)
                     {
-                        request.AddModelError(data => data.PaymentMethodCriteria[index].PaymentMethodId, "Payment method was invalid", this);
+                        request.AddModelError(data => data.PaymentMethodCriteria[i].PaymentMethodId, "Payment method was invalid", this);
                     }
 
                     if (pmc.Amount < 0)
                     {
-                        request.AddModelError(data => data.PaymentMethodCriteria[index].Amount, "Amount must be greater than 0", this);
+                        request.AddModelError(data => data.PaymentMethodCriteria[i].Amount, "Amount must be greater than 0", this);
                     }
                 }
             }

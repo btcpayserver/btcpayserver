@@ -11,18 +11,23 @@ namespace BTCPayServer.Models.StoreViewModels
         public class Source
         {
             public bool ShowScripting { get; set; }
+
             [Display(Name = "Rate Rules")]
             [MaxLength(2000)]
             public string Script { get; set; }
+
             public string DefaultScript { get; set; }
+
             [Display(Name = "Preferred Price Source")]
             public string PreferredExchange { get; set; }
+
             public SelectList Exchanges { get; set; }
             public string RateSource { get; set; }
             public string PreferredResolvedExchange { get; set; }
             public bool IsFallback { get; set; }
             public ConfirmModel ScriptingConfirm { get; set; }
         }
+
         public class TestResultViewModel
         {
             public string CurrencyPair { get; set; }
@@ -35,8 +40,9 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public Source PrimarySource { get; set; }
         public Source FallbackSource { get; set; }
+
         [Display(Name = "Enable fallback rates")]
-        public bool HasFallback {get; set; }
+        public bool HasFallback { get; set; }
 
         public string ScriptTest { get; set; }
         public string DefaultCurrencyPairs { get; set; }
@@ -45,6 +51,7 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Add Exchange Rate Spread")]
         [Range(0.0, 100.0)]
         public double Spread { get; set; }
+
         public IEnumerable<RateSourceInfo> AvailableExchanges { get; set; }
     }
 }

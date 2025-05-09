@@ -5,14 +5,21 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Migrations;
+using BTCPayServer.Payments;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
+using StoreData = BTCPayServer.Data.StoreData;
+using StoreWebhookData = BTCPayServer.Data.StoreWebhookData;
+using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.Services.Stores
 {
@@ -94,7 +101,7 @@ namespace BTCPayServer.Services.Stores
                         IsServerRole = u.StoreDataId == null,
                         IsUsed = u.Users.Any()
                 });
-            
+
             var roles = await query.ToArrayAsync();
             // return ordered: default role comes first, then server-wide roles in specified order, followed by store roles
             var defaultRole = await GetDefaultRole();
@@ -359,7 +366,7 @@ namespace BTCPayServer.Services.Stores
 
             if (userStore.StoreRoleId == roleId.Id)
                 return new AddOrUpdateStoreUserResult.DuplicateRole(roleId);
-            
+
             userStore.StoreRoleId = roleId.Id;
             try
             {
@@ -694,6 +701,67 @@ retry:
                       'btcpay.store.canmodifystoresettings' = ANY(sr."Permissions")
                 LIMIT 1;
                 """, new { storeId })) is true;
+        }
+
+        public async Task<StoreData> GetDefaultStoreTemplate()
+        {
+            var data = new StoreData();
+            var policies = await this._settingsRepository.GetSettingAsync<PoliciesSettings>();
+            if (policies?.DefaultStoreTemplate is null)
+                return data;
+            var serializer = new NBXplorer.Serializer(null);
+            serializer.Settings.DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate;
+            var r = serializer.ToObject<RestrictedStoreData>(policies.DefaultStoreTemplate);
+            if (!string.IsNullOrWhiteSpace(r.StoreName))
+                data.StoreName = r.StoreName;
+            if (r.SpeedPolicy is not null)
+                data.SpeedPolicy = r.SpeedPolicy.Value;
+            if (!string.IsNullOrWhiteSpace(r.StoreWebsite))
+                data.StoreWebsite = r.StoreWebsite;
+            if (!string.IsNullOrWhiteSpace(r.DefaultPaymentMethodId) && PaymentMethodId.TryParse(r.DefaultPaymentMethodId, out var paymentMethodId))
+                data.SetDefaultPaymentId(paymentMethodId);
+            if (r?.Blob is not null)
+                data.SetStoreBlob(r.Blob);
+            return data;
+        }
+        public async Task SetDefaultStoreTemplate(string storeId, string userId)
+        {
+            var storeData = await this.FindStore(storeId, userId);
+            if (storeData is null)
+                throw new InvalidOperationException("Store not found, or incorrect permissions");
+            await SetDefaultStoreTemplate(storeData);
+        }
+        public async Task SetDefaultStoreTemplate(StoreData? store)
+        {
+            var policies = await this._settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new();
+            if (store is null)
+            {
+                policies.DefaultStoreTemplate = null;
+                await _settingsRepository.UpdateSetting(policies);
+                return;
+            }
+            var serializer = new NBXplorer.Serializer(null);
+            serializer.Settings.DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate;
+            var r = new RestrictedStoreData()
+            {
+                StoreName = store.StoreName,
+                SpeedPolicy = store.SpeedPolicy,
+                StoreWebsite = store.StoreWebsite,
+                DefaultPaymentMethodId = store.GetDefaultPaymentId()?.ToString(),
+                Blob = store.GetStoreBlob()
+            };
+            policies.DefaultStoreTemplate = JObject.Parse(serializer.ToString(r));
+            await _settingsRepository.UpdateSetting(policies);
+        }
+
+        class RestrictedStoreData
+        {
+            public string? StoreName { get; set; }
+            [JsonConverter(typeof(StringEnumConverter))]
+            public SpeedPolicy? SpeedPolicy { get; set; }
+            public string? StoreWebsite { get; set; }
+            public string? DefaultPaymentMethodId { get; set; }
+            public StoreBlob? Blob { get; set; }
         }
     }
 

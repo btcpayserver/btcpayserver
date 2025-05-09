@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
@@ -12,6 +13,7 @@ using BTCPayServer.Views.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Playwright;
 using NBitcoin;
+using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -37,7 +39,6 @@ namespace BTCPayServer.Tests
             await s.Page.Locator("a:has-text('.log')").First.ClickAsync();
             Assert.Contains("Starting listening NBXplorer", await s.Page.ContentAsync());
         }
-
 
         [Fact]
         public async Task CanUseForms()
@@ -488,6 +489,93 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage(partialText: "Email server password reset");
             Assert.DoesNotContain("Configured", await s.Page.ContentAsync());
             Assert.Contains("test_fix", await s.Page.ContentAsync());
+        }
+
+        [Fact]
+        public async Task CanUseStoreTemplate()
+        {
+            await using var s = CreatePlaywrightTester(newDb: true);
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore(preferredExchange: "Kraken");
+            var client = await s.AsTestAccount().CreateClient();
+            await client.UpdateStore(s.StoreId, new UpdateStoreRequest()
+            {
+                Name = "Can Use Store?",
+                Website = "https://test.com/",
+                CelebratePayment = false,
+                DefaultLang = "fr-FR",
+                NetworkFeeMode = NetworkFeeMode.MultiplePaymentsOnly,
+                ShowStoreHeader = false
+            });
+            await s.GoToServer();
+            await s.Page.ClickAsync("#SetTemplate");
+            await s.FindAlertMessage();
+
+            var newStore = await client.CreateStore(new ());
+            Assert.Equal("Can Use Store?", newStore.Name);
+            Assert.Equal("https://test.com/", newStore.Website);
+            Assert.False(newStore.CelebratePayment);
+            Assert.Equal("fr-FR", newStore.DefaultLang);
+            Assert.Equal(NetworkFeeMode.MultiplePaymentsOnly, newStore.NetworkFeeMode);
+            Assert.False(newStore.ShowStoreHeader);
+
+            newStore = await client.CreateStore(new (){ Name = "Yes you can also customize"});
+            Assert.Equal("Yes you can also customize", newStore.Name);
+            Assert.Equal("https://test.com/", newStore.Website);
+            Assert.False(newStore.CelebratePayment);
+            Assert.Equal("fr-FR", newStore.DefaultLang);
+            Assert.Equal(NetworkFeeMode.MultiplePaymentsOnly, newStore.NetworkFeeMode);
+            Assert.False(newStore.ShowStoreHeader);
+
+            await s.GoToUrl("/stores/create");
+            Assert.Equal("Can Use Store?" ,await s.Page.InputValueAsync("#Name"));
+            await s.Page.FillAsync("#Name", "Just changed it!");
+            await s.Page.ClickAsync("#Create");
+            await s.Page.ClickAsync("#StoreNav-General");
+            var newStoreId = await s.Page.InputValueAsync("#Id");
+            Assert.NotEqual(newStoreId, s.StoreId);
+
+            newStore = await client.GetStore(newStoreId);
+            Assert.Equal("Just changed it!", newStore.Name);
+            Assert.Equal("https://test.com/", newStore.Website);
+            Assert.False(newStore.CelebratePayment);
+            Assert.Equal("fr-FR", newStore.DefaultLang);
+            Assert.Equal(NetworkFeeMode.MultiplePaymentsOnly, newStore.NetworkFeeMode);
+            Assert.False(newStore.ShowStoreHeader);
+
+            await s.GoToServer();
+            await s.Page.ClickAsync("#ResetTemplate");
+            await s.FindAlertMessage(partialText: "Store template successfully unset");
+
+            await s.GoToUrl("/stores/create");
+            Assert.Equal("" ,await s.Page.InputValueAsync("#Name"));
+
+            newStore = await client.CreateStore(new (){ Name = "Test"});
+            Assert.Equal(TimeSpan.FromDays(30), newStore.RefundBOLT11Expiration);
+            Assert.Equal(TimeSpan.FromDays(1), newStore.MonitoringExpiration);
+            Assert.Equal(TimeSpan.FromMinutes(5), newStore.DisplayExpirationTimer);
+            Assert.Equal(TimeSpan.FromMinutes(15), newStore.InvoiceExpiration);
+
+            // What happens if the default template doesn't have all the fields?
+            var settings = s.Server.PayTester.GetService<SettingsRepository>();
+            var policies = await settings.GetSettingAsync<PoliciesSettings>() ?? new();
+            policies.DefaultStoreTemplate = new JObject()
+            {
+                ["blob"] = new JObject()
+                {
+                    ["defaultCurrency"] = "AAA",
+                    ["defaultLang"] = "de-DE"
+                }
+            };
+            await settings.UpdateSetting(policies);
+            newStore = await client.CreateStore(new() { Name = "Test2"});
+            Assert.Equal("AAA", newStore.DefaultCurrency);
+            Assert.Equal("de-DE", newStore.DefaultLang);
+            Assert.Equal(TimeSpan.FromDays(30), newStore.RefundBOLT11Expiration);
+            Assert.Equal(TimeSpan.FromDays(1), newStore.MonitoringExpiration);
+            Assert.Equal(TimeSpan.FromMinutes(5), newStore.DisplayExpirationTimer);
+            Assert.Equal(TimeSpan.FromMinutes(15), newStore.InvoiceExpiration);
         }
     }
 }

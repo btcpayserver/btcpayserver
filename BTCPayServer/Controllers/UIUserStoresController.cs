@@ -24,7 +24,6 @@ namespace BTCPayServer.Controllers
     {
         private readonly StoreRepository _repo;
         private readonly IStringLocalizer StringLocalizer;
-        private readonly SettingsRepository _settingsRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly DefaultRulesCollection _defaultRules;
         private readonly RateFetcher _rateFactory;
@@ -35,15 +34,13 @@ namespace BTCPayServer.Controllers
 			DefaultRulesCollection defaultRules,
             StoreRepository storeRepository,
             IStringLocalizer stringLocalizer,
-            RateFetcher rateFactory,
-            SettingsRepository settingsRepository)
+            RateFetcher rateFactory)
         {
             _repo = storeRepository;
             StringLocalizer = stringLocalizer;
             _userManager = userManager;
             _defaultRules = defaultRules;
             _rateFactory = rateFactory;
-            _settingsRepository = settingsRepository;
         }
 
         [HttpGet]
@@ -79,6 +76,7 @@ namespace BTCPayServer.Controllers
                 IsFirstStore = !(stores.Any() || skipWizard),
                 DefaultCurrency = blob.DefaultCurrency,
                 Exchanges = GetExchangesSelectList(blob.DefaultCurrency, null),
+                CanEditPreferredExchange = blob.GetRateSettings(false)?.RateScripting is not true,
                 PreferredExchange = blob.GetRateSettings(false)?.PreferredExchange
             };
 

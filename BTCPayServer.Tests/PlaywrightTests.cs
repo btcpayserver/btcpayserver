@@ -564,13 +564,14 @@ namespace BTCPayServer.Tests
             {
                 ["blob"] = new JObject()
                 {
-                    ["defaultCurrency"] = "AAA"
+                    ["defaultCurrency"] = "AAA",
+                    ["defaultLang"] = "de-DE"
                 }
             };
             await settings.UpdateSetting(policies);
-
-            newStore = await client.CreateStore(new (){ Name = "Test2"});
+            newStore = await client.CreateStore(new() { Name = "Test2"});
             Assert.Equal("AAA", newStore.DefaultCurrency);
+            Assert.Equal("de-DE", newStore.DefaultLang);
             Assert.Equal(TimeSpan.FromDays(30), newStore.RefundBOLT11Expiration);
             Assert.Equal(TimeSpan.FromDays(1), newStore.MonitoringExpiration);
             Assert.Equal(TimeSpan.FromMinutes(5), newStore.DisplayExpirationTimer);

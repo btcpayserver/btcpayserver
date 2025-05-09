@@ -374,7 +374,7 @@ namespace BTCPayServer.Controllers
                 else
                 {
                     await _StoreRepository.SetDefaultStoreTemplate(storeId, GetUserId());
-                    this.TempData.SetStatusSuccess(StringLocalizer["Store template created from this store"]);
+                    this.TempData.SetStatusSuccess(StringLocalizer["Store template created from store '{0}'. New stores will inherit these settings.", HttpContext.GetStoreData().StoreName]);
                 }
                 return RedirectToAction(nameof(Policies));
             }

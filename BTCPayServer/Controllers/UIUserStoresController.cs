@@ -94,7 +94,7 @@ namespace BTCPayServer.Controllers
                 var stores = await _repo.GetStoresByUserId(GetUserId());
                 vm.IsFirstStore = !stores.Any();
                 var template = await _repo.GetDefaultStoreTemplate();
-                var defaultCurrency = template?.GetStoreBlob()?.DefaultCurrency ?? StoreBlob.StandardDefaultCurrency;
+                var defaultCurrency = template.GetStoreBlob().DefaultCurrency ?? StoreBlob.StandardDefaultCurrency;
                 vm.Exchanges = GetExchangesSelectList(defaultCurrency, null);
                 return View(vm);
             }

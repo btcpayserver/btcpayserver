@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -41,8 +40,6 @@ namespace BTCPayServer.Tests
             await Server.StartAsync();
             var builder = new ConfigurationBuilder();
             builder.AddUserSecrets("AB0AC1DD-9D26-485B-9416-56A33F268117");
-            var config = builder.Build();
-
             var playwright = await Playwright.CreateAsync();
             Browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
@@ -92,7 +89,7 @@ namespace BTCPayServer.Tests
             }
             else
             {
-                await GoToUrl(storeId == null ? "/invoices/" : $"/stores/{storeId}/invoices/");
+                await GoToUrl($"/stores/{storeId}/invoices/");
                 StoreId = storeId;
             }
         }
@@ -122,9 +119,9 @@ namespace BTCPayServer.Tests
                 await Page.SelectOptionAsync("select[name='DefaultPaymentMethod']", new SelectOptionValue { Value = defaultPaymentMethod });
             await ClickPagePrimary();
 
-            var statusText = (await FindAlertMessage(expectedSeverity)).TextContentAsync();
+            var statusText = await (await FindAlertMessage(expectedSeverity)).TextContentAsync();
             var inv = expectedSeverity == StatusMessageModel.StatusSeverity.Success
-                ? Regex.Match(await statusText, @"Invoice (\w+) just created!").Groups[1].Value
+                ? Regex.Match(statusText!, @"Invoice (\w+) just created!").Groups[1].Value
                 : null;
 
             InvoiceId = inv;
@@ -244,7 +241,7 @@ namespace BTCPayServer.Tests
             await Page.FillAsync("#Name", name);
 
             var selectedOption = await Page.Locator("#PreferredExchange option:checked").TextContentAsync();
-            Assert.Equal("Recommendation (Kraken)", selectedOption.Trim());
+            Assert.Equal("Recommendation (Kraken)", selectedOption?.Trim());
             await Page.Locator("#PreferredExchange").SelectOptionAsync(new SelectOptionValue { Label = preferredExchange });
             await Page.ClickAsync("#Create");
             await Page.ClickAsync("#StoreNav-General");
@@ -478,7 +475,7 @@ namespace BTCPayServer.Tests
             walletId ??= WalletId;
             await GoToWallet(walletId, WalletsNavPages.Receive);
             var addressStr = await Page.Locator("#Address").GetAttributeAsync("data-text");
-            var address = BitcoinAddress.Create(addressStr, ((BTCPayNetwork)Server.NetworkProvider.GetNetwork(walletId.CryptoCode)).NBitcoinNetwork);
+            var address = BitcoinAddress.Create(addressStr!, ((BTCPayNetwork)Server.NetworkProvider.GetNetwork(walletId.CryptoCode)).NBitcoinNetwork);
             for (var i = 0; i < coins; i++)
             {
                 bool mined = false;

@@ -11,23 +11,16 @@ using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests;
 
-[Collection(nameof(NonParallelizableCollectionDefinition))]
 [Trait("Integration", "Integration")]
-public class FormTests : UnitTestBase
+[Collection(nameof(SharedServerCollection))]
+public class FormTests(Fixtures.SharedServerFixture fixture, ITestOutputHelper helper)
 {
-    public FormTests(ITestOutputHelper helper) : base(helper)
-    {
-    }
-
-
     [Fact(Timeout = TestUtils.TestTimeout)]
-    [Trait("Integration", "Integration")]  
     public async Task CanParseForm()
     {
-        using var tester = CreateServerTester();
-        await tester.StartAsync();
+        var tester = await fixture.GetServerTester(helper);
         var user = tester.NewAccount();
-        user.GrantAccess();
+        await user.GrantAccessAsync();
         var service = tester.PayTester.GetService<FormDataService>();
 
         var form = new Form()
@@ -190,11 +183,11 @@ public class FormTests : UnitTestBase
                 }
             }
         };
-        
+
         service.SetValues(form, obj);
         obj = service.GetValues(form);
         Assert.Null(obj["test"].Value<string>());
-        
+
         service.SetValues(form, new JObject { ["test"] = "hello" });
         obj = service.GetValues(form);
         Assert.Equal("hello", obj["test"].Value<string>());
@@ -202,7 +195,7 @@ public class FormTests : UnitTestBase
         var req = service.GenerateInvoiceParametersFromForm(form);
         Assert.Null(req.Amount);
         Assert.Null(req.Currency);
-        
+
         form.Fields.Add(new Field
         {
             Name = $"{FormDataService.InvoiceParameterPrefix}amount",
@@ -211,7 +204,7 @@ public class FormTests : UnitTestBase
         });
         req = service.GenerateInvoiceParametersFromForm(form);
         Assert.Equal(1, req.Amount);
-        
+
         form.Fields.Add(new Field
         {
             Name = $"{FormDataService.InvoiceParameterPrefix}amount_adjustment",
@@ -235,7 +228,7 @@ public class FormTests : UnitTestBase
         req = service.GenerateInvoiceParametersFromForm(form);
         Assert.Equal("eur", req.Currency);
         Assert.Equal(4, req.Amount);
-        
+
 
         form.Fields.Add(new Field
         {
@@ -243,18 +236,18 @@ public class FormTests : UnitTestBase
             Type = "number",
             Value = "2"
         });
-        
+
         req = service.GenerateInvoiceParametersFromForm(form);
         Assert.Equal(8, req.Amount);
-        
-        
+
+
         form.Fields.Add(new Field
         {
             Name = $"{FormDataService.InvoiceParameterPrefix}amount_multiply_adjustment1",
             Type = "number",
             Value = "2"
         });
-        
+
         req = service.GenerateInvoiceParametersFromForm(form);
         Assert.Equal(16, req.Amount);
     }

@@ -40,6 +40,7 @@ using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
+using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
@@ -76,19 +77,15 @@ using MarkPayoutRequest = BTCPayServer.Client.Models.MarkPayoutRequest;
 using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 using Microsoft.Extensions.Caching.Memory;
 using PosViewType = BTCPayServer.Client.Models.PosViewType;
-using BTCPayServer.PaymentRequest;
 using BTCPayServer.Views.Stores;
 
 namespace BTCPayServer.Tests
 {
-    [Collection(nameof(NonParallelizableCollectionDefinition))]
-    public class UnitTest1 : UnitTestBase
+    [Collection(nameof(SharedServerCollection))]
+    public class UnitTest1(Fixtures.SharedServerFixture fixture, ITestOutputHelper helper)
+        : UnitTestBase(helper)
     {
         public const int LongRunningTestTimeout = 60_000; // 60s
-
-        public UnitTest1(ITestOutputHelper helper) : base(helper)
-        {
-        }
 
         class DockerImage
         {
@@ -140,8 +137,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CheckSwaggerIsConformToSchema()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var acc = tester.NewAccount();
 
             var sresp = Assert
@@ -172,8 +168,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task EnsureSwaggerPermissionsDocumented()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var acc = tester.NewAccount();
 
             var description = UtilitiesTests.GetSecuritySchemeDescription();
@@ -196,8 +191,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanStoreArbitrarySettingsWithStore()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             var settingsRepo = tester.PayTester.ServiceProvider.GetRequiredService<IStoreRepository>();
@@ -292,10 +286,9 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanAcceptInvoiceWithTolerance2()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
-            user.GrantAccess();
+            await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
 
             // Set tolerance to 50%
@@ -334,10 +327,9 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanThrowBitpay404Error()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
-            user.GrantAccess();
+            await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
 
             var invoice = user.BitPay.CreateInvoice(
@@ -494,7 +486,7 @@ namespace BTCPayServer.Tests
             // For easier debugging and testing
             // LightningLikePaymentHandler.LIGHTNING_TIMEOUT = int.MaxValue;
 
-            using var tester = CreateServerTester();
+            using var tester = CreateServerTester(nameof(ProcessLightningPayment) + type);
             tester.ActivateLightning();
             await tester.StartAsync();
             await tester.EnsureChannelsSetup();
@@ -536,11 +528,10 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUseServerInitiatedPairingCode()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var acc = tester.NewAccount();
-            acc.Register();
-            acc.CreateStore();
+            await acc.RegisterAsync();
+            await acc.CreateStoreAsync();
 
             var controller = acc.GetController<UIStoresController>();
             var token = (RedirectToActionResult)await controller.CreateToken2(
@@ -562,8 +553,7 @@ namespace BTCPayServer.Tests
         public async Task CanSendIPN()
         {
             using var callbackServer = new CustomServer();
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var acc = tester.NewAccount();
             await acc.GrantAccessAsync();
             acc.RegisterDerivationScheme("BTC");
@@ -630,11 +620,10 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CantPairTwiceWithSamePubkey()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var acc = tester.NewAccount();
-            acc.Register();
-            acc.CreateStore();
+            await acc.RegisterAsync();
+            await acc.CreateStoreAsync();
             var store = acc.GetController<UIStoresController>();
             var pairingCode = acc.BitPay.RequestClientAuthorization("test", Facade.Merchant);
             Assert.IsType<RedirectToActionResult>(store.Pair(pairingCode.ToString(), acc.StoreId).GetAwaiter()
@@ -652,8 +641,7 @@ namespace BTCPayServer.Tests
         [Trait("Flaky", "Flaky")]
         public async Task CanUseTorClient()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var httpFactory = tester.PayTester.GetService<IHttpClientFactory>();
             var client = httpFactory.CreateClient(PayjoinServerCommunicator.PayjoinOnionNamedClient);
             Assert.NotNull(client);
@@ -705,10 +693,9 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanRescanWallet()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var acc = tester.NewAccount();
-            acc.GrantAccess();
+            await acc.GrantAccessAsync();
             acc.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit);
             var btcDerivationScheme = acc.DerivationScheme;
 
@@ -802,8 +789,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanListInvoices()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var acc = tester.NewAccount();
             await acc.GrantAccessAsync();
             acc.RegisterDerivationScheme("BTC");
@@ -854,10 +840,9 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanGetRates()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var acc = tester.NewAccount();
-            acc.GrantAccess();
+            await acc.GrantAccessAsync();
             acc.RegisterDerivationScheme("BTC");
 
             var rateController = acc.GetController<BitpayRateController>();
@@ -920,8 +905,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanRBFPayment()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
@@ -1074,8 +1058,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanSaveKeyPathForOnChainPayments()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             await user.RegisterDerivationSchemeAsync("BTC");
@@ -1102,8 +1085,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CheckCORSSetOnBitpayAPI()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             foreach (var req in new[] { "invoices/", "invoices", "rates", "tokens" }.Select(async path =>
               {
                   using HttpClient client = new HttpClient();
@@ -1133,11 +1115,10 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task TestAccessBitpayAPI()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
             Assert.False(user.BitPay.TestAccess(Facade.Merchant));
-            user.GrantAccess();
+            await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
 
             Assert.True(user.BitPay.TestAccess(Facade.Merchant));
@@ -1217,10 +1198,9 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUseAnyoneCanCreateInvoice()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
-            user.GrantAccess();
+            await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
 
             TestLogs.LogInformation("StoreId without anyone can create invoice = 403");
@@ -1267,10 +1247,9 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanTweakRate()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
-            user.GrantAccess();
+            await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
             // First we try payment with a merchant having only BTC
             var invoice1 = user.BitPay.CreateInvoice(
@@ -1313,8 +1292,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanCreateTopupInvoices()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
@@ -1380,195 +1358,11 @@ namespace BTCPayServer.Tests
             });
         }
 
-        [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Playwright", "Playwright")]
-        public async Task CanModifyRates()
-        {
-            await using var tester = CreatePlaywrightTester();
-            await tester.StartAsync();
-            await tester.RegisterNewUser(true);
-            await tester.CreateNewStore();
-            await tester.GoToStore();
-            await tester.GoToStore(StoreNavPages.Rates);
-
-            async Task Test(string pairs)
-            {
-                await tester.Page.FillAsync("#ScriptTest", pairs);
-                await tester.Page.ClickAsync("button[value='Test']");
-            }
-
-            foreach (var fallback in new[] { false, true })
-            {
-                tester.TestLogs.LogInformation($"Testing rates (fallback={fallback})");
-                var source = fallback ? "FallbackSource" : "PrimarySource";
-                var toggleScriptSelector = $"#{source}_ShowScripting_submit";
-
-                var l = tester.Page.Locator(toggleScriptSelector);
-                await l.WaitForAsync();
-                Assert.DoesNotContain("btcpay-toggle--active", await l.GetAttributeAsync("class"));
-                if (fallback)
-                {
-                    Assert.Equal("", await tester.Page.Locator($"#{source}_PreferredExchange").InputValueAsync());
-                }
-                else
-                {
-                    Assert.Equal(CoinGeckoRateProvider.CoinGeckoName, await tester.Page.Locator($"#{source}_PreferredExchange").InputValueAsync());
-                }
-
-                Assert.Equal("0", await tester.Page.InputValueAsync("#Spread"));
-                await tester.Page.SelectOptionAsync($"#{source}_PreferredExchange", "bitflyer");
-                await tester.ClickPagePrimary();
-                await tester.FindAlertMessage();
-
-                await tester.Page.FillAsync("#Spread", "10");
-                await Test("BTC_JPY,BTC_CAD");
-                var rules = await tester.Page.Locator(".testresult .testresult_rule").AllAsync();
-                if (fallback)
-                {
-                    // If fallback is set, we should see the results of the fallback too
-                    Assert.Contains("(coingecko(BTC_CAD)) * (0.9, 1.1) = 4050.0", await rules[0].InnerTextAsync());
-                    Assert.Contains("(ERR_RATE_UNAVAILABLE(bitflyer, BTC_CAD)) * (0.9, 1.1)", await rules[1].InnerTextAsync());
-                    Assert.Contains("(ERR_RATE_UNAVAILABLE(coingecko, BTC_JPY)) * (0.9, 1.1)", await rules[2].InnerTextAsync());
-                    Assert.Contains("(bitflyer(BTC_JPY)) * (0.9, 1.1) = 630000.0", await rules[3].InnerTextAsync());
-                }
-                else
-                {
-                    Assert.Contains("(ERR_RATE_UNAVAILABLE(bitflyer, BTC_CAD))", await rules[0].InnerTextAsync());
-                    Assert.Contains("(bitflyer(BTC_JPY)) * (0.9, 1.1) =", await rules[1].InnerTextAsync());
-                }
-
-                await tester.ClickPagePrimary();
-                await tester.FindAlertMessage();
-
-                await tester.Page.ClickAsync(toggleScriptSelector);
-                await tester.FindAlertMessage(partialText: "Rate rules scripting activated");
-
-                l = tester.Page.Locator(toggleScriptSelector);
-                await l.WaitForAsync();
-                Assert.Contains("btcpay-toggle--active", await l.GetAttributeAsync("class"));
-
-                var script = await tester.Page.InputValueAsync($"#{source}_Script");
-                var defaultScript = await tester.Page.GetAttributeAsync($"#{source}_DefaultScript", "data-defaultScript");
-                Assert.Contains("X_JPY = bitbank(X_JPY);", defaultScript);
-                Assert.Contains("X_TRY = btcturk(X_TRY);", defaultScript);
-
-                await Test("BTC_JPY");
-                rules = await tester.Page.Locator(".testresult .testresult_rule").AllAsync();
-                if (fallback)
-                {
-                    Assert.Contains("(ERR_RATE_UNAVAILABLE(coingecko, BTC_JPY)) * (0.9, 1.1)", await rules[0].InnerTextAsync());
-                    Assert.Contains("(bitflyer(BTC_JPY)) * (0.9, 1.1) = 630000.0", await rules[1].InnerTextAsync());
-                }
-                else
-                {
-                    Assert.Contains("(bitflyer(BTC_JPY)) * (0.9, 1.1) =", await rules[0].InnerTextAsync());
-                }
-
-                await tester.Page.FillAsync("#Spread", "50");
-                await tester.Page.FillAsync($"#{source}_Script","""
-                                                                DOGE_X = bitpay(DOGE_BTC) * BTC_X;
-                                                                X_CAD = ndax(X_CAD);
-                                                                X_X = coingecko(X_X);
-                                                                """);
-                await Test("BTC_USD,BTC_CAD,DOGE_USD,DOGE_CAD");
-                rules = await tester.Page.Locator(".testresult").AllAsync();
-                if (fallback)
-                {
-                    Assert.Equal(8, rules.Count);
-                }
-                else
-                {
-                    Assert.Equal(4, rules.Count);
-                    foreach (var rule in rules)
-                    {
-                        await rule.Locator(".testresult_success").WaitForAsync();
-                        Assert.Contains("(0.5, 1.5)", await rule.InnerTextAsync());
-                    }
-                }
-
-                await tester.ClickPagePrimary();
-                Assert.Equal("50", await tester.Page.InputValueAsync("#Spread"));
-                var beforeReset = await tester.Page.InputValueAsync($"#{source}_Script");
-                Assert.Contains("X_CAD = ndax(X_CAD);", beforeReset);
-                await tester.Page.ClickAsync($"#{source}_DefaultScript");
-                var afterReset = await tester.Page.InputValueAsync($"#{source}_Script");
-                Assert.NotEqual(beforeReset, afterReset);
-
-                await tester.Page.ClickAsync(toggleScriptSelector);
-                await tester.ConfirmModal();
-                await tester.FindAlertMessage(partialText: "Rate rules scripting deactivated");
-
-                l = tester.Page.Locator(toggleScriptSelector);
-                await l.WaitForAsync();
-                Assert.DoesNotContain("btcpay-toggle--active", await l.GetAttributeAsync("class"));
-
-                if (fallback)
-                {
-                    await tester.Page.ClickAsync("#HasFallback");
-                    await tester.ClickPagePrimary();
-                    await tester.Page.FillAsync("#Spread", "0");
-                    await tester.ClickPagePrimary();
-                }
-                else
-                {
-                    await tester.Page.ClickAsync("#HasFallback");
-                    await tester.ClickPagePrimary();
-                    await tester.FindAlertMessage();
-                    await tester.Page.SelectOptionAsync($"#{source}_PreferredExchange", CoinGeckoRateProvider.CoinGeckoName);
-                    await tester.Page.FillAsync("#Spread", "0");
-                    await tester.ClickPagePrimary();
-                }
-            }
-
-            await tester.Page.ClickAsync("#HasFallback");
-            await tester.ClickPagePrimary();
-            await tester.FindAlertMessage();
-            await tester.Page.SelectOptionAsync($"#PrimarySource_PreferredExchange", CoinGeckoRateProvider.CoinGeckoName);
-            await tester.Page.SelectOptionAsync($"#FallbackSource_PreferredExchange", "bitflyer");
-
-            await tester.Page.FillAsync("#DefaultCurrencyPairs", "BTC_JPY,BTC_CAD");
-            await tester.ClickPagePrimary();
-
-            using var req = await tester.Server.PayTester.HttpClient.GetAsync($"/api/rates?storeId={tester.StoreId}");
-            var rates = JArray.Parse(await req.Content.ReadAsStringAsync());
-            foreach (var expected in new[]
-                     {
-                         (name: "BTC_JPY", rate: 700000m),
-                         (name: "BTC_CAD", rate: 4500m)
-                     })
-            {
-                // JPY is handled by the fallback, CAD by the primary
-                var r = rates.First(r => r["currencyPair"].ToString() == expected.name);
-                Assert.Equal(expected.rate, r["rate"]!.Value<decimal>());
-            }
-
-            await tester.GenerateWallet();
-            var invoiceId = await tester.CreateInvoice(currency: "JPY", amount: 700000m);
-            var client = await tester.AsTestAccount().CreateClient();
-            var paymentMethods = await client.GetInvoicePaymentMethods(tester.StoreId, invoiceId);
-            Assert.Equal(1.0m, paymentMethods[0].Amount);
-
-            // The fallback doesn't support JPY anymore
-            var a = await client.GetStoreRateConfiguration(tester.StoreId, fallback: false);
-            var b = await client.GetStoreRateConfiguration(tester.StoreId, fallback: true);
-            Assert.Equal("coingecko", a.PreferredSource);
-            Assert.Equal("bitflyer", b.PreferredSource);
-            await client.UpdateStoreRateConfiguration(tester.StoreId, new()
-            {
-                PreferredSource = "coingecko"
-            }, true);
-            b = await client.GetStoreRateConfiguration(tester.StoreId, fallback: true);
-            Assert.Equal("coingecko", b.PreferredSource);
-            await tester.CreateInvoice(currency: "JPY", amount: 700000m, expectedSeverity: StatusMessageModel.StatusSeverity.Error);
-        }
-
-
         [Fact]
         [Trait("Integration", "Integration")]
         public async Task CanTopUpPullPayment()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
             await user.GrantAccessAsync(true);
             await user.RegisterDerivationSchemeAsync("BTC");
@@ -1601,8 +1395,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUseDefaultCurrency()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
             await user.GrantAccessAsync(true);
             user.RegisterDerivationScheme("BTC");
@@ -1840,8 +1633,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task PosDataParser_ParsesCorrectly_Slower()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
             user.GrantAccess();
             user.RegisterDerivationScheme("BTC");
@@ -1868,9 +1660,8 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanChangeNetworkFeeMode()
         {
-            using var tester = CreateServerTester();
+            var tester = await fixture.GetServerTester(helper);
             var btc = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
-            await tester.StartAsync();
             var user = tester.NewAccount();
             user.GrantAccess();
             user.RegisterDerivationScheme("BTC");
@@ -1952,8 +1743,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanCreateAndDeleteApps()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             var user2 = tester.NewAccount();
@@ -2108,8 +1898,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task EnsureWebhooksTrigger()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
@@ -2270,8 +2059,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task InvoiceFlowThroughDifferentStatesCorrectly()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
@@ -2453,8 +2241,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CheckLogsRoute()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
             user.GrantAccess();
             user.RegisterDerivationScheme("BTC");
@@ -2467,8 +2254,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanLoginWithNoSecondaryAuthSystemsOrRequestItWhenAdded()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
             user.GrantAccess();
 
@@ -2540,8 +2326,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CheckOnionlocationForNonOnionHtmlRequests()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var url = tester.PayTester.ServerUri.AbsoluteUri;
 
             // check onion location is present for HTML page request
@@ -2589,8 +2374,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanCheckForNewVersion()
         {
-            using var tester = CreateServerTester(newDb: true);
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
 
             var acc = tester.NewAccount();
             acc.GrantAccess(true);
@@ -3210,10 +2994,9 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanConfigureStorage()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
-            user.GrantAccess();
+            await user.GrantAccessAsync();
             var controller = tester.PayTester.GetController<UIServerController>(user.UserId, user.StoreId);
 
 
@@ -3291,8 +3074,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUseLocalProviderFiles()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             var controller = tester.PayTester.GetController<UIServerController>(user.UserId, user.StoreId);
@@ -3561,6 +3343,64 @@ namespace BTCPayServer.Tests
             var redirect = resp.AssertType<RedirectToActionResult>();
             Assert.Equal("Checkout", redirect.ActionName);
             return (string)redirect.RouteValues["invoiceId"];
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanUsePoSAppJsonEndpoint()
+        {
+            var tester = await fixture.GetServerTester(helper);
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            user.RegisterDerivationScheme("BTC");
+            var apps = user.GetController<UIAppsController>();
+            var pos = user.GetController<UIPointOfSaleController>();
+            var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
+            var appType = PointOfSaleAppType.AppType;
+            vm.AppName = "test";
+            vm.SelectedAppType = appType;
+            var redirect = Assert.IsType<RedirectResult>(apps.CreateApp(user.StoreId, vm).Result);
+            Assert.EndsWith("/settings/pos", redirect.Url);
+            var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
+            var app = appList.Apps[0];
+            var appData = new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = appType };
+            apps.HttpContext.SetAppData(appData);
+            pos.HttpContext.SetAppData(appData);
+            var vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
+            vmpos.Title = "App POS";
+            vmpos.Currency = "EUR";
+            Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
+
+            // Failing requests
+            var (invoiceId1, error1) = await PosJsonRequest(tester, app.Id, "amount=-21&discount=10&tip=2");
+            Assert.Null(invoiceId1);
+            Assert.Equal("Negative amount is not allowed", error1);
+            var (invoiceId2, error2) = await PosJsonRequest(tester, app.Id, "amount=21&discount=-10&tip=-2");
+            Assert.Null(invoiceId2);
+            Assert.Equal("Negative tip or discount is not allowed", error2);
+
+            // Successful request
+            var (invoiceId3, error3) = await PosJsonRequest(tester, app.Id, "amount=21");
+            Assert.NotNull(invoiceId3);
+            Assert.Null(error3);
+
+            // Check generated invoice
+            var invoices = await user.BitPay.GetInvoicesAsync();
+            var invoice = invoices.First();
+            Assert.Equal(invoiceId3, invoice.Id);
+            Assert.Equal(21.00m, invoice.Price);
+            Assert.Equal("EUR", invoice.Currency);
+        }
+
+        private async Task<(string invoiceId, string error)> PosJsonRequest(ServerTester tester, string appId, string query)
+        {
+            var uriBuilder = new UriBuilder(tester.PayTester.ServerUri) { Path = $"/apps/{appId}/pos/light", Query = query };
+            var request = new HttpRequestMessage(HttpMethod.Post, uriBuilder.Uri);
+            request.Headers.Add("Accept", "application/json");
+            var response = await tester.PayTester.HttpClient.SendAsync(request);
+            var content = await response.Content.ReadAsStringAsync();
+            var json = JObject.Parse(content);
+            return (json["invoiceId"]?.Value<string>(), json["error"]?.Value<string>());
         }
     }
 }

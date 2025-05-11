@@ -35,21 +35,17 @@ using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {
-    [Collection(nameof(NonParallelizableCollectionDefinition))]
-    public class PayJoinTests : UnitTestBase
+    [Collection(nameof(SharedServerCollection))]
+    public class PayJoinTests(Fixtures.SharedServerFixture fixture, ITestOutputHelper helper)
+        : UnitTestBase(helper)
     {
         public const int TestTimeout = 60_000;
-
-        public PayJoinTests(ITestOutputHelper helper) : base(helper)
-        {
-        }
 
         [Fact]
         [Trait("Integration", "Integration")]
         public async Task CanUseTheDelayedBroadcaster()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
             var broadcaster = tester.PayTester.GetService<DelayedTransactionBroadcaster>();
             await broadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromDays(500), RandomTransaction(network), network);
@@ -57,9 +53,10 @@ namespace BTCPayServer.Tests
             await broadcaster.Schedule(DateTimeOffset.UtcNow - TimeSpan.FromDays(5), tx, network);
             // twice on same tx should be noop
             await broadcaster.Schedule(DateTimeOffset.UtcNow - TimeSpan.FromDays(5), tx, network);
-            broadcaster.Disable();
-            Assert.Equal(0, await broadcaster.ProcessAll());
-            broadcaster.Enable();
+            using (var d = broadcaster.Disable())
+            {
+                Assert.Equal(0, await broadcaster.ProcessAll());
+            }
             Assert.Equal(1, await broadcaster.ProcessAll());
             Assert.Equal(0, await broadcaster.ProcessAll());
         }
@@ -67,8 +64,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUsePayjoinRepository()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
             var repo = tester.PayTester.GetService<UTXOLocker>();
             var outpoint = RandomOutpoint();
@@ -105,8 +101,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task ChooseBestUTXOsForPayjoin()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
             var controller = tester.PayTester.GetService<PayJoinEndpointController>();
 
@@ -187,16 +182,14 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanOnlyUseCorrectAddressFormatsForPayjoin()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var broadcaster = tester.PayTester.GetService<DelayedTransactionBroadcaster>();
             tester.PayTester.GetService<UTXOLocker>();
-            broadcaster.Disable();
+            using var r = broadcaster.Disable();
             var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
             tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet(network);
             var cashCow = tester.ExplorerNode;
             cashCow.Generate(2); // get some money in case
-
             var unsupportedFormats = new[] { ScriptPubKeyType.Legacy };
 
 
@@ -419,6 +412,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUsePayjoin2()
         {
+            // Modify the pjClient, so better having a new server.
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var pjClient = tester.PayTester.GetService<PayjoinClient>();
@@ -641,12 +635,11 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUsePayjoinFeeCornerCase()
         {
-            using (var tester = CreateServerTester())
+            var tester = await fixture.GetServerTester(helper);
             {
-                await tester.StartAsync();
                 var broadcaster = tester.PayTester.GetService<DelayedTransactionBroadcaster>();
                 var payjoinRepository = tester.PayTester.GetService<UTXOLocker>();
-                broadcaster.Disable();
+                using var r = broadcaster.Disable();
                 var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
                 var btcPayWallet = tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet(network);
                 var cashCow = tester.ExplorerNode;
@@ -831,10 +824,8 @@ retry:
         [Trait("Integration", "Integration")]
         public async Task CanUsePayjoin()
         {
-            using (var tester = CreateServerTester())
+            var tester = await fixture.GetServerTester(helper);
             {
-                await tester.StartAsync();
-
                 ////var payJoinStateProvider = tester.PayTester.GetService<PayJoinStateProvider>();
                 var btcPayNetwork = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
                 var btcPayWallet = tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet(btcPayNetwork);
@@ -981,8 +972,8 @@ retry:
                     .BuildTransaction(true);
 
 
-                //Attempt 2: Create two transactions using different inputs and send them to the same invoice. 
-                //Result: Second Tx should be rejected. 
+                //Attempt 2: Create two transactions using different inputs and send them to the same invoice.
+                //Result: Second Tx should be rejected.
                 var Invoice1Coin1ResponseTx = await senderUser.SubmitPayjoin(invoice, Invoice1Coin1, btcPayNetwork);
 
                 await senderUser.SubmitPayjoin(invoice, Invoice1Coin1, btcPayNetwork, "already-paid");

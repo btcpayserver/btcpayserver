@@ -130,15 +130,15 @@ namespace BTCPayServer.Services
             };
         }
 
+        class ActionDisposable(Action act) : IDisposable
+        {
+            public void Dispose() => act();
+        }
         private bool disabled = false;
-        public void Disable()
+        public IDisposable Disable()
         {
             disabled = true;
-        }
-
-        public void Enable()
-        {
-            disabled = false;
+            return new ActionDisposable(() => disabled = false);
         }
     }
 }

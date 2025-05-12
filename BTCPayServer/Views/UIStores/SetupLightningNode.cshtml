@@ -65,7 +65,7 @@
                 <label asp-for="ConnectionString" class="form-label" text-translate="true">Connection configuration for your custom Lightning node:</label>
                 <div class="d-sm-flex">
                     <textarea asp-for="ConnectionString" class="form-control mb-2 me-2" placeholder="type=…;server=…;"
-                              rows="4">@(Model.LightningNodeType == LightningNodeType.Internal ? "" : Model.ConnectionString)"</textarea>
+                              rows="4">@(Model.LightningNodeType == LightningNodeType.Internal ? "" : Model.ConnectionString)</textarea>
                 </div>
                 <div class="d-sm-flex">
                     <button id="test" name="command" type="submit" value="test" class="btn btn-secondary text-nowrap mb-2" text-translate="true">

@@ -160,7 +160,7 @@ namespace BTCPayServer.Hosting
             //
 
             AddOnchainWalletParsers(services);
-            
+
 
             services.AddStartupTask<BlockExplorerLinkStartupTask>();
             services.AddStartupTask<LoadCurrencyNameTableStartupTask>();
@@ -597,6 +597,7 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             services.AddRateProvider<FreeCurrencyRatesRateProvider>();
             services.AddRateProvider<BitmyntRateProvider>();
             services.AddRateProvider<BareBitcoinRateProvider>();
+            services.AddRateProvider<CoinmateRateProvider>();
 
             services.AddSingleton<InvoiceBlobMigratorHostedService>();
             services.AddSingleton<IHostedService, InvoiceBlobMigratorHostedService>(o => o.GetRequiredService<InvoiceBlobMigratorHostedService>());

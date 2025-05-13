@@ -198,8 +198,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
 
             var jposData = TryParseJObject(posData);
-            string title;
-            decimal? price;
+            string title = settings.Title;
+            PoSOrder order = new(_currencies.GetNumberFormatInfo(settings.Currency, true).CurrencyDecimalDigits);
+            if (settings.DefaultTaxRate is { } rate)
+                order.SetTaxRate(rate);
             Dictionary<string, InvoiceSupportedTransactionCurrency> paymentMethods = null;
             AppItem choice = null;
             List<AppCartItem> cartItems = null;
@@ -213,13 +215,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 title = choice.Title;
                 if (choice.PriceType == AppItemPriceType.Topup)
                 {
-                    price = null;
+                    order = null;
                 }
                 else
                 {
-                    price = choice.Price.Value;
-                    if (amount > price)
-                        price = amount;
+                    order.AddLine(new(choice.Id, 1, Math.Max(choice.Price.Value, amount ?? 0m), choice.TaxRate));
                 }
 
                 if (choice.Inventory is <= 0)
@@ -227,55 +227,49 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     return RedirectToAction(nameof(ViewPointOfSale), new { appId });
                 }
             }
-            else
+            else if ((currentView == PosViewType.Light || settings.ShowCustomAmount) && amount is { } a)
             {
-                if (!settings.ShowCustomAmount && currentView != PosViewType.Cart && currentView != PosViewType.Light)
-                    return NotFound();
-
-                title = settings.Title;
-                // if cart IS enabled and we detect posdata that matches the cart system's, check inventory for the items
-                price = amount;
-                if (AppService.TryParsePosCartItems(jposData, out cartItems))
-                {
-                    price = jposData.TryGetValue("amounts", out var amounts) && amounts is JArray { Count: > 0 } amountsArray
-                        ? amountsArray.Values<decimal>().Sum()
-                        : 0.0m;
-                    choices = AppService.Parse(settings.Template, false);
-                    foreach (var cartItem in cartItems)
-                    {
-                        var itemChoice = choices.FirstOrDefault(item => item.Id == cartItem.Id);
-                        if (itemChoice == null)
-                            return NotFound();
-
-                        if (itemChoice.Inventory.HasValue)
-                        {
-                            switch (itemChoice.Inventory)
-                            {
-                                case <= 0:
-                                case { } inventory when inventory < cartItem.Count:
-                                    return wantsJson
-                                        ? Json(new { error = $"Inventory for {itemChoice.Title} exhausted: {itemChoice.Inventory} available" })
-                                        : RedirectToAction(nameof(ViewPointOfSale), new { appId });
-                            }
-                        }
-
-                        var expectedCartItemPrice = itemChoice.PriceType != AppItemPriceType.Topup
-                            ? itemChoice.Price ?? 0
-                            : 0;
-
-                        if (cartItem.Price < expectedCartItemPrice)
-                            cartItem.Price = expectedCartItemPrice;
-
-                        price += cartItem.Price * cartItem.Count;
-                    }
-                    if (customAmount is { } c)
-                        price += c;
-                    if (discount is { } d)
-                        price -= price * d / 100.0m;
-                    if (tip is { } t)
-                        price += t;
-                }
+                order.AddLine(new("", 1, a));
             }
+            else if (currentView == PosViewType.Cart && AppService.TryParsePosCartItems(jposData, out cartItems))
+            {
+                choices = AppService.Parse(settings.Template, false);
+                foreach (var cartItem in cartItems)
+                {
+                    var itemChoice = choices.FirstOrDefault(item => item.Id == cartItem.Id);
+                    if (itemChoice == null)
+                        return NotFound();
+
+                    if (itemChoice.Inventory.HasValue)
+                    {
+                        switch (itemChoice.Inventory)
+                        {
+                            case <= 0:
+                            case { } inventory when inventory < cartItem.Count:
+                                return wantsJson
+                                    ? Json(new { error = $"Inventory for {itemChoice.Title} exhausted: {itemChoice.Inventory} available" })
+                                    : RedirectToAction(nameof(ViewPointOfSale), new { appId });
+                        }
+                    }
+
+                    var expectedCartItemPrice = itemChoice.PriceType != AppItemPriceType.Topup
+                        ? itemChoice.Price ?? 0
+                        : 0;
+
+                    if (cartItem.Price < expectedCartItemPrice)
+                        cartItem.Price = expectedCartItemPrice;
+
+                    order.AddLine(new(cartItem.Id, cartItem.Count, cartItem.Price, itemChoice.TaxRate));
+                }
+                if (customAmount is { } c)
+                    order.AddLine(new("", 1, c));
+                if (discount is { } d)
+                    order.AddDiscountRate(d);
+                if (tip is { } t)
+                    order.AddTip(t);
+            }
+            else
+                return NotFound();
 
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
@@ -317,38 +311,37 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     var amtField = form.GetFieldByFullName($"{FormDataService.InvoiceParameterPrefix}amount");
                     if (amtField is null)
                     {
-                        form.Fields.Add(new Field
+                        amtField = new Field
                         {
                             Name = $"{FormDataService.InvoiceParameterPrefix}amount",
                             Type = "hidden",
-                            Value = price?.ToString(),
                             Constant = true
-                        });
+                        };
+                        form.Fields.Add(amtField);
                     }
-                    else
-                    {
-                        amtField.Value = price?.ToString();
-                    }
+                    amtField.Value = order?.Calculate()?.PriceTaxExcluded.ToString(CultureInfo.InvariantCulture);
                     formResponseJObject = FormDataService.GetValues(form);
 
                     var invoiceRequest = FormDataService.GenerateInvoiceParametersFromForm(form);
                     if (invoiceRequest.Amount is not null)
                     {
-                        price = invoiceRequest.Amount.Value;
+                        order.AddLine(new("", 1, invoiceRequest.Amount.Value));
                     }
                     break;
             }
             try
             {
+                var summary = order?.Calculate();
                 var invoice = await _invoiceController.CreateInvoiceCoreRaw(new CreateInvoiceRequest
                 {
-                    Amount = price,
+                    Amount = summary?.PriceTaxIncludedWithTips,
                     Currency = settings.Currency,
                     Metadata = new InvoiceMetadata
                     {
                         ItemCode = choice?.Id,
                         ItemDesc = title,
                         BuyerEmail = email,
+                        TaxIncluded = summary.Tax is 0 ? null : summary.Tax,
                         OrderId = orderId ?? AppService.GetRandomOrderId()
                     }.ToJObject(),
                     Checkout = new InvoiceDataBase.CheckoutOptions()
@@ -433,7 +426,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 var data = new { invoiceId = invoice.Id };
                 if (wantsJson)
                     return Json(data);
-                if (price is 0 && storeBlob.ReceiptOptions?.Enabled is true)
+                if (order?.Calculate().PriceTaxIncludedWithTips is 0 && storeBlob.ReceiptOptions?.Enabled is true)
                     return RedirectToAction(nameof(UIInvoiceController.InvoiceReceipt), "UIInvoice", data);
                 return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", data);
             }
@@ -561,7 +554,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             viewModel.StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
             return View("Views/UIForms/View", viewModel);
         }
-        
+
         [Authorize(Policy = Policies.CanViewInvoices, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("/apps/{appId}/pos/recent-transactions")]
         public async Task<IActionResult> RecentTransactions(string appId)
@@ -606,6 +599,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 Archived = app.Archived,
                 AppName = app.Name,
                 Title = settings.Title,
+                DefaultTaxRate = settings.DefaultTaxRate,
                 DefaultView = settings.DefaultView,
                 ShowItems = settings.ShowItems,
                 ShowCustomAmount = settings.ShowCustomAmount,
@@ -663,7 +657,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
 
             vm.ExampleCallback = "{\n  \"id\":\"SkdsDghkdP3D3qkj7bLq3\",\n  \"url\":\"https://btcpay.example.com/invoice?id=SkdsDghkdP3D3qkj7bLq3\",\n  \"status\":\"paid\",\n  \"price\":10,\n  \"currency\":\"EUR\",\n  \"invoiceTime\":1520373130312,\n  \"expirationTime\":1520374030312,\n  \"currentTime\":1520373179327,\n  \"exceptionStatus\":false,\n  \"buyerFields\":{\n    \"buyerEmail\":\"customer@example.com\",\n    \"buyerNotify\":false\n  },\n  \"paymentSubtotals\": {\n    \"BTC\":114700\n  },\n  \"paymentTotals\": {\n    \"BTC\":118400\n  },\n  \"transactionCurrency\": \"BTC\",\n  \"amountPaid\": \"1025900\",\n  \"exchangeRates\": {\n    \"BTC\": {\n      \"EUR\": 8721.690715789999,\n      \"USD\": 10817.99\n    }\n  }\n}";
-            
+
             await FillUsers(vm);
             return View("PointOfSale/UpdatePointOfSale", vm);
         }
@@ -702,6 +696,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             {
                 Title = vm.Title,
                 DefaultView = vm.DefaultView,
+                DefaultTaxRate = vm.DefaultTaxRate,
                 ShowItems = vm.ShowItems,
                 ShowCustomAmount = vm.ShowCustomAmount,
                 ShowDiscount = vm.ShowDiscount,

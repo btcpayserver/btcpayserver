@@ -261,6 +261,7 @@ namespace BTCPayServer.Controllers
             }
 
             var payments = ViewPaymentRequestViewModel.PaymentRequestInvoicePayment.GetViewModels(i, _displayFormatter, _transactionLinkProviders, _handlers);
+            vm.TaxIncluded = i.Metadata?.TaxIncluded ?? 0.0m;
             vm.Amount = i.PaidAmount.Net;
             vm.Payments = receipt.ShowPayments is false ? null : payments;
 
@@ -929,6 +930,12 @@ namespace BTCPayServer.Controllers
 
             model.PaymentMethodId = paymentMethodId.ToString();
             model.OrderAmountFiat = OrderAmountFromInvoice(model.PaymentMethodCurrency, invoice, DisplayFormatter.CurrencyFormat.Symbol);
+            model.TaxIncluded = new();
+            if (invoice.Metadata.TaxIncluded is { } t)
+            {
+                model.TaxIncluded.Formatted = _displayFormatter.Currency(t, invoice.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                model.TaxIncluded.Value = t;
+            }
 
             if (storeBlob.PlaySoundOnPayment)
             {

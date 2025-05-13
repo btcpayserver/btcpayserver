@@ -130,8 +130,8 @@
                                 </tr>
                             }
                         }
-                        else if (cart is ICollection<object> { Count: > 0 } cartCollection) 
-                        { 
+                        else if (cart is ICollection<object> { Count: > 0 } cartCollection)
+                        {
                             @foreach (var value in cartCollection)
                             {
                                 <tr>
@@ -163,6 +163,7 @@
                                 <td class="val text-end">@tip</td>
                             </tr>
                         }
+
                         if (hasTotal)
                         {
                             <tr>
@@ -171,6 +172,13 @@
                             <tr class="sums-data">
                                 <td class="key text-secondary">Total</td>
                                 <td class="val text-end fw-semibold">@total</td>
+                            </tr>
+                        }
+                        if (Model.TaxIncluded != 0.0m)
+                        {
+                            <tr class="sums-data">
+                                <td class="key text-nowrap text-secondary">Total taxes</td>
+                                <td class="val text-end fw-semibold">@DisplayFormatter.Currency(Model.TaxIncluded, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</td>
                             </tr>
                         }
                     }

@@ -341,7 +341,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         ItemCode = choice?.Id,
                         ItemDesc = title,
                         BuyerEmail = email,
-                        TaxIncluded = summary.Tax is 0 ? null : summary.Tax,
+                        TaxIncluded = summary is null or { Tax: 0.0m } ? null : summary.Tax,
                         OrderId = orderId ?? AppService.GetRandomOrderId()
                     }.ToJObject(),
                     Checkout = new InvoiceDataBase.CheckoutOptions()

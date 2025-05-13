@@ -21,11 +21,11 @@ namespace BTCPayServer.Controllers;
 public partial class UIStoresController
 {
     [HttpGet("{storeId}/rates")]
-    public IActionResult Rates()
+    public async Task<IActionResult> Rates()
     {
         var storeBlob = CurrentStore.GetStoreBlob();
         var vm = new RatesViewModel();
-        SetViewModel(vm, storeBlob);
+        await SetViewModel(vm, storeBlob);
         return View(vm);
     }
 
@@ -64,7 +64,7 @@ public partial class UIStoresController
 
         if (!ModelState.IsValid)
         {
-            SetViewModel(model, storeBlob);
+            await SetViewModel(model, storeBlob);
             return View(model);
         }
 
@@ -99,7 +99,7 @@ public partial class UIStoresController
         }
         else if (command == "Test")
         {
-            SetViewModel(model, storeBlob);
+            await SetViewModel(model, storeBlob);
             if (string.IsNullOrWhiteSpace(model.ScriptTest))
             {
                 ModelState.AddModelError(nameof(model.ScriptTest), StringLocalizer["Fill out currency pair to test for (like {0})", "BTC_USD,BTC_CAD"]);
@@ -230,20 +230,20 @@ public partial class UIStoresController
             .OrderBy(s => s.DisplayName, StringComparer.OrdinalIgnoreCase).ToList();
     }
 
-    private void SetViewModel(RatesViewModel vm, StoreBlob storeBlob)
+    private async Task SetViewModel(RatesViewModel vm, StoreBlob storeBlob)
     {
         vm.AvailableExchanges = GetAvailableExchanges();
         vm.PrimarySource = new();
         vm.FallbackSource = new() { IsFallback = true };
-        SetViewModel(vm.PrimarySource, storeBlob.GetRateSettings(false), storeBlob);
+        await SetViewModel(vm.PrimarySource, storeBlob.GetRateSettings(false), storeBlob);
         if (storeBlob.GetRateSettings(true) is { } r)
         {
             vm.HasFallback = true;
-            SetViewModel(vm.FallbackSource, r, storeBlob);
+            await SetViewModel(vm.FallbackSource, r, storeBlob);
         }
         else
         {
-            SetViewModel(vm.FallbackSource, new(), storeBlob);
+            await SetViewModel(vm.FallbackSource, new(), storeBlob);
         }
 
         vm.Spread = (double)(storeBlob.Spread * 100m);

@@ -215,7 +215,7 @@ $"You can't set the preferredSource if you are using custom scripts");
                         .RateProviderFactory
                         .AvailableRateProviders
                         .FirstOrDefault(s =>
-                            s.Id.Equals(configuration.PreferredSource,
+                            (s.Id ?? "").Equals(configuration.PreferredSource,
                                 StringComparison.InvariantCultureIgnoreCase))?.Id;
 
                     if (string.IsNullOrEmpty(configuration.PreferredSource))

@@ -1286,7 +1286,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(Money.Coins(1.0m), invoice1.BtcPrice);
 
             var storeController = user.GetController<UIStoresController>();
-            var vm = (RatesViewModel)((ViewResult)storeController.Rates()).Model;
+            var vm = (RatesViewModel)((ViewResult)await storeController.Rates()).Model;
             Assert.Equal(0.0, vm.Spread);
             vm.Spread = 40;
             await storeController.Rates(vm);

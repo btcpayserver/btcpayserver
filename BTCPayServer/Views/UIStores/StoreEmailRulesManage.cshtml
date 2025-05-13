@@ -163,13 +163,16 @@
                     subject: 'Invoice {Invoice.Id} payment settled',
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) payment settled.'
                 },
+                @{ var invoiceLink = CallbackGenerator.InvoiceLink("INVOICE_ID", this.Context.Request).Replace("INVOICE_ID", ""); }
                 @WebhookEventType.InvoiceExpiredPaidPartial: {
                     subject: 'Invoice {Invoice.Id} Expired Paid Partial',
-                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) has expired partially paid.'
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) has expired partially paid. '+
+                        '\nPlease review and take appropriate action: ' + @Safe.Json(invoiceLink) + '{Invoice.Id}'
                 },
                 @WebhookEventType.InvoicePaidAfterExpiration: {
                     subject: 'Invoice {Invoice.Id} Expired Paid Late',
-                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) has been paid after expiration.'
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) has been paid after expiration. '+
+                        '\nPlease review and take appropriate action: ' + @Safe.Json(invoiceLink) + '{Invoice.Id}'
                 },
                 @{ var paymentRequestsLink = CallbackGenerator.PaymentRequestListLink(storeId, this.Context.Request); }
                 @WebhookEventType.PaymentRequestCompleted: {

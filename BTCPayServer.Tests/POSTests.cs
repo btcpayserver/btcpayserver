@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
@@ -12,6 +14,8 @@ using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Playwright;
+using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
 using Xunit;
 using Xunit.Abstractions;
@@ -261,9 +265,17 @@ donation:
             await s.Page.FillAsync("#CustomTipPercentages", "10,21");
             Assert.False(await s.Page.IsCheckedAsync("#ShowDiscount"));
             await s.Page.ClickAsync("#ShowDiscount");
+
+
+            // Default tax of 8.375%, but 10% for the first item.
+            await s.Page.FillAsync("#DefaultTaxRate", "8.375");
+            await s.Page.Locator(".template-item").First.ClickAsync();
+            await s.Page.Locator("#item-form div").Filter(new() { HasText = "Tax rate %" }).GetByRole(AriaRole.Spinbutton).FillAsync("10");
+            await s.Page.GetByRole(AriaRole.Button, new() { Name = "Apply" }).ClickAsync();
+
             await s.ClickPagePrimary();
             await s.FindAlertMessage(partialText: "App updated");
-            //
+
             // View
             var o = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("#ViewApp");
@@ -339,7 +351,8 @@ donation:
             await s.Page.WaitForSelectorAsync("#Checkout");
             await s.Page.ClickAsync("#DetailsToggle");
             await s.Page.WaitForSelectorAsync("#PaymentDetails-TotalFiat");
-            Assert.Contains("9,90 €", await s.Page.TextContentAsync("#PaymentDetails-TotalFiat"));
+            Assert.Contains("0,77 €", await s.Page.TextContentAsync("#PaymentDetails-TaxIncluded"));
+            Assert.Contains("10,67 €", await s.Page.TextContentAsync("#PaymentDetails-TotalFiat"));
             //
             // Pay
             await s.PayInvoice(true);
@@ -363,8 +376,9 @@ donation:
                     new("Items total", "10,00 €"),
                     new("Discount", "10% = 1,00 €"),
                     new("Subtotal", "9,00 €"),
+                    new("Tax", "0,77 €"),
                     new("Tip", "10% = 0,90 €"),
-                    new("Total", "9,90 €")
+                    new("Total", "10,67 €")
                 ]
             });
 
@@ -607,6 +621,65 @@ donation:
             {
                 await tester.Page.ClickAsync($".keypad [data-key='{c}']");
             }
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanUsePoSAppJsonEndpoint()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            user.RegisterDerivationScheme("BTC");
+            var apps = user.GetController<UIAppsController>();
+            var pos = user.GetController<UIPointOfSaleController>();
+            var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
+            var appType = PointOfSaleAppType.AppType;
+            vm.AppName = "test";
+            vm.SelectedAppType = appType;
+            var redirect = Assert.IsType<RedirectResult>(apps.CreateApp(user.StoreId, vm).Result);
+            Assert.EndsWith("/settings/pos", redirect.Url);
+            var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
+            var app = appList.Apps[0];
+            var appData = new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = appType };
+            apps.HttpContext.SetAppData(appData);
+            pos.HttpContext.SetAppData(appData);
+            var vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
+            vmpos.Title = "App POS";
+            vmpos.Currency = "EUR";
+            Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
+
+            // Failing requests
+            var (invoiceId1, error1) = await PosJsonRequest(tester, app.Id, "amount=-21&discount=10&tip=2");
+            Assert.Null(invoiceId1);
+            Assert.Equal("Negative amount is not allowed", error1);
+            var (invoiceId2, error2) = await PosJsonRequest(tester, app.Id, "amount=21&discount=-10&tip=-2");
+            Assert.Null(invoiceId2);
+            Assert.Equal("Negative tip or discount is not allowed", error2);
+
+            // Successful request
+            var (invoiceId3, error3) = await PosJsonRequest(tester, app.Id, "amount=21");
+            Assert.NotNull(invoiceId3);
+            Assert.Null(error3);
+
+            // Check generated invoice
+            var invoices = await user.BitPay.GetInvoicesAsync();
+            var invoice = invoices.First();
+            Assert.Equal(invoiceId3, invoice.Id);
+            Assert.Equal(21.00m, invoice.Price);
+            Assert.Equal("EUR", invoice.Currency);
+        }
+
+        private async Task<(string invoiceId, string error)> PosJsonRequest(ServerTester tester, string appId, string query)
+        {
+            var uriBuilder = new UriBuilder(tester.PayTester.ServerUri) { Path = $"/apps/{appId}/pos/light", Query = query };
+            var request = new HttpRequestMessage(HttpMethod.Post, uriBuilder.Uri);
+            request.Headers.Add("Accept", "application/json");
+            var response = await tester.PayTester.HttpClient.SendAsync(request);
+            var content = await response.Content.ReadAsStringAsync();
+            var json = JObject.Parse(content);
+            return (json["invoiceId"]?.Value<string>(), json["error"]?.Value<string>());
         }
     }
 }

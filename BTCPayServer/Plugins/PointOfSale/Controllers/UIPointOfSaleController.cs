@@ -171,22 +171,31 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             // Distinguish JSON requests coming via the mobile app
             var wantsJson = Request.Headers.Accept.FirstOrDefault()?.StartsWith("application/json") is true;
 
+            IActionResult Error(string message)
+            {
+                if (wantsJson)
+                    return Json(new { error = message });
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Message = message,
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    AllowDismiss = true
+                });
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
+            }
+
             var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
             if (app == null)
                 return wantsJson
-                    ? Json(new { error = "App not found" })
+                    ? Json(new { error = StringLocalizer["App not found"].Value })
                     : NotFound();
 
             // not allowing negative tips or discounts
             if (tip < 0 || discount < 0)
-                return wantsJson
-                    ? Json(new { error = "Negative tip or discount is not allowed" })
-                    : RedirectToAction(nameof(ViewPointOfSale), new { appId });
+                return Error(StringLocalizer["Negative tip or discount is not allowed"].Value);
 
-            if (string.IsNullOrEmpty(choiceKey) && amount <= 0)
-                return wantsJson
-                    ? Json(new { error = "Negative amount is not allowed" })
-                    : RedirectToAction(nameof(ViewPointOfSale), new { appId });
+            if (string.IsNullOrEmpty(choiceKey) && (amount <= 0 || customAmount <= 0))
+                return Error(StringLocalizer["Negative amount is not allowed"].Value);
 
             var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
@@ -196,75 +205,58 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
             }
-
-            var jposData = PosAppData.TryParse(posData);
-            string title = settings.Title;
+            var choices = AppService.Parse(settings.Template, false);
+            var jposData = PosAppData.TryParse(posData) ?? new();
             PoSOrder order = new(_currencies.GetNumberFormatInfo(settings.Currency, true).CurrencyDecimalDigits);
             if (settings.DefaultTaxRate is { } rate)
                 order.SetTaxRate(rate);
             Dictionary<string, InvoiceSupportedTransactionCurrency> paymentMethods = null;
-            AppItem choice = null;
-            var cartItems = jposData?.Cart;
-            AppItem[] choices = null;
+            List<AppItem> selectedChoices = new();
             if (!string.IsNullOrEmpty(choiceKey))
             {
-                choices = AppService.Parse(settings.Template, false);
-                choice = choices.FirstOrDefault(c => c.Id == choiceKey);
-                if (choice == null)
-                    return NotFound();
-                title = choice.Title;
-                if (choice.PriceType == AppItemPriceType.Topup)
-                {
-                    order = null;
-                }
-                else
-                {
-                    order.AddLine(new(choice.Id, 1, Math.Max(choice.Price.Value, amount ?? 0m), choice.TaxRate));
-                }
-
-                if (choice.Inventory is <= 0)
-                {
-                    return RedirectToAction(nameof(ViewPointOfSale), new { appId });
-                }
+                jposData.Cart = new PosAppCartItem[] { new() { Id = choiceKey, Count = 1, Price = amount ?? 0 } };
             }
-            else if (((currentView is PosViewType.Cart or PosViewType.Light) || settings.ShowCustomAmount)
-                     && jposData is not null)
+            jposData.Cart ??= [];
+
+            if (currentView is PosViewType.Print)
+                return NotFound();
+            if (currentView is PosViewType.Cart or PosViewType.Static && jposData.Cart.Length == 0)
+                return NotFound();
+
+            if (jposData.Amounts is null &&
+                currentView == PosViewType.Light &&
+                amount is { } o)
             {
-                for (var i = 0; i < (jposData.Amounts ?? []).Length; i++)
+                order.AddLine(new("", 1, o));
+            }
+            for (var i = 0; i < (jposData.Amounts ?? []).Length; i++)
+            {
+                order.AddLine(new($"Custom Amount {i + 1}", 1, jposData.Amounts[i]));
+            }
+            foreach (var cartItem in jposData.Cart)
+            {
+                var itemChoice = choices.FirstOrDefault(item => item.Id == cartItem.Id);
+                if (itemChoice == null)
+                    return NotFound();
+                selectedChoices.Add(itemChoice);
+                if (itemChoice.Inventory is <= 0 ||
+                    itemChoice.Inventory is { } inv && inv < cartItem.Count)
+                    return Error(StringLocalizer["Inventory for {0} exhausted: {1} available", itemChoice.Title, itemChoice.Inventory]);
+
+                if (itemChoice.PriceType is not AppItemPriceType.Topup)
                 {
-                    order.AddLine(new($"Custom Amount {i + 1}", 1, jposData.Amounts[i]));
-                }
-                choices = AppService.Parse(settings.Template, false);
-                foreach (var cartItem in jposData.Cart ?? [])
-                {
-                    var itemChoice = choices.FirstOrDefault(item => item.Id == cartItem.Id);
-                    if (itemChoice == null)
-                        return NotFound();
-
-                    if (itemChoice.Inventory is <= 0 ||
-                        itemChoice.Inventory is { } inv && inv < cartItem.Count)
-                        return wantsJson
-                            ? Json(new { error = $"Inventory for {itemChoice.Title} exhausted: {itemChoice.Inventory} available" })
-                            : RedirectToAction(nameof(ViewPointOfSale), new { appId });
-
-                    var expectedCartItemPrice = itemChoice.PriceType != AppItemPriceType.Topup
-                        ? itemChoice.Price ?? 0
-                        : 0;
-
+                    var expectedCartItemPrice = itemChoice.Price ?? 0;
                     if (cartItem.Price < expectedCartItemPrice)
                         cartItem.Price = expectedCartItemPrice;
-
-                    order.AddLine(new(cartItem.Id, cartItem.Count, cartItem.Price, itemChoice.TaxRate));
                 }
-                if (customAmount is { } c)
-                    order.AddLine(new("", 1, c));
-                if (discount is { } d)
-                    order.AddDiscountRate(d);
-                if (tip is { } t)
-                    order.AddTip(t);
+                order.AddLine(new(cartItem.Id, cartItem.Count, cartItem.Price, itemChoice.TaxRate));
             }
-            else
-                return NotFound();
+            if (customAmount is { } c && settings.ShowCustomAmount)
+                order.AddLine(new("", 1, c));
+            if (discount is { } d)
+                order.AddDiscountRate(d);
+            if (tip is { } t)
+                order.AddTip(t);
 
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
@@ -314,7 +306,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         };
                         form.Fields.Add(amtField);
                     }
-                    amtField.Value = order?.Calculate()?.PriceTaxExcluded.ToString(CultureInfo.InvariantCulture);
+                    amtField.Value = order.Calculate().PriceTaxExcluded.ToString(CultureInfo.InvariantCulture);
                     formResponseJObject = FormDataService.GetValues(form);
 
                     var invoiceRequest = FormDataService.GenerateInvoiceParametersFromForm(form);
@@ -324,29 +316,64 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     }
                     break;
             }
-            try
+
+            var receiptData = new PosReceiptData();
+            var summary = order.Calculate();
+
+            bool isTopup = summary.PriceTaxIncludedWithTips == 0 && currentView == PosViewType.Static;
+            if (!isTopup)
             {
-                var summary = order?.Calculate();
-                if (summary is not null && jposData is not null)
+                jposData.ItemsTotal = summary.ItemsTotal;
+                jposData.DiscountAmount = summary.Discount;
+                jposData.Subtotal = summary.PriceTaxExcluded;
+                jposData.Tax = summary.Tax;
+                jposData.Tip = summary.Tip;
+                jposData.Total = summary.PriceTaxIncludedWithTips;
+                receiptData.Subtotal = _displayFormatter.Currency(jposData.Subtotal, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+
+                if (jposData.DiscountAmount > 0)
                 {
-                    jposData.ItemsTotal = summary.ItemsTotal;
-                    jposData.DiscountAmount = summary.Discount;
-                    jposData.Subtotal = summary.PriceTaxExcluded;
-                    jposData.Tax = summary.Tax;
-                    jposData.Tip = summary.Tip;
-                    jposData.Total = summary.PriceTaxIncludedWithTips;
+                    var discountFormatted = _displayFormatter.Currency(jposData.DiscountAmount, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                    receiptData.Discount = jposData.DiscountPercentage > 0 ? $"{jposData.DiscountPercentage}% = {discountFormatted}" : discountFormatted;
                 }
 
+                if (jposData.Tip > 0)
+                {
+                    var tipFormatted = _displayFormatter.Currency(jposData.Tip, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                    receiptData.Tip = jposData.TipPercentage > 0 ? $"{jposData.TipPercentage}% = {tipFormatted}" : tipFormatted;
+                }
+
+                if (jposData.Tax > 0)
+                {
+                    var taxFormatted = _displayFormatter.Currency(jposData.Tax, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                    receiptData.Tax = taxFormatted;
+                }
+
+                if (jposData.ItemsTotal > 0)
+                {
+                    var itemsTotal = _displayFormatter.Currency(jposData.ItemsTotal, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                    receiptData.ItemsTotal = itemsTotal;
+                }
+
+                receiptData.Total = _displayFormatter.Currency(jposData.Total, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                if (receiptData.ItemsTotal == receiptData.Subtotal)
+                    receiptData.ItemsTotal = null;
+                if (receiptData.Subtotal == receiptData.Total)
+                    receiptData.Subtotal = null;
+            }
+
+            try
+            {
                 var invoice = await _invoiceController.CreateInvoiceCoreRaw(new CreateInvoiceRequest
                 {
-                    Amount = summary?.PriceTaxIncludedWithTips,
+                    Amount = isTopup ? null : summary.PriceTaxIncludedWithTips,
                     Currency = settings.Currency,
                     Metadata = new InvoiceMetadata
                     {
-                        ItemCode = choice?.Id,
-                        ItemDesc = title,
+                        ItemCode = selectedChoices is [{} c1] ? c1.Id : null,
+                        ItemDesc = selectedChoices is [{} c2] ? c2.Title : null,
                         BuyerEmail = email,
-                        TaxIncluded = summary is null or { Tax: 0.0m } ? null : summary.Tax,
+                        TaxIncluded = summary.Tax == 0m ? null : summary.Tax,
                         OrderId = orderId ?? AppService.GetRandomOrderId()
                     }.ToJObject(),
                     Checkout = new InvoiceDataBase.CheckoutOptions()
@@ -367,63 +394,37 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         entity.FullNotifications = true;
                         entity.ExtendedNotifications = true;
                         entity.Metadata.OrderUrl = Request.GetDisplayUrl();
-                        entity.Metadata.PosData = jposData is not null ? JObject.FromObject(jposData) : null;
-                        var receiptData = new PosReceiptData();
-                        if (choice is not null)
-                        {
-                            receiptData.Title = choice.Title;
-                            if (!string.IsNullOrEmpty(choice.Description))
-                                receiptData.Description = choice.Title;
-                        }
-                        else if (jposData is not null)
-                        {
-                            var posCartItems = cartItems?.ToList() ?? new();
-                            var selectedChoices = choices?
-                                .Where(item => posCartItems.Any(cartItem => cartItem.Id == item.Id))
-                                .ToDictionary(item => item.Id) ?? new();
-                            Dictionary<string,string> cartData = null;
-                            foreach (var cartItem in posCartItems)
-                            {
-                                if (!selectedChoices.TryGetValue(cartItem.Id, out var selectedChoice))
-                                    continue;
-                                var singlePrice = _displayFormatter.Currency(cartItem.Price, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
-                                var totalPrice = _displayFormatter.Currency(cartItem.Price * cartItem.Count, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
-                                var ident = selectedChoice.Title ?? selectedChoice.Id;
-                                var key = selectedChoice.PriceType == AppItemPriceType.Fixed ? ident : $"{ident} ({singlePrice})";
-                                cartData ??= new();
-                                cartData.Add(key, $"{cartItem.Count} x {singlePrice} = {totalPrice}");
-                            }
+                        entity.Metadata.PosData = JObject.FromObject(jposData);
 
-                            for (var i = 0; i < (jposData.Amounts ?? []).Length; i++)
-                            {
-                                cartData ??= new();
-                                cartData.Add($"Custom Amount {i + 1}", _displayFormatter.Currency(jposData.Amounts[i], settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
-                            }
-
-                            receiptData.Cart = cartData;
-                            receiptData.Subtotal = _displayFormatter.Currency(jposData.Subtotal, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
-                            if (jposData.DiscountAmount > 0)
-                            {
-                                var discountFormatted = _displayFormatter.Currency(jposData.DiscountAmount, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
-                                receiptData.Discount = jposData.DiscountPercentage > 0 ? $"{jposData.DiscountPercentage}% = {discountFormatted}" : discountFormatted;
-                            }
-                            if (jposData.Tip > 0)
-                            {
-                                var tipFormatted = _displayFormatter.Currency(jposData.Tip, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
-                                receiptData.Tip = jposData.TipPercentage > 0 ? $"{jposData.TipPercentage}% = {tipFormatted}" : tipFormatted;
-                            }
-                            if (jposData.Tax > 0)
-                            {
-                                var taxFormatted = _displayFormatter.Currency(jposData.Tax, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
-                                receiptData.Tax = taxFormatted;
-                            }
-                            if (jposData.ItemsTotal > 0)
-                            {
-                                var itemsTotal = _displayFormatter.Currency(jposData.ItemsTotal, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
-                                receiptData.ItemsTotal = itemsTotal;
-                            }
-                            receiptData.Total = _displayFormatter.Currency(jposData.Total, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                        if (selectedChoices.Count == 1)
+                        {
+                            receiptData.Title = selectedChoices[0].Title;
+                            if (!string.IsNullOrEmpty(selectedChoices[0].Description))
+                                receiptData.Description = selectedChoices[0].Description;
                         }
+
+                        Dictionary<string,string> cartData = null;
+                        foreach (var cartItem in jposData.Cart)
+                        {
+                            var selectedChoice = choices.FirstOrDefault(item => item.Id == cartItem.Id);
+                            if (selectedChoice is null)
+                                continue;
+                            var singlePrice = _displayFormatter.Currency(cartItem.Price, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                            var totalPrice = _displayFormatter.Currency(cartItem.Price * cartItem.Count, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                            var ident = selectedChoice.Title ?? selectedChoice.Id;
+                            var key = selectedChoice.PriceType == AppItemPriceType.Fixed ? ident : $"{ident} ({singlePrice})";
+                            cartData ??= new();
+                            cartData.Add(key, $"{cartItem.Count} x {singlePrice} = {totalPrice}");
+                        }
+
+                        for (var i = 0; i < (jposData.Amounts ?? []).Length; i++)
+                        {
+                            cartData ??= new();
+                            cartData.Add($"Custom Amount {i + 1}", _displayFormatter.Currency(jposData.Amounts[i], settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
+                        }
+
+                        receiptData.Cart = cartData;
+
                         entity.Metadata.SetAdditionalData("receiptData", receiptData);
 
                         if (formResponseJObject is null)
@@ -435,7 +436,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 var data = new { invoiceId = invoice.Id };
                 if (wantsJson)
                     return Json(data);
-                if (order?.Calculate().PriceTaxIncludedWithTips is 0 && storeBlob.ReceiptOptions?.Enabled is true)
+                if (!isTopup && summary.PriceTaxIncludedWithTips is 0 && storeBlob.ReceiptOptions?.Enabled is true)
                     return RedirectToAction(nameof(UIInvoiceController.InvoiceReceipt), "UIInvoice", data);
                 return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", data);
             }

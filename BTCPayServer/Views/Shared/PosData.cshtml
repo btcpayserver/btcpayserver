@@ -32,7 +32,7 @@
             }
             var posData = WellKnownPosData.TryParse(Model.Items) ?? new();
             <tfoot style="border-top-width:0">
-            @if (posData.ItemsTotal != null && !posData.ItemsTotal.Equals(posData.Subtotal))
+            @if (posData.ItemsTotal != null)
             {
                 <tr style="border-top-width:3px">
                     <th text-translate="true">Items total</th>
@@ -46,7 +46,7 @@
                     <td class="text-end">@posData.Discount</td>
                 </tr>
             }
-            @if (posData.Subtotal != null && !posData.Subtotal.Equals(posData.Total))
+            @if (posData.Subtotal != null)
             {
                 <tr style="border-top-width:3px">
                     <th text-translate="true">Subtotal</th>

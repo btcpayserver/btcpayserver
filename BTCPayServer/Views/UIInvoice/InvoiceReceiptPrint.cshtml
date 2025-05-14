@@ -137,7 +137,7 @@
                             }
                         }
 
-                        @if (posData.ItemsTotal != null && !posData.ItemsTotal.Equals(posData.Subtotal))
+                        @if (posData.ItemsTotal != null)
                         {
                             <tr>
                                 <td colspan="2"><hr class="w-100 my-0"/></td>
@@ -154,7 +154,7 @@
                                 <td class="val text-end">@posData.Discount</td>
                             </tr>
                         }
-                        @if (posData.Subtotal != null && !posData.Subtotal.Equals(posData.Total))
+                        @if (posData.Subtotal != null)
                         {
                             <tr class="sums-data">
                                 <td class="key text-secondary">Subtotal</td>

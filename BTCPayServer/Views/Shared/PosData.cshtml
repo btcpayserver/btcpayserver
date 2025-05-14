@@ -39,11 +39,11 @@
                     <td class="text-end">@posData.ItemsTotal</td>
                 </tr>
             }
-            @if (posData.DiscountAmount != null)
+            @if (posData.Discount != null)
             {
                 <tr>
                     <th text-translate="true">Discount</th>
-                    <td class="text-end">@posData.DiscountAmount</td>
+                    <td class="text-end">@posData.Discount</td>
                 </tr>
             }
             @if (posData.Subtotal != null && posData.Subtotal != posData.Total)

@@ -190,14 +190,16 @@ namespace BTCPayServer.Tests
             }
         }
 
-        public async Task GoToUrl(string relativeUrl)
+        public async Task GoToUrl(string uri)
         {
-            await Page.GotoAsync(Link(relativeUrl), new() { WaitUntil  = WaitUntilState.Commit } );
+            await Page.GotoAsync(Link(uri), new() { WaitUntil  = WaitUntilState.Commit } );
         }
 
-        public string Link(string relativeLink)
+        public string Link(string uri)
         {
-            return ServerUri.AbsoluteUri.WithoutEndingSlash() + relativeLink.WithStartingSlash();
+            if (Uri.IsWellFormedUriString(uri, UriKind.Absolute))
+                return uri;
+            return ServerUri.AbsoluteUri.WithoutEndingSlash() + uri.WithStartingSlash();
         }
 
         public async Task<string> RegisterNewUser(bool isAdmin = false)
@@ -333,6 +335,18 @@ namespace BTCPayServer.Tests
             }
             else { await GoToUrl("/"); }
         }
+        public async Task AddUserToStore(string storeId, string email, string role)
+        {
+            var addUser = Page.Locator("#AddUser");
+            if (!await addUser.IsVisibleAsync())
+            {
+                await GoToStore(storeId, StoreNavPages.Users);
+            }
+            await Page.FillAsync("#Email", email);
+            await Page.SelectOptionAsync("#Role", role);
+            await Page.ClickAsync("#AddUser");
+            await FindAlertMessage(partialText: "The user has been added successfully");
+        }
         public async Task LogIn(string user, string password = "123456")
         {
             await Page.FillAsync("#Email", user);
@@ -424,6 +438,8 @@ namespace BTCPayServer.Tests
                 StoreId = storeId;
                 if (WalletId != null)
                     WalletId = new WalletId(storeId, WalletId.CryptoCode);
+                if (storeNavPage != StoreNavPages.General)
+                    await Page.Locator($"#StoreNav-{StoreNavPages.General}").ClickAsync();
             }
             await Page.Locator($"#StoreNav-{storeNavPage}").ClickAsync();
         }
@@ -501,6 +517,37 @@ namespace BTCPayServer.Tests
         public async Task ConfirmModal()
         {
             await Page.ClickAsync(".modal.fade.show .modal-confirm");
+        }
+
+        public async Task<(string appName, string appId)> CreateApp(string type, string name = null)
+        {
+            if (string.IsNullOrEmpty(name))
+                name = $"{type}-{Guid.NewGuid().ToString()[..14]}";
+            await Page.Locator($"#StoreNav-Create{type}").ClickAsync();
+            await Page.Locator("[name='AppName']").FillAsync(name);
+            await ClickPagePrimary();
+            await FindAlertMessage(partialText: "App successfully created");
+            var appId = Page.Url.Split('/')[4];
+            return (name, appId);
+        }
+
+        public async Task PayInvoice(bool mine = false, decimal? amount = null)
+        {
+            if (amount is not null)
+            {
+                await Page.FillAsync("#test-payment-amount", amount.ToString());
+            }
+            await Page.ClickAsync("#FakePayment");
+            await Page.Locator("#CheatSuccessMessage").WaitForAsync();
+            if (mine)
+            {
+                await MineBlockOnInvoiceCheckout();
+            }
+        }
+
+        public async Task MineBlockOnInvoiceCheckout()
+        {
+            await Page.ClickAsync("#mine-block button");
         }
     }
 }

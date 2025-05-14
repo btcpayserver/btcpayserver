@@ -422,11 +422,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                 var itemsTotal = _displayFormatter.Currency(jposData.ItemsTotal, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
                                 receiptData.ItemsTotal = itemsTotal;
                             }
-                            if (jposData.DiscountAmount > 0)
-                            {
-                                var discountTotal = _displayFormatter.Currency(jposData.DiscountAmount, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
-                                receiptData.DiscountAmount = discountTotal;
-                            }
                             receiptData.Total = _displayFormatter.Currency(jposData.Total, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
                         }
                         entity.Metadata.SetAdditionalData("receiptData", receiptData);

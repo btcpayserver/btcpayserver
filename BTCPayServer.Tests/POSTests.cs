@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -11,6 +12,7 @@ using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Mvc;
+using OpenQA.Selenium;
 using Xunit;
 using Xunit.Abstractions;
 using static BTCPayServer.Tests.UnitTest1;
@@ -79,8 +81,8 @@ fruit tea:
         Assert.Equal( 1 ,parsedDefault[0].Price);
         Assert.Equal( AppItemPriceType.Fixed ,parsedDefault[0].PriceType);
         Assert.Null( parsedDefault[0].AdditionalData);
-        
-        
+
+
         Assert.Equal( "Herbal Tea" ,parsedDefault[4].Title);
         Assert.Equal( "herbal tea" ,parsedDefault[4].Id);
         Assert.Equal( "Chamomile tea is made from the flower heads of the chamomile plant. The medicinal use of chamomile dates back to the ancient Egyptians, Romans and Greeks. Pay us what you want!" ,parsedDefault[4].Description);
@@ -126,7 +128,7 @@ fruit tea:
             items = AppService.Parse(missingId);
             Assert.Single(items);
             Assert.Equal("black-tea", items[0].Id);
-            
+
             // Throws for missing ID
             Assert.Throws<ArgumentException>(() => AppService.Parse(missingId, true, true));
 
@@ -134,11 +136,11 @@ fruit tea:
             var duplicateId = template.Replace(@"""id"": ""green-tea"",", @"""id"": ""black-tea"",");
             items = AppService.Parse(duplicateId);
             Assert.Empty(items);
-            
+
             // Throws for duplicate IDs
             Assert.Throws<ArgumentException>(() => AppService.Parse(duplicateId, true, true));
         }
-        
+
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanUsePoSApp1()
@@ -191,7 +193,7 @@ donation:
             // apple is not found
             Assert.IsType<NotFoundResult>(publicApps
                 .ViewPointOfSale(app.Id, PosViewType.Cart, 0, choiceKey: "apple").Result);
-            
+
             // List
             appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
             app = appList.Apps[0];
@@ -226,6 +228,172 @@ donation:
             Assert.Equal(nameof(UIStoresController.Dashboard), redirectToAction.ActionName);
             appList = await apps.ListApps(user.StoreId).AssertViewModelAsync<ListAppsViewModel>();
             Assert.Empty(appList.Apps);
+        }
+
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        public async Task CanUsePOSCart()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+
+            // Create users
+            var user = await s.RegisterNewUser();
+            var userAccount = s.AsTestAccount();
+            await s.GoToHome();
+            await s.Logout();
+            await s.GoToRegister();
+            await s.RegisterNewUser(true);
+
+            // Setup store and associate user
+            (_, string storeId) = await s.CreateNewStore();
+            await s.GoToStore();
+            await s.AddDerivationScheme();
+            await s.AddUserToStore(storeId, user, "Guest");
+
+            // Setup POS
+            await s.CreateApp("PointOfSale");
+            await s.Page.ClickAsync("label[for='DefaultView_Cart']");
+            await s.Page.FillAsync("#Currency", "EUR");
+            Assert.False(await s.Page.IsCheckedAsync("#EnableTips"));
+            await s.Page.ClickAsync("#EnableTips");
+            Assert.True(await s.Page.IsCheckedAsync("#EnableTips"));
+            await s.Page.FillAsync("#CustomTipPercentages", "10,21");
+            Assert.False(await s.Page.IsCheckedAsync("#ShowDiscount"));
+            await s.Page.ClickAsync("#ShowDiscount");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "App updated");
+            //
+            // View
+            var o = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("#ViewApp");
+            var newPage = await o;
+            await newPage.WaitForSelectorAsync("#PosItems");
+            Assert.Empty(await newPage.QuerySelectorAllAsync("#CartItems tr"));
+            var posUrl = newPage.Url;
+            await newPage.BringToFrontAsync();
+            s.Page = newPage;
+
+            // Select and clear
+            await s.Page.ClickAsync(".posItem:nth-child(1) .btn-primary");
+            Assert.Single(await s.Page.QuerySelectorAllAsync("#CartItems tr"));
+            await s.Page.ClickAsync("#CartClear");
+            Assert.Empty(await s.Page.QuerySelectorAllAsync("#CartItems tr"));
+
+            // Select simple items
+            await s.Page.ClickAsync(".posItem:nth-child(1) .btn-primary");
+            Assert.Single(await s.Page.QuerySelectorAllAsync("#CartItems tr"));
+            await s.Page.ClickAsync(".posItem:nth-child(2) .btn-primary");
+            await s.Page.ClickAsync(".posItem:nth-child(2) .btn-primary");
+            Assert.Equal(2, (await s.Page.QuerySelectorAllAsync("#CartItems tr")).Count);
+            var t = await s.Page.TextContentAsync("#CartTotal");
+            Assert.Equal("3,00 €", await s.Page.TextContentAsync("#CartTotal"));
+
+            // Select item with inventory - two of it
+            Assert.Equal("5 left", await s.Page.TextContentAsync(".posItem:nth-child(3) .badge.inventory"));
+            await s.Page.ClickAsync(".posItem:nth-child(3) .btn-primary");
+            await s.Page.ClickAsync(".posItem:nth-child(3) .btn-primary");
+            Assert.Equal(3, (await s.Page.QuerySelectorAllAsync("#CartItems tr")).Count);
+            Assert.Equal("5,40 €", await s.Page.TextContentAsync("#CartTotal"));
+
+            // Select items with minimum amount
+            await s.Page.ClickAsync(".posItem:nth-child(5) .btn-primary");
+            Assert.Equal(4, (await s.Page.QuerySelectorAllAsync("#CartItems tr")).Count);
+            Assert.Equal("7,20 €", await s.Page.TextContentAsync("#CartTotal"));
+
+            // Select items with adjusted minimum amount
+            await s.Page.FillAsync(".posItem:nth-child(5) input[name='amount']", "");
+            await s.Page.FillAsync(".posItem:nth-child(5) input[name='amount']", "2.3");
+            await s.Page.ClickAsync(".posItem:nth-child(5) .btn-primary");
+            Assert.Equal(5, (await s.Page.QuerySelectorAllAsync("#CartItems tr")).Count);
+            Assert.Equal("9,50 €", await s.Page.TextContentAsync("#CartTotal"));
+
+            // Select items with custom amount
+            await s.Page.FillAsync(".posItem:nth-child(6) input[name='amount']", "");
+            await s.Page.FillAsync(".posItem:nth-child(6) input[name='amount']", ".2");
+            await s.Page.ClickAsync(".posItem:nth-child(6) .btn-primary");
+            Assert.Equal(6, (await s.Page.QuerySelectorAllAsync("#CartItems tr")).Count);
+            Assert.Equal("9,70 €", await s.Page.TextContentAsync("#CartTotal"));
+
+            // Select items with another custom amount
+            await s.Page.FillAsync(".posItem:nth-child(6) input[name='amount']", "");
+            await s.Page.FillAsync(".posItem:nth-child(6) input[name='amount']", ".3");
+            await s.Page.ClickAsync(".posItem:nth-child(6) .btn-primary");
+            Assert.Equal(7, (await s.Page.QuerySelectorAllAsync("#CartItems tr")).Count);
+            Assert.Equal("10,00 €", await s.Page.TextContentAsync("#CartTotal"));
+
+            // Discount: 10%
+            Assert.False(await s.Page.IsVisibleAsync("#CartDiscount"));
+            await s.Page.FillAsync("#Discount", "10");
+            Assert.Contains("10% = 1,00 €".NormalizeWhitespaces(), (await s.Page.TextContentAsync("#CartDiscount")).NormalizeWhitespaces());
+            Assert.Equal("9,00 €", await s.Page.TextContentAsync("#CartTotal"));
+
+            // Tip: 10%
+            Assert.False(await s.Page.IsVisibleAsync("#CartTip"));
+            await s.Page.ClickAsync("#Tip-10");
+            Assert.Contains("10% = 0,90 €".NormalizeWhitespaces(), (await s.Page.TextContentAsync("#CartTip")).NormalizeWhitespaces());
+            Assert.Equal("9,90 €", await s.Page.TextContentAsync("#CartTotal"));
+
+            // Check values on checkout page
+            await s.Page.ClickAsync("#CartSubmit");
+            await s.Page.WaitForSelectorAsync("#Checkout");
+            await s.Page.ClickAsync("#DetailsToggle");
+            await s.Page.WaitForSelectorAsync("#PaymentDetails-TotalFiat");
+            Assert.Contains("9,90 €", await s.Page.TextContentAsync("#PaymentDetails-TotalFiat"));
+            //
+            // Pay
+            await s.PayInvoice(true);
+
+
+            // Receipt
+            await s.Page.ClickAsync("#ReceiptLink");
+            await s.Page.WaitForSelectorAsync("#CartData table");
+            var items = await s.Page.QuerySelectorAllAsync("#CartData table tbody tr");
+            var sums = await s.Page.QuerySelectorAllAsync("#CartData table tfoot tr");
+            Assert.Equal(7, items.Count);
+            Assert.Equal(5, sums.Count);
+            Assert.Contains("Black Tea", await items[0].TextContentAsync());
+            Assert.Contains("2 x 1,00 € = 2,00 €", await items[0].TextContentAsync());
+            Assert.Contains("Green Tea", await items[1].TextContentAsync());
+            Assert.Contains("1 x 1,00 € = 1,00 €", await items[1].TextContentAsync());
+            Assert.Contains("Rooibos (limited)", await items[2].TextContentAsync());
+            Assert.Contains("2 x 1,20 € = 2,40 €", await items[2].TextContentAsync());
+            Assert.Contains("Herbal Tea (minimum) (1,80 €)", await items[3].TextContentAsync());
+            Assert.Contains("1 x 1,80 € = 1,80 €", await items[3].TextContentAsync());
+            Assert.Contains("Herbal Tea (minimum) (2,30 €)", await items[4].TextContentAsync());
+            Assert.Contains("1 x 2,30 € = 2,30 €", await items[4].TextContentAsync());
+            Assert.Contains("Fruit Tea (any amount) (0,20 €)", await items[5].TextContentAsync());
+            Assert.Contains("1 x 0,20 € = 0,20 €", await items[5].TextContentAsync());
+            Assert.Contains("Fruit Tea (any amount) (0,30 €)", await items[6].TextContentAsync());
+            Assert.Contains("1 x 0,30 € = 0,30 €", await items[6].TextContentAsync());
+            Assert.Contains("Items total", await sums[0].TextContentAsync());
+            Assert.Contains("10,00 €", await sums[0].TextContentAsync());
+            Assert.Contains("Discount", await sums[1].TextContentAsync());
+            Assert.Contains("10% = 1,00 €", await sums[1].TextContentAsync());
+            Assert.Contains("Subtotal", await sums[2].TextContentAsync());
+            var aaa = await sums[2].TextContentAsync();
+            Assert.Contains("9,00 €", await sums[2].TextContentAsync());
+            Assert.Contains("Tip", await sums[3].TextContentAsync());
+            Assert.Contains("10% = 0,90 €", await sums[3].TextContentAsync());
+            Assert.Contains("Total", await sums[4].TextContentAsync());
+            Assert.Contains("9,90 €", await sums[4].TextContentAsync());
+
+            // Check inventory got updated and is now 3 instead of 5
+            await s.GoToUrl(posUrl);
+            Assert.Equal("3 left", await s.Page.TextContentAsync(".posItem:nth-child(3) .badge.inventory"));
+
+            // Guest user can access recent transactions
+            await s.GoToHome();
+            await s.Logout();
+            await s.LogIn(user, userAccount.RegisterDetails.Password);
+            await s.GoToUrl(posUrl);
+            await s.Page.WaitForSelectorAsync("#RecentTransactionsToggle");
+            await s.GoToHome();
+            await s.Logout();
+
+            // Unauthenticated user can't access recent transactions
+            await s.GoToUrl(posUrl);
+            Assert.False(await s.Page.IsVisibleAsync("#RecentTransactionsToggle"));
         }
     }
 }

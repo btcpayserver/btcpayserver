@@ -22,7 +22,6 @@ public class WellKnownPosData
     public object Discount { get; set; }
     public object Tip { get; set; }
     public object Total { get; set; }
-    public object DiscountAmount { get; set; }
     public object ItemsTotal { get; set; }
     public object Tax { get; set; }
 }

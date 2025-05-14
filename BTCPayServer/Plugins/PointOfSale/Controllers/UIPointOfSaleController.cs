@@ -227,12 +227,13 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     return RedirectToAction(nameof(ViewPointOfSale), new { appId });
                 }
             }
-            else if ((currentView == PosViewType.Light || settings.ShowCustomAmount) && amount is { } a)
+            else if (((currentView is PosViewType.Cart or PosViewType.Light) || settings.ShowCustomAmount)
+                     && jposData is not null)
             {
-                order.AddLine(new("", 1, a));
-            }
-            else if (currentView == PosViewType.Cart && jposData is not null)
-            {
+                for (var i = 0; i < (jposData.Amounts ?? []).Length; i++)
+                {
+                    order.AddLine(new($"Custom Amount {i + 1}", 1, jposData.Amounts[i]));
+                }
                 choices = AppService.Parse(settings.Template, false);
                 foreach (var cartItem in jposData.Cart ?? [])
                 {
@@ -240,17 +241,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     if (itemChoice == null)
                         return NotFound();
 
-                    if (itemChoice.Inventory.HasValue)
-                    {
-                        switch (itemChoice.Inventory)
-                        {
-                            case <= 0:
-                            case { } inventory when inventory < cartItem.Count:
-                                return wantsJson
-                                    ? Json(new { error = $"Inventory for {itemChoice.Title} exhausted: {itemChoice.Inventory} available" })
-                                    : RedirectToAction(nameof(ViewPointOfSale), new { appId });
-                        }
-                    }
+                    if (itemChoice.Inventory is <= 0 ||
+                        itemChoice.Inventory is { } inv && inv < cartItem.Count)
+                        return wantsJson
+                            ? Json(new { error = $"Inventory for {itemChoice.Title} exhausted: {itemChoice.Inventory} available" })
+                            : RedirectToAction(nameof(ViewPointOfSale), new { appId });
 
                     var expectedCartItemPrice = itemChoice.PriceType != AppItemPriceType.Topup
                         ? itemChoice.Price ?? 0
@@ -373,56 +368,66 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         entity.ExtendedNotifications = true;
                         entity.Metadata.OrderUrl = Request.GetDisplayUrl();
                         entity.Metadata.PosData = jposData is not null ? JObject.FromObject(jposData) : null;
-                        var receiptData = new JObject();
+                        var receiptData = new PosReceiptData();
                         if (choice is not null)
                         {
-                            var dict = new Dictionary<string, string> { { "Title", choice.Title } };
+                            receiptData.Title = choice.Title;
                             if (!string.IsNullOrEmpty(choice.Description))
-                                dict["Description"] = choice.Description;
-                            receiptData = JObject.FromObject(dict);
+                                receiptData.Description = choice.Title;
                         }
                         else if (jposData is not null)
                         {
-                            receiptData = new JObject();
-                            if (cartItems is not null && choices is not null)
+                            var posCartItems = cartItems?.ToList() ?? new();
+                            var selectedChoices = choices?
+                                .Where(item => posCartItems.Any(cartItem => cartItem.Id == item.Id))
+                                .ToDictionary(item => item.Id) ?? new();
+                            Dictionary<string,string> cartData = null;
+                            foreach (var cartItem in posCartItems)
                             {
-                                var posCartItems = cartItems.ToList();
-                                var selectedChoices = choices
-                                    .Where(item => posCartItems.Any(cartItem => cartItem.Id == item.Id))
-                                    .ToDictionary(item => item.Id);
-                                var cartData = new JObject();
-                                foreach (var cartItem in posCartItems)
-                                {
-                                    if (!selectedChoices.TryGetValue(cartItem.Id, out var selectedChoice))
-                                        continue;
-                                    var singlePrice = _displayFormatter.Currency(cartItem.Price, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
-                                    var totalPrice = _displayFormatter.Currency(cartItem.Price * cartItem.Count, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
-                                    var ident = selectedChoice.Title ?? selectedChoice.Id;
-                                    var key = selectedChoice.PriceType == AppItemPriceType.Fixed ? ident : $"{ident} ({singlePrice})";
-                                    cartData.Add(key, $"{cartItem.Count} x {singlePrice} = {totalPrice}");
-                                }
-
-                                if (jposData.Amounts is { Length: > 0 } amountsArray)
-                                {
-                                    for (var i = 0; i < amountsArray.Length; i++)
-                                    {
-                                        cartData.Add($"Custom Amount {i + 1}", _displayFormatter.Currency(amountsArray[i], settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
-                                    }
-                                }
-                                receiptData.Add("Cart", cartData);
+                                if (!selectedChoices.TryGetValue(cartItem.Id, out var selectedChoice))
+                                    continue;
+                                var singlePrice = _displayFormatter.Currency(cartItem.Price, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                                var totalPrice = _displayFormatter.Currency(cartItem.Price * cartItem.Count, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                                var ident = selectedChoice.Title ?? selectedChoice.Id;
+                                var key = selectedChoice.PriceType == AppItemPriceType.Fixed ? ident : $"{ident} ({singlePrice})";
+                                cartData ??= new();
+                                cartData.Add(key, $"{cartItem.Count} x {singlePrice} = {totalPrice}");
                             }
-                            receiptData.Add("Subtotal", _displayFormatter.Currency(jposData.Total, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
+
+                            for (var i = 0; i < (jposData.Amounts ?? []).Length; i++)
+                            {
+                                cartData ??= new();
+                                cartData.Add($"Custom Amount {i + 1}", _displayFormatter.Currency(jposData.Amounts[i], settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
+                            }
+
+                            receiptData.Cart = cartData;
+                            receiptData.Subtotal = _displayFormatter.Currency(jposData.Subtotal, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
                             if (jposData.DiscountAmount > 0)
                             {
                                 var discountFormatted = _displayFormatter.Currency(jposData.DiscountAmount, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
-                                receiptData.Add("Discount", jposData.DiscountPercentage > 0 ? $"{jposData.DiscountPercentage}% = {discountFormatted}" : discountFormatted);
+                                receiptData.Discount = jposData.DiscountPercentage > 0 ? $"{jposData.DiscountPercentage}% = {discountFormatted}" : discountFormatted;
                             }
                             if (jposData.Tip > 0)
                             {
                                 var tipFormatted = _displayFormatter.Currency(jposData.Tip, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
-                                receiptData.Add("Tip", jposData.TipPercentage > 0 ? $"{jposData.TipPercentage}% = {tipFormatted}" : tipFormatted);
+                                receiptData.Tip = jposData.TipPercentage > 0 ? $"{jposData.TipPercentage}% = {tipFormatted}" : tipFormatted;
                             }
-                            receiptData.Add("Total", _displayFormatter.Currency(jposData.Total, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
+                            if (jposData.Tax > 0)
+                            {
+                                var taxFormatted = _displayFormatter.Currency(jposData.Tax, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                                receiptData.Tax = taxFormatted;
+                            }
+                            if (jposData.ItemsTotal > 0)
+                            {
+                                var itemsTotal = _displayFormatter.Currency(jposData.ItemsTotal, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                                receiptData.ItemsTotal = itemsTotal;
+                            }
+                            if (jposData.DiscountAmount > 0)
+                            {
+                                var discountTotal = _displayFormatter.Currency(jposData.DiscountAmount, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                                receiptData.DiscountAmount = discountTotal;
+                            }
+                            receiptData.Total = _displayFormatter.Currency(jposData.Total, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
                         }
                         entity.Metadata.SetAdditionalData("receiptData", receiptData);
 

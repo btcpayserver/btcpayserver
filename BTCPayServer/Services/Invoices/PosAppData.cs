@@ -20,18 +20,6 @@ public class PosAppData
         return null;
     }
 
-    public static PosAppData? TryParse(Dictionary<string, object> data)
-    {
-        try
-        {
-            return JObject.FromObject(data).ToObject<PosAppData>();
-        }
-        catch
-        {
-        }
-        return null;
-    }
-
     [JsonProperty(PropertyName = "cart")]
     public PosAppCartItem[] Cart { get; set; }
 

@@ -1,16 +1,11 @@
 @using BTCPayServer.Services.Invoices
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model (Dictionary<string, object> Items, int Level)
-@{
-    var posData = PosAppData.TryParse(Model.Items) ?? new();
-}
 
 @if (Model.Items.Any())
 {
-    @* Use titlecase and lowercase versions for backwards-compatibility *@
-    string[] cartKeys = ["cart", "subtotal", "discount", "tip", "total"];
     <table class="table my-0" v-pre>
-        @if (Model.Items.Keys.Any(key => cartKeys.Contains(key.ToLowerInvariant())))
+        @if (Model.Items.Keys.Any(WellKnownPosData.IsWellKnown))
         {
             _ = Model.Items.TryGetValue("cart", out var cart) || Model.Items.TryGetValue("Cart", out cart);
             if (cart is Dictionary<string, object> { Keys.Count: > 0 } cartDict)
@@ -35,50 +30,44 @@
                 }
                 </tbody>
             }
+            var posData = WellKnownPosData.TryParse(Model.Items) ?? new();
             <tfoot style="border-top-width:0">
-            @if (posData.ItemsTotal != 0.0m)
+            @if (posData.ItemsTotal != null)
             {
                 <tr style="border-top-width:3px">
                     <th text-translate="true">Items total</th>
                     <td class="text-end">@posData.ItemsTotal</td>
                 </tr>
             }
-            @if (posData.DiscountAmount != 0.0m)
+            @if (posData.DiscountAmount != null)
             {
                 <tr>
                     <th text-translate="true">Discount</th>
                     <td class="text-end">@posData.DiscountAmount</td>
                 </tr>
             }
-            @if (posData.Subtotal != 0.0m && posData.Subtotal != posData.Total)
+            @if (posData.Subtotal != null && posData.Subtotal != posData.Total)
             {
                 <tr style="border-top-width:3px">
                     <th text-translate="true">Subtotal</th>
                     <td class="text-end">@posData.Subtotal</td>
                 </tr>
             }
-            @if (posData.Tax != 0.0m)
+            @if (posData.Tax != null)
             {
                 <tr>
                     <th text-translate="true">Tax</th>
                     <td class="text-end">@posData.Tax</td>
                 </tr>
             }
-            @if (posData.Tip != 0.0m)
+            @if (posData.Tip != null)
             {
                 <tr>
-                    @if (posData.TipPercentage != 0.0m)
-                    {
-                        <th><span text-translate="true">Tip</span> (@(posData.TipPercentage + "%"))</th>
-                    }
-                    else
-                    {
                         <th text-translate="true">Tip</th>
-                    }
-                    <td class="text-end">@posData.Tip</td>
+                        <td class="text-end">@posData.Tip</td>
                 </tr>
             }
-            @if (posData.Total != 0.0m)
+            @if (posData.Total != null)
             {
                 <tr style="border-top-width:3px">
                     <th text-translate="true">Total</th>

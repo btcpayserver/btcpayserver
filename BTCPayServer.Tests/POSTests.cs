@@ -348,35 +348,25 @@ donation:
             // Receipt
             await s.Page.ClickAsync("#ReceiptLink");
             await s.Page.WaitForSelectorAsync("#CartData table");
-            var items = await s.Page.QuerySelectorAllAsync("#CartData table tbody tr");
-            var sums = await s.Page.QuerySelectorAllAsync("#CartData table tfoot tr");
-            Assert.Equal(7, items.Count);
-            Assert.Equal(5, sums.Count);
-            Assert.Contains("Black Tea", await items[0].TextContentAsync());
-            Assert.Contains("2 x 1,00 € = 2,00 €", await items[0].TextContentAsync());
-            Assert.Contains("Green Tea", await items[1].TextContentAsync());
-            Assert.Contains("1 x 1,00 € = 1,00 €", await items[1].TextContentAsync());
-            Assert.Contains("Rooibos (limited)", await items[2].TextContentAsync());
-            Assert.Contains("2 x 1,20 € = 2,40 €", await items[2].TextContentAsync());
-            Assert.Contains("Herbal Tea (minimum) (1,80 €)", await items[3].TextContentAsync());
-            Assert.Contains("1 x 1,80 € = 1,80 €", await items[3].TextContentAsync());
-            Assert.Contains("Herbal Tea (minimum) (2,30 €)", await items[4].TextContentAsync());
-            Assert.Contains("1 x 2,30 € = 2,30 €", await items[4].TextContentAsync());
-            Assert.Contains("Fruit Tea (any amount) (0,20 €)", await items[5].TextContentAsync());
-            Assert.Contains("1 x 0,20 € = 0,20 €", await items[5].TextContentAsync());
-            Assert.Contains("Fruit Tea (any amount) (0,30 €)", await items[6].TextContentAsync());
-            Assert.Contains("1 x 0,30 € = 0,30 €", await items[6].TextContentAsync());
-            Assert.Contains("Items total", await sums[0].TextContentAsync());
-            Assert.Contains("10,00 €", await sums[0].TextContentAsync());
-            Assert.Contains("Discount", await sums[1].TextContentAsync());
-            Assert.Contains("10% = 1,00 €", await sums[1].TextContentAsync());
-            Assert.Contains("Subtotal", await sums[2].TextContentAsync());
-            var aaa = await sums[2].TextContentAsync();
-            Assert.Contains("9,00 €", await sums[2].TextContentAsync());
-            Assert.Contains("Tip", await sums[3].TextContentAsync());
-            Assert.Contains("10% = 0,90 €", await sums[3].TextContentAsync());
-            Assert.Contains("Total", await sums[4].TextContentAsync());
-            Assert.Contains("9,90 €", await sums[4].TextContentAsync());
+            await AssertReceipt(s, new()
+            {
+                Items = [
+                    new("Black Tea", "2 x 1,00 € = 2,00 €"),
+                    new("Green Tea", "1 x 1,00 € = 1,00 €"),
+                    new("Rooibos (limited)", "2 x 1,20 € = 2,40 €"),
+                    new("Herbal Tea (minimum) (1,80 €)", "1 x 1,80 € = 1,80 €"),
+                    new("Herbal Tea (minimum) (2,30 €)", "1 x 2,30 € = 2,30 €"),
+                    new("Fruit Tea (any amount) (0,20 €)", "1 x 0,20 € = 0,20 €"),
+                    new("Fruit Tea (any amount) (0,30 €)", "1 x 0,30 € = 0,30 €")
+                ],
+                Sums = [
+                    new("Items total", "10,00 €"),
+                    new("Discount", "10% = 1,00 €"),
+                    new("Subtotal", "9,00 €"),
+                    new("Tip", "10% = 0,90 €"),
+                    new("Total", "9,90 €")
+                ]
+            });
 
             // Check inventory got updated and is now 3 instead of 5
             await s.GoToUrl(posUrl);
@@ -394,6 +384,229 @@ donation:
             // Unauthenticated user can't access recent transactions
             await s.GoToUrl(posUrl);
             Assert.False(await s.Page.IsVisibleAsync("#RecentTransactionsToggle"));
+        }
+
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        public async Task CanUsePOSKeypad()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+
+            // Create users
+            var user = await s.RegisterNewUser();
+            var userAccount = s.AsTestAccount();
+            await s.GoToHome();
+            await s.Logout();
+            await s.GoToRegister();
+            await s.RegisterNewUser(true);
+
+            // Setup store and associate user
+            (_, string storeId) = await s.CreateNewStore();
+            await s.GoToStore();
+            await s.AddDerivationScheme();
+            await s.AddUserToStore(storeId, user, "Guest");
+
+            // Setup POS
+            await s.CreateApp("PointOfSale");
+            var editUrl = s.Page.Url;
+            await s.Page.ClickAsync("label[for='DefaultView_Light']");
+            await s.Page.FillAsync("#Currency", "EUR");
+            Assert.False(await s.Page.IsCheckedAsync("#EnableTips"));
+            await s.Page.ClickAsync("#EnableTips");
+            Assert.True(await s.Page.IsCheckedAsync("#EnableTips"));
+            await s.Page.FillAsync("#CustomTipPercentages", "");
+            await s.Page.FillAsync("#CustomTipPercentages", "10,21");
+            Assert.False(await s.Page.IsCheckedAsync("#ShowDiscount"));
+            Assert.False(await s.Page.IsCheckedAsync("#ShowItems"));
+            await s.Page.ClickAsync("#ShowDiscount");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "App updated");
+
+            // View
+            var o = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("#ViewApp");
+            var newPage = await o;
+            await newPage.WaitForSelectorAsync(".keypad");
+            await newPage.BringToFrontAsync();
+            s.Page = newPage;
+
+            // basic checks
+            var keypadUrl = s.Page.Url;
+            await s.Page.WaitForSelectorAsync("#RecentTransactionsToggle");
+            Assert.Null(await s.Page.QuerySelectorAsync("#ItemsListToggle"));
+            Assert.Contains("EUR", await s.Page.TextContentAsync("#Currency"));
+            Assert.Contains("0,00", await s.Page.TextContentAsync("#Amount"));
+            Assert.Equal("", await s.Page.TextContentAsync("#Calculation"));
+            Assert.True(await s.Page.IsCheckedAsync("#ModeTablist-amounts"));
+            Assert.False(await s.Page.IsEnabledAsync("#ModeTablist-discount"));
+            Assert.False(await s.Page.IsEnabledAsync("#ModeTablist-tip"));
+
+            // Amount: 1234,56
+            await EnterKeypad(s, "123400");
+            Assert.Equal("1.234,00", await s.Page.TextContentAsync("#Amount"));
+            Assert.Equal("", await s.Page.TextContentAsync("#Calculation"));
+            await EnterKeypad(s, "+56");
+            Assert.Equal("1.234,56", await s.Page.TextContentAsync("#Amount"));
+            Assert.True(await s.Page.IsEnabledAsync("#ModeTablist-discount"));
+            Assert.True(await s.Page.IsEnabledAsync("#ModeTablist-tip"));
+            Assert.Equal("1.234,00 € + 0,56 €", await s.Page.TextContentAsync("#Calculation"));
+
+            // Discount: 10%
+            await s.Page.ClickAsync("label[for='ModeTablist-discount']");
+            await s.Page.ClickAsync(".keypad [data-key='1']");
+            await s.Page.ClickAsync(".keypad [data-key='0']");
+            Assert.Contains("1.111,10", await s.Page.TextContentAsync("#Amount"));
+            Assert.Contains("10% discount", await s.Page.TextContentAsync("#Discount"));
+            Assert.Contains("1.234,00 € + 0,56 € - 123,46 € (10%)", await s.Page.TextContentAsync("#Calculation"));
+
+            // Tip: 10%
+            await s.Page.ClickAsync("label[for='ModeTablist-tip']");
+            await s.Page.ClickAsync("#Tip-10");
+            Assert.Contains("1.222,21", await s.Page.TextContentAsync("#Amount"));
+            Assert.Contains("1.234,00 € + 0,56 € - 123,46 € (10%) + 111,11 € (10%)", await s.Page.TextContentAsync("#Calculation"));
+
+            // Pay
+            await s.Page.ClickAsync("#pay-button");
+            await s.Page.ClickAsync("#DetailsToggle");
+            Assert.Contains("1 222,21 €", await s.Page.TextContentAsync("#PaymentDetails-TotalFiat"));
+            await s.PayInvoice(true);
+
+            // Receipt
+            await s.Page.ClickAsync("#ReceiptLink");
+            await AssertReceipt(s, new()
+            {
+                Items = [
+
+                    new("Custom Amount 1", "1 234,00 €"),
+                    new("Custom Amount 2", "0,56 €")
+                ],
+                Sums = [
+
+                    new("Items total", "1 234,56 €"),
+                    new("Discount", "10% = 123,46 €"),
+                    new("Subtotal", "1 111,10 €"),
+                    new("Tip", "10% = 111,11 €"),
+                    new("Total", "1 222,21 €")
+                ]
+            });
+
+            await s.GoToUrl(editUrl);
+            await s.Page.ClickAsync("#ShowItems");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "App updated");
+
+            await s.GoToUrl(keypadUrl);
+            await s.Page.ClickAsync("#ItemsListToggle");
+            await s.Page.WaitForSelectorAsync("#PosItems");
+            await s.Page.ClickAsync("#PosItems .posItem--displayed:nth-child(1) .btn-plus");
+            await s.Page.ClickAsync("#PosItems .posItem--displayed:nth-child(1) .btn-plus");
+            await s.Page.ClickAsync("#PosItems .posItem--displayed:nth-child(2) .btn-plus");
+            await s.Page.ClickAsync("#ItemsListOffcanvas button[data-bs-dismiss='offcanvas']");
+
+            await EnterKeypad(s, "123");
+            Assert.Contains("4,23", await s.Page.TextContentAsync("#Amount"));
+            var txt = await s.Page.TextContentAsync("#Calculation");
+            Assert.Contains("2 x Green Tea (1,00 €) = 2,00 € + 1 x Black Tea (1,00 €) = 1,00 € + 1,23 €", await s.Page.TextContentAsync("#Calculation"));
+
+            // Pay
+            await s.Page.ClickAsync("#pay-button");
+            await s.Page.WaitForSelectorAsync("#Checkout");
+            await s.Page.ClickAsync("#DetailsToggle");
+            await s.Page.WaitForSelectorAsync("#PaymentDetails-TotalFiat");
+            Assert.Contains("4,23 €", await s.Page.TextContentAsync("#PaymentDetails-TotalFiat"));
+            await s.PayInvoice(true);
+
+
+            // Receipt
+            await s.Page.ClickAsync("#ReceiptLink");
+
+            await AssertReceipt(s, new()
+            {
+                Items = [
+                    new("Black Tea", "1 x 1,00 € = 1,00 €"),
+                    new("Green Tea", "2 x 1,00 € = 2,00 €"),
+                    new("Custom Amount 1", "1,23 €")
+                ],
+                Sums = [
+                    new("Total", "4,23 €")
+                ]
+            });
+
+            // Guest user can access recent transactions
+            await s.GoToHome();
+            await s.Logout();
+            await s.LogIn(user, userAccount.RegisterDetails.Password);
+            await s.GoToUrl(keypadUrl);
+            await s.Page.WaitForSelectorAsync("#RecentTransactionsToggle");
+            await s.GoToHome();
+            await s.Logout();
+
+            // Unauthenticated user can't access recent transactions
+            await s.GoToUrl(keypadUrl);
+            Assert.False(await s.Page.IsVisibleAsync("#RecentTransactionsToggle"));
+
+            // But they can generate invoices
+            await EnterKeypad(s, "123");
+
+            await s.Page.ClickAsync("#pay-button");
+            await s.Page.WaitForSelectorAsync("#Checkout");
+            await s.Page.ClickAsync("#DetailsToggle");
+            await s.Page.WaitForSelectorAsync("#PaymentDetails-TotalFiat");
+            Assert.Contains("1,23 €", await s.Page.TextContentAsync("#PaymentDetails-TotalFiat"));
+        }
+
+        public class AssertReceiptAssertion
+        {
+            public record Line(string Key, string Value);
+            public Line[] Items { get; set; }
+            public Line[] Sums { get; set; }
+        }
+
+        private async Task AssertReceipt(PlaywrightTester s, AssertReceiptAssertion assertion)
+        {
+            await AssertReceipt(s, assertion, "#CartData table tbody tr", "#CartData table tfoot tr");
+
+            // Receipt print
+            var oldPage = s.Page;
+            var o = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("#ReceiptLinkPrint");
+            var newPage = await o;
+            await newPage.BringToFrontAsync();
+            s.Page = newPage;
+
+            await AssertReceipt(s, assertion, "#PaymentDetails table tr.cart-data", "#PaymentDetails table tr.sums-data");
+            s.Page = oldPage;
+            await newPage.CloseAsync();
+        }
+
+        private async Task AssertReceipt(PlaywrightTester s, AssertReceiptAssertion assertion, string itemSelector, string sumsSelector)
+        {
+            var items = await s.Page.QuerySelectorAllAsync(itemSelector);
+            var sums = await s.Page.QuerySelectorAllAsync(sumsSelector);
+            Assert.Equal(assertion.Items.Length, items.Count);
+            Assert.Equal(assertion.Sums.Length, sums.Count);
+            for (int i = 0; i < assertion.Items.Length; i++)
+            {
+                var txt = (await items[i].TextContentAsync()).NormalizeWhitespaces();
+                Assert.Contains(assertion.Items[i].Key.NormalizeWhitespaces(), txt);
+                Assert.Contains(assertion.Items[i].Value.NormalizeWhitespaces(), txt);
+            }
+
+            for (int i = 0; i < assertion.Sums.Length; i++)
+            {
+                var txt = (await sums[i].TextContentAsync()).NormalizeWhitespaces();
+                Assert.Contains(assertion.Sums[i].Key.NormalizeWhitespaces(), txt);
+                Assert.Contains(assertion.Sums[i].Value.NormalizeWhitespaces(), txt);
+            }
+        }
+
+        private async Task EnterKeypad(PlaywrightTester tester, string text)
+        {
+            foreach (char c in text)
+            {
+                await tester.Page.ClickAsync($".keypad [data-key='{c}']");
+            }
         }
     }
 }

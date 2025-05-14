@@ -220,6 +220,15 @@ namespace BTCPayServer.Tests
                         e => e.CurrencyPair == new CurrencyPair("BTC", "NOK") &&
                              e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 NOK
                 }
+                else if (name == "coinmate")
+                {
+                    Assert.Contains(exchangeRates.ByExchange[name],
+                        e => e.CurrencyPair == new CurrencyPair("BTC", "EUR") &&
+                             e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 EUR
+                    Assert.Contains(exchangeRates.ByExchange[name],
+                        e => e.CurrencyPair == new CurrencyPair("BTC", "CZK") &&
+                             e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 CZK
+                }
                 else
                 {
                     if (name == "kraken")

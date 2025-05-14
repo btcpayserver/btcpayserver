@@ -27,7 +27,9 @@ public class PoSOrder
     {
         public decimal Discount { get; set; }
         public decimal Tax { get; set; }
+        public decimal ItemsTotal { get; set; }
         public decimal PriceTaxExcluded { get; set; }
+        public decimal Tip { get; set; }
         public decimal PriceTaxIncluded { get; set; }
         public decimal PriceTaxIncludedWithTips { get; set; }
     }
@@ -51,6 +53,8 @@ public class PoSOrder
         ctx.PriceTaxIncluded = ctx.PriceTaxExcluded + ctx.Tax;
         ctx.PriceTaxIncludedWithTips = ctx.PriceTaxIncluded + _tip;
         ctx.PriceTaxIncludedWithTips = Round(ctx.PriceTaxIncludedWithTips);
+        ctx.Tip = Round(_tip);
+        ctx.ItemsTotal = ctx.PriceTaxExcluded + ctx.Discount;
         return ctx;
     }
 

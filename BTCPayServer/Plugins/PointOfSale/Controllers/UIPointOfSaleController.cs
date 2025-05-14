@@ -197,14 +197,14 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
             }
 
-            var jposData = TryParseJObject(posData);
+            var jposData = PosAppData.TryParse(posData);
             string title = settings.Title;
             PoSOrder order = new(_currencies.GetNumberFormatInfo(settings.Currency, true).CurrencyDecimalDigits);
             if (settings.DefaultTaxRate is { } rate)
                 order.SetTaxRate(rate);
             Dictionary<string, InvoiceSupportedTransactionCurrency> paymentMethods = null;
             AppItem choice = null;
-            List<AppCartItem> cartItems = null;
+            var cartItems = jposData?.Cart;
             AppItem[] choices = null;
             if (!string.IsNullOrEmpty(choiceKey))
             {
@@ -231,10 +231,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             {
                 order.AddLine(new("", 1, a));
             }
-            else if (currentView == PosViewType.Cart && AppService.TryParsePosCartItems(jposData, out cartItems))
+            else if (currentView == PosViewType.Cart && jposData is not null)
             {
                 choices = AppService.Parse(settings.Template, false);
-                foreach (var cartItem in cartItems)
+                foreach (var cartItem in jposData.Cart ?? [])
                 {
                     var itemChoice = choices.FirstOrDefault(item => item.Id == cartItem.Id);
                     if (itemChoice == null)
@@ -332,6 +332,16 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             try
             {
                 var summary = order?.Calculate();
+                if (summary is not null && jposData is not null)
+                {
+                    jposData.ItemsTotal = summary.ItemsTotal;
+                    jposData.DiscountAmount = summary.Discount;
+                    jposData.Subtotal = summary.PriceTaxExcluded;
+                    jposData.Tax = summary.Tax;
+                    jposData.Tip = summary.Tip;
+                    jposData.Total = summary.PriceTaxIncludedWithTips;
+                }
+
                 var invoice = await _invoiceController.CreateInvoiceCoreRaw(new CreateInvoiceRequest
                 {
                     Amount = summary?.PriceTaxIncludedWithTips,
@@ -362,7 +372,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         entity.FullNotifications = true;
                         entity.ExtendedNotifications = true;
                         entity.Metadata.OrderUrl = Request.GetDisplayUrl();
-                        entity.Metadata.PosData = jposData;
+                        entity.Metadata.PosData = jposData is not null ? JObject.FromObject(jposData) : null;
                         var receiptData = new JObject();
                         if (choice is not null)
                         {
@@ -373,7 +383,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         }
                         else if (jposData is not null)
                         {
-                            var appPosData = jposData.ToObject<PosAppData>();
                             receiptData = new JObject();
                             if (cartItems is not null && choices is not null)
                             {
@@ -382,7 +391,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                     .Where(item => posCartItems.Any(cartItem => cartItem.Id == item.Id))
                                     .ToDictionary(item => item.Id);
                                 var cartData = new JObject();
-                                foreach (AppCartItem cartItem in posCartItems)
+                                foreach (var cartItem in posCartItems)
                                 {
                                     if (!selectedChoices.TryGetValue(cartItem.Id, out var selectedChoice))
                                         continue;
@@ -393,27 +402,27 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                     cartData.Add(key, $"{cartItem.Count} x {singlePrice} = {totalPrice}");
                                 }
 
-                                if (jposData.TryGetValue("amounts", out var amounts) && amounts is JArray { Count: > 0 } amountsArray)
+                                if (jposData.Amounts is { Length: > 0 } amountsArray)
                                 {
-                                    for (var i = 0; i < amountsArray.Count; i++)
+                                    for (var i = 0; i < amountsArray.Length; i++)
                                     {
-                                        cartData.Add($"Custom Amount {i + 1}", _displayFormatter.Currency(amountsArray[i].ToObject<decimal>(), settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
+                                        cartData.Add($"Custom Amount {i + 1}", _displayFormatter.Currency(amountsArray[i], settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
                                     }
                                 }
                                 receiptData.Add("Cart", cartData);
                             }
-                            receiptData.Add("Subtotal", _displayFormatter.Currency(appPosData.Subtotal, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
-                            if (appPosData.DiscountAmount > 0)
+                            receiptData.Add("Subtotal", _displayFormatter.Currency(jposData.Total, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
+                            if (jposData.DiscountAmount > 0)
                             {
-                                var discountFormatted = _displayFormatter.Currency(appPosData.DiscountAmount, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
-                                receiptData.Add("Discount", appPosData.DiscountPercentage > 0 ? $"{appPosData.DiscountPercentage}% = {discountFormatted}" : discountFormatted);
+                                var discountFormatted = _displayFormatter.Currency(jposData.DiscountAmount, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                                receiptData.Add("Discount", jposData.DiscountPercentage > 0 ? $"{jposData.DiscountPercentage}% = {discountFormatted}" : discountFormatted);
                             }
-                            if (appPosData.Tip > 0)
+                            if (jposData.Tip > 0)
                             {
-                                var tipFormatted = _displayFormatter.Currency(appPosData.Tip, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
-                                receiptData.Add("Tip", appPosData.TipPercentage > 0 ? $"{appPosData.TipPercentage}% = {tipFormatted}" : tipFormatted);
+                                var tipFormatted = _displayFormatter.Currency(jposData.Tip, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                                receiptData.Add("Tip", jposData.TipPercentage > 0 ? $"{jposData.TipPercentage}% = {tipFormatted}" : tipFormatted);
                             }
-                            receiptData.Add("Total", _displayFormatter.Currency(appPosData.Total, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
+                            receiptData.Add("Total", _displayFormatter.Currency(jposData.Total, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
                         }
                         entity.Metadata.SetAdditionalData("receiptData", receiptData);
 

@@ -29,59 +29,52 @@ namespace BTCPayServer.Controllers
     {
         private readonly ThemeSettings _theme;
         private readonly StoreRepository _storeRepository;
-        private IHttpClientFactory HttpClientFactory { get; }
-        private SignInManager<ApplicationUser> SignInManager { get; }
-
-        private IFileProvider _WebRootFileProvider;
-
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly IFileProvider _webRootFileProvider;
         public LanguageService LanguageService { get; }
 
-        public UIHomeController(IHttpClientFactory httpClientFactory,
-                              ThemeSettings theme,
-                              LanguageService languageService,
-                              StoreRepository storeRepository,
-                              IWebHostEnvironment environment,
-                              SignInManager<ApplicationUser> signInManager)
+        public UIHomeController(
+            IHttpClientFactory httpClientFactory,
+            ThemeSettings theme,
+            LanguageService languageService,
+            StoreRepository storeRepository,
+            IWebHostEnvironment environment,
+            SignInManager<ApplicationUser> signInManager)
         {
             _theme = theme;
-            HttpClientFactory = httpClientFactory;
+            _httpClientFactory = httpClientFactory;
             LanguageService = languageService;
             _storeRepository = storeRepository;
-            SignInManager = signInManager;
-            _WebRootFileProvider = environment.WebRootFileProvider;
+            _signInManager = signInManager;
+            _webRootFileProvider = environment.WebRootFileProvider;
         }
 
         [HttpGet("home")]
-        public Task<IActionResult> Home()
-        {
-            return Index();
-        }
+        public Task<IActionResult> Home() => Index();
 
         [Route("")]
         [DomainMappingConstraint]
         public async Task<IActionResult> Index()
         {
             if (_theme.FirstRun)
-            {
                 return RedirectToAction(nameof(UIAccountController.Register), "UIAccount");
-            }
 
-            if (SignInManager.IsSignedIn(User))
+            if (_signInManager.IsSignedIn(User))
             {
-                var userId = SignInManager.UserManager.GetUserId(HttpContext.User);
+                var userId = _signInManager.UserManager.GetUserId(User);
                 var storeId = HttpContext.GetUserPrefsCookie()?.CurrentStoreId;
+
                 if (storeId != null)
                 {
-                    // verify store exists and redirect to it
                     var store = await _storeRepository.FindStore(storeId);
                     if (store != null)
-                    {
                         return RedirectToAction(nameof(UIStoresController.Index), "UIStores", new { storeId });
-                    }
                 }
 
                 var stores = await _storeRepository.GetStoresByUserId(userId!);
                 var activeStore = stores.FirstOrDefault(s => !s.Archived);
+
                 return activeStore != null
                     ? RedirectToAction(nameof(UIStoresController.Index), "UIStores", new { storeId = activeStore.Id })
                     : RedirectToAction(nameof(UIUserStoresController.CreateStore), "UIUserStores");
@@ -90,50 +83,55 @@ namespace BTCPayServer.Controllers
             return Challenge();
         }
 
-        [Route("misc/lang")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
-        public IActionResult Languages()
-        {
-            return Json(LanguageService.GetLanguages(), new JsonSerializerSettings { Formatting = Formatting.Indented });
-        }
+        // ----- JSON Endpoints -----
 
-        [Route("misc/permissions")]
+        [HttpGet("misc/lang")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
-        public IActionResult Permissions()
-        {
-            return Json(Client.Models.PermissionMetadata.PermissionNodes, new JsonSerializerSettings { Formatting = Formatting.Indented });
-        }
-        [Route("misc/translations/{resource}/{lang}")]
+        public IActionResult Languages() =>
+            Json(LanguageService.GetLanguages(), new JsonSerializerSettings { Formatting = Formatting.Indented });
+
+        [HttpGet("misc/permissions")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
+        public IActionResult Permissions() =>
+            Json(Client.Models.PermissionMetadata.PermissionNodes, new JsonSerializerSettings { Formatting = Formatting.Indented });
+
+        [HttpGet("misc/translations/{resource}/{lang}")]
         [AllowAnonymous]
         public IActionResult GetTranslations(string resource, string lang)
         {
-            string path;
-            if (resource.StartsWith("checkout"))
-                path = "locales/checkout";
-            else
+            if (!resource.StartsWith("checkout"))
                 return NotFound();
-            var enLang = Lang(path + "/en.json");
-            var en = (enLang as JsonResult)?.Value as JObject;
-            if (en is null || lang == "en" || lang == "en-US")
-                return enLang;
-            lang = LanguageService.FindLanguage(lang)?.Code;
-            if (lang is null)
-                return enLang;
-            var oLang = Lang(path + $"/{lang}.json");
-            var o = (oLang as JsonResult)?.Value as JObject;
-            if (o is null)
-                return enLang;
-            en.Merge(o);
-            return Json(en);
+
+            var basePath = "locales/checkout";
+            var englishJsonResult = LoadJsonFromFile($"{basePath}/en.json");
+            var englishJson = (englishJsonResult as JsonResult)?.Value as JObject;
+
+            if (englishJson == null || lang == "en" || lang == "en-US")
+                return englishJsonResult;
+
+            var matchedLang = LanguageService.FindLanguage(lang)?.Code;
+            if (matchedLang == null)
+                return englishJsonResult;
+
+            var localizedJsonResult = LoadJsonFromFile($"{basePath}/{matchedLang}.json");
+            var localizedJson = (localizedJsonResult as JsonResult)?.Value as JObject;
+
+            if (localizedJson == null)
+                return englishJsonResult;
+
+            englishJson.Merge(localizedJson);
+            return Json(englishJson);
         }
 
-        private IActionResult Lang(string path)
+        private IActionResult LoadJsonFromFile(string path)
         {
-            var fi = _WebRootFileProvider.GetFileInfo(path);
+            var file = _webRootFileProvider.GetFileInfo(path);
             try
             {
-                using var fs = fi.CreateReadStream();
-                return Json(JObject.Load(new JsonTextReader(new StreamReader(fs, leaveOpen: true))));
+                using var stream = file.CreateReadStream();
+                using var reader = new StreamReader(stream);
+                using var jsonReader = new JsonTextReader(reader);
+                return Json(JObject.Load(jsonReader));
             }
             catch
             {
@@ -141,57 +139,54 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        [Route("swagger/v1/swagger.json")]
+        // ----- Swagger -----
+
+        [HttpGet("swagger/v1/swagger.json")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> Swagger([FromServices] IEnumerable<ISwaggerProvider> swaggerProviders)
         {
-            JObject json = new();
-            var res = await Task.WhenAll(swaggerProviders.Select(provider => provider.Fetch()));
-            foreach (JObject jObject in res)
+            var mergedJson = new JObject();
+            var swaggerDocs = await Task.WhenAll(swaggerProviders.Select(p => p.Fetch()));
+            foreach (var doc in swaggerDocs)
+                mergedJson.Merge(doc);
+
+            // Add server info
+            mergedJson["servers"] = new JArray(new JObject(new JProperty("url", HttpContext.Request.GetAbsoluteRoot())));
+
+            // Sort tags alphabetically
+            if (mergedJson["tags"] is JArray tags)
             {
-                json.Merge(jObject);
+                mergedJson["tags"] = new JArray(tags
+                    .Select(t => (name: t["name"]?.ToString(), tag: t))
+                    .OrderBy(t => t.name)
+                    .Select(t => t.tag));
             }
-            var servers = new JArray();
-            servers.Add(new JObject(new JProperty("url", HttpContext.Request.GetAbsoluteRoot())));
-            json["servers"] = servers;
-            var tags = (JArray)json["tags"];
-            json["tags"] = new JArray(tags
-                .Select(o => (name: ((JObject)o)["name"].Value<string>(), o))
-                .OrderBy(o => o.name)
-                .Select(o => o.o)
-                .ToArray());
-            return Json(json);
+
+            return Json(mergedJson);
         }
 
-        [Route("docs")]
+        [HttpGet("docs")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        public IActionResult SwaggerDocs()
-        {
-            return View();
-        }
+        public IActionResult SwaggerDocs() => View();
 
-        [Route("recovery-seed-backup")]
+        // ----- Recovery Seed -----
+
+        [HttpGet("recovery-seed-backup")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
-        public IActionResult RecoverySeedBackup(RecoverySeedBackupViewModel vm)
+        public IActionResult RecoverySeedBackup(RecoverySeedBackupViewModel vm) =>
+            View("RecoverySeedBackup", vm);
+
+        // ----- Utilities -----
+
+        [HttpPost("postredirect-callback-test")]
+        public IActionResult PostRedirectCallbackTestpage(IFormCollection formData)
         {
-            return View("RecoverySeedBackup", vm);
+            var result = formData.Keys.ToDictionary(k => k, k => formData[k]);
+            return Json(result);
         }
 
-        [HttpPost]
-        [Route("postredirect-callback-test")]
-        public ActionResult PostRedirectCallbackTestpage(IFormCollection data)
-        {
-            var list = data.Keys.Aggregate(new Dictionary<string, string>(), (res, key) =>
-            {
-                res.Add(key, data[key]);
-                return res;
-            });
-            return Json(list);
-        }
-
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
+        [HttpGet("error")]
+        public IActionResult Error() =>
+            View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 }

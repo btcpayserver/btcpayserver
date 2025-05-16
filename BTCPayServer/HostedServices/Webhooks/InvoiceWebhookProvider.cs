@@ -29,6 +29,8 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
             {WebhookEventType.InvoiceExpired, "Invoice - Expired"},
             {WebhookEventType.InvoiceSettled, "Invoice - Is Settled"},
             {WebhookEventType.InvoiceInvalid, "Invoice - Became Invalid"},
+            {WebhookEventType.InvoiceExpiredPaidPartial, "Invoice - Expired Paid Partial"},
+            {WebhookEventType.InvoicePaidAfterExpiration, "Invoice - Expired Paid Late"},
         };
     }
 
@@ -113,6 +115,10 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
                     Payment = GreenfieldInvoiceController.ToPaymentModel(invoiceEvent.Invoice, invoiceEvent.Payment),
                     StoreId = invoiceEvent.Invoice.StoreId
                 };
+            case InvoiceEventCode.ExpiredPaidPartial:
+                return new WebhookInvoiceEvent(WebhookEventType.InvoiceExpiredPaidPartial, storeId);
+            case InvoiceEventCode.PaidAfterExpiration:
+                return new WebhookInvoiceEvent(WebhookEventType.InvoicePaidAfterExpiration, storeId);
             default:
                 return null;
         }

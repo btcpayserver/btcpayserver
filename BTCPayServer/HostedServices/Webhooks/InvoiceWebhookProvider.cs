@@ -116,17 +116,9 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
                     StoreId = invoiceEvent.Invoice.StoreId
                 };
             case InvoiceEventCode.ExpiredPaidPartial:
-                return new WebhookInvoiceReceivedPaymentEvent(WebhookEventType.InvoiceExpiredPaidPartial, storeId)
-                {
-                    AfterExpiration = true,
-                    StoreId = invoiceEvent.Invoice.StoreId
-                };
+                return new WebhookInvoiceEvent(WebhookEventType.InvoiceExpiredPaidPartial, storeId);
             case InvoiceEventCode.PaidAfterExpiration:
-                return new WebhookInvoiceReceivedPaymentEvent(WebhookEventType.InvoicePaidAfterExpiration, storeId)
-                {
-                    AfterExpiration = true,
-                    StoreId = invoiceEvent.Invoice.StoreId
-                };
+                return new WebhookInvoiceEvent(WebhookEventType.InvoicePaidAfterExpiration, storeId);
             default:
                 return null;
         }

@@ -18,7 +18,7 @@ namespace BTCPayServer.Client.Models
         [JsonProperty(Order = 2)] public string PayoutId { get; set; }
         [JsonProperty(Order = 3)] public string PullPaymentId { get; set; }
         [JsonProperty(Order = 4)] [JsonConverter(typeof(StringEnumConverter))]public PayoutState PayoutState { get; set; }
-    } 
+    }
     public class WebhookPaymentRequestEvent : StoreWebhookEvent
     {
         public WebhookPaymentRequestEvent(string type, string storeId)
@@ -32,12 +32,12 @@ namespace BTCPayServer.Client.Models
         [JsonProperty(Order = 2)] public string PaymentRequestId { get; set; }
         [JsonProperty(Order = 3)] [JsonConverter(typeof(StringEnumConverter))]public PaymentRequestStatus Status { get; set; }
     }
-    
+
     public abstract class StoreWebhookEvent : WebhookEvent
     {
         [JsonProperty(Order = 1)] public string StoreId { get; set; }
     }
-    
+
     public class WebhookInvoiceEvent : StoreWebhookEvent
     {
         public WebhookInvoiceEvent()
@@ -45,7 +45,7 @@ namespace BTCPayServer.Client.Models
         }
 
         public WebhookInvoiceEvent(string evtType, string storeId)
-        { 
+        {
             if (!evtType.StartsWith("invoice", StringComparison.InvariantCultureIgnoreCase))
                 throw new ArgumentException("Invalid event type", nameof(evtType));
             Type = evtType;

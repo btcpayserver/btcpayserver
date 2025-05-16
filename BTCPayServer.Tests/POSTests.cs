@@ -277,12 +277,13 @@ donation:
             // View
             var o = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("#ViewApp");
-            var newPage = await o;
-            await newPage.WaitForSelectorAsync("#PosItems");
-            Assert.Empty(await newPage.QuerySelectorAllAsync("#CartItems tr"));
-            var posUrl = newPage.Url;
-            await newPage.BringToFrontAsync();
-            s.Page = newPage;
+            string posUrl;
+            await using (await s.SwitchPage(o))
+            {
+                await s.Page.WaitForSelectorAsync("#PosItems");
+                Assert.Empty(await s.Page.QuerySelectorAllAsync("#CartItems tr"));
+                posUrl = s.Page.Url;
+            }
 
             // Select and clear
             await s.Page.ClickAsync(".posItem:nth-child(1) .btn-primary");
@@ -510,10 +511,7 @@ donation:
             // View
             var o = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("#ViewApp");
-            var newPage = await o;
-            await newPage.WaitForSelectorAsync(".keypad");
-            await newPage.BringToFrontAsync();
-            s.Page = newPage;
+            await s.SwitchPage(o);
 
             // basic checks
             var keypadUrl = s.Page.Url;
@@ -534,20 +532,20 @@ donation:
             Assert.Equal("1.234,56", await s.Page.TextContentAsync("#Amount"));
             Assert.True(await s.Page.IsEnabledAsync("#ModeTablist-discount"));
             Assert.True(await s.Page.IsEnabledAsync("#ModeTablist-tip"));
-            Assert.Equal("1.234,00 € + 0,56 €", await s.Page.TextContentAsync("#Calculation"));
+            await AssertKeypadCalculation(s, "1.234,00 € + 0,56 €");
 
             // Discount: 10%
             await s.Page.ClickAsync("label[for='ModeTablist-discount']");
             await EnterKeypad(s, "10");
             Assert.Contains("1.111,10", await s.Page.TextContentAsync("#Amount"));
             Assert.Contains("10% discount", await s.Page.TextContentAsync("#Discount"));
-            Assert.Contains("1.234,00 € + 0,56 € - 123,46 € (10%)", await s.Page.TextContentAsync("#Calculation"));
+            await AssertKeypadCalculation(s, "1.234,00 € + 0,56 € - 123,46 € (10%)");
 
             // Tip: 10%
             await s.Page.ClickAsync("label[for='ModeTablist-tip']");
             await s.Page.ClickAsync("#Tip-10");
             Assert.Contains("1.222,21", await s.Page.TextContentAsync("#Amount"));
-            Assert.Contains("1.234,00 € + 0,56 € - 123,46 € (10%) + 111,11 € (10%)", await s.Page.TextContentAsync("#Calculation"));
+            await AssertKeypadCalculation(s, "1.234,00 € + 0,56 € - 123,46 € (10%) + 111,11 € (10%)");
 
             // Pay
             await s.Page.ClickAsync("#pay-button");
@@ -589,11 +587,8 @@ donation:
             await s.Page.ClickAsync("#ItemsListOffcanvas button[data-bs-dismiss='offcanvas']");
 
             await EnterKeypad(s, "123");
-            var amm = await s.Page.TextContentAsync("#Amount");
             Assert.Contains("4,65", await s.Page.TextContentAsync("#Amount"));
-            var txt = await s.Page.TextContentAsync("#Calculation");
-            var c = await s.Page.TextContentAsync("#Calculation");
-            Assert.Contains("2 x Green Tea (1,00 €) = 2,00 € + 1 x Black Tea (1,00 €) = 1,00 € + 1,23 € + 0,42 € (10%)", await s.Page.TextContentAsync("#Calculation"));
+            await AssertKeypadCalculation(s, "2 x Green Tea (1,00 €) = 2,00 € + 1 x Black Tea (1,00 €) = 1,00 € + 1,23 € + 0,42 € (10%)");
 
             // Pay
             await s.Page.ClickAsync("#pay-button");
@@ -644,6 +639,11 @@ donation:
             Assert.Contains("1,35 €", await s.Page.TextContentAsync("#PaymentDetails-TotalFiat"));
         }
 
+        private static async Task AssertKeypadCalculation(PlaywrightTester s, string expected)
+        {
+            Assert.Equal(expected.NormalizeWhitespaces(), (await s.Page.TextContentAsync("#Calculation")).NormalizeWhitespaces());
+        }
+
         public class AssertReceiptAssertion
         {
             public record Line(string Key, string Value);
@@ -654,18 +654,13 @@ donation:
         private async Task AssertReceipt(PlaywrightTester s, AssertReceiptAssertion assertion)
         {
             await AssertReceipt(s, assertion, "#CartData table tbody tr", "#CartData table tfoot tr");
-
             // Receipt print
-            var oldPage = s.Page;
             var o = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("#ReceiptLinkPrint");
-            var newPage = await o;
-            await newPage.BringToFrontAsync();
-            s.Page = newPage;
-
-            await AssertReceipt(s, assertion, "#PaymentDetails table tr.cart-data", "#PaymentDetails table tr.sums-data");
-            s.Page = oldPage;
-            await newPage.CloseAsync();
+            await using (await s.SwitchPage(o))
+            {
+                await AssertReceipt(s, assertion, "#PaymentDetails table tr.cart-data", "#PaymentDetails table tr.sums-data");
+            }
         }
 
         private async Task AssertReceipt(PlaywrightTester s, AssertReceiptAssertion assertion, string itemSelector, string sumsSelector)

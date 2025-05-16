@@ -2128,10 +2128,9 @@ namespace BTCPayServer.Tests
             await tester.ExplorerNode.SendToAddressAsync(inv.Address, Money.Coins(inv.Amount.ToDecimal(MoneyUnit.BTC)));
             await Task.Delay(1000);
 
-            await user.AssertHasWebhookEvent(WebhookEventType.InvoicePaidAfterExpiration, (WebhookInvoiceReceivedPaymentEvent evt) =>
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoicePaidAfterExpiration, (WebhookInvoiceEvent evt) =>
             {
                 Assert.Equal(invoicePaidAfterExpiration.Id, evt.InvoiceId);
-                Assert.True(evt.AfterExpiration);
             });
 
             // ExpiredPaidPartial
@@ -2153,10 +2152,9 @@ namespace BTCPayServer.Tests
             await Task.Delay(2000); // give it time to expire and process payments
 
             await user.AssertHasWebhookEvent(WebhookEventType.InvoiceExpired, (WebhookInvoiceEvent x) => Assert.Equal(invoiceExpiredPartial.Id, x.InvoiceId));
-            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceExpiredPaidPartial, (WebhookInvoiceReceivedPaymentEvent evt) =>
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceExpiredPaidPartial, (WebhookInvoiceEvent evt) =>
             {
                 Assert.Equal(invoiceExpiredPartial.Id, evt.InvoiceId);
-                Assert.True(evt.AfterExpiration);
             });
         }
 

@@ -136,6 +136,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomButtonText = settings.CustomButtonText,
                 CustomTipText = settings.CustomTipText,
                 CustomTipPercentages = settings.CustomTipPercentages,
+                DefaultTaxRate =  settings.DefaultTaxRate ?? 0,
                 AppId = appId,
                 StoreId = store.Id,
                 HtmlLang = settings.HtmlLang,

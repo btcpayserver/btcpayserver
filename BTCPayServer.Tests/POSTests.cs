@@ -298,53 +298,98 @@ donation:
             await s.Page.ClickAsync(".posItem:nth-child(2) .btn-primary");
             await s.Page.ClickAsync(".posItem:nth-child(2) .btn-primary");
             Assert.Equal(2, (await s.Page.QuerySelectorAllAsync("#CartItems tr")).Count);
-            var t = await s.Page.TextContentAsync("#CartTotal");
-            Assert.Equal("3,00 €", await s.Page.TextContentAsync("#CartTotal"));
+
+            await AssertCartSummary(s, new()
+            {
+                Subtotal = "3,00€",
+                Taxes = "0,27 €",
+                Total = "3,27 €"
+            });
 
             // Select item with inventory - two of it
             Assert.Equal("5 left", await s.Page.TextContentAsync(".posItem:nth-child(3) .badge.inventory"));
             await s.Page.ClickAsync(".posItem:nth-child(3) .btn-primary");
             await s.Page.ClickAsync(".posItem:nth-child(3) .btn-primary");
             Assert.Equal(3, (await s.Page.QuerySelectorAllAsync("#CartItems tr")).Count);
-            Assert.Equal("5,40 €", await s.Page.TextContentAsync("#CartTotal"));
+
+            await AssertCartSummary(s, new()
+            {
+                Subtotal = "5,40 €",
+                Taxes = "0,47 €",
+                Total = "5,87 €"
+            });
 
             // Select items with minimum amount
             await s.Page.ClickAsync(".posItem:nth-child(5) .btn-primary");
             Assert.Equal(4, (await s.Page.QuerySelectorAllAsync("#CartItems tr")).Count);
-            Assert.Equal("7,20 €", await s.Page.TextContentAsync("#CartTotal"));
+            await AssertCartSummary(s, new()
+            {
+                Subtotal = "7,20 €",
+                Taxes = "0,62 €",
+                Total = "7,82 €"
+            });
 
             // Select items with adjusted minimum amount
             await s.Page.FillAsync(".posItem:nth-child(5) input[name='amount']", "");
             await s.Page.FillAsync(".posItem:nth-child(5) input[name='amount']", "2.3");
             await s.Page.ClickAsync(".posItem:nth-child(5) .btn-primary");
             Assert.Equal(5, (await s.Page.QuerySelectorAllAsync("#CartItems tr")).Count);
-            Assert.Equal("9,50 €", await s.Page.TextContentAsync("#CartTotal"));
+            await AssertCartSummary(s, new()
+            {
+                Subtotal = "9,50 €",
+                Taxes = "0,81 €",
+                Total = "10,31 €"
+            });
 
             // Select items with custom amount
             await s.Page.FillAsync(".posItem:nth-child(6) input[name='amount']", "");
             await s.Page.FillAsync(".posItem:nth-child(6) input[name='amount']", ".2");
             await s.Page.ClickAsync(".posItem:nth-child(6) .btn-primary");
             Assert.Equal(6, (await s.Page.QuerySelectorAllAsync("#CartItems tr")).Count);
-            Assert.Equal("9,70 €", await s.Page.TextContentAsync("#CartTotal"));
+            await AssertCartSummary(s, new()
+            {
+                Subtotal = "9,70 €",
+                Taxes = "0,83 €",
+                Total = "10,53 €"
+            });
 
             // Select items with another custom amount
             await s.Page.FillAsync(".posItem:nth-child(6) input[name='amount']", "");
             await s.Page.FillAsync(".posItem:nth-child(6) input[name='amount']", ".3");
             await s.Page.ClickAsync(".posItem:nth-child(6) .btn-primary");
             Assert.Equal(7, (await s.Page.QuerySelectorAllAsync("#CartItems tr")).Count);
-            Assert.Equal("10,00 €", await s.Page.TextContentAsync("#CartTotal"));
+            await AssertCartSummary(s, new()
+            {
+                Subtotal = "10,00 €",
+                Taxes = "0,86 €",
+                Total = "10,86 €"
+            });
 
             // Discount: 10%
             Assert.False(await s.Page.IsVisibleAsync("#CartDiscount"));
             await s.Page.FillAsync("#Discount", "10");
-            Assert.Contains("10% = 1,00 €".NormalizeWhitespaces(), (await s.Page.TextContentAsync("#CartDiscount")).NormalizeWhitespaces());
-            Assert.Equal("9,00 €", await s.Page.TextContentAsync("#CartTotal"));
+            await AssertCartSummary(s, new()
+            {
+                ItemsTotal = "10,00 €",
+                Discount = "10% = 1,00 €",
+                Subtotal = "9,00 €",
+                Taxes = "0,77 €",
+                Total = "9,77 €"
+            });
 
             // Tip: 10%
             Assert.False(await s.Page.IsVisibleAsync("#CartTip"));
             await s.Page.ClickAsync("#Tip-10");
-            Assert.Contains("10% = 0,90 €".NormalizeWhitespaces(), (await s.Page.TextContentAsync("#CartTip")).NormalizeWhitespaces());
-            Assert.Equal("9,90 €", await s.Page.TextContentAsync("#CartTotal"));
+
+            await AssertCartSummary(s, new()
+            {
+                ItemsTotal = "10,00 €",
+                Discount = "10% = 1,00 €",
+                Subtotal = "9,00 €",
+                Tip = "10% = 0,90 €",
+                Taxes = "0,77 €",
+                Total = "10,67 €"
+            });
 
             // Check values on checkout page
             await s.Page.ClickAsync("#CartSubmit");
@@ -398,6 +443,33 @@ donation:
             // Unauthenticated user can't access recent transactions
             await s.GoToUrl(posUrl);
             Assert.False(await s.Page.IsVisibleAsync("#RecentTransactionsToggle"));
+        }
+
+        public class CartSummaryAssertion
+        {
+            public string Subtotal { get; set; }
+            public string Taxes { get; set; }
+            public string Total { get; set; }
+            public string ItemsTotal { get; set; }
+            public string Discount { get; set; }
+            public string Tip { get; set; }
+        }
+        private async Task AssertCartSummary(PlaywrightTester s, CartSummaryAssertion o)
+        {
+            string[] ids = ["CartItemsTotal", "CartDiscount", "CartAmount", "CartTip", "CartTax", "CartTotal"];
+            string[] values = [o.ItemsTotal, o.Discount, o.Subtotal, o.Tip, o.Taxes, o.Total];
+            for (int i = 0; i < ids.Length; i++)
+            {
+                if (values[i] != null)
+                {
+                    var text = await s.Page.TextContentAsync("#" + ids[i]);
+                    Assert.Equal(values[i].NormalizeWhitespaces(), text.NormalizeWhitespaces());
+                }
+                else
+                {
+                    Assert.False(await s.Page.IsVisibleAsync("#" + ids[i]));
+                }
+            }
         }
 
         [Fact]
@@ -468,8 +540,7 @@ donation:
 
             // Discount: 10%
             await s.Page.ClickAsync("label[for='ModeTablist-discount']");
-            await s.Page.ClickAsync(".keypad [data-key='1']");
-            await s.Page.ClickAsync(".keypad [data-key='0']");
+            await EnterKeypad(s, "10");
             Assert.Contains("1.111,10", await s.Page.TextContentAsync("#Amount"));
             Assert.Contains("10% discount", await s.Page.TextContentAsync("#Discount"));
             Assert.Contains("1.234,00 € + 0,56 € - 123,46 € (10%)", await s.Page.TextContentAsync("#Calculation"));
@@ -507,6 +578,7 @@ donation:
 
             await s.GoToUrl(editUrl);
             await s.Page.ClickAsync("#ShowItems");
+            await s.Page.FillAsync("#DefaultTaxRate", "10");
             await s.ClickPagePrimary();
             await s.FindAlertMessage(partialText: "App updated");
 
@@ -519,16 +591,18 @@ donation:
             await s.Page.ClickAsync("#ItemsListOffcanvas button[data-bs-dismiss='offcanvas']");
 
             await EnterKeypad(s, "123");
-            Assert.Contains("4,23", await s.Page.TextContentAsync("#Amount"));
+            var amm = await s.Page.TextContentAsync("#Amount");
+            Assert.Contains("4,65", await s.Page.TextContentAsync("#Amount"));
             var txt = await s.Page.TextContentAsync("#Calculation");
-            Assert.Contains("2 x Green Tea (1,00 €) = 2,00 € + 1 x Black Tea (1,00 €) = 1,00 € + 1,23 €", await s.Page.TextContentAsync("#Calculation"));
+            var c = await s.Page.TextContentAsync("#Calculation");
+            Assert.Contains("2 x Green Tea (1,00 €) = 2,00 € + 1 x Black Tea (1,00 €) = 1,00 € + 1,23 € + 0,42 € (10%)", await s.Page.TextContentAsync("#Calculation"));
 
             // Pay
             await s.Page.ClickAsync("#pay-button");
             await s.Page.WaitForSelectorAsync("#Checkout");
             await s.Page.ClickAsync("#DetailsToggle");
             await s.Page.WaitForSelectorAsync("#PaymentDetails-TotalFiat");
-            Assert.Contains("4,23 €", await s.Page.TextContentAsync("#PaymentDetails-TotalFiat"));
+            Assert.Contains("4,65 €", await s.Page.TextContentAsync("#PaymentDetails-TotalFiat"));
             await s.PayInvoice(true);
 
 
@@ -543,7 +617,9 @@ donation:
                     new("Custom Amount 1", "1,23 €")
                 ],
                 Sums = [
-                    new("Total", "4,23 €")
+                    new("Subtotal", "4,23 €"),
+                    new("Tax", "0,42 €"),
+                    new("Total", "4,65 €")
                 ]
             });
 
@@ -567,7 +643,7 @@ donation:
             await s.Page.WaitForSelectorAsync("#Checkout");
             await s.Page.ClickAsync("#DetailsToggle");
             await s.Page.WaitForSelectorAsync("#PaymentDetails-TotalFiat");
-            Assert.Contains("1,23 €", await s.Page.TextContentAsync("#PaymentDetails-TotalFiat"));
+            Assert.Contains("1,35 €", await s.Page.TextContentAsync("#PaymentDetails-TotalFiat"));
         }
 
         public class AssertReceiptAssertion

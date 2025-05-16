@@ -2,7 +2,7 @@
 @using BTCPayServer.Abstractions.Contracts
 @inject LanguageService LangService
 @inject BTCPayServerEnvironment Env
-@inject IEnumerable<IUIExtension> UiExtensions 
+@inject IEnumerable<IUIExtension> UiExtensions
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model CheckoutModel
 @{
@@ -247,7 +247,7 @@
             </p>
         </div>
     </noscript>
-    <script type="text/x-template" id="payment-details">
+<script type="text/x-template" id="payment-details">
         <dl>
             <div v-if="orderAmount > 0" id="PaymentDetails-TotalPrice" key="TotalPrice">
                 <dt v-t="'total_price'"></dt>
@@ -256,6 +256,10 @@
             <div v-if="orderAmount > 0 && srvModel.orderAmountFiat" id="PaymentDetails-TotalFiat" key="TotalFiat">
                 <dt v-t="'total_fiat'"></dt>
                 <dd class="clipboard-button clipboard-button-hover" :data-clipboard="asNumber(srvModel.orderAmountFiat)" data-clipboard-hover="start">{{srvModel.orderAmountFiat}}</dd>
+            </div>
+             <div v-if="srvModel.taxIncluded.value > 0 && srvModel.taxIncluded.formatted" id="PaymentDetails-TaxIncluded" key="TaxIncluded">
+                <dt v-t="'tax_included'"></dt>
+                <dd class="clipboard-button clipboard-button-hover" :data-clipboard="srvModel.taxIncluded.value" data-clipboard-hover="start">{{srvModel.taxIncluded.formatted}}</dd>
             </div>
             <div v-if="srvModel.rate && srvModel.paymentMethodCurrency" id="PaymentDetails-ExchangeRate" key="ExchangeRate">
                 <dt v-t="'exchange_rate'"></dt>

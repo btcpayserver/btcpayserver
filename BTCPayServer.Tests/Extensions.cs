@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -59,6 +60,8 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain("Error", driver.Title, StringComparison.OrdinalIgnoreCase);
         }
 
+        public static string NormalizeWhitespaces(this string input) =>
+            string.Concat((input??"").Where(c => !char.IsWhiteSpace(c)));
 
         public static async Task AssertNoError(this IPage page)
         {

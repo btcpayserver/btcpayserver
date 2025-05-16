@@ -8,7 +8,6 @@ public class PoSOrder
 {
     private readonly int _decimals;
     decimal _discount;
-    decimal _defaultTaxRate;
     decimal _tip;
     List<ItemLine> ItemLines = new();
 
@@ -17,7 +16,7 @@ public class PoSOrder
         _decimals = decimals;
     }
 
-    public record ItemLine(string ItemId, int Count, decimal UnitPrice, decimal? TaxRate = null);
+    public record ItemLine(string ItemId, int Count, decimal UnitPrice, decimal TaxRate);
     public void AddLine(ItemLine line)
     {
         ItemLines.Add(line);
@@ -44,7 +43,7 @@ public class PoSOrder
             discount = Round(discount);
             ctx.Discount += discount;
             linePrice -= discount;
-            var tax = linePrice * (item.TaxRate ?? _defaultTaxRate) / 100.0m;
+            var tax = linePrice * item.TaxRate / 100.0m;
             tax =  Round(tax);
             ctx.Tax += tax;
             ctx.PriceTaxExcluded += linePrice;
@@ -72,14 +71,5 @@ public class PoSOrder
     public void AddDiscountRate(decimal discount)
     {
         _discount = discount;
-    }
-
-    /// <summary>
-    ///
-    /// </summary>
-    /// <param name="rate">From 0 to 100</param>
-    public void SetTaxRate(decimal rate)
-    {
-        _defaultTaxRate = rate;
     }
 }

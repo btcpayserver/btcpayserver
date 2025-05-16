@@ -136,7 +136,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomButtonText = settings.CustomButtonText,
                 CustomTipText = settings.CustomTipText,
                 CustomTipPercentages = settings.CustomTipPercentages,
-                DefaultTaxRate =  settings.DefaultTaxRate ?? 0,
+                DefaultTaxRate =  settings.DefaultTaxRate,
                 AppId = appId,
                 StoreId = store.Id,
                 HtmlLang = settings.HtmlLang,
@@ -209,8 +209,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var choices = AppService.Parse(settings.Template, false);
             var jposData = PosAppData.TryParse(posData) ?? new();
             PoSOrder order = new(_currencies.GetNumberFormatInfo(settings.Currency, true).CurrencyDecimalDigits);
-            if (settings.DefaultTaxRate is { } rate)
-                order.SetTaxRate(rate);
             Dictionary<string, InvoiceSupportedTransactionCurrency> paymentMethods = null;
             List<AppItem> selectedChoices = new();
             if (!string.IsNullOrEmpty(choiceKey))
@@ -228,11 +226,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 currentView == PosViewType.Light &&
                 amount is { } o)
             {
-                order.AddLine(new("", 1, o));
+                order.AddLine(new("", 1, o, settings.DefaultTaxRate));
             }
             for (var i = 0; i < (jposData.Amounts ?? []).Length; i++)
             {
-                order.AddLine(new($"Custom Amount {i + 1}", 1, jposData.Amounts[i]));
+                order.AddLine(new($"Custom Amount {i + 1}", 1, jposData.Amounts[i], settings.DefaultTaxRate));
             }
             foreach (var cartItem in jposData.Cart)
             {
@@ -250,10 +248,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     if (cartItem.Price < expectedCartItemPrice)
                         cartItem.Price = expectedCartItemPrice;
                 }
-                order.AddLine(new(cartItem.Id, cartItem.Count, cartItem.Price, itemChoice.TaxRate));
+                order.AddLine(new(cartItem.Id, cartItem.Count, cartItem.Price, itemChoice.TaxRate ?? settings.DefaultTaxRate));
             }
             if (customAmount is { } c && settings.ShowCustomAmount)
-                order.AddLine(new("", 1, c));
+                order.AddLine(new("", 1, c, settings.DefaultTaxRate));
             if (discount is { } d)
                 order.AddDiscountRate(d);
             if (tip is { } t)
@@ -313,7 +311,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     var invoiceRequest = FormDataService.GenerateInvoiceParametersFromForm(form);
                     if (invoiceRequest.Amount is not null)
                     {
-                        order.AddLine(new("", 1, invoiceRequest.Amount.Value));
+                        order.AddLine(new("", 1, invoiceRequest.Amount.Value, settings.DefaultTaxRate));
                     }
                     break;
             }
@@ -702,12 +700,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return View("PointOfSale/UpdatePointOfSale", vm);
             }
 
-            bool wasHtmlModified;
             var settings = new PointOfSaleSettings
             {
                 Title = vm.Title,
                 DefaultView = vm.DefaultView,
-                DefaultTaxRate = vm.DefaultTaxRate,
+                DefaultTaxRate = vm.DefaultTaxRate ?? 0,
                 ShowItems = vm.ShowItems,
                 ShowCustomAmount = vm.ShowCustomAmount,
                 ShowDiscount = vm.ShowDiscount,
@@ -723,7 +720,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 NotificationUrl = vm.NotificationUrl,
                 RedirectUrl = vm.RedirectUrl,
                 HtmlLang = vm.HtmlLang,
-                HtmlMetaTags = _safe.RawMeta(vm.HtmlMetaTags, out wasHtmlModified),
+                HtmlMetaTags = _safe.RawMeta(vm.HtmlMetaTags, out bool wasHtmlModified),
                 Description = vm.Description,
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? null : bool.Parse(vm.RedirectAutomatically),
                 FormId = vm.FormId

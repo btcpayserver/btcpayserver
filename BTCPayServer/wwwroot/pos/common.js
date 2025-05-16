@@ -4,7 +4,6 @@ class PoSOrder {
     constructor(decimals) {
         this._decimals = decimals;
         this._discount = 0;
-        this._defaultTaxRate = 0;
         this._tip = 0;
         this._tipPercent = 0;
         this.itemLines = [];
@@ -28,7 +27,7 @@ class PoSOrder {
         this._tipPercent = 0;
     }
     setTipPercent(tip) {
-        this._tipPercent = this._round(tip);
+        this._tipPercent = tip;
         this._tip = 0;
     }
 
@@ -36,20 +35,16 @@ class PoSOrder {
         this._discount = discount;
     }
 
-    setTaxRate(rate) {
-        this._defaultTaxRate = rate;
-    }
-
-    setCart(cart, amounts) {
+    setCart(cart, amounts, defaultTaxRate) {
         this.itemLines = [];
         for (const item of cart) {
-            this.addLine(new PoSOrder.ItemLine(item.id, item.count, item.price, item.taxRate));
+            this.addLine(new PoSOrder.ItemLine(item.id, item.count, item.price, item.taxRate ?? defaultTaxRate));
         }
         if (amounts) {
             var i = 1;
             for (const item of amounts) {
                 if (!item) continue;
-                this.addLine(new PoSOrder.ItemLine("Custom amount " + i, 1, item, null));
+                this.addLine(new PoSOrder.ItemLine("Custom Amount " + i, 1, item, defaultTaxRate));
                 i++;
             }
         }
@@ -73,7 +68,7 @@ class PoSOrder {
             ctx.discount += discount;
             linePrice -= discount;
 
-            let taxRate = item.taxRate !== null ? item.taxRate : this._defaultTaxRate;
+            let taxRate = item.taxRate ?? 0;
             let tax = linePrice * taxRate / 100;
             tax = this._round(tax);
             ctx.tax += tax;
@@ -225,12 +220,12 @@ const posCommon = {
                 if (this.persistState) {
                     saveState('cart', newCart)
                 }
-                this.posOrder.setCart(newCart, this.amounts)
+                this.posOrder.setCart(newCart, this.amounts, this.defaultTaxRate)
             },
             deep: true
         },
         amounts (values) {
-            this.posOrder.setCart(this.cart, values)
+            this.posOrder.setCart(this.cart, values, this.defaultTaxRate)
         }
     },
     methods: {
@@ -313,13 +308,13 @@ const posCommon = {
             // Animate
             if (!$posItem.classList.contains(POS_ITEM_ADDED_CLASS)) $posItem.classList.add(POS_ITEM_ADDED_CLASS);
 
-            this.posOrder.setCart(this.cart, this.amounts);
+            this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate);
             return itemInCart;
         },
         removeFromCart(id) {
             const index = this.cart.findIndex(lineItem => lineItem.id === id);
             this.cart.splice(index, 1);
-            this.posOrder.setCart(this.cart, this.amounts);
+            this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate);
         },
         getQuantity(id) {
             const itemInCart = this.cart.find(lineItem => lineItem.id === id);
@@ -339,7 +334,7 @@ const posCommon = {
             if (itemInCart && itemInCart.count <= 0 && addOrRemove) {
                 this.removeFromCart(itemInCart.id);
             }
-            this.posOrder.setCart(this.cart, this.amounts);
+            this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate);
         },
         clear() {
             this.cart = [];
@@ -400,8 +395,7 @@ const posCommon = {
         if (this.persistState) {
             this.cart = loadState('cart');
         }
-        this.posOrder.setTaxRate(srvModel.defaultTaxRate);
-        this.posOrder.setCart(this.cart, this.amounts);
+        this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate);
     },
     mounted () {
         if (this.$refs.categories) {

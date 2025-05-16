@@ -55,32 +55,6 @@ namespace BTCPayServer.Tests
             await Page.AssertNoError();
         }
 
-        public async Task PayInvoiceAsync(IPage page, bool mine = false, decimal? amount = null)
-        {
-            if (amount is not null)
-            {
-                try
-                {
-                    await page.Locator("#test-payment-amount").ClearAsync();
-                }
-                catch (PlaywrightException)
-                {
-                    await page.Locator("#test-payment-amount").ClearAsync();
-                }
-                await page.Locator("#test-payment-amount").FillAsync(amount.ToString());
-            }
-            await page.Locator("#FakePayment").WaitForAsync();
-            await page.Locator("#FakePayment").ClickAsync();
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                await page.Locator("#CheatSuccessMessage").WaitForAsync();
-            });
-            if (mine)
-            {
-                await MineBlockOnInvoiceCheckout(page);
-            }
-        }
-
         public async Task GoToInvoices(string storeId = null)
         {
             if (storeId is null)
@@ -150,13 +124,6 @@ namespace BTCPayServer.Tests
             {
                 await Page.Locator($"#WalletNav-{navPages}").ClickAsync();
             }
-        }
-
-        public async Task MineBlockOnInvoiceCheckout(IPage page)
-        {
-        retry:
-            try { await page.Locator("#mine-block button").ClickAsync(); }
-            catch (PlaywrightException) { goto retry; }
         }
 
         public async Task<ILocator> FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success, string partialText = null)
@@ -527,7 +494,7 @@ namespace BTCPayServer.Tests
             await Page.Locator("[name='AppName']").FillAsync(name);
             await ClickPagePrimary();
             await FindAlertMessage(partialText: "App successfully created");
-            var appId = Page.Url.Split('/')[4];
+            var appId = Page.Url.Split('/')[^3];
             return (name, appId);
         }
 
@@ -548,6 +515,24 @@ namespace BTCPayServer.Tests
         public async Task MineBlockOnInvoiceCheckout()
         {
             await Page.ClickAsync("#mine-block button");
+        }
+
+        class SwitchDisposable(IPage newPage, IPage oldPage, PlaywrightTester tester, bool closeAfter) : IAsyncDisposable
+        {
+            public async ValueTask DisposeAsync()
+            {
+                if (closeAfter)
+                    await newPage.CloseAsync();
+                tester.Page = oldPage;
+            }
+        }
+
+        public async Task<IAsyncDisposable> SwitchPage(IPage page, bool closeAfter = true)
+        {
+            var old = Page;
+            Page = page;
+            await page.BringToFrontAsync();
+            return new SwitchDisposable(page, old, this, closeAfter);
         }
     }
 }

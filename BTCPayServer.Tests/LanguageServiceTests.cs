@@ -17,13 +17,11 @@ using static BTCPayServer.Services.LocalizerService;
 
 namespace BTCPayServer.Tests
 {
-    [Collection(nameof(NonParallelizableCollectionDefinition))]
-    public class LanguageServiceTests : UnitTestBase
+    [Collection(nameof(SharedServerCollection))]
+    public class LanguageServiceTests(Fixtures.SharedServerFixture fixture, ITestOutputHelper helper)
+        : UnitTestBase(helper)
     {
         public const int TestTimeout = TestUtils.TestTimeout;
-        public LanguageServiceTests(ITestOutputHelper helper) : base(helper)
-        {
-        }
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Selenium", "Selenium")]
@@ -43,7 +41,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("Cyphercode", tester.Driver.PageSource);
             Assert.Contains("Yo at BTCPay Server", tester.Driver.PageSource);
 
-            // Create English (Custom) 
+            // Create English (Custom)
             tester.LogIn();
             tester.GoToServer(Views.Server.ServerNavPages.Translations);
             tester.ClickPagePrimary();
@@ -175,8 +173,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanAutoDetectLanguage()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var languageService = tester.PayTester.GetService<LanguageService>();
 
             // Most common format. First option does not have a quality score. Others do in descending order.
@@ -197,7 +194,7 @@ namespace BTCPayServer.Tests
             Assert.NotNull(lang3);
             Assert.Equal("fr-FR", lang3?.Code);
 
-            // Unusual format, but still valid. Some language is given that we don't have and a wildcard for everything else. 
+            // Unusual format, but still valid. Some language is given that we don't have and a wildcard for everything else.
             // Result should be NULL, because "xx" does not exist and * is a wildcard and has no meaning.
             var lang4 = languageService.FindLanguageInAcceptLanguageHeader("xx,*;q=0.5");
             Assert.Null(lang4);

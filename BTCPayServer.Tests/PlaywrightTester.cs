@@ -25,6 +25,7 @@ namespace BTCPayServer.Tests
         private string InvoiceId;
         public Logging.ILog TestLogs => Server.TestLogs;
         public IPage Page { get; set; }
+        public IBrowserContext BrowserContext { get; set; }
         public IBrowser Browser { get; private set; }
         public ServerTester Server { get; set; }
         public WalletId WalletId { get; set; }
@@ -46,13 +47,22 @@ namespace BTCPayServer.Tests
                 Headless = Server.PayTester.InContainer,
                 SlowMo = Server.PayTester.InContainer ? 0 : 50, // Add slight delay, nicer during dev
             });
+            await ResetPageContext();
+            await Page.AssertNoError();
+        }
+
+        public async Task ResetPageContext()
+        {
+            if (Page != null)
+                await Page.CloseAsync();
+            if (BrowserContext != null)
+                await BrowserContext.CloseAsync();
             var context = await Browser.NewContextAsync();
             Page = await context.NewPageAsync();
             ServerUri = Server.PayTester.ServerUri;
             TestLogs.LogInformation($"Playwright: Using {Page.GetType()}");
             TestLogs.LogInformation($"Playwright: Browsing to {ServerUri}");
             await GoToRegister();
-            await Page.AssertNoError();
         }
 
         public async Task PayInvoiceAsync(IPage page, bool mine = false, decimal? amount = null)
@@ -432,16 +442,13 @@ namespace BTCPayServer.Tests
             await Page.Locator("#CancelWizard").ClickAsync();
         }
 
-
-        public async Task InitializeBTCPayServer()
+        public async Task AdminNewStoreWithBTC()
         {
             await RegisterNewUser(true);
             await CreateNewStore();
             await GoToStore();
             await AddDerivationScheme();
         }
-
-
 
         public async ValueTask DisposeAsync()
         {

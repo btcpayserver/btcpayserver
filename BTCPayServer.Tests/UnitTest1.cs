@@ -2102,6 +2102,61 @@ namespace BTCPayServer.Tests
         }
 
 
+        [Fact()]
+        [Trait("Integration", "Integration")]
+        public async Task EnsureWebhooksInvoiceExpiredPaidLatePartial()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            user.RegisterDerivationScheme("BTC");
+            await user.SetupWebhook();
+            var client = await user.CreateClient();
+
+            // PaidAfterExpiration
+            var invoicePaidAfterExpiration = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = 0.01m, Currency = "BTC" });
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceCreated, (WebhookInvoiceEvent x) => Assert.Equal(invoicePaidAfterExpiration.Id, x.InvoiceId));
+
+            await tester.PayTester.InvoiceRepository.UpdateInvoiceExpiry(invoicePaidAfterExpiration.Id, TimeSpan.FromSeconds(0));
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceExpired, (WebhookInvoiceEvent x) => Assert.Equal(invoicePaidAfterExpiration.Id, x.InvoiceId));
+
+            var inv = new BitcoinUrlBuilder((await client.GetInvoicePaymentMethods(user.StoreId, invoicePaidAfterExpiration.Id)).Single(model =>
+                    PaymentMethodId.Parse(model.PaymentMethodId) ==
+                    PaymentTypes.CHAIN.GetPaymentMethodId("BTC"))
+                .PaymentLink, tester.ExplorerNode.Network);
+            await tester.ExplorerNode.SendToAddressAsync(inv.Address, Money.Coins(inv.Amount.ToDecimal(MoneyUnit.BTC)));
+            await Task.Delay(1000);
+
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoicePaidAfterExpiration, (WebhookInvoiceEvent evt) =>
+            {
+                Assert.Equal(invoicePaidAfterExpiration.Id, evt.InvoiceId);
+            });
+
+            // ExpiredPaidPartial
+            var invoiceExpiredPartial = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
+            {
+                Amount = 0.01m, Currency = "BTC", Checkout = new InvoiceDataBase.CheckoutOptions {
+                    Expiration = TimeSpan.FromMinutes(1)
+                }
+            });
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceCreated, (WebhookInvoiceEvent x) => Assert.Equal(invoiceExpiredPartial.Id, x.InvoiceId));
+
+            inv = new BitcoinUrlBuilder((await client.GetInvoicePaymentMethods(user.StoreId, invoiceExpiredPartial.Id)).Single(model =>
+                    PaymentMethodId.Parse(model.PaymentMethodId) ==
+                    PaymentTypes.CHAIN.GetPaymentMethodId("BTC"))
+                .PaymentLink, tester.ExplorerNode.Network);
+            await tester.ExplorerNode.SendToAddressAsync(inv.Address, Money.Coins(inv.Amount.ToDecimal(MoneyUnit.BTC)/2m));
+
+            await tester.PayTester.InvoiceRepository.UpdateInvoiceExpiry(invoiceExpiredPartial.Id, TimeSpan.FromSeconds(1));
+            await Task.Delay(2000); // give it time to expire and process payments
+
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceExpired, (WebhookInvoiceEvent x) => Assert.Equal(invoiceExpiredPartial.Id, x.InvoiceId));
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceExpiredPaidPartial, (WebhookInvoiceEvent evt) =>
+            {
+                Assert.Equal(invoiceExpiredPartial.Id, evt.InvoiceId);
+            });
+        }
 
 
         [Fact()]

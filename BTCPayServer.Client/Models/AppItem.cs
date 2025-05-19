@@ -30,6 +30,9 @@ public class AppItem
     public string BuyButtonText { get; set; }
     public int? Inventory { get; set; }
 
+    [JsonConverter(typeof(NumericStringJsonConverter))]
+    public decimal? TaxRate { get; set; }
+
     [JsonExtensionData]
     public Dictionary<string, JToken> AdditionalData { get; set; }
 }

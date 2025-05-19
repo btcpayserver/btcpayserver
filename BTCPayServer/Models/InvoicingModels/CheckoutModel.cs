@@ -9,6 +9,11 @@ namespace BTCPayServer.Models.InvoicingModels
 {
     public class CheckoutModel
     {
+        public class Amount
+        {
+            public decimal Value { get; set; }
+            public string Formatted { get; set; }
+        }
         public string CheckoutBodyComponentName { get; set; }
         public class AvailablePaymentMethod
         {
@@ -52,6 +57,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string Rate { get; set; }
         public string OrderAmount { get; set; }
         public string OrderAmountFiat { get; set; }
+        public Amount TaxIncluded { get; set; }
         public string InvoiceBitcoinUrl { get; set; }
         public string InvoiceBitcoinUrlQR { get; set; }
         public int TxCount { get; set; }

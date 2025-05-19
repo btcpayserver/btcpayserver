@@ -30,9 +30,18 @@ namespace BTCPayServer.JsonConverters
                 case JTokenType.Integer:
                 case JTokenType.String:
                     if (objectType == typeof(decimal) || objectType == typeof(decimal?))
+                    {
+                        if (objectType == typeof(decimal?) && string.IsNullOrWhiteSpace(token.ToString()))
+                            return null;
                         return decimal.Parse(token.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture);
+                    }
+
                     if (objectType == typeof(double) || objectType == typeof(double?))
+                    {
+                        if (objectType == typeof(double?) && string.IsNullOrWhiteSpace(token.ToString()))
+                            return null;
                         return double.Parse(token.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture);
+                    }
                     throw new JsonSerializationException("Unexpected object type: " + objectType);
                 case JTokenType.Null when objectType == typeof(decimal?) || objectType == typeof(double?):
                     return null;

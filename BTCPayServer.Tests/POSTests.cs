@@ -23,12 +23,8 @@ using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 namespace BTCPayServer.Tests
 {
     [Collection(nameof(NonParallelizableCollectionDefinition))]
-    public class POSTests : UnitTestBase
+    public class POSTests(ITestOutputHelper helper) : UnitTestBase(helper)
     {
-        public POSTests(ITestOutputHelper helper) : base(helper)
-        {
-        }
-
         [Fact]
         [Trait("Fast", "Fast")]
         public void CanParseOldYmlCorrectly()

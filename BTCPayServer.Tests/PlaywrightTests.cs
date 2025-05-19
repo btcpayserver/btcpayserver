@@ -362,7 +362,7 @@ namespace BTCPayServer.Tests
 
             // Store Email Rules
             await s.Page.ClickAsync("#ConfigureEmailRules");
-            Assert.Contains("There are no rules yet.", await s.Page.ContentAsync());
+            await s.Page.Locator("text=There are no rules yet.").WaitForAsync();
             Assert.DoesNotContain("id=\"SaveEmailRules\"", await s.Page.ContentAsync());
             Assert.DoesNotContain("You need to configure email settings before this feature works", await s.Page.ContentAsync());
 
@@ -373,6 +373,7 @@ namespace BTCPayServer.Tests
             await s.Page.FillAsync("#Subject", "Thanks!");
             await s.Page.Locator(".note-editable").FillAsync("Your invoice is settled");
             await s.Page.ClickAsync("#SaveEmailRules");
+            await s.FindAlertMessage();
             // we now have a rule
             Assert.DoesNotContain("There are no rules yet.", await s.Page.ContentAsync());
             Assert.Contains("test@gmail.com", await s.Page.ContentAsync());

@@ -277,13 +277,10 @@ donation:
             // View
             var o = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("#ViewApp");
-            string posUrl;
-            await using (await s.SwitchPage(o))
-            {
-                await s.Page.WaitForSelectorAsync("#PosItems");
-                Assert.Empty(await s.Page.QuerySelectorAllAsync("#CartItems tr"));
-                posUrl = s.Page.Url;
-            }
+            await s.SwitchPage(o);
+            await s.Page.WaitForSelectorAsync("#PosItems");
+            Assert.Empty(await s.Page.QuerySelectorAllAsync("#CartItems tr"));
+            var posUrl = s.Page.Url;
 
             // Select and clear
             await s.Page.ClickAsync(".posItem:nth-child(1) .btn-primary");

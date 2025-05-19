@@ -238,16 +238,15 @@ namespace BTCPayServer.Controllers
             if (additionalData.TryGetValue("receiptData", out object? combinedReceiptData))
             {
                 var receiptData = new Dictionary<string, object>((Dictionary<string, object>)combinedReceiptData, StringComparer.OrdinalIgnoreCase);
-                string[] cartKeys = ["cart", "subtotal", "discount", "tip", "total"];
                 // extract cart data and lowercase keys to handle data uniformly in PosData partial
-                if (receiptData.Keys.Any(key => cartKeys.Contains(key.ToLowerInvariant())))
+                if (receiptData.Keys.Any(WellKnownPosData.IsWellKnown))
                 {
                     vm.CartData = new Dictionary<string, object>();
-                    foreach (var key in cartKeys)
+                    foreach (var key in receiptData.Keys.Where(WellKnownPosData.IsWellKnown))
                     {
-                        if (!receiptData.ContainsKey(key)) continue;
+                        if (!receiptData.TryGetValue(key, out object? value)) continue;
                         // add it to cart data and remove it from the general data
-                        vm.CartData.Add(key.ToLowerInvariant(), receiptData[key]);
+                        vm.CartData.Add(key.ToLowerInvariant(), value);
                         receiptData.Remove(key);
                     }
                 }
@@ -261,6 +260,7 @@ namespace BTCPayServer.Controllers
             }
 
             var payments = ViewPaymentRequestViewModel.PaymentRequestInvoicePayment.GetViewModels(i, _displayFormatter, _transactionLinkProviders, _handlers);
+            vm.TaxIncluded = i.Metadata?.TaxIncluded ?? 0.0m;
             vm.Amount = i.PaidAmount.Net;
             vm.Payments = receipt.ShowPayments is false ? null : payments;
 
@@ -929,6 +929,12 @@ namespace BTCPayServer.Controllers
 
             model.PaymentMethodId = paymentMethodId.ToString();
             model.OrderAmountFiat = OrderAmountFromInvoice(model.PaymentMethodCurrency, invoice, DisplayFormatter.CurrencyFormat.Symbol);
+            model.TaxIncluded = new();
+            if (invoice.Metadata.TaxIncluded is { } t)
+            {
+                model.TaxIncluded.Formatted = _displayFormatter.Currency(t, invoice.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                model.TaxIncluded.Value = t;
+            }
 
             if (storeBlob.PlaySoundOnPayment)
             {

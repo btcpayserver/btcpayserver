@@ -41,6 +41,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public bool ShowCategories { get; set; }
         [Display(Name = "Enable tips")]
         public bool EnableTips { get; set; }
+        [Display(Name = "Default Tax Rate")]
+        [Range(0.0, 100.0)]
+        [DisplayFormat(DataFormatString = "{0:0.00####}", ApplyFormatInEditMode = true)]
+        public decimal? DefaultTaxRate { get; set; }
         public string Example1 { get; internal set; }
         public string Example2 { get; internal set; }
         public string ExampleCallback { get; internal set; }

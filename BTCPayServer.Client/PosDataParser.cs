@@ -41,6 +41,7 @@ public static class PosDataParser
                 result.TryAdd(item.Key, ParsePosData(item.Value));
                 break;
             case null:
+            case JTokenType.Null:
                 break;
             default:
                 result.TryAdd(item.Key, item.Value.ToString());

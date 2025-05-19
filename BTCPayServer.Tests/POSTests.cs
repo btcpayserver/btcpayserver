@@ -363,7 +363,7 @@ donation:
             await AssertCartSummary(s, new()
             {
                 ItemsTotal = "10,00 €",
-                Discount = "10% = 1,00 €",
+                Discount = "1,00 € (10%)",
                 Subtotal = "9,00 €",
                 Taxes = "0,77 €",
                 Total = "9,77 €"
@@ -376,9 +376,9 @@ donation:
             await AssertCartSummary(s, new()
             {
                 ItemsTotal = "10,00 €",
-                Discount = "10% = 1,00 €",
+                Discount = "1,00 € (10%)",
                 Subtotal = "9,00 €",
-                Tip = "10% = 0,90 €",
+                Tip = "0,90 € (10%)",
                 Taxes = "0,77 €",
                 Total = "10,67 €"
             });
@@ -411,10 +411,10 @@ donation:
                 ],
                 Sums = [
                     new("Items total", "10,00 €"),
-                    new("Discount", "10% = 1,00 €"),
+                    new("Discount", "1,00 € (10%)"),
                     new("Subtotal", "9,00 €"),
                     new("Tax", "0,77 €"),
-                    new("Tip", "10% = 0,90 €"),
+                    new("Tip", "0,90 € (10%)"),
                     new("Total", "10,67 €")
                 ]
             });
@@ -558,9 +558,9 @@ donation:
                 Sums = [
 
                     new("Items total", "1 234,56 €"),
-                    new("Discount", "10% = 123,46 €"),
+                    new("Discount", "123,46 € (10%)"),
                     new("Subtotal", "1 111,10 €"),
-                    new("Tip", "10% = 111,11 €"),
+                    new("Tip", "111,11 € (10%)"),
                     new("Total", "1 222,21 €")
                 ]
             });

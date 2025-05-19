@@ -233,8 +233,7 @@
                         <tr v-if="discountNumeric">
                             <td class="align-middle" text-translate="true">Discount</td>
                             <td class="align-middle text-end" id="CartDiscount">
-                                <span v-if="discountPercent">{{discountPercent}}% =</span>
-                                {{ formatCurrency(discountNumeric, true) }}
+                                <span>{{ formatCurrency(discountNumeric, true) }}</span>&nbsp;<span v-if="discountPercent">({{discountPercent}}%)</span>
                             </td>
                         </tr>
                         <tr v-if="subtotalNumeric">
@@ -244,8 +243,7 @@
                         <tr v-if="tipNumeric">
                             <td class="align-middle" text-translate="true">Tip</td>
                             <td class="align-middle text-end" id="CartTip">
-                                <span v-if="tipPercent">{{tipPercent}}% =</span>
-                                {{ formatCurrency(tipNumeric, true) }}
+                                <span>{{ formatCurrency(tipNumeric, true) }}</span>&nbsp;<span v-if="tipPercent">({{tipPercent}}%)</span>
                             </td>
                         </tr>
                         <tr v-if="taxNumeric">

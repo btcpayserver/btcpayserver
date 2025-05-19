@@ -333,13 +333,13 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 if (jposData.DiscountAmount > 0)
                 {
                     var discountFormatted = _displayFormatter.Currency(jposData.DiscountAmount, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
-                    receiptData.Discount = jposData.DiscountPercentage > 0 ? $"{jposData.DiscountPercentage}% = {discountFormatted}" : discountFormatted;
+                    receiptData.Discount = jposData.DiscountPercentage > 0 ? $"{discountFormatted} ({jposData.DiscountPercentage}%)" : discountFormatted;
                 }
 
                 if (jposData.Tip > 0)
                 {
                     var tipFormatted = _displayFormatter.Currency(jposData.Tip, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
-                    receiptData.Tip = jposData.TipPercentage > 0 ? $"{jposData.TipPercentage}% = {tipFormatted}" : tipFormatted;
+                    receiptData.Tip = jposData.TipPercentage > 0 ? $"{tipFormatted} ({jposData.TipPercentage}%)" : tipFormatted;
                 }
 
                 if (jposData.Tax > 0)

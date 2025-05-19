@@ -5,11 +5,13 @@ public static class WebhookEventType
 {
     public const string InvoiceCreated = nameof(InvoiceCreated);
     public const string InvoiceReceivedPayment = nameof(InvoiceReceivedPayment);
+    public const string InvoicePaymentSettled = nameof(InvoicePaymentSettled);
     public const string InvoiceProcessing = nameof(InvoiceProcessing);
     public const string InvoiceExpired = nameof(InvoiceExpired);
     public const string InvoiceSettled = nameof(InvoiceSettled);
     public const string InvoiceInvalid = nameof(InvoiceInvalid);
-    public const string InvoicePaymentSettled = nameof(InvoicePaymentSettled);
+    public const string InvoiceExpiredPaidPartial = nameof(InvoiceExpiredPaidPartial);
+    public const string InvoicePaidAfterExpiration = nameof(InvoicePaidAfterExpiration);
     public const string PayoutCreated = nameof(PayoutCreated);
     public const string PayoutApproved = nameof(PayoutApproved);
     public const string PayoutUpdated = nameof(PayoutUpdated);
@@ -18,5 +20,4 @@ public static class WebhookEventType
     public const string PaymentRequestArchived = nameof(PaymentRequestArchived);
     public const string PaymentRequestStatusChanged = nameof(PaymentRequestStatusChanged);
     public const string PaymentRequestCompleted = nameof(PaymentRequestCompleted);
-    
 }

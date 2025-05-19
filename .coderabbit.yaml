@@ -4,6 +4,8 @@ early_access: false
 enable_free_tier: true
 auto_resolve_threads: true
 reviews:
+  summaries:
+    include_walkthrough: false
   profile: chill
   request_changes_workflow: false
   high_level_summary: false

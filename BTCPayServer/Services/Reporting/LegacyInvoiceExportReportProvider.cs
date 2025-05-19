@@ -48,6 +48,7 @@ public class LegacyInvoiceExportReportProvider : ReportProvider
                 new("InvoiceCurrency", "text"),
                 new("InvoiceDue", "number"),
                 new("InvoicePrice", "number"),
+                new("InvoiceTaxIncluded", "number"),
                 new("InvoiceItemCode", "text"),
                 new("InvoiceItemDesc", "text"),
                 new("InvoiceFullStatus", "text"),
@@ -91,6 +92,7 @@ public class LegacyInvoiceExportReportProvider : ReportProvider
                     data.Add(invoiceEntity.Currency);
                     data.Add(Math.Round(invoiceDue, currency.NumberDecimalDigits));
                     data.Add(invoiceEntity.Price);
+                    data.Add(invoiceEntity.Metadata.TaxIncluded ?? 0.0m);
                     data.Add(invoiceEntity.Metadata.ItemCode);
                     data.Add(invoiceEntity.Metadata.ItemDesc);
                     data.Add(invoiceEntity.GetInvoiceState().ToString());
@@ -125,6 +127,7 @@ public class LegacyInvoiceExportReportProvider : ReportProvider
                 data.Add(invoiceEntity.Currency);
                 data.Add(Math.Round(invoiceDue, currency.NumberDecimalDigits)); // InvoiceDue
                 data.Add(invoiceEntity.Price);
+                data.Add(invoiceEntity.Metadata.TaxIncluded ?? 0.0m);
                 data.Add(invoiceEntity.Metadata.ItemCode);
                 data.Add(invoiceEntity.Metadata.ItemDesc);
                 data.Add(invoiceEntity.GetInvoiceState().ToString());

@@ -1225,6 +1225,14 @@
         {
             "name": "Apps",
             "description": "App operations"
+        },
+        {
+            "name": "Crowdfund",
+            "description": "Crowdfund operations"
+        },
+        {
+            "name": "Point of Sale",
+            "description": "Point of Sale operations"
         }
     ]
 }

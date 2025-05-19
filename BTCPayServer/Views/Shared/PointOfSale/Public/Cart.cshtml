@@ -150,7 +150,7 @@
                 </button>
                 <button id="CartClose" type="button" class="cart-toggle-btn" v-on:click="toggleCart" aria-controls="cart" aria-label="@StringLocalizer["Close"]">
                     <vc:icon symbol="cross" />
-                </button>   
+                </button>
             </header>
             <div class="offcanvas-body py-0">
                 <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" v-on:submit="handleFormSubmit" v-if="cartCount !== 0">
@@ -226,22 +226,30 @@
                         </tr>
                     </table>
                     <table class="table table-borderless mt-4 mb-0">
-                        <tr>
-                            <td class="align-middle" text-translate="true">Subtotal</td>
-                            <td class="align-middle text-end" id="CartAmount">{{ formatCurrency(amountNumeric, true) }}</td>
+                        <tr v-if="itemsTotalNumeric">
+                            <td class="align-middle h6 border-0" text-translate="true">Items total</td>
+                            <td class="align-middle h6 border-0 text-end" id="CartItemsTotal">{{ formatCurrency(itemsTotalNumeric, true) }}</td>
                         </tr>
                         <tr v-if="discountNumeric">
                             <td class="align-middle" text-translate="true">Discount</td>
                             <td class="align-middle text-end" id="CartDiscount">
-                                <span v-if="discountPercent">{{discountPercent}}% =</span>
-                                {{ formatCurrency(discountNumeric, true) }}
+                                <span>{{ formatCurrency(discountNumeric, true) }}</span>&nbsp;<span v-if="discountPercent">({{discountPercent}}%)</span>
                             </td>
+                        </tr>
+                        <tr v-if="subtotalNumeric">
+                            <td class="align-middle h6 border-0" text-translate="true">Subtotal</td>
+                            <td class="align-middle h6 border-0 text-end" id="CartAmount">{{ formatCurrency(subtotalNumeric, true) }}</td>
                         </tr>
                         <tr v-if="tipNumeric">
                             <td class="align-middle" text-translate="true">Tip</td>
                             <td class="align-middle text-end" id="CartTip">
-                                <span v-if="tipPercent">{{tipPercent}}% =</span>
-                                {{ formatCurrency(tipNumeric, true) }}
+                                <span>{{ formatCurrency(tipNumeric, true) }}</span>&nbsp;<span v-if="tipPercent">({{tipPercent}}%)</span>
+                            </td>
+                        </tr>
+                        <tr v-if="taxNumeric">
+                            <td class="align-middle" text-translate="true">Taxes</td>
+                            <td class="align-middle text-end" id="CartTax">
+                                {{ formatCurrency(taxNumeric, true) }}
                             </td>
                         </tr>
                         <tr>

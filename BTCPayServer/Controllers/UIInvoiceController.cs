@@ -269,13 +269,11 @@ namespace BTCPayServer.Controllers
                             "No wallet has been linked to your BTCPay Store. See the following link for more information on how to connect your store and wallet. (https://docs.btcpayserver.org/WalletSetup/)");
                     else
                     {
-                        var list = logs.ToList();
-                        var errors = list.Where(l => l.Severity == InvoiceEventData.EventSeverity.Error).Select(l => l.Log);
                         message.AppendLine("Error retrieving a matching payment method or rate.");
-                        foreach (var error in errors)
-                            message.AppendLine(error);
+                        foreach (var error in logs.ToList())
+                            message.AppendLine(error.ToString());
                     }
-                    
+
                     throw new BitpayHttpException(400, message.ToString());
                 }
                 entity.SetPaymentPrompts(new PaymentPromptDictionary(contexts.Select(c => c.Prompt)));

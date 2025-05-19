@@ -98,8 +98,8 @@ namespace BTCPayServer.Tests
                 await mempoolSpaceFeeProvider.GetFeeRateAsync();
                 mempoolSpaceFeeProvider.CachedOnly = false;
                 Assert.NotEmpty(rates);
-                
-                
+
+
                 var recommendedFees =
                     await Task.WhenAll(new[]
                         {
@@ -126,7 +126,7 @@ namespace BTCPayServer.Tests
                 //ENSURE THESE ARE LOGICAL
                 Assert.True(recommendedFees[0].FeeRate >= recommendedFees[1].FeeRate, $"{recommendedFees[0].Target}:{recommendedFees[0].FeeRate} >= {recommendedFees[1].Target}:{recommendedFees[1].FeeRate}");
                 Assert.True(recommendedFees[1].FeeRate >= recommendedFees[2].FeeRate, $"{recommendedFees[1].Target}:{recommendedFees[1].FeeRate} >= {recommendedFees[2].Target}:{recommendedFees[2].FeeRate}");
-                Assert.True(recommendedFees[2].FeeRate >= recommendedFees[3].FeeRate, $"{recommendedFees[2].Target}:{recommendedFees[2].FeeRate} >= {recommendedFees[3].Target}:{recommendedFees[3].FeeRate}");                
+                Assert.True(recommendedFees[2].FeeRate >= recommendedFees[3].FeeRate, $"{recommendedFees[2].Target}:{recommendedFees[2].FeeRate} >= {recommendedFees[3].Target}:{recommendedFees[3].FeeRate}");
             }
         }
         [Fact]
@@ -214,11 +214,20 @@ namespace BTCPayServer.Tests
                         e => e.CurrencyPair == new CurrencyPair("BTC", "NOK") &&
                              e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 NOK
                 }
-                else if (name == "barebitcoin") 
+                else if (name == "barebitcoin")
                 {
                     Assert.Contains(exchangeRates.ByExchange[name],
                         e => e.CurrencyPair == new CurrencyPair("BTC", "NOK") &&
                              e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 NOK
+                }
+                else if (name == "coinmate")
+                {
+                    Assert.Contains(exchangeRates.ByExchange[name],
+                        e => e.CurrencyPair == new CurrencyPair("BTC", "EUR") &&
+                             e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 EUR
+                    Assert.Contains(exchangeRates.ByExchange[name],
+                        e => e.CurrencyPair == new CurrencyPair("BTC", "CZK") &&
+                             e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 CZK
                 }
                 else
                 {
@@ -378,7 +387,7 @@ retry:
             foreach (var k in defaultRules.RecommendedExchanges)
             {
                 b.DefaultCurrency = k.Key;
-                var rules = b.GetDefaultRateRules(defaultRules);
+                var rules = b.GetOrCreateRateSettings(false).GetDefaultRateRules(defaultRules, b.Spread);
                 var pairs = new[] { CurrencyPair.Parse($"BTC_{k.Key}") }.ToHashSet();
                 var result = fetcher.FetchRates(pairs, rules, null, default);
                 foreach ((CurrencyPair key, Task<RateResult> value) in result)
@@ -386,7 +395,7 @@ retry:
                     TestLogs.LogInformation($"Testing {key} when default currency is {k.Key}");
                     var rateResult = await value;
                     var hasRate = rateResult.BidAsk != null;
-                    
+
                     if (temporarilyBroken.Contains(k.Key))
                     {
                         if (!hasRate)
@@ -426,7 +435,7 @@ retry:
                 }
             }
 
-            var rules = new StoreBlob().GetDefaultRateRules(defaultRules);
+            var rules = new StoreBlob().GetOrCreateRateSettings(false).GetDefaultRateRules(defaultRules, 0.0m);
             var result = fetcher.FetchRates(pairs, rules, null, cts.Token);
             foreach ((CurrencyPair key, Task<RateResult> value) in result)
             {
@@ -537,7 +546,7 @@ retry:
             version = Regex.Match(actual, "Original file: /npm/decimal\\.js@([0-9]+.[0-9]+.[0-9]+)/decimal\\.js").Groups[1].Value;
             expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/decimal.js@{version}/decimal.min.js")).Content.ReadAsStringAsync()).Trim();
             EqualJsContent(expected, actual);
-            
+
             actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "bbqr", "bbqr.iife.js").Trim();
             expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/bbqr@1.0.0/dist/bbqr.iife.js")).Content.ReadAsStringAsync()).Trim();
             EqualJsContent(expected, actual);
@@ -622,8 +631,8 @@ retry:
             string currency = "USD")
         {
             var storeController = user.GetController<UIStoresController>();
-            var vm = (RatesViewModel)((ViewResult)storeController.Rates()).Model;
-            vm.PreferredExchange = exchange;
+            var vm = (RatesViewModel)((ViewResult)await storeController.Rates()).Model;
+            vm.PrimarySource.PreferredExchange = exchange;
             await storeController.Rates(vm);
             var invoice2 = await user.BitPay.CreateInvoiceAsync(
                 new Invoice()

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
@@ -12,6 +13,7 @@ using BTCPayServer.Views.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Playwright;
 using NBitcoin;
+using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -38,7 +40,6 @@ namespace BTCPayServer.Tests
             Assert.Contains("Starting listening NBXplorer", await s.Page.ContentAsync());
         }
 
-
         [Fact]
         public async Task CanUseForms()
         {
@@ -56,12 +57,15 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage(partialText: "App updated");
             await s.Page.ClickAsync("#ViewApp");
             var popOutPage = await s.Page.Context.WaitForPageAsync();
-            await popOutPage.Locator("button[type='submit']").First.ClickAsync();
-            await popOutPage.FillAsync("[name='buyerEmail']", "aa@aa.com");
-            await popOutPage.ClickAsync("input[type='submit']");
-            await s.PayInvoiceAsync(popOutPage, true);
-            var invoiceId = popOutPage.Url[(popOutPage.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
-            await popOutPage.CloseAsync();
+            string invoiceId;
+            await using (var o = await s.SwitchPage(popOutPage))
+            {
+                await s.Page.Locator("button[type='submit']").First.ClickAsync();
+                await s.Page.FillAsync("[name='buyerEmail']", "aa@aa.com");
+                await s.Page.ClickAsync("input[type='submit']");
+                await s.PayInvoice(true);
+                invoiceId = s.Page.Url[(s.Page.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
+            }
 
             await s.Page.Context.Pages.First().BringToFrontAsync();
             await s.GoToUrl($"/invoices/{invoiceId}/");
@@ -108,7 +112,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("CustomFormInputTest", await s.Page.ContentAsync());
             await s.Page.FillAsync("[name='buyerEmail']", "aa@aa.com");
             await s.Page.ClickAsync("input[type='submit']");
-            await s.PayInvoiceAsync(s.Page, true, 0.001m);
+            await s.PayInvoice(true, 0.001m);
             var result = await s.Server.PayTester.HttpClient.GetAsync(formUrl);
             Assert.Equal(HttpStatusCode.NotFound, result.StatusCode);
             await s.GoToHome();
@@ -358,7 +362,7 @@ namespace BTCPayServer.Tests
 
             // Store Email Rules
             await s.Page.ClickAsync("#ConfigureEmailRules");
-            Assert.Contains("There are no rules yet.", await s.Page.ContentAsync());
+            await s.Page.Locator("text=There are no rules yet.").WaitForAsync();
             Assert.DoesNotContain("id=\"SaveEmailRules\"", await s.Page.ContentAsync());
             Assert.DoesNotContain("You need to configure email settings before this feature works", await s.Page.ContentAsync());
 
@@ -369,6 +373,7 @@ namespace BTCPayServer.Tests
             await s.Page.FillAsync("#Subject", "Thanks!");
             await s.Page.Locator(".note-editable").FillAsync("Your invoice is settled");
             await s.Page.ClickAsync("#SaveEmailRules");
+            await s.FindAlertMessage();
             // we now have a rule
             Assert.DoesNotContain("There are no rules yet.", await s.Page.ContentAsync());
             Assert.Contains("test@gmail.com", await s.Page.ContentAsync());
@@ -488,6 +493,93 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage(partialText: "Email server password reset");
             Assert.DoesNotContain("Configured", await s.Page.ContentAsync());
             Assert.Contains("test_fix", await s.Page.ContentAsync());
+        }
+
+        [Fact]
+        public async Task CanUseStoreTemplate()
+        {
+            await using var s = CreatePlaywrightTester(newDb: true);
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore(preferredExchange: "Kraken");
+            var client = await s.AsTestAccount().CreateClient();
+            await client.UpdateStore(s.StoreId, new UpdateStoreRequest()
+            {
+                Name = "Can Use Store?",
+                Website = "https://test.com/",
+                CelebratePayment = false,
+                DefaultLang = "fr-FR",
+                NetworkFeeMode = NetworkFeeMode.MultiplePaymentsOnly,
+                ShowStoreHeader = false
+            });
+            await s.GoToServer();
+            await s.Page.ClickAsync("#SetTemplate");
+            await s.FindAlertMessage();
+
+            var newStore = await client.CreateStore(new ());
+            Assert.Equal("Can Use Store?", newStore.Name);
+            Assert.Equal("https://test.com/", newStore.Website);
+            Assert.False(newStore.CelebratePayment);
+            Assert.Equal("fr-FR", newStore.DefaultLang);
+            Assert.Equal(NetworkFeeMode.MultiplePaymentsOnly, newStore.NetworkFeeMode);
+            Assert.False(newStore.ShowStoreHeader);
+
+            newStore = await client.CreateStore(new (){ Name = "Yes you can also customize"});
+            Assert.Equal("Yes you can also customize", newStore.Name);
+            Assert.Equal("https://test.com/", newStore.Website);
+            Assert.False(newStore.CelebratePayment);
+            Assert.Equal("fr-FR", newStore.DefaultLang);
+            Assert.Equal(NetworkFeeMode.MultiplePaymentsOnly, newStore.NetworkFeeMode);
+            Assert.False(newStore.ShowStoreHeader);
+
+            await s.GoToUrl("/stores/create");
+            Assert.Equal("Can Use Store?" ,await s.Page.InputValueAsync("#Name"));
+            await s.Page.FillAsync("#Name", "Just changed it!");
+            await s.Page.ClickAsync("#Create");
+            await s.Page.ClickAsync("#StoreNav-General");
+            var newStoreId = await s.Page.InputValueAsync("#Id");
+            Assert.NotEqual(newStoreId, s.StoreId);
+
+            newStore = await client.GetStore(newStoreId);
+            Assert.Equal("Just changed it!", newStore.Name);
+            Assert.Equal("https://test.com/", newStore.Website);
+            Assert.False(newStore.CelebratePayment);
+            Assert.Equal("fr-FR", newStore.DefaultLang);
+            Assert.Equal(NetworkFeeMode.MultiplePaymentsOnly, newStore.NetworkFeeMode);
+            Assert.False(newStore.ShowStoreHeader);
+
+            await s.GoToServer();
+            await s.Page.ClickAsync("#ResetTemplate");
+            await s.FindAlertMessage(partialText: "Store template successfully unset");
+
+            await s.GoToUrl("/stores/create");
+            Assert.Equal("" ,await s.Page.InputValueAsync("#Name"));
+
+            newStore = await client.CreateStore(new (){ Name = "Test"});
+            Assert.Equal(TimeSpan.FromDays(30), newStore.RefundBOLT11Expiration);
+            Assert.Equal(TimeSpan.FromDays(1), newStore.MonitoringExpiration);
+            Assert.Equal(TimeSpan.FromMinutes(5), newStore.DisplayExpirationTimer);
+            Assert.Equal(TimeSpan.FromMinutes(15), newStore.InvoiceExpiration);
+
+            // What happens if the default template doesn't have all the fields?
+            var settings = s.Server.PayTester.GetService<SettingsRepository>();
+            var policies = await settings.GetSettingAsync<PoliciesSettings>() ?? new();
+            policies.DefaultStoreTemplate = new JObject()
+            {
+                ["blob"] = new JObject()
+                {
+                    ["defaultCurrency"] = "AAA",
+                    ["defaultLang"] = "de-DE"
+                }
+            };
+            await settings.UpdateSetting(policies);
+            newStore = await client.CreateStore(new() { Name = "Test2"});
+            Assert.Equal("AAA", newStore.DefaultCurrency);
+            Assert.Equal("de-DE", newStore.DefaultLang);
+            Assert.Equal(TimeSpan.FromDays(30), newStore.RefundBOLT11Expiration);
+            Assert.Equal(TimeSpan.FromDays(1), newStore.MonitoringExpiration);
+            Assert.Equal(TimeSpan.FromMinutes(5), newStore.DisplayExpirationTimer);
+            Assert.Equal(TimeSpan.FromMinutes(15), newStore.InvoiceExpiration);
         }
     }
 }

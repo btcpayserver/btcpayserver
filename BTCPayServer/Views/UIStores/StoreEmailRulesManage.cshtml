@@ -42,7 +42,7 @@
     <div class="form-group">
         <label asp-for="Trigger" class="form-label" data-required></label>
         <select asp-for="Trigger" asp-items="@WebhookSender.GetSupportedWebhookTypes()
-                .OrderBy(a=>a.Value).Select(s => new SelectListItem(s.Value, s.Key))" 
+                .OrderBy(a=>a.Value).Select(s => new SelectListItem(s.Value, s.Key))"
                 class="form-select email-rule-trigger" required></select>
         <span asp-validation-for="Trigger" class="text-danger"></span>
         <div class="form-text" text-translate="true">Choose what event sends the email.</div>
@@ -66,7 +66,7 @@
         <input type="text" asp-for="Subject" class="form-control email-rule-subject" />
         <span asp-validation-for="Subject" class="text-danger"></span>
     </div>
-    
+
     <div class="form-group">
         <label asp-for="Body" class="form-label" data-required></label>
         <textarea asp-for="Body" class="form-control richtext email-rule-body" rows="4"></textarea>
@@ -162,6 +162,17 @@
                 @WebhookEventType.InvoicePaymentSettled: {
                     subject: 'Invoice {Invoice.Id} payment settled',
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) payment settled.'
+                },
+                @{ var invoiceLink = CallbackGenerator.InvoiceLink("INVOICE_ID", this.Context.Request).Replace("INVOICE_ID", ""); }
+                @WebhookEventType.InvoiceExpiredPaidPartial: {
+                    subject: 'Invoice {Invoice.Id} Expired Paid Partial',
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) has expired partially paid. '+
+                        '\nPlease review and take appropriate action: ' + @Safe.Json(invoiceLink) + '{Invoice.Id}'
+                },
+                @WebhookEventType.InvoicePaidAfterExpiration: {
+                    subject: 'Invoice {Invoice.Id} Expired Paid Late',
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) has been paid after expiration. '+
+                        '\nPlease review and take appropriate action: ' + @Safe.Json(invoiceLink) + '{Invoice.Id}'
                 },
                 @{ var paymentRequestsLink = CallbackGenerator.PaymentRequestListLink(storeId, this.Context.Request); }
                 @WebhookEventType.PaymentRequestCompleted: {

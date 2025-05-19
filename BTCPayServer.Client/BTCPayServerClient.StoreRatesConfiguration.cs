@@ -8,19 +8,29 @@ namespace BTCPayServer.Client;
 
 public partial class BTCPayServerClient
 {
-    public virtual async Task<StoreRateConfiguration> GetStoreRateConfiguration(string storeId, CancellationToken token = default)
+    public virtual async Task<StoreRateConfiguration> GetStoreRateConfiguration(string storeId, bool? fallback = null, CancellationToken token = default)
     {
-        return await SendHttpRequest<StoreRateConfiguration>($"api/v1/stores/{storeId}/rates/configuration", null, HttpMethod.Get, token);
+        var path = GetRateConfigPath(storeId, fallback);
+        return await SendHttpRequest<StoreRateConfiguration>(path, null, HttpMethod.Get, token);
     }
+
+    private string GetRateConfigPath(string storeId, bool? fallback)
+    => fallback switch
+    {
+        null => $"api/v1/stores/{storeId}/rates/configuration",
+        true => $"api/v1/stores/{storeId}/rates/configuration/fallback",
+        false => $"api/v1/stores/{storeId}/rates/configuration/primary",
+    };
 
     public virtual async Task<List<RateSource>> GetRateSources(CancellationToken token = default)
     {
         return await SendHttpRequest<List<RateSource>>("misc/rate-sources", null, HttpMethod.Get, token);
     }
 
-    public virtual async Task<StoreRateConfiguration> UpdateStoreRateConfiguration(string storeId, StoreRateConfiguration request, CancellationToken token = default)
+    public virtual async Task<StoreRateConfiguration> UpdateStoreRateConfiguration(string storeId, StoreRateConfiguration request, bool? fallback = null, CancellationToken token = default)
     {
-        return await SendHttpRequest<StoreRateConfiguration>($"api/v1/stores/{storeId}/rates/configuration", request, HttpMethod.Put, token);
+        var path = GetRateConfigPath(storeId, fallback);
+        return await SendHttpRequest<StoreRateConfiguration>(path, request, HttpMethod.Put, token);
     }
 
     public virtual async Task<List<StoreRateResult>> PreviewUpdateStoreRateConfiguration(string storeId, StoreRateConfiguration request, string[] currencyPair = null, CancellationToken token = default)

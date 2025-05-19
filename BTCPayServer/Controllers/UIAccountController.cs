@@ -256,7 +256,7 @@ namespace BTCPayServer.Controllers
                     _logger.LogWarning("User {Email} tried to log in, but is locked out", user.Email);
                     return RedirectToAction(nameof(Lockout), new { user.LockoutEnd });
                 }
-                
+
                 ModelState.AddModelError(string.Empty, errorMessage);
                 return View(model);
             }
@@ -568,7 +568,6 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("/register")]
         [AllowAnonymous]
-        [RateLimitsFilter(ZoneLimits.Register, Scope = RateLimitsScope.RemoteAddress)]
         public IActionResult Register(string returnUrl = null)
         {
             if (!CanLoginOrRegister())
@@ -788,7 +787,7 @@ namespace BTCPayServer.Controllers
             {
                 return View(model);
             }
-            
+
             var user = await _userManager.FindByEmailAsync(model.Email);
             var hasPassword = user != null && await _userManager.HasPasswordAsync(user);
             var needsInitialPassword = user != null && !await _userManager.HasPasswordAsync(user);
@@ -811,8 +810,8 @@ namespace BTCPayServer.Controllers
                 });
 
                 if (!hasPassword) await FinalizeInvitationIfApplicable(user);
-                
-                // see if we can sign in user after accepting an invitation and setting the password 
+
+                // see if we can sign in user after accepting an invitation and setting the password
                 if (needsInitialPassword && UserService.TryCanLogin(user, out _))
                 {
                     var signInResult = await _signInManager.PasswordSignInAsync(user.Email!, model.Password, true, true);
@@ -844,7 +843,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            
+
             var requiresEmailConfirmation = user.RequiresEmailConfirmation && !user.EmailConfirmed;
             var requiresSetPassword = !await _userManager.HasPasswordAsync(user);
             if (requiresEmailConfirmation)

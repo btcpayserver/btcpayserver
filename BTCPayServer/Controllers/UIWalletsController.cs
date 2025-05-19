@@ -876,7 +876,7 @@ namespace BTCPayServer.Controllers
                 throw new Exception("Store not found");
             var storeData = store.GetStoreBlob();
             var rateRules = storeData.GetRateRules(_defaultRules);
-            rateRules.Spread = 0.0m;
+            storeData.Spread = 0.0m;
             var currencyPair = new CurrencyPair(walletId.CryptoCode, storeData.DefaultCurrency);
 
             using CancellationTokenSource cts = new();
@@ -1202,7 +1202,7 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                psbtResponse = await CreatePSBT(network, derivationScheme, vm, cancellation);
+                psbtResponse = await CreatePSBT(walletId.StoreId, network, derivationScheme, vm, cancellation);
             }
             catch (NBXplorerException ex)
             {

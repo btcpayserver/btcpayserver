@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -7,6 +8,18 @@ namespace BTCPayServer.Services.Invoices;
 
 public class PosAppData
 {
+    public static PosAppData TryParse(string posData)
+    {
+        try
+        {
+            return JObject.Parse(posData).ToObject<PosAppData>();
+        }
+        catch
+        {
+        }
+        return null;
+    }
+
     [JsonProperty(PropertyName = "cart")]
     public PosAppCartItem[] Cart { get; set; }
 
@@ -19,18 +32,19 @@ public class PosAppData
     [JsonProperty(PropertyName = "discountPercentage")]
     public decimal DiscountPercentage { get; set; }
 
-    [JsonProperty(PropertyName = "discountAmount")]
-    public decimal DiscountAmount { get; set; }
-
     [JsonProperty(PropertyName = "tipPercentage")]
     public decimal TipPercentage { get; set; }
 
-    [JsonProperty(PropertyName = "tip")]
-    public decimal Tip { get; set; }
-
+    [JsonProperty(PropertyName = "itemsTotal")]
+    public decimal ItemsTotal { get; set; }
+    [JsonProperty(PropertyName = "discountAmount")]
+    public decimal DiscountAmount { get; set; }
     [JsonProperty(PropertyName = "subTotal")]
     public decimal Subtotal { get; set; }
-
+    [JsonProperty(PropertyName = "tax")]
+    public decimal Tax { get; set; }
+    [JsonProperty(PropertyName = "tip")]
+    public decimal Tip { get; set; }
     [JsonProperty(PropertyName = "total")]
     public decimal Total { get; set; }
 }

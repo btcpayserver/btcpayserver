@@ -443,19 +443,19 @@ namespace BTCPayServer.HostedServices
             var cryptoCode = _handlers.TryGetNetwork(payoutPaymentMethod)?.NBXplorerNetwork.CryptoCode;
             var currencyPair = new Rating.CurrencyPair(cryptoCode,
                 payout.PullPaymentData?.Currency ?? cryptoCode);
-            Rating.RateRule rule = null;
+            Rating.RateRuleCollection rule = null;
             try
             {
                 if (explicitRateRule is null)
                 {
                     var storeBlob = payout.StoreData.GetStoreBlob();
                     var rules = storeBlob.GetRateRules(_defaultRules);
-                    rules.Spread = 0.0m;
+                    storeBlob.Spread = 0.0m;
                     rule = rules.GetRuleFor(currencyPair);
                 }
                 else
                 {
-                    rule = Rating.RateRule.CreateFromExpression(explicitRateRule, currencyPair);
+                    rule = new RateRuleCollection(Rating.RateRule.CreateFromExpression(explicitRateRule, currencyPair), null);
                 }
             }
             catch (Exception)
@@ -956,13 +956,13 @@ namespace BTCPayServer.HostedServices
             public record Error(string Message) : ClaimedAmountResult;
             public record Success(decimal? Amount) : ClaimedAmountResult;
         }
-        
-        
+
+
         public static ClaimedAmountResult GetClaimedAmount(IClaimDestination destination, decimal? amount, string payoutCurrency, string ppCurrency)
         {
             var amountsComparable = false;
             var destinationAmount = destination.Amount;
-            if (destinationAmount is not null && 
+            if (destinationAmount is not null &&
                 payoutCurrency == "BTC" &&
                 ppCurrency == "SATS")
             {

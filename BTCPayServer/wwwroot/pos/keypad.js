@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded",function () {
+
     const displayFontSize = 64;
     new Vue({
         el: '#app',
@@ -39,8 +40,15 @@ document.addEventListener("DOMContentLoaded",function () {
                 if (this.discountNumeric > 0 || this.discountPercentNumeric > 0) calc += ` - ${this.formatCurrency(this.discountNumeric, true)} (${this.discountPercent}%)`
                 if (this.summary.tip > 0) calc += ` + ${this.formatCurrency(this.summary.tip, true)}`
                 if (this.tipPercent) calc += ` (${this.tipPercent}%)`
-                if (this.summary.tax) calc += ` + ${this.formatCurrency(this.summary.tax, true)}`
-                if (this.defaultTaxRate) calc += ` (${this.defaultTaxRate}%)`
+                if (this.summary.tax)
+                {
+                    calc += ` + ${this.formatCurrency(this.summary.tax, true)}`
+                    if (this.posOrder.getTaxRate())
+                    {
+                        calc += ` (${this.posOrder.getTaxRate()}%)`
+                    }
+                }
+                calc += ` = ${this.formatCurrency(this.summary.priceTaxIncludedWithTips, true)}`
                 return calc
             }
         },

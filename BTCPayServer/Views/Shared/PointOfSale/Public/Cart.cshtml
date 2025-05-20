@@ -191,9 +191,11 @@
                         <tr v-if="showDiscount">
                             <th class="align-middle" text-translate="true">Discount</th>
                             <th class="align-middle" colspan="3">
-                                <div class="input-group input-group-sm w-100px pull-right">
-                                    <input class="form-control hide-number-spin" type="number" inputmode="decimal" min="0" step="1" max="100" id="Discount" v-model.number="discountPercent">
-                                    <span class="input-group-text">%</span>
+                                <div class="d-flex justify-content-end">
+                                    <div class="input-group input-group-sm w-100px">
+                                        <input class="form-control hide-number-spin" type="number" inputmode="decimal" min="0" step="1" max="100" id="Discount" v-model.number="discountPercent">
+                                        <span class="input-group-text">%</span>
+                                    </div>
                                 </div>
                             </th>
                         </tr>

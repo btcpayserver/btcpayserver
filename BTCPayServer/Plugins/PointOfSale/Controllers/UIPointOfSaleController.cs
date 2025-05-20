@@ -345,6 +345,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 if (jposData.Tax > 0)
                 {
                     var taxFormatted = _displayFormatter.Currency(jposData.Tax, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+                    if (order.GetTaxRate() is { } r)
+                        taxFormatted = $"{taxFormatted} ({r:0.######}%)";
                     receiptData.Tax = taxFormatted;
                 }
 

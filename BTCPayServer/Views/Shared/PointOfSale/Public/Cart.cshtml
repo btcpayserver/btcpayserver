@@ -191,9 +191,11 @@
                         <tr v-if="showDiscount">
                             <th class="align-middle" text-translate="true">Discount</th>
                             <th class="align-middle" colspan="3">
-                                <div class="input-group input-group-sm w-100px pull-right">
-                                    <input class="form-control hide-number-spin" type="number" inputmode="decimal" min="0" step="1" max="100" id="Discount" v-model.number="discountPercent">
-                                    <span class="input-group-text">%</span>
+                                <div class="d-flex justify-content-end">
+                                    <div class="input-group input-group-sm w-100px">
+                                        <input class="form-control hide-number-spin" type="number" inputmode="decimal" min="0" step="1" max="100" id="Discount" v-model.number="discountPercent">
+                                        <span class="input-group-text">%</span>
+                                    </div>
                                 </div>
                             </th>
                         </tr>
@@ -233,7 +235,7 @@
                         <tr v-if="discountNumeric">
                             <td class="align-middle" text-translate="true">Discount</td>
                             <td class="align-middle text-end" id="CartDiscount">
-                                <span>{{ formatCurrency(discountNumeric, true) }}</span>&nbsp;<span v-if="discountPercent">({{discountPercent}}%)</span>
+                                <span>{{ formatCurrency(discountNumeric, true) }}</span> <span v-if="discountPercent">({{discountPercent}}%)</span>
                             </td>
                         </tr>
                         <tr v-if="subtotalNumeric">
@@ -243,13 +245,13 @@
                         <tr v-if="tipNumeric">
                             <td class="align-middle" text-translate="true">Tip</td>
                             <td class="align-middle text-end" id="CartTip">
-                                <span>{{ formatCurrency(tipNumeric, true) }}</span>&nbsp;<span v-if="tipPercent">({{tipPercent}}%)</span>
+                                <span>{{ formatCurrency(tipNumeric, true) }}</span> <span v-if="tipPercent">({{tipPercent}}%)</span>
                             </td>
                         </tr>
                         <tr v-if="taxNumeric">
                             <td class="align-middle" text-translate="true">Taxes</td>
                             <td class="align-middle text-end" id="CartTax">
-                                {{ formatCurrency(taxNumeric, true) }}
+                                <span>{{ formatCurrency(taxNumeric, true) }}</span> <span v-if="taxPercent">({{taxPercent}}%)</span>
                             </td>
                         </tr>
                         <tr>

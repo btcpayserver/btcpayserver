@@ -50,6 +50,21 @@ class PoSOrder {
         }
     }
 
+    // Returns the tax rate of the items in the cart.
+    // If the tax rates are not all the same, returns null.
+    // If the cart is empty, returns null.
+    // Else, returns the tax rate shared by all items
+    getTaxRate() {
+        if (this.itemLines.length === 0) return null;
+        var rate = this.itemLines[0].taxRate ?? 0;
+        for (const line of this.itemLines.slice(1)) {
+            if (rate !== line.taxRate)
+            {
+                return null;
+            }
+        }
+        return rate;
+    }
     calculate() {
         const ctx = {
             discount: 0,
@@ -159,6 +174,9 @@ const posCommon = {
         taxNumeric() {
             return this.summary.tax;
         },
+        taxPercent() {
+            return this.posOrder.getTaxRate();
+        },
         subtotalNumeric () {
             // We don't want to show the subtotal if there is no tax or tips
             if (this.summary.priceTaxExcluded === this.summary.priceTaxIncludedWithTips) return 0;
@@ -184,6 +202,9 @@ const posCommon = {
         },
         tipNumeric () {
             return this.summary.tip;
+        },
+        lastAmount() {
+          return this.amounts[this.amounts.length - 1] = this.amounts[this.amounts.length - 1] || 0;
         },
         totalNumeric () {
             return this.summary.priceTaxIncludedWithTips;

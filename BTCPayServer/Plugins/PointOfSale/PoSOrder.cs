@@ -1,6 +1,7 @@
 ﻿#nullable  enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BTCPayServer.Plugins.PointOfSale;
 
@@ -62,6 +63,20 @@ public class PoSOrder
     public void AddTip(decimal tip)
     {
         _tip = Round(tip);
+    }
+
+    /// <summary>
+    /// Returns the tax rate of the items in the cart.
+    /// If the tax rates are not all the same, returns null.
+    /// If the cart is empty, returns null.
+    /// Else, returns the tax rate shared by all items
+    /// </summary>
+    /// <returns></returns>
+    public decimal? GetTaxRate()
+    {
+        if (!ItemLines.Any())
+            return null;
+        return ItemLines.GroupBy(i => i.TaxRate).Count() == 1 ? ItemLines[0].TaxRate : null;
     }
 
     /// <summary>

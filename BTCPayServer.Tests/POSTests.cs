@@ -522,23 +522,23 @@ donation:
             Assert.Equal("1.234,00", await s.Page.TextContentAsync("#Amount"));
             Assert.Equal("", await s.Page.TextContentAsync("#Calculation"));
             await EnterKeypad(s, "+56");
-            Assert.Equal("1.234,56", await s.Page.TextContentAsync("#Amount"));
+            Assert.Equal("0,56", await s.Page.TextContentAsync("#Amount"));
             Assert.True(await s.Page.IsEnabledAsync("#ModeTablist-discount"));
             Assert.True(await s.Page.IsEnabledAsync("#ModeTablist-tip"));
-            await AssertKeypadCalculation(s, "1.234,00 € + 0,56 €");
+            await AssertKeypadCalculation(s, "1.234,00 € + 0,56 € = 1.234,56 €");
 
             // Discount: 10%
             await s.Page.ClickAsync("label[for='ModeTablist-discount']");
             await EnterKeypad(s, "10");
-            Assert.Contains("1.111,10", await s.Page.TextContentAsync("#Amount"));
+            Assert.Contains("0,56", await s.Page.TextContentAsync("#Amount"));
             Assert.Contains("10% discount", await s.Page.TextContentAsync("#Discount"));
-            await AssertKeypadCalculation(s, "1.234,00 € + 0,56 € - 123,46 € (10%)");
+            await AssertKeypadCalculation(s, "1.234,00 € + 0,56 € - 123,46 € (10%) = 1.111,10 €");
 
             // Tip: 10%
             await s.Page.ClickAsync("label[for='ModeTablist-tip']");
             await s.Page.ClickAsync("#Tip-10");
-            Assert.Contains("1.222,21", await s.Page.TextContentAsync("#Amount"));
-            await AssertKeypadCalculation(s, "1.234,00 € + 0,56 € - 123,46 € (10%) + 111,11 € (10%)");
+            Assert.Contains("0,56", await s.Page.TextContentAsync("#Amount"));
+            await AssertKeypadCalculation(s, "1.234,00 € + 0,56 € - 123,46 € (10%) + 111,11 € (10%) = 1.222,21 €");
 
             // Pay
             await s.Page.ClickAsync("#pay-button");
@@ -580,8 +580,8 @@ donation:
             await s.Page.ClickAsync("#ItemsListOffcanvas button[data-bs-dismiss='offcanvas']");
 
             await EnterKeypad(s, "123");
-            Assert.Contains("4,65", await s.Page.TextContentAsync("#Amount"));
-            await AssertKeypadCalculation(s, "2 x Green Tea (1,00 €) = 2,00 € + 1 x Black Tea (1,00 €) = 1,00 € + 1,23 € + 0,42 € (10%)");
+            Assert.Contains("1,23", await s.Page.TextContentAsync("#Amount"));
+            await AssertKeypadCalculation(s, "2 x Green Tea (1,00 €) = 2,00 € + 1 x Black Tea (1,00 €) = 1,00 € + 1,23 € + 0,42 € (10%) = 4,65 €");
 
             // Pay
             await s.Page.ClickAsync("#pay-button");
@@ -604,7 +604,7 @@ donation:
                 ],
                 Sums = [
                     new("Subtotal", "4,23 €"),
-                    new("Tax", "0,42 €"),
+                    new("Tax", "0,42 € (10%)"),
                     new("Total", "4,65 €")
                 ]
             });

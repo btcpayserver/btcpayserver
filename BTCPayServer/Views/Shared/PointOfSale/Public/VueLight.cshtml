@@ -22,7 +22,7 @@
     <input type="hidden" name="posdata" :value="posdata">
     <div ref="display" class="d-flex flex-column align-items-center px-4 mb-auto">
         <div class="fw-semibold text-muted" id="Currency">{{currencyCode}}</div>
-        <div class="fw-bold lh-sm" ref="amount" v-bind:style="{ fontSize: `${fontSize}px` }" id="Amount">{{ formatCurrency(totalNumeric, false) }}</div>
+        <div class="fw-bold lh-sm" ref="amount" v-bind:style="{ fontSize: `${fontSize}px` }" id="Amount">{{ formatCurrency(lastAmount, false) }}</div>
         <div class="text-muted text-center mt-2" id="Calculation">{{ calculation }}</div>
     </div>
     <div id="ModeTabs" class="tab-content mb-n2" v-if="showDiscount || enableTips">

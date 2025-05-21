@@ -138,13 +138,14 @@ namespace BTCPayServer.Tests
             var factory = FastTests.CreateBTCPayRateFactory();
             var directlySupported = factory.AvailableRateProviders.Where(s => s.Source == RateSource.Direct)
                 .Select(s => s.Id).ToHashSet();
-            foreach (var result in factory
+            var providerList = factory
                 .Providers
                 .Where(p => p.Value is BackgroundFetcherRateProvider bf &&
                             !(bf.Inner is CoinGeckoRateProvider cg && cg.UnderlyingExchange != null))
                 .Select(p => (ExpectedName: p.Key, ResultAsync: p.Value.GetRatesAsync(default),
                     Fetcher: (BackgroundFetcherRateProvider)p.Value))
-                .ToList())
+                .ToList();
+            foreach (var result in providerList)
             {
                 var name = result.ExpectedName;
                 if (brokenShitcoinCasinos.Contains(name))
@@ -206,6 +207,9 @@ namespace BTCPayServer.Tests
                 {
                     Assert.Contains(exchangeRates.ByExchange[name],
                         e => e.CurrencyPair == new CurrencyPair("BTC", "LBP") &&
+                             e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 LBP (I hope)
+                    Assert.Contains(exchangeRates.ByExchange[name],
+                        e => e.CurrencyPair == new CurrencyPair("BTC", "XPT") &&
                              e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 LBP (I hope)
                 }
                 else if (name == "bitmynt")

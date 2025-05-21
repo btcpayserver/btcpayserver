@@ -147,6 +147,28 @@
                     </div>
                 </div>
                 <div class="accordion-item">
+                    <h2 class="accordion-header" id="CustomNodePhoenixdHeader">
+                        <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodePhoenixdContent"
+                                aria-controls="CustomNodePhoenixdContent" aria-expanded="false">
+                            <span><strong>Phoenixd</strong> <span text-translate="true">via HTTP</span></span>
+                            <vc:icon symbol="caret-down" />
+                        </button>
+                    </h2>
+                    <div id="CustomNodePhoenixdContent" class="accordion-collapse collapse" aria-labelledby="CustomNodePhoenixdHeader"
+                         data-bs-parent="#CustomNodeSupport">
+                        <div class="accordion-body">
+                            <ul class="pb-3">
+                                <li>
+                                    <code><b>type=</b>phoenixd;<b>server=</b>http://phoenixd:9740/;<b>password=</b>phoenixdpassword...</code>
+                                </li>
+                            </ul>
+                            <p class="mt-2" html-translate="true">
+                                The password is the <code>http-password</code> generated in your <code>~/.phoenix/phoenix.conf</code> file.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
                     <h2 class="accordion-header" id="CustomNodeLNDHeader">
                         <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeLNDContent"
                                 aria-controls="CustomNodeLNDContent" aria-expanded="false">

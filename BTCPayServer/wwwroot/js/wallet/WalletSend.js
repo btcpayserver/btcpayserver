@@ -11,12 +11,9 @@
         var fiatValue = $(element).parents(".input-group").first().find(".fiat-value")
         var fiatValueInput = fiatValue.find(".fiat-value-edit-input");
         var amountValue = parseFloat($(element).val());
+        fiatValue.show();
         if (!isNaN(amountValue)) {
-            fiatValue.show();
             fiatValueInput.val((rate * amountValue).toFixed(divisibility));
-        } else {
-            fiatValue.hide();
-            fiatValueInput.val("")
         }
     }
 }

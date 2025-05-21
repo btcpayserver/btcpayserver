@@ -606,6 +606,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 MonitoringExpiration = entity.MonitoringExpiration,
                 CreatedTime = entity.InvoiceTime,
                 Amount = entity.Price,
+                PaidAmount = entity.PaidAmount.Net,
                 Type = entity.Type,
                 Id = entity.Id,
                 CheckoutLink = request is null ? null : linkGenerator.CheckoutLink(entity.Id, request.Scheme, request.Host, request.PathBase),

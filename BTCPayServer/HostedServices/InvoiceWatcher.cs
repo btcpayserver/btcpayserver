@@ -104,8 +104,7 @@ namespace BTCPayServer.HostedServices
                     {
                         context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.PaidInFull));
                         invoice.Status = InvoiceStatus.Processing;
-                        invoice.ExceptionStatus = invoice.IsOverPaid ? InvoiceExceptionStatus.PaidOver : InvoiceExceptionStatus.None;
-                        if (!invoice.IsUnsetTopUp())
+                        if (invoice.IsUnsetTopUp())
                         {
                             invoice.ExceptionStatus = InvoiceExceptionStatus.None;
                             // We know there is at least one payment because hasPayment is true
@@ -113,6 +112,10 @@ namespace BTCPayServer.HostedServices
                             invoice.Price = payment.InvoicePaidAmount.Net;
                             invoice.UpdateTotals();
                             context.PriceUpdated();
+                        }
+                        else
+                        {
+                            invoice.ExceptionStatus = invoice.IsOverPaid ? InvoiceExceptionStatus.PaidOver : InvoiceExceptionStatus.None;
                         }
                         context.MarkDirty();
                     }

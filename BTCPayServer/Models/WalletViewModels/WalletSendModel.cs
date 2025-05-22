@@ -79,6 +79,7 @@ namespace BTCPayServer.Models.WalletViewModels
             public string Outpoint { get; set; }
             public string Link { get; set; }
             public long Confirmations { get; set; }
+            public DateTimeOffset? Timestamp { get; set; }
         }
     }
 }

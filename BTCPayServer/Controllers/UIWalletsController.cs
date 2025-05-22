@@ -284,7 +284,6 @@ namespace BTCPayServer.Controllers
             model.RecommendedSatoshiPerByte =
                 recommendedFees.Where(option => option != null).ToList();
             model.FeeSatoshiPerByte ??= recommendedFees.Skip(1).FirstOrDefault()?.FeeRate;
-
             if (HttpContext.Request.Method != HttpMethods.Post)
             {
                 model.Command = null;
@@ -303,7 +302,7 @@ namespace BTCPayServer.Controllers
             var feeBumpUrl = Url.Action(nameof(WalletBumpFee), new { walletId, transactionId = bumpTarget.GetSingleTransactionId(), model.FeeSatoshiPerByte, model.BumpMethod, model.TransactionHashes, model.Outpoints })!;
             if (model.BumpMethod == "CPFP")
             {
-                var utxos = await explorer.GetUTXOsAsync(paymentMethod.AccountDerivation);
+                var utxos = await explorer.GetUTXOsAsync(paymentMethod.AccountDerivation, cancellationToken);
 
                 List<OutPoint> bumpableUTXOs = bumpTarget.GetMatchedOutpoints(utxos.GetUnspentUTXOs().Where(u => u.Confirmations == 0).Select(u => u.Outpoint));
                 if (bumpableUTXOs.Count == 0)
@@ -350,12 +349,16 @@ namespace BTCPayServer.Controllers
                 // RBF is only supported for a single tx
                 var tx = txs[bumpTarget.GetSingleTransactionId()!];
                 var changeOutput = tx.Outputs.FirstOrDefault(o => o.Feature == DerivationFeature.Change);
+                if (changeOutput is null &&
+                    tx is { Transaction: { Outputs: [{ ScriptPubKey: {} singleAddress }] }})
+                    changeOutput = new() { ScriptPubKey = singleAddress, Index = 0 };
                 if (tx.Inputs.Count != tx.Transaction?.Inputs.Count ||
                     changeOutput is null)
                 {
                     this.ModelState.AddModelError(nameof(model.BumpMethod), StringLocalizer["This transaction can't be RBF'd"]);
                     return View(nameof(WalletBumpFee), model);
                 }
+
                 IActionResult ChangeTooSmall(WalletBumpFeeViewModel vm, Money? missing)
                 {
                     if (missing is not null)
@@ -365,7 +368,14 @@ namespace BTCPayServer.Controllers
                     return View(nameof(WalletBumpFee), vm);
                 }
 
-                var bumpResult = bumpable[tx.TransactionId].ReplacementInfo!.CalculateBumpResult(targetFeeRate);
+                var bumpableTx = bumpable[tx.TransactionId].ReplacementInfo!;
+                if (targetFeeRate < bumpableTx.CalculateNewMinFeeRate())
+                {
+                    ModelState.AddModelError(nameof(model.FeeSatoshiPerByte), StringLocalizer["The selected fee rate is too small. The minimum is {0} sat/byte", bumpableTx.CalculateNewMinFeeRate().SatoshiPerByte]);
+                    return View(nameof(WalletBumpFee), model);
+                }
+
+                var bumpResult = bumpableTx.CalculateBumpResult(targetFeeRate);
                 var createPSBT = new CreatePSBTRequest()
                 {
                     RBF = true,
@@ -378,7 +388,12 @@ namespace BTCPayServer.Controllers
                     {
                         ExplicitFee = bumpResult.NewTxFee
                     },
-                    ExplicitChangeAddress = changeOutput.Address,
+                    ExplicitChangeAddress = changeOutput switch
+                    {
+                        { Address: {} addr } => PSBTDestination.Create(addr),
+                        { ScriptPubKey: {} scriptPubKey } => PSBTDestination.Create(scriptPubKey),
+                        _ => throw new InvalidOperationException("Invalid change output")
+                    },
                     Destinations = tx.Transaction.Outputs.AsIndexedOutputs()
                                         .Select(o => new CreatePSBTDestination()
                                         {
@@ -904,8 +919,7 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    var result = await feeProvider.GetFeeRateAsync(
-                        (int)network.NBitcoinNetwork.Consensus.GetExpectedBlocksFor(time));
+                    var result = await feeProvider.GetFeeRateAsync((int)network.NBitcoinNetwork.Consensus.GetExpectedBlocksFor(time));
                     options.Add(new WalletSendModel.FeeRateOption()
                     {
                         Target = time,

@@ -10,7 +10,7 @@ namespace BTCPayServer.Services.Fees
     {
         public async Task<FeeRate> GetFeeRateAsync(int blockTarget = 20)
         {
-                return (await ExplorerClient.GetFeeRateAsync(blockTarget).ConfigureAwait(false)).FeeRate;
+            return (await ExplorerClient.GetFeeRateAsync(blockTarget).ConfigureAwait(false)).FeeRate;
         }
     }
 }

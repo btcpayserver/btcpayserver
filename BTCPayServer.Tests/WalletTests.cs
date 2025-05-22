@@ -2,8 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Client;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Views.Wallets;
 using NBitcoin;
 using Xunit;
@@ -87,6 +85,21 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         // However, the new transaction should have copied the CPFP tag from the transaction it replaced, and have a RBF label as well.
         await AssertHasLabels(s, rbfTx, "CPFP");
         await AssertHasLabels(s, rbfTx, "RBF");
+
+        // Now, we sweep all the UTXOs to a single destination. This should be RBF-able. (Fee deducted on the lone UTXO)
+        await s.GoToWallet(navPages: WalletsNavPages.Send);
+        var send = await s.GoToWalletSend();
+        await send.FillAddress(new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest));
+        await send.SweepBalance();
+        await send.SetFeeRate(20m);
+        await send.Sign();
+        await s.Page.ClickAsync("button[value=broadcast]");
+        // Now we RBF the sweep
+        await ClickBumpFee(s);
+        Assert.Equal("RBF", await s.Page.Locator("#BumpMethod").InnerTextAsync());
+        await s.ClickPagePrimary();
+        await s.Page.ClickAsync("#BroadcastTransaction");
+        await AssertHasLabels(s, "RBF");
     }
 
     private async Task CreateInvoices(PlaywrightTester tester)
@@ -107,13 +120,10 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Page.ReloadAsync();
         await s.Page.Locator($"{TxRowSelector(txId)} .transaction-label[data-value=\"{label}\"]").WaitForAsync();
     }
-    private async Task AssertHasLabels(PlaywrightTester s, string label)
-    {
-        await s.Page.ReloadAsync();
-        await s.Page.Locator($".transaction-label[data-value=\"{label}\"]").First.WaitForAsync();
-    }
 
-    static string TxRowSelector(uint256 txId) => $".transaction-row[data-value=\"{txId}\"]";
+    private Task AssertHasLabels(PlaywrightTester s, string label) => AssertHasLabels(s, null, label);
+
+    static string TxRowSelector(uint256 txId) => txId is null ? ".transaction-row:first-of-type"  : $".transaction-row[data-value=\"{txId}\"]";
 
     private async Task SelectTransactions(PlaywrightTester s, params uint256[] txs)
     {
@@ -123,7 +133,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         }
     }
 
-    private async Task ClickBumpFee(PlaywrightTester s, uint256 txId)
+    private async Task ClickBumpFee(PlaywrightTester s, uint256 txId = null)
     {
         await s.Page.ClickAsync($"{TxRowSelector(txId)} .bumpFee-btn");
     }

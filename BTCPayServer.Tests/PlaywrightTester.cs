@@ -506,6 +506,8 @@ namespace BTCPayServer.Tests
             }
             await Page.ClickAsync("#FakePayment");
             await Page.Locator("#CheatSuccessMessage").WaitForAsync();
+            await Page.Locator("text=Payment Received").WaitForAsync();
+
             if (mine)
             {
                 await MineBlockOnInvoiceCheckout();

@@ -67,18 +67,10 @@
 			<input type="hidden" asp-for="Outpoints[i]" />
 		}
 	}
-	@if (!ViewContext.ModelState.IsValid)
-	{
-		<ul class="text-danger">
-			@foreach (var errors in ViewData.ModelState.Where(pair => pair.Key == string.Empty && pair.Value.ValidationState == ModelValidationState.Invalid))
-			{
-				foreach (var error in errors.Value.Errors)
-				{
-					<li>@error.ErrorMessage</li>
-				}
-			}
-		</ul>
-	}
+    @if (!ViewContext.ModelState.IsValid)
+    {
+        <div asp-validation-summary="All"></div>
+    }
 	@if (Model.GetBumpTarget().GetSingleTransactionId() is { } txId)
 	{
 		<div class="list-group list-group-flush">

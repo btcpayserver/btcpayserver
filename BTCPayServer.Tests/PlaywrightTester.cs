@@ -474,6 +474,7 @@ namespace BTCPayServer.Tests
                     goto retry;
                 }
             }
+            await Server.ExplorerNode.GenerateAsync(1);
             await Page.ReloadAsync();
             await Page.Locator("#CancelWizard").ClickAsync();
             return addressStr;
@@ -540,6 +541,24 @@ namespace BTCPayServer.Tests
             Page = page;
             await page.BringToFrontAsync();
             return new SwitchDisposable(page, old, this, closeAfter);
+        }
+
+        public async Task<SendWalletPMO> GoToWalletSend(WalletId walletId = null)
+        {
+            await GoToWallet(walletId, navPages: WalletsNavPages.Send);
+            return new(Page);
+        }
+
+        public class SendWalletPMO(IPage page)
+        {
+            public Task FillAddress(BitcoinAddress address) => page.FillAsync("[name='Outputs[0].DestinationAddress']",
+                address.ToString());
+
+            public Task SweepBalance() => page.ClickAsync("#SweepBalance");
+
+            public Task Sign() => page.ClickAsync("#SignTransaction");
+
+            public Task SetFeeRate(decimal val) => page.FillAsync("[name=\"FeeSatoshiPerByte\"]", val.ToString(CultureInfo.InvariantCulture));
         }
     }
 }

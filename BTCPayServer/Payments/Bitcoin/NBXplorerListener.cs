@@ -155,10 +155,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                 if (evt.DerivationStrategy != null)
                                 {
                                     wallet.InvalidateCache(evt.DerivationStrategy);
-                                    var validOutputs = network.GetValidOutputs(evt).ToList();
-                                    if (!validOutputs.Any())
-                                        break;
-                                    foreach (var output in validOutputs)
+                                    foreach (var output in network.GetValidOutputs(evt))
                                     {
                                         if (!output.matchedOutput.Value.IsCompatible(network))
                                             continue;

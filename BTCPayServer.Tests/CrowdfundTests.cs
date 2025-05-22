@@ -23,18 +23,14 @@ using static BTCPayServer.Tests.UnitTest1;
 
 namespace BTCPayServer.Tests
 {
-    public class CrowdfundTests : UnitTestBase
+    [Collection(nameof(SharedServerCollection))]
+    public class CrowdfundTests(Fixtures.SharedServerFixture fixture, ITestOutputHelper TestLogs)
     {
-        public CrowdfundTests(ITestOutputHelper helper) : base(helper)
-        {
-        }
-
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanCreateAndDeleteCrowdfundApp()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(TestLogs);
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             var user2 = tester.NewAccount();
@@ -96,8 +92,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanContributeOnlyWhenAllowed()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(TestLogs);
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
@@ -187,8 +182,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanComputeCrowdfundModel()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(TestLogs);
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
@@ -206,7 +200,7 @@ namespace BTCPayServer.Tests
             apps.HttpContext.SetAppData(appData);
             crowdfund.HttpContext.SetAppData(appData);
 
-            TestLogs.LogInformation("We create an invoice with a hardcap");
+            TestLogs.WriteLine("We create an invoice with a hardcap");
             var crowdfundViewModel = await crowdfund.UpdateCrowdfund(app.Id).AssertViewModelAsync<UpdateCrowdfundViewModel>();
             crowdfundViewModel.Enabled = true;
             crowdfundViewModel.EndDate = null;
@@ -229,8 +223,8 @@ namespace BTCPayServer.Tests
             Assert.Equal(0m, model.Info.CurrentPendingAmount);
             Assert.Equal(0m, model.Info.ProgressPercentage);
 
-            TestLogs.LogInformation("Unpaid invoices should show as pending contribution because it is hardcap");
-            TestLogs.LogInformation("Because UseAllStoreInvoices is true, we can manually create an invoice and it should show as contribution");
+            TestLogs.WriteLine("Unpaid invoices should show as pending contribution because it is hardcap");
+            TestLogs.WriteLine("Because UseAllStoreInvoices is true, we can manually create an invoice and it should show as contribution");
             var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice
             {
                 Buyer = new Buyer() { email = "test@fwf.com" },
@@ -250,7 +244,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(0m, model.Info.ProgressPercentage);
             Assert.Equal(1m, model.Info.PendingProgressPercentage);
 
-            TestLogs.LogInformation("Let's check current amount change once payment is confirmed");
+            TestLogs.WriteLine("Let's check current amount change once payment is confirmed");
             var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, tester.ExplorerNode.Network);
             await tester.ExplorerNode.SendToAddressAsync(invoiceAddress, invoice.BtcDue);
             await tester.ExplorerNode.GenerateAsync(1); // By default invoice confirmed at 1 block
@@ -262,7 +256,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(0m, model.Info.CurrentPendingAmount);
             });
 
-            TestLogs.LogInformation("Because UseAllStoreInvoices is true, let's make sure the invoice is tagged");
+            TestLogs.WriteLine("Because UseAllStoreInvoices is true, let's make sure the invoice is tagged");
             var invoiceEntity = await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id);
             Assert.True(invoiceEntity.Version >= InvoiceEntity.InternalTagSupport_Version);
             Assert.Contains(AppService.GetAppInternalTag(app.Id), invoiceEntity.InternalTags);
@@ -270,7 +264,7 @@ namespace BTCPayServer.Tests
             crowdfundViewModel.UseAllStoreInvoices = false;
             Assert.IsType<RedirectToActionResult>(crowdfund.UpdateCrowdfund(app.Id, crowdfundViewModel).Result);
 
-            TestLogs.LogInformation("Because UseAllStoreInvoices is false, let's make sure the invoice is not tagged");
+            TestLogs.WriteLine("Because UseAllStoreInvoices is false, let's make sure the invoice is not tagged");
             invoice = await user.BitPay.CreateInvoiceAsync(new Invoice
             {
                 Buyer = new Buyer { email = "test@fwf.com" },
@@ -284,7 +278,7 @@ namespace BTCPayServer.Tests
             invoiceEntity = await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id);
             Assert.DoesNotContain(AppService.GetAppInternalTag(app.Id), invoiceEntity.InternalTags);
 
-            TestLogs.LogInformation("After turning setting a softcap, let's check that only actual payments are counted");
+            TestLogs.WriteLine("After turning setting a softcap, let's check that only actual payments are counted");
             crowdfundViewModel.EnforceTargetAmount = false;
             crowdfundViewModel.UseAllStoreInvoices = true;
             Assert.IsType<RedirectToActionResult>(crowdfund.UpdateCrowdfund(app.Id, crowdfundViewModel).Result);
@@ -314,8 +308,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CrowdfundWithFormNoPerk()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(TestLogs);
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
@@ -368,8 +361,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CrowdfundWithFormAndPerk()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(TestLogs);
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");

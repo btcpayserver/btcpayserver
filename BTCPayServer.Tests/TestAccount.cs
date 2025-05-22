@@ -225,7 +225,7 @@ namespace BTCPayServer.Tests
             Assert.IsType<RedirectToActionResult>(GetController<UIStoresController>().LightningSettings(lnSettingsVm).Result);
         }
 
-        private async Task RegisterAsync(bool isAdmin = false)
+        public async Task RegisterAsync(bool isAdmin = false)
         {
             var account = parent.PayTester.GetController<UIAccountController>();
             RegisterDetails = new RegisterViewModel()

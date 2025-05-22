@@ -14,19 +14,14 @@ using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {
-    [Collection(nameof(NonParallelizableCollectionDefinition))]
-    public class PaymentRequestTests : UnitTestBase
+    [Collection(nameof(SharedServerCollection))]
+    public class PaymentRequestTests(Fixtures.SharedServerFixture fixture, ITestOutputHelper helper)
     {
-        public PaymentRequestTests(ITestOutputHelper helper) : base(helper)
-        {
-        }
-
         [Fact]
         [Trait("Integration", "Integration")]
         public async Task CanCreateViewUpdateAndDeletePaymentRequest()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
@@ -59,7 +54,7 @@ namespace BTCPayServer.Tests
 
             paymentRequestController.HttpContext.SetPaymentRequestData(new PaymentRequestData { Id = id, StoreDataId = request.StoreId });
 
-            // Permission guard for guests editing 
+            // Permission guard for guests editing
             Assert
                 .IsType<NotFoundResult>(await guestpaymentRequestController.EditPaymentRequest(user.StoreId, id));
 
@@ -110,8 +105,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanPayPaymentRequestWhenPossible()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
@@ -183,8 +177,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanCancelPaymentWhenPossible()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
+            var tester = await fixture.GetServerTester(helper);
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");

@@ -19,6 +19,17 @@ public class PosAppData
         }
         return null;
     }
+    public static PosAppData TryParse(JObject posData)
+    {
+        try
+        {
+            return posData.ToObject<PosAppData>();
+        }
+        catch
+        {
+        }
+        return null;
+    }
 
     [JsonProperty(PropertyName = "cart")]
     public PosAppCartItem[] Cart { get; set; }

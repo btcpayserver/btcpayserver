@@ -170,12 +170,6 @@ retry:
             wait.Until(d => d.WaitForElement(By.CssSelector("#WalletTransactions[data-loaded='true']")));
         }
 
-        public static async Task WaitWalletTransactionsLoaded(this IPage page)
-        {
-            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-            await page.Locator("#WalletTransactions[data-loaded='true']").WaitForAsync(new() { State = WaitForSelectorState.Visible });
-        }
-
         public static IWebElement WaitForElement(this IWebDriver driver, By selector)
         {
             var wait = new WebDriverWait(driver, SeleniumTester.ImplicitWait);

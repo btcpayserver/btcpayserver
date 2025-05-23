@@ -92,24 +92,20 @@ namespace BTCPayServer.HostedServices
                             {
                                 if (transactionEvent.NewTransactionEvent.Replacing is not null)
                                 {
-
                                     foreach (var replaced in transactionEvent.NewTransactionEvent.Replacing)
                                     {
                                         var replacedwoId = new WalletObjectId(wid,
                                               WalletObjectData.Types.Tx, replaced.ToString());
                                         var replacedo = await _walletRepository.GetWalletObject(replacedwoId);
                                         var replacedLinks = replacedo?.GetLinks().Where(t => t.type != WalletObjectData.Types.Tx) ?? [];
-                                        if (replacedLinks.Count() != 0)
+                                        var rbf = new WalletObjectId(wid, WalletObjectData.Types.RBF, "");
+                                        var label = WalletRepository.CreateLabel(rbf);
+                                        newObjs.Add(label.ObjectData);
+                                        links.Add(WalletRepository.NewWalletObjectLinkData(txWalletObject, label.Id));
+                                        links.Add(WalletRepository.NewWalletObjectLinkData(txWalletObject, rbf, new JObject()
                                         {
-                                            var rbf = new WalletObjectId(wid, WalletObjectData.Types.RBF, "");
-                                            var label = WalletRepository.CreateLabel(rbf);
-                                            newObjs.Add(label.ObjectData);
-                                            links.Add(WalletRepository.NewWalletObjectLinkData(txWalletObject, label.Id));
-                                            links.Add(WalletRepository.NewWalletObjectLinkData(txWalletObject, rbf, new JObject()
-                                            {
-                                                ["txs"] = JArray.FromObject(new[] { replaced.ToString() })
-                                            }));
-                                        }
+                                            ["txs"] = JArray.FromObject(new[] { replaced.ToString() })
+                                        }));
                                         foreach (var link in replacedLinks)
                                         {
                                             links.Add(WalletRepository.NewWalletObjectLinkData(new WalletObjectId(walletObjectDatas.Key, link.type, link.id), txWalletObject, link.linkdata));

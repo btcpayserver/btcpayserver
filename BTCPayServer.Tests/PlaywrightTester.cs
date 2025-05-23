@@ -543,7 +543,45 @@ namespace BTCPayServer.Tests
             return new SwitchDisposable(page, old, this, closeAfter);
         }
 
-        public async Task<SendWalletPMO> GoToWalletSend(WalletId walletId = null)
+        public async Task<WalletTransactionsPMO> GoToWalletTransactions(WalletId walletId = null)
+        {
+            await GoToWallet(walletId, navPages: WalletsNavPages.Transactions);
+            await Page.Locator("#WalletTransactions[data-loaded='true']").WaitForAsync(new() { State = WaitForSelectorState.Visible });
+            return new WalletTransactionsPMO(Page);
+        }
+
+#nullable enable
+        public class WalletTransactionsPMO(IPage page)
+        {
+            public Task SelectAll() => page.SetCheckedAsync(".mass-action-select-all", true);
+            public async Task Select(params uint256[] txs)
+            {
+                foreach (var txId in txs)
+                {
+                    await page.SetCheckedAsync($"{TxRowSelector(txId)} .mass-action-select", true);
+                }
+            }
+
+            public Task BumpFeeSelected() => page.ClickAsync("#BumpFee");
+
+            public Task BumpFee(uint256? txId = null) => page.ClickAsync($"{TxRowSelector(txId)} .bumpFee-btn");
+            static string TxRowSelector(uint256? txId = null) => txId is null ? ".transaction-row:first-of-type"  : $".transaction-row[data-value=\"{txId}\"]";
+
+            public Task AssertHasLabels(string label) => AssertHasLabels(null, label);
+            public async Task AssertHasLabels(uint256? txId, string label)
+            {
+                await page.ReloadAsync();
+                await page.Locator($"{TxRowSelector(txId)} .transaction-label[data-value=\"{label}\"]").WaitForAsync();
+            }
+
+            public async Task AssertNotFound(uint256 txId)
+            {
+                Assert.False(await page.Locator(TxRowSelector(txId)).IsVisibleAsync());
+            }
+        }
+
+
+        public async Task<SendWalletPMO> GoToWalletSend(WalletId? walletId = null)
         {
             await GoToWallet(walletId, navPages: WalletsNavPages.Send);
             return new(Page);

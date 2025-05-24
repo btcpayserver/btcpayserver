@@ -25,6 +25,10 @@
     </div>
     <input type="text" v-model="filter" class="form-control my-3" placeholder="@StringLocalizer["Filter by transaction id, amount, label, comment"]"/>
     <div class="d-flex gap-3 my-2 align-items-center">
+        <input class="form-check-input flex-shrink-0"
+               type="checkbox"
+               :checked="isSelectAllChecked"
+               v-on:change="toggleSelectAllItems" />
         <span text-translate="true">Sort by</span>
         <div class="btn-group gap-3" role="group">
           <button type="button" class="btn btn-link p-0" :class="{active: sortOrder.startsWith('amount')}" v-on:click="sortBy('amount')" text-translate="true">Amount</button>
@@ -207,6 +211,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     result += this.selectedItems[i].amount;
                 }
                 return roundNumber(result, 12);
+            },
+            isSelectAllChecked: function () {
+                const filteredOutpoints = this.filteredItems.map(item => item.outpoint);
+                return filteredOutpoints.length > 0 && filteredOutpoints.every(outpoint => this.selectedInputs.includes(outpoint));
             }
         },
         mounted: function() {
@@ -256,8 +264,19 @@ document.addEventListener("DOMContentLoaded", function () {
                     var selected = res.indexOf($(this).attr("value")) !== -1;
                     $(this).attr("selected", selected ? "selected" : null);
                 });
+            toggleSelectAllItems: function () {
+                const filteredOutpoints = this.pagedFilteredItems.map(item => item.outpoint);
+                const allSelected = filteredOutpoints.length > 0 && filteredOutpoints.every(outpoint => this.selectedInputs.includes(outpoint));
 
-                this.selectedInputs = res;
+                if (allSelected) {
+                    this.selectedInputs = this.selectedInputs.filter(outpoint => !filteredOutpoints.includes(outpoint));
+                } else {
+                    const newSelected = new Set(this.selectedInputs);
+                    filteredOutpoints.forEach(outpoint => newSelected.add(outpoint));
+                    this.selectedInputs = Array.from(newSelected);
+                }
+
+                this.updateSelectedInputsSelect();
                 $(".crypto-balance-link").text(this.selectedAmount);
             },
             styles: function (bgColor) {

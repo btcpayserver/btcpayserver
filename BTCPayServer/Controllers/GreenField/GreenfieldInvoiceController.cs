@@ -23,7 +23,6 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using NBitpayClient;
 using Newtonsoft.Json.Linq;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
@@ -56,8 +55,8 @@ namespace BTCPayServer.Controllers.Greenfield
             LinkGenerator linkGenerator, LanguageService languageService,
             CurrencyNameTable currencyNameTable, RateFetcher rateProvider,
             InvoiceActivator invoiceActivator,
-            PullPaymentHostedService pullPaymentService, 
-            ApplicationDbContextFactory dbContextFactory, 
+            PullPaymentHostedService pullPaymentService,
+            ApplicationDbContextFactory dbContextFactory,
             IAuthorizationService authorizationService,
             Dictionary<PaymentMethodId, IPaymentLinkExtension> paymentLinkExtensions,
             PayoutMethodHandlerDictionary payoutHandlers,
@@ -221,7 +220,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            
+
             try
             {
                 var invoice = await _invoiceController.CreateInvoiceCoreRaw(request, store,
@@ -470,7 +469,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     ModelState.AddModelError(nameof(request.RefundVariant), "Please select a valid refund option");
                     return this.CreateValidationError(ModelState);
             }
-            
+
             // reduce by percentage
             if (request.SubtractPercentage is > 0 and <= 100)
             {

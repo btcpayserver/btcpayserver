@@ -540,7 +540,8 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
                 { "UGX", "yadio"},
                 { "RSD", "bitpay"},
                 { "NGN", "bitnob"},
-                { "NOK", "barebitcoin"}
+                { "NOK", "barebitcoin"},
+                { "CZK", "coinmate"},
             })
             {
                 var r = new DefaultRules.Recommendation(rule.Key, rule.Value);

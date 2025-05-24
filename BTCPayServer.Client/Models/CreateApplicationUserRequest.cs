@@ -26,5 +26,10 @@ namespace BTCPayServer.Client.Models
         /// Whether this user is an administrator. If left null and there are no admins in the system, the user will be created as an admin.
         /// </summary>
         public bool? IsAdministrator { get; set; }
+
+        /// <summary>
+        /// Flag to specify if email invitation should be sent to the user. https://github.com/btcpayserver/btcpayserver/issues/6406#issuecomment-2886252217
+        /// </summary>
+        public bool? SkipEmailInvite { get; set; }
     }
 }

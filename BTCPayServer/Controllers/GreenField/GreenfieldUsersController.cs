@@ -249,7 +249,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var user = await _userManager.GetUserAsync(User);
             if (user is null) return this.UserNotFound();
-            
+
             UploadImageResultModel? upload = null;
             if (file is null)
                 ModelState.AddModelError(nameof(file), "Invalid file");
@@ -286,7 +286,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var user = await _userManager.GetUserAsync(User);
             if (user is null) return this.UserNotFound();
-            
+
             var blob = user.GetBlob() ?? new UserBlob();
             if (!string.IsNullOrEmpty(blob.ImageUrl))
             {
@@ -315,10 +315,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.Email), "Email is missing");
             if (!MailboxAddressValidator.IsMailboxAddress(request.Email))
                 ModelState.AddModelError(nameof(request.Email), "Invalid email");
-            
+
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            
+
             if (User.Identity is null)
                 throw new JsonHttpException(this.StatusCode(401));
             var anyAdmin = (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();
@@ -358,6 +358,9 @@ namespace BTCPayServer.Controllers.Greenfield
                 Created = DateTimeOffset.UtcNow,
                 Approved = isAdmin // auto-approve first admin and users created by an admin
             };
+            if (request.SkipEmailInvite == true)
+                user.RequiresEmailConfirmation = false;
+
             var blob = user.GetBlob() ?? new();
             blob.Name = request.Name;
             blob.ImageUrl = request.ImageUrl;

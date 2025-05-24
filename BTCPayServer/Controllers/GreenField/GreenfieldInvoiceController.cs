@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using NBitpayClient;
 using Newtonsoft.Json.Linq;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
@@ -582,10 +583,10 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private InvoiceData ToModel(InvoiceEntity entity)
         {
-            return ToModel(entity, _linkGenerator, Request);
+            return ToModel(entity, _linkGenerator, _currencyNameTable, Request);
         }
 
-        public static InvoiceData ToModel(InvoiceEntity entity, LinkGenerator linkGenerator, HttpRequest? request)
+        public static InvoiceData ToModel(InvoiceEntity entity, LinkGenerator linkGenerator, CurrencyNameTable currencyNameTable, HttpRequest? request)
         {
             var statuses = new List<InvoiceStatus>();
             var state = entity.GetInvoiceState();
@@ -606,7 +607,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 MonitoringExpiration = entity.MonitoringExpiration,
                 CreatedTime = entity.InvoiceTime,
                 Amount = entity.Price,
-                PaidAmount = entity.PaidAmount.Net,
+                PaidAmount = Math.Round(entity.PaidAmount.Net, currencyNameTable.GetNumberFormatInfo(entity.Currency)?.CurrencyDecimalDigits ?? 2),
                 Type = entity.Type,
                 Id = entity.Id,
                 CheckoutLink = request is null ? null : linkGenerator.CheckoutLink(entity.Id, request.Scheme, request.Host, request.PathBase),

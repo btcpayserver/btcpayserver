@@ -9,6 +9,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Plugins.PayButton.Models;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -23,14 +24,17 @@ namespace BTCPayServer.Controllers
         public UIPublicController(UIInvoiceController invoiceController,
             StoreRepository storeRepository,
             IStringLocalizer stringLocalizer,
+            CurrencyNameTable currencyNameTable,
             LinkGenerator linkGenerator)
         {
             _InvoiceController = invoiceController;
+            _currencyNameTable = currencyNameTable;
             _StoreRepository = storeRepository;
             _linkGenerator = linkGenerator;
             StringLocalizer = stringLocalizer;
         }
 
+        private readonly CurrencyNameTable _currencyNameTable;
         private readonly UIInvoiceController _InvoiceController;
         private readonly StoreRepository _StoreRepository;
         private readonly LinkGenerator _linkGenerator;
@@ -105,7 +109,7 @@ namespace BTCPayServer.Controllers
                 return View();
             }
 
-            var url = GreenfieldInvoiceController.ToModel(invoice, _linkGenerator, HttpContext.Request).CheckoutLink;
+            var url = GreenfieldInvoiceController.ToModel(invoice, _linkGenerator, _currencyNameTable, HttpContext.Request).CheckoutLink;
             if (!string.IsNullOrEmpty(model.CheckoutQueryString))
             {
                 var additionalParamValues = HttpUtility.ParseQueryString(model.CheckoutQueryString);

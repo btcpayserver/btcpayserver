@@ -797,6 +797,12 @@
                                 "description": "The amount of the invoice. Note that the amount will be zero for a top-up invoice that is paid after invoice expiry.",
                                 "example": "5.00"
                             },
+                            "paidAmount": {
+                                "type": "string",
+                                "format": "decimal",
+                                "description": "The actual amount paid by the customer/buyer.",
+                                "example": "5.00"
+                            },
                             "currency": {
                                 "type": "string",
                                 "description": "The currency of the invoice",

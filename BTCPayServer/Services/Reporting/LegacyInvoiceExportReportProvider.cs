@@ -49,6 +49,8 @@ public class LegacyInvoiceExportReportProvider : ReportProvider
                 new("InvoiceDue", "number"),
                 new("InvoicePrice", "number"),
                 new("InvoiceTaxIncluded", "number"),
+                new("InvoiceTip", "number"),
+                new("InvoiceSubtotal", "number"),
                 new("InvoiceItemCode", "text"),
                 new("InvoiceItemDesc", "text"),
                 new("InvoiceFullStatus", "text"),
@@ -93,6 +95,17 @@ public class LegacyInvoiceExportReportProvider : ReportProvider
                     data.Add(Math.Round(invoiceDue, currency.NumberDecimalDigits));
                     data.Add(invoiceEntity.Price);
                     data.Add(invoiceEntity.Metadata.TaxIncluded ?? 0.0m);
+                    if (invoiceEntity.Metadata.PosData != null &&
+                        PosAppData.TryParse(invoiceEntity.Metadata.PosData) is { } posData)
+                    {
+                        data.Add(posData.Tip);
+                        data.Add(posData.Subtotal);
+                    }
+                    else
+                    {
+                        data.Add(0m);
+                        data.Add(0m);
+                    }
                     data.Add(invoiceEntity.Metadata.ItemCode);
                     data.Add(invoiceEntity.Metadata.ItemDesc);
                     data.Add(invoiceEntity.GetInvoiceState().ToString());
@@ -128,6 +141,8 @@ public class LegacyInvoiceExportReportProvider : ReportProvider
                 data.Add(Math.Round(invoiceDue, currency.NumberDecimalDigits)); // InvoiceDue
                 data.Add(invoiceEntity.Price);
                 data.Add(invoiceEntity.Metadata.TaxIncluded ?? 0.0m);
+                data.Add(0m); // Tip
+                data.Add(0m); // Subtotal
                 data.Add(invoiceEntity.Metadata.ItemCode);
                 data.Add(invoiceEntity.Metadata.ItemDesc);
                 data.Add(invoiceEntity.GetInvoiceState().ToString());

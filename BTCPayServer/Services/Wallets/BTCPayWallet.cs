@@ -338,9 +338,9 @@ namespace BTCPayServer.Services.Wallets
                         WHERE code = @code AND wallet_id=@walletId AND mempool IS TRUE AND replaced_by IS NULL AND blk_id IS NULL
                         GROUP BY code, tx_id
                     )
-                    SELECT tt.tx_id, u.raw, tt.input_count, tt.change_count, uu.unspent_count FROM unconfs u
+                    SELECT tt.tx_id, u.raw, tt.input_count, tt.change_count, COALESCE(uu.unspent_count, 0) FROM unconfs u
                     JOIN tracked_txs tt USING (code, tx_id)
-                    JOIN unspent_utxos uu USING (code, tx_id);
+                    LEFT JOIN unspent_utxos uu USING (code, tx_id);
                     """,
                     parameters: new
                     {
@@ -367,8 +367,11 @@ namespace BTCPayServer.Services.Wallets
                 {
                     continue;
                 }
-                if ((state.MempoolInfo?.FullRBF is true || tx.RBF) && tx.Inputs.Count == r.input_count &&
-                    r.change_count > 0)
+
+                var rbf = state.MempoolInfo?.FullRBF is true || Network.IsBTC || tx.RBF;
+                rbf &= tx.Inputs.Count == r.input_count;
+                rbf &= r.change_count > 0 || tx.Outputs.Count == 1;
+                if (rbf)
                 {
                     canRBF.Add(uint256.Parse(r.tx_id));
                 }

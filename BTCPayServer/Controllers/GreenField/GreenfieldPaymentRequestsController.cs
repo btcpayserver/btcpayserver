@@ -119,7 +119,7 @@ namespace BTCPayServer.Controllers.Greenfield
 				if (pr.Invoices.GetReusableInvoice(amount)?.Id is string invoiceId)
 				{
 					var inv = await _InvoiceRepository.GetInvoice(invoiceId);
-					return Ok(GreenfieldInvoiceController.ToModel(inv, _linkGenerator, Request));
+					return Ok(GreenfieldInvoiceController.ToModel(inv, _linkGenerator, _currencyNameTable, Request));
 				}
 			}
 
@@ -127,7 +127,7 @@ namespace BTCPayServer.Controllers.Greenfield
 			{
 				var prData = await _paymentRequestRepository.FindPaymentRequest(pr.Id, null);
 				var invoice = await _invoiceController.CreatePaymentRequestInvoice(prData, amount, pr.AmountDue, this.StoreData, Request, cancellationToken);
-				return Ok(GreenfieldInvoiceController.ToModel(invoice, _linkGenerator, Request));
+				return Ok(GreenfieldInvoiceController.ToModel(invoice, _linkGenerator, _currencyNameTable, Request));
 			}
 			catch (BitpayHttpException e)
 			{

@@ -474,6 +474,7 @@ namespace BTCPayServer.Tests
                     goto retry;
                 }
             }
+            await Server.ExplorerNode.GenerateAsync(1);
             await Page.ReloadAsync();
             await Page.Locator("#CancelWizard").ClickAsync();
             return addressStr;
@@ -506,6 +507,8 @@ namespace BTCPayServer.Tests
             }
             await Page.ClickAsync("#FakePayment");
             await Page.Locator("#CheatSuccessMessage").WaitForAsync();
+            await Page.Locator("text=Payment Received").WaitForAsync();
+
             if (mine)
             {
                 await MineBlockOnInvoiceCheckout();
@@ -538,6 +541,62 @@ namespace BTCPayServer.Tests
             Page = page;
             await page.BringToFrontAsync();
             return new SwitchDisposable(page, old, this, closeAfter);
+        }
+
+        public async Task<WalletTransactionsPMO> GoToWalletTransactions(WalletId walletId = null)
+        {
+            await GoToWallet(walletId, navPages: WalletsNavPages.Transactions);
+            await Page.Locator("#WalletTransactions[data-loaded='true']").WaitForAsync(new() { State = WaitForSelectorState.Visible });
+            return new WalletTransactionsPMO(Page);
+        }
+
+#nullable enable
+        public class WalletTransactionsPMO(IPage page)
+        {
+            public Task SelectAll() => page.SetCheckedAsync(".mass-action-select-all", true);
+            public async Task Select(params uint256[] txs)
+            {
+                foreach (var txId in txs)
+                {
+                    await page.SetCheckedAsync($"{TxRowSelector(txId)} .mass-action-select", true);
+                }
+            }
+
+            public Task BumpFeeSelected() => page.ClickAsync("#BumpFee");
+
+            public Task BumpFee(uint256? txId = null) => page.ClickAsync($"{TxRowSelector(txId)} .bumpFee-btn");
+            static string TxRowSelector(uint256? txId = null) => txId is null ? ".transaction-row:first-of-type"  : $".transaction-row[data-value=\"{txId}\"]";
+
+            public Task AssertHasLabels(string label) => AssertHasLabels(null, label);
+            public async Task AssertHasLabels(uint256? txId, string label)
+            {
+                await page.ReloadAsync();
+                await page.Locator($"{TxRowSelector(txId)} .transaction-label[data-value=\"{label}\"]").WaitForAsync();
+            }
+
+            public async Task AssertNotFound(uint256 txId)
+            {
+                Assert.False(await page.Locator(TxRowSelector(txId)).IsVisibleAsync());
+            }
+        }
+
+
+        public async Task<SendWalletPMO> GoToWalletSend(WalletId? walletId = null)
+        {
+            await GoToWallet(walletId, navPages: WalletsNavPages.Send);
+            return new(Page);
+        }
+
+        public class SendWalletPMO(IPage page)
+        {
+            public Task FillAddress(BitcoinAddress address) => page.FillAsync("[name='Outputs[0].DestinationAddress']",
+                address.ToString());
+
+            public Task SweepBalance() => page.ClickAsync("#SweepBalance");
+
+            public Task Sign() => page.ClickAsync("#SignTransaction");
+
+            public Task SetFeeRate(decimal val) => page.FillAsync("[name=\"FeeSatoshiPerByte\"]", val.ToString(CultureInfo.InvariantCulture));
         }
     }
 }

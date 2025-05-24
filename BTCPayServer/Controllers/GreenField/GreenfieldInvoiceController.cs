@@ -55,8 +55,8 @@ namespace BTCPayServer.Controllers.Greenfield
             LinkGenerator linkGenerator, LanguageService languageService,
             CurrencyNameTable currencyNameTable, RateFetcher rateProvider,
             InvoiceActivator invoiceActivator,
-            PullPaymentHostedService pullPaymentService, 
-            ApplicationDbContextFactory dbContextFactory, 
+            PullPaymentHostedService pullPaymentService,
+            ApplicationDbContextFactory dbContextFactory,
             IAuthorizationService authorizationService,
             Dictionary<PaymentMethodId, IPaymentLinkExtension> paymentLinkExtensions,
             PayoutMethodHandlerDictionary payoutHandlers,
@@ -220,7 +220,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            
+
             try
             {
                 var invoice = await _invoiceController.CreateInvoiceCoreRaw(request, store,
@@ -469,7 +469,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     ModelState.AddModelError(nameof(request.RefundVariant), "Please select a valid refund option");
                     return this.CreateValidationError(ModelState);
             }
-            
+
             // reduce by percentage
             if (request.SubtractPercentage is > 0 and <= 100)
             {
@@ -582,10 +582,10 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private InvoiceData ToModel(InvoiceEntity entity)
         {
-            return ToModel(entity, _linkGenerator, Request);
+            return ToModel(entity, _linkGenerator, _currencyNameTable, Request);
         }
 
-        public static InvoiceData ToModel(InvoiceEntity entity, LinkGenerator linkGenerator, HttpRequest? request)
+        public static InvoiceData ToModel(InvoiceEntity entity, LinkGenerator linkGenerator, CurrencyNameTable currencyNameTable, HttpRequest? request)
         {
             var statuses = new List<InvoiceStatus>();
             var state = entity.GetInvoiceState();
@@ -606,6 +606,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 MonitoringExpiration = entity.MonitoringExpiration,
                 CreatedTime = entity.InvoiceTime,
                 Amount = entity.Price,
+                PaidAmount = Math.Round(entity.PaidAmount.Net, currencyNameTable.GetNumberFormatInfo(entity.Currency)?.CurrencyDecimalDigits ?? 2),
                 Type = entity.Type,
                 Id = entity.Id,
                 CheckoutLink = request is null ? null : linkGenerator.CheckoutLink(entity.Id, request.Scheme, request.Host, request.PathBase),

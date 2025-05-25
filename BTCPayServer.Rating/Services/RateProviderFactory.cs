@@ -57,7 +57,7 @@ namespace BTCPayServer.Services.Rates
             _httpClientFactory = httpClientFactory;
             foreach (var prov in rateProviders)
             {
-                Providers.Add(prov.RateSourceInfo.Id, prov);
+                Providers.Add(prov.RateSourceInfo.Id ?? "", prov);
             }
             InitExchanges();
         }
@@ -85,7 +85,7 @@ namespace BTCPayServer.Services.Rates
 
             foreach (var supportedExchange in CoinGeckoRateProvider.SupportedExchanges.Values)
             {
-                if (!Providers.ContainsKey(supportedExchange.Id) && supportedExchange.Id != CoinGeckoRateProvider.CoinGeckoName)
+                if (!Providers.ContainsKey(supportedExchange.Id ?? "") && supportedExchange.Id != CoinGeckoRateProvider.CoinGeckoName)
                 {
                     var coingecko = new CoinGeckoRateProvider(_httpClientFactory)
                     {
@@ -94,7 +94,7 @@ namespace BTCPayServer.Services.Rates
                     var bgFetcher = new BackgroundFetcherRateProvider(coingecko);
                     bgFetcher.RefreshRate = TimeSpan.FromMinutes(1.0);
                     bgFetcher.ValidatyTime = TimeSpan.FromMinutes(5.0);
-                    Providers.Add(supportedExchange.Id, bgFetcher);
+                    Providers.Add(supportedExchange.Id ?? "", bgFetcher);
                     AvailableRateProviders.Add(coingecko.RateSourceInfo);
                 }
             }

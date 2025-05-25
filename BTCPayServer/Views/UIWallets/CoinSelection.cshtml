@@ -207,10 +207,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 const amountMax = parsedFilters.amountmax ? parseFloat(parsedFilters.amountmax) : null;
                 const beforeDate = parsedFilters.before ? parsedFilters.before : null;
                 const afterDate = parsedFilters.after ? parsedFilters.after : null;
-
-                const availableItems = this.currentItems;
-                for (let index = 0; index < availableItems.length; index++) {
-                    const utxo = availableItems[index];
+                
+                for (let index = 0; index < this.currentItems.length; index++) {
+                    const utxo = this.currentItems[index];
 
                     if (parsedFilters.text) {
                         const searchTerm = parsedFilters.text.toLowerCase();

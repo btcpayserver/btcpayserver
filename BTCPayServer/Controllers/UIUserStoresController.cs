@@ -52,6 +52,7 @@ namespace BTCPayServer.Controllers
             {
                 Stores = stores
                     .Where(s => s.Archived == archived)
+                    .OrderBy(s => s.StoreName, StringComparer.InvariantCultureIgnoreCase)
                     .Select(s => new ListStoresViewModel.StoreViewModel
                     {
                         StoreId = s.Id,

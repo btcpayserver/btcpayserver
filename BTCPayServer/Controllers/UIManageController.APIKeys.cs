@@ -466,7 +466,10 @@ namespace BTCPayServer.Controllers
 
         private async Task<T> SetViewModelValues<T>(T viewModel) where T : AddApiKeyViewModel
         {
-            viewModel.Stores = await _StoreRepository.GetStoresByUserId(_userManager.GetUserId(User));
+            // FIXED: Added OrderBy to sort stores alphabetically by name
+            var stores = await _StoreRepository.GetStoresByUserId(_userManager.GetUserId(User));
+            viewModel.Stores = stores.OrderBy(store => store.StoreName).ToArray();
+            //viewModel.Stores = await _StoreRepository.GetStoresByUserId(_userManager.GetUserId(User));
             var isAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings))
                 .Succeeded;
             viewModel.PermissionValues ??= Policies.AllPolicies

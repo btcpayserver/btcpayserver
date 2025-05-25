@@ -1274,6 +1274,78 @@ namespace BTCPayServer.Tests
             Assert.Single(tx.Inputs);
             Assert.Equal(spentOutpoint, tx.Inputs[0].PrevOut);
         }
+        
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanUseCoinSelectionFilters()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            s.RegisterNewUser(true);
+            (_, string storeId) = s.CreateNewStore();
+            s.GenerateWallet("BTC", "", false, true);
+            var walletId = new WalletId(storeId, "BTC");
+
+            s.GoToWallet(walletId, WalletsNavPages.Receive);
+            var addressStr = s.Driver.FindElement(By.Id("Address")).GetAttribute("data-text");
+            var address = BitcoinAddress.Create(addressStr,
+                ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
+
+            await s.Server.ExplorerNode.GenerateAsync(1);
+
+            List<uint256> txs =
+            [
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(0.001m)),
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(0.005m)),
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(0.009m)),
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(0.02m))
+            ];
+
+            await s.Server.ExplorerNode.GenerateAsync(1);
+            s.GoToWallet(walletId);
+            s.Driver.WaitForAndClick(By.Id("toggleInputSelection"));
+
+            var input = s.Driver.WaitForElement(By.CssSelector("input[placeholder^='Filter']"));
+            Assert.NotNull(input);
+
+            // Test amountmin
+            input.Clear();
+            input.SendKeys("amountmin:0.01");
+            await Task.Delay(500);
+            Assert.Single(s.Driver.FindElements(By.CssSelector("li.list-group-item")));
+
+            // Test amountmax
+            input.Clear();
+            input.SendKeys("amountmax:0.002");
+            await Task.Delay(500);
+            Assert.Single(s.Driver.FindElements(By.CssSelector("li.list-group-item")));
+
+            // Test general text (txid)
+            input.Clear();
+            input.SendKeys(txs[2].ToString()[..8]);
+            await Task.Delay(500);
+            Assert.Single(s.Driver.FindElements(By.CssSelector("li.list-group-item")));
+
+            // Test timestamp before/after
+            input.Clear();
+            input.SendKeys("after:2099-01-01");
+            await Task.Delay(500);
+            Assert.Empty(s.Driver.FindElements(By.CssSelector("li.list-group-item")));
+
+            input.Clear();
+            input.SendKeys("before:2099-01-01");
+            await Task.Delay(500);
+            Assert.True(s.Driver.FindElements(By.CssSelector("li.list-group-item")).Count >= 3);
+
+            // Test Select All
+            s.Driver.FindElement(By.CssSelector("input[type='checkbox']")).Click();
+            await TestUtils.EventuallyAsync(() =>
+            {
+                var inputSelectionSelect = s.Driver.FindElement(By.Name("SelectedInputs"));
+                var selectedOptions = inputSelectionSelect.FindElements(By.CssSelector("option[selected]"));
+                return Task.FromResult(selectedOptions.Count == s.Driver.FindElements(By.CssSelector("li.list-group-item")).Count);
+            });
+        }
+
 
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseWebhooks()

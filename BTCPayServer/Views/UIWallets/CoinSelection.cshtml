@@ -27,12 +27,24 @@
     <details class="text-muted small mt-2">
         <summary>Available Filters (click to expand)</summary>
         <ul class="mb-0">
-            <li><b>General text search:</b> txid, amount, comment, label</li>
-            <li><b>Minimum amount:</b> <code>amountmin:0.001</code></li>
-            <li><b>Maximum amount:</b> <code>amountmax:0.01</code></li>
-            <li><b>Created before date:</b> <code>before:2024-01-01</code></li>
-            <li><b>Created after date:</b> <code>after:2023-01-01</code></li>
-            <li><b>Combine filters:</b> <code>tag1 amountmin:0.0005 before:2024-01-01</code></li>
+            <li class="mb-2"><b>General text search:</b> txid, amount, comment, label</li>
+            <li class="mb-2">
+                <b>Minimum amount:</b> 
+                <code class="clipboard-button clipboard-button-hover" :data-clipboard="'amountmin:'">amountmin:0.001</code>
+            </li>
+            <li class="mb-2">
+                <b>Maximum amount:</b>
+                <code class="clipboard-button clipboard-button-hover" :data-clipboard="'amountmax:'">amountmax:0.01</code>
+            </li>
+            <li class="mb-2">
+                <b>Created before date:</b> 
+                <code class="clipboard-button clipboard-button-hover" :data-clipboard="'before:'">before:2024-01-01</code>
+            </li>
+            <li class="mb-2">
+                <b>Created after date:</b> 
+                <code class="clipboard-button clipboard-button-hover" :data-clipboard="'after:'">after:2023-01-01</code>
+            </li>
+            <li class="mb-2"><b>Combine filters:</b> <code>tag1 amountmin:0.0005 before:2024-01-01</code></li>
         </ul>
     </details>
     <div class="d-flex gap-3 my-2 align-items-center">
@@ -118,7 +130,6 @@
         </div>
     </div>
 </div>
-
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     Vue.directive('tooltip', function(el, binding) {
@@ -357,3 +368,5 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 </script>
+
+<script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>

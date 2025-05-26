@@ -68,9 +68,9 @@
             </div>
         </div>
     </div>
-    <ul class="list-group list-group-flush mb-3" v-show="pagedFilteredItems.length">
+    <ul class="list-group list-group-flush mb-3" v-show="filteredItems.length">
         <li class="list-group-item py-2 cursor-pointer gap-2 align-items-center justify-content-between"
-            v-for="item of pagedFilteredItems"
+            v-for="item of filteredItems"
             :key="item.outpoint"
             :class="{ 'active': item.selected }"
             v-on:click="toggleItem($event, item, !item.selected)">
@@ -177,14 +177,6 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             selectedInputs: function() {
                 this.handle();
-                const selectElement = document.getElementById("SelectedInputs");
-                if (!selectElement) return;
-
-                const selectedSet = new Set(this.selectedInputs);
-                for (let i = 0; i < selectElement.options.length; i++) {
-                    const option = selectElement.options[i];
-                    option.selected = selectedSet.has(option.value);
-                }
             },
             showUnconfirmedOnly: function() {
                 this.handle();
@@ -209,60 +201,47 @@ document.addEventListener("DOMContentLoaded", function () {
                 return this.items.filter(i => !i.confirmations).length > 0;
             },
             filteredItems: function () {
-                const filteredResults = [];
-                const parsedFilters = {};
                 const searchInput = this.filter.trim();
+                const parsedFilters = {};
+                const filteredResults = [];
 
                 if (searchInput) {
-                    searchInput.split(" ").forEach(filterPart => {
-                        const [filterKey, filterValue] = filterPart.split(":");
-                        if (filterValue !== undefined) {
-                            parsedFilters[filterKey.toLowerCase()] = filterValue;
+                    for (const part of searchInput.split(" ")) {
+                        const [key, value] = part.split(":");
+                        if (value !== undefined) {
+                            parsedFilters[key.toLowerCase()] = value;
                         } else {
-                            parsedFilters.text = parsedFilters.text ? parsedFilters.text + " " + filterKey : filterKey;
+                            parsedFilters.text = parsedFilters.text ? parsedFilters.text + " " + key : key;
                         }
-                    });
+                    }
                 }
 
                 const amountMin = parsedFilters.amountmin ? parseFloat(parsedFilters.amountmin) : null;
                 const amountMax = parsedFilters.amountmax ? parseFloat(parsedFilters.amountmax) : null;
-                const beforeDate = parsedFilters.before ? parsedFilters.before : null;
-                const afterDate = parsedFilters.after ? parsedFilters.after : null;
-                
-                for (let index = 0; index < this.currentItems.length; index++) {
-                    const utxo = this.currentItems[index];
+                const beforeDate = parsedFilters.before ?? null;
+                const afterDate = parsedFilters.after ?? null;
+                const searchTerm = parsedFilters.text?.toLowerCase();
 
-                    if (parsedFilters.text) {
-                        const searchTerm = parsedFilters.text.toLowerCase();
-                        const matchesText = utxo.outpoint.toLowerCase().includes(searchTerm) ||
-                            utxo.amount.toString().includes(searchTerm) ||
-                            (utxo.comment && utxo.comment.toLowerCase().includes(searchTerm)) ||
-                            (utxo.labels && utxo.labels.some(label =>
-                                label.text.toLowerCase().includes(searchTerm) || label.tooltip.toLowerCase().includes(searchTerm)));
-                        if (!matchesText) continue;
-                    }
+                for (const utxo of this.currentItems) {
+                    const matchesText = !searchTerm || (
+                        utxo.outpoint.toLowerCase().includes(searchTerm) ||
+                        utxo.amount.toString().includes(searchTerm) ||
+                        (utxo.comment?.toLowerCase().includes(searchTerm)) ||
+                        (utxo.labels?.some(l => l.text.toLowerCase().includes(searchTerm) || l.tooltip.toLowerCase().includes(searchTerm)))
+                    );
 
-                    if (amountMin !== null && utxo.amount < amountMin)
-                        continue;
-
-                    if (amountMax !== null && utxo.amount > amountMax)
-                        continue;
-
-                    if (beforeDate !== null && utxo.timestamp && utxo.timestamp >= beforeDate)
-                        continue;
-
-                    if (afterDate !== null && utxo.timestamp && utxo.timestamp <= afterDate)
-                        continue;
+                    if (!matchesText) continue;
+                    if (amountMin !== null && utxo.amount < amountMin) continue;
+                    if (amountMax !== null && utxo.amount > amountMax) continue;
+                    if (beforeDate !== null && utxo.timestamp && utxo.timestamp >= beforeDate) continue;
+                    if (afterDate !== null && utxo.timestamp && utxo.timestamp <= afterDate) continue;
 
                     filteredResults.push({
                         ...utxo,
-                        selected: this.selectedInputs.indexOf(utxo.outpoint) !== -1
+                        selected: this.selectedInputs.includes(utxo.outpoint)
                     });
                 }
-                return filteredResults;
-            },
-            pagedFilteredItems: function () {
-                return this.filteredItems.slice(this.pageStart, this.pageEnd);
+                return filteredResults.slice(this.pageStart, this.pageEnd);
             },
             selectedItems: function() {
                 var result = [];
@@ -283,8 +262,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 return roundNumber(result, 12);
             },
             isSelectAllChecked: function () {
-                const filteredOutpoints = this.filteredItems.map(item => item.outpoint);
-                return filteredOutpoints.length > 0 && filteredOutpoints.every(outpoint => this.selectedInputs.includes(outpoint));
+                const visibleOutpoints = this.filteredItems.map(i => i.outpoint);
+                return visibleOutpoints.length > 0 && visibleOutpoints.every(outpoint => this.selectedInputs.includes(outpoint));
             }
         },
         mounted: function() {
@@ -311,7 +290,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 this.page = 0;
             },
             handle: function() {
-                if (this.selectedInputs.length == 0) {
+                if (this.selectedInputs.length === 0) {
                     this.showSelectedOnly = false;
                 }
                 if (this.currentItems.length < this.pageEnd) {
@@ -323,41 +302,45 @@ document.addEventListener("DOMContentLoaded", function () {
                     return;
                 }
 
-                const selected = new Set(this.selectedInputs);
+                var res = $("#SelectedInputs").val() || [];
 
                 if (toggle) {
-                    selected.add(item.outpoint);
+                    if (!res.includes(item.outpoint)) {
+                        res.push(item.outpoint);
+                    }
                 } else {
-                    selected.delete(item.outpoint);
+                    res = res.filter(x => x !== item.outpoint);
                 }
 
-                this.selectedInputs = Array.from(selected);
-                this.updateSelectedInputsSelect();
-            },
-            toggleSelectAllItems: function () {
-                const filteredOutpoints = this.pagedFilteredItems.map(item => item.outpoint);
-                const allSelected = filteredOutpoints.length > 0 && filteredOutpoints.every(outpoint => this.selectedInputs.includes(outpoint));
+                $("#SelectedInputs option").each(function () {
+                    const selected = res.includes($(this).attr("value"));
+                    $(this).prop("selected", selected);
+                });
 
-                if (allSelected) {
-                    this.selectedInputs = this.selectedInputs.filter(outpoint => !filteredOutpoints.includes(outpoint));
-                } else {
-                    const newSelected = new Set(this.selectedInputs);
-                    filteredOutpoints.forEach(outpoint => newSelected.add(outpoint));
-                    this.selectedInputs = Array.from(newSelected);
-                }
-
-                this.updateSelectedInputsSelect();
+                this.selectedInputs = res;
                 $(".crypto-balance-link").text(this.selectedAmount);
             },
-            updateSelectedInputsSelect() {
-                const selectElement = document.getElementById("SelectedInputs");
-                if (!selectElement) return;
+            toggleSelectAllItems: function () {
+                const filteredOutpoints = this.filteredItems.map(item => item.outpoint);
+                let res = $("#SelectedInputs").val() || [];
 
-                const selectedSet = new Set(this.selectedInputs);
-                for (let i = 0; i < selectElement.options.length; i++) {
-                    const option = selectElement.options[i];
-                    option.selected = selectedSet.has(option.value);
+                const allSelected = filteredOutpoints.every(outpoint => res.includes(outpoint));
+
+                if (allSelected) {
+                    res = res.filter(outpoint => !filteredOutpoints.includes(outpoint));
+                } else {
+                    const set = new Set(res);
+                    filteredOutpoints.forEach(outpoint => set.add(outpoint));
+                    res = Array.from(set);
                 }
+
+                $("#SelectedInputs option").each(function () {
+                    const selected = res.includes($(this).val());
+                    $(this).prop("selected", selected);
+                });
+
+                this.selectedInputs = res;
+                $(".crypto-balance-link").text(this.selectedAmount);
             },
             styles: function (bgColor) {
                 let color = 'inherit'

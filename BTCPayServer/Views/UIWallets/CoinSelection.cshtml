@@ -47,15 +47,25 @@
             <li class="mb-2"><b>Combine filters:</b> <code>tag1 amountmin:0.0005 before:2024-01-01</code></li>
         </ul>
     </details>
-    <div class="d-flex gap-3 my-2 align-items-center">
-        <input class="form-check-input flex-shrink-0"
-               type="checkbox"
-               :checked="isSelectAllChecked"
-               v-on:change="toggleSelectAllItems" />
-        <span text-translate="true">Sort by</span>
-        <div class="btn-group gap-3" role="group">
-          <button type="button" class="btn btn-link p-0" :class="{active: sortOrder.startsWith('amount')}" v-on:click="sortBy('amount')" text-translate="true">Amount</button>
-          <button type="button" class="btn btn-link p-0" :class="{active: sortOrder.startsWith('confs')}" v-on:click="sortBy('confs')" text-translate="true">Confirmations</button>
+    <div class="d-flex justify-content-between align-items-center my-2">
+        <div class="d-flex gap-2 align-items-center">
+            <input class="form-check-input flex-shrink-0"
+                   type="checkbox"
+                   :checked="isSelectAllChecked"
+                   v-on:change="toggleSelectAllItems" />
+            <span text-translate="true">Select All</span>
+        </div>
+
+        <div class="d-flex gap-2 align-items-center">
+            <span text-translate="true">Sort by</span>
+            <div class="btn-group gap-3" role="group">
+                <button type="button" class="btn btn-link p-0"
+                        :class="{active: sortOrder.startsWith('amount')}"
+                        v-on:click="sortBy('amount')" text-translate="true">Amount</button>
+                <button type="button" class="btn btn-link p-0"
+                        :class="{active: sortOrder.startsWith('confs')}"
+                        v-on:click="sortBy('confs')" text-translate="true">Confirmations</button>
+            </div>
         </div>
     </div>
     <ul class="list-group list-group-flush mb-3" v-show="pagedFilteredItems.length">

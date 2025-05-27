@@ -94,6 +94,7 @@ namespace BTCPayServer.Controllers.Greenfield
             DateTimeOffset? endDate = null,
             [FromQuery] string? textSearch = null,
             [FromQuery] bool includeArchived = false,
+            [FromQuery] bool includePaymentMethods = false,
             [FromQuery] int? skip = null,
             [FromQuery] int? take = null
             )
@@ -123,7 +124,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     TextSearch = textSearch
                 });
 
-            return Ok(invoices.Select(ToModel));
+            return Ok(invoices.Select(invoice => ToModel(invoice, includePaymentMethods)));
         }
 
         [Authorize(Policy = Policies.CanViewInvoices,
@@ -640,9 +641,13 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [NonAction]
-        public InvoiceData ToModel(InvoiceEntity entity)
+        public InvoiceData ToModel(InvoiceEntity entity, bool includePaymentMethods = false)
         {
-            return ToModel(entity, _linkGenerator, _currencyNameTable, Request);
+            var invoiceData = ToModel(entity, _linkGenerator, _currencyNameTable, Request);
+            if (includePaymentMethods)
+                invoiceData.PaymentMethods = ToPaymentMethodModels(entity, true, false);
+
+            return invoiceData;
         }
 
         public static InvoiceData ToModel(InvoiceEntity entity, LinkGenerator linkGenerator, CurrencyNameTable currencyNameTable, HttpRequest? request)

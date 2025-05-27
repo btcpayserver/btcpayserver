@@ -333,7 +333,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     res = Array.from(set);
                 }
 
-                $("#SelectedInputs option").each(function () {
+                $("#SelectedInputs").find("option").each(function () {
                     var selected = res.indexOf($(this).attr("value")) !== -1;
                     $(this).attr("selected", selected ? "selected" : null);
                 });

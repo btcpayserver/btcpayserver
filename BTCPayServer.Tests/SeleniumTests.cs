@@ -1303,12 +1303,17 @@ namespace BTCPayServer.Tests
 
             await s.Server.ExplorerNode.GenerateAsync(1);
 
+            const decimal AmountTiny = 0.001m;
+            const decimal AmountSmall = 0.005m;
+            const decimal AmountMedium = 0.009m;
+            const decimal AmountLarge = 0.02m;
+
             List<uint256> txs =
             [
-                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(0.001m)),
-                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(0.005m)),
-                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(0.009m)),
-                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(0.02m))
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(AmountTiny)),
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(AmountSmall)),
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(AmountMedium)),
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(AmountLarge))
             ];
 
             await s.Server.ExplorerNode.GenerateAsync(1);
@@ -1321,31 +1326,37 @@ namespace BTCPayServer.Tests
             // Test amountmin
             input.Clear();
             input.SendKeys("amountmin:0.01");
-            await Task.Delay(500);
-            Assert.Single(s.Driver.FindElements(By.CssSelector("li.list-group-item")));
+            TestUtils.Eventually(() => {
+                Assert.Single(s.Driver.FindElements(By.CssSelector("li.list-group-item")));
+            });
 
             // Test amountmax
             input.Clear();
             input.SendKeys("amountmax:0.002");
-            await Task.Delay(500);
-            Assert.Single(s.Driver.FindElements(By.CssSelector("li.list-group-item")));
+            TestUtils.Eventually(() => {
+                Assert.Single(s.Driver.FindElements(By.CssSelector("li.list-group-item")));
+            });
 
             // Test general text (txid)
             input.Clear();
             input.SendKeys(txs[2].ToString()[..8]);
-            await Task.Delay(500);
-            Assert.Single(s.Driver.FindElements(By.CssSelector("li.list-group-item")));
+            TestUtils.Eventually(() => {
+                Assert.Single(s.Driver.FindElements(By.CssSelector("li.list-group-item")));
+            });
 
             // Test timestamp before/after
             input.Clear();
             input.SendKeys("after:2099-01-01");
-            await Task.Delay(500);
-            Assert.Empty(s.Driver.FindElements(By.CssSelector("li.list-group-item")));
+            TestUtils.Eventually(() => {
+                Assert.Empty(s.Driver.FindElements(By.CssSelector("li.list-group-item")));
+            });
 
             input.Clear();
             input.SendKeys("before:2099-01-01");
-            await Task.Delay(500);
-            Assert.True(s.Driver.FindElements(By.CssSelector("li.list-group-item")).Count >= 3);
+            TestUtils.Eventually(() =>
+            {
+                Assert.True(s.Driver.FindElements(By.CssSelector("li.list-group-item")).Count >= 4);
+            });
         }
 
         [Fact(Timeout = TestTimeout)]

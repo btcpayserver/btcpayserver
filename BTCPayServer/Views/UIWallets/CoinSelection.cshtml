@@ -50,6 +50,7 @@
     <div class="d-flex justify-content-between align-items-center my-2">
         <div class="d-flex gap-2 align-items-center">
             <input class="form-check-input flex-shrink-0"
+                   id="select-all-checkbox"
                    type="checkbox"
                    :checked="isSelectAllChecked"
                    v-on:change="toggleSelectAllItems" />
@@ -305,16 +306,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 var res = $("#SelectedInputs").val() || [];
 
                 if (toggle) {
-                    if (!res.includes(item.outpoint)) {
-                        res.push(item.outpoint);
-                    }
+                    res.push(item.outpoint);
                 } else {
-                    res = res.filter(x => x !== item.outpoint);
+                    res.splice(this.selectedInputs.indexOf(item.outpoint), 1);
                 }
 
-                $("#SelectedInputs option").each(function () {
-                    const selected = res.includes($(this).attr("value"));
-                    $(this).prop("selected", selected);
+                $("select option").each(function () {
+                    var selected = res.indexOf($(this).attr("value")) !== -1;
+                    $(this).attr("selected", selected ? "selected" : null);
                 });
 
                 this.selectedInputs = res;
@@ -335,8 +334,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 $("#SelectedInputs option").each(function () {
-                    const selected = res.includes($(this).val());
-                    $(this).prop("selected", selected);
+                    var selected = res.indexOf($(this).attr("value")) !== -1;
+                    $(this).attr("selected", selected ? "selected" : null);
                 });
 
                 this.selectedInputs = res;

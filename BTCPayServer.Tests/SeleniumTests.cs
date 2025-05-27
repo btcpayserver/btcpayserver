@@ -1257,6 +1257,17 @@ namespace BTCPayServer.Tests
             s.Driver.WaitForElement(By.Id(spentOutpoint.ToString()));
             Assert.Equal("true",
                 s.Driver.FindElement(By.Name("InputSelection")).GetAttribute("value").ToLowerInvariant());
+            
+            //Select All test
+            s.Driver.FindElement(By.Id("select-all-checkbox")).Click();
+            var inputSelectionSelectAll = s.Driver.FindElement(By.Name("SelectedInputs"));
+            var selectedOptions = inputSelectionSelectAll.FindElements(By.CssSelector("option[selected]"));
+            var listItems = s.Driver.FindElements(By.CssSelector("li.list-group-item"));
+            Assert.True(selectedOptions.Count == listItems.Count,$"Expected {listItems.Count} selected options, but found {selectedOptions.Count}");
+            s.Driver.FindElement(By.Id("select-all-checkbox")).Click();
+            selectedOptions = inputSelectionSelectAll.FindElements(By.CssSelector("option[selected]"));
+            Assert.Empty(selectedOptions); 
+            
             s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
             s.Driver.FindElement(By.Id(spentOutpoint.ToString())).Click();
             var inputSelectionSelect = s.Driver.FindElement(By.Name("SelectedInputs"));
@@ -1335,17 +1346,7 @@ namespace BTCPayServer.Tests
             input.SendKeys("before:2099-01-01");
             await Task.Delay(500);
             Assert.True(s.Driver.FindElements(By.CssSelector("li.list-group-item")).Count >= 3);
-
-            // Test Select All
-            s.Driver.FindElement(By.CssSelector("input[type='checkbox']")).Click();
-            await TestUtils.EventuallyAsync(() =>
-            {
-                var inputSelectionSelect = s.Driver.FindElement(By.Name("SelectedInputs"));
-                var selectedOptions = inputSelectionSelect.FindElements(By.CssSelector("option[selected]"));
-                return Task.FromResult(selectedOptions.Count == s.Driver.FindElements(By.CssSelector("li.list-group-item")).Count);
-            });
         }
-
 
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseWebhooks()

@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
@@ -121,8 +122,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     Status = status,
                     TextSearch = textSearch
                 });
-
-            return Ok(invoices.Select(ToModel));
+            return Ok(invoices.Select(invoice => ToInvoiceModelWithPaymentMethodModels(invoice, includeAccountedPaymentOnly: true, includeSensitive: false)));
         }
 
         [Authorize(Policy = Policies.CanViewInvoices,
@@ -578,6 +578,15 @@ namespace BTCPayServer.Controllers.Greenfield
                 Value = paymentEntity.Value,
                 ReceivedDate = paymentEntity.ReceivedTime.DateTime
             };
+        }
+
+        private InvoiceDataWithPaymentMethods ToInvoiceModelWithPaymentMethodModels(InvoiceEntity entity, bool includeAccountedPaymentOnly = true, bool includeSensitive = false)
+        {
+            var invoiceModel = ToModel(entity, _linkGenerator, _currencyNameTable, Request);
+            var json = JsonConvert.SerializeObject(invoiceModel);
+            var result = JsonConvert.DeserializeObject<InvoiceDataWithPaymentMethods>(json) ?? new InvoiceDataWithPaymentMethods();
+            result.PaymentMethods = ToPaymentMethodModels(entity, includeAccountedPaymentOnly, includeSensitive);
+            return result;
         }
 
         private InvoiceData ToModel(InvoiceEntity entity)

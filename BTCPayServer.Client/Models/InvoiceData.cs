@@ -110,6 +110,12 @@ namespace BTCPayServer.Client.Models
         public InvoiceStatus[] AvailableStatusesForManualMarking { get; set; }
         public bool Archived { get; set; }
     }
+
+    public class InvoiceDataWithPaymentMethods : InvoiceData
+    {
+        public InvoicePaymentMethodDataModel[] PaymentMethods { get; set; }
+    }
+
     public enum InvoiceStatus
     {
         New,

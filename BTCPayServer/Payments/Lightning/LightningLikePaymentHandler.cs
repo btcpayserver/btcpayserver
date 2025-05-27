@@ -146,7 +146,7 @@ namespace BTCPayServer.Payments.Lightning
         {
             var synced = _Dashboard.IsFullySynched(_Network.CryptoCode, out var summary);
             if (supportedPaymentMethod.IsInternalNode && !synced)
-                throw new PaymentMethodUnavailableException("Full node not available");
+                invoiceLogs?.Write("The full node isn’t synced yet. Lightning payments may not function correctly.", InvoiceEventData.EventSeverity.Warning);
 
             try
             {
@@ -187,7 +187,7 @@ namespace BTCPayServer.Payments.Lightning
                     ? info.NodeInfoList.Where(i => i.IsTor == preferOnion.Value).ToArray()
                     : info.NodeInfoList.Select(i => i).ToArray();
 
-                if (summary.Status is not null)
+                if (summary?.Status is not null)
                 {
                     var blocksGap = summary.Status.ChainHeight - info.BlockHeight;
                     if (blocksGap > 10 && !(isLndHub && info.BlockHeight == 0))

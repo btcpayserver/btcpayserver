@@ -358,8 +358,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 Created = DateTimeOffset.UtcNow,
                 Approved = isAdmin // auto-approve first admin and users created by an admin
             };
-            if (request.SkipEmailInvite == true)
-                user.RequiresEmailConfirmation = false;
 
             var blob = user.GetBlob() ?? new();
             blob.Name = request.Name;
@@ -418,7 +416,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var currentUser = await _userManager.GetUserAsync(User);
             var userEvent = currentUser switch
             {
-                { } invitedBy => await UserEvent.Invited.Create(user, invitedBy, _callbackGenerator, Request, true),
+                { } invitedBy => await UserEvent.Invited.Create(user, invitedBy, _callbackGenerator, Request, request.SendInvitationEmail is not false),
                 _ => await UserEvent.Registered.Create(user, _callbackGenerator, Request)
             };
             _eventAggregator.Publish(userEvent);

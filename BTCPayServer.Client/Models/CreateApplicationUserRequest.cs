@@ -28,8 +28,8 @@ namespace BTCPayServer.Client.Models
         public bool? IsAdministrator { get; set; }
 
         /// <summary>
-        /// Flag to specify if email invitation should be sent to the user. https://github.com/btcpayserver/btcpayserver/issues/6406#issuecomment-2886252217
+        /// Flag to specify if an email invitation should be sent to the user.
         /// </summary>
-        public bool? SkipEmailInvite { get; set; }
+        public bool? SendInvitationEmail { get; set; } = true;
     }
 }

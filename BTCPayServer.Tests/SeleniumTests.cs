@@ -1257,17 +1257,21 @@ namespace BTCPayServer.Tests
             s.Driver.WaitForElement(By.Id(spentOutpoint.ToString()));
             Assert.Equal("true",
                 s.Driver.FindElement(By.Name("InputSelection")).GetAttribute("value").ToLowerInvariant());
-            
+
             //Select All test
             s.Driver.FindElement(By.Id("select-all-checkbox")).Click();
             var inputSelectionSelectAll = s.Driver.FindElement(By.Name("SelectedInputs"));
-            var selectedOptions = inputSelectionSelectAll.FindElements(By.CssSelector("option[selected]"));
-            var listItems = s.Driver.FindElements(By.CssSelector("li.list-group-item"));
-            Assert.True(selectedOptions.Count == listItems.Count,$"Expected {listItems.Count} selected options, but found {selectedOptions.Count}");
+            TestUtils.Eventually(() => {
+                var selectedOptions = inputSelectionSelectAll.FindElements(By.CssSelector("option[selected]"));
+                var listItems = s.Driver.FindElements(By.CssSelector("li.list-group-item"));
+                Assert.Equal(listItems.Count, selectedOptions.Count);
+            });
             s.Driver.FindElement(By.Id("select-all-checkbox")).Click();
-            selectedOptions = inputSelectionSelectAll.FindElements(By.CssSelector("option[selected]"));
-            Assert.Empty(selectedOptions); 
-            
+            TestUtils.Eventually(() => {
+                var selectedOptions = inputSelectionSelectAll.FindElements(By.CssSelector("option[selected]"));
+                Assert.Empty(selectedOptions);
+            });
+
             s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
             s.Driver.FindElement(By.Id(spentOutpoint.ToString())).Click();
             var inputSelectionSelect = s.Driver.FindElement(By.Name("SelectedInputs"));
@@ -1285,7 +1289,7 @@ namespace BTCPayServer.Tests
             Assert.Single(tx.Inputs);
             Assert.Equal(spentOutpoint, tx.Inputs[0].PrevOut);
         }
-        
+
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseCoinSelectionFilters()
         {

@@ -271,6 +271,12 @@
                                         "description": "Make this user administrator (only if you have the `unrestricted` permission of a server administrator)",
                                         "nullable": true,
                                         "default": false
+                                    },
+                                    "sendInvitationEmail": {
+                                        "type": "boolean",
+                                        "description": "Flag to specify if an email invitation should be sent to the user",
+                                        "nullable": true,
+                                        "default": true
                                     }
                                 }
                             }

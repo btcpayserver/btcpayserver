@@ -21,14 +21,7 @@
 
 <h4 class="mb-3">Compatible wallets</h4>
 <div class="services-list">
-    @if (Model.Uri == null) // if GRPC
-    {
-        <a href="https://zaphq.io/" target="_blank" class="service" rel="noreferrer noopener">
-            <img src="~/img/zapwallet.jpg" asp-append-version="true" alt="Zap" />
-            <h6>Zap</h6>
-        </a>
-    }
-    else
+    if (Model.Uri != null)
     {
         <a href="https://lightningjoule.com/" target="_blank" class="service" rel="noreferrer noopener">
             <img src="~/img/joule.png" asp-append-version="true" alt="Joule" />

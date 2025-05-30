@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Blazor.VaultBridge.Elements;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
@@ -570,9 +571,25 @@ namespace BTCPayServer.Tests
             public Task AssertHasLabels(string label) => AssertHasLabels(null, label);
             public async Task AssertHasLabels(uint256? txId, string label)
             {
+                // This is complicated, the labels are asynchronously added.
+                // So we may need to refresh the page
+                int tried = 0;
+                retry:
+                await WaitTransactionsLoaded();
+                var selector = $"{TxRowSelector(txId)} .transaction-label[data-value=\"{label}\"]";
+                if (await page.Locator(selector).IsVisibleAsync())
+                    return;
+                if (tried > 5)
+                {
+                    await page.Locator(selector).WaitForAsync();
+                    return;
+                }
+                tried++;
                 await page.ReloadAsync();
-                await page.Locator($"{TxRowSelector(txId)} .transaction-label[data-value=\"{label}\"]").WaitForAsync();
+                goto retry;
             }
+
+            public Task WaitTransactionsLoaded() => page.Locator("#WalletTransactions[data-loaded='true']").WaitForAsync();
 
             public async Task AssertNotFound(uint256 txId)
             {

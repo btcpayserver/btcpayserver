@@ -260,8 +260,7 @@ public class GetXPubController : HWIController
         ui.ShowFeedback(FeedbackType.Success, ui.StringLocalizer["Public keys successfully fetched."]);
 
         var firstDepositPath = new KeyPath(0, 0);
-        var firstDepositAddr =
-            network.NBXplorerNetwork.CreateAddress(strategy, firstDepositPath, strategy.GetDerivation(firstDepositPath).ScriptPubKey);
+        var firstDepositAddr = strategy.GetDerivation(firstDepositPath).ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork);
 
         var verif = new VerifyAddress(ui)
         {

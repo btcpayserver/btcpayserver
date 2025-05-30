@@ -9,6 +9,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
+using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Models.StoreViewModels;
@@ -194,7 +195,7 @@ public partial class UIStoresController
             // This is success case when derivation scheme is added to the store
             return RedirectToAction(nameof(WalletSettings), new { storeId = vm.StoreId, cryptoCode = vm.CryptoCode });
         }
-        return ConfirmAddresses(vm, strategy, network.NBXplorerNetwork);
+        return ConfirmAddresses(vm, strategy, network);
     }
 
     [HttpGet("{storeId}/onchain/{cryptoCode}/generate/{method?}")]
@@ -250,7 +251,7 @@ public partial class UIStoresController
         }
 
         var perm = await CanUseHotWallet();
-        if ((!perm.CanCreateHotWallet && request.SavePrivateKeys) || 
+        if ((!perm.CanCreateHotWallet && request.SavePrivateKeys) ||
             (!perm.CanRPCImport && request.ImportKeysToRPC) ||
             (!perm.CanCreateColdWallet && !request.SavePrivateKeys))
         {
@@ -540,7 +541,7 @@ public partial class UIStoresController
                     _eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
                     successMessage += $" {vm.CryptoCode} on-chain payments are now {(vm.Enabled ? "enabled" : "disabled")} for this store.";
                 }
-                
+
                 if (payjoinChanged && storeBlob.PayJoinEnabled && network.SupportPayJoin)
                 {
                     var config = store.GetPaymentMethodConfig<DerivationSchemeSettings>(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode), _handlers);
@@ -691,30 +692,20 @@ public partial class UIStoresController
         return RedirectToAction(nameof(GeneralSettings), new { storeId });
     }
 
-    private IActionResult ConfirmAddresses(WalletSetupViewModel vm, DerivationSchemeSettings strategy, NBXplorerNetwork network)
+    private IActionResult ConfirmAddresses(WalletSetupViewModel vm, DerivationSchemeSettings strategy, BTCPayNetwork network)
     {
         vm.DerivationScheme = strategy.AccountDerivation.ToString();
-        var deposit = new KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
-
+        vm.AddressSamples = new();
         if (!string.IsNullOrEmpty(vm.DerivationScheme))
         {
-            var line = strategy.AccountDerivation.GetLineFor(deposit);
-
-            for (uint i = 0; i < 10; i++)
+            var result = GreenfieldStoreOnChainPaymentMethodsController.GetPreviewResultData(0, 10, network, strategy.AccountDerivation);
+            foreach (var r in result.Addresses)
             {
-                var keyPath = deposit.GetKeyPath(i);
-                var rootedKeyPath = vm.GetAccountKeypath()?.Derive(keyPath);
-                var derivation = line.Derive(i);
-                var address = network.CreateAddress(strategy.AccountDerivation,
-                    line.KeyPathTemplate.GetKeyPath(i),
-                    derivation.ScriptPubKey);
-                vm.AddressSamples.Add((keyPath.ToString(), address.ToString(), rootedKeyPath));
+                vm.AddressSamples.Add((r.KeyPath, r.Address));
             }
         }
-
         vm.Confirmation = true;
         ModelState.Remove(nameof(vm.Config)); // Remove the cached value
-
         return View("ImportWallet/ConfirmAddresses", vm);
     }
 
@@ -722,7 +713,6 @@ public partial class UIStoresController
     {
         store = HttpContext.GetStoreData();
         network = cryptoCode == null ? null : _explorerProvider.GetNetwork(cryptoCode);
-
         return store == null || network == null ? NotFound() : null;
     }
 
@@ -773,7 +763,7 @@ public partial class UIStoresController
         return WalletWarning(isHotWallet,
             $"The store won't be able to receive {cryptoCode} onchain payments until a new wallet is set up.");
     }
-    
+
     internal static DerivationSchemeSettings ParseDerivationStrategy(string derivationScheme, BTCPayNetwork network)
     {
         var parser = new DerivationSchemeParser(network);

@@ -5,7 +5,6 @@ using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using Microsoft.Extensions.Logging;
-using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.HostedServices.Webhooks;
 
@@ -34,14 +33,14 @@ public class InvoiceWebhookProvider(
     protected override WebhookSender.WebhookDeliveryRequest CreateDeliveryRequest(InvoiceEvent invoiceEvent,
         WebhookData webhook)
     {
-        WebhookInvoiceEvent webhookEvent = GetWebhookEvent(invoiceEvent)!;
-        WebhookBlob webhookBlob = webhook?.GetBlob();
+        var webhookEvent = GetWebhookEvent(invoiceEvent)!;
+        var webhookBlob = webhook?.GetBlob();
         webhookEvent.InvoiceId = invoiceEvent.InvoiceId;
         webhookEvent.StoreId = invoiceEvent.Invoice.StoreId;
         webhookEvent.Metadata = invoiceEvent.Invoice.Metadata.ToJObject();
         webhookEvent.WebhookId = webhook?.Id;
         webhookEvent.IsRedelivery = false;
-        WebhookDeliveryData delivery = webhook is null ? null : WebhookExtensions.NewWebhookDelivery(webhook.Id);
+        var delivery = webhook is null ? null : WebhookExtensions.NewWebhookDelivery(webhook.Id);
         if (delivery is not null)
         {
             webhookEvent.DeliveryId = delivery.Id;
@@ -55,14 +54,14 @@ public class InvoiceWebhookProvider(
 
     public override WebhookEvent CreateTestEvent(string type, params object[] args)
     {
-        string storeId = args[0].ToString();
+        var storeId = args[0].ToString();
         return new WebhookInvoiceEvent(type, storeId) { InvoiceId = "__test__" + Guid.NewGuid() + "__test__" };
     }
 
     protected override WebhookInvoiceEvent GetWebhookEvent(InvoiceEvent invoiceEvent)
     {
-        InvoiceEventCode eventCode = invoiceEvent.EventCode;
-        string storeId = invoiceEvent.Invoice.StoreId;
+        var eventCode = invoiceEvent.EventCode;
+        var storeId = invoiceEvent.Invoice.StoreId;
         switch (eventCode)
         {
             case InvoiceEventCode.Confirmed:

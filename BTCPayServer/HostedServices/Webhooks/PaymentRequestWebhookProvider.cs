@@ -4,7 +4,6 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.PaymentRequests;
 using Microsoft.Extensions.Logging;
-using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.HostedServices.Webhooks;
 
@@ -25,7 +24,7 @@ public class PaymentRequestWebhookProvider(EventAggregator eventAggregator, ILog
 
     public override WebhookEvent CreateTestEvent(string type, object[] args)
     {
-        string storeId = args[0].ToString();
+        var storeId = args[0].ToString();
         return new WebhookPaymentRequestEvent(type, storeId) { PaymentRequestId = "__test__" + Guid.NewGuid() + "__test__" };
     }
 
@@ -44,14 +43,14 @@ public class PaymentRequestWebhookProvider(EventAggregator eventAggregator, ILog
 
     protected override WebhookSender.WebhookDeliveryRequest CreateDeliveryRequest(PaymentRequestEvent paymentRequestEvent, WebhookData webhook)
     {
-        WebhookBlob webhookBlob = webhook?.GetBlob();
-        WebhookPaymentRequestEvent webhookEvent = GetWebhookEvent(paymentRequestEvent)!;
+        var webhookBlob = webhook?.GetBlob();
+        var webhookEvent = GetWebhookEvent(paymentRequestEvent)!;
         webhookEvent.StoreId = paymentRequestEvent.Data.StoreDataId;
         webhookEvent.PaymentRequestId = paymentRequestEvent.Data.Id;
         webhookEvent.Status = paymentRequestEvent.Data.Status;
         webhookEvent.WebhookId = webhook?.Id;
         webhookEvent.IsRedelivery = false;
-        WebhookDeliveryData delivery = webhook is null ? null : WebhookExtensions.NewWebhookDelivery(webhook.Id);
+        var delivery = webhook is null ? null : WebhookExtensions.NewWebhookDelivery(webhook.Id);
         if (delivery is not null)
         {
             webhookEvent.DeliveryId = delivery.Id;

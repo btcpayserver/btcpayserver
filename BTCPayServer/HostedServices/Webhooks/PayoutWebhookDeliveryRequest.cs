@@ -27,8 +27,8 @@ public class PayoutWebhookDeliveryRequest(
 
     private string Interpolate(string str)
     {
-        PayoutBlob? blob = evt.Payout.GetBlob(btcPayNetworkJsonSerializerSettings);
-        string res = str.Replace("{Payout.Id}", evt.Payout.Id)
+        var blob = evt.Payout.GetBlob(btcPayNetworkJsonSerializerSettings);
+        var res = str.Replace("{Payout.Id}", evt.Payout.Id)
             .Replace("{Payout.PullPaymentId}", evt.Payout.PullPaymentDataId)
             .Replace("{Payout.Destination}", evt.Payout.DedupId ?? blob.Destination)
             .Replace("{Payout.State}", evt.Payout.State.ToString());

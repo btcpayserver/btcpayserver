@@ -31,8 +31,9 @@ public abstract class WebhookProvider<T>(EventAggregator eventAggregator, ILogge
             if (GetWebhookEvent(tEvt) is not { } webhookEvent)
                 return;
 
-            WebhookData[] webhooks = await webhookSender.GetWebhooks(webhookEvent.StoreId, webhookEvent.Type);
-            foreach (WebhookData webhook in webhooks) webhookSender.EnqueueDelivery(CreateDeliveryRequest(tEvt, webhook));
+            var webhooks = await webhookSender.GetWebhooks(webhookEvent.StoreId, webhookEvent.Type);
+            foreach (var webhook in webhooks)
+                webhookSender.EnqueueDelivery(CreateDeliveryRequest(tEvt, webhook));
 
             EventAggregator.Publish(CreateDeliveryRequest(tEvt, null));
         }

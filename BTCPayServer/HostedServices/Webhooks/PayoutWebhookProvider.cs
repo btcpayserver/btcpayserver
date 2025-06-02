@@ -4,7 +4,6 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services;
 using Microsoft.Extensions.Logging;
-using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.HostedServices.Webhooks;
 
@@ -17,16 +16,16 @@ public class PayoutWebhookProvider(
 {
     protected override WebhookSender.WebhookDeliveryRequest CreateDeliveryRequest(PayoutEvent payoutEvent, WebhookData webhook)
     {
-        WebhookBlob webhookBlob = webhook?.GetBlob();
+        var webhookBlob = webhook?.GetBlob();
 
-        WebhookPayoutEvent webhookEvent = GetWebhookEvent(payoutEvent)!;
+        var webhookEvent = GetWebhookEvent(payoutEvent)!;
         webhookEvent.StoreId = payoutEvent.Payout.StoreDataId;
         webhookEvent.PayoutId = payoutEvent.Payout.Id;
         webhookEvent.PayoutState = payoutEvent.Payout.State;
         webhookEvent.PullPaymentId = payoutEvent.Payout.PullPaymentDataId;
         webhookEvent.WebhookId = webhook?.Id;
         webhookEvent.IsRedelivery = false;
-        WebhookDeliveryData delivery = webhook is null ? null : WebhookExtensions.NewWebhookDelivery(webhook.Id);
+        var delivery = webhook is null ? null : WebhookExtensions.NewWebhookDelivery(webhook.Id);
         if (delivery is not null)
         {
             webhookEvent.DeliveryId = delivery.Id;
@@ -49,7 +48,7 @@ public class PayoutWebhookProvider(
 
     public override WebhookEvent CreateTestEvent(string type, object[] args)
     {
-        string storeId = args[0].ToString();
+        var storeId = args[0].ToString();
         return new WebhookPayoutEvent(type, storeId) { PayoutId = "__test__" + Guid.NewGuid() + "__test__" };
     }
 

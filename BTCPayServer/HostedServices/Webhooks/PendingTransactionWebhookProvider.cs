@@ -4,7 +4,6 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.HostedServices.Webhooks;
 
@@ -33,13 +32,13 @@ public class PendingTransactionWebhookProvider(
     protected override WebhookSender.WebhookDeliveryRequest CreateDeliveryRequest(PendingTransactionService.PendingTransactionEvent evt,
         WebhookData webhook)
     {
-        WebhookBlob webhookBlob = webhook?.GetBlob();
+        var webhookBlob = webhook?.GetBlob();
 
-        WebhookPendingTransactionEvent webhookEvent = GetWebhookEvent(evt)!;
+        var webhookEvent = GetWebhookEvent(evt)!;
         webhookEvent.StoreId = evt.Data.StoreId;
         webhookEvent.WebhookId = webhook?.Id;
         webhookEvent.IsRedelivery = false;
-        WebhookDeliveryData delivery = webhook is null ? null : WebhookExtensions.NewWebhookDelivery(webhook.Id);
+        var delivery = webhook is null ? null : WebhookExtensions.NewWebhookDelivery(webhook.Id);
         if (delivery is not null)
         {
             webhookEvent.DeliveryId = delivery.Id;
@@ -68,7 +67,7 @@ public class PendingTransactionWebhookProvider(
 
     public override WebhookEvent CreateTestEvent(string type, params object[] args)
     {
-        string storeId = args[0].ToString();
+        var storeId = args[0].ToString();
         return new WebhookInvoiceEvent(type, storeId) { InvoiceId = "__test__" + Guid.NewGuid() + "__test__" };
     }
 

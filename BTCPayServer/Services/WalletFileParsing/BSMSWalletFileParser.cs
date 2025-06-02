@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BTCPayServer;
 using NBitcoin;
+using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using AccountKeySettings = BTCPayServer.AccountKeySettings;
 using BTCPayNetwork = BTCPayServer.BTCPayNetwork;
@@ -37,8 +38,7 @@ public class BSMSWalletFileParser : IWalletFileParser
 
         derivationSchemeSettings = network.GetDerivationSchemeParser().ParseOD(descriptor);
         derivationSchemeSettings.Source = "BSMS";
-        var deposit = new NBXplorer.KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
-        var line = derivationSchemeSettings.AccountDerivation.GetLineFor(deposit).Derive(0);
+        var line = derivationSchemeSettings.AccountDerivation.GetLineFor(DerivationFeature.Deposit).Derive(0);
         return testAddress.ScriptPubKey == line.ScriptPubKey;
     }
 }

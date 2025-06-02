@@ -918,7 +918,7 @@ namespace BTCPayServer.Tests
             for (int i = 0; i < 5; i++)
             {
                 var expectedScripts = script.Derive(AddressIntent.Deposit, i).Miniscript.ToScripts();
-                var actual = scheme.AccountDerivation.GetDerivation(new KeyPath(0, (uint)i));
+                var actual = ((StandardDerivationStrategyBase)scheme.AccountDerivation).GetDerivation(new KeyPath(0, (uint)i));
                 Assert.Equal(expectedScripts.ScriptPubKey, actual.ScriptPubKey);
                 Assert.Equal(expectedScripts.RedeemScript, actual.Redeem);
                 if (i == 0)
@@ -1029,7 +1029,7 @@ namespace BTCPayServer.Tests
                 "ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD",
                 settings.AccountOriginal);
             Assert.Equal(root.Derive(new KeyPath("m/49'/0'/0'")).Neuter().PubKey.WitHash.ScriptPubKey.Hash.ScriptPubKey,
-                settings.AccountDerivation.GetDerivation().ScriptPubKey);
+                ((StandardDerivationStrategyBase)settings.AccountDerivation).GetDerivation(new KeyPath()).ScriptPubKey);
             Assert.Equal("ElectrumFile", settings.Source);
             Assert.Null(error);
 
@@ -1101,8 +1101,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.True(multsig.LexicographicOrder);
             Assert.Equal(1, multsig.RequiredSignatures);
 
-            var deposit = new NBXplorer.KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
-            var line = nunchuk.AccountDerivation.GetLineFor(deposit).Derive(0);
+            var line = nunchuk.AccountDerivation.GetLineFor(DerivationFeature.Deposit).Derive(0);
 
             Assert.Equal(BitcoinAddress.Create("bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku", Network.Main).ScriptPubKey,
                 line.ScriptPubKey);

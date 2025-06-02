@@ -33,6 +33,7 @@ namespace BTCPayServer.Services.Wallets
         public Coin Coin { get; set; }
         public long Confirmations { get; set; }
         public BitcoinAddress Address { get; set; }
+        public int KeyIndex { get; set; }
     }
     public class NetworkCoins
     {
@@ -491,6 +492,7 @@ namespace BTCPayServer.Services.Wallets
                           .Select(c => new ReceivedCoin()
                           {
                               KeyPath = c.KeyPath,
+                              KeyIndex = c.KeyIndex,
                               Value = c.Value,
                               Timestamp = c.Timestamp,
                               OutPoint = c.Outpoint,

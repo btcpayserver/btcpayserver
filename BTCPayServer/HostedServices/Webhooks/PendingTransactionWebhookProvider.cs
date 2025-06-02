@@ -68,7 +68,7 @@ public class PendingTransactionWebhookProvider(
     public override WebhookEvent CreateTestEvent(string type, params object[] args)
     {
         var storeId = args[0].ToString();
-        return new WebhookInvoiceEvent(type, storeId) { InvoiceId = "__test__" + Guid.NewGuid() + "__test__" };
+        return new WebhookPendingTransactionEvent(type, storeId) { PendingTransactionId = "__test__" + Guid.NewGuid() + "__test__" };
     }
 
 

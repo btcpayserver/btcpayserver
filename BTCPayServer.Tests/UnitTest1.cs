@@ -1453,6 +1453,7 @@ namespace BTCPayServer.Tests
                 Assert.Contains("X_TRY = btcturk(X_TRY);", defaultScript);
 
                 await Test("BTC_JPY");
+                await tester.Page.Locator(".testresult .testresult_rule").First.WaitForAsync();
                 rules = await tester.Page.Locator(".testresult .testresult_rule").AllAsync();
                 if (fallback)
                 {

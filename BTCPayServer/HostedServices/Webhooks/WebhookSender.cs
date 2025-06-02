@@ -63,7 +63,7 @@ public class WebhookSender(
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        Task stopping = _processingQueue.Abort(cancellationToken);
+        var stopping = _processingQueue.Abort(cancellationToken);
         await stopping;
     }
 
@@ -76,7 +76,7 @@ public class WebhookSender(
 
     public async Task<string?> Redeliver(string deliveryId)
     {
-        WebhookDeliveryRequest? deliveryRequest = await CreateRedeliveryRequest(deliveryId);
+        var deliveryRequest = await CreateRedeliveryRequest(deliveryId);
         if (deliveryRequest is null)
             return null;
         EnqueueDelivery(deliveryRequest);
@@ -85,18 +85,18 @@ public class WebhookSender(
 
     private async Task<WebhookDeliveryRequest?> CreateRedeliveryRequest(string deliveryId)
     {
-        await using ApplicationDbContext? ctx = dbContextFactory.CreateContext();
+        await using var ctx = dbContextFactory.CreateContext();
         var webhookDelivery = await ctx.WebhookDeliveries.AsNoTracking()
             .Where(o => o.Id == deliveryId)
             .Select(o => new { o.Webhook, Delivery = o })
             .FirstOrDefaultAsync();
         if (webhookDelivery is null)
             return null;
-        WebhookDeliveryBlob? oldDeliveryBlob = webhookDelivery.Delivery.GetBlob();
-        WebhookDeliveryData? newDelivery = WebhookExtensions.NewWebhookDelivery(webhookDelivery.Webhook.Id);
+        var oldDeliveryBlob = webhookDelivery.Delivery.GetBlob();
+        var newDelivery = WebhookExtensions.NewWebhookDelivery(webhookDelivery.Webhook.Id);
         WebhookDeliveryBlob newDeliveryBlob = new();
         newDeliveryBlob.Request = oldDeliveryBlob.Request;
-        WebhookEvent? webhookEvent = newDeliveryBlob.ReadRequestAs<WebhookEvent>();
+        var webhookEvent = newDeliveryBlob.ReadRequestAs<WebhookEvent>();
         if (webhookEvent.IsPruned())
             return null;
         webhookEvent.DeliveryId = newDelivery.Id;
@@ -113,13 +113,13 @@ public class WebhookSender(
     private WebhookEvent GetTestWebHook(string storeId, string webhookId, string webhookEventType,
         WebhookDeliveryData delivery)
     {
-        IWebhookProvider? webhookProvider = serviceProvider.GetServices<IWebhookProvider>()
+        var webhookProvider = serviceProvider.GetServices<IWebhookProvider>()
             .FirstOrDefault(provider => provider.GetSupportedWebhookTypes().ContainsKey(webhookEventType));
 
         if (webhookProvider is null)
             throw new ArgumentException($"Unknown webhook event type {webhookEventType}", webhookEventType);
 
-        WebhookEvent? webhookEvent = webhookProvider.CreateTestEvent(webhookEventType, storeId);
+        var webhookEvent = webhookProvider.CreateTestEvent(webhookEventType, storeId);
         if (webhookEvent is null)
             throw new ArgumentException("Webhook provider does not support tests");
 
@@ -135,8 +135,8 @@ public class WebhookSender(
     public async Task<DeliveryResult> TestWebhook(string storeId, string webhookId, string webhookEventType,
         CancellationToken cancellationToken)
     {
-        WebhookDeliveryData? delivery = WebhookExtensions.NewWebhookDelivery(webhookId);
-        WebhookData? webhook = (await StoreRepository.GetWebhooks(storeId)).FirstOrDefault(w => w.Id == webhookId);
+        var delivery = WebhookExtensions.NewWebhookDelivery(webhookId);
+        var webhook = (await StoreRepository.GetWebhooks(storeId)).FirstOrDefault(w => w.Id == webhookId);
         WebhookDeliveryRequest deliveryRequest = new(
             webhookId,
             GetTestWebHook(storeId, webhookId, webhookEventType, delivery),
@@ -155,16 +155,16 @@ public class WebhookSender(
     {
         try
         {
-            WebhookBlob? wh = (await StoreRepository.GetWebhook(ctx.WebhookId))?.GetBlob();
+            var wh = (await StoreRepository.GetWebhook(ctx.WebhookId))?.GetBlob();
             if (wh is null || !wh.ShouldDeliver(ctx.WebhookEvent.Type))
                 return;
-            DeliveryResult result = await SendAndSaveDelivery(ctx, cancellationToken);
+            var result = await SendAndSaveDelivery(ctx, cancellationToken);
             if (ctx.WebhookBlob.AutomaticRedelivery &&
                 !result.Success &&
                 result.DeliveryId is not null)
             {
-                string? originalDeliveryId = result.DeliveryId;
-                foreach (TimeSpan wait in new[]
+                var originalDeliveryId = result.DeliveryId;
+                foreach (var wait in new[]
                          {
                              TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10),
                              TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10)
@@ -194,22 +194,22 @@ public class WebhookSender(
     private async Task<DeliveryResult> SendDelivery(WebhookDeliveryRequest ctx, CancellationToken cancellationToken)
     {
         Uri uri = new(ctx.WebhookBlob.Url, UriKind.Absolute);
-        HttpClient httpClient = GetClient(uri);
+        var httpClient = GetClient(uri);
         using HttpRequestMessage request = new();
         request.RequestUri = uri;
         request.Method = HttpMethod.Post;
-        byte[] bytes = ToBytes(ctx.WebhookEvent);
+        var bytes = ToBytes(ctx.WebhookEvent);
         ByteArrayContent content = new(bytes);
         content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
         using HMACSHA256 hmac = new(_utf8.GetBytes(ctx.WebhookBlob.Secret ?? string.Empty));
-        string? sig = Encoders.Hex.EncodeData(hmac.ComputeHash(bytes));
+        var sig = Encoders.Hex.EncodeData(hmac.ComputeHash(bytes));
         content.Headers.Add("BTCPay-Sig", $"sha256={sig}");
         request.Content = content;
-        WebhookDeliveryBlob deliveryBlob = ctx.Delivery.GetBlob() ?? new WebhookDeliveryBlob();
+        var deliveryBlob = ctx.Delivery.GetBlob() ?? new WebhookDeliveryBlob();
         deliveryBlob.Request = bytes;
         try
         {
-            using HttpResponseMessage response = await httpClient.SendAsync(request, cancellationToken);
+            using var response = await httpClient.SendAsync(request, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
                 deliveryBlob.Status = WebhookDeliveryStatus.HttpError;
@@ -236,7 +236,7 @@ public class WebhookSender(
     private async Task<DeliveryResult> SendAndSaveDelivery(WebhookDeliveryRequest ctx,
         CancellationToken cancellationToken)
     {
-        DeliveryResult result = await SendDelivery(ctx, cancellationToken);
+        var result = await SendDelivery(ctx, cancellationToken);
         await StoreRepository.AddWebhookDelivery(ctx.Delivery);
 
         return result;
@@ -244,8 +244,8 @@ public class WebhookSender(
 
     private byte[] ToBytes(WebhookEvent webhookEvent)
     {
-        string str = JsonConvert.SerializeObject(webhookEvent, Formatting.Indented, DefaultSerializerSettings);
-        byte[] bytes = _utf8.GetBytes(str);
+        var str = JsonConvert.SerializeObject(webhookEvent, Formatting.Indented, DefaultSerializerSettings);
+        var bytes = _utf8.GetBytes(str);
         return bytes;
     }
 
@@ -291,15 +291,15 @@ public class WebhookSender(
             //find all instance of {fieldName*} instead str, then run obj.SelectToken(*) on it
             while (true)
             {
-                int start = str.IndexOf($"{{{fieldName}", StringComparison.InvariantCultureIgnoreCase);
+                var start = str.IndexOf($"{{{fieldName}", StringComparison.InvariantCultureIgnoreCase);
                 if (start == -1)
                     break;
                 start += fieldName.Length + 1;
-                int end = str.IndexOf("}", start, StringComparison.InvariantCultureIgnoreCase);
+                var end = str.IndexOf("}", start, StringComparison.InvariantCultureIgnoreCase);
                 if (end == -1)
                     break;
-                string jsonpath = str.Substring(start, end - start);
-                string? result = string.Empty;
+                var jsonpath = str.Substring(start, end - start);
+                var result = string.Empty;
                 try
                 {
                     if (string.IsNullOrEmpty(jsonpath))

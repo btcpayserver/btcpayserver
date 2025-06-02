@@ -5,7 +5,6 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Services.PaymentRequests;
-using MimeKit;
 using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.HostedServices.Webhooks;
@@ -21,9 +20,9 @@ public class PaymentRequestWebhookDeliveryRequest(
     public override Task<SendEmailRequest?> Interpolate(SendEmailRequest req,
         UIStoresController.StoreEmailRule storeEmailRule)
     {
-        PaymentRequestBlob? blob = evt.Data.GetBlob();
+        var blob = evt.Data.GetBlob();
         if (storeEmailRule.CustomerEmail &&
-            MailboxAddressValidator.TryParse(blob.Email, out MailboxAddress? bmb))
+            MailboxAddressValidator.TryParse(blob.Email, out var bmb))
         {
             req.Email ??= string.Empty;
             req.Email += $",{bmb}";
@@ -36,11 +35,11 @@ public class PaymentRequestWebhookDeliveryRequest(
 
     private string Interpolate(string str, PaymentRequestData data)
     {
-        string? id = data.Id;
-        string trimmedId = $"{id.Substring(0, 7)}...{id.Substring(id.Length - 7)}";
+        var id = data.Id;
+        var trimmedId = $"{id.Substring(0, 7)}...{id.Substring(id.Length - 7)}";
 
-        PaymentRequestBlob? blob = data.GetBlob();
-        string res = str.Replace("{PaymentRequest.Id}", id)
+        var blob = data.GetBlob();
+        var res = str.Replace("{PaymentRequest.Id}", id)
             .Replace("{PaymentRequest.TrimmedId}", trimmedId)
             .Replace("{PaymentRequest.Amount}", data.Amount.ToString(CultureInfo.InvariantCulture))
             .Replace("{PaymentRequest.Currency}", data.Currency)

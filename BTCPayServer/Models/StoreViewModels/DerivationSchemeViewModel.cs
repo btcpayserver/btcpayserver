@@ -11,10 +11,10 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Derivation scheme")]
         public string DerivationScheme { get; set; }
 
-        public List<(string KeyPath, string Address, RootedKeyPath RootedKeyPath)> AddressSamples
+        public List<(string KeyPath, string Address)> AddressSamples
         {
             get; set;
-        } = new List<(string KeyPath, string Address, RootedKeyPath RootedKeyPath)>();
+        }
         public string CryptoCode { get; set; }
         public string KeyPath { get; set; }
         [Display(Name = "Root fingerprint")]

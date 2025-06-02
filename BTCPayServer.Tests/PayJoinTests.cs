@@ -472,7 +472,7 @@ namespace BTCPayServer.Tests
 
             var derivationSchemeSettings = alice.GetController<UIWalletsController>().GetDerivationSchemeSettings(new WalletId(alice.StoreId, "BTC"));
             var signingAccount = derivationSchemeSettings.GetSigningAccountKeySettings();
-            psbt.SignAll(derivationSchemeSettings.AccountDerivation, alice.GenerateWalletResponseV.AccountHDKey, signingAccount.GetRootedKeyPath());
+            psbt.SignAll(derivationSchemeSettings.AccountDerivation as IHDScriptPubKey, alice.GenerateWalletResponseV.AccountHDKey, signingAccount.GetRootedKeyPath());
             using var fakeServer = new FakeServer();
             await fakeServer.Start();
             var bip21 = new BitcoinUrlBuilder($"bitcoin:{paymentAddress}?pj={fakeServer.ServerUri}", Network.RegTest);
@@ -592,13 +592,13 @@ namespace BTCPayServer.Tests
                     ExplicitFee = Money.Satoshis(3001)
                 }
             })).PSBT;
-            psbt.SignAll(derivationSchemeSettings.AccountDerivation, alice.GenerateWalletResponseV.AccountHDKey, signingAccount.GetRootedKeyPath());
+            psbt.SignAll(derivationSchemeSettings.AccountDerivation as IHDScriptPubKey, alice.GenerateWalletResponseV.AccountHDKey, signingAccount.GetRootedKeyPath());
             var endpoint = TestAccount.GetPayjoinBitcoinUrl(invoice, Network.RegTest);
             pjClient.MaxFeeBumpContribution = Money.Satoshis(50);
             var proposal = await pjClient.RequestPayjoin(endpoint, new PayjoinWallet(derivationSchemeSettings), psbt, default);
             Assert.True(proposal.TryGetFee(out var newFee));
             Assert.Equal(Money.Satoshis(3001 + 50), newFee);
-            proposal = proposal.SignAll(derivationSchemeSettings.AccountDerivation, alice.GenerateWalletResponseV.AccountHDKey, signingAccount.GetRootedKeyPath());
+            proposal = proposal.SignAll(derivationSchemeSettings.AccountDerivation as IHDScriptPubKey, alice.GenerateWalletResponseV.AccountHDKey, signingAccount.GetRootedKeyPath());
             proposal.Finalize();
             await tester.ExplorerNode.SendRawTransactionAsync(proposal.ExtractTransaction());
             await notifications.WaitReceive(bob.DerivationScheme);
@@ -623,7 +623,7 @@ namespace BTCPayServer.Tests
                     ExplicitFee = Money.Satoshis(3001)
                 }
             })).PSBT;
-            psbt.SignAll(derivationSchemeSettings.AccountDerivation, alice.GenerateWalletResponseV.AccountHDKey, signingAccount.GetRootedKeyPath());
+            psbt.SignAll(derivationSchemeSettings.AccountDerivation as IHDScriptPubKey, alice.GenerateWalletResponseV.AccountHDKey, signingAccount.GetRootedKeyPath());
             endpoint = TestAccount.GetPayjoinBitcoinUrl(invoice, Network.RegTest);
             pjClient.MinimumFeeRate = new FeeRate(100_000_000.2m);
             var ex2 = await Assert.ThrowsAsync<PayjoinReceiverException>(async () => await pjClient.RequestPayjoin(endpoint, new PayjoinWallet(derivationSchemeSettings), psbt, default));
@@ -981,8 +981,8 @@ retry:
                     .BuildTransaction(true);
 
 
-                //Attempt 2: Create two transactions using different inputs and send them to the same invoice. 
-                //Result: Second Tx should be rejected. 
+                //Attempt 2: Create two transactions using different inputs and send them to the same invoice.
+                //Result: Second Tx should be rejected.
                 var Invoice1Coin1ResponseTx = await senderUser.SubmitPayjoin(invoice, Invoice1Coin1, btcPayNetwork);
 
                 await senderUser.SubmitPayjoin(invoice, Invoice1Coin1, btcPayNetwork, "already-paid");

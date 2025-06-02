@@ -301,7 +301,7 @@ namespace BTCPayServer.Controllers
             }
             else
             {
-                var balanceChange = psbtObject.GetBalance(derivationSchemeSettings.AccountDerivation, signingKey, signingKeyPath);
+                var balanceChange = psbtObject.GetBalance(derivationSchemeSettings.AccountDerivation as IHDScriptPubKey, signingKey, signingKeyPath);
                 var replacement = Money.Satoshis(vm.SigningContext.BalanceChangeFromReplacement);
                 if (replacement != Money.Zero)
                 {
@@ -324,7 +324,7 @@ namespace BTCPayServer.Controllers
                 var inputVm = new WalletPSBTReadyViewModel.InputViewModel();
                 vm.Inputs.Add(inputVm);
                 var txOut = input.GetTxOut();
-                var mine = input.HDKeysFor(derivationSchemeSettings.AccountDerivation, signingKey, signingKeyPath).Any();
+                var mine = input.HDKeysFor(derivationSchemeSettings.AccountDerivation as IHDScriptPubKey, signingKey, signingKeyPath).Any();
                 var balanceChange2 = txOut?.Value ?? Money.Zero;
                 if (mine)
                     balanceChange2 = -balanceChange2;
@@ -346,7 +346,7 @@ namespace BTCPayServer.Controllers
             {
                 var dest = new WalletPSBTReadyViewModel.DestinationViewModel();
                 vm.Destinations.Add(dest);
-                var mine = output.HDKeysFor(derivationSchemeSettings.AccountDerivation, signingKey, signingKeyPath).Any();
+                var mine = output.HDKeysFor(derivationSchemeSettings.AccountDerivation as IHDScriptPubKey, signingKey, signingKeyPath).Any();
                 var balanceChange2 = output.Value;
                 if (!mine)
                     balanceChange2 = -balanceChange2;
@@ -457,7 +457,7 @@ namespace BTCPayServer.Controllers
                                 EnforceLowR = vm.SigningContext.EnforceLowR is not false
                             };
                             var extKey = ExtKey.Parse(vm.SigningKey, network.NBitcoinNetwork);
-                            proposedPayjoin = proposedPayjoin.SignAll(derivationSchemeSettings.AccountDerivation,
+                            proposedPayjoin = proposedPayjoin.SignAll(derivationSchemeSettings.AccountDerivation as IHDScriptPubKey,
                                 extKey,
                                 RootedKeyPath.Parse(vm.SigningKeyPath));
                             vm.SigningContext.PSBT = proposedPayjoin.ToBase64();

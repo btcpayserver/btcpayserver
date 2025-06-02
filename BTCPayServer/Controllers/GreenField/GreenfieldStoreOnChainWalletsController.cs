@@ -595,7 +595,7 @@ namespace BTCPayServer.Controllers.Greenfield
             else if (psbt.Suggestions?.ShouldEnforceLowR is bool v2)
                 psbt.PSBT.Settings.SigningOptions.EnforceLowR = v2;
 
-            var changed = psbt.PSBT.PSBTChanged(() => psbt.PSBT.SignAll(derivationScheme.AccountDerivation, accountKey,
+            var changed = psbt.PSBT.PSBTChanged(() => psbt.PSBT.SignAll(derivationScheme.AccountDerivation as IHDScriptPubKey, accountKey,
                 rootedKeyPath));
 
             if (!changed)
@@ -622,7 +622,7 @@ namespace BTCPayServer.Controllers.Greenfield
                         psbt.PSBT, CancellationToken.None);
                     psbt.PSBT.Settings.SigningOptions =
                         new SigningOptions() { EnforceLowR = !(signingContext?.EnforceLowR is false) };
-                    payjoinPSBT = psbt.PSBT.SignAll(derivationScheme.AccountDerivation, accountKey, rootedKeyPath);
+                    payjoinPSBT = psbt.PSBT.SignAll(derivationScheme.AccountDerivation as IHDScriptPubKey, accountKey, rootedKeyPath);
                     payjoinPSBT.Finalize();
                     var payjoinTransaction = payjoinPSBT.ExtractTransaction();
                     var hash = payjoinTransaction.GetHash();

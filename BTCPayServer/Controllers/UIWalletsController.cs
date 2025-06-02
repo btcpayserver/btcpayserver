@@ -1503,14 +1503,14 @@ namespace BTCPayServer.Controllers
             {
                 EnforceLowR = !(viewModel.SigningContext?.EnforceLowR is false)
             };
-            var changed = psbt.PSBTChanged(() => psbt.SignAll(settings.AccountDerivation, signingKey, rootedKeyPath));
+            var changed = psbt.PSBTChanged(() => psbt.SignAll(settings.AccountDerivation as IHDScriptPubKey, signingKey, rootedKeyPath));
             if (!changed)
             {
                 var update = new UpdatePSBTRequest() { PSBT = psbt, DerivationScheme = settings.AccountDerivation };
                 update.RebaseKeyPaths = settings.GetPSBTRebaseKeyRules().ToList();
                 psbt = (await ExplorerClientProvider.GetExplorerClient(network).UpdatePSBTAsync(update))?.PSBT;
                 changed = psbt is not null && psbt.PSBTChanged(() =>
-                    psbt.SignAll(settings.AccountDerivation, signingKey, rootedKeyPath));
+                    psbt.SignAll(settings.AccountDerivation as IHDScriptPubKey, signingKey, rootedKeyPath));
                 if (!changed)
                 {
                     ModelState.AddModelError(nameof(viewModel.SeedOrKey),

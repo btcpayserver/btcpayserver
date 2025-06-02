@@ -4,70 +4,65 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Logging;
 using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.HostedServices.Webhooks;
 
-public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
+public class InvoiceWebhookProvider(
+    WebhookSender webhookSender,
+    EventAggregator eventAggregator,
+    ILogger<InvoiceWebhookProvider> logger)
+    : WebhookProvider<InvoiceEvent>(eventAggregator, logger, webhookSender)
 {
-    public InvoiceWebhookProvider(WebhookSender webhookSender, EventAggregator eventAggregator,
-        ILogger<InvoiceWebhookProvider> logger) : base(
-        eventAggregator, logger, webhookSender)
-    {
-    }
-
     public override Dictionary<string, string> GetSupportedWebhookTypes()
     {
         return new Dictionary<string, string>
         {
-            {WebhookEventType.InvoiceCreated, "Invoice - Created"},
-            {WebhookEventType.InvoiceReceivedPayment, "Invoice - Received Payment"},
-            {WebhookEventType.InvoicePaymentSettled, "Invoice - Payment Settled"},
-            {WebhookEventType.InvoiceProcessing, "Invoice - Is Processing"},
-            {WebhookEventType.InvoiceExpired, "Invoice - Expired"},
-            {WebhookEventType.InvoiceSettled, "Invoice - Is Settled"},
-            {WebhookEventType.InvoiceInvalid, "Invoice - Became Invalid"},
-            {WebhookEventType.InvoiceExpiredPaidPartial, "Invoice - Expired Paid Partial"},
-            {WebhookEventType.InvoicePaidAfterExpiration, "Invoice - Expired Paid Late"},
+            { WebhookEventType.InvoiceCreated, "Invoice - Created" },
+            { WebhookEventType.InvoiceReceivedPayment, "Invoice - Received Payment" },
+            { WebhookEventType.InvoicePaymentSettled, "Invoice - Payment Settled" },
+            { WebhookEventType.InvoiceProcessing, "Invoice - Is Processing" },
+            { WebhookEventType.InvoiceExpired, "Invoice - Expired" },
+            { WebhookEventType.InvoiceSettled, "Invoice - Is Settled" },
+            { WebhookEventType.InvoiceInvalid, "Invoice - Became Invalid" },
+            { WebhookEventType.InvoiceExpiredPaidPartial, "Invoice - Expired Paid Partial" },
+            { WebhookEventType.InvoicePaidAfterExpiration, "Invoice - Expired Paid Late" }
         };
     }
 
     protected override WebhookSender.WebhookDeliveryRequest CreateDeliveryRequest(InvoiceEvent invoiceEvent,
         WebhookData webhook)
     {
-        var webhookEvent = GetWebhookEvent(invoiceEvent)!;
-        var webhookBlob = webhook?.GetBlob();
+        WebhookInvoiceEvent webhookEvent = GetWebhookEvent(invoiceEvent)!;
+        WebhookBlob webhookBlob = webhook?.GetBlob();
         webhookEvent.InvoiceId = invoiceEvent.InvoiceId;
         webhookEvent.StoreId = invoiceEvent.Invoice.StoreId;
         webhookEvent.Metadata = invoiceEvent.Invoice.Metadata.ToJObject();
         webhookEvent.WebhookId = webhook?.Id;
         webhookEvent.IsRedelivery = false;
-        WebhookDeliveryData delivery = webhook is null? null: WebhookExtensions.NewWebhookDelivery(webhook.Id);
+        WebhookDeliveryData delivery = webhook is null ? null : WebhookExtensions.NewWebhookDelivery(webhook.Id);
         if (delivery is not null)
         {
             webhookEvent.DeliveryId = delivery.Id;
             webhookEvent.OriginalDeliveryId = delivery.Id;
             webhookEvent.Timestamp = delivery.Timestamp;
         }
+
         return new InvoiceWebhookDeliveryRequest(invoiceEvent.Invoice, webhook?.Id, webhookEvent,
             delivery, webhookBlob);
     }
 
     public override WebhookEvent CreateTestEvent(string type, params object[] args)
     {
-        var storeId = args[0].ToString();
-        return new WebhookInvoiceEvent(type, storeId)
-        {
-            InvoiceId = "__test__" + Guid.NewGuid() + "__test__"
-        };
+        string storeId = args[0].ToString();
+        return new WebhookInvoiceEvent(type, storeId) { InvoiceId = "__test__" + Guid.NewGuid() + "__test__" };
     }
 
     protected override WebhookInvoiceEvent GetWebhookEvent(InvoiceEvent invoiceEvent)
     {
-        var eventCode = invoiceEvent.EventCode;
-        var storeId = invoiceEvent.Invoice.StoreId;
+        InvoiceEventCode eventCode = invoiceEvent.EventCode;
+        string storeId = invoiceEvent.Invoice.StoreId;
         switch (eventCode)
         {
             case InvoiceEventCode.Confirmed:
@@ -80,21 +75,12 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
             case InvoiceEventCode.Created:
                 return new WebhookInvoiceEvent(WebhookEventType.InvoiceCreated, storeId);
             case InvoiceEventCode.Expired:
-                return new WebhookInvoiceExpiredEvent(storeId)
-                {
-                    PartiallyPaid = invoiceEvent.PaidPartial
-                };
+                return new WebhookInvoiceExpiredEvent(storeId) { PartiallyPaid = invoiceEvent.PaidPartial };
             case InvoiceEventCode.FailedToConfirm:
             case InvoiceEventCode.MarkedInvalid:
-                return new WebhookInvoiceInvalidEvent(storeId)
-                {
-                    ManuallyMarked = eventCode == InvoiceEventCode.MarkedInvalid
-                };
+                return new WebhookInvoiceInvalidEvent(storeId) { ManuallyMarked = eventCode == InvoiceEventCode.MarkedInvalid };
             case InvoiceEventCode.PaidInFull:
-                return new WebhookInvoiceProcessingEvent(storeId)
-                {
-                    OverPaid = invoiceEvent.Invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver
-                };
+                return new WebhookInvoiceProcessingEvent(storeId) { OverPaid = invoiceEvent.Invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver };
             case InvoiceEventCode.ReceivedPayment:
                 return new WebhookInvoiceReceivedPaymentEvent(WebhookEventType.InvoiceReceivedPayment, storeId)
                 {

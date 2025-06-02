@@ -113,7 +113,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(result);
         }
 
-        private static OnChainPaymentMethodPreviewResultData GetPreviewResultData(int offset, int count, BTCPayNetwork network, DerivationStrategyBase strategy)
+        internal static OnChainPaymentMethodPreviewResultData GetPreviewResultData(int offset, int count, BTCPayNetwork network, DerivationStrategyBase strategy)
         {
             var deposit = new NBXplorer.KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
             var line = strategy.GetLineFor(deposit);
@@ -122,9 +122,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 var derivation = line.Derive((uint)i);
                 result.Addresses.Add(
-                    new
-                        OnChainPaymentMethodPreviewResultData.
-                        OnChainPaymentMethodPreviewResultAddressItem()
+                    new()
                     {
                         KeyPath = deposit.GetKeyPath((uint)i).ToString(),
                         Address =

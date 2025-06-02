@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using NBitcoin;
 using NBitcoin.Scripting;
 using NBitcoin.WalletPolicies;
+using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using static NBitcoin.WalletPolicies.MiniscriptNode;
 
@@ -69,7 +70,7 @@ namespace BTCPayServer
             }).ToArray() ?? new AccountKeySettings[result.Item1.GetExtPubKeys().Count()];
             if (result.Item2?.Length > 1)
                 derivationSchemeSettings.IsMultiSigOnServer = true;
-            var isTaproot = derivationSchemeSettings.AccountDerivation.GetDerivation().ScriptPubKey.IsScriptType(ScriptType.Taproot);
+            var isTaproot = derivationSchemeSettings.AccountDerivation.GetLineFor(KeyPathTemplates.Default, DerivationFeature.Deposit).Derive(0).ScriptPubKey.IsScriptType(ScriptType.Taproot);
             derivationSchemeSettings.DefaultIncludeNonWitnessUtxo = !isTaproot;
             return derivationSchemeSettings;
         }

@@ -1,25 +1,18 @@
 using System;
 using System.Collections.Generic;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
-using BTCPayServer.Events;
-using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.HostedServices.Webhooks;
 
-public class PendingTransactionWebhookProvider : WebhookProvider<PendingTransactionService.PendingTransactionEvent>
+public class PendingTransactionWebhookProvider(
+    WebhookSender webhookSender,
+    EventAggregator eventAggregator,
+    ILogger<InvoiceWebhookProvider> logger)
+    : WebhookProvider<PendingTransactionService.PendingTransactionEvent>(eventAggregator, logger, webhookSender)
 {
-    public PendingTransactionWebhookProvider(WebhookSender webhookSender, EventAggregator eventAggregator,
-        ILogger<InvoiceWebhookProvider> logger) : base(
-        eventAggregator, logger, webhookSender)
-    {
-    }
-    
     public const string PendingTransactionCreated = nameof(PendingTransactionCreated);
     public const string PendingTransactionSignatureCollected = nameof(PendingTransactionSignatureCollected);
     public const string PendingTransactionBroadcast = nameof(PendingTransactionBroadcast);
@@ -29,10 +22,10 @@ public class PendingTransactionWebhookProvider : WebhookProvider<PendingTransact
     {
         return new Dictionary<string, string>
         {
-            {PendingTransactionCreated, "Pending Transaction - Created"},
-            {PendingTransactionSignatureCollected, "Pending Transaction - Signature Collected"},
-            {PendingTransactionBroadcast, "Pending Transaction - Broadcast"},
-            {PendingTransactionCancelled, "Pending Transaction - Cancelled"}
+            { PendingTransactionCreated, "Pending Transaction - Created" },
+            { PendingTransactionSignatureCollected, "Pending Transaction - Signature Collected" },
+            { PendingTransactionBroadcast, "Pending Transaction - Broadcast" },
+            { PendingTransactionCancelled, "Pending Transaction - Cancelled" }
         };
     }
 
@@ -45,13 +38,14 @@ public class PendingTransactionWebhookProvider : WebhookProvider<PendingTransact
         webhookEvent.StoreId = evt.Data.StoreId;
         webhookEvent.WebhookId = webhook?.Id;
         webhookEvent.IsRedelivery = false;
-        WebhookDeliveryData delivery = webhook is null? null:  WebhookExtensions.NewWebhookDelivery(webhook.Id);
+        var delivery = webhook is null ? null : WebhookExtensions.NewWebhookDelivery(webhook.Id);
         if (delivery is not null)
         {
             webhookEvent.DeliveryId = delivery.Id;
             webhookEvent.OriginalDeliveryId = delivery.Id;
             webhookEvent.Timestamp = delivery.Timestamp;
         }
+
         return new PendingTransactionDeliveryRequest(evt, webhook?.Id, webhookEvent, delivery, webhookBlob);
     }
 
@@ -74,13 +68,10 @@ public class PendingTransactionWebhookProvider : WebhookProvider<PendingTransact
     public override WebhookEvent CreateTestEvent(string type, params object[] args)
     {
         var storeId = args[0].ToString();
-        return new WebhookInvoiceEvent(type, storeId)
-        {
-            InvoiceId = "__test__" + Guid.NewGuid() + "__test__"
-        };
+        return new WebhookPendingTransactionEvent(type, storeId) { PendingTransactionId = "__test__" + Guid.NewGuid() + "__test__" };
     }
-    
-    
+
+
     public class WebhookPendingTransactionEvent : StoreWebhookEvent
     {
         public WebhookPendingTransactionEvent(string type, string storeId)

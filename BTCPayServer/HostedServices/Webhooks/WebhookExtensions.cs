@@ -11,14 +11,9 @@ namespace BTCPayServer.HostedServices.Webhooks;
 
 public static class WebhookExtensions
 {
-    public static Data.WebhookDeliveryData NewWebhookDelivery(string webhookId)
+    public static WebhookDeliveryData NewWebhookDelivery(string webhookId)
     {
-        return new Data.WebhookDeliveryData
-        {
-            Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)),
-            Timestamp = DateTimeOffset.UtcNow,
-            WebhookId = webhookId
-        };
+        return new WebhookDeliveryData { Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)), Timestamp = DateTimeOffset.UtcNow, WebhookId = webhookId };
     }
 
     public static bool ShouldDeliver(this WebhookBlob wh, string type)
@@ -35,11 +30,11 @@ public static class WebhookExtensions
         services.AddSingleton<PayoutWebhookProvider>();
         services.AddSingleton<IWebhookProvider>(o => o.GetRequiredService<PayoutWebhookProvider>());
         services.AddHostedService(o => o.GetRequiredService<PayoutWebhookProvider>());
-        
+
         services.AddSingleton<PaymentRequestWebhookProvider>();
         services.AddSingleton<IWebhookProvider>(o => o.GetRequiredService<PaymentRequestWebhookProvider>());
         services.AddHostedService(o => o.GetRequiredService<PaymentRequestWebhookProvider>());
-        
+
         services.AddSingleton<PendingTransactionWebhookProvider>();
         services.AddSingleton<IWebhookProvider>(o => o.GetRequiredService<PendingTransactionWebhookProvider>());
         services.AddHostedService(o => o.GetRequiredService<PendingTransactionWebhookProvider>());

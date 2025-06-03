@@ -288,28 +288,41 @@ public class WebhookSender(
         protected static string InterpolateJsonField(string str, string fieldName, JObject obj)
         {
             fieldName += ".";
-            //find all instance of {fieldName*} instead str, then run obj.SelectToken(*) on it
+            // Regex pattern to validate JSONPath: alphanumeric, underscore, dot, hyphen, square brackets, asterisk, single/double quotes
+            const string jsonPathPattern = @"^[a-zA-Z0-9_\.\-\[\]\*'""]*$";
+
+            //find all instance of {fieldName*} in str, then run obj.SelectToken(*) on it
             while (true)
             {
                 var start = str.IndexOf($"{{{fieldName}", StringComparison.InvariantCultureIgnoreCase);
                 if (start == -1)
                     break;
-                start += fieldName.Length + 1;
+
+                start += fieldName.Length + 1; // Move past the {
                 var end = str.IndexOf("}", start, StringComparison.InvariantCultureIgnoreCase);
                 if (end == -1)
                     break;
+
                 var jsonpath = str.Substring(start, end - start);
                 var result = string.Empty;
+
                 try
                 {
                     if (string.IsNullOrEmpty(jsonpath))
+                    {
                         result = obj.ToString();
-                    else
-                        result = obj.SelectToken(jsonpath)?.ToString();
+                    }
+                    else if (System.Text.RegularExpressions.Regex.IsMatch(jsonpath, jsonPathPattern))
+                    {
+                        // Only process if JSONPath is valid
+                        result = obj.SelectToken(jsonpath)?.ToString() ?? string.Empty;
+                    }
+                    // If jsonpath doesn't match the pattern, result remains empty string
                 }
-                catch (Exception)
+                catch (Newtonsoft.Json.JsonException)
                 {
-                    // ignored
+                    // Handle JSON parsing errors (e.g., invalid JSONPath syntax)
+                    result = string.Empty;
                 }
 
                 str = str.Replace($"{{{fieldName}{jsonpath}}}", result);

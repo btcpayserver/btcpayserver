@@ -178,7 +178,9 @@ namespace BTCPayServer.Hosting
             mvcBuilder.AddRazorRuntimeCompilation();
 #endif
 
-            services.AddServerSideBlazor();
+            services.AddRazorComponents()
+                .AddInteractiveWebAssemblyComponents()
+                .AddInteractiveServerComponents();
 
             LowercaseTransformer.Register(services);
             ValidateControllerNameTransformer.Register(services);
@@ -345,7 +347,10 @@ namespace BTCPayServer.Hosting
             {
                 AppHub.Register(endpoints);
                 PaymentRequestHub.Register(endpoints);
-                endpoints.MapBlazorHub().RequireAuthorization();
+                endpoints.MapRazorComponents<int>()
+                    .AddInteractiveServerRenderMode()
+                    .AddInteractiveWebAssemblyRenderMode()
+                    .RequireAuthorization();
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
                 endpoints.MapControllerRoute("default", "{controller:validate=UIHome}/{action:lowercase=Index}/{id?}");

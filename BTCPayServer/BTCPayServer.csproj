@@ -51,6 +51,7 @@
 
   <ItemGroup>
     <PackageReference Include="BTCPayServer.NTag424" Version="1.0.25" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.16" />
     <PackageReference Include="NBitcoin" Version="8.0.13" />
     <PackageReference Include="YamlDotNet" Version="8.0.0" />
     <PackageReference Include="BIP78.Sender" Version="0.2.4" />

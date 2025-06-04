@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
@@ -285,11 +286,14 @@ public class WebhookSender(
             return Task.FromResult(req)!;
         }
 
+        // Regex pattern to validate JSONPath: alphanumeric, underscore, dot, hyphen, square brackets, asterisk, single/double quotes
+        private static readonly Regex _jsonPathRegex =  new(@"^[a-zA-Z0-9_\.\-\[\]\*'""]*$", RegexOptions.Compiled);
         protected static string InterpolateJsonField(string str, string fieldName, JObject obj)
         {
+            if (string.IsNullOrEmpty(str) || string.IsNullOrEmpty(fieldName) || obj == null)
+                return str;
+
             fieldName += ".";
-            // Regex pattern to validate JSONPath: alphanumeric, underscore, dot, hyphen, square brackets, asterisk, single/double quotes
-            const string jsonPathPattern = @"^[a-zA-Z0-9_\.\-\[\]\*'""]*$";
 
             //find all instance of {fieldName*} in str, then run obj.SelectToken(*) on it
             while (true)
@@ -312,7 +316,7 @@ public class WebhookSender(
                     {
                         result = obj.ToString();
                     }
-                    else if (System.Text.RegularExpressions.Regex.IsMatch(jsonpath, jsonPathPattern))
+                    else if (_jsonPathRegex.IsMatch(jsonpath))
                     {
                         // Only process if JSONPath is valid
                         result = obj.SelectToken(jsonpath)?.ToString() ?? string.Empty;

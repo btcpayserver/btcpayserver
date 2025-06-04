@@ -48,7 +48,6 @@ document.addEventListener("DOMContentLoaded",function () {
                         calc += ` (${this.posOrder.getTaxRate()}%)`
                     }
                 }
-                calc += ` = ${this.formatCurrency(this.summary.priceTaxIncludedWithTips, true)}`
                 return calc
             }
         },

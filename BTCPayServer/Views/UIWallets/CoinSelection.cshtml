@@ -29,7 +29,7 @@
         <ul class="mb-0">
             <li class="mb-2"><b>General text search:</b> txid, amount, comment, label</li>
             <li class="mb-2">
-                <b>Minimum amount:</b> 
+                <b>Minimum amount:</b>
                 <code class="clipboard-button clipboard-button-hover" :data-clipboard="'amountmin:'">amountmin:0.001</code>
             </li>
             <li class="mb-2">
@@ -37,11 +37,11 @@
                 <code class="clipboard-button clipboard-button-hover" :data-clipboard="'amountmax:'">amountmax:0.01</code>
             </li>
             <li class="mb-2">
-                <b>Created before date:</b> 
+                <b>Created before date:</b>
                 <code class="clipboard-button clipboard-button-hover" :data-clipboard="'before:'">before:2024-01-01</code>
             </li>
             <li class="mb-2">
-                <b>Created after date:</b> 
+                <b>Created after date:</b>
                 <code class="clipboard-button clipboard-button-hover" :data-clipboard="'after:'">after:2023-01-01</code>
             </li>
             <li class="mb-2"><b>Combine filters:</b> <code>tag1 amountmin:0.0005 before:2024-01-01</code></li>
@@ -95,17 +95,17 @@
                 <span v-if="item.comment" data-bs-toggle="tooltip" v-tooltip="item.comment" class="badge bg-info rounded-pill" style="min-width:2em">
                     <vc:icon symbol="info" />
                 </span>
-                <span class="text-muted text-nowrap flex-shrink-0 ms-2">{{item.amount}} @Model.CryptoCode</span>
                 <span :class="{'bg-secondary' : item.confirmations > 0, 'bg-warning' : item.confirmations <= 0}"
                       class="badge d-inline-flex align-items-center gap-1 py-1"
                       data-bs-toggle="tooltip"
                       v-tooltip="`${item.confirmations} confirmation${item.confirmations === 1 ? '' : 's'}`">
                     {{item.confirmations}} <vc:icon symbol="block" />
                 </span>
+                <span class="text-nowrap flex-shrink-0 ms-2" style="font-family: 'Courier';">{{item.amount.toFixed(@Model.CryptoDivisibility)}} @Model.CryptoCode</span>
             </div>
         </li>
     </ul>
-    
+
     <div class="d-grid d-sm-flex flex-wrap gap-3 justify-content-between">
         <ul class="pagination">
             <li class="page-item" :class="{'disabled' : pageStart == 0}">

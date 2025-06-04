@@ -176,7 +176,7 @@ public class MultisigTests : UnitTestBase
         var resp1 = new GenerateWalletResponse
         {
             MasterHDKey = key1,
-            DerivationScheme = parser.Parse(derivation),
+            DerivationScheme = (StandardDerivationStrategyBase)parser.Parse(derivation),
             AccountKeyPath = RootedKeyPath.Parse(keypath)
         };
         return resp1;
@@ -202,7 +202,7 @@ public class MultisigTests : UnitTestBase
         // Sign the PSBT
         extKey = extKey.Derive(rootedKeyPath.KeyPath);
         psbt.Settings.SigningOptions = new SigningOptions();
-        var changed = psbt.PSBTChanged(() => psbt.SignAll(derivationStrategyBase, extKey, rootedKeyPath));
+        var changed = psbt.PSBTChanged(() => psbt.SignAll(derivationStrategyBase as IHDScriptPubKey, extKey, rootedKeyPath));
 
         if (!changed)
             throw new Exception("Failed to sign the PSBT. Ensure the inputs align with the account key path.");

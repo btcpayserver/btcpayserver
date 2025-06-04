@@ -16,10 +16,7 @@ namespace BTCPayServer.Payments.PayJoin.Sender
             return ((IHDScriptPubKey)_derivationSchemeSettings.AccountDerivation).Derive(keyPath);
         }
 
-        public bool CanDeriveHardenedPath()
-        {
-            return _derivationSchemeSettings.AccountDerivation.CanDeriveHardenedPath();
-        }
+        public bool CanDeriveHardenedPath() => false;
 
         public Script ScriptPubKey => ((IHDScriptPubKey)_derivationSchemeSettings.AccountDerivation).ScriptPubKey;
         public ScriptPubKeyType ScriptPubKeyType => _derivationSchemeSettings.AccountDerivation.ScriptPubKeyType();

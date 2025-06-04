@@ -358,7 +358,7 @@ namespace BTCPayServer.Tests
                 DerivationScheme = DerivationScheme,
                 PSBT = psbt
             })).PSBT;
-            return psbt.SignAll(this.DerivationScheme, GenerateWalletResponseV.AccountHDKey,
+            return psbt.SignAll(this.DerivationScheme as IHDScriptPubKey, GenerateWalletResponseV.AccountHDKey,
                 GenerateWalletResponseV.AccountKeyPath);
         }
         Logging.ILog TestLogs => this.parent.TestLogs;

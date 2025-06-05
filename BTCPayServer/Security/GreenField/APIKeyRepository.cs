@@ -101,13 +101,13 @@ namespace BTCPayServer.Security.Greenfield
                     Id = $"{apiKey}-{permission}",
                     ApiKey = apiKey,
                     Permission = permission,
-                    LastUsed = DateTime.UtcNow,
+                    LastUsed = DateTimeOffset.UtcNow,
                     UsageCount = 1
                 });
             }
             else
             {
-                entity.LastUsed = DateTime.UtcNow;
+                entity.LastUsed = DateTimeOffset.UtcNow;
                 entity.UsageCount += 1;
                 context.ApiKeyPermissionUsages.Update(entity);
             }

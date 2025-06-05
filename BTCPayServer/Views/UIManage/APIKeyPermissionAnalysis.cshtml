@@ -1,6 +1,7 @@
 @using BTCPayServer.Client
 @model BTCPayServer.Controllers.UIManageController.ApiKeyPermissionAnalyticsViewModel
 @{
+	var staleThresholdDays = 100;
 	ViewData.SetActivePage(ManageNavPages.APIKeys, $"{Model.Label} - API key analysis");
 }
 
@@ -15,8 +16,8 @@
 <div class="sticky-header">
 	<h2>@ViewData["Title"]</h2>
 	<div>
-		<a id="page-primary" class="btn btn-primary" asp-action="EditAPIKey" asp-route-id="@Model.ApiKey">Edit API Key</a>
-		<a id="page-primary" class="btn btn-secondary" asp-action="APIKeys">Go Back</a>
+		<a class="btn btn-primary" asp-action="EditAPIKey" asp-route-id="@Model.ApiKey">Edit API Key</a>
+		<a class="btn btn-secondary" asp-action="APIKeys">Go Back</a>
 	</div>
 </div>
 
@@ -90,7 +91,7 @@
 										{
 											var usage = Model.UsedPermissions.FirstOrDefault(u => u.Permission == permission.Permission);
 											var isUsed = usage != null;
-											var isStale = isUsed && (DateTimeOffset.UtcNow - usage.LastUsed).TotalDays > 100;
+											var isStale = isUsed && (DateTimeOffset.UtcNow - usage.LastUsed).TotalDays > staleThresholdDays;
 
 											<tr class="@(isUsed ? (isStale ? "table-warning" : "") : "table-light")">
 												<td>
@@ -162,7 +163,7 @@
 									<tbody>
 										@foreach (var permission in Model.UsedPermissions.OrderByDescending(p => p.LastUsed))
 										{
-											var isStale = (DateTimeOffset.UtcNow - permission.LastUsed).TotalDays > 100;
+											var isStale = (DateTimeOffset.UtcNow - permission.LastUsed).TotalDays > staleThresholdDays;
 											<tr class="@(isStale ? "table-warning" : "")">
 												<td>
 													<code>@permission.Permission</code>

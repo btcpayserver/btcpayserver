@@ -1,0 +1,253 @@
+@using BTCPayServer.Client
+@model BTCPayServer.Controllers.UIManageController.ApiKeyPermissionAnalyticsViewModel
+@{
+	ViewData.SetActivePage(ManageNavPages.APIKeys, $"{Model.Label} - API key analysis");
+}
+
+@section PageHeadContent {
+	<style>
+		.nav-tabs .nav-link.active {
+		color: #212529 !important;
+		}
+	</style>
+}
+
+<div class="sticky-header">
+	<h2>@ViewData["Title"]</h2>
+	<div>
+		<a id="page-primary" class="btn btn-primary" asp-action="EditAPIKey" asp-route-id="@Model.ApiKey">Edit API Key</a>
+		<a id="page-primary" class="btn btn-secondary" asp-action="APIKeys">Go Back</a>
+	</div>
+</div>
+
+<div class="row mb-4">
+	<div class="col-md-4">
+		<div class="card text-center">
+			<div class="card-body">
+				<h5 class="card-title text-primary">@Model.TotalPermissions</h5>
+				<p class="card-text">Total Permissions</p>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-4">
+		<div class="card text-center">
+			<div class="card-body">
+				<h5 class="card-title text-success">@Model.UsedPermissions.Count</h5>
+				<p class="card-text">Used Permissions</p>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-4">
+		<div class="card text-center">
+			<div class="card-body">
+				<h5 class="card-title text-warning">@Model.UnusedPermissions.Count</h5>
+				<p class="card-text">Unused Permissions</p>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<div class="row">
+	<div class="col-12">
+		<div class="card">
+			<div class="card-header">
+				<ul class="nav nav-tabs card-header-tabs" id="permissionTabs" role="tablist">
+					<li class="nav-item" role="presentation">
+						<button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-permissions" type="button" role="tab">
+							All Permissions (@Model.TotalPermissions)
+						</button>
+					</li>
+					<li class="nav-item" role="presentation">
+						<button class="nav-link" id="used-tab" data-bs-toggle="tab" data-bs-target="#used-permissions" type="button" role="tab">
+							Used Permissions (@Model.UsedPermissions.Count)
+						</button>
+					</li>
+					<li class="nav-item" role="presentation">
+						<button class="nav-link" id="unused-tab" data-bs-toggle="tab" data-bs-target="#unused-permissions" type="button" role="tab">
+							Unused Permissions (@Model.UnusedPermissions.Count)
+						</button>
+					</li>
+				</ul>
+			</div>
+			<div class="card-body">
+				<div class="tab-content" id="permissionTabContent">
+					<div class="tab-pane fade show active" id="all-permissions" role="tabpanel">
+						@if (Model.AllPermissions.Any())
+						{
+							<div class="table-responsive">
+								<table class="table table-hover">
+									<thead class="table-light">
+										<tr>
+											<th>Permission</th>
+											<th>Usage Count</th>
+											<th>Last Used</th>
+											<th>Status</th>
+										</tr>
+									</thead>
+									<tbody>
+										@foreach (var permission in Model.AllPermissions.OrderBy(p => p.Permission))
+										{
+											var usage = Model.UsedPermissions.FirstOrDefault(u => u.Permission == permission.Permission);
+											var isUsed = usage != null;
+											var isStale = isUsed && (DateTimeOffset.UtcNow - usage.LastUsed).TotalDays > 100;
+
+											<tr class="@(isUsed ? (isStale ? "table-warning" : "") : "table-light")">
+												<td>
+													<code>@permission.Permission</code>
+												</td>
+												<td>
+													@if (isUsed)
+													{
+														<span class="badge bg-secondary">@usage.UsageCount.ToString("N0")</span>
+													}
+													else
+													{
+														<span class="text-muted">-</span>
+													}
+												</td>
+												<td>
+													@if (isUsed)
+													{
+														<span class="text-muted">@usage.LastUsed.ToString("MMM dd, yyyy HH:mm")</span>
+														<br>
+														<small class="text-muted">(@usage.DaysAgo days ago)</small>
+													}
+													else
+													{
+														<span class="text-muted">Never</span>
+													}
+												</td>
+												<td>
+													@if (!isUsed)
+													{
+														<span class="badge bg-secondary">Never Used</span>
+													}
+													else if (isStale)
+													{
+														<span class="badge bg-warning">Stale</span>
+													}
+													else
+													{
+														<span class="badge bg-info">Active</span>
+													}
+												</td>
+											</tr>
+										}
+									</tbody>
+								</table>
+							</div>
+						}
+						else
+						{
+							<div class="text-center py-5">
+								<h5 class="mt-3">No Permission Usage Recorded</h5>
+							</div>
+						}
+					</div>
+
+					<div class="tab-pane fade" id="used-permissions" role="tabpanel">
+						@if (Model.UsedPermissions.Any())
+						{
+							<div class="table-responsive">
+								<table class="table table-hover">
+									<thead class="table-light">
+										<tr>
+											<th>Permission</th>
+											<th>Usage Count</th>
+											<th>Last Used</th>
+											<th>Status</th>
+										</tr>
+									</thead>
+									<tbody>
+										@foreach (var permission in Model.UsedPermissions.OrderByDescending(p => p.LastUsed))
+										{
+											var isStale = (DateTimeOffset.UtcNow - permission.LastUsed).TotalDays > 100;
+											<tr class="@(isStale ? "table-warning" : "")">
+												<td>
+													<code>@permission.Permission</code>
+												</td>
+												<td>
+													<span class="badge bg-secondary">@permission.UsageCount.ToString("N0")</span>
+												</td>
+												<td>
+													<span class="text-muted">@permission.LastUsed.ToString("MMM dd, yyyy HH:mm")</span>
+													<br>
+													<small class="text-muted">(@permission.DaysAgo days ago)</small>
+												</td>
+												<td>
+													@if (isStale)
+													{
+														<span class="badge bg-warning">Stale (100+ days)</span>
+													}
+													else
+													{
+														<span class="badge bg-info">Active</span>
+													}
+												</td>
+											</tr>
+										}
+									</tbody>
+								</table>
+							</div>
+						}
+						else
+						{
+							<div class="text-center py-5">
+								<h5 class="mt-3">No Permission Usage Recorded</h5>
+							</div>
+						}
+					</div>
+
+					<div class="tab-pane fade" id="unused-permissions" role="tabpanel">
+						@if (Model.UnusedPermissions.Any())
+						{
+							<div class="alert alert-warning" role="alert">
+								<i class="bi bi-exclamation-triangle"></i>
+								<strong>Security Recommendation:</strong> Consider removing unused permissions to reduce security risk.
+							</div>
+
+							<div class="table-responsive">
+								<table class="table table-hover">
+									<thead class="table-light">
+										<tr>
+											<th>Permission</th>
+											<th>Status</th>
+										</tr>
+									</thead>
+									<tbody>
+										@foreach (var permission in Model.UnusedPermissions.OrderBy(p => p))
+										{
+											<tr>
+												<td>
+													<code>@permission</code>
+												</td>
+												<td>
+													<span class="badge bg-secondary">Never Used</span>
+												</td>
+											</tr>
+										}
+									</tbody>
+								</table>
+							</div>
+						}
+						else
+						{
+							<div class="text-center py-5">
+								<i class="bi bi-shield-check text-success" style="font-size: 3rem;"></i>
+								@if (Model.TotalPermissions > 0)
+								{
+									<h5 class="mt-3 text-success">No unused permission!</h5>
+								}
+								else
+								{
+									<h5 class="mt-3">No Permission Usage Recorded</h5>
+								}
+							</div>
+						}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

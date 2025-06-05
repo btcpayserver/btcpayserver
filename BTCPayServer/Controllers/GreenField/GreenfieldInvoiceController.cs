@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AngleSharp.Dom;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
@@ -582,14 +583,15 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private InvoiceDataWithPaymentMethods ToInvoiceModelWithPaymentMethodModels(InvoiceEntity entity, bool includeAccountedPaymentOnly = true, bool includeSensitive = false)
         {
-            var invoiceModel = ToModel(entity, _linkGenerator, _currencyNameTable, Request);
-            var json = JsonConvert.SerializeObject(invoiceModel);
-            var result = JsonConvert.DeserializeObject<InvoiceDataWithPaymentMethods>(json) ?? new InvoiceDataWithPaymentMethods();
-            result.PaymentMethods = ToPaymentMethodModels(entity, includeAccountedPaymentOnly, includeSensitive);
+            var baseModel = ToModel(entity, _linkGenerator, _currencyNameTable, Request);
+            var result = new InvoiceDataWithPaymentMethods(baseModel)
+            {
+                PaymentMethods = ToPaymentMethodModels(entity, includeAccountedPaymentOnly, includeSensitive)
+            };
             return result;
         }
 
-        private InvoiceData ToModel(InvoiceEntity entity)
+private InvoiceData ToModel(InvoiceEntity entity)
         {
             return ToModel(entity, _linkGenerator, _currencyNameTable, Request);
         }

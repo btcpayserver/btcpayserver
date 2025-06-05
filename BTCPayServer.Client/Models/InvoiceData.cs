@@ -113,7 +113,28 @@ namespace BTCPayServer.Client.Models
 
     public class InvoiceDataWithPaymentMethods : InvoiceData
     {
-        public InvoicePaymentMethodDataModel[] PaymentMethods { get; set; }
+        public InvoiceDataWithPaymentMethods() { }
+        public InvoiceDataWithPaymentMethods(InvoiceData baseModel)
+        {
+            StoreId = baseModel.StoreId;
+            ExpirationTime = baseModel.ExpirationTime;
+            MonitoringExpiration = baseModel.MonitoringExpiration;
+            CreatedTime = baseModel.CreatedTime;
+            Amount = baseModel.Amount;
+            PaidAmount = baseModel.PaidAmount;
+            Type = baseModel.Type;
+            Id = baseModel.Id;
+            CheckoutLink = baseModel.CheckoutLink;
+            Status = baseModel.Status;
+            AdditionalStatus = baseModel.AdditionalStatus;
+            Currency = baseModel.Currency;
+            Archived = baseModel.Archived;
+            Metadata = baseModel.Metadata;
+            AvailableStatusesForManualMarking = baseModel.AvailableStatusesForManualMarking;
+            Checkout = baseModel.Checkout;
+            Receipt = baseModel.Receipt;
+        }
+        public InvoicePaymentMethodDataModel[] PaymentMethods { get; set; } = Array.Empty<InvoicePaymentMethodDataModel>();
     }
 
     public enum InvoiceStatus

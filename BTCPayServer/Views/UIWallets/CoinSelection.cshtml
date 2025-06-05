@@ -303,12 +303,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     return;
                 }
 
-                var res = $("#SelectedInputs").val() || [];
+                let res = $("#SelectedInputs").val() || [];
 
                 if (toggle) {
                     res.push(item.outpoint);
                 } else {
-                    res.splice(this.selectedInputs.indexOf(item.outpoint), 1);
+                    res = res.filter(i => i !== item.outpoint);
                 }
 
                 $("select option").each(function () {

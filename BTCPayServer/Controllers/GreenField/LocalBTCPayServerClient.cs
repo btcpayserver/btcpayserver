@@ -139,6 +139,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var authoverride = new AuthorizationService(new GreenfieldAuthorizationHandler(_httpContextAccessor,
                 _serviceProvider.GetService<UserManager<ApplicationUser>>(),
+                _serviceProvider.GetService<APIKeyRepository>(),
                 _serviceProvider.GetService<StoreRepository>(),
                 _serviceProvider.GetService<IPluginHookService>()));
 

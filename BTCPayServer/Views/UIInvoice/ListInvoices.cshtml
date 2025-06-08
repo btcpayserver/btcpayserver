@@ -45,6 +45,27 @@
                 width: 100%;
             }
         }
+        .filter-clear-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            color: #22c55e; /* Green text */
+            background: #181c20;
+            border: 1px solid #2c3238;
+            border-radius: 0.375rem;
+            padding: 0.375rem 1rem;
+            font-size: 1rem;
+            height: 40px;
+            font-weight: 500;
+            transition: background 0.2s, border 0.2s, color 0.2s;
+            line-height: 1.2;
+        }
+        .filter-clear-btn:hover, .filter-clear-btn:focus {
+            background: #23272b;
+            border-color: #22c55e;
+            color: #22c55e;
+            text-decoration: none;
+        }
     </style>
 }
 
@@ -267,7 +288,33 @@
             <button type="button" class="dropdown-item @(HasCustomDateFilter() ? "custom-active" : "")" data-bs-toggle="modal" data-bs-target="#customRangeModal" text-translate="true">Custom Range</button>
         </div>
     </div>
+    @if (statusFilterCount > 0 || appFilterCount > 0 || hasDateFilter || !string.IsNullOrEmpty(Model.SearchText))
+    {
+        <button id="clearAllFiltersBtn" type="button" class="btn btn-secondary ms-auto" style="min-width: 7rem;" title="@StringLocalizer["Clear all filters"]">
+            <span class="align-middle">Clear All</span>
+        </button>
+    }
 </form>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const clearBtn = document.getElementById('clearAllFiltersBtn');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function () {
+                const form = clearBtn.closest('form');
+                if (!form) return;
+                // Reset search text
+                const searchText = form.querySelector('[name="SearchText"]');
+                if (searchText) searchText.value = '';
+                // Reset SearchTerm (filters)
+                const searchTerm = form.querySelector('[name="SearchTerm"]');
+                if (searchTerm) searchTerm.value = '';
+                // Optionally reset other hidden fields if needed
+                // Submit the form
+                form.submit();
+            });
+        }
+    });
+</script>
 
 @if (Model.Invoices.Any())
 {

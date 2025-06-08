@@ -1,5 +1,31 @@
 # Changelog
 
+## 2.1.2
+
+### New features
+
+* POS: Apply tax rates to items, show in checkout/receipts (#6724 #6712) @NicolasDorier
+* POS: Improved total breakdown in receipts and cart (#6739) @NicolasDorier
+* POS Report: Add tip and subtotal (#6749) @NicolasDorier
+* New webhooks: InvoiceExpiredPaidPartial, InvoicePaidAfterExpiration (#5936 #6723) @rockstardev
+* Added Coinmate rate provider, recommended for CZK (#6707 #6725) @d4rp4t
+* Can RBF sweeping transactions (#6748) @NicolasDorier
+* Admin can change default store templates (#6704) @NicolasDorier
+* Store owners can configure fallback rate source (#6705) @NicolasDorier
+* Greenfield: Include `amountPaid` on greenfield invoices (#6747 #2525) @TChukwuleta
+* Phoenixd support (https://github.com/btcpayserver/BTCPayServer.Lightning/pull/169 https://github.com/btcpayserver/btcpayserver-docker/pull/987) @pm47 @armelinw
+
+### Bug fixes
+
+* Yadio rate lookup failure (#6743 #6729) @Abhijay007
+* RBF label inconsistency on replacement txs (#6748) @NicolasDorier
+* Crash when fee rate below minimum during RBF (#6748) @NicolasDorier
+
+### Improvements
+
+* Switched to textarea for full lightning connection string (#6706) @rockstardev
+* POS Keypad: shows amount being input rather than total (#6739 #6768) @NicolasDorier
+
 ## 2.1.1
 
 Note: If you installed the XPub Extractor plugin, you will need to update it.

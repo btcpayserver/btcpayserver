@@ -12,17 +12,18 @@ public abstract class WebhookProvider<T>(EventAggregator eventAggregator, ILogge
 {
     public abstract Dictionary<string, string> GetSupportedWebhookTypes();
 
-    protected abstract WebhookSender.WebhookDeliveryRequest CreateDeliveryRequest(T evt, WebhookData webhook);
-
     public abstract WebhookEvent CreateTestEvent(string type, params object[] args);
 
+    protected abstract WebhookSender.WebhookDeliveryRequest CreateDeliveryRequest(T evt, WebhookData webhook);
+
     protected abstract StoreWebhookEvent GetWebhookEvent(T evt);
-    
+
     protected override void SubscribeToEvents()
     {
         Subscribe<T>();
         base.SubscribeToEvents();
     }
+
     protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
     {
         if (evt is T tEvt)
@@ -32,14 +33,11 @@ public abstract class WebhookProvider<T>(EventAggregator eventAggregator, ILogge
 
             var webhooks = await webhookSender.GetWebhooks(webhookEvent.StoreId, webhookEvent.Type);
             foreach (var webhook in webhooks)
-            {
                 webhookSender.EnqueueDelivery(CreateDeliveryRequest(tEvt, webhook));
-            }
 
             EventAggregator.Publish(CreateDeliveryRequest(tEvt, null));
         }
 
         await base.ProcessEvent(evt, cancellationToken);
     }
-    
 }

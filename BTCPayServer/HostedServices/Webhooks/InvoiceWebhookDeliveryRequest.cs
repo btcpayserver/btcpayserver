@@ -8,15 +8,15 @@ using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.HostedServices.Webhooks;
 
-public class InvoiceWebhookDeliveryRequest : WebhookSender.WebhookDeliveryRequest
+public class InvoiceWebhookDeliveryRequest(
+    InvoiceEntity invoice,
+    string webhookId,
+    WebhookEvent webhookEvent,
+    WebhookDeliveryData delivery,
+    WebhookBlob webhookBlob)
+    : WebhookSender.WebhookDeliveryRequest(webhookId, webhookEvent, delivery, webhookBlob)
 {
-    public InvoiceEntity Invoice { get; }
-
-    public InvoiceWebhookDeliveryRequest(InvoiceEntity invoice, string webhookId, WebhookEvent webhookEvent,
-        WebhookDeliveryData delivery, WebhookBlob webhookBlob) : base(webhookId, webhookEvent, delivery, webhookBlob)
-    {
-        Invoice = invoice;
-    }
+    public InvoiceEntity Invoice { get; } = invoice;
 
     public override Task<SendEmailRequest> Interpolate(SendEmailRequest req,
         UIStoresController.StoreEmailRule storeEmailRule)
@@ -35,7 +35,7 @@ public class InvoiceWebhookDeliveryRequest : WebhookSender.WebhookDeliveryReques
 
     private string Interpolate(string str)
     {
-        var res =  str.Replace("{Invoice.Id}", Invoice.Id)
+        var res = str.Replace("{Invoice.Id}", Invoice.Id)
             .Replace("{Invoice.StoreId}", Invoice.StoreId)
             .Replace("{Invoice.Price}", Invoice.Price.ToString(CultureInfo.InvariantCulture))
             .Replace("{Invoice.Currency}", Invoice.Currency)
@@ -47,5 +47,4 @@ public class InvoiceWebhookDeliveryRequest : WebhookSender.WebhookDeliveryReques
         res = InterpolateJsonField(res, "Invoice.Metadata", Invoice.Metadata.ToJObject());
         return res;
     }
-    
 }

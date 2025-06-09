@@ -1,11 +1,14 @@
 using System;
+using BTCPayServer.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace BTCPayServer.Migrations
 {
-    /// <inheritdoc />
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20250605063018_IncludeAPIKeyPermissionUsageTable")]
     public partial class IncludeAPIKeyPermissionUsageTable : Migration
     {
         /// <inheritdoc />

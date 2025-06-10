@@ -73,9 +73,6 @@ namespace BTCPayServer.Controllers.Greenfield
             if (user == null)
                 return UserNotFound();
 
-            await _userManager.SetLockoutEnabledAsync(user, true);
-            var res = await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
-
             var storeRemovalResult = await _storeRepository.RemoveStoreUser(storeId, user.Id);
             if (!storeRemovalResult)
                 return this.CreateAPIError(409, "store-user-role-orphaned", "Removing this user would result in the store having no owner.");

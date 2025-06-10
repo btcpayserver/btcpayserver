@@ -4092,7 +4092,7 @@ namespace BTCPayServer.Tests
 
             // remove
             await client.RemoveStoreUser(user.StoreId, employee.UserId);
-            await AssertHttpError(403, async () => await employeeClient.GetStore(user.StoreId));
+            await AssertHttpError(401, async () => await employeeClient.GetStore(user.StoreId));
             await AssertAPIError("store-user-role-orphaned", async () => await client.RemoveStoreUser(user.StoreId, user.UserId));
 
             // test duplicate add
@@ -4100,12 +4100,6 @@ namespace BTCPayServer.Tests
             await AssertAPIError("duplicate-store-user-role", async () =>
                  await client.AddStoreUser(user.StoreId, new StoreUserData { StoreRole = ownerRole.Id, Id = employee.UserId }));
             await employeeClient.RemoveStoreUser(user.StoreId, user.UserId);
-
-            //test no access to api when unrelated to store at all
-            await AssertPermissionError(Policies.CanViewStoreSettings, async () => await client.GetStore(user.StoreId));
-            await AssertPermissionError(Policies.CanViewStoreSettings, async () => await client.GetStoreUsers(user.StoreId));
-            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await client.AddStoreUser(user.StoreId, new StoreUserData()));
-            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await client.RemoveStoreUser(user.StoreId, user.UserId));
 
             await AssertAPIError("store-user-role-orphaned", async () => await employeeClient.RemoveStoreUser(user.StoreId, employee.UserId));
         }

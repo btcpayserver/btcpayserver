@@ -32,7 +32,7 @@
         .invoiceId-col {
             min-width: 8rem;
         }
-        .invoice-details-row > td  {
+        .invoice-details-row > td {
             padding: 1.5rem 1rem 0 2.65rem;
         }
         .dropdown > .btn {
@@ -45,7 +45,6 @@
                 width: 100%;
             }
         }
-        <button id="clearAllFiltersBtn" type="button" class="filter-clear-btn ms-auto" style="min-width: 7rem;" title="@StringLocalizer["Clear all filters"]">
     </style>
 }
 
@@ -108,7 +107,7 @@
             <vc:icon symbol="info" />
         </a>
     </h2>
-	<a id="page-primary"
+    <a id="page-primary"
        permission="@Policies.CanCreateInvoice"
        asp-action="CreateInvoice" 
        asp-route-storeId="@Model.StoreId" 
@@ -267,15 +266,15 @@
             <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-7d")" class="dropdown-item @(HasArrayFilter("startdate", "-7d") ? "custom-active" : "")" text-translate="true">Last 7 days</a>
             <button type="button" class="dropdown-item @(HasCustomDateFilter() ? "custom-active" : "")" data-bs-toggle="modal" data-bs-target="#customRangeModal" text-translate="true">Custom Range</button>
         </div>
-        
     </div>
-        @if (statusFilterCount > 0 || appFilterCount > 0 || hasDateFilter || !string.IsNullOrEmpty(Model.SearchText))
+    @if (statusFilterCount > 0 || appFilterCount > 0 || hasDateFilter || !string.IsNullOrEmpty(Model.SearchText))
     {
-
         <button id="clearAllFiltersBtn" type="button" class="btn btn-secondary" style="min-width: 7rem;" title="@StringLocalizer["Clear all filters"]">
             <span class="align-middle">Clear All</span>
-        </button>}
+        </button>
+    }
 </form>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const clearBtn = document.getElementById('clearAllFiltersBtn');
@@ -405,7 +404,6 @@
         </div>
 
         <vc:pager view-model="Model" />
-    
     </form>
 }
 else

@@ -305,13 +305,16 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         };
                         form.Fields.Add(amtField);
                     }
-                    amtField.Value = order.Calculate().PriceTaxExcluded.ToString(CultureInfo.InvariantCulture);
+                    var originalAmount = order.Calculate().PriceTaxExcluded;
+                    amtField.Value = originalAmount.ToString(CultureInfo.InvariantCulture);
                     formResponseJObject = FormDataService.GetValues(form);
 
                     var invoiceRequest = FormDataService.GenerateInvoiceParametersFromForm(form);
-                    if (invoiceRequest.Amount is not null)
+                    // If the form has an amount field, we compute the difference from the original POS order amount, and add it as a line item
+                    if (invoiceRequest.Amount is not null && originalAmount != invoiceRequest.Amount.Value )
                     {
-                        order.AddLine(new("", 1, invoiceRequest.Amount.Value, settings.DefaultTaxRate));
+                        var diff = invoiceRequest.Amount.Value - originalAmount;
+                        order.AddLine(new("", 1, diff, settings.DefaultTaxRate));
                     }
                     break;
             }

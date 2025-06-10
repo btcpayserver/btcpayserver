@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.1.3
+
+### Bug fixes
+
+* Free items in the PoS were generating top-up invoices rather than settled invoices (#6780) @NicolasDorier
+* When a POS has a form, the amount adjusts incorrectly (#6782) @Kukks
+
 ## 2.1.2
 
 ### New features

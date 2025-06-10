@@ -31,12 +31,14 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly EmailSenderFactory _emailSenderFactory;
         private readonly IAuthorizationService _authorizationService;
         private readonly PoliciesSettings _policiesSettings;
+        private readonly EventAggregator _eventAggregator;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly CallbackGenerator _callbackGenerator;
         private readonly UriResolver _uriResolver;
 
         public GreenfieldStoreUsersController(
             StoreRepository storeRepository,
+            EventAggregator eventAggregator,
             PoliciesSettings policiesSettings,
             EmailSenderFactory emailSenderFactory,
             UserManager<ApplicationUser> userManager,
@@ -44,6 +46,7 @@ namespace BTCPayServer.Controllers.Greenfield
             IAuthorizationService authorizationService,
             UriResolver uriResolver)
         {
+            _eventAggregator = eventAggregator;
             _emailSenderFactory = emailSenderFactory;
             _storeRepository = storeRepository;
             _policiesSettings = policiesSettings;
@@ -132,6 +135,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     {
                         var invitationEmail = await _emailSenderFactory.IsComplete();
                         var evt = await UserEvent.Invited.Create(user!, currentUser, _callbackGenerator, Request, invitationEmail);
+                        _eventAggregator.Publish(evt);
                         user = await _userManager.FindByEmailAsync(request.Email);
                     }
                 }

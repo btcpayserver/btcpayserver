@@ -2,7 +2,7 @@
 @model BTCPayServer.Controllers.UIManageController.ApiKeyPermissionAnalyticsViewModel
 @{
 	var staleThresholdDays = 100;
-	ViewData.SetActivePage(ManageNavPages.APIKeys, $"{Model.Label} - API key analysis");
+	ViewData.SetActivePage(ManageNavPages.APIKeys, StringLocalizer["API Key analysis"]);
 }
 
 @section PageHeadContent {
@@ -14,11 +14,16 @@
 }
 
 <div class="sticky-header">
-	<h2>@ViewData["Title"]</h2>
-	<div>
-		<a class="btn btn-primary" asp-action="EditAPIKey" asp-route-id="@Model.ApiKey">Edit API Key</a>
-		<a class="btn btn-secondary" asp-action="APIKeys">Go Back</a>
-	</div>
+	<nav aria-label="breadcrumb">
+		<ol class="breadcrumb">
+			<li class="breadcrumb-item">
+				<a asp-action="APIKeys" text-translate="true">API Keys</a>
+			</li>
+			<li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+		</ol>
+		<h2>@ViewData["Title"]</h2>
+	</nav>
+	<a class="btn btn-primary" asp-action="EditAPIKey" asp-route-id="@Model.ApiKey" text-translate="true">Edit API Key</a>
 </div>
 
 <div class="row mb-4">
@@ -26,7 +31,7 @@
 		<div class="card text-center">
 			<div class="card-body">
 				<h5 class="card-title text-primary">@Model.TotalPermissions</h5>
-				<p class="card-text">Total Permissions</p>
+				<p class="card-text" text-translate="true">Total Permissions</p>
 			</div>
 		</div>
 	</div>
@@ -34,7 +39,7 @@
 		<div class="card text-center">
 			<div class="card-body">
 				<h5 class="card-title text-success">@Model.UsedPermissions.Count</h5>
-				<p class="card-text">Used Permissions</p>
+				<p class="card-text" text-translate="true">Used Permissions</p>
 			</div>
 		</div>
 	</div>
@@ -42,7 +47,7 @@
 		<div class="card text-center">
 			<div class="card-body">
 				<h5 class="card-title text-warning">@Model.UnusedPermissions.Count</h5>
-				<p class="card-text">Unused Permissions</p>
+				<p class="card-text" text-translate="true">Unused Permissions</p>
 			</div>
 		</div>
 	</div>
@@ -56,17 +61,17 @@
 				<ul class="nav nav-tabs card-header-tabs" id="permissionTabs" role="tablist">
 					<li class="nav-item" role="presentation">
 						<button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-permissions" type="button" role="tab">
-							All Permissions (@Model.TotalPermissions)
+							@ViewLocalizer["All Permissions {0}", Model.AllPermissions.Count]
 						</button>
 					</li>
 					<li class="nav-item" role="presentation">
 						<button class="nav-link" id="used-tab" data-bs-toggle="tab" data-bs-target="#used-permissions" type="button" role="tab">
-							Used Permissions (@Model.UsedPermissions.Count)
+							@ViewLocalizer["Used Permissions {0}", Model.UsedPermissions.Count]
 						</button>
 					</li>
 					<li class="nav-item" role="presentation">
 						<button class="nav-link" id="unused-tab" data-bs-toggle="tab" data-bs-target="#unused-permissions" type="button" role="tab">
-							Unused Permissions (@Model.UnusedPermissions.Count)
+							@ViewLocalizer["Unused Permissions {0}", Model.UnusedPermissions.Count]
 						</button>
 					</li>
 				</ul>
@@ -80,10 +85,10 @@
 								<table class="table table-hover">
 									<thead class="table-light">
 										<tr>
-											<th>Permission</th>
-											<th>Usage Count</th>
-											<th>Last Used</th>
-											<th>Status</th>
+											<th text-translate="true">Permission</th>
+											<th text-translate="true">Usage Count</th>
+											<th text-translate="true">Last Used</th>
+											<th text-translate="true">Status</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -92,8 +97,7 @@
 											var usage = Model.UsedPermissions.FirstOrDefault(u => u.Permission == permission.Permission);
 											var isUsed = usage != null;
 											var isStale = isUsed && (DateTimeOffset.UtcNow - usage.LastUsed).TotalDays > staleThresholdDays;
-
-											<tr class="@(isUsed ? (isStale ? "table-warning" : "") : "table-light")">
+											<tr class="@(isUsed ? "" : "table-light")">
 												<td>
 													<code>@permission.Permission</code>
 												</td>
@@ -110,27 +114,25 @@
 												<td>
 													@if (isUsed)
 													{
-														<span class="text-muted">@usage.LastUsed.ToString("MMM dd, yyyy HH:mm")</span>
-														<br>
-														<small class="text-muted">(@usage.DaysAgo days ago)</small>
+														<span class="text-muted">@usage.LastUsed.ToTimeAgo()</span>
 													}
 													else
 													{
-														<span class="text-muted">Never</span>
+														<span class="text-muted" text-translate="true">Never</span>
 													}
 												</td>
 												<td>
 													@if (!isUsed)
 													{
-														<span class="badge bg-secondary">Never Used</span>
+														<span class="badge bg-secondary" text-translate="true">Never Used</span>
 													}
 													else if (isStale)
 													{
-														<span class="badge bg-warning">Stale</span>
+														<span class="badge bg-warning" text-translate="true">Stale</span>
 													}
 													else
 													{
-														<span class="badge bg-info">Active</span>
+														<span class="badge bg-info" text-translate="true">Active</span>
 													}
 												</td>
 											</tr>
@@ -142,7 +144,7 @@
 						else
 						{
 							<div class="text-center py-5">
-								<h5 class="mt-3">No Permission Usage Recorded</h5>
+								<h5 class="mt-3" text-translate="true">No Permission Usage Recorded</h5>
 							</div>
 						}
 					</div>
@@ -164,7 +166,7 @@
 										@foreach (var permission in Model.UsedPermissions.OrderByDescending(p => p.LastUsed))
 										{
 											var isStale = (DateTimeOffset.UtcNow - permission.LastUsed).TotalDays > staleThresholdDays;
-											<tr class="@(isStale ? "table-warning" : "")">
+											<tr>
 												<td>
 													<code>@permission.Permission</code>
 												</td>
@@ -172,18 +174,16 @@
 													<span class="badge bg-secondary">@permission.UsageCount.ToString("N0")</span>
 												</td>
 												<td>
-													<span class="text-muted">@permission.LastUsed.ToString("MMM dd, yyyy HH:mm")</span>
-													<br>
-													<small class="text-muted">(@permission.DaysAgo days ago)</small>
+													<span class="text-muted">@permission.LastUsed.ToTimeAgo()</span>
 												</td>
 												<td>
 													@if (isStale)
 													{
-														<span class="badge bg-warning">Stale (100+ days)</span>
+														<span class="badge bg-warning" text-translate="true">Stale</span>
 													}
 													else
 													{
-														<span class="badge bg-info">Active</span>
+														<span class="badge bg-info" text-translate="true">Active</span>
 													}
 												</td>
 											</tr>
@@ -195,7 +195,7 @@
 						else
 						{
 							<div class="text-center py-5">
-								<h5 class="mt-3">No Permission Usage Recorded</h5>
+								<h5 class="mt-3" text-translate="true">No Permission Usage Recorded</h5>
 							</div>
 						}
 					</div>
@@ -212,8 +212,8 @@
 								<table class="table table-hover">
 									<thead class="table-light">
 										<tr>
-											<th>Permission</th>
-											<th>Status</th>
+											<th text-translate="true">Permission</th>
+											<th text-translate="true">Status</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -224,7 +224,7 @@
 													<code>@permission</code>
 												</td>
 												<td>
-													<span class="badge bg-secondary">Never Used</span>
+													<span class="badge bg-secondary" text-translate="true">Never Used</span>
 												</td>
 											</tr>
 										}
@@ -238,11 +238,11 @@
 								<i class="bi bi-shield-check text-success" style="font-size: 3rem;"></i>
 								@if (Model.TotalPermissions > 0)
 								{
-									<h5 class="mt-3 text-success">No unused permission!</h5>
+									<h5 class="mt-3 text-success" text-translate="true">No unused permission!</h5>
 								}
 								else
 								{
-									<h5 class="mt-3">No Permission Usage Recorded</h5>
+									<h5 class="mt-3" text-translate="true">No Permission Usage Recorded</h5>
 								}
 							</div>
 						}

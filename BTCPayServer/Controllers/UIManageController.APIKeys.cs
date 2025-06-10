@@ -717,7 +717,6 @@ namespace BTCPayServer.Controllers
             public string Permission { get; set; }
             public DateTimeOffset LastUsed { get; set; }
             public int UsageCount { get; set; }
-            public int DaysAgo => (int)(DateTimeOffset.UtcNow - LastUsed).TotalDays;
         }
         public class PermissionViewModel
         {

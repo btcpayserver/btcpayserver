@@ -40,6 +40,11 @@
             padding-left: 1rem;
             text-align: left;
         }
+        #SearchText {
+            flex-shrink: 0;
+            min-width: 200px;
+            max-width: 300px;
+        }
         @@media (max-width: 568px) {
             #SearchText {
                 width: 100%;
@@ -183,7 +188,7 @@
     </div>
 </div>
 
-<form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxxl-8" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
+<form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
     <input asp-for="Count" type="hidden" />
     <input asp-for="TimezoneOffset" type="hidden" />
     <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>

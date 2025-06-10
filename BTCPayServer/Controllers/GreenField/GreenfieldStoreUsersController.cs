@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using static BTCPayServer.Services.Stores.StoreRepository;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -72,9 +73,16 @@ namespace BTCPayServer.Controllers.Greenfield
             if (user == null)
                 return UserNotFound();
 
-            return await _storeRepository.RemoveStoreUser(storeId, user.Id)
-                ? Ok()
-                : this.CreateAPIError(409, "store-user-role-orphaned", "Removing this user would result in the store having no owner.");
+            await _userManager.SetLockoutEnabledAsync(user, true);
+            var res = await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
+
+            var storeRemovalResult = await _storeRepository.RemoveStoreUser(storeId, user.Id);
+            if (!storeRemovalResult)
+                return this.CreateAPIError(409, "store-user-role-orphaned", "Removing this user would result in the store having no owner.");
+
+            await _userManager.SetLockoutEnabledAsync(user, true);
+            var lockoutResult = await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
+            return lockoutResult.Succeeded ? Ok() : this.CreateAPIError(500, "lockout-failed", "User was removed from store but lockout failed.");
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -119,21 +127,25 @@ namespace BTCPayServer.Controllers.Greenfield
                         RequiresApproval = request.RequiresApproval,
                         Created = DateTimeOffset.UtcNow
                     };
+                    if (!(await _userManager.CreateAsync(user)).Succeeded)
+                        return UserNotFound();
+
                     var currentUser = await _userManager.GetUserAsync(HttpContext.User);
-                    if (currentUser is not null &&
-                        (await _userManager.CreateAsync(user)) is { Succeeded: true })
+                    if (currentUser is not null)
                     {
                         var invitationEmail = await _emailSenderFactory.IsComplete();
                         var evt = await UserEvent.Invited.Create(user!, currentUser, _callbackGenerator, Request, invitationEmail);
                         user = await _userManager.FindByEmailAsync(request.Email);
                     }
                 }
+                await _userManager.SetLockoutEndDateAsync(user, null);
                 res = await _storeRepository.AddStoreUser(storeId, user.Id, roleId) ? new AddOrUpdateStoreUserResult.Success() : new AddOrUpdateStoreUserResult.DuplicateRole(roleId);
             }
             else
             {
                 if (user == null)
                     return UserNotFound();
+
                 res = await _storeRepository.AddOrUpdateStoreUser(storeId, user.Id, roleId);
             }
 

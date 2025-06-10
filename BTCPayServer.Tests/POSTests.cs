@@ -172,6 +172,8 @@ orange:
 donation:
   price: 1.02
   custom: true
+goodies:
+  price: 0
 ";
             vmpos.Currency = "EUR";
             vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
@@ -182,7 +184,7 @@ donation:
 
             Assert.Equal("EUR", vmview.CurrencyCode);
             // apple shouldn't be available since we it's set to "disabled: true" above
-            Assert.Equal(2, vmview.Items.Length);
+            Assert.Equal(3, vmview.Items.Length);
             Assert.Equal("orange", vmview.Items[0].Title);
             Assert.Equal("donation", vmview.Items[1].Title);
             // orange is available
@@ -191,6 +193,14 @@ donation:
             // apple is not found
             Assert.IsType<NotFoundResult>(publicApps
                 .ViewPointOfSale(app.Id, PosViewType.Cart, 0, choiceKey: "apple").Result);
+
+            var redirectToCheckout = Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(app.Id, PosViewType.Cart, 0, choiceKey: "goodies").Result);
+            Assert.Equal("InvoiceReceipt", redirectToCheckout.ActionName);
+            var invoiceId = redirectToCheckout.RouteValues!["invoiceId"]!.ToString();
+            var client = await user.CreateClient();
+            var inv = await client.GetInvoice(user.StoreId, invoiceId);
+            Assert.Equal(0, inv.Amount);
+            Assert.NotEqual(InvoiceType.TopUp, inv.Type);
 
             // List
             appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);

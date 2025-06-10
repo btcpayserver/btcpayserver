@@ -232,6 +232,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             {
                 order.AddLine(new($"Custom Amount {i + 1}", 1, jposData.Amounts[i], settings.DefaultTaxRate));
             }
+
             foreach (var cartItem in jposData.Cart)
             {
                 var itemChoice = choices.FirstOrDefault(item => item.Id == cartItem.Id);
@@ -319,7 +320,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var receiptData = new PosReceiptData();
             var summary = order.Calculate();
 
-            bool isTopup = summary.PriceTaxIncludedWithTips == 0 && currentView == PosViewType.Static;
+            var isTopup = selectedChoices.FirstOrDefault().Price is null && currentView == PosViewType.Static;
             if (!isTopup)
             {
                 jposData.ItemsTotal = summary.ItemsTotal;

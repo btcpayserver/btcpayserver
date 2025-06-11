@@ -511,6 +511,9 @@ goodies:
 
                 await AssertInvoiceAmount(s, "124.00000000 BTC");
                 await s.Page.GoBackAsync();
+
+                await s.Page.ClickAsync("#card_fruit-tea button");
+                await AssertInvoiceAmount(s, "Any amount");
             }
 
             await s.GoToStore();
@@ -677,6 +680,26 @@ goodies:
                     new("Subtotal", "4,23 €"),
                     new("Tax", "0,42 € (10%)"),
                     new("Total", "4,65 €")
+                ]
+            });
+
+            await s.GoToUrl(keypadUrl);
+            await s.Page.ClickAsync("#ItemsListToggle");
+            await s.Page.WaitForSelectorAsync("#PosItems");
+            // This item should be free.
+            await s.Page.ClickAsync("#PosItems .posItem--displayed:nth-child(4) .btn-plus");
+            await s.Page.ClickAsync("#ItemsListOffcanvas button[data-bs-dismiss='offcanvas']");
+            await s.Page.ClickAsync("#pay-button");
+            await s.Page.WaitForSelectorAsync("#ReceiptLinkPrint");
+            await AssertReceipt(s, new()
+            {
+                Items =
+                [
+                    new("Pu Erh (free)", "1 x 0,00 € = 0,00 €")
+                ],
+                Sums =
+                [
+                    new("Total", "0,00 €")
                 ]
             });
 

@@ -195,7 +195,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             if (tip < 0 || discount < 0)
                 return Error(StringLocalizer["Negative tip or discount is not allowed"].Value);
 
-            if (string.IsNullOrEmpty(choiceKey) && (amount <= 0 || customAmount <= 0))
+
+            if ( amount < 0 || customAmount < 0)
                 return Error(StringLocalizer["Negative amount is not allowed"].Value);
 
             var settings = app.GetSettings<PointOfSaleSettings>();
@@ -307,6 +308,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         form.Fields.Add(amtField);
                     }
                     var originalAmount = order.Calculate().PriceTaxExcluded;
+                    //this overrides any amount set by the form with the POS expected amount
                     amtField.Value = originalAmount.ToString(CultureInfo.InvariantCulture);
                     formResponseJObject = FormDataService.GetValues(form);
 

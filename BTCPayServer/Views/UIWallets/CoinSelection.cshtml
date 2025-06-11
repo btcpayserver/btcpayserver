@@ -25,26 +25,26 @@
     </div>
     <input type="text" v-model="filter" class="form-control my-3" placeholder="@StringLocalizer["Filter by transaction id, amount, label, comment"]"/>
     <details class="text-muted small mt-2">
-        <summary>Available Filters (click to expand)</summary>
+        <summary text-translate="true">Available Filters (click to expand)</summary>
         <ul class="mb-0">
-            <li class="mb-2"><b>General text search:</b> txid, amount, comment, label</li>
+            <li class="mb-2"><b text-translate="true">General text search:</b> <span text-translate="true">txid, amount, comment, label</span></li>
             <li class="mb-2">
-                <b>Minimum amount:</b>
+                <b text-translate="true">Minimum amount:</b>
                 <code class="clipboard-button clipboard-button-hover" :data-clipboard="'amountmin:'">amountmin:0.001</code>
             </li>
             <li class="mb-2">
-                <b>Maximum amount:</b>
+                <b text-translate="true">Maximum amount:</b>
                 <code class="clipboard-button clipboard-button-hover" :data-clipboard="'amountmax:'">amountmax:0.01</code>
             </li>
             <li class="mb-2">
-                <b>Created before date:</b>
+                <b text-translate="true">Created before date:</b>
                 <code class="clipboard-button clipboard-button-hover" :data-clipboard="'before:'">before:2024-01-01</code>
             </li>
             <li class="mb-2">
-                <b>Created after date:</b>
+                <b text-translate="true">Created after date:</b>
                 <code class="clipboard-button clipboard-button-hover" :data-clipboard="'after:'">after:2023-01-01</code>
             </li>
-            <li class="mb-2"><b>Combine filters:</b> <code>tag1 amountmin:0.0005 before:2024-01-01</code></li>
+            <li class="mb-2"><b text-translate="true">Combine filters:</b> <code>tag1 amountmin:0.0005 before:2024-01-01</code></li>
         </ul>
     </details>
     <div class="d-flex justify-content-between align-items-center my-2">

@@ -215,15 +215,16 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             {
                 jposData.Cart = new PosAppCartItem[] { new() { Id = choiceKey, Count = 1, Price = amount ?? 0 } };
             }
+
             jposData.Cart ??= [];
 
             if (currentView is PosViewType.Print)
                 return NotFound();
-            if (currentView is PosViewType.Cart or PosViewType.Static && jposData.Cart.Length == 0)
+            if (currentView is PosViewType.Cart && jposData.Cart.Length == 0)
                 return NotFound();
 
-            if (jposData.Amounts is null &&
-                currentView == PosViewType.Light &&
+            if (string.IsNullOrEmpty(choiceKey) &&
+                jposData.Amounts is null &&
                 amount is { } o)
             {
                 order.AddLine(new("", 1, o, settings.DefaultTaxRate));
@@ -323,7 +324,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var receiptData = new PosReceiptData();
             var summary = order.Calculate();
 
-            var isTopup = selectedChoices?.FirstOrDefault()?.Price is null && currentView == PosViewType.Static;
+            var isTopup = currentView == PosViewType.Static &&
+                          selectedChoices.Any(c => c.PriceType == AppItemPriceType.Topup);
             if (!isTopup)
             {
                 jposData.ItemsTotal = summary.ItemsTotal;

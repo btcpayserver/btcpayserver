@@ -35,7 +35,7 @@
                     : item.BuyButtonText;
                 buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
 
-                <div class="col posItem posItem--displayed@(x == 0 ? " posItem--first" : null)@(x == Model.Items.Length - 1 && !Model.ShowCustomAmount ? " posItem--last" : null)">
+                <div id="card_@item.Id" class="col posItem posItem--displayed@(x == 0 ? " posItem--first" : null)@(x == Model.Items.Length - 1 && !Model.ShowCustomAmount ? " posItem--last" : null)">
                     <div class="tile card" data-id="@x">
                         @if (!string.IsNullOrWhiteSpace(item.Image))
                         {
@@ -92,7 +92,7 @@
             }
             @if (Model.ShowCustomAmount)
             {
-                <div class="col posItem posItem--displayed posItem--last@(Model.Items.Length == 0 ? " posItem--first" : null)">
+                <div id="card_custom_amount" class="col posItem posItem--displayed posItem--last@(Model.Items.Length == 0 ? " posItem--first" : null)">
                     <div class="card h-100 px-0">
                         <div class="card-body p-3 d-flex flex-column gap-2 mb-auto">
                             <h5 class="card-title" text-translate="true">Custom Amount</h5>

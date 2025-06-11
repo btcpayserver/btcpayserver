@@ -12,6 +12,7 @@ using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Views.Stores;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Playwright;
 using Newtonsoft.Json.Linq;
@@ -472,6 +473,66 @@ goodies:
                     Assert.False(await s.Page.IsVisibleAsync("#" + ids[i]));
                 }
             }
+        }
+
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        public async Task CanUsePOSProductList()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+
+            await s.RegisterNewUser();
+            s.AsTestAccount();
+            await s.GoToHome();
+            await s.CreateNewStore();
+            await s.GoToStore();
+            await s.AddDerivationScheme();
+
+            // Let's check Custom amount works as expected
+            await s.CreateApp("PointOfSale");
+            var appUrl = s.Page.Url;
+            await s.Page.FillAsync("#Currency", "BTC");
+            await s.Page.SetCheckedAsync("#ShowCustomAmount", true);
+            await s.ClickPagePrimary();
+
+            var o = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("#ViewApp");
+            await using (_ = await s.SwitchPage(o))
+            {
+                await s.Page.FillAsync("#card_herbal-tea [name='amount']", "123");
+                await s.Page.PressAsync("#card_herbal-tea [name='amount']", "Enter");
+
+                await AssertInvoiceAmount(s, "123.00000000 BTC");
+                await s.Page.GoBackAsync();
+
+                await s.Page.FillAsync("#card_custom_amount [name='amount']", "124");
+                await s.Page.PressAsync("#card_custom_amount [name='amount']", "Enter");
+
+                await AssertInvoiceAmount(s, "124.00000000 BTC");
+                await s.Page.GoBackAsync();
+            }
+
+            await s.GoToStore();
+            await s.GoToStore(StoreNavPages.Forms);
+            await s.ClickPagePrimary();
+            await s.Page.FillAsync("[name='Name']", "test");
+            await s.Page.ClickAsync("[name='newField1']");
+            await s.Page.SelectOptionAsync("#field-editor-field-type", "number");
+            await s.Page.FillAsync("#field-editor-field-name", "invoice_amount_adjustment");
+            await s.Page.PressAsync("#field-editor-field-name", "Enter");
+            await s.ClickPagePrimary();
+
+            await s.GoToUrl(appUrl);
+            await s.Page.SelectOptionAsync("#FormId", new SelectOptionValue { Label = "test" });
+            await s.ClickPagePrimary();
+        }
+
+        private static async Task AssertInvoiceAmount(PlaywrightTester s, string expectedAmount)
+        {
+            var el = await s.Page.WaitForSelectorAsync("#AmountDue");
+            var content = await el!.TextContentAsync();
+            Assert.Equal(expectedAmount.NormalizeWhitespaces(), content.NormalizeWhitespaces());
         }
 
         [Fact]

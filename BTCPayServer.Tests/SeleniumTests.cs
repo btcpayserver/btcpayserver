@@ -1259,14 +1259,14 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Name("InputSelection")).GetAttribute("value").ToLowerInvariant());
 
             //Select All test
-            s.Driver.FindElement(By.Id("select-all-checkbox")).Click();
+            s.Driver.WaitForAndClick(By.Id("select-all-checkbox"));
             var inputSelectionSelectAll = s.Driver.FindElement(By.Name("SelectedInputs"));
             TestUtils.Eventually(() => {
                 var selectedOptions = inputSelectionSelectAll.FindElements(By.CssSelector("option[selected]"));
                 var listItems = s.Driver.FindElements(By.CssSelector("li.list-group-item"));
                 Assert.Equal(listItems.Count, selectedOptions.Count);
             });
-            s.Driver.FindElement(By.Id("select-all-checkbox")).Click();
+            s.Driver.WaitForAndClick(By.Id("select-all-checkbox"));
             TestUtils.Eventually(() => {
                 var selectedOptions = inputSelectionSelectAll.FindElements(By.CssSelector("option[selected]"));
                 Assert.Empty(selectedOptions);

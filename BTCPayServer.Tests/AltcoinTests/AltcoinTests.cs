@@ -800,6 +800,9 @@ g:
                 var topupInvoice = invoices.Single(invoice => invoice.ItemCode == "g");
                 Assert.Equal(0, topupInvoice.Price);
                 Assert.Equal("new", topupInvoice.Status);
+                var client = await user.CreateClient();
+                var inv = await client.GetInvoice(user.StoreId, topupInvoice.Id);
+                Assert.Equal(InvoiceType.TopUp, inv.Type);
             }
         }
     }

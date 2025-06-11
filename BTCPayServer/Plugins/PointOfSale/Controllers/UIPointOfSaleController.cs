@@ -195,7 +195,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             if (tip < 0 || discount < 0)
                 return Error(StringLocalizer["Negative tip or discount is not allowed"].Value);
 
-            if (string.IsNullOrEmpty(choiceKey) && (amount <= 0 || customAmount <= 0))
+            if (string.IsNullOrEmpty(choiceKey) && (amount < 0 || customAmount < 0))
                 return Error(StringLocalizer["Negative amount is not allowed"].Value);
 
             var settings = app.GetSettings<PointOfSaleSettings>();

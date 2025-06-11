@@ -219,8 +219,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 const amountMin = parsedFilters.amountmin ? parseFloat(parsedFilters.amountmin) : null;
                 const amountMax = parsedFilters.amountmax ? parseFloat(parsedFilters.amountmax) : null;
-                const beforeDate = parsedFilters.before ?? null;
-                const afterDate = parsedFilters.after ?? null;
+                const beforeDate = parsedFilters.before ? new Date(parsedFilters.before).getTime() : null;
+                const afterDate = parsedFilters.after ? new Date(parsedFilters.after).getTime()  : null;
                 const searchTerm = parsedFilters.text?.toLowerCase();
 
                 for (const utxo of this.currentItems) {
@@ -234,8 +234,16 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (!matchesText) continue;
                     if (amountMin !== null && utxo.amount < amountMin) continue;
                     if (amountMax !== null && utxo.amount > amountMax) continue;
-                    if (beforeDate !== null && utxo.timestamp && utxo.timestamp >= beforeDate) continue;
-                    if (afterDate !== null && utxo.timestamp && utxo.timestamp <= afterDate) continue;
+
+                    if (beforeDate !== null && utxo.timestamp) {
+                        const utxoTime = new Date(utxo.timestamp).getTime();
+                        if (utxoTime >= beforeDate) continue;
+                    }
+
+                    if (afterDate !== null && utxo.timestamp) {
+                        const utxoTime = new Date(utxo.timestamp).getTime();
+                        if (utxoTime <= afterDate) continue;
+                    }
 
                     filteredResults.push({
                         ...utxo,

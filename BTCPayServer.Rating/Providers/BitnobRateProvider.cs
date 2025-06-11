@@ -32,7 +32,9 @@ namespace BTCPayServer.Rating.Providers
             {
                 string[] parts = property.Name.Split('_');
                 decimal value = property.Value.Value<decimal>();
-                pairRates.Add(new PairRate(new CurrencyPair("BTC", parts[1]), new BidAsk(value)));
+                // When API is broken, they return 0 rate
+                if (value != 0m)
+                    pairRates.Add(new PairRate(new CurrencyPair("BTC", parts[1]), new BidAsk(value)));
             }
             return pairRates.ToArray();
         }

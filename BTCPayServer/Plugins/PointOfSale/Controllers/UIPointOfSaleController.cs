@@ -323,7 +323,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var receiptData = new PosReceiptData();
             var summary = order.Calculate();
 
-            var isTopup = selectedChoices.FirstOrDefault().Price is null && currentView == PosViewType.Static;
+            var isTopup = selectedChoices?.FirstOrDefault()?.Price is null && currentView == PosViewType.Static;
             if (!isTopup)
             {
                 jposData.ItemsTotal = summary.ItemsTotal;

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.4
+
+### Bug fixes
+
+* Fix keypad crash introduced by 2.1.4
+
 ## 2.1.3
 
 ### Bug fixes

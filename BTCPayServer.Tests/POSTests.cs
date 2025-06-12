@@ -529,6 +529,15 @@ goodies:
             await s.GoToUrl(appUrl);
             await s.Page.SelectOptionAsync("#FormId", new SelectOptionValue { Label = "test" });
             await s.ClickPagePrimary();
+            o = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("#ViewApp");
+            await using (_ = await s.SwitchPage(o))
+            {
+                await s.Page.ClickAsync("#card_black-tea button");
+                await s.Page.FillAsync("[name='invoice_amount_adjustment']", "0.5");
+                await s.ClickPagePrimary();
+                await AssertInvoiceAmount(s, "1.50000000 BTC");
+            }
         }
 
         private static async Task AssertInvoiceAmount(PlaywrightTester s, string expectedAmount)

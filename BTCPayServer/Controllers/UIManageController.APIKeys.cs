@@ -99,7 +99,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            var isDeleted = await _apiKeyRepository.Remove(id, _userManager.GetUserId(User));
+            await _apiKeyRepository.Remove(id, _userManager.GetUserId(User));
 
             TempData.SetStatusMessageModel(new StatusMessageModel
             {

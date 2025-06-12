@@ -45,6 +45,7 @@ namespace BTCPayServer.Controllers
                 typeof(InvoiceMetadata)
                 .GetProperties()
                 .Select(p => p.Name)
+                .Where(p => p != "ReceiptData")
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
             InvoiceAdditionalDataExclude.Remove(nameof(InvoiceMetadata.PosData));
         }

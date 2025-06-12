@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -13,8 +14,10 @@ using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Views.Stores;
+using LNURL;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Playwright;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
@@ -477,20 +480,19 @@ goodies:
 
         [Fact]
         [Trait("Playwright", "Playwright")]
+        [Trait("Lightning", "Lightning")]
         public async Task CanUsePOSProductList()
         {
             await using var s = CreatePlaywrightTester();
+            s.Server.ActivateLightning();
             await s.StartAsync();
-
-            await s.RegisterNewUser();
-            s.AsTestAccount();
-            await s.GoToHome();
+            await s.RegisterNewUser(true);
             await s.CreateNewStore();
-            await s.GoToStore();
             await s.AddDerivationScheme();
+            await s.AddLightningNode();
 
             // Let's check Custom amount works as expected
-            await s.CreateApp("PointOfSale");
+            var (_, appId) = await s.CreateApp("PointOfSale");
             var appUrl = s.Page.Url;
             await s.Page.FillAsync("#Currency", "BTC");
             await s.Page.SetCheckedAsync("#ShowCustomAmount", true);
@@ -538,6 +540,41 @@ goodies:
                 await s.ClickPagePrimary();
                 await AssertInvoiceAmount(s, "1.50000000 BTC");
             }
+
+            await s.Page.FillAsync("#DefaultTaxRate", "10");
+            await s.ClickPagePrimary();
+
+            await GoToLNUrlCheckout(s, appId, "black-tea");
+            await AssertInvoiceAmount(s, "1.10000000 BTC");
+            await s.MarkAsSettled();
+
+            await s.Page.ClickAsync("#ReceiptLink");
+            await AssertReceipt(s, new()
+            {
+                Items = [
+                    new("BlackTea", "1.00000000 BTC"),
+                ],
+                Sums = [
+                    new("Subtotal", "1.00000000 BTC"),
+                    new("Tax", "0.10000000 BTC (10%)"),
+                    new("Total", "1.10000000 BTC")
+                ]
+            });
+
+            await GoToLNUrlCheckout(s, appId, "fruit-tea");
+            await AssertInvoiceAmount(s, "Any amount");
+
+            await GoToLNUrlCheckout(s, appId, "");
+            await AssertInvoiceAmount(s, "Any amount");
+        }
+
+        private static async Task GoToLNUrlCheckout(PlaywrightTester s, string appId, string item)
+        {
+            var result = await s.Server.PayTester.HttpClient.GetStringAsync($"BTC/lnurl/pay/app/{appId}/{item}");
+            var req = JsonConvert.DeserializeObject<LNURLPayRequest>(result);
+            var invoiceId = Regex.Replace(req.Callback.AbsoluteUri, ".*/pay/i/(.*)", "$1");
+            s.InvoiceId = invoiceId;
+            await s.GoToInvoiceCheckout();
         }
 
         private static async Task AssertInvoiceAmount(PlaywrightTester s, string expectedAmount)
@@ -634,12 +671,10 @@ goodies:
             await AssertReceipt(s, new()
             {
                 Items = [
-
                     new("Custom Amount 1", "1 234,00 €"),
                     new("Custom Amount 2", "0,56 €")
                 ],
                 Sums = [
-
                     new("Items total", "1 234,56 €"),
                     new("Discount", "123,46 € (10%)"),
                     new("Subtotal", "1 111,10 €"),

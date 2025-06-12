@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using BTCPayServer.Plugins.PointOfSale;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -58,6 +59,16 @@ public class PosAppData
     public decimal Tip { get; set; }
     [JsonProperty(PropertyName = "total")]
     public decimal Total { get; set; }
+
+    internal void UpdateFrom(PoSOrder.OrderSummary summary)
+    {
+        ItemsTotal = summary.ItemsTotal;
+        DiscountAmount = summary.Discount;
+        Subtotal = summary.PriceTaxExcluded;
+        Tax = summary.Tax;
+        Tip = summary.Tip;
+        Total = summary.PriceTaxIncludedWithTips;
+    }
 }
 
 public class PosAppCartItem

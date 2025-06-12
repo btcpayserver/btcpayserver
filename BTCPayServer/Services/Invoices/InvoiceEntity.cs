@@ -212,6 +212,13 @@ namespace BTCPayServer.Services.Invoices
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; }
 
+        [JsonIgnore]
+        public PosReceiptData ReceiptData
+        {
+            get => this.GetAdditionalData<PosReceiptData>("receiptData");
+            set => this.SetAdditionalData("receiptData", value);
+        }
+
         public static InvoiceMetadata FromJObject(JObject jObject)
         {
             return jObject.ToObject<InvoiceMetadata>(MetadataSerializer);
@@ -940,7 +947,7 @@ namespace BTCPayServer.Services.Invoices
         /// An additional fee, hidden from UI, meant to be used when a payment method has a service provider which
         /// have a different way of converting the invoice's amount into the currency of the payment method.
         /// This fee can avoid under/over payments when this case happens.
-        /// 
+        ///
         /// You need to increment it with <see cref="AddTweakFee(decimal)"/> so that the tweak fee is also added to the <see cref="PaymentMethodFee"/>.
         /// </summary>
         [JsonConverter(typeof(NumericStringJsonConverter))]

@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Blazor.VaultBridge.Elements;
+using BTCPayServer.Client.Models;
+using BTCPayServer.Lightning;
+using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
@@ -15,6 +18,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Playwright;
 using NBitcoin;
 using NBitcoin.RPC;
+using OpenQA.Selenium;
 using Xunit;
 
 namespace BTCPayServer.Tests
@@ -23,7 +27,7 @@ namespace BTCPayServer.Tests
     {
         public Uri ServerUri;
         private string CreatedUser;
-        private string InvoiceId;
+        internal string InvoiceId;
         public Logging.ILog TestLogs => Server.TestLogs;
         public IPage Page { get; set; }
         public IBrowser Browser { get; private set; }
@@ -107,9 +111,7 @@ namespace BTCPayServer.Tests
         public async Task GoToInvoiceCheckout(string invoiceId = null)
         {
             invoiceId ??= InvoiceId;
-            await Page.Locator("#StoreNav-Invoices").ClickAsync();
-            await Page.Locator($"#invoice-checkout-{invoiceId}").ClickAsync();
-            await Page.Locator("#Checkout").WaitForAsync();
+            await GoToUrl($"/i/{invoiceId}");
         }
 
         public async Task GoToWallet(WalletId walletId = null, WalletsNavPages navPages = WalletsNavPages.Send)
@@ -380,6 +382,61 @@ namespace BTCPayServer.Tests
             await FindAlertMessage();
         }
 
+        public async Task AddLightningNode(string connectionType = null, bool test = true)
+        {
+            var cryptoCode = "BTC";
+            if (!(await Page.ContentAsync()).Contains("Connect to a Lightning node"))
+            {
+                await GoToLightningSettings();
+            }
+
+            var connectionString = connectionType switch
+            {
+                LightningConnectionType.CLightning =>
+                    $"type=clightning;server={((CLightningClient)Server.MerchantLightningD).Address.AbsoluteUri}",
+                LightningConnectionType.LndREST =>
+                    $"type=lnd-rest;server={Server.MerchantLnd.Swagger.BaseUrl};allowinsecure=true",
+                _ => null
+            };
+
+            if (connectionString == null)
+            {
+                Assert.True(await Page.IsEnabledAsync("#LightningNodeType-Internal"), "Usage of the internal Lightning node is disabled.");
+                await Page.ClickAsync("label[for=\"LightningNodeType-Internal\"]");
+            }
+            else
+            {
+                await Page.ClickAsync("label[for=\"LightningNodeType-Custom\"]");
+                await Page.FillAsync("#ConnectionString", connectionString);
+                if (test)
+                {
+                    await Page.ClickAsync("#test");
+                    await FindAlertMessage(partialText: "Connection to the Lightning node successful.");
+                }
+            }
+
+            await ClickPagePrimary();
+            await FindAlertMessage(partialText: $"{cryptoCode} Lightning node updated.");
+
+            var enabled = await Page.WaitForSelectorAsync($"#{cryptoCode}LightningEnabled");
+            if (!await enabled!.IsCheckedAsync())
+            {
+                await enabled.ClickAsync();
+                await ClickPagePrimary();
+                await FindAlertMessage(partialText: $"{cryptoCode} Lightning settings successfully updated");
+            }
+        }
+
+        public async Task GoToLightningSettings(string cryptoCode = "BTC")
+        {
+            await Page.ClickAsync($"#StoreNav-Lightning{cryptoCode}");
+            // if Lightning is already set up we need to navigate to the settings
+            if ((await Page.ContentAsync()).Contains("id=\"StoreNav-LightningSettings\""))
+            {
+                await Page.ClickAsync("#StoreNav-LightningSettings");
+            }
+        }
+
         public async Task ClickPagePrimary()
         {
             await Page.Locator("#page-primary").ClickAsync();
@@ -627,6 +684,13 @@ namespace BTCPayServer.Tests
             public Task Sign() => page.ClickAsync("#SignTransaction");
 
             public Task SetFeeRate(decimal val) => page.FillAsync("[name=\"FeeSatoshiPerByte\"]", val.ToString(CultureInfo.InvariantCulture));
+        }
+
+        public async Task MarkAsSettled()
+        {
+            var txId = Regex.Replace(Page.Url, ".*/(.*)$", "$1");
+            var client = await this.AsTestAccount().CreateClient();
+            await client.MarkInvoiceStatus(StoreId, txId, new() { Status = InvoiceStatus.Settled });
         }
     }
 }

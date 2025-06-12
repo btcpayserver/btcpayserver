@@ -157,7 +157,7 @@ namespace BTCPayServer.Security.Greenfield
             {
                 if (_httpContext.GetAPIKey(out var apiKey))
                 {
-                    _ = _apiKeyRepository.RecordPermissionUsage(apiKey, requirement.Policy);
+                    _ = _apiKeyRepository.RecordPermissionUsage(apiKey, Permission.Create(requirement.Policy));
                 }
                 context.Succeed(requirement);
             }

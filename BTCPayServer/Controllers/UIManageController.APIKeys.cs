@@ -100,8 +100,6 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
             var isDeleted = await _apiKeyRepository.Remove(id, _userManager.GetUserId(User));
-            if (isDeleted)
-                await _apiKeyRepository.DeleteAPIPermissionRecord(id);
 
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
@@ -302,19 +300,17 @@ namespace BTCPayServer.Controllers
             }
             var viewModel = new EditApiKeyViewModel { Label = key.Label, Id = key.Id };
             await SetViewModelValues(viewModel);
-            var existingPermissions = key.GetBlob().Permissions;
+            var existingPermissions = Permission.ToPermissions(key.GetBlob().Permissions);
 
             foreach (var permissionItem in viewModel.PermissionValues)
             {
-                var permissionKey = permissionItem.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific ? $"{permissionItem.Permission}:" : permissionItem.Permission;
-
-                permissionItem.Value = existingPermissions.Contains(permissionKey) || existingPermissions.Any(p => p.StartsWith($"{permissionItem.Permission}:"));
+                permissionItem.Value = existingPermissions.Any(p => p.Policy == permissionItem.Permission);
                 if (permissionItem.Value && permissionItem.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific)
                 {
-                    var storeSpecificPermissions = existingPermissions.Where(p => p.StartsWith($"{permissionItem.Permission}:")).ToList();
+                    var storeSpecificPermissions = existingPermissions.Where(p => p.Scope != null).ToList();
                     if (storeSpecificPermissions.Any())
                     {
-                        permissionItem.SpecificStores = storeSpecificPermissions.Select(p => p.Substring(p.IndexOf(':') + 1)).ToList();
+                        permissionItem.SpecificStores = storeSpecificPermissions.Select(p => p.Scope).ToList();
                     }
                 }
             }
@@ -325,7 +321,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> UpdateApiKey(string id, EditApiKeyViewModel viewModel)
         {
             await SetViewModelValues(viewModel);
-            var permissions = GetPermissionsFromViewModel(viewModel).Select(p => p.ToString()).Distinct().ToArray();
+            var permissions = GetPermissionsFromViewModel(viewModel).Distinct().ToArray();
             await _apiKeyRepository.UpdateKey(id, permissions, viewModel.Label, _userManager.GetUserId(User));
             TempData.SetStatusMessageModel(new StatusMessageModel
             {

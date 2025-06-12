@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Data;
 using BTCPayServer.Plugins.Shopify.ApiModels;
@@ -55,7 +56,7 @@ namespace BTCPayServer.Security.Greenfield
             await context.SaveChangesAsync();
         }
 
-        public async Task UpdateKey(string id, string[] permissions, string label, string userId)
+        public async Task UpdateKey(string id, Permission[] permissions, string label, string userId)
         {
             using var context = _applicationDbContextFactory.CreateContext();
             var key = await EntityFrameworkQueryableExtensions.SingleOrDefaultAsync(context.ApiKeys,
@@ -66,7 +67,7 @@ namespace BTCPayServer.Security.Greenfield
                 key.Label = label;
                 key.SetBlob(new APIKeyBlob
                 {
-                    Permissions = permissions,
+                    Permissions = permissions.Select(p => p.ToString()).ToArray(),
                     ApplicationAuthority = keyBlob.ApplicationAuthority,
                     ApplicationIdentifier = keyBlob.ApplicationIdentifier
                 });

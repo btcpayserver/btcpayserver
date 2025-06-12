@@ -90,18 +90,18 @@ namespace BTCPayServer.Security.Greenfield
             return true;
         }
 
-        public async Task RecordPermissionUsage(string apiKey, string permission)
+        public async Task RecordPermissionUsage(string apiKey, Permission permission)
         {
             using var context = _applicationDbContextFactory.CreateContext();
             var entity = await EntityFrameworkQueryableExtensions.SingleOrDefaultAsync(context.ApiKeyPermissionUsages,
-                    data => data.ApiKey == apiKey && data.Permission == permission);
+                    data => data.ApiKey == apiKey && data.Permission == permission.Policy);
             if (entity == null)
             {
                 await context.ApiKeyPermissionUsages.AddAsync(new Data.Data.ApiKeyPermissionUsage
                 {
                     Id = $"{apiKey}-{permission}",
                     ApiKey = apiKey,
-                    Permission = permission,
+                    Permission = permission.Policy,
                     LastUsed = DateTimeOffset.UtcNow,
                     UsageCount = 1
                 });

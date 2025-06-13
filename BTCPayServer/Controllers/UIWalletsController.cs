@@ -996,7 +996,8 @@ namespace BTCPayServer.Controllers
                         Comment = info?.Comment,
                         Labels = _labelService.CreateTransactionTagModels(info, Request),
                         Link = _transactionLinkProviders.GetTransactionLink(pmi, coin.OutPoint.ToString()),
-                        Confirmations = coin.Confirmations
+                        Confirmations = coin.Confirmations,
+                        Timestamp = coin.Timestamp                   
                     };
                 }).ToArray();
             }

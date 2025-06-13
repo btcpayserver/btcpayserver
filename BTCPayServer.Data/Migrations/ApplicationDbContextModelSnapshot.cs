@@ -194,6 +194,28 @@ namespace BTCPayServer.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.Data.ApiKeyPermissionUsage", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ApiKey")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("LastUsed")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Permission")
+                        .HasColumnType("text");
+
+                    b.Property<int>("UsageCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ApiKeyPermissionUsages");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.Fido2Credential", b =>
                 {
                     b.Property<string>("Id")

@@ -291,14 +291,6 @@ const posCommon = {
 
             return item.inventory == null || item.inventory > (itemInCart ? itemInCart.count : 0)
         },
-        inventoryText(index) {
-            const item = this.items[index]
-            if (item.inventory == null) return null
-
-            const itemInCart = this.cart.find(lineItem => lineItem.id === item.id)
-            const left = item.inventory - (itemInCart ? itemInCart.count : 0)
-            return left > 0 ? `${item.inventory} left` : 'Sold out'
-        },
         addToCart(index, count) {
             if (!this.inStock(index)) return null;
 

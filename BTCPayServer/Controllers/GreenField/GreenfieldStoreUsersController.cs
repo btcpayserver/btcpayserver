@@ -6,12 +6,16 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
+using BTCPayServer.Security;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using static BTCPayServer.Services.Stores.StoreRepository;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -24,19 +28,31 @@ namespace BTCPayServer.Controllers.Greenfield
     public class GreenfieldStoreUsersController : ControllerBase
     {
         private readonly StoreRepository _storeRepository;
+        private readonly EmailSenderFactory _emailSenderFactory;
+        private readonly IAuthorizationService _authorizationService;
+        private readonly PoliciesSettings _policiesSettings;
+        private readonly EventAggregator _eventAggregator;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly CallbackGenerator _callbackGenerator;
         private readonly UriResolver _uriResolver;
 
         public GreenfieldStoreUsersController(
             StoreRepository storeRepository,
+            EventAggregator eventAggregator,
+            PoliciesSettings policiesSettings,
+            EmailSenderFactory emailSenderFactory,
             UserManager<ApplicationUser> userManager,
             CallbackGenerator callbackGenerator,
+            IAuthorizationService authorizationService,
             UriResolver uriResolver)
         {
+            _eventAggregator = eventAggregator;
+            _emailSenderFactory = emailSenderFactory;
             _storeRepository = storeRepository;
+            _policiesSettings = policiesSettings;
             _userManager = userManager;
             _callbackGenerator = callbackGenerator;
+            _authorizationService = authorizationService;
             _uriResolver = uriResolver;
         }
 
@@ -60,9 +76,13 @@ namespace BTCPayServer.Controllers.Greenfield
             if (user == null)
                 return UserNotFound();
 
-            return await _storeRepository.RemoveStoreUser(storeId, user.Id)
-                ? Ok()
-                : this.CreateAPIError(409, "store-user-role-orphaned", "Removing this user would result in the store having no owner.");
+            var storeRemovalResult = await _storeRepository.RemoveStoreUser(storeId, user.Id);
+            if (!storeRemovalResult)
+                return this.CreateAPIError(409, "store-user-role-orphaned", "Removing this user would result in the store having no owner.");
+
+            await _userManager.SetLockoutEnabledAsync(user, true);
+            var lockoutResult = await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
+            return lockoutResult.Succeeded ? Ok() : this.CreateAPIError(500, "lockout-failed", "User was removed from store but lockout failed.");
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -79,9 +99,6 @@ namespace BTCPayServer.Controllers.Greenfield
             request.Id ??= request.AdditionalData.TryGetValue("userId", out var userId) ? userId.ToString() : null;
 
             var user = await _userManager.FindByIdOrEmail(idOrEmail ?? request.Id);
-            if (user == null)
-                return UserNotFound();
-
             StoreRoleId roleId = null;
             if (request.StoreRole is not null)
             {
@@ -96,10 +113,40 @@ namespace BTCPayServer.Controllers.Greenfield
             AddOrUpdateStoreUserResult res;
             if (string.IsNullOrEmpty(idOrEmail))
             {
+                if (user == null)
+                {
+                    var isAdmin = await IsAdmin();
+                    if (_policiesSettings.LockSubscription && !isAdmin)
+                        return UserNotFound();
+
+                    user = new ApplicationUser
+                    {
+                        UserName = request.Email,
+                        Email = request.Email,
+                        RequiresEmailConfirmation = request.RequiresEmailConfirmation,
+                        RequiresApproval = request.RequiresApproval,
+                        Created = DateTimeOffset.UtcNow
+                    };
+                    if (!(await _userManager.CreateAsync(user)).Succeeded)
+                        return UserNotFound();
+
+                    var currentUser = await _userManager.GetUserAsync(HttpContext.User);
+                    if (currentUser is not null)
+                    {
+                        var invitationEmail = await _emailSenderFactory.IsComplete();
+                        var evt = await UserEvent.Invited.Create(user!, currentUser, _callbackGenerator, Request, invitationEmail);
+                        _eventAggregator.Publish(evt);
+                        user = await _userManager.FindByEmailAsync(request.Email);
+                    }
+                }
+                await _userManager.SetLockoutEndDateAsync(user, null);
                 res = await _storeRepository.AddStoreUser(storeId, user.Id, roleId) ? new AddOrUpdateStoreUserResult.Success() : new AddOrUpdateStoreUserResult.DuplicateRole(roleId);
             }
             else
             {
+                if (user == null)
+                    return UserNotFound();
+
                 res = await _storeRepository.AddOrUpdateStoreUser(storeId, user.Id, roleId);
             }
 
@@ -112,6 +159,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 _ => this.CreateAPIError(409, "store-user-role-orphaned", "Removing this user would result in the store having no owner."),
             };
         }
+
+
+        private async Task<bool> IsAdmin()
+        => (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanCreateUser))).Succeeded;
 
         private async Task<IEnumerable<StoreUserData>> ToAPI(StoreData store)
         {

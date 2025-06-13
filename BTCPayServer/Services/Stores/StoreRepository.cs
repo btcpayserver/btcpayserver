@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -397,6 +398,7 @@ namespace BTCPayServer.Services.Stores
             var userStore = new UserStore { StoreDataId = storeId, ApplicationUserId = userId };
             ctx.UserStore.Add(userStore);
             ctx.Entry(userStore).State = EntityState.Deleted;
+
             await ctx.SaveChangesAsync();
             _eventAggregator.Publish(new StoreUserEvent.Removed(storeId, userId));
             return true;

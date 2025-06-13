@@ -14,6 +14,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
 using NicolasDorier.RateLimits;
@@ -88,6 +89,7 @@ public partial class UIStoresController
         }
         else
         {
+            await _userManager.SetLockoutEndDateAsync(user, null);
             action = (await _storeRepo.GetStoreUser(storeId, user.Id)) is not null
                  ? StoreUsersAction.Updated
                  : StoreUsersAction.Added;
@@ -162,10 +164,21 @@ public partial class UIStoresController
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> DeleteStoreUser(string storeId, string userId)
     {
-        if (await _storeRepo.RemoveStoreUser(storeId, userId))
-            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["User removed successfully."].Value;
-        else
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return NotFound();
+        }
+        var storeRemovalResult = await _storeRepo.RemoveStoreUser(storeId, userId);
+        if (!storeRemovalResult)
+        {
             TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Removing this user would result in the store having no owner."].Value;
+            return RedirectToAction(nameof(StoreUsers), new { storeId, userId });
+        }
+
+        await _userManager.SetLockoutEnabledAsync(user, true);
+        var lockoutResult = await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
+        TempData[WellKnownTempData.SuccessMessage] = lockoutResult.Succeeded ? StringLocalizer["User removed successfully."].Value : StringLocalizer["User was removed from store but lockout failed."].Value;
         return RedirectToAction(nameof(StoreUsers), new { storeId, userId });
     }
 

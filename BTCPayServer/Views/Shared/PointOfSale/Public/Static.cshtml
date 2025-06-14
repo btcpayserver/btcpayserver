@@ -27,43 +27,26 @@
         @foreach (var user in Model.PosUsers)
         {
             <option value="@user.Id" data-multistore="@user.IsMultiStoreUser.ToString().ToLower()">
-                @user.Email (@user.Role)
+                @user.Role (@user.Id) <!-- Replace email with role or ID -->
             </option>
         }
         </select>
     </div>
 }
 
-<!-- Hidden input to sync dropdown value -->
-<input type="hidden" name="userId" id="formUserId" value="" />
+<!-- Global hidden input -->
+<input type="hidden" name="userId" value="" />
 
 <script>
 document.getElementById('userDropdown')?.addEventListener('change', function(e) {
     var selectedOption = e.target.options[e.target.selectedIndex];
-    document.getElementById('formUserId').value = selectedOption.value; // Sync hidden input value
+    document.querySelector('input[name="userId"]').value = selectedOption.value; // Sync hidden input value
     if (selectedOption.dataset.multistore === "true") {
         if (!window.confirm("Are you sure you want to generate a QR code for a user who has access to multiple stores?")) {
             e.target.selectedIndex = 0;
-            document.getElementById('formUserId').value = ""; // Reset hidden input value
+            document.querySelector('input[name="userId"]').value = ""; // Reset hidden input value
         }
     }
-});
-</script>
-
-<script>
-const userDropdown = document.getElementById('userDropdown');
-document.querySelectorAll('form').forEach(form => {
-    form.addEventListener('submit', function() {
-        // find or create the hidden input
-        let input = form.querySelector('input[name="userId"]');
-        if (!input) {
-            input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'userId';
-            form.appendChild(input);
-        }
-        input.value = userDropdown.value;
-    });
 });
 </script>
 
@@ -119,7 +102,7 @@ document.querySelectorAll('form').forEach(form => {
                     {
                         <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" autocomplete="off">
                             <input type="hidden" name="choiceKey" value="@item.Id" />
-                            <input type="hidden" name="userId" id="formUserId" value="" /> <!-- Hidden input added -->
+                            <input type="hidden" name="userId" value="" /> <!-- Removed id -->
                             @if (item.PriceType == AppItemPriceType.Minimum)
                             {
                                 <div class="input-group mb-2">
@@ -144,7 +127,7 @@ document.querySelectorAll('form').forEach(form => {
                 </div>
                 <div class="card-footer bg-transparent border-0 pb-3">
                     <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" autocomplete="off">
-                        <input type="hidden" name="userId" id="formUserId" value="" /> <!-- Hidden input added -->
+                        <input type="hidden" name="userId" value="" /> <!-- Removed id -->
                         <div class="input-group mb-2">
                             <span class="input-group-text">@Model.CurrencySymbol</span>
                             <input class="form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="@StringLocalizer["Amount"]" required>

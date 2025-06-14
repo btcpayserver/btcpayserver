@@ -106,8 +106,23 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
             var storeBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
+            // Build the list of users with multi-store detection
+            var storeUsers = await _storeRepository.GetStoreUsers(store.Id);
+            var allStores = await _storeRepository.GetStores();
+            var posUsers = storeUsers.Select(u =>
+            {
+                var multiStore = allStores.Count(s => s.UserStores.Any(us => us.ApplicationUserId == u.Id)) > 1
+                    || u.StoreRole.Role.Equals("ServerAdmin", StringComparison.OrdinalIgnoreCase);
 
-            return View($"PointOfSale/Public/{viewType}", new ViewPointOfSaleViewModel
+                return new ViewPointOfSaleViewModel.PosUserViewModel
+                {
+                    Id = u.Id,
+                    Email = u.Email,
+                    Role = u.StoreRole.Role,
+                    IsMultiStoreUser = multiStore
+                };
+            }).ToList();
+           return View($"PointOfSale/Public/{viewType}", new ViewPointOfSaleViewModel
             {
                 Title = settings.Title,
                 StoreName = store.StoreName,
@@ -142,6 +157,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 HtmlLang = settings.HtmlLang,
                 HtmlMetaTags= settings.HtmlMetaTags,
                 Description = settings.Description,
+                PosUsers = posUsers 
             });
         }
 
@@ -164,7 +180,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                                         string choiceKey = null,
                                                         string posData = null,
                                                         string formResponse = null,
-                                                        CancellationToken cancellationToken = default)
+                                                        string userId = null, 
+                                                CancellationToken cancellationToken = default)
         {
             if (await Throttle(appId))
                 return new TooManyRequestsResult(ZoneLimits.PublicInvoices);

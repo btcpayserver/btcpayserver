@@ -74,5 +74,14 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public SelectList AllCategories { get; set; }
         public string StoreId { get; set; }
         public decimal DefaultTaxRate { get; set; }
+        public List<PosUserViewModel> PosUsers { get; set; }
+    }
+
+    public class PosUserViewModel
+    {
+        public string Id { get; set; }
+        public string Email { get; set; }
+        public string Role { get; set; }
+        public bool IsMultiStoreUser { get; set; }
     }
 }

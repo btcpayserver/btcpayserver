@@ -5,9 +5,15 @@ namespace BTCPayServer.Blazor
     public static class BlazorExtensions
     {
         public static bool IsPreRendering(this IJSRuntime runtime)
-        {
-            // The peculiar thing in prerender is that Blazor circuit isn't yet created, so we can't use JSInterop
-            return !(bool)runtime.GetType().GetProperty("IsInitialized").GetValue(runtime);
-        }
+            => runtime.GetType() switch
+            {
+                // blazor wasm (pre-rendering)
+                { Name: "UnsupportedJavaScriptRuntime" } => true,
+                // blazor wasm (rendering)
+                { Name: "DefaultWebAssemblyJSRuntime" } => false,
+                // blazor server (pre-rendering and rendering)
+                { } type when type.GetProperty("IsInitialized")?.GetValue(runtime) is bool isInitialized => !isInitialized,
+                _ => false
+            };
     }
 }

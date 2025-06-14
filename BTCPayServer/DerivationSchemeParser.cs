@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using NBitcoin;
 using NBitcoin.Scripting;
 using NBitcoin.WalletPolicies;
+using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using static NBitcoin.WalletPolicies.MiniscriptNode;
 
@@ -69,7 +70,7 @@ namespace BTCPayServer
             }).ToArray() ?? new AccountKeySettings[result.Item1.GetExtPubKeys().Count()];
             if (result.Item2?.Length > 1)
                 derivationSchemeSettings.IsMultiSigOnServer = true;
-            var isTaproot = derivationSchemeSettings.AccountDerivation.GetDerivation().ScriptPubKey.IsScriptType(ScriptType.Taproot);
+            var isTaproot = derivationSchemeSettings.AccountDerivation.GetLineFor(DerivationFeature.Deposit).Derive(0).ScriptPubKey.IsScriptType(ScriptType.Taproot);
             derivationSchemeSettings.DefaultIncludeNonWitnessUtxo = !isTaproot;
             return derivationSchemeSettings;
         }
@@ -209,9 +210,40 @@ namespace BTCPayServer
                     ScriptPubKeyType = ScriptPubKeyType.SegwitP2SH,
                     KeepOrder = desc.Name == "multi"
                 }), rpks),
-                _ => throw new FormatException("Not supporting this script policy (BIP388) yet.")
+                _ => ParsePolicy(factory, str)
             };
         }
+
+        private (DerivationStrategyBase, RootedKeyPath[]) ParsePolicy(DerivationStrategyFactory factory, string str)
+        {
+            var policy = factory.Parse(str) as PolicyDerivationStrategy;
+            if (policy is null)
+                throw new FormatException("Invalid miniscript derivation");
+            var v = new RootKeyPathVisitor();
+            policy.Policy.FullDescriptor.Visit(v);
+            return (policy, v.RootedKeyPaths.ToArray());
+        }
+
+        class RootKeyPathVisitor : MiniscriptVisitor
+        {
+            public List<RootedKeyPath> RootedKeyPaths { get; set; } = new();
+            public override void Visit(MiniscriptNode node)
+            {
+                // Match all '[12345678]xpub/**'
+                if (node is MiniscriptNode.MultipathNode
+                        {
+                            Target: HDKeyNode hd
+                        })
+                {
+                    RootedKeyPaths.Add(hd.RootedKeyPath);
+                }
+                else
+                {
+                    base.Visit(node);
+                }
+            }
+        }
+
 
         private (DerivationStrategyBase, RootedKeyPath[]) ParseLegacyOutputDescriptor(string str)
         {

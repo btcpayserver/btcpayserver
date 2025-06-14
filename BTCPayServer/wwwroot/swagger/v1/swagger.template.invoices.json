@@ -674,7 +674,22 @@
             "InvoiceDataList": {
                 "type": "array",
                 "items": {
-                    "$ref": "#/components/schemas/InvoiceData"
+                    "allOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "PaymentMethods": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/InvoicePaymentMethodDataModel"
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "$ref": "#/components/schemas/InvoiceData"
+                        }
+                    ]
                 }
             },
             "MarkInvoiceStatusRequest": {

@@ -27,7 +27,7 @@
         @foreach (var user in Model.PosUsers)
         {
             <option value="@user.Id" data-multistore="@user.IsMultiStoreUser.ToString().ToLower()">
-                @user.Role (@user.Id) <!-- Replace email with role or ID -->
+                @user.Role (@user.Id) 
             </option>
         }
         </select>
@@ -102,7 +102,7 @@ document.getElementById('userDropdown')?.addEventListener('change', function(e) 
                     {
                         <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" autocomplete="off">
                             <input type="hidden" name="choiceKey" value="@item.Id" />
-                            <input type="hidden" name="userId" value="" /> <!-- Removed id -->
+                            <input type="hidden" name="userId" value="" /> 
                             @if (item.PriceType == AppItemPriceType.Minimum)
                             {
                                 <div class="input-group mb-2">
@@ -127,7 +127,7 @@ document.getElementById('userDropdown')?.addEventListener('change', function(e) 
                 </div>
                 <div class="card-footer bg-transparent border-0 pb-3">
                     <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" autocomplete="off">
-                        <input type="hidden" name="userId" value="" /> <!-- Removed id -->
+                        <input type="hidden" name="userId" value="" /> 
                         <div class="input-group mb-2">
                             <span class="input-group-text">@Model.CurrencySymbol</span>
                             <input class="form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="@StringLocalizer["Amount"]" required>

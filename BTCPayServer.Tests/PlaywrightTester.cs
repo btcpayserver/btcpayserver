@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -566,12 +567,39 @@ namespace BTCPayServer.Tests
             await Page.ClickAsync("#FakePayment");
             await Page.Locator("#CheatSuccessMessage").WaitForAsync();
             // TODO: Fix flakyness
-            await Page.Locator("text=Payment Received").WaitForAsync();
+            try
+            {
+                await Page.Locator("text=Payment Received").WaitForAsync();
+            }
+            catch
+            {
+                await TakeScreenshot("PayInvoice.png");
+                throw;
+            }
 
             if (mine)
             {
                 await MineBlockOnInvoiceCheckout();
             }
+        }
+
+        /// <summary>
+        /// Take a screenshot. If running in CI, it is uploaded in the artifacts (see https://github.com/btcpayserver/btcpayserver/pull/6794)
+        /// </summary>
+        /// <param name="fileName"></param>
+        public async Task TakeScreenshot(string fileName)
+        {
+            var screenshotDir = Environment.GetEnvironmentVariable("TESTS_ARTIFACTS_DIR") ?? "Screenshots";
+            Directory.CreateDirectory(screenshotDir);
+            screenshotDir = Path.Combine(screenshotDir, this.Server.Scope);
+            Directory.CreateDirectory(screenshotDir);
+            var filePath = Path.Combine(screenshotDir, fileName);
+            Server.TestLogs.LogInformation("Saving test screenshot to " + filePath);
+            await Page.ScreenshotAsync(new()
+            {
+                Path = filePath,
+                FullPage = true,
+            });
         }
 
         public async Task MineBlockOnInvoiceCheckout()

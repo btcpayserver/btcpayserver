@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AngleSharp.Dom;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
@@ -23,6 +24,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
@@ -121,8 +123,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     Status = status,
                     TextSearch = textSearch
                 });
-
-            return Ok(invoices.Select(ToModel));
+            return Ok(invoices.Select(invoice => ToInvoiceModelWithPaymentMethodModels(invoice, includeAccountedPaymentOnly: true, includeSensitive: false)));
         }
 
         [Authorize(Policy = Policies.CanViewInvoices,
@@ -580,7 +581,17 @@ namespace BTCPayServer.Controllers.Greenfield
             };
         }
 
-        private InvoiceData ToModel(InvoiceEntity entity)
+        private InvoiceDataWithPaymentMethods ToInvoiceModelWithPaymentMethodModels(InvoiceEntity entity, bool includeAccountedPaymentOnly = true, bool includeSensitive = false)
+        {
+            var baseModel = ToModel(entity, _linkGenerator, _currencyNameTable, Request);
+            var result = new InvoiceDataWithPaymentMethods(baseModel)
+            {
+                PaymentMethods = ToPaymentMethodModels(entity, includeAccountedPaymentOnly, includeSensitive)
+            };
+            return result;
+        }
+
+private InvoiceData ToModel(InvoiceEntity entity)
         {
             return ToModel(entity, _linkGenerator, _currencyNameTable, Request);
         }

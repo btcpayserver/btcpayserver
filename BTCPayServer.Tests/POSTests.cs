@@ -405,9 +405,7 @@ goodies:
             Assert.Contains("0,77 €", await s.Page.TextContentAsync("#PaymentDetails-TaxIncluded"));
             Assert.Contains("10,67 €", await s.Page.TextContentAsync("#PaymentDetails-TotalFiat"));
             //
-            // Pay
             await s.PayInvoice(true);
-
 
             // Receipt
             await s.Page.ClickAsync("#ReceiptLink");

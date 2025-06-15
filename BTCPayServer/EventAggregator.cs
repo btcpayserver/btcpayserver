@@ -87,6 +87,9 @@ namespace BTCPayServer
                 }
             }
 
+            if (Logs.Events.IsEnabled(LogLevel.Information))
+                Logs.Events.LogInformation("Event published {0}", evt);
+
             foreach (var sub in actionList)
             {
                 try

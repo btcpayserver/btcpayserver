@@ -405,9 +405,7 @@ goodies:
             Assert.Contains("0,77 €", await s.Page.TextContentAsync("#PaymentDetails-TaxIncluded"));
             Assert.Contains("10,67 €", await s.Page.TextContentAsync("#PaymentDetails-TotalFiat"));
             //
-            // Pay
             await s.PayInvoice(true);
-
 
             // Receipt
             await s.Page.ClickAsync("#ReceiptLink");
@@ -435,7 +433,17 @@ goodies:
 
             // Check inventory got updated and is now 3 instead of 5
             await s.GoToUrl(posUrl);
-            Assert.Equal("3 left", await s.Page.TextContentAsync(".posItem:nth-child(3) .badge.inventory"));
+            try
+            {
+                Assert.Equal("3 left", await s.Page.TextContentAsync(".posItem:nth-child(3) .badge.inventory"));
+            }
+            catch (Exception e)
+            {
+                // Flaky
+                await s.TakeScreenshot("BadInventory.png");
+                throw;
+            }
+
 
             // Guest user can access recent transactions
             await s.GoToHome();

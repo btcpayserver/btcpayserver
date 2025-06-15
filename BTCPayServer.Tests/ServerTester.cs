@@ -34,6 +34,7 @@ namespace BTCPayServer.Tests
         internal ILog TestLogs;
         public ServerTester(string scope, bool newDb, ILog testLogs, ILoggerProvider loggerProvider, BTCPayNetworkProvider networkProvider)
         {
+            Scope = scope;
             LoggerProvider = loggerProvider;
             this.TestLogs = testLogs;
             _Directory = scope;
@@ -72,6 +73,8 @@ namespace BTCPayServer.Tests
             PayTester.SSHConnection = GetEnvironment("TESTS_SSHCONNECTION", "root@127.0.0.1:21622");
             PayTester.SocksEndpoint = GetEnvironment("TESTS_SOCKSENDPOINT", "localhost:9050");
         }
+
+        public string Scope { get; set; }
 
         public void ActivateLangs()
         {

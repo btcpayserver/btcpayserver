@@ -82,7 +82,17 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await w.AssertNotFound(cpfpTx);
 
         // However, the new transaction should have copied the CPFP tag from the transaction it replaced, and have a RBF label as well.
-        await w.AssertHasLabels(rbfTx, "CPFP");
+        try
+        {
+            await w.AssertHasLabels(rbfTx, "CPFP");
+        }
+        catch
+        {
+            // TODO: Flaky
+            await s.TakeScreenshot("AssertHasLabels-Fails.png");
+            throw;
+        }
+
         await w.AssertHasLabels(rbfTx, "RBF");
 
         // Now, we sweep all the UTXOs to a single destination. This should be RBF-able. (Fee deducted on the lone UTXO)

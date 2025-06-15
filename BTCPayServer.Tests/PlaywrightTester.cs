@@ -565,20 +565,8 @@ namespace BTCPayServer.Tests
             }
             await Page.ClickAsync("#FakePayment");
             await Page.Locator("#CheatSuccessMessage").WaitForAsync();
-            try
-            {
-                await Page.Locator("text=Payment Received").WaitForAsync(new()
-                {
-                    Timeout = 1000
-                });
-            }
-            // I don't like this hack, but it seems that on CI the payment received text sometimes
-            // does not show up. This should fix flacky tests
-            catch
-            {
-                await Page.ReloadAsync();
-                await Page.Locator("text=Payment Received").WaitForAsync();
-            }
+            // TODO: Fix flakyness
+            await Page.Locator("text=Payment Received").WaitForAsync();
 
             if (mine)
             {

@@ -301,26 +301,25 @@ namespace BTCPayServer.Controllers
             var viewModel = new EditApiKeyViewModel { Label = key.Label, Id = key.Id };
             await SetViewModelValues(viewModel);
             var existingPermissions = Permission.ToPermissions(key.GetBlob().Permissions);
-
             foreach (var permissionItem in viewModel.PermissionValues)
             {
-                permissionItem.Value = existingPermissions.Any(p => p.Policy == permissionItem.Permission);
-                if (permissionItem.Value && permissionItem.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific)
-                {
-                    var storeSpecificPermissions = existingPermissions.Where(p => p.Scope != null).ToList();
-                    if (storeSpecificPermissions.Any())
-                    {
-                        permissionItem.SpecificStores = storeSpecificPermissions.Select(p => p.Scope).ToList();
-                    }
-                }
+                var permissionInKey = existingPermissions.FirstOrDefault(p => p.Policy == permissionItem.Permission);
+                bool hasPermission = permissionInKey != null;
+                permissionItem.Value = hasPermission;
+                permissionItem.StoreMode = hasPermission && !string.IsNullOrEmpty(permissionInKey.Scope) ? EditApiKeyViewModel.ApiKeyStoreMode.Specific : EditApiKeyViewModel.ApiKeyStoreMode.AllStores;
+                permissionItem.SpecificStores = hasPermission && !string.IsNullOrEmpty(permissionInKey.Scope) ? new List<string> { permissionInKey.Scope } : new List<string>();
             }
             return View(viewModel);
         }
 
         [HttpPost("~/api-keys/{id}/edit")]
-        public async Task<IActionResult> UpdateApiKey(string id, EditApiKeyViewModel viewModel)
+        public async Task<IActionResult> EditAPIKey(string id, EditApiKeyViewModel viewModel)
         {
             await SetViewModelValues(viewModel);
+            var ar = HandleCommands(viewModel);
+            if (ar != null)
+                return ar;
+
             var permissions = GetPermissionsFromViewModel(viewModel).Distinct().ToArray();
             await _apiKeyRepository.UpdateKey(id, permissions, viewModel.Label, _userManager.GetUserId(User));
             TempData.SetStatusMessageModel(new StatusMessageModel

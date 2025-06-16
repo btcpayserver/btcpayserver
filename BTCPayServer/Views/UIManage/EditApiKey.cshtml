@@ -3,7 +3,7 @@
 @model UIManageController.EditApiKeyViewModel
 
 @{
-    ViewData.SetActivePage(ManageNavPages.APIKeys, "Update API Key");
+	ViewData.SetActivePage(ManageNavPages.APIKeys, StringLocalizer["Update API Key"]);
 }
 
 @section PageHeadContent {
@@ -15,17 +15,9 @@
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial"/>
-    <script>
-        delegate('click', `form button[value*=':']`, function (e) {
-            const { form, value } = e.target
-            const [action] = form.getAttribute('action').split('#')
-            const anchor = value.replace(/:.*/, '')
-            form.setAttribute('action', `${action}#${anchor}`)
-        })
-    </script>
 }
 
-<form method="post" asp-action="UpdateApiKey" asp-route-id="@Model.Id" id="Permissions">
+<form method="post" asp-action="EditAPIKey" asp-route-id="@Model.Id" id="Permissions">
     <div class="sticky-header">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
@@ -36,7 +28,7 @@
             </ol>
             <h2>@ViewData["Title"]</h2>
         </nav>
-		<button id="page-primary" type="submit" class="btn btn-primary">Update API Key</button>
+		<button id="page-primary" type="submit" class="btn btn-primary" text-translate="true">Update API Key</button>
     </div>
     <div class="row">
         <div class="col-xl-10 col-xxl-constrain">
@@ -65,7 +57,8 @@
                             @if (Policies.IsStorePolicy(Model.PermissionValues[i].Permission))
                             {
                                 <input type="hidden" asp-for="PermissionValues[i].StoreMode" value="@Model.PermissionValues[i].StoreMode" />
-                                @if (Model.PermissionValues[i].StoreMode == UIManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores)
+								<input type="hidden" asp-for="Id" />
+								@if (Model.PermissionValues[i].StoreMode == UIManageController.EditApiKeyViewModel.ApiKeyStoreMode.AllStores)
                                 {
                                     <div class="form-check mb-0">
                                         <input id="@Model.PermissionValues[i].Permission" type="checkbox" asp-for="PermissionValues[i].Value" class="form-check-input ms-n4"/>
@@ -78,7 +71,7 @@
                                             <div class="text-muted">@Model.PermissionValues[i].Description</div>
                                             @if (Model.Stores.Any())
                                             {
-                                                <button type="submit" class="btn btn-link p-0" name="command" value="@($"{Model.PermissionValues[i].Permission}:change-store-mode")">Select specific stores</button>
+												<button type="submit" class="btn btn-link p-0" name="command" value="@($"{Model.PermissionValues[i].Permission}:change-store-mode")" text-translate="true">Select specific stores</button>
                                             }
                                         </div>
                                     </div>
@@ -90,13 +83,13 @@
                                         <small class="text-muted text-break d-block my-2 d-lg-inline-block my-lg-0">@Model.PermissionValues[i].Permission</small>
                                     </h5>
                                     <div class="text-muted">@Model.PermissionValues[i].Description</div>
-                                    <button type="submit" class="btn btn-link p-0" name="command" value="@($"{Model.PermissionValues[i].Permission}:change-store-mode")">Give permission to all stores instead</button>
+									<button type="submit" class="btn btn-link p-0" name="command" value="@($"{Model.PermissionValues[i].Permission}:change-store-mode")" text-translate="true">Give permission to all stores instead</button>
         
                                     @if (!Model.Stores.Any())
                                     {
                                         <p class="info-note text-warning mt-2 mb-0">
                                             <vc:icon symbol="warning"/>
-                                            You currently have no stores configured.
+											<span text-translate="true">You currently have no stores configured.</span>
                                         </p>
                                     }
                                     @for (var index = 0; index < Model.PermissionValues[i].SpecificStores.Count; index++)
@@ -120,7 +113,7 @@
                                     @if (Model.PermissionValues[i].SpecificStores.Count < Model.Stores.Length)
                                     {
                                         <div class="mt-3">
-                                            <button type="submit" name="command" value="@($"{Model.PermissionValues[i].Permission}:add-store")" class="btn btn-secondary">Add another store</button>
+											<button type="submit" name="command" value="@($"{Model.PermissionValues[i].Permission}:add-store")" class="btn btn-secondary" text-translate="true">Add another store</button>
                                         </div>
                                     }
                                 }

@@ -76,7 +76,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public decimal DefaultTaxRate { get; set; }
         public List<PosUserViewModel> PosUsers { get; set; } = new List<PosUserViewModel>(); // Initialize to avoid null-checks
 
-        public class PosUserViewModel
+        public partial class PosUserViewModel
         {
             public string Id { get; set; }
             public string Email { get; set; }

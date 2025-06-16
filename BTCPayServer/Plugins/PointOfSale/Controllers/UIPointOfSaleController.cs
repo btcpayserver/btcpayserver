@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Microsoft.EntityFrameworkCore;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
@@ -47,6 +48,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
     [Route("apps")]
     public class UIPointOfSaleController : Controller
     {
+        private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
+
         public UIPointOfSaleController(
             AppService appService,
             CurrencyNameTable currencies,
@@ -59,8 +62,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             DisplayFormatter displayFormatter,
             IRateLimitService rateLimitService,
             IAuthorizationService authorizationService,
-            Safe safe)
+            Safe safe,
+            IDbContextFactory<ApplicationDbContext> dbContextFactory)
         {
+            _dbContextFactory = dbContextFactory;
             _currencies = currencies;
             _appService = appService;
             _storeRepository = storeRepository;
@@ -108,9 +113,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var storeBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
             var storeUsers = await _storeRepository.GetStoreUsers(store.Id);
             var allStores = await _storeRepository.GetStores();
+            var storeCountsPerUser = await _storeRepository.GetStoreCountsPerUserAsync();
             var posUsers = storeUsers.Select(u =>
             {
-                var multiStore = allStores.Count(s => s.UserStores.Any(us => us.ApplicationUserId == u.Id)) > 1
+                var multiStore = storeCountsPerUser.TryGetValue(u.Id, out var storeCount) && storeCount > 1
                     || u.StoreRole.Role.Equals("ServerAdmin", StringComparison.OrdinalIgnoreCase);
 
                 return new ViewPointOfSaleViewModel.PosUserViewModel
@@ -181,102 +187,102 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                                 string formResponse = null,
                                                 string userId = null, // userId parameter
                                                 CancellationToken cancellationToken = default)
+{
+    if (await Throttle(appId))
+        return new TooManyRequestsResult(ZoneLimits.PublicInvoices);
+
+    var wantsJson = Request.Headers.Accept.FirstOrDefault()?.StartsWith("application/json") is true;
+
+    IActionResult Error(string message)
+    {
+        if (wantsJson)
+            return Json(new { error = message });
+        TempData.SetStatusMessageModel(new StatusMessageModel
         {
-            if (await Throttle(appId))
-                return new TooManyRequestsResult(ZoneLimits.PublicInvoices);
+            Message = message,
+            Severity = StatusMessageModel.StatusSeverity.Error,
+            AllowDismiss = true
+        });
+        return RedirectToAction(nameof(ViewPointOfSale), new { appId });
+    }
 
-            var wantsJson = Request.Headers.Accept.FirstOrDefault()?.StartsWith("application/json") is true;
+    var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
+    if (app == null)
+        return wantsJson
+            ? Json(new { error = StringLocalizer["App not found"].Value })
+            : NotFound();
 
-            IActionResult Error(string message)
+    // Validate userId
+    var store = await _appService.GetStore(app);
+    var storeUsers = await _storeRepository.GetStoreUsers(store.Id);
+    var user = storeUsers.FirstOrDefault(u => u.Id == userId);
+    if (user == null)
+        return Error(StringLocalizer["Invalid userId"].Value);
+
+    // not allowing negative tips or discounts
+    if (tip < 0 || discount < 0)
+        return Error(StringLocalizer["Negative tip or discount is not allowed"].Value);
+
+    if (string.IsNullOrEmpty(choiceKey) && (amount < 0 || customAmount < 0))
+        return Error(StringLocalizer["Negative amount is not allowed"].Value);
+
+    var settings = app.GetSettings<PointOfSaleSettings>();
+    settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
+    var currentView = viewType ?? settings.DefaultView;
+
+    if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount &&
+        currentView != PosViewType.Cart && currentView != PosViewType.Light)
+    {
+        return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
+    }
+
+    var choices = AppService.Parse(settings.Template, false);
+    var jposData = PosAppData.TryParse(posData) ?? new();
+    PoSOrder order = new(_currencies.GetNumberFormatInfo(settings.Currency, true).CurrencyDecimalDigits);
+
+    // Invoice creation logic
+    try
+    {
+        var invoice = await _invoiceController.CreateInvoiceCoreRaw(new CreateInvoiceRequest
+        {
+            Amount = order.Calculate().PriceTaxIncludedWithTips,
+            Currency = settings.Currency,
+            Metadata = new InvoiceMetadata
             {
-                if (wantsJson)
-                    return Json(new { error = message });
-                TempData.SetStatusMessageModel(new StatusMessageModel
+                BuyerEmail = email,
+                OrderId = orderId ?? AppService.GetRandomOrderId(),
+                PosData = JObject.FromObject(jposData),
+                AdditionalData = JObject.FromObject(new Dictionary<string, string>
                 {
-                    Message = message,
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    AllowDismiss = true
-                });
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
-            }
-
-            var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
-            if (app == null)
-                return wantsJson
-                    ? Json(new { error = StringLocalizer["App not found"].Value })
-                    : NotFound();
-
-            // Validate userId
-            var store = await _appService.GetStore(app);
-            var storeUsers = await _storeRepository.GetStoreUsers(store.Id);
-            var user = storeUsers.FirstOrDefault(u => u.Id == userId);
-            if (user == null)
-                return Error(StringLocalizer["Invalid userId"].Value);
-
-            // not allowing negative tips or discounts
-            if (tip < 0 || discount < 0)
-                return Error(StringLocalizer["Negative tip or discount is not allowed"].Value);
-
-            if (string.IsNullOrEmpty(choiceKey) && (amount < 0 || customAmount < 0))
-                return Error(StringLocalizer["Negative amount is not allowed"].Value);
-
-            var settings = app.GetSettings<PointOfSaleSettings>();
-            settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
-            var currentView = viewType ?? settings.DefaultView;
-
-            if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount &&
-                currentView != PosViewType.Cart && currentView != PosViewType.Light)
+                    { "userId", userId } // Tag invoice with userId
+                })
+            }.ToJObject(),
+            Checkout = new InvoiceDataBase.CheckoutOptions
             {
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
+                RedirectAutomatically = settings.RedirectAutomatically,
+                RedirectURL = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl : settings.RedirectUrl
             }
+        }, store, HttpContext.Request.GetAbsoluteRoot(),
+        new List<string> { AppService.GetAppInternalTag(appId) },
+        cancellationToken);
 
-            var choices = AppService.Parse(settings.Template, false);
-            var jposData = PosAppData.TryParse(posData) ?? new();
-            PoSOrder order = new(_currencies.GetNumberFormatInfo(settings.Currency, true).CurrencyDecimalDigits);
-
-            // Invoice creation logic
-            try
-            {
-                var invoice = await _invoiceController.CreateInvoiceCoreRaw(new CreateInvoiceRequest
-                {
-                    Amount = order.Calculate().PriceTaxIncludedWithTips,
-                    Currency = settings.Currency,
-                    Metadata = new InvoiceMetadata
-                    {
-                        BuyerEmail = email,
-                        OrderId = orderId ?? AppService.GetRandomOrderId(),
-                        PosData = JObject.FromObject(jposData),
-                        AdditionalData = new Dictionary<string, string>
-                        {
-                            { "userId", userId } // Tag invoice with userId
-                        }
-                    }.ToJObject(),
-                    Checkout = new InvoiceDataBase.CheckoutOptions
-                    {
-                        RedirectAutomatically = settings.RedirectAutomatically,
-                        RedirectURL = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl : settings.RedirectUrl
-                    }
-                }, store, HttpContext.Request.GetAbsoluteRoot(),
-                new List<string> { AppService.GetAppInternalTag(appId) },
-                cancellationToken);
-
-                var data = new { invoiceId = invoice.Id };
-                if (wantsJson)
-                    return Json(data);
-                return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", data);
-            }
-            catch (BitpayHttpException e)
-            {
-                if (wantsJson) return Json(new { error = e.Message });
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Html = e.Message.Replace("\n", "<br />", StringComparison.OrdinalIgnoreCase),
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    AllowDismiss = true
-                });
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
-            }
-        }
+        var data = new { invoiceId = invoice.Id };
+        if (wantsJson)
+            return Json(data);
+        return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", data);
+    }
+    catch (BitpayHttpException e)
+    {
+        if (wantsJson) return Json(new { error = e.Message });
+        TempData.SetStatusMessageModel(new StatusMessageModel
+        {
+            Html = e.Message.Replace("\n", "<br />", StringComparison.OrdinalIgnoreCase),
+            Severity = StatusMessageModel.StatusSeverity.Error,
+            AllowDismiss = true
+        });
+        return RedirectToAction(nameof(ViewPointOfSale), new { appId });
+    }
+}
 
         private async Task<bool> Throttle(string appId) =>
             !(await _authorizationService.AuthorizeAsync(HttpContext.User, appId, Policies.CanViewInvoices)).Succeeded &&
@@ -597,16 +603,16 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var users = await _storeRepository.GetStoreUsers(GetCurrentStore().Id);
             vm.StoreUsers = users.Select(u => (u.Id, u.Email, u.StoreRole.Role)).ToDictionary(u => u.Id, u => $"{u.Email} ({u.Role})");
         }
-    }
 
-    public class ViewPointOfSaleViewModel
-    {
-        public class PosUserViewModel
+        public async Task<Dictionary<string, int>> GetStoreCountsPerUserAsync()
         {
-            public string Id { get; set; }
-            public string Email { get; set; }
-            public string Role { get; set; }
-            public bool IsMultiStoreUser { get; set; }
+            using var context = _dbContextFactory.CreateDbContext();
+            return await context.UserStore
+                .GroupBy(us => us.ApplicationUserId)
+                .Select(group => new { UserId = group.Key, StoreCount = group.Count() })
+                .ToDictionaryAsync(g => g.UserId, g => g.StoreCount);
         }
     }
-}
+
+    }
+

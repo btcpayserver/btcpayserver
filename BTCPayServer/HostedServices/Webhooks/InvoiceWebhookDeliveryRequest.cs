@@ -47,4 +47,7 @@ public class InvoiceWebhookDeliveryRequest(
         res = InterpolateJsonField(res, "Invoice.Metadata", Invoice.Metadata.ToJObject());
         return res;
     }
+
+    public override string ToString()
+        => $"Webhook delivery request ({webhookEvent.Type})";
 }

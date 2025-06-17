@@ -3392,7 +3392,7 @@ retry:
                 s.Driver.WaitForElement(By.Id("reserved-addresses"));
 
                 //Test Filter
-                var filterInput = s.Driver.FindElement(By.CssSelector("input[placeholder='Filter by address or label']"));
+                var filterInput = s.Driver.FindElement(By.Id("filter-reserved-addresses"));
                 filterInput.SendKeys("test-label");
 
                 TestUtils.Eventually(() =>

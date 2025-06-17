@@ -3031,5 +3031,88 @@ retry:
                 checkboxElement.Click();
             }
         }
+
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanUseReservedAddressesView()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            s.RegisterNewUser(true);
+            (string _, string storeId) = s.CreateNewStore();
+            s.GenerateWallet(seed: null);
+
+                var walletId = new WalletId(storeId, "BTC");
+                s.GoToWallet(walletId, WalletsNavPages.Receive);
+
+                for (int i = 0; i < 10; i++)
+                {
+                    string previousAddress = s.Driver.FindElement(By.Id("Address")).GetAttribute("data-text");
+
+                    s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
+
+                    TestUtils.Eventually(() =>
+                    {
+                        var currentAddress = s.Driver.FindElement(By.Id("Address")).GetAttribute("data-text");
+                        Assert.False(string.IsNullOrEmpty(currentAddress));
+                        Assert.NotEqual(previousAddress, currentAddress);
+                    });
+                }
+                s.Driver.FindElement(By.Id("CancelWizard")).Click();
+
+                s.Driver.FindElement(By.Id($"StoreNav-WalletBTC")).Click();
+                s.Driver.FindElement(By.Id("WalletNav-ReservedAddresses")).Click();
+                s.Driver.WaitForElement(By.Id("reserved-addresses"));
+
+                TestUtils.Eventually(() =>
+                {
+                    var row = s.Driver.FindElements(By.CssSelector("#reserved-addresses table tbody tr")).FirstOrDefault();
+                    Assert.NotNull(row);
+
+                    var input = row.FindElement(By.CssSelector(".ts-control input"));
+                    input.Click();
+                });
+
+                var labelInput = s.Driver.FindElement(By.CssSelector(".ts-control input"));
+                labelInput.SendKeys("test-label" + Keys.Enter);
+
+                TestUtils.Eventually(() =>
+                {
+                    var row = s.Driver.FindElement(By.CssSelector("#reserved-addresses table tbody tr"));
+                    Assert.Contains("test-label", row.Text);
+                });
+
+                // Test Pagination
+                TestUtils.Eventually(() =>
+                {
+                    var rows = s.Driver.FindElements(By.CssSelector("#reserved-addresses table tbody tr"))
+                        .Where(row => row.Displayed).ToList();
+                    Assert.Equal(10, rows.Count);
+                });
+
+                s.Driver.FindElement(By.CssSelector(".pagination li:last-child a")).Click();
+
+                TestUtils.Eventually(() =>
+                {
+                    var rows = s.Driver.FindElements(By.CssSelector("#reserved-addresses table tbody tr"))
+                        .Where(row => row.Displayed).ToList();
+                    Assert.Single(rows);
+                });
+
+                s.Driver.FindElement(By.CssSelector(".pagination li:first-child a")).Click();
+
+                s.Driver.Navigate().Refresh();
+                s.Driver.WaitForElement(By.Id("reserved-addresses"));
+
+                //Test Filter
+                var filterInput = s.Driver.FindElement(By.CssSelector("input[placeholder='Filter by address or label']"));
+                filterInput.SendKeys("test-label");
+
+                TestUtils.Eventually(() =>
+                {
+                    var rows = s.Driver.FindElements(By.CssSelector("#reserved-addresses table tbody tr"))
+                        .Where(row => row.Displayed).ToList();
+                    Assert.Single(rows);
+                });
+        }
     }
 }

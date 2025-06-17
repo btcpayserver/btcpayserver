@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -12,8 +13,11 @@ using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Views.Stores;
+using LNURL;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Playwright;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
@@ -172,6 +176,8 @@ orange:
 donation:
   price: 1.02
   custom: true
+goodies:
+  price: 0
 ";
             vmpos.Currency = "EUR";
             vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
@@ -182,7 +188,7 @@ donation:
 
             Assert.Equal("EUR", vmview.CurrencyCode);
             // apple shouldn't be available since we it's set to "disabled: true" above
-            Assert.Equal(2, vmview.Items.Length);
+            Assert.Equal(3, vmview.Items.Length);
             Assert.Equal("orange", vmview.Items[0].Title);
             Assert.Equal("donation", vmview.Items[1].Title);
             // orange is available
@@ -191,6 +197,14 @@ donation:
             // apple is not found
             Assert.IsType<NotFoundResult>(publicApps
                 .ViewPointOfSale(app.Id, PosViewType.Cart, 0, choiceKey: "apple").Result);
+
+            var redirectToCheckout = Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(app.Id, PosViewType.Cart, 0, choiceKey: "goodies").Result);
+            Assert.Equal("InvoiceReceipt", redirectToCheckout.ActionName);
+            var invoiceId = redirectToCheckout.RouteValues!["invoiceId"]!.ToString();
+            var client = await user.CreateClient();
+            var inv = await client.GetInvoice(user.StoreId, invoiceId);
+            Assert.Equal(0, inv.Amount);
+            Assert.NotEqual(InvoiceType.TopUp, inv.Type);
 
             // List
             appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
@@ -391,9 +405,7 @@ donation:
             Assert.Contains("0,77 €", await s.Page.TextContentAsync("#PaymentDetails-TaxIncluded"));
             Assert.Contains("10,67 €", await s.Page.TextContentAsync("#PaymentDetails-TotalFiat"));
             //
-            // Pay
             await s.PayInvoice(true);
-
 
             // Receipt
             await s.Page.ClickAsync("#ReceiptLink");
@@ -421,7 +433,17 @@ donation:
 
             // Check inventory got updated and is now 3 instead of 5
             await s.GoToUrl(posUrl);
-            Assert.Equal("3 left", await s.Page.TextContentAsync(".posItem:nth-child(3) .badge.inventory"));
+            try
+            {
+                Assert.Equal("3 left", await s.Page.TextContentAsync(".posItem:nth-child(3) .badge.inventory"));
+            }
+            catch (Exception e)
+            {
+                // Flaky
+                await s.TakeScreenshot("BadInventory.png");
+                throw;
+            }
+
 
             // Guest user can access recent transactions
             await s.GoToHome();
@@ -462,6 +484,112 @@ donation:
                     Assert.False(await s.Page.IsVisibleAsync("#" + ids[i]));
                 }
             }
+        }
+
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanUsePOSProductList()
+        {
+            await using var s = CreatePlaywrightTester();
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            await s.AddDerivationScheme();
+            await s.AddLightningNode();
+
+            // Let's check Custom amount works as expected
+            var (_, appId) = await s.CreateApp("PointOfSale");
+            var appUrl = s.Page.Url;
+            await s.Page.FillAsync("#Currency", "BTC");
+            await s.Page.SetCheckedAsync("#ShowCustomAmount", true);
+            await s.ClickPagePrimary();
+
+            var o = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("#ViewApp");
+            await using (_ = await s.SwitchPage(o))
+            {
+                await s.Page.FillAsync("#card_herbal-tea [name='amount']", "123");
+                await s.Page.PressAsync("#card_herbal-tea [name='amount']", "Enter");
+
+                await AssertInvoiceAmount(s, "123.00000000 BTC");
+                await s.Page.GoBackAsync();
+
+                await s.Page.FillAsync("#card_custom_amount [name='amount']", "124");
+                await s.Page.PressAsync("#card_custom_amount [name='amount']", "Enter");
+
+                await AssertInvoiceAmount(s, "124.00000000 BTC");
+                await s.Page.GoBackAsync();
+
+                await s.Page.ClickAsync("#card_fruit-tea button");
+                await AssertInvoiceAmount(s, "Any amount");
+            }
+
+            await s.GoToStore();
+            await s.GoToStore(StoreNavPages.Forms);
+            await s.ClickPagePrimary();
+            await s.Page.FillAsync("[name='Name']", "test");
+            await s.Page.ClickAsync("[name='newField1']");
+            await s.Page.SelectOptionAsync("#field-editor-field-type", "number");
+            await s.Page.FillAsync("#field-editor-field-name", "invoice_amount_adjustment");
+            await s.Page.PressAsync("#field-editor-field-name", "Enter");
+            await s.ClickPagePrimary();
+
+            await s.GoToUrl(appUrl);
+            await s.Page.SelectOptionAsync("#FormId", new SelectOptionValue { Label = "test" });
+            await s.ClickPagePrimary();
+            o = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("#ViewApp");
+            await using (_ = await s.SwitchPage(o))
+            {
+                await s.Page.ClickAsync("#card_black-tea button");
+                await s.Page.FillAsync("[name='invoice_amount_adjustment']", "0.5");
+                await s.ClickPagePrimary();
+                await AssertInvoiceAmount(s, "1.50000000 BTC");
+            }
+
+            await s.Page.FillAsync("#DefaultTaxRate", "10");
+            await s.ClickPagePrimary();
+
+            await GoToLNUrlCheckout(s, appId, "black-tea");
+            await AssertInvoiceAmount(s, "1.10000000 BTC");
+            await s.MarkAsSettled();
+
+            await s.Page.ClickAsync("#ReceiptLink");
+            await AssertReceipt(s, new()
+            {
+                Items = [
+                    new("BlackTea", "1.00000000 BTC"),
+                ],
+                Sums = [
+                    new("Subtotal", "1.00000000 BTC"),
+                    new("Tax", "0.10000000 BTC (10%)"),
+                    new("Total", "1.10000000 BTC")
+                ]
+            });
+
+            await GoToLNUrlCheckout(s, appId, "fruit-tea");
+            await AssertInvoiceAmount(s, "Any amount");
+
+            await GoToLNUrlCheckout(s, appId, "");
+            await AssertInvoiceAmount(s, "Any amount");
+        }
+
+        private static async Task GoToLNUrlCheckout(PlaywrightTester s, string appId, string item)
+        {
+            var result = await s.Server.PayTester.HttpClient.GetStringAsync($"BTC/lnurl/pay/app/{appId}/{item}");
+            var req = JsonConvert.DeserializeObject<LNURLPayRequest>(result);
+            var invoiceId = Regex.Replace(req.Callback.AbsoluteUri, ".*/pay/i/(.*)", "$1");
+            s.InvoiceId = invoiceId;
+            await s.GoToInvoiceCheckout();
+        }
+
+        private static async Task AssertInvoiceAmount(PlaywrightTester s, string expectedAmount)
+        {
+            var el = await s.Page.WaitForSelectorAsync("#AmountDue");
+            var content = await el!.TextContentAsync();
+            Assert.Equal(expectedAmount.NormalizeWhitespaces(), content.NormalizeWhitespaces());
         }
 
         [Fact]
@@ -551,12 +679,10 @@ donation:
             await AssertReceipt(s, new()
             {
                 Items = [
-
                     new("Custom Amount 1", "1 234,00 €"),
                     new("Custom Amount 2", "0,56 €")
                 ],
                 Sums = [
-
                     new("Items total", "1 234,56 €"),
                     new("Discount", "123,46 € (10%)"),
                     new("Subtotal", "1 111,10 €"),
@@ -606,6 +732,26 @@ donation:
                     new("Subtotal", "4,23 €"),
                     new("Tax", "0,42 € (10%)"),
                     new("Total", "4,65 €")
+                ]
+            });
+
+            await s.GoToUrl(keypadUrl);
+            await s.Page.ClickAsync("#ItemsListToggle");
+            await s.Page.WaitForSelectorAsync("#PosItems");
+            // This item should be free.
+            await s.Page.ClickAsync("#PosItems .posItem--displayed:nth-child(4) .btn-plus");
+            await s.Page.ClickAsync("#ItemsListOffcanvas button[data-bs-dismiss='offcanvas']");
+            await s.Page.ClickAsync("#pay-button");
+            await s.Page.WaitForSelectorAsync("#ReceiptLinkPrint");
+            await AssertReceipt(s, new()
+            {
+                Items =
+                [
+                    new("Pu Erh (free)", "1 x 0,00 € = 0,00 €")
+                ],
+                Sums =
+                [
+                    new("Total", "0,00 €")
                 ]
             });
 

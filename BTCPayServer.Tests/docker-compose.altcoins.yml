@@ -29,6 +29,7 @@ services:
       TESTS_SSHPASSWORD: ""
       TESTS_SSHKEYFILE: ""
       TESTS_SOCKSENDPOINT: "tor:9050"
+      TESTS_ARTIFACTS_DIR: "/tmp/Artifacts"
     expose:
       - "80"
     depends_on:
@@ -44,6 +45,7 @@ services:
       - "sshd_datadir:/root/.ssh"
       - "customer_lightningd_datadir:/etc/customer_lightningd_datadir"
       - "merchant_lightningd_datadir:/etc/merchant_lightningd_datadir"
+      - "tests_datadir:/tmp/Artifacts"
 
   # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
   dev:
@@ -228,7 +230,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.18.5-beta
+    image: btcpayserver/lnd:v0.19.1-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -266,7 +268,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.18.5-beta
+    image: btcpayserver/lnd:v0.19.1-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -366,6 +368,7 @@ services:
           - "elementsd_liquid_datadir:/data"
 
 volumes:
+    tests_datadir:
     sshd_datadir:
     bitcoin_datadir:
     elementsd_liquid_datadir:

@@ -1,5 +1,33 @@
 # Changelog
 
+## 2.1.5
+
+### Features
+
+* Wallet: Enhance manual Coin Selection with advanced filters and improved UX (#6755 #6685) @thgO-O
+* Added "Clear All" filter to Invoices (#6776 #5156) @Abhijay007
+
+### Bug fixes
+
+* Fix connection failure with phoenixd on mainnet (https://github.com/btcpayserver/BTCPayServer.Lightning/pull/170) @armelinw
+* PoS: Attempting to pay via Custom Amount in Product List mode would returns error 404. (#6786) @NicolasDorier
+* PoS: When using the Keypad (with cart), the button to proceed to checkout wasn't enabled if all selected items in the cart were free. (#6785) @NicolasDorier
+* PoS: When paying an item via Print View, the tax were not applied and receipt wasn't showing the item purchased. (#6788) @NicolasDorier
+* PoS: When paying an item via Print View, the custom amount option wasn't working. (#6788) @NicolasDorier
+
+## 2.1.4
+
+### Bug fixes
+
+* Fix keypad crash introduced by 2.1.3
+
+## 2.1.3
+
+### Bug fixes
+
+* Free items in the PoS were generating top-up invoices rather than settled invoices (#6780) @NicolasDorier
+* When a POS has a form, the amount adjusts incorrectly (#6782) @Kukks
+
 ## 2.1.2
 
 ### New features

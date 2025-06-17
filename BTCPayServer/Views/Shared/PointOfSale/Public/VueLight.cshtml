@@ -73,7 +73,7 @@
             <template v-else>{{ k }}</template>
         </button>
     </div>
-    <button class="btn btn-lg btn-primary mx-3" type="submit" :disabled="payButtonLoading || totalNumeric <= 0" id="pay-button">
+    <button class="btn btn-lg btn-primary mx-3" type="submit" :disabled="payButtonLoading || (totalNumeric <= 0 && posOrder.itemLines.length === 0)" id="pay-button">
         <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
             <span class="visually-hidden" text-translate="true">Loading...</span>
         </div>
@@ -140,7 +140,7 @@
                                     }
                                     @if (item.Inventory.HasValue)
                                     {
-                                        <span class="badge text-bg-warning inventory" v-text="inventoryText(@index)">
+                                        <span class="badge text-bg-warning inventory">
                                             @if (item.Inventory > 0)
                                             {
                                                 <span>@ViewLocalizer["{0} left", item.Inventory.ToString()]</span>

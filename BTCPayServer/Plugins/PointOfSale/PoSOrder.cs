@@ -10,7 +10,7 @@ public class PoSOrder
     private readonly int _decimals;
     decimal _discount;
     decimal _tip;
-    List<ItemLine> ItemLines = new();
+    public List<ItemLine> ItemLines = new();
 
     public PoSOrder(int decimals)
     {

@@ -74,6 +74,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
         await s.ClickPagePrimary();
         await s.Page.ClickAsync("#BroadcastTransaction");
+        await s.FindAlertMessage();
 
         await s.Page.ReloadAsync();
         var rbfTx = (await client.ShowOnChainWalletTransactions(s.StoreId, "BTC")).Select(t => t.TransactionHash).ToArray()[0];

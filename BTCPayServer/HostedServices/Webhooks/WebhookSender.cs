@@ -33,8 +33,7 @@ public class WebhookSender(
     IHttpClientFactory httpClientFactory,
     ApplicationDbContextFactory dbContextFactory,
     ILogger<WebhookSender> logger,
-    IServiceProvider serviceProvider,
-    EventAggregator eventAggregator)
+    IServiceProvider serviceProvider)
     : IHostedService
 {
     public const string OnionNamedClient = "greenfield-webhook.onion";

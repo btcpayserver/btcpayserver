@@ -1257,6 +1257,21 @@ namespace BTCPayServer.Tests
             s.Driver.WaitForElement(By.Id(spentOutpoint.ToString()));
             Assert.Equal("true",
                 s.Driver.FindElement(By.Name("InputSelection")).GetAttribute("value").ToLowerInvariant());
+
+            //Select All test
+            s.Driver.WaitForAndClick(By.Id("select-all-checkbox"));
+            var inputSelectionSelectAll = s.Driver.FindElement(By.Name("SelectedInputs"));
+            TestUtils.Eventually(() => {
+                var selectedOptions = inputSelectionSelectAll.FindElements(By.CssSelector("option[selected]"));
+                var listItems = s.Driver.FindElements(By.CssSelector("li.list-group-item"));
+                Assert.Equal(listItems.Count, selectedOptions.Count);
+            });
+            s.Driver.WaitForAndClick(By.Id("select-all-checkbox"));
+            TestUtils.Eventually(() => {
+                var selectedOptions = inputSelectionSelectAll.FindElements(By.CssSelector("option[selected]"));
+                Assert.Empty(selectedOptions);
+            });
+
             s.Driver.FindElement(By.Id(spentOutpoint.ToString()));
             s.Driver.FindElement(By.Id(spentOutpoint.ToString())).Click();
             var inputSelectionSelect = s.Driver.FindElement(By.Name("SelectedInputs"));
@@ -1273,6 +1288,79 @@ namespace BTCPayServer.Tests
             tx = await s.Server.ExplorerNode.GetRawTransactionAsync(new uint256(txid));
             Assert.Single(tx.Inputs);
             Assert.Equal(spentOutpoint, tx.Inputs[0].PrevOut);
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanUseCoinSelectionFilters()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            s.RegisterNewUser(true);
+            (_, string storeId) = s.CreateNewStore();
+            s.GenerateWallet("BTC", "", false, true);
+            var walletId = new WalletId(storeId, "BTC");
+
+            s.GoToWallet(walletId, WalletsNavPages.Receive);
+            var addressStr = s.Driver.FindElement(By.Id("Address")).GetAttribute("data-text");
+            var address = BitcoinAddress.Create(addressStr,
+                ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
+
+            await s.Server.ExplorerNode.GenerateAsync(1);
+
+            const decimal AmountTiny = 0.001m;
+            const decimal AmountSmall = 0.005m;
+            const decimal AmountMedium = 0.009m;
+            const decimal AmountLarge = 0.02m;
+
+            List<uint256> txs =
+            [
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(AmountTiny)),
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(AmountSmall)),
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(AmountMedium)),
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(AmountLarge))
+            ];
+
+            await s.Server.ExplorerNode.GenerateAsync(1);
+            s.GoToWallet(walletId);
+            s.Driver.WaitForAndClick(By.Id("toggleInputSelection"));
+
+            var input = s.Driver.WaitForElement(By.CssSelector("input[placeholder^='Filter']"));
+            Assert.NotNull(input);
+
+            // Test amountmin
+            input.Clear();
+            input.SendKeys("amountmin:0.01");
+            TestUtils.Eventually(() => {
+                Assert.Single(s.Driver.FindElements(By.CssSelector("li.list-group-item")));
+            });
+
+            // Test amountmax
+            input.Clear();
+            input.SendKeys("amountmax:0.002");
+            TestUtils.Eventually(() => {
+                Assert.Single(s.Driver.FindElements(By.CssSelector("li.list-group-item")));
+            });
+
+            // Test general text (txid)
+            input.Clear();
+            input.SendKeys(txs[2].ToString()[..8]);
+            TestUtils.Eventually(() => {
+                Assert.Single(s.Driver.FindElements(By.CssSelector("li.list-group-item")));
+            });
+
+            // Test timestamp before/after
+            input.Clear();
+            input.SendKeys("after:2099-01-01");
+            TestUtils.Eventually(() => {
+                Assert.Empty(s.Driver.FindElements(By.CssSelector("li.list-group-item")));
+            });
+
+            input.Clear();
+            input.SendKeys("before:2099-01-01");
+            TestUtils.Eventually(() =>
+            {
+                Assert.True(s.Driver.FindElements(By.CssSelector("li.list-group-item")).Count >= 4);
+            });
         }
 
         [Fact(Timeout = TestTimeout)]

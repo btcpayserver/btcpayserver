@@ -133,7 +133,7 @@ namespace BTCPayServer.Tests
         public async Task CanQueryDirectProviders()
         {
             // TODO: Check once in a while whether or not they are working again
-            string[] brokenShitcoinCasinos = { "binance", "coinbasepro" };
+            string[] brokenShitcoinCasinos = { "bitnob", "binance", "coinbasepro" };
             var skipped = 0;
             var factory = FastTests.CreateBTCPayRateFactory();
             var directlySupported = factory.AvailableRateProviders.Where(s => s.Source == RateSource.Direct)

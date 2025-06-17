@@ -1,11 +1,9 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Wallets;
-using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Playwright;
 using NBXplorer.DerivationStrategy;

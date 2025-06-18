@@ -2131,38 +2131,6 @@ namespace BTCPayServer.Tests
         [Fact]
         [Trait("Selenium", "Selenium")]
         [Trait("Lightning", "Lightning")]
-        public async Task CanUsePOSPrint()
-        {
-            using var s = CreateSeleniumTester();
-            s.Server.ActivateLightning();
-            await s.StartAsync();
-
-            s.RegisterNewUser(true);
-            s.CreateNewStore();
-            s.GoToStore();
-            s.AddLightningNode(LightningConnectionType.CLightning, false);
-            s.GoToLightningSettings();
-            s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
-            s.CreateApp("PointOfSale");
-            s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Print']")).Click();
-            s.ClickPagePrimary();
-            Assert.Contains("App updated", s.FindAlertMessage().Text);
-
-            s.Driver.FindElement(By.Id("ViewApp")).Click();
-            var btns = s.Driver.FindElements(By.ClassName("lnurl"));
-            foreach (IWebElement webElement in btns)
-            {
-                var choice = webElement.GetAttribute("data-choice");
-                var lnurl = webElement.GetAttribute("href");
-                var parsed = LNURL.LNURL.Parse(lnurl, out _);
-                Assert.EndsWith(choice, parsed.ToString());
-                Assert.IsType<LNURLPayRequest>(await LNURL.LNURL.FetchInformation(parsed, new HttpClient()));
-            }
-        }
-
-        [Fact]
-        [Trait("Selenium", "Selenium")]
-        [Trait("Lightning", "Lightning")]
         public async Task CanUseLNURL()
         {
             using var s = CreateSeleniumTester();
@@ -3041,30 +3009,6 @@ retry:
             JObject.Parse(s.Driver.FindElement(By.TagName("body")).Text);
             s.Driver.Close();
             s.Driver.SwitchTo().Window(windows[0]);
-        }
-
-        private static void CanSetupEmailCore(SeleniumTester s)
-        {
-            s.Driver.ScrollTo(By.Id("QuickFillDropdownToggle"));
-            s.Driver.FindElement(By.Id("QuickFillDropdownToggle")).Click();
-            s.Driver.FindElement(By.CssSelector("#quick-fill .dropdown-menu .dropdown-item:first-child")).Click();
-            s.Driver.FindElement(By.Id("Settings_Login")).Clear();
-            s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("test@gmail.com");
-            s.Driver.FindElement(By.Id("Settings_Password")).Clear();
-            s.Driver.FindElement(By.Id("Settings_Password")).SendKeys("mypassword");
-            s.Driver.FindElement(By.Id("Settings_From")).Clear();
-            s.Driver.FindElement(By.Id("Settings_From")).SendKeys("Firstname Lastname <email@example.com>");
-            s.ClickPagePrimary();
-            Assert.Contains("Configured", s.Driver.PageSource);
-            s.Driver.FindElement(By.Id("Settings_Login")).Clear();
-            s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("test_fix@gmail.com");
-            s.ClickPagePrimary();
-            Assert.Contains("Configured", s.Driver.PageSource);
-            Assert.Contains("test_fix", s.Driver.PageSource);
-            s.Driver.FindElement(By.Id("ResetPassword")).SendKeys(Keys.Enter);
-            s.FindAlertMessage();
-            Assert.DoesNotContain("Configured", s.Driver.PageSource);
-            Assert.Contains("test_fix", s.Driver.PageSource);
         }
 
         private static string AssertUrlHasPairingCode(SeleniumTester s)

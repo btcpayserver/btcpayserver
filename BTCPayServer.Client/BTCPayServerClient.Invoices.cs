@@ -11,12 +11,13 @@ namespace BTCPayServer.Client;
 
 public partial class BTCPayServerClient
 {
-    public virtual async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string[] orderId = null,
+    public virtual async Task<IEnumerable<InvoiceDataWithPaymentMethods>> GetInvoices(string storeId, string[] orderId = null,
         InvoiceStatus[] status = null,
         DateTimeOffset? startDate = null,
         DateTimeOffset? endDate = null,
         string textSearch = null,
         bool includeArchived = false,
+        bool includePaymentMethods = false,
         int? skip = null,
         int? take = null,
         CancellationToken token = default)
@@ -37,7 +38,7 @@ public partial class BTCPayServerClient
         if (take != null)
             queryPayload.Add(nameof(take), take);
 
-        return await SendHttpRequest<IEnumerable<InvoiceData>>($"api/v1/stores/{storeId}/invoices", queryPayload, HttpMethod.Get, token);
+        return await SendHttpRequest<IEnumerable<InvoiceDataWithPaymentMethods>>($"api/v1/stores/{storeId}/invoices", queryPayload, HttpMethod.Get, token);
     }
 
     public virtual async Task<InvoiceData> GetInvoice(string storeId, string invoiceId,

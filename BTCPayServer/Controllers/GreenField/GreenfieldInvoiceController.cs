@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AngleSharp.Dom;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
@@ -95,6 +94,7 @@ namespace BTCPayServer.Controllers.Greenfield
             DateTimeOffset? endDate = null,
             [FromQuery] string? textSearch = null,
             [FromQuery] bool includeArchived = false,
+            [FromQuery] bool includePaymentMethods = false,
             [FromQuery] int? skip = null,
             [FromQuery] int? take = null
             )
@@ -123,7 +123,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     Status = status,
                     TextSearch = textSearch
                 });
-            return Ok(invoices.Select(invoice => ToInvoiceModelWithPaymentMethodModels(invoice, includeAccountedPaymentOnly: true, includeSensitive: false)));
+            return includePaymentMethods ? Ok(invoices.Select(invoice => ToInvoiceModelWithPaymentMethodModels(invoice, includeAccountedPaymentOnly: true, includeSensitive: false))) : Ok(invoices.Select(ToModel));
         }
 
         [Authorize(Policy = Policies.CanViewInvoices,

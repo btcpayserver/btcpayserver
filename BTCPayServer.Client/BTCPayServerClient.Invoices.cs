@@ -17,6 +17,7 @@ public partial class BTCPayServerClient
         DateTimeOffset? endDate = null,
         string textSearch = null,
         bool includeArchived = false,
+        bool includePaymentMethods = false,
         int? skip = null,
         int? take = null,
         CancellationToken token = default)

@@ -78,6 +78,16 @@
                             "nullable": true,
                             "type": "number"
                         }
+                    },
+                    {
+                        "name": "includePaymentMethods",
+                        "in": "query",
+                        "required": false,
+                        "description": "Number of records returned in response",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
                     }
                 ],
                 "description": "View information about the existing invoices",
@@ -678,7 +688,7 @@
                         {
                             "type": "object",
                             "properties": {
-                                "PaymentMethods": {
+                                "paymentMethods": {
                                     "type": "array",
                                     "items": {
                                         "$ref": "#/components/schemas/InvoicePaymentMethodDataModel"

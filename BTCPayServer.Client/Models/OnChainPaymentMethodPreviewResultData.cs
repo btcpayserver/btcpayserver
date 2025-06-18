@@ -18,6 +18,7 @@ namespace BTCPayServer.Client.Models
             public string KeyPath { get; set; }
             //The address generated at the key path
             public string Address { get; set; }
+            public int Index { get; set; }
         }
     }
 }

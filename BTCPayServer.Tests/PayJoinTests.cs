@@ -981,8 +981,8 @@ retry:
                     .BuildTransaction(true);
 
 
-                //Attempt 2: Create two transactions using different inputs and send them to the same invoice. 
-                //Result: Second Tx should be rejected. 
+                //Attempt 2: Create two transactions using different inputs and send them to the same invoice.
+                //Result: Second Tx should be rejected.
                 var Invoice1Coin1ResponseTx = await senderUser.SubmitPayjoin(invoice, Invoice1Coin1, btcPayNetwork);
 
                 await senderUser.SubmitPayjoin(invoice, Invoice1Coin1, btcPayNetwork, "already-paid");

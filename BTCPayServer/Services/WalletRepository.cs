@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
+using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Services.Wallets;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
@@ -297,6 +298,55 @@ namespace BTCPayServer.Services
             await using var ctx = _ContextFactory.CreateContext();
             return (await ctx.WalletObjects.AsNoTracking().Where(predicate).ToArrayAsync())
                 .Select(FormatToLabel).ToArray();
+        }
+
+        public async Task<List<ReservedAddress>> GetReservedAddressesWithDetails(WalletId walletId)
+        {
+            var objects = await GetWalletObjects(new GetWalletObjectsQuery(walletId, WalletObjectData.Types.Address)
+            {
+                IncludeNeighbours = true
+            });
+
+            var result = new List<ReservedAddress>();
+
+            foreach (var obj in objects.Values)
+            {
+                if (obj.Data is null)
+                    continue;
+
+                var data = JObject.Parse(obj.Data);
+                if (data["generatedBy"]?.Value<string>() != "receive")
+                    continue;
+
+                var labels = obj.GetNeighbours()
+                    .Where(n => n.Type == WalletObjectData.Types.Label)
+                    .Select(label =>
+                    {
+                        var baseColor = ColorPalette.Default.DeterministicColor(label.Id);
+                        var dataObj = !string.IsNullOrEmpty(label.Data) ? JObject.Parse(label.Data) : null;
+                        var color = dataObj?["color"]?.ToString() ?? baseColor;
+
+                        return new TransactionTagModel
+                        {
+                            Text = label.Id,
+                            Color = color,
+                            TextColor = ColorPalette.Default.TextColor(color)
+                        };
+                    }).ToList();
+
+                var reservedAt = data["reservedAt"]?.ToObject<DateTimeOffset?>();
+
+                result.Add(new ReservedAddress
+                {
+                    Address = obj.Id,
+                    Labels = labels,
+                    ReservedAt = reservedAt
+                });
+            }
+
+            return result
+                .OrderByDescending(a => a.ReservedAt)
+                .ToList();
         }
 
         private (string Label, string Color) FormatToLabel(WalletObjectData o)

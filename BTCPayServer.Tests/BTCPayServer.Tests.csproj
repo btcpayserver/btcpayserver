@@ -6,6 +6,7 @@
     <UserSecretsId>AB0AC1DD-9D26-485B-9416-56A33F268117</UserSecretsId>
     <!--https://devblogs.microsoft.com/aspnet/testing-asp-net-core-mvc-web-apps-in-memory/-->
     <PreserveCompilationContext>true</PreserveCompilationContext>
+    <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
   </PropertyGroup>
 
   <ItemGroup>

@@ -691,6 +691,25 @@ input:checked + label.btcpay-list-select-item {
     background-color: var(--btcpay-form-bg-hover);
 }
 
+.dropdown-online{
+    color: var(--btcpay-body-text-muted);
+    flex-basis: 100%;
+    margin-left: 2.5rem;
+}
+.dropdown-in-store{
+    color: var(--btcpay-body-text-muted);
+    flex-basis: 100%;
+    margin-left: 2.5rem;
+}
+.dropdown-online div{
+    padding-top: 5px;
+}
+
+.dropdown-in-store div{
+    padding-top: 5px;
+}
+
+
 /* Public pages */
 @media screen {
     .public-page-wrap {

@@ -119,18 +119,6 @@
                                         </li>
 
                                         <li class="nav-item nav-item-sub">
-                                            <a id="WalletNav-ReservedAddresses"
-                                               class="nav-link @ViewData.ActivePageClass(WalletsNavPages.ReservedAddresses, scheme.WalletId.ToString())"
-                                               asp-area=""
-                                               asp-controller="UIWallets"
-                                               asp-action="ReservedAddresses"
-                                               asp-route-walletId="@scheme.WalletId"
-                                               text-translate="true">
-                                                Addresses
-                                            </a>
-                                        </li>
-
-                                        <li class="nav-item nav-item-sub">
                                             <a id="WalletNav-Settings" class="nav-link @ViewData.ActivePageClass(WalletsNavPages.Settings, scheme.WalletId.ToString()) @ViewData.ActivePageClass(StoreNavPages.OnchainSettings, categoryId)" asp-area="" asp-controller="UIStores" asp-action="WalletSettings" asp-route-cryptoCode="@scheme.WalletId.CryptoCode" asp-route-storeId="@scheme.WalletId.StoreId" text-translate="true">Settings</a>
                                         </li>
                                         <vc:ui-extension-point location="wallet-nav" model="@Model" />

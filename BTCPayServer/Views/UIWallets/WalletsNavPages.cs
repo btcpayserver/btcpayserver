@@ -7,7 +7,6 @@ namespace BTCPayServer.Views.Wallets
         Transactions,
         PSBT,
         Receive,
-        ReservedAddresses,
         Settings
     }
 }

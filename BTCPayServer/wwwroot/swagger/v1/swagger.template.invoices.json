@@ -83,7 +83,7 @@
                         "name": "includePaymentMethods",
                         "in": "query",
                         "required": false,
-                        "description": "Include the list od payment methods available in the response",
+                        "description": "Includes payment methods available to the response",
                         "schema": {
                             "type": "boolean",
                             "default": false

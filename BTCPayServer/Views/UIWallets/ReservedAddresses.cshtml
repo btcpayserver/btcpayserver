@@ -115,7 +115,7 @@
                     addresses: @Safe.Json(Model.Addresses),
                     page: 0,
                     pageSize: 10,
-                    filter: "",
+                    filter: "@Context.Request.Query["filter"]".toLowerCase(),
                 },
                 computed: {
                     pageStart() {

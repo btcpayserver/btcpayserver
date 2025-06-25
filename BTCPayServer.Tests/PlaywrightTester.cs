@@ -50,7 +50,7 @@ namespace BTCPayServer.Tests
             Browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
                 Headless = Server.PayTester.InContainer,
-                SlowMo = Server.PayTester.InContainer ? 0 : 50, // Add slight delay, nicer during dev
+                SlowMo = 0 // 50 if you want to slow down
             });
             var context = await Browser.NewContextAsync();
             Page = await context.NewPageAsync();
@@ -230,8 +230,9 @@ namespace BTCPayServer.Tests
             var isImport = !string.IsNullOrEmpty(seed);
             await GoToWalletSettings(cryptoCode);
             // Replace previous wallet case
-            if (await Page.Locator("#ChangeWalletLink").IsVisibleAsync())
+            if (await Page.Locator("#ActionsDropdownToggle").IsVisibleAsync())
             {
+                TestLogs.LogInformation($"Replacing the wallet");
                 await Page.ClickAsync("#ActionsDropdownToggle");
                 await Page.ClickAsync("#ChangeWalletLink");
                 await Page.FillAsync("#ConfirmInput", "REPLACE");
@@ -624,24 +625,25 @@ namespace BTCPayServer.Tests
         {
             await GoToWallet(walletId, navPages: WalletsNavPages.Transactions);
             await Page.Locator("#WalletTransactions[data-loaded='true']").WaitForAsync(new() { State = WaitForSelectorState.Visible });
-            return new WalletTransactionsPMO(Page);
+            return new WalletTransactionsPMO(this);
         }
 
 #nullable enable
-        public class WalletTransactionsPMO(IPage page)
+        public class WalletTransactionsPMO(PlaywrightTester tester)
         {
-            public Task SelectAll() => page.SetCheckedAsync(".mass-action-select-all", true);
+            private IPage Page => tester.Page;
+            public Task SelectAll() => Page.SetCheckedAsync(".mass-action-select-all", true);
             public async Task Select(params uint256[] txs)
             {
                 foreach (var txId in txs)
                 {
-                    await page.SetCheckedAsync($"{TxRowSelector(txId)} .mass-action-select", true);
+                    await Page.SetCheckedAsync($"{TxRowSelector(txId)} .mass-action-select", true);
                 }
             }
 
-            public Task BumpFeeSelected() => page.ClickAsync("#BumpFee");
+            public Task BumpFeeSelected() => Page.ClickAsync("#BumpFee");
 
-            public Task BumpFee(uint256? txId = null) => page.ClickAsync($"{TxRowSelector(txId)} .bumpFee-btn");
+            public Task BumpFee(uint256? txId = null) => Page.ClickAsync($"{TxRowSelector(txId)} .bumpFee-btn");
             static string TxRowSelector(uint256? txId = null) => txId is null ? ".transaction-row:first-of-type"  : $".transaction-row[data-value=\"{txId}\"]";
 
             public Task AssertHasLabels(string label) => AssertHasLabels(null, label);
@@ -653,23 +655,32 @@ namespace BTCPayServer.Tests
                 retry:
                 await WaitTransactionsLoaded();
                 var selector = $"{TxRowSelector(txId)} .transaction-label[data-value=\"{label}\"]";
-                if (await page.Locator(selector).IsVisibleAsync())
+                if (await Page.Locator(selector).IsVisibleAsync())
                     return;
                 if (tried > 5)
                 {
-                    await page.Locator(selector).WaitForAsync();
+                    try
+                    {
+                        await Page.Locator(selector).WaitForAsync();
+                    }
+                    catch
+                    {
+                        await tester.TakeScreenshot("AssertHasLabels.png");
+                        throw;
+                    }
+
                     return;
                 }
                 tried++;
-                await page.ReloadAsync();
+                await Page.ReloadAsync();
                 goto retry;
             }
 
-            public Task WaitTransactionsLoaded() => page.Locator("#WalletTransactions[data-loaded='true']").WaitForAsync();
+            public Task WaitTransactionsLoaded() => Page.Locator("#WalletTransactions[data-loaded='true']").WaitForAsync();
 
             public async Task AssertNotFound(uint256 txId)
             {
-                Assert.False(await page.Locator(TxRowSelector(txId)).IsVisibleAsync());
+                Assert.False(await Page.Locator(TxRowSelector(txId)).IsVisibleAsync());
             }
         }
 
@@ -690,6 +701,8 @@ namespace BTCPayServer.Tests
             public Task Sign() => page.ClickAsync("#SignTransaction");
 
             public Task SetFeeRate(decimal val) => page.FillAsync("[name=\"FeeSatoshiPerByte\"]", val.ToString(CultureInfo.InvariantCulture));
+
+            public Task FillAmount(decimal amount) => page.FillAsync("[name='Outputs[0].Amount']", amount.ToString(CultureInfo.InvariantCulture));
         }
 
         public async Task MarkAsSettled()
@@ -697,6 +710,23 @@ namespace BTCPayServer.Tests
             var txId = Regex.Replace(Page.Url, ".*/(.*)$", "$1");
             var client = await this.AsTestAccount().CreateClient();
             await client.MarkInvoiceStatus(StoreId, txId, new() { Status = InvoiceStatus.Settled });
+        }
+
+        public WalletTransactionsPMO InWalletTransactions() => new WalletTransactionsPMO(this);
+
+        public WalletBroadcastPMO InBroadcast() => new WalletBroadcastPMO(Page);
+
+        public class WalletBroadcastPMO(IPage page)
+        {
+            public async Task AssertSending(BitcoinAddress destination, decimal amount)
+            {
+                await page.WaitForSelectorAsync($"td:text('{destination}')");
+                var amt = await page.WaitForSelectorAsync($"td:text('{destination}') >> .. >> :nth-child(3)");
+                var actual = (await amt!.TextContentAsync()).NormalizeWhitespaces();
+                var expected = ("-" + Money.Coins(amount).ToString() + " " + "BTC").NormalizeWhitespaces();
+                Assert.Equal(expected, actual);
+            }
+            public async Task Broadcast() => await page.ClickAsync("#BroadcastTransaction");
         }
     }
 }

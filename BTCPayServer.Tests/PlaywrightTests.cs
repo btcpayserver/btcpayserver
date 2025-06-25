@@ -849,5 +849,91 @@ namespace BTCPayServer.Tests
             });
             Assert.Contains(tx.ToString(), await File.ReadAllTextAsync(await download.PathAsync()));
         }
+
+        [Fact]
+        public async Task CanUseReservedAddressesView()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            var walletId = new WalletId(s.StoreId, "BTC");
+            s.WalletId = walletId;
+            await s.GenerateWallet();
+
+            await s.GoToWallet(walletId, WalletsNavPages.Receive);
+
+            for (var i = 0; i < 10; i++)
+            {
+                var currentAddress = await s.Page.GetAttributeAsync("#Address", "data-text");
+                await s.Page.ClickAsync("button[value=generate-new-address]");
+                await TestUtils.EventuallyAsync(async () =>
+                {
+                    var newAddress = await s.Page.GetAttributeAsync("#Address[data-text]", "data-text");
+                    Assert.False(string.IsNullOrEmpty(newAddress));
+                    Assert.NotEqual(currentAddress, newAddress);
+                });
+            }
+
+            await s.Page.ClickAsync("#reserved-addresses-button");
+            await s.Page.WaitForSelectorAsync("#reserved-addresses");
+
+            const string labelInputSelector = "#reserved-addresses table tbody tr .ts-control input";
+            await s.Page.WaitForSelectorAsync(labelInputSelector);
+
+            // Test Label Manager
+            await s.Page.FillAsync(labelInputSelector, "test-label");
+            await s.Page.Keyboard.PressAsync("Enter");
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var text = await s.Page.InnerTextAsync("#reserved-addresses table tbody");
+                Assert.Contains("test-label", text);
+            });
+
+            //Test Pagination
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var rows = await s.Page.QuerySelectorAllAsync("#reserved-addresses table tbody tr");
+                var visible = await Task.WhenAll(rows.Select(async r => await r.IsVisibleAsync()));
+                Assert.Equal(10, visible.Count(v => v));
+            });
+
+            await s.Page.ClickAsync(".pagination li:last-child a");
+
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var rows = await s.Page.QuerySelectorAllAsync("#reserved-addresses table tbody tr");
+                var visible = await Task.WhenAll(rows.Select(async r => await r.IsVisibleAsync()));
+                Assert.Single(visible, v => v);
+            });
+
+            await s.Page.ClickAsync(".pagination li:first-child a");
+            await s.Page.WaitForSelectorAsync("#reserved-addresses");
+
+            // Test Filter
+            await s.Page.FillAsync("#filter-reserved-addresses", "test-label");
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var rows = await s.Page.QuerySelectorAllAsync("#reserved-addresses table tbody tr");
+                var visible = await Task.WhenAll(rows.Select(async r => await r.IsVisibleAsync()));
+                Assert.Single(visible, v => v);
+            });
+
+            //Test WalletLabels redirect with filter
+            await s.GoToWallet(walletId, WalletsNavPages.Settings);
+            await s.Page.ClickAsync("#manage-wallet-labels-button");
+            await s.Page.WaitForSelectorAsync("table");
+            await s.Page.ClickAsync("a:has-text('Addresses')");
+
+            await s.Page.WaitForSelectorAsync("#reserved-addresses");
+            var currentFilter = await s.Page.InputValueAsync("#filter-reserved-addresses");
+            Assert.Equal("test-label", currentFilter);
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var rows = await s.Page.QuerySelectorAllAsync("#reserved-addresses table tbody tr");
+                var visible = await Task.WhenAll(rows.Select(r => r.IsVisibleAsync()));
+                Assert.Single(visible, v => v);
+            });
+        }
     }
 }

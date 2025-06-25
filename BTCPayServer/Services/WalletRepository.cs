@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
@@ -302,49 +303,74 @@ namespace BTCPayServer.Services
 
         public async Task<List<ReservedAddress>> GetReservedAddressesWithDetails(WalletId walletId)
         {
-            var objects = await GetWalletObjects(new GetWalletObjectsQuery(walletId, WalletObjectData.Types.Address)
+            await using var ctx = _ContextFactory.CreateContext();
+            await using var conn = ctx.Database.GetDbConnection();
+            await conn.OpenAsync();
+
+            const string sql = """
+                SELECT
+                    w."Id",
+                    w."Data"->>'reservedAt' AS "ReservedAt",
+                    l."Id" AS "LabelId",
+                    l."Data"->>'color' AS "LabelColor"
+                FROM "WalletObjects" w
+                LEFT JOIN "WalletObjectLinks" n
+                  ON n."AType" = 'address'
+                 AND n."AId" = w."Id"
+                 AND n."WalletId" = w."WalletId"
+                LEFT JOIN "WalletObjects" l
+                  ON l."Id" = n."BId"
+                 AND l."Type" = 'label'
+                 AND l."WalletId" = w."WalletId"
+                WHERE w."WalletId" = @WalletId
+                  AND w."Type" = 'address'
+                  AND w."Data"->>'generatedBy' = 'receive'
+            """;
+
+            var parameters = new DynamicParameters();
+            parameters.Add("WalletId", walletId.ToString(), DbType.String);
+
+            var rows = await conn.QueryAsync(sql, parameters);
+
+            var addressesById = new Dictionary<string, ReservedAddress>();
+            var labelTrackers = new Dictionary<string, HashSet<string>>();
+
+            foreach (var row in rows)
             {
-                IncludeNeighbours = true
-            });
+                string id = row.Id;
 
-            var result = new List<ReservedAddress>();
-
-            foreach (var obj in objects.Values)
-            {
-                if (obj.Data is null)
-                    continue;
-
-                var data = JObject.Parse(obj.Data);
-                if (data["generatedBy"]?.Value<string>() != "receive")
-                    continue;
-
-                var labels = obj.GetNeighbours()
-                    .Where(n => n.Type == WalletObjectData.Types.Label)
-                    .Select(label =>
-                    {
-                        var baseColor = ColorPalette.Default.DeterministicColor(label.Id);
-                        var dataObj = !string.IsNullOrEmpty(label.Data) ? JObject.Parse(label.Data) : null;
-                        var color = dataObj?["color"]?.ToString() ?? baseColor;
-
-                        return new TransactionTagModel
-                        {
-                            Text = label.Id,
-                            Color = color,
-                            TextColor = ColorPalette.Default.TextColor(color)
-                        };
-                    }).ToList();
-
-                var reservedAt = data["reservedAt"]?.ToObject<DateTimeOffset?>();
-
-                result.Add(new ReservedAddress
+                if (!addressesById.TryGetValue(id, out var addr))
                 {
-                    Address = obj.Id,
-                    Labels = labels,
-                    ReservedAt = reservedAt
+                    DateTimeOffset? reservedAt = null;
+                    if (DateTimeOffset.TryParse(row.ReservedAt, out DateTimeOffset parsed))
+                        reservedAt = parsed;
+
+                    addr = new ReservedAddress
+                    {
+                        Address = id,
+                        ReservedAt = reservedAt,
+                        Labels = new List<TransactionTagModel>()
+                    };
+                    addressesById[id] = addr;
+                    labelTrackers[id] = new HashSet<string>();
+                }
+
+                if (row.LabelId == null) continue;
+
+                string labelId = row.LabelId;
+                if (!labelTrackers[id].Add(labelId)) continue;
+
+                string color = row.LabelColor ?? ColorPalette.Default.DeterministicColor(labelId);
+
+                addr.Labels.Add(new TransactionTagModel
+                {
+                    Text = labelId,
+                    Color = color,
+                    TextColor = ColorPalette.Default.TextColor(color)
                 });
             }
 
-            return result
+            return addressesById.Values
                 .OrderByDescending(a => a.ReservedAt)
                 .ToList();
         }

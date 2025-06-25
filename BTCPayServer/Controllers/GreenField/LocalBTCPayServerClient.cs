@@ -823,7 +823,7 @@ namespace BTCPayServer.Controllers.Greenfield
             HandleActionResult(await GetController<GreenfieldStoresController>().DeleteStoreLogo(storeId));
         }
 
-        public override async Task<IEnumerable<InvoiceDataWithPaymentMethods>> GetInvoices(string storeId, string[] orderId = null,
+        public override async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string[] orderId = null,
             InvoiceStatus[] status = null,
             DateTimeOffset? startDate = null,
             DateTimeOffset? endDate = null,
@@ -835,7 +835,7 @@ namespace BTCPayServer.Controllers.Greenfield
             CancellationToken token = default
         )
         {
-            return GetFromActionResult<IEnumerable<InvoiceDataWithPaymentMethods>>(
+            return GetFromActionResult<IEnumerable<InvoiceData>>(
                 await GetController<GreenfieldInvoiceController>().GetInvoices(storeId, orderId,
                     status?.Select(invoiceStatus => invoiceStatus.ToString())?.ToArray(), startDate,
                     endDate, textSearch, includeArchived, includePaymentMethods, skip, take));

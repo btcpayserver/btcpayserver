@@ -123,7 +123,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     Status = status,
                     TextSearch = textSearch
                 });
-            return includePaymentMethods ? Ok(invoices.Select(invoice => ToInvoiceModelWithPaymentMethodModels(invoice, includeAccountedPaymentOnly: true, includeSensitive: false))) : Ok(invoices.Select(ToModel));
+            return Ok(invoices.Select(invoice => ToModel(invoice, includePaymentMethods)));
         }
 
         [Authorize(Policy = Policies.CanViewInvoices,
@@ -524,7 +524,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return this.CreateAPIError(404, "invoice-not-found", "The invoice was not found");
         }
 
-        private InvoicePaymentMethodDataModel[] ToPaymentMethodModels(InvoiceEntity entity, bool includeAccountedPaymentOnly, bool includeSensitive)
+        private InvoicePaymentMethodDataModel[] ToPaymentMethodModels(InvoiceEntity entity, bool includeAccountedPaymentOnly = true, bool includeSensitive = false)
         {
             return entity.GetPaymentPrompts().Select(
                 prompt =>
@@ -581,19 +581,13 @@ namespace BTCPayServer.Controllers.Greenfield
             };
         }
 
-        private InvoiceDataWithPaymentMethods ToInvoiceModelWithPaymentMethodModels(InvoiceEntity entity, bool includeAccountedPaymentOnly = true, bool includeSensitive = false)
+        private InvoiceData ToModel(InvoiceEntity entity, bool includePaymentMethods = false)
         {
-            var baseModel = ToModel(entity, _linkGenerator, _currencyNameTable, Request);
-            var result = new InvoiceDataWithPaymentMethods(baseModel)
-            {
-                PaymentMethods = ToPaymentMethodModels(entity, includeAccountedPaymentOnly, includeSensitive)
-            };
-            return result;
-        }
+            var invoiceData = ToModel(entity, _linkGenerator, _currencyNameTable, Request);
+            if (includePaymentMethods)
+                invoiceData.PaymentMethods = ToPaymentMethodModels(entity);
 
-private InvoiceData ToModel(InvoiceEntity entity)
-        {
-            return ToModel(entity, _linkGenerator, _currencyNameTable, Request);
+            return invoiceData;
         }
 
         public static InvoiceData ToModel(InvoiceEntity entity, LinkGenerator linkGenerator, CurrencyNameTable currencyNameTable, HttpRequest? request)

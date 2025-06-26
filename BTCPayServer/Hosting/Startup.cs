@@ -178,7 +178,13 @@ namespace BTCPayServer.Hosting
             mvcBuilder.AddRazorRuntimeCompilation();
 #endif
 
-            services.AddServerSideBlazor();
+
+            services.AddServerSideBlazor().AddHubOptions(o =>
+            {
+                // PSBT with previous transactions could become
+                // easily too big to get signed without this.
+                o.MaximumReceiveMessageSize = BlazorMaximumReceiveMessageSize;
+            });
 
             LowercaseTransformer.Register(services);
             ValidateControllerNameTransformer.Register(services);
@@ -237,6 +243,9 @@ namespace BTCPayServer.Hosting
                 });
             }
         }
+
+        public const long BlazorMaximumReceiveMessageSize = 5_000_000;
+
         public void Configure(
             IApplicationBuilder app,
             IWebHostEnvironment env,

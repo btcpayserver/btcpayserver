@@ -437,7 +437,7 @@ goodies:
             {
                 Assert.Equal("3 left", await s.Page.TextContentAsync(".posItem:nth-child(3) .badge.inventory"));
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // Flaky
                 await s.TakeScreenshot("BadInventory.png");

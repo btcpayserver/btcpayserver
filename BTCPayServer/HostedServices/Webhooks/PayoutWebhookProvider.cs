@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -35,6 +35,8 @@ public class PayoutWebhookProvider(
 
         return new PayoutWebhookDeliveryRequest(payoutEvent, webhook?.Id, webhookEvent, delivery, webhookBlob, btcPayNetworkJsonSerializerSettings);
     }
+
+    public override bool SupportsCustomerEmail { get; } = false;
 
     public override Dictionary<string, string> GetSupportedWebhookTypes()
     {

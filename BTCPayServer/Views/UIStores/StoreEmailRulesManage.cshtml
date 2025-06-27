@@ -229,11 +229,11 @@
                 }
             }
 
-            function applayDisplayStyleToCustomerEmailContainer() {
+            function toggleCustomerEmailVisibility() {
                 const customerEmailContainer = document.getElementById('customer-email-container');
                 const customerEmailCheckbox = document.getElementById('customer-email-checkbox');
                 const selectedTrigger = triggerSelect.value;
-                const supportsCustomerEmailDict = @Safe.Json(WebhookSender.GetWeebhookTypesSupportedByCustomerEmail());
+                const supportsCustomerEmailDict = @Safe.Json(WebhookSender.GetWebhookTypesSupportedByCustomerEmail());
 
                 if (supportsCustomerEmailDict[selectedTrigger]) {
                     customerEmailContainer.style.display = 'block';
@@ -244,12 +244,12 @@
             }
 
             triggerSelect.addEventListener('change', applyTemplate);
-            triggerSelect.addEventListener('change', applayDisplayStyleToCustomerEmailContainer);
+            triggerSelect.addEventListener('change', toggleCustomerEmailVisibility);
 
             // Apply template on page load if a trigger is selected
             if (triggerSelect.value) {
                 applyTemplate();
-                applayDisplayStyleToCustomerEmailContainer();
+                toggleCustomerEmailVisibility();
             }
         });
     </script>

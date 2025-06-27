@@ -135,70 +135,70 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const templates = {
-        @WebhookEventType.InvoiceCreated: {
+                @WebhookEventType.InvoiceCreated: {
                     subject: 'Invoice {Invoice.Id} created',
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) created.'
                 },
-        @WebhookEventType.InvoiceReceivedPayment: {
+                @WebhookEventType.InvoiceReceivedPayment: {
                     subject: 'Invoice {Invoice.Id} received payment',
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) received payment.'
                 },
-        @WebhookEventType.InvoiceProcessing: {
+                @WebhookEventType.InvoiceProcessing: {
                     subject: 'Invoice {Invoice.Id} processing',
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) is processing.'
                 },
-        @WebhookEventType.InvoiceExpired: {
+                @WebhookEventType.InvoiceExpired: {
                     subject: 'Invoice {Invoice.Id} expired',
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) expired.'
                 },
-        @WebhookEventType.InvoiceSettled: {
+                @WebhookEventType.InvoiceSettled: {
                     subject: 'Invoice {Invoice.Id} settled',
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) is settled.'
                 },
-        @WebhookEventType.InvoiceInvalid: {
+                @WebhookEventType.InvoiceInvalid: {
                     subject: 'Invoice {Invoice.Id} invalid',
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) invalid.'
                 },
-        @WebhookEventType.InvoicePaymentSettled: {
+                @WebhookEventType.InvoicePaymentSettled: {
                     subject: 'Invoice {Invoice.Id} payment settled',
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) payment settled.'
                 },
-        @{ var invoiceLink = CallbackGenerator.InvoiceLink("INVOICE_ID", this.Context.Request).Replace("INVOICE_ID", ""); }
-        @WebhookEventType.InvoiceExpiredPaidPartial: {
+                @{ var invoiceLink = CallbackGenerator.InvoiceLink("INVOICE_ID", this.Context.Request).Replace("INVOICE_ID", ""); }
+                @WebhookEventType.InvoiceExpiredPaidPartial: {
                     subject: 'Invoice {Invoice.Id} Expired Paid Partial',
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) has expired partially paid. '+
                         '\nPlease review and take appropriate action: ' + @Safe.Json(invoiceLink) + '{Invoice.Id}'
                 },
-        @WebhookEventType.InvoicePaidAfterExpiration: {
+                @WebhookEventType.InvoicePaidAfterExpiration: {
                     subject: 'Invoice {Invoice.Id} Expired Paid Late',
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) has been paid after expiration. '+
                         '\nPlease review and take appropriate action: ' + @Safe.Json(invoiceLink) + '{Invoice.Id}'
                 },
-        @{ var paymentRequestsLink = CallbackGenerator.PaymentRequestListLink(storeId, this.Context.Request); }
-        @WebhookEventType.PaymentRequestCompleted: {
+                @{ var paymentRequestsLink = CallbackGenerator.PaymentRequestListLink(storeId, this.Context.Request); }
+                @WebhookEventType.PaymentRequestCompleted: {
                     subject: 'Payment Request {PaymentRequest.Title} {PaymentRequest.ReferenceId} Completed',
                     body: 'The total of {PaymentRequest.Amount} {PaymentRequest.Currency} has been received and Payment Request {PaymentRequest.Id} is completed. ' +
                     '\nReview the payment requests: ' + @Safe.Json(paymentRequestsLink)
                 },
-        @{ var bitcoinWalletTransactions = CallbackGenerator.WalletTransactionsLink(new (storeId, "BTC"), this.Context.Request); }
-        @PendingTransactionWebhookProvider.PendingTransactionCreated : {
+                @{ var bitcoinWalletTransactions = CallbackGenerator.WalletTransactionsLink(new (storeId, "BTC"), this.Context.Request); }
+                @PendingTransactionWebhookProvider.PendingTransactionCreated : {
                     subject: 'Pending Transaction {PendingTransaction.TrimmedId} Created',
-                    body: 'Review the transaction {PendingTransaction.Id} and sign it on: ' + @Safe.Json(bitcoinWalletTransactions)
+					body: 'Review the transaction {PendingTransaction.Id} and sign it on: ' + @Safe.Json(bitcoinWalletTransactions)
                 },
-        @PendingTransactionWebhookProvider.PendingTransactionSignatureCollected : {
+                @PendingTransactionWebhookProvider.PendingTransactionSignatureCollected : {
                     subject: 'Signature Collected for Pending Transaction {PendingTransaction.TrimmedId}',
                     body: 'So far {PendingTransaction.SignaturesCollected} signatures collected out of {PendingTransaction.SignaturesNeeded} signatures needed. ' +
-                        'Review the transaction and sign it on: ' + @Safe.Json(bitcoinWalletTransactions)
+						'Review the transaction and sign it on: ' + @Safe.Json(bitcoinWalletTransactions)
                 },
-        @PendingTransactionWebhookProvider.PendingTransactionBroadcast : {
+                @PendingTransactionWebhookProvider.PendingTransactionBroadcast : {
                     subject: 'Transaction {PendingTransaction.TrimmedId} has been Broadcast',
                     body: 'Transaction is visible in mempool on: https://mempool.space/tx/{PendingTransaction.Id}. ' +
-                        'Review the transaction: ' + @Safe.Json(bitcoinWalletTransactions)
+						'Review the transaction: ' + @Safe.Json(bitcoinWalletTransactions)
                 },
-        @PendingTransactionWebhookProvider.PendingTransactionCancelled : {
+                @PendingTransactionWebhookProvider.PendingTransactionCancelled : {
                     subject: 'Pending Transaction {PendingTransaction.TrimmedId} Cancelled',
                     body: 'Transaction {PendingTransaction.Id} is cancelled and signatures are no longer being collected. ' +
-                        'Review the wallet: ' + @Safe.Json(bitcoinWalletTransactions)
+						'Review the wallet: ' + @Safe.Json(bitcoinWalletTransactions)
                 },
             };
 
@@ -233,6 +233,7 @@
                 const customerEmailContainer = document.getElementById('customer-email-container');
                 const customerEmailCheckbox = document.getElementById('customer-email-checkbox');
                 const selectedTrigger = triggerSelect.value;
+                const supportsCustomerEmailDict = @Safe.Json(WebhookSender.GetWeebhookTypesSupportedByCustomerEmail());
 
                 if (supportsCustomerEmailDict[selectedTrigger]) {
                     customerEmailContainer.style.display = 'block';

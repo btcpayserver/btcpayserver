@@ -469,6 +469,11 @@ namespace BTCPayServer.Controllers
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyPaymentRequests)]
         public async Task<IActionResult> ChangePaymentRequestState(string payReqId, string newState)
         {
+            if (string.IsNullOrWhiteSpace(payReqId) || string.IsNullOrWhiteSpace(newState))
+            {
+                return BadRequest("Invalid parameters");
+            }
+
             var paymentRequest = await _PaymentRequestRepository.FindPaymentRequest(payReqId, GetUserId());
             var model = new PaymentRequestStateChangeModel();
             if (paymentRequest == null)
@@ -476,15 +481,20 @@ namespace BTCPayServer.Controllers
                 model.NotFound = true;
                 return NotFound(model);
             }
+
             if (newState == "completed")
             {
-                await _PaymentRequestRepository.UpdatePaymentRequestStatus(payReqId, Client.Models.PaymentRequestStatus.Completed);
+                await _PaymentRequestRepository.UpdatePaymentRequestStatus(payReqId, PaymentRequestStatus.Completed);
                 model.StatusString = "Settled";
             }
             else if (newState == "expired")
             {
-                await _PaymentRequestRepository.UpdatePaymentRequestStatus(payReqId, Client.Models.PaymentRequestStatus.Expired);
+                await _PaymentRequestRepository.UpdatePaymentRequestStatus(payReqId, PaymentRequestStatus.Expired);
                 model.StatusString = "Expired";
+            }
+            else
+            {
+                return BadRequest($"Invalid state: {newState}");
             }
 
             return Json(model);

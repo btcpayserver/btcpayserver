@@ -55,8 +55,8 @@
         <div class="form-text" text-translate="true">Who to send the email to. For multiple emails, separate with a comma.</div>
     </div>
 
-    <div class="form-check mb-4" id="customer-email-container">
-        <input asp-for="CustomerEmail" type="checkbox" class="form-check-input email-rule-customer-email" id="customer-email-checkbox" />
+    <div class="form-check mb-4 customer-email-container">
+        <input asp-for="CustomerEmail" type="checkbox" class="form-check-input email-rule-customer-email customer-email-checkbox" />
         <label asp-for="CustomerEmail" class="form-check-label" text-translate="true">Send the email to the buyer, if email was provided to the invoice</label>
         <span asp-validation-for="CustomerEmail" class="text-danger"></span>
     </div>
@@ -230,8 +230,8 @@
             }
 
             function toggleCustomerEmailVisibility() {
-                const customerEmailContainer = document.getElementById('customer-email-container');
-                const customerEmailCheckbox = document.getElementById('customer-email-checkbox');
+                const customerEmailContainer = document.querySelector('.customer-email-container');
+                const customerEmailCheckbox = document.querySelector('.customer-email-checkbox');
                 const selectedTrigger = triggerSelect.value;
                 const supportsCustomerEmailDict = @Safe.Json(WebhookSender.GetWebhookTypesSupportedByCustomerEmail());
 

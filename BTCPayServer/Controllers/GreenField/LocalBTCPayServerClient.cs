@@ -1302,6 +1302,12 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return GetFromActionResult<CrowdfundAppData>(await GetController<GreenfieldAppsController>().GetCrowdfundApp(appId));
         }
+
+        public override async Task<InvoiceRefundAccounting> GetInvoiceAccounting(string storeId, string invoiceId, string paymentMethodId,
+            CancellationToken token = default)
+        {
+            return GetFromActionResult<InvoiceRefundAccounting>(await GetController<GreenfieldInvoiceController>().GetInvoiceAccounting(storeId, invoiceId, paymentMethodId, token));
+        }
         public override async Task<PullPaymentData> RefundInvoice(string storeId, string invoiceId, RefundInvoiceRequest request, CancellationToken token = default)
         {
             return GetFromActionResult<PullPaymentData>(await GetController<GreenfieldInvoiceController>().RefundInvoice(storeId, invoiceId, request, token));

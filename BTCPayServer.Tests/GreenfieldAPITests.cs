@@ -2900,6 +2900,11 @@ namespace BTCPayServer.Tests
             var pm = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id));
             Assert.Equal(0.0001m, pm.Due);
 
+            // retrieve invoice accounting
+            var accounting = await client.GetInvoiceAccounting(store.Id, invoice.Id, paymentMethod.PaymentMethodId);
+            Assert.NotNull(accounting);
+            Assert.Equal("BTC", accounting.InvoiceCurrency);
+
             await tester.WaitForEvent<NewOnChainTransactionEvent>(async () =>
             {
                 await tester.ExplorerNode.SendToAddressAsync(

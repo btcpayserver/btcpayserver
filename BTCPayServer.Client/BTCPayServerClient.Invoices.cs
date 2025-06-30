@@ -104,4 +104,9 @@ public partial class BTCPayServerClient
     {
         return await SendHttpRequest<PullPaymentData>($"api/v1/stores/{storeId}/invoices/{invoiceId}/refund", request, HttpMethod.Post, token);
     }
+    public virtual async Task<InvoiceRefundAccounting> GetInvoiceAccounting(string storeId, string invoiceId, string paymentMethodId,
+        CancellationToken token = default)
+    {
+        return await SendHttpRequest<InvoiceRefundAccounting>($"api/v1/stores/{storeId}/invoices/{invoiceId}/accounting/{paymentMethodId}", null, HttpMethod.Get, token);
+    }
 }

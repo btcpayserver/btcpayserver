@@ -18,6 +18,8 @@ public class PendingTransactionWebhookProvider(
     public const string PendingTransactionBroadcast = nameof(PendingTransactionBroadcast);
     public const string PendingTransactionCancelled = nameof(PendingTransactionCancelled);
 
+    public override bool SupportsCustomerEmail { get; } = false;
+
     public override Dictionary<string, string> GetSupportedWebhookTypes()
     {
         return new Dictionary<string, string>

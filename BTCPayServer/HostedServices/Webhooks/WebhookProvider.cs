@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
@@ -10,6 +10,8 @@ namespace BTCPayServer.HostedServices.Webhooks;
 public abstract class WebhookProvider<T>(EventAggregator eventAggregator, ILogger logger, WebhookSender webhookSender)
     : EventHostedServiceBase(eventAggregator, logger), IWebhookProvider
 {
+    public abstract bool SupportsCustomerEmail { get; }
+
     public abstract Dictionary<string, string> GetSupportedWebhookTypes();
 
     public abstract WebhookEvent CreateTestEvent(string type, params object[] args);

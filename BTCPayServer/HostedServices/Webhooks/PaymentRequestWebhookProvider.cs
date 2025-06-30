@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -10,6 +10,8 @@ namespace BTCPayServer.HostedServices.Webhooks;
 public class PaymentRequestWebhookProvider(EventAggregator eventAggregator, ILogger<PaymentRequestWebhookProvider> logger, WebhookSender webhookSender)
     : WebhookProvider<PaymentRequestEvent>(eventAggregator, logger, webhookSender)
 {
+    public override bool SupportsCustomerEmail { get; } = true;
+
     public override Dictionary<string, string> GetSupportedWebhookTypes()
     {
         return new Dictionary<string, string>

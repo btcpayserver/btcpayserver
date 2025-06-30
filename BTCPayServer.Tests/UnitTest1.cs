@@ -78,6 +78,7 @@ using Microsoft.Extensions.Caching.Memory;
 using PosViewType = BTCPayServer.Client.Models.PosViewType;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Views.Stores;
+using NBXplorer.DerivationStrategy;
 
 namespace BTCPayServer.Tests
 {
@@ -730,7 +731,7 @@ namespace BTCPayServer.Tests
 
             // Sending a coin
             var txId = tester.ExplorerNode.SendToAddress(
-                btcDerivationScheme.GetDerivation(new KeyPath("0/90")).ScriptPubKey, Money.Coins(1.0m));
+                ((StandardDerivationStrategyBase)btcDerivationScheme).GetDerivation(new KeyPath("0/90")).ScriptPubKey, Money.Coins(1.0m));
             tester.ExplorerNode.Generate(1);
             var transactions = Assert.IsType<ListTransactionsViewModel>(Assert
                 .IsType<ViewResult>(walletController.WalletTransactions(walletId, loadTransactions: true).Result).Model);

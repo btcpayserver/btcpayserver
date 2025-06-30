@@ -109,7 +109,6 @@
 	  <ProjectReference Include="..\BTCPayServer.Rating\BTCPayServer.Rating.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Common\BTCPayServer.Common.csproj" />
 	</ItemGroup>
-
 	<ItemGroup>
     <Watch Include="Views\**\*.*"></Watch>
     <Watch Remove="Views\Shared\LocalhostBrowserSupport.cshtml" />

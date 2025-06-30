@@ -47,18 +47,21 @@ namespace BTCPayServer
         }
 
 
-        private BitcoinExtPubKey _signingKey;
+        [JsonIgnore]
+        [Obsolete("Use AccountKeySettings[0].AccountKey instead")]
         public BitcoinExtPubKey SigningKey
         {
             get
             {
-                return _signingKey ?? AccountKeySettings?.Select(k => k.AccountKey).FirstOrDefault();
+                // There should always be at least one account key
+                return AccountKeySettings[0].AccountKey;
             }
             set
             {
-                _signingKey = value;
+                // Ignored, this is legacy stuff that should disappear
             }
         }
+
         public string Source { get; set; }
 
         public bool IsHotWallet { get; set; }
@@ -67,23 +70,32 @@ namespace BTCPayServer
         public string AccountOriginal { get; set; }
 
 #nullable enable
+        [Obsolete("Use GetFirstAccountKeySettings isntead")]
         public AccountKeySettings GetSigningAccountKeySettings()
-        {
-            return (AccountKeySettings ?? []).Single(a => a.AccountKey == SigningKey);
-        }
+            // There should always be at least one account key
+        => (AccountKeySettings ?? []).First();
 
+        public AccountKeySettings GetFirstAccountKeySettings()
+            // There should always be at least one account key
+            => (AccountKeySettings ?? []).First();
+
+        public AccountKeySettings? GetAccountKeySettingsFromRoot(IHDKey rootKey)
+            => GetAccountKeySettingsFromRoot(rootKey.GetPublicKey().GetHDFingerPrint());
+
+        public AccountKeySettings? GetAccountKeySettingsFromRoot(HDFingerprint rootFingerprint)
+            => (AccountKeySettings ?? []).FirstOrDefault(a => a.RootFingerprint == rootFingerprint);
+
+        [Obsolete("Use GetAccountKeySettingsFromRoot instead")]
         public AccountKeySettings? GetSigningAccountKeySettings(IHDKey rootKey)
-        => GetSigningAccountKeySettings(rootKey.GetPublicKey().GetHDFingerPrint());
+        => GetAccountKeySettingsFromRoot(rootKey.GetPublicKey().GetHDFingerPrint());
 
+        [Obsolete("Use GetAccountKeySettingsFromRoot instead")]
         public AccountKeySettings? GetSigningAccountKeySettings(HDFingerprint rootFingerprint)
-        {
-            return (AccountKeySettings ?? []).FirstOrDefault(a => a.RootFingerprint == rootFingerprint);
-        }
+            => GetAccountKeySettingsFromRoot(rootFingerprint);
 
-        public AccountKeySettings? GetSigningAccountKeySettingsOrDefault()
-        {
-            return (AccountKeySettings ?? []).SingleOrDefault(a => a.AccountKey == SigningKey);
-        }
+        [Obsolete("Use AccountKeySettings[0] instead")]
+        // There should always be at least one account key
+        public AccountKeySettings? GetSigningAccountKeySettingsOrDefault() => this.AccountKeySettings[0];
 #nullable restore
         public AccountKeySettings[] AccountKeySettings { get; set; }
 

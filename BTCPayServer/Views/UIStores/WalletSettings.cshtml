@@ -73,8 +73,8 @@
                 </form>
             </div>
         </div>
-        
-        <a class="btn btn-secondary" asp-controller="UIWallets" asp-action="WalletLabels"
+
+        <a id="manage-wallet-labels-button" class="btn btn-secondary" asp-controller="UIWallets" asp-action="WalletLabels"
            asp-route-walletId="@Model.WalletId" text-translate="true">Manage labels</a>
 
         <button type="submit" class="btn btn-primary" id="SaveWalletSettings" form="walletSettingsForm" text-translate="true">Save Wallet Settings</button>
@@ -190,14 +190,14 @@
     <script>
         const wallets = @Safe.Json(Model.AccountKeys.Select(model => Encoders.Hex.EncodeData(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(model, Formatting.None)))))
         const qrApp = initQRShow({ title: "Wallet QR" })
-        
+
         delegate('click', '#Delete', event => { event.preventDefault() })
-        
+
         delegate('click', 'button[data-account-key]', event => {
             const { accountKey } = event.target.dataset;
             qrApp.showData(wallets[parseInt(accountKey)]);
         })
-        
+
         if (navigator.registerProtocolHandler) {
             document.getElementById('RegisterWallet').removeAttribute('hidden');
             delegate('click', '#RegisterWallet', event => {
@@ -205,7 +205,7 @@
                const uri = decodeURIComponent(url)
                navigator.registerProtocolHandler(scheme, uri, `BTCPay Wallet: ${store}`)
             })
-        } 
+        }
     </script>
     <partial name="_ValidationScriptsPartial"/>
 }

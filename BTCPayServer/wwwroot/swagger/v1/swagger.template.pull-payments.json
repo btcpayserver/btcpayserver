@@ -1202,6 +1202,6 @@
         {
             "name": "Stores (Payouts)",
             "description": "Store pull payment payout operations"
-        },
+        }
     ]
 }

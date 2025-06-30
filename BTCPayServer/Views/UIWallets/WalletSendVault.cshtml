@@ -1,7 +1,5 @@
-@using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Blazor.VaultBridge
-@using BTCPayServer.TagHelpers
-@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Hosting
 @model WalletSendVaultModel
 @{
     var walletId = Context.GetRouteValue("walletId")?.ToString() ?? "";
@@ -9,6 +7,12 @@
     Layout = "_LayoutWizard";
     ViewData.SetActivePage(WalletsNavPages.Send, StringLocalizer["Sign the transaction"], walletId);
     this.ViewData.SetBlazorAllowed(true);
+
+    // Calculate maximum PSBT size accounting for SignalR message overhead
+    var blazorMax = Startup.BlazorMaximumReceiveMessageSize;
+    var otherDataSize = 500; // Estimated overhead for other SignalR message data
+    decimal waste = 1.35m; // Base64 re-encoding overhead factor (approximately 35%)
+    long maxPSBTSize = (long)((blazorMax - otherDataSize) / waste);
 }
 
 @section Navbar {
@@ -20,18 +24,29 @@
     <p class="lead text-secondary mt-3" text-translate="true">Using BTCPay Server Vault</p>
 </header>
 
-<div class="row mt-5 mb-4">
-    <div class="col-md-8 mx-auto">
-        <component type="typeof(VaultBridgeUI)"
-                   param-Controller="@(new SignHWIController()
-                                      {
-                                          StoreId = WalletId.Parse(walletId).StoreId,
-                                          CryptoCode = WalletId.Parse(walletId).CryptoCode,
-                                          PSBT = Model.SigningContext.PSBT
-                                      })"
-                   render-mode="Server"/>
+<partial name="_StatusMessage" />
+
+@if (maxPSBTSize >= Model.SigningContext.PSBT.Length)
+{
+    <div class="row mt-5 mb-4">
+        <div class="col-md-8 mx-auto">
+            <component type="typeof(VaultBridgeUI)"
+                       param-Controller="@(new SignHWIController()
+                                         {
+                                             StoreId = WalletId.Parse(walletId).StoreId,
+                                             CryptoCode = WalletId.Parse(walletId).CryptoCode,
+                                             PSBT = Convert.FromBase64String(Model.SigningContext.PSBT)
+                                         })"
+                       render-mode="Server" />
+        </div>
     </div>
-</div>
+}
+else
+{
+    <div class="alert alert-danger my-4" role="alert">
+        <span>@StringLocalizer["PSBT too large to be signed by Vault. (Max: {0} bytes)", maxPSBTSize]</span>
+    </div>
+}
 
 <div id="body" class="my-4">
     <form id="broadcastForm" asp-action="WalletSendVault" asp-route-walletId="@walletId" method="post" style="display:none;">

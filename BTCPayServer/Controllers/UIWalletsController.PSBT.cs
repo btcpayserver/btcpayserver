@@ -269,7 +269,7 @@ namespace BTCPayServer.Controllers
 
             if (signingKey == null || signingKeyPath == null)
             {
-                var signingKeySettings = derivationSchemeSettings.GetSigningAccountKeySettings();
+                var signingKeySettings = derivationSchemeSettings.GetFirstAccountKeySettings();
                 if (signingKey == null)
                 {
                     signingKey = signingKeySettings.AccountKey;

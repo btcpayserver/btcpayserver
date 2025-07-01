@@ -499,7 +499,6 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/stores/{storeId}/invoices/{invoiceId}/accounting/{paymentMethodId}")]
         public async Task<IActionResult> GetInvoiceAccounting(string storeId, string invoiceId, string paymentMethodId, CancellationToken cancellationToken)
         {
-            var model = new RefundModel();
             var invoice = await _invoiceRepository.GetInvoice(invoiceId, true);
             if (!BelongsToThisStore(invoice))
                 return InvoiceNotFound();
@@ -529,7 +528,6 @@ namespace BTCPayServer.Controllers.Greenfield
             var cdCurrency = _currencyNameTable.GetCurrencyData(invoice.Currency, true);
 
             var paidCurrency = Math.Round(cryptoPaid * paymentPrompt.Rate, cdCurrency.Divisibility);
-            model.CryptoAmountThen = cryptoPaid.RoundToSignificant(paymentPrompt.Divisibility);
             var store = this.HttpContext.GetStoreData();
             var rules = store.GetStoreBlob().GetRateRules(_defaultRules);
             var rateResult = await _rateProvider.FetchRate(
@@ -538,17 +536,17 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (rateResult.BidAsk is null)
                 return this.CreateAPIError("rate-failure", "Failed to fetch rate");
-
-            model.CryptoAmountNow = Math.Round(paidCurrency / rateResult.BidAsk.Bid, paymentPrompt.Divisibility);
-            model.FiatAmount = paidCurrency;
-            model.CryptoCode = paymentMethodCurrency;
-            model.CryptoDivisibility = paymentPrompt.Divisibility;
-            model.InvoiceDivisibility = cdCurrency.Divisibility;
-            model.InvoiceCurrency = invoice.Currency;
-            model.CustomAmount = model.FiatAmount;
-            model.CustomCurrency = invoice.Currency;
-            model.SubtractPercentage = 0;
-            model.OverpaidAmount = overpaidAmount;
+            var model = new InvoiceRefundAccounting
+            {
+                CryptoAmountThen = cryptoPaid.RoundToSignificant(paymentPrompt.Divisibility),
+                CryptoAmountNow = Math.Round(paidCurrency / rateResult.BidAsk.Bid, paymentPrompt.Divisibility),
+                FiatAmount = paidCurrency,
+                CryptoCode = paymentMethodCurrency,
+                CryptoDivisibility = paymentPrompt.Divisibility,
+                InvoiceDivisibility = cdCurrency.Divisibility,
+                InvoiceCurrency = invoice.Currency,
+                OverpaidAmount = overpaidAmount
+            };
 
             return Ok(model);
         }

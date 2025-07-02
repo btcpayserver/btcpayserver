@@ -1,6 +1,6 @@
 namespace BTCPayServer.Client.Models
 {
-    public class InvoiceRefundAccounting
+    public class InvoiceRefundTriggerData
     {
         public decimal CryptoAmountNow { get; set; } = 0m;
         public string CurrentRateText { get; set; }

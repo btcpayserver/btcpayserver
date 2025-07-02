@@ -2900,11 +2900,6 @@ namespace BTCPayServer.Tests
             var pm = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id));
             Assert.Equal(0.0001m, pm.Due);
 
-            // retrieve invoice accounting
-            var accounting = await client.GetInvoiceAccounting(store.Id, invoice.Id, paymentMethod.PaymentMethodId);
-            Assert.NotNull(accounting);
-            Assert.Equal("BTC", accounting.InvoiceCurrency);
-
             await tester.WaitForEvent<NewOnChainTransactionEvent>(async () =>
             {
                 await tester.ExplorerNode.SendToAddressAsync(
@@ -2921,6 +2916,15 @@ namespace BTCPayServer.Tests
                 invoiceObject = await client.GetOnChainWalletObject(user.StoreId, "BTC", new OnChainWalletObjectId("invoice", invoice.Id), false);
                 Assert.Contains(invoiceObject.Links.Select(l => l.Type), t => t == "tx");
             });
+
+            // retrieve invoice refund trigger data
+            var accounting = await client.GetInvoiceRefundTriggerData(store.Id, invoice.Id, paymentMethod.PaymentMethodId);
+            Assert.NotNull(accounting);
+            Assert.Equal("BTC", accounting.InvoiceCurrency);
+            Assert.Equal(0.0002M, accounting.CryptoAmountThen);
+            Assert.Equal(0.0002M, accounting.CryptoAmountNow);
+            Assert.Equal(0.0001M, accounting.OverpaidAmount);
+            Assert.True(accounting.FiatAmount > 0);
         }
 
         [Fact(Timeout = 60 * 20 * 1000)]

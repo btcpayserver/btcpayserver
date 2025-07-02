@@ -496,8 +496,8 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [Authorize(Policy = Policies.CanCreateNonApprovedPullPayments,
     AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/invoices/{invoiceId}/accounting/{paymentMethodId}")]
-        public async Task<IActionResult> GetInvoiceAccounting(string storeId, string invoiceId, string paymentMethodId, CancellationToken cancellationToken)
+        [HttpGet("~/api/v1/stores/{storeId}/invoices/{invoiceId}/refund/{paymentMethodId}")]
+        public async Task<IActionResult> GetInvoiceRefundTriggerData(string storeId, string invoiceId, string paymentMethodId, CancellationToken cancellationToken)
         {
             var invoice = await _invoiceRepository.GetInvoice(invoiceId, true);
             if (!BelongsToThisStore(invoice))
@@ -527,7 +527,7 @@ namespace BTCPayServer.Controllers.Greenfield
             decimal? overpaidAmount = isPaidOver ? Math.Round(cryptoPaid - dueAmount, paymentPrompt.Divisibility) : null;
             var cdCurrency = _currencyNameTable.GetCurrencyData(invoice.Currency, true);
 
-            var paidCurrency = Math.Round(cryptoPaid * paymentPrompt.Rate, cdCurrency.Divisibility);
+            var paidAmount = Math.Round(cryptoPaid * paymentPrompt.Rate, cdCurrency.Divisibility);
             var store = this.HttpContext.GetStoreData();
             var rules = store.GetStoreBlob().GetRateRules(_defaultRules);
             var rateResult = await _rateProvider.FetchRate(
@@ -536,11 +536,12 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (rateResult.BidAsk is null)
                 return this.CreateAPIError("rate-failure", "Failed to fetch rate");
-            var model = new InvoiceRefundAccounting
+
+            var model = new InvoiceRefundTriggerData
             {
                 CryptoAmountThen = cryptoPaid.RoundToSignificant(paymentPrompt.Divisibility),
-                CryptoAmountNow = Math.Round(paidCurrency / rateResult.BidAsk.Bid, paymentPrompt.Divisibility),
-                FiatAmount = paidCurrency,
+                CryptoAmountNow = Math.Round(paidAmount / rateResult.BidAsk.Bid, paymentPrompt.Divisibility),
+                FiatAmount = paidAmount,
                 CryptoCode = paymentMethodCurrency,
                 CryptoDivisibility = paymentPrompt.Divisibility,
                 InvoiceDivisibility = cdCurrency.Divisibility,

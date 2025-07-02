@@ -416,7 +416,7 @@
                         "$ref": "#/components/parameters/PaymentMethodId"
                     }
                 ],
-                "description": "View refund trigger information about the specified invoice",
+                "description": "View calculated refund amounts (crypto then/now, fiat, overpaid) for the specified invoice/payment-method. This can be used preceding the POST /refund call.",
                 "operationId": "Invoices_GetInvoiceRefundTriggerData",
                 "responses": {
                     "200": {
@@ -1151,15 +1151,11 @@
                     },
                     "cryptoDivisibility": {
                         "type": "number",
-                        "nullable": true,
-                        "description": "The maximum divisibility supported by the crypto currency of the invoice",
-                        "example": "3"
+                        "description": "The maximum divisibility supported by the crypto currency of the invoice"
                     },
                     "invoiceDivisibility": {
                         "type": "number",
-                        "nullable": true,
-                        "description": "The maximum divisibility supported by the fiat currency of the invoice",
-                        "example": "2"
+                        "description": "The maximum divisibility supported by the fiat currency of the invoice"
                     },
                     "invoiceCurrency": {
                         "type": "string",

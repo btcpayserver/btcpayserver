@@ -81,7 +81,7 @@ namespace BTCPayServer.Payments.Lightning
                         if (GetListenedInvoices(invoice).Count > 0)
                         {
                             _CheckInvoices.Writer.TryWrite(invoice.Id);
-                            _memoryCache.Set(GetCacheKey(invoice.Id), invoice, GetExpiration(invoice));
+                            _memoryCache.Set(GetInvoiceCacheKey(invoice.Id), invoice, GetExpiration(invoice));
                         }
                     }
 
@@ -134,14 +134,12 @@ namespace BTCPayServer.Payments.Lightning
             }
         }
 
-        private string GetCacheKey(string invoiceId)
-        {
-            return $"{nameof(GetListenedInvoices)}-{invoiceId}";
-        }
+        private string GetInvoiceCacheKey(string invoiceId) => $"{nameof(GetListenedInvoices)}-{invoiceId}";
+        private string GetStoreCacheKey(string storeId) => $"{nameof(GetListenedInvoices)}-store-{storeId}";
 
         private Task<InvoiceEntity> GetInvoice(string invoiceId)
         {
-            return _memoryCache.GetOrCreateAsync(GetCacheKey(invoiceId), async (cacheEntry) =>
+            return _memoryCache.GetOrCreateAsync(GetInvoiceCacheKey(invoiceId), async (cacheEntry) =>
             {
                 var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
                 if (invoice is null)
@@ -153,7 +151,7 @@ namespace BTCPayServer.Payments.Lightning
 
         private Task<Data.StoreData> GetStore(string storeId)
         {
-            return _memoryCache.GetOrCreateAsync(GetCacheKey("store-" + storeId), async (cacheEntry) =>
+            return _memoryCache.GetOrCreateAsync(GetStoreCacheKey(storeId), async (cacheEntry) =>
             {
                 var store = await _storeRepository.FindStore(storeId);
                 cacheEntry.AbsoluteExpiration = DateTimeOffset.UtcNow + TimeSpan.FromMinutes(1.0);
@@ -234,15 +232,19 @@ namespace BTCPayServer.Payments.Lightning
             {
                 if (_handlers.TryGet(inv.PaymentMethodId) is LightningLikePaymentHandler)
                 {
-                    _memoryCache.Remove(GetCacheKey(inv.InvoiceId));
+                    _memoryCache.Remove(GetInvoiceCacheKey(inv.InvoiceId));
                     _CheckInvoices.Writer.TryWrite(inv.InvoiceId);
                 }
+            }));
+            leases.Add(_Aggregator.Subscribe<StoreEvent.Updated>(ev =>
+            {
+                _memoryCache.Remove(GetStoreCacheKey(ev.StoreId));
             }));
             leases.Add(_Aggregator.Subscribe<Events.InvoiceNewPaymentDetailsEvent>(inv =>
             {
                 if (_handlers.TryGet(inv.PaymentMethodId) is LNURLPayPaymentHandler && !string.IsNullOrEmpty(inv.InvoiceId))
                 {
-                    _memoryCache.Remove(GetCacheKey(inv.InvoiceId));
+                    _memoryCache.Remove(GetInvoiceCacheKey(inv.InvoiceId));
                     _CheckInvoices.Writer.TryWrite(inv.InvoiceId);
                 }
             }));

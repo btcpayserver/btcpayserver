@@ -35,7 +35,7 @@
             <tbody>
             @foreach (var address in Model.Addresses)
             {
-                <tr v-show="filteredItems.some(a => a.address === '@address.Address')">
+                <tr v-show='filteredItemsSet.has(@Safe.Json(address.Address))'>
                     <td>@address.Address</td>
                     <td>
                         <vc:label-manager
@@ -137,6 +137,9 @@
                         }
 
                         return result.slice(this.pageStart, this.pageEnd);
+                    },
+                    filteredItemsSet() {
+                        return new Set(this.filteredItems.map(x => x.address));
                     }
                 },
                 mounted() {

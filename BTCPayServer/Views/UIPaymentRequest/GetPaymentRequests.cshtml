@@ -114,23 +114,7 @@
                             @item.ReferenceId
                         </td>
                         <td>
-                         @if (item.IsPending)
-                            {
-                                <div class="badge badge-@item.Status.ToLower() status-badge" data-payment-request-state-badge="@item.Id">
-                                    <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor:pointer;">
-                                        @item.Status
-                                    </span>
-                                    <div class="dropdown-menu">
-                                        <form asp-action="TogglePaymentRequestCompleted" asp-route-payReqId="@item.Id" method="post">
-                                            <button type="submit" class="dropdown-item lh-base">Mark as settled</button>
-                                        </form>
-                                    </div>
-                                </div>
-                            }
-                            else
-                            {
-                                <span class="badge badge-@item.Status.ToLower() status-badge">@item.Status</span>
-                            }
+                            <span class="badge badge-@item.Status.ToLower() status-badge">@item.Status</span>
                         </td>
                         <td class="text-end">
                             <span data-sensitive>@item.AmountFormatted</span>

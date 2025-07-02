@@ -317,15 +317,15 @@
         </main>
         <footer class="store-footer">
             <div permission="@Policies.CanModifyStoreSettings" class="d-print-none">
-                <a asp-controller="UIPaymentRequest" asp-action="EditPaymentRequest" asp-route-storeId="@Model.StoreId" asp-route-payReqId="@Model.Id" text-translate="true">
-                    Edit payment request
-                </a>
+                <form asp-action="EditPaymentRequest" asp-route-storeId="@Model.StoreId" asp-route-payReqId="@Model.Id" method="get">
+                    <button type="submit" class="btn btn-link" text-translate="true">Edit payment request</button>
+                </form>
             </div>
             @if (Model.IsPending && Model.AmountCollected > 0)
             {
                 <div permission="@Policies.CanModifyPaymentRequests" class="d-print-none">
                     <form asp-action="TogglePaymentRequestCompleted" asp-route-payReqId="@Model.Id" asp-route-storeId="@Model.StoreId" method="post">
-                        <button type="submit" class="dropdown-item lh-base">Mark as settled</button>
+                        <button type="submit" class="btn btn-link" text-translate="true">Mark as settled</button>
                     </form>
                 </div>
             }

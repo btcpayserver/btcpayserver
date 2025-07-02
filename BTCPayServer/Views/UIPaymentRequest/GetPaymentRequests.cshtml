@@ -114,7 +114,21 @@
                             @item.ReferenceId
                         </td>
                         <td>
-                            <span class="badge badge-@item.Status.ToLower() status-badge">@item.Status</span>
+                         @if (item.IsPending)
+                            {
+                                <div class="badge badge-@item.Status.ToLower() status-badge" data-payment-request-state-badge="@item.Id">
+                                    <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor:pointer;">
+                                        @item.Status
+                                    </span>
+                                    <div class="dropdown-menu">
+                                        <button type="button" class="dropdown-item lh-base" data-payment-request-id="@item.Id" data-new-state="completed">Mark as settled</button>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="badge badge-@item.Status.ToLower() status-badge">@item.Status</span>
+                            }
                         </td>
                         <td class="text-end">
                             <span data-sensitive>@item.AmountFormatted</span>
@@ -154,3 +168,7 @@ else
         There are no payment requests matching your criteria.
     </p>
 }
+
+<script>
+    window.storeId = '@storeId';
+</script>

@@ -276,6 +276,23 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Invoice state update failed");
         }
     })
+
+      // Payment Request Status
+      delegate('click', '[data-payment-request-state-badge] [data-payment-request-id][data-new-state]', async e => {
+        const $button = e.target
+        const $badge = $button.closest('[data-payment-request-state-badge]')
+        const { paymentRequestId, newState } = $button.dataset
+
+        $badge.classList.add('pe-none'); // disable further interaction
+        const response = await fetch(`${baseUrl}/payment-requests/${paymentRequestId}/changestate/${newState}`, { method: 'POST' })
+        if (response.ok) {
+            const { statusString } = await response.json()
+            $badge.outerHTML = `<div class="badge badge-${newState}" data-payment-request-state-badge="${paymentRequestId}">${statusString}</div>`
+        } else {
+            $badge.classList.remove('pe-none');
+            alert("Payment request state update failed");
+        }
+    })
     
     // Time Format
     delegate('click', '.switch-time-format', switchTimeFormat);

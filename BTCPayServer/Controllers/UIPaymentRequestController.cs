@@ -465,47 +465,30 @@ namespace BTCPayServer.Controllers
             return NotFound();
         }
 
-        [HttpPost("{payReqId}/changestate/{newState}")]
+        [HttpPost("{payReqId}/complete")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyPaymentRequests)]
-        public async Task<IActionResult> ChangePaymentRequestState(string payReqId, string newState)
+        public async Task<IActionResult> TogglePaymentRequestCompleted(string payReqId)
         {
-            if (string.IsNullOrWhiteSpace(payReqId) || string.IsNullOrWhiteSpace(newState))
+            if (string.IsNullOrWhiteSpace(payReqId))
             {
                 return BadRequest("Invalid parameters");
             }
 
             var paymentRequest = await _PaymentRequestRepository.FindPaymentRequest(payReqId, GetUserId());
-            var model = new PaymentRequestStateChangeModel();
             if (paymentRequest == null)
             {
-                model.NotFound = true;
-                return NotFound(model);
+                return NotFound();
             }
 
-            if (newState == "completed")
+            if (paymentRequest.Status != PaymentRequestStatus.Pending)
             {
-                await _PaymentRequestRepository.UpdatePaymentRequestStatus(payReqId, PaymentRequestStatus.Completed);
-                model.StatusString = "Settled";
-            }
-            else if (newState == "expired")
-            {
-                await _PaymentRequestRepository.UpdatePaymentRequestStatus(payReqId, PaymentRequestStatus.Expired);
-                model.StatusString = "Expired";
-            }
-            else
-            {
-                return BadRequest($"Invalid state: {newState}");
+                return BadRequest("Invalid payment request status. Only pending payment requests can be marked as completed.");
             }
 
-            return Json(model);
+            await _PaymentRequestRepository.UpdatePaymentRequestStatus(payReqId, PaymentRequestStatus.Completed);
+
+            return RedirectToAction("GetPaymentRequests", new { storeId = paymentRequest.StoreDataId });
         }
-
-        public class PaymentRequestStateChangeModel
-        {
-            public bool NotFound { get; set; }
-            public string? StatusString { get; set; }
-        }
-
 
         private string GetUserId() => _UserManager.GetUserId(User);
 

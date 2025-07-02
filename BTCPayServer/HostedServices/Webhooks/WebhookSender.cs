@@ -268,6 +268,14 @@ public class WebhookSender(
             .SelectMany(provider => provider.GetSupportedWebhookTypes()).ToDictionary(pair => pair.Key, pair => pair.Value);
     }
 
+    public Dictionary<string, bool> GetWebhookTypesSupportedByCustomerEmail()
+    {
+        return serviceProvider.GetServices<IWebhookProvider>()
+            .SelectMany(provider => provider.GetSupportedWebhookTypes()
+                .Select(pair => new { pair.Key, Value = provider.SupportsCustomerEmail }))
+            .ToDictionary(x => x.Key, x => x.Value);
+    }
+
     public class WebhookDeliveryRequest(
         string webhookId,
         WebhookEvent webhookEvent,

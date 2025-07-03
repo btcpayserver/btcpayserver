@@ -65,7 +65,7 @@
             <div class="d-flex flex-column justify-content-center gap-4">
                 <partial name="_StoreHeader" model="(Model.Title, Model.StoreBranding)" />
                 <div class="text-center mt-n3">
-                    Invoice from 
+                    Invoice from
                     @if (!string.IsNullOrEmpty(Model.StoreWebsite))
                     {
                         <a href="@Model.StoreWebsite" target="_blank" rel="noreferrer noopener">@Model.StoreName</a>
@@ -134,7 +134,7 @@
                             </div>
                         </div>
                     </dl>
-                    
+
                     <div class="buttons mt-3">
                         <template v-if="srvModel.formId && srvModel.formId !== 'None' && !srvModel.formSubmitted">
                             <a asp-action="ViewPaymentRequestForm" asp-route-payReqId="@Model.Id" class="btn btn-primary btn-lg" data-test="form-button">
@@ -210,7 +210,7 @@
                         }
                     </noscript>
                 </section>
-                
+
                 @if (!string.IsNullOrEmpty(Model.Description) && Model.Description != "<br>")
                 {
                     <section class="tile">
@@ -218,7 +218,7 @@
                         <div id="InvoiceDescription" v-html="srvModel.description">@Safe.Raw(Model.Description)</div>
                     </section>
                 }
-            
+
                 <section class="tile">
                     <h2 class="h4 mb-3" text-translate="true">Payment History</h2>
                     <template v-if="!srvModel.invoices || srvModel.invoices.length == 0">
@@ -316,11 +316,19 @@
             </div>
         </main>
         <footer class="store-footer">
-            <p permission="@Policies.CanModifyStoreSettings" class="d-print-none">
-                <a asp-controller="UIPaymentRequest" asp-action="EditPaymentRequest" asp-route-storeId="@Model.StoreId" asp-route-payReqId="@Model.Id" text-translate="true">
-                    Edit payment request
-                </a>
-            </p>
+            <div permission="@Policies.CanModifyStoreSettings" class="d-print-none">
+                <form asp-action="EditPaymentRequest" asp-route-storeId="@Model.StoreId" asp-route-payReqId="@Model.Id" method="get">
+                    <button type="submit" class="btn btn-link" text-translate="true">Edit payment request</button>
+                </form>
+            </div>
+            @if (Model.IsPending && Model.AmountCollected > 0)
+            {
+                <div permission="@Policies.CanModifyPaymentRequests" class="d-print-none">
+                    <form asp-action="TogglePaymentRequestCompleted" asp-route-payReqId="@Model.Id" asp-route-storeId="@Model.StoreId" method="post">
+                        <button type="submit" class="btn btn-link" text-translate="true">Mark as settled</button>
+                    </form>
+                </div>
+            }
             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
                 <span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" />
             </a>

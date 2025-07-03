@@ -465,6 +465,31 @@ namespace BTCPayServer.Controllers
             return NotFound();
         }
 
+        [HttpPost("{payReqId}/complete")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyPaymentRequests)]
+        public async Task<IActionResult> TogglePaymentRequestCompleted(string payReqId)
+        {
+            if (string.IsNullOrWhiteSpace(payReqId))
+            {
+                return BadRequest("Invalid parameters");
+            }
+
+            var paymentRequest = await _PaymentRequestRepository.FindPaymentRequest(payReqId, GetUserId());
+            if (paymentRequest == null)
+            {
+                return NotFound();
+            }
+
+            if (paymentRequest.Status != PaymentRequestStatus.Pending)
+            {
+                return BadRequest("Invalid payment request status. Only pending payment requests can be marked as completed.");
+            }
+
+            await _PaymentRequestRepository.UpdatePaymentRequestStatus(payReqId, PaymentRequestStatus.Completed);
+
+            return RedirectToAction("GetPaymentRequests", new { storeId = paymentRequest.StoreDataId });
+        }
+
         private string GetUserId() => _UserManager.GetUserId(User);
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();

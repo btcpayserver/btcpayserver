@@ -1,7 +1,3 @@
-@using Microsoft.AspNetCore.Http
-
-@inject IHttpContextAccessor HttpContextAccessor
-
 @if (Users?.Any() is true)
 {
     <div @attributes="Attrs" class="@CssClass">
@@ -31,12 +27,11 @@ else
 
     [Parameter]
     public Dictionary<string,string> Users { get; set; }
+    [Parameter] public string PosUrl { get; set; }
 
     [Parameter(CaptureUnmatchedValues = true)]
     public Dictionary<string, object> Attrs { get; set; }
 
     private string _userId;
-    private string PosUrl => Request.GetAbsoluteRoot() + PosPath;
-    private HttpRequest Request => HttpContextAccessor.HttpContext?.Request;
     private string CssClass => $"form-group {(Attrs?.ContainsKey("class") is true ? Attrs["class"] : "")}".Trim();
 }

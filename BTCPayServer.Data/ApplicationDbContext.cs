@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Data.Data;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
@@ -28,6 +29,7 @@ namespace BTCPayServer.Data
         }
         public DbSet<AddressInvoiceData> AddressInvoices { get; set; }
         public DbSet<APIKeyData> ApiKeys { get; set; }
+        public DbSet<ApiKeyPermissionUsage> ApiKeyPermissionUsages { get; set; }
         public DbSet<AppData> Apps { get; set; }
         public DbSet<StoredFile> Files { get; set; }
         public DbSet<InvoiceSearchData> InvoiceSearches { get; set; }

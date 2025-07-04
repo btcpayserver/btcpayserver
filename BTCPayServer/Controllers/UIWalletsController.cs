@@ -763,6 +763,26 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(WalletReceive), new { walletId, returnUrl = vm.ReturnUrl });
         }
 
+        [HttpGet("{walletId}/addresses")]
+        public async Task<IActionResult> ReservedAddresses(
+            [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId)
+        {
+            var paymentMethod = GetDerivationSchemeSettings(walletId);
+            if (paymentMethod == null)
+                return NotFound();
+
+            var labeledAddresses = await WalletRepository.GetReservedAddressesWithDetails(walletId);
+
+            var vm = new ReservedAddressesViewModel
+            {
+                WalletId = walletId.ToString(),
+                CryptoCode = walletId.CryptoCode,
+                Addresses = labeledAddresses
+            };
+
+            return View(vm);
+        }
+
         private async Task SendFreeMoney(Cheater cheater, WalletId walletId, DerivationSchemeSettings paymentMethod)
         {
             var c = this.ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode);

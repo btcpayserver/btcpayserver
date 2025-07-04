@@ -79,6 +79,15 @@ async function initLabelManager (elementId) {
                 }));
             },
             async onChange (values) {
+                const labels = Array.isArray(values) ? values : values.split(',');
+
+                element.dispatchEvent(new CustomEvent("labelmanager:changed", {
+                    detail: {
+                        walletObjectId,
+                        labels: labels
+                    }
+                }));
+
                 const selectElementI = selectElement ? document.getElementById(selectElement) : null;
                 if (selectElementI){
                     while (selectElementI.options.length > 0) {

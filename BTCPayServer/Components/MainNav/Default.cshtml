@@ -117,6 +117,7 @@
                                         <li class="nav-item nav-item-sub">
                                             <a id="WalletNav-Receive" class="nav-link @ViewData.ActivePageClass(WalletsNavPages.Receive, scheme.WalletId.ToString())" asp-area="" asp-controller="UIWallets" asp-action="WalletReceive" asp-route-walletId="@scheme.WalletId" text-translate="true">Receive</a>
                                         </li>
+
                                         <li class="nav-item nav-item-sub">
                                             <a id="WalletNav-Settings" class="nav-link @ViewData.ActivePageClass(WalletsNavPages.Settings, scheme.WalletId.ToString()) @ViewData.ActivePageClass(StoreNavPages.OnchainSettings, categoryId)" asp-area="" asp-controller="UIStores" asp-action="WalletSettings" asp-route-cryptoCode="@scheme.WalletId.CryptoCode" asp-route-storeId="@scheme.WalletId.StoreId" text-translate="true">Settings</a>
                                         </li>
@@ -408,7 +409,7 @@
             {
                 <li class="nav-item">
                     <a href="@Model.ContactUrl" class="nav-link" id="Nav-ContactUs">
-                    <vc:icon symbol="nav-contact"/>
+                        <vc:icon symbol="nav-contact"/>
                         <span text-translate="true">Contact Us</span>
                     </a>
                 </li>

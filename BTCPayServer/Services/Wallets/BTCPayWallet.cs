@@ -117,12 +117,21 @@ namespace BTCPayServer.Services.Wallets
                 await _Client.TrackAsync(derivationStrategy).ConfigureAwait(false);
                 pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
             }
-            if (storeId != null)
+
+            if (storeId == null) return pathInfo;
+
+            var metadata = new JObject
             {
-                await WalletRepository.EnsureWalletObject(
-                    new WalletObjectId(new WalletId(storeId, Network.CryptoCode), WalletObjectData.Types.Address, pathInfo.Address.ToString()),
-                    new JObject() { ["generatedBy"] = generatedBy });
+                ["generatedBy"] = generatedBy
+            };
+
+            if (generatedBy == "receive")
+            {
+                metadata["reservedAt"] = DateTimeOffset.UtcNow;
             }
+
+            await WalletRepository.EnsureWalletObject(
+                new WalletObjectId(new WalletId(storeId, Network.CryptoCode), WalletObjectData.Types.Address, pathInfo.Address.ToString()), metadata);
             return pathInfo;
         }
 

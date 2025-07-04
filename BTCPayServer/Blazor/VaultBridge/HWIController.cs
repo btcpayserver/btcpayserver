@@ -182,12 +182,15 @@ public abstract class HWIController : VaultController
 public class SignHWIController : HWIController
 {
     public string StoreId { get; set; }
-    public string PSBT { get; set; }
+    /// <summary>
+    /// We use byte[] to avoid wasted bytes and hitting size limits of Blazor
+    /// </summary>
+    public byte[] PSBT { get; set; }
 
     protected override async Task Run(VaultBridgeUI ui, HwiClient hwi, HwiDeviceClient device, HDFingerprint fingerprint, BTCPayNetwork network,
         CancellationToken cancellationToken)
     {
-        if (!NBitcoin.PSBT.TryParse(PSBT, network.NBitcoinNetwork, out var psbt))
+        if (!NBitcoin.PSBT.TryParse(Convert.ToBase64String(PSBT), network.NBitcoinNetwork, out var psbt))
             return;
         var store = await ui.ServiceProvider.GetRequiredService<StoreRepository>().FindStore(StoreId ?? "");
         var handlers = ui.ServiceProvider.GetRequiredService<PaymentMethodHandlerDictionary>();

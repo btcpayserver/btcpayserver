@@ -79,6 +79,15 @@ async function initLabelManager (elementId) {
                 }));
             },
             async onChange (values) {
+                const labels = Array.isArray(values) ? values : values.split(',');
+
+                element.dispatchEvent(new CustomEvent("labelmanager:changed", {
+                    detail: {
+                        walletObjectId,
+                        labels: labels
+                    }
+                }));
+
                 const selectElementI = selectElement ? document.getElementById(selectElement) : null;
                 if (selectElementI){
                     while (selectElementI.options.length > 0) {
@@ -151,7 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         setStickyHeaderHeight();
     }
-    
+
     // initialize timezone offset value if field is present in page
     const $timezoneOffset = document.getElementById("TimezoneOffset");
     const timezoneOffset = new Date().getTimezoneOffset();
@@ -161,7 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
     formatDateTimes();
 
     initLabelManagers();
-    
+
     function updateTimeAgo(){
         var timeagoElements = $("[data-timeago-unixms]");
         timeagoElements.each(function () {
@@ -171,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(updateTimeAgo, 1000);
     }
     updateTimeAgo();
-    
+
     // intializing date time pickers
     $(".flatdtpicker").each(function () {
         var element = $(this);
@@ -259,7 +268,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!!$button.innerHTML.match('#actions-hide')) $button.innerHTML = $button.innerHTML.replace('#actions-hide', '#actions-show');
         }
     })
-    
+
     // Invoice Status
     delegate('click', '[data-invoice-state-badge] [data-invoice-id][data-new-state]', async e => {
         const $button = e.target
@@ -276,7 +285,7 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Invoice state update failed");
         }
     })
-    
+
     // Time Format
     delegate('click', '.switch-time-format', switchTimeFormat);
 
@@ -302,7 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.documentElement.setAttribute(SENSITIVE_INFO_DATA_ATTR, 'true');
         }
     });
-    
+
     // Currency Selection: Remove the current input value once the element is focused, so that the user gets to
     // see the available options. If no selection or change is made, reset it to the previous value on blur.
     // Note: Use focusin/focusout instead of focus/blur, because the latter do not bubble up and delegate won't work.
@@ -314,7 +323,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!e.target.value) e.target.value = e.target.getAttribute('placeholder')
         e.target.removeAttribute('placeholder')
     })
-    
+
     // Offcanvas navigation
     const mainMenuToggle = document.getElementById('mainMenuToggle')
     if (mainMenuToggle) {
@@ -325,7 +334,7 @@ document.addEventListener("DOMContentLoaded", () => {
             mainMenuToggle.setAttribute('aria-expanded', 'false')
         })
     }
-    
+
     // Menu collapses
     const mainNav = document.getElementById('mainNav')
     if (mainNav) {
@@ -344,7 +353,7 @@ document.addEventListener("DOMContentLoaded", () => {
             window.localStorage.setItem(COLLAPSED_KEY, JSON.stringify(collapsed))
         })
     }
-    
+
     // Mass Action Tables
     const updateSelectedCount = ($table) => {
         const selectedCount = document.querySelectorAll('.mass-action-select:checked').length;

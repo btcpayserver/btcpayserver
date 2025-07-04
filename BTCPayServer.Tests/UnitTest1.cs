@@ -2828,8 +2828,7 @@ namespace BTCPayServer.Tests
             var v = store.GetPaymentMethodConfig<DerivationSchemeSettings>(pmi, handlers);
             Assert.Equal(derivation, v.AccountDerivation.ToString());
             Assert.Equal(derivation, v.AccountOriginal);
-            Assert.Equal(xpub, v.SigningKey.ToString());
-            Assert.Equal(xpub, v.GetSigningAccountKeySettings().AccountKey.ToString());
+            Assert.Equal(xpub, v.GetFirstAccountKeySettings().AccountKey.ToString());
 
             await acc.RegisterLightningNodeAsync("BTC", LightningConnectionType.CLightning, true);
             store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);

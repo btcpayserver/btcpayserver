@@ -1166,11 +1166,11 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
 """;
             Assert.True(parsers.TryParseWalletFile(electrumText, mainnet, out electrum, out _));
             Assert.Equal("ElectrumFile", electrum.Source);
-            Assert.Equal("0'", electrum.GetSigningAccountKeySettings().AccountKeyPath.ToString());
+            Assert.Equal("0'", electrum.GetFirstAccountKeySettings().AccountKeyPath.ToString());
             Assert.True(electrum.AccountDerivation is DirectDerivationStrategy { Segwit: true });
-            Assert.Equal("fbb5b37d", electrum.GetSigningAccountKeySettings().RootFingerprint.ToString());
+            Assert.Equal("fbb5b37d", electrum.GetFirstAccountKeySettings().RootFingerprint.ToString());
             Assert.Equal("zpub6oQLDcJLztdMD29C8D8eyZKdKVfX9txB4BxZsMif9avJZBdVWPg1wmK3Uh3VxU7KXon1wm1xzvjyqmKWguYMqyjKP5f5Cho9f7uLfmRt2Br", electrum.AccountOriginal);
-            Assert.Equal(((DirectDerivationStrategy)electrum.AccountDerivation).GetExtPubKeys().First().ParentFingerprint.ToString(), electrum.GetSigningAccountKeySettings().RootFingerprint.ToString());
+            Assert.Equal(((DirectDerivationStrategy)electrum.AccountDerivation).GetExtPubKeys().First().ParentFingerprint.ToString(), electrum.GetFirstAccountKeySettings().RootFingerprint.ToString());
 
             // Electrum with strange garbage at the end caused by the lightning support
             electrumText =

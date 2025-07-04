@@ -14,6 +14,8 @@ public class InvoiceWebhookProvider(
     ILogger<InvoiceWebhookProvider> logger)
     : WebhookProvider<InvoiceEvent>(eventAggregator, logger, webhookSender)
 {
+    public override bool SupportsCustomerEmail { get; } = true;
+
     public override Dictionary<string, string> GetSupportedWebhookTypes()
     {
         return new Dictionary<string, string>

@@ -1,3 +1,4 @@
+using System.Linq;
 using BTCPayServer.BIP78.Sender;
 using NBitcoin;
 
@@ -10,7 +11,11 @@ namespace BTCPayServer.Payments.PayJoin.Sender
         public PayjoinWallet(DerivationSchemeSettings derivationSchemeSettings)
         {
             _derivationSchemeSettings = derivationSchemeSettings;
+            AccountSettings = _derivationSchemeSettings.AccountKeySettings.Single();
         }
+
+        public AccountKeySettings AccountSettings { get; set; }
+
         public IHDScriptPubKey Derive(KeyPath keyPath)
         {
             return ((IHDScriptPubKey)_derivationSchemeSettings.AccountDerivation).Derive(keyPath);
@@ -25,8 +30,8 @@ namespace BTCPayServer.Payments.PayJoin.Sender
         public ScriptPubKeyType ScriptPubKeyType => _derivationSchemeSettings.AccountDerivation.ScriptPubKeyType();
 
         public RootedKeyPath RootedKeyPath =>
-            _derivationSchemeSettings.GetSigningAccountKeySettings().GetRootedKeyPath();
+            AccountSettings.GetRootedKeyPath();
 
-        public IHDKey AccountKey => _derivationSchemeSettings.GetSigningAccountKeySettings().AccountKey;
+        public IHDKey AccountKey => AccountSettings.AccountKey;
     }
 }

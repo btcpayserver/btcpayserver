@@ -33,9 +33,15 @@
                         <span>@label.Label</span>
                     </div>
                 </td>
+
                 <td class="text-end">
-                    <form method="post" asp-action="RemoveWalletLabel" asp-route-walletId="@Model.WalletId" asp-route-id="@label.Label">
-                        <button class="btn btn-link btn-delete p-0" type="submit" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@StringLocalizer["The label {0} will be removed from this wallet and its associated transactions.", Html.Encode(label.Label)]" data-confirm-input="@StringLocalizer["DELETE"]" text-translate="true">Remove</button>
+                    <a class="btn btn-link p-0 me-3"
+                       href="@Url.Action("ReservedAddresses", "UIWallets", new { walletId = Model.WalletId.ToString(), filter = label.Label })"
+                       title="View Reserved Addresses with this label">
+                        Addresses
+                    </a>
+                    <form method="post" asp-action="RemoveWalletLabel" asp-route-walletId="@Model.WalletId" asp-route-id="@label.Label" class="d-inline">
+                        <button class="btn btn-link btn-delete p-0 me-3" type="submit" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@StringLocalizer["The label {0} will be removed from this wallet and its associated transactions.", Html.Encode(label.Label)]" data-confirm-input="@StringLocalizer["DELETE"]" text-translate="true">Remove</button>
                     </form>
                 </td>
             </tr>

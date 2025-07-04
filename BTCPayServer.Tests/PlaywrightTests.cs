@@ -1,34 +1,28 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http.Headers;
-using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
+using BTCPayServer.Views.Wallets;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Playwright;
 using NBitcoin;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using OpenQA.Selenium;
-using Xunit;
-using Xunit.Abstractions;
-using BTCPayServer.Payments;
-using BTCPayServer.Services.Rates;
-using BTCPayServer.Views.Wallets;
 using NBitcoin.Payment;
 using NBXplorer.Models;
-using System.Collections.Generic;
-using System.IO;
+using Newtonsoft.Json.Linq;
+using Xunit;
+using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {
@@ -68,10 +62,10 @@ namespace BTCPayServer.Tests
             await s.Page.SelectOptionAsync("#FormId", "Email");
             await s.ClickPagePrimary();
             await s.FindAlertMessage(partialText: "App updated");
+            var opening = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("#ViewApp");
-            var popOutPage = await s.Page.Context.WaitForPageAsync();
             string invoiceId;
-            await using (var o = await s.SwitchPage(popOutPage))
+            await using (_ = await s.SwitchPage(opening))
             {
                 await s.Page.Locator("button[type='submit']").First.ClickAsync();
                 await s.Page.FillAsync("[name='buyerEmail']", "aa@aa.com");
@@ -92,8 +86,9 @@ namespace BTCPayServer.Tests
             await s.ClickPagePrimary();
             await s.Page.Locator("a[id^='Edit-']").First.ClickAsync();
             var editUrl = new Uri(s.Page.Url);
+            opening = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("#ViewPaymentRequest");
-            popOutPage = await s.Page.Context.WaitForPageAsync();
+            var popOutPage = await opening;
             await popOutPage.ClickAsync("[data-test='form-button']");
             Assert.Contains("Enter your email", await popOutPage.ContentAsync());
             await popOutPage.FillAsync("input[name='buyerEmail']", "aa@aa.com");
@@ -939,83 +934,6 @@ namespace BTCPayServer.Tests
                 var visible = await Task.WhenAll(rows.Select(r => r.IsVisibleAsync()));
                 Assert.Single(visible, v => v);
             });
-        }
-
-        [Fact]
-        public async Task CanEditApiKeysAndViewPermissionUsage()
-        {
-            await using var s = CreatePlaywrightTester(newDb: true);
-            await s.StartAsync();
-            var tester = s.Server;
-            var user = tester.NewAccount();
-            await user.GrantAccessAsync();
-            await user.MakeAdmin(false);
-            await s.GoToLogin();
-            await s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
-            await s.GoToProfile(ManageNavPages.APIKeys);
-            await s.ClickPagePrimary();
-            string pageContent = await s.Page.ContentAsync();
-            Assert.DoesNotContain("btcpay.server.canmodifyserversettings", pageContent);
-            await user.MakeAdmin();
-            await s.Logout();
-            await s.GoToLogin();
-            await s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
-            await s.GoToProfile(ManageNavPages.APIKeys);
-            await s.ClickPagePrimary();
-            pageContent = await s.Page.ContentAsync();
-            Assert.Contains("btcpay.server.canmodifyserversettings", pageContent);
-            await s.Page.Locator("#btcpay\\.server\\.canmodifyserversettings").CheckAsync();
-            await s.Page.Locator("#btcpay\\.store\\.canmodifystoresettings").CheckAsync();
-            await s.ClickPagePrimary();
-            var alertLocator = await s.FindAlertMessage();
-            var apiKey = await alertLocator.Locator("code").InnerTextAsync();
-
-            string[] permissionsArray = new[] { Policies.CanViewProfile, Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings };
-            var expectedPermissions = Permission.ToPermissions(permissionsArray).ToArray();
-            var apikeydata = await TestApiAgainstAccessToken<ApiKeyData>(apiKey, $"api/v1/api-keys/current", tester.PayTester.HttpClient);
-            Assert.Equal(2, apikeydata.Permissions.Length);
-            await s.GoToProfile(ManageNavPages.APIKeys);
-            await s.Page.Locator($"#edit-apikey-{apiKey}").ClickAsync();
-            await s.Page.Locator("#btcpay\\.user\\.canviewprofile").CheckAsync();
-            await s.ClickPagePrimary();
-            apikeydata = await TestApiAgainstAccessToken<ApiKeyData>(apiKey, $"api/v1/api-keys/current", tester.PayTester.HttpClient);
-            var permissions = apikeydata.Permissions;
-            Assert.Equal(expectedPermissions.Length, permissions.Length);
-            foreach (var expectPermission in expectedPermissions)
-            {
-                Assert.True(permissions.Any(p => p == expectPermission), $"Missing expected permission {expectPermission}");
-            }
-            await s.GoToProfile(ManageNavPages.APIKeys);
-            await s.Page.Locator($"#viewusage-{apiKey}").ClickAsync();
-            var totalPermissions = await s.Page
-                .Locator("div.card-body", new PageLocatorOptions { HasTextString = "Total Permissions" }).Locator("h5.card-title").InnerTextAsync();
-            var unusedPermissions = await s.Page
-                .Locator("div.card-body", new PageLocatorOptions { HasTextString = "Unused Permissions" }).Locator("h5.card-title").InnerTextAsync();
-            int total = int.Parse(totalPermissions);
-            int unused = int.Parse(unusedPermissions);
-            Assert.Equal(unused, expectedPermissions.Length);
-            Assert.Equal(total, expectedPermissions.Length);
-        }
-
-
-        private async Task<T> TestApiAgainstAccessToken<T>(string apikey, string url, HttpClient client)
-        {
-            var uri = new Uri(client.BaseAddress, url);
-            var httpRequest = new HttpRequestMessage(HttpMethod.Get, uri);
-            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("token", apikey);
-            TestLogs.LogInformation($"Testing {uri}");
-            var result = await client.SendAsync(httpRequest);
-            TestLogs.LogInformation($"Testing {uri} status: {result.StatusCode}");
-            result.EnsureSuccessStatusCode();
-
-            var rawJson = await result.Content.ReadAsStringAsync();
-            TestLogs.LogInformation($"Testing {uri} result: {rawJson}");
-            if (typeof(T).IsPrimitive || typeof(T) == typeof(string))
-            {
-                return (T)Convert.ChangeType(rawJson, typeof(T));
-            }
-
-            return JsonConvert.DeserializeObject<T>(rawJson);
         }
     }
 }

@@ -763,6 +763,26 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(WalletReceive), new { walletId, returnUrl = vm.ReturnUrl });
         }
 
+        [HttpGet("{walletId}/addresses")]
+        public async Task<IActionResult> ReservedAddresses(
+            [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId)
+        {
+            var paymentMethod = GetDerivationSchemeSettings(walletId);
+            if (paymentMethod == null)
+                return NotFound();
+
+            var labeledAddresses = await WalletRepository.GetReservedAddressesWithDetails(walletId);
+
+            var vm = new ReservedAddressesViewModel
+            {
+                WalletId = walletId.ToString(),
+                CryptoCode = walletId.CryptoCode,
+                Addresses = labeledAddresses
+            };
+
+            return View(vm);
+        }
+
         private async Task SendFreeMoney(Cheater cheater, WalletId walletId, DerivationSchemeSettings paymentMethod)
         {
             var c = this.ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode);
@@ -997,7 +1017,7 @@ namespace BTCPayServer.Controllers
                         Labels = _labelService.CreateTransactionTagModels(info, Request),
                         Link = _transactionLinkProviders.GetTransactionLink(pmi, coin.OutPoint.ToString()),
                         Confirmations = coin.Confirmations,
-                        Timestamp = coin.Timestamp                   
+                        Timestamp = coin.Timestamp
                     };
                 }).ToArray();
             }
@@ -1479,13 +1499,12 @@ namespace BTCPayServer.Controllers
             var settings = GetDerivationSchemeSettings(walletId);
             if (settings is null)
                 return NotFound();
-            var signingKeySettings = settings.GetSigningAccountKeySettings(extKey);
+            var signingKeySettings = settings.GetAccountKeySettingsFromRoot(extKey);
             if (signingKeySettings is null)
             {
                 // Let's try best effort if RootFingerprint isn't configured, but AccountKeyPath is
                 signingKeySettings = settings.AccountKeySettings
-                                            .Where(a => a.RootFingerprint is null && a.AccountKeyPath is not null)
-                                            .FirstOrDefault();
+                    .FirstOrDefault(a => a.RootFingerprint is null && a.AccountKeyPath is not null);
                 if (signingKeySettings is not null)
                     signingKeySettings.RootFingerprint = extKey.GetPublicKey().GetHDFingerPrint();
             }

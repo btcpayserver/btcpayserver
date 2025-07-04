@@ -407,13 +407,12 @@ public partial class UIStoresController
             Network = network,
             IsHotWallet = derivation.IsHotWallet,
             Source = derivation.Source,
-            RootFingerprint = derivation.GetSigningAccountKeySettingsOrDefault()?.RootFingerprint.ToString(),
+            RootFingerprint = derivation.GetFirstAccountKeySettings().RootFingerprint.ToString(),
             DerivationScheme = derivation.AccountDerivation?.ToString(),
             DerivationSchemeInput = derivation.AccountOriginal,
-            KeyPath = derivation.GetSigningAccountKeySettingsOrDefault()?.AccountKeyPath?.ToString(),
+            KeyPath = derivation.GetFirstAccountKeySettings().AccountKeyPath?.ToString(),
             UriScheme = network.NBitcoinNetwork.UriScheme,
             Label = derivation.Label,
-            SelectedSigningKey = derivation.SigningKey?.ToString(),
             NBXSeedAvailable = derivation.IsHotWallet &&
                                perm.CanCreateHotWallet &&
                                !string.IsNullOrEmpty(await client.GetMetadataAsync<string>(derivation.AccountDerivation,
@@ -478,15 +477,6 @@ public partial class UIStoresController
             derivation.Label = vm.Label;
             derivation.IsMultiSigOnServer = vm.IsMultiSigOnServer;
             derivation.DefaultIncludeNonWitnessUtxo = vm.DefaultIncludeNonWitnessUtxo;
-        }
-
-        var signingKey = string.IsNullOrEmpty(vm.SelectedSigningKey)
-            ? null
-            : new BitcoinExtPubKey(vm.SelectedSigningKey, network.NBitcoinNetwork);
-        if (derivation.SigningKey != signingKey && signingKey != null)
-        {
-            needUpdate = true;
-            derivation.SigningKey = signingKey;
         }
 
         for (int i = 0; i < derivation.AccountKeySettings.Length; i++)

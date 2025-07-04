@@ -32,6 +32,7 @@ using Ganss.Xss;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using NBitcoin;
@@ -59,6 +60,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             DisplayFormatter displayFormatter,
             IRateLimitService rateLimitService,
             IAuthorizationService authorizationService,
+            UserManager<ApplicationUser> userManager,
             Safe safe)
         {
             _currencies = currencies;
@@ -70,6 +72,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             _displayFormatter = displayFormatter;
             _rateLimitService = rateLimitService;
             _authorizationService = authorizationService;
+            _userManager = userManager;
             _safe = safe;
             StringLocalizer = stringLocalizer;
             FormDataService = formDataService;
@@ -84,6 +87,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly DisplayFormatter _displayFormatter;
         private readonly IRateLimitService _rateLimitService;
         private readonly IAuthorizationService _authorizationService;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly Safe _safe;
         public FormDataService FormDataService { get; }
         public IStringLocalizer StringLocalizer { get; }
@@ -704,7 +708,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private async Task FillUsers(UpdatePointOfSaleViewModel vm)
         {
             var users = await _storeRepository.GetStoreUsers(GetCurrentStore().Id);
-            vm.StoreUsers = users.Select(u => (u.Id, u.Email, u.StoreRole.Role)).ToDictionary(u => u.Id, u => $"{u.Email} ({u.Role})");
+            vm.StoreUsers = users.Where(u => u.Id == _userManager.GetUserId(User)).Select(u => (u.Id, u.Email, u.StoreRole.Role)).ToDictionary(u => u.Id, u => $"{u.Email} ({u.Role})");
         }
     }
 }

@@ -8,6 +8,7 @@ using BTCPayServer.Data.Data;
 using BTCPayServer.Plugins.Shopify.ApiModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
+using Npgsql;
 
 namespace BTCPayServer.Security.Greenfield
 {
@@ -93,37 +94,19 @@ namespace BTCPayServer.Security.Greenfield
         public async Task RecordPermissionUsage(string apiKey, Permission permission)
         {
             using var context = _applicationDbContextFactory.CreateContext();
-            var entity = await EntityFrameworkQueryableExtensions.SingleOrDefaultAsync(context.ApiKeyPermissionUsages,
-                    data => data.ApiKey == apiKey && data.Permission == permission.Policy);
-            if (entity == null)
-            {
-                await context.ApiKeyPermissionUsages.AddAsync(new Data.Data.ApiKeyPermissionUsage
-                {
-                    Id = $"{apiKey}-{permission}",
-                    ApiKey = apiKey,
-                    Permission = permission.Policy,
-                    LastUsed = DateTimeOffset.UtcNow,
-                    UsageCount = 1
-                });
-            }
-            else
-            {
-                entity.LastUsed = DateTimeOffset.UtcNow;
-                entity.UsageCount += 1;
-                context.ApiKeyPermissionUsages.Update(entity);
-            }
-            await context.SaveChangesAsync();
-        }
+            var sql = @"
+            INSERT INTO ""ApiKeyPermissionUsages"" (""Id"", ""ApiKey"", ""Permission"", ""LastUsed"", ""UsageCount"")
+            VALUES (@Id, @ApiKey, @Permission, @LastUsed, 1)
+            ON CONFLICT (""Id"")
+            DO UPDATE SET
+                ""LastUsed"" = @LastUsed,
+                ""UsageCount"" = ""ApiKeyPermissionUsages"".""UsageCount"" + 1";
 
-        public async Task DeleteAPIPermissionRecord(string apiKey)
-        {
-            await using var ctx = _applicationDbContextFactory.CreateContext();
-            var entity = ctx.ApiKeyPermissionUsages.Where(c => c.ApiKey == apiKey);
-            if (entity.Any())
-            {
-                ctx.RemoveRange(entity);
-                await ctx.SaveChangesAsync();
-            }
+            await context.Database.ExecuteSqlRawAsync(sql,
+                new NpgsqlParameter("@Id", $"{apiKey}-{permission}"),
+                new NpgsqlParameter("@ApiKey", apiKey),
+                new NpgsqlParameter("@Permission", permission.Policy),
+                new NpgsqlParameter("@LastUsed", DateTimeOffset.UtcNow));
         }
 
         public async Task<List<ApiKeyPermissionUsage>> GetAPIPermissionUsageRecords(string apiKey)

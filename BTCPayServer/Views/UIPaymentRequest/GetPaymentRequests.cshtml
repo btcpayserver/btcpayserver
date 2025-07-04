@@ -18,7 +18,7 @@
 {
     private int CountArrayFilter(string type) =>
         Model.Search.ContainsFilter(type) ? Model.Search.GetFilterArray(type).Length : 0;
-    
+
     private bool HasArrayFilter(string type, string key = null) =>
         Model.Search.ContainsFilter(type) && (key is null || Model.Search.GetFilterArray(type).Contains(key));
 
@@ -122,14 +122,14 @@
                         <td class="text-end">
                             <div class="d-inline-flex align-items-center gap-3">
                                 <a asp-action="ViewPaymentRequest" asp-route-payReqId="@item.Id" id="PaymentRequest-@item.Id" target="_blank" text-translate="true">View</a>
-                                <button type="button" class="btn btn-link p-0 clipboard-button" 
+                                <button type="button" class="btn btn-link p-0 clipboard-button"
                                         data-clipboard="@CallbackGenerator.PaymentRequestByIdLink(item.Id, this.Context.Request)"
                                         title="Copy Link">
                                     <vc:icon symbol="actions-copy" />
                                 </button>
                                 <div class="dropdown">
                                     <button class="btn btn-link dropdown-toggle p-0 dropdown-toggle-no-caret text-body" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="ToggleActions-@item.Id">
-                                        <vc:icon symbol="dots" />   
+                                        <vc:icon symbol="dots" />
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="actionDropdown">
                                         <li><a class="dropdown-item"  permission="@Policies.CanViewInvoices" asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@item.StoreId" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")" text-translate="true">Invoices</a></li>

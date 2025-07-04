@@ -98,6 +98,15 @@
             <div class="mt-4">
                 <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100" text-translate="true">Generate another address</button>
             </div>
+            <div class="payment-box mt-3">
+                <a class="btn btn-outline-info w-100"
+                   id="reserved-addresses-button"
+                   asp-controller="UIWallets" asp-action="ReservedAddresses" asp-route-walletId="@walletId">
+                    Reserved Addresses
+                </a>
+            </div>
+
+
         </div>
     }
     @if (env.CheatMode)

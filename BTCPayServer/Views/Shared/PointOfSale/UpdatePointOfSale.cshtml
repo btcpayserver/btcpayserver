@@ -13,6 +13,7 @@
 	Csp.UnsafeEval();
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
     var posPath = Url.Action("ViewPointOfSale", "UIPointOfSale", new { appId = Model.Id });
+    var posUrl = Url.ActionAbsolute(this.Context.Request, "ViewPointOfSale", "UIPointOfSale", new { appId = Model.Id }).AbsoluteUri;
 }
 
 @section PageHeadContent {
@@ -361,7 +362,10 @@ Please insert valid HTML here. Only meta tags accepted.'>
                 </button>
             </div>
             <div class="modal-body pt-0">
-                <component type="typeof(BTCPayServer.Blazor.PosLoginCode)" render-mode="ServerPrerendered" param-Users="@Model.StoreUsers" param-PosPath="@posPath" />
+                <component type="typeof(BTCPayServer.Blazor.PosLoginCode)" render-mode="ServerPrerendered"
+                           param-Users="@Model.StoreUsers"
+                           param-PosPath="@posPath"
+                           param-PosUrl="@posUrl"/>
             </div>
         </div>
     </div>

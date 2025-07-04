@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
+using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Services.Wallets;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
@@ -297,6 +299,80 @@ namespace BTCPayServer.Services
             await using var ctx = _ContextFactory.CreateContext();
             return (await ctx.WalletObjects.AsNoTracking().Where(predicate).ToArrayAsync())
                 .Select(FormatToLabel).ToArray();
+        }
+
+        public async Task<List<ReservedAddress>> GetReservedAddressesWithDetails(WalletId walletId)
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            await using var conn = ctx.Database.GetDbConnection();
+            await conn.OpenAsync();
+
+            const string sql = """
+                SELECT
+                    w."Id",
+                    w."Data"->>'reservedAt' AS "ReservedAt",
+                    l."Id" AS "LabelId",
+                    l."Data"->>'color' AS "LabelColor"
+                FROM "WalletObjects" w
+                LEFT JOIN "WalletObjectLinks" n
+                  ON n."AType" = 'address'
+                 AND n."AId" = w."Id"
+                 AND n."WalletId" = w."WalletId"
+                LEFT JOIN "WalletObjects" l
+                  ON l."Id" = n."BId"
+                 AND l."Type" = 'label'
+                 AND l."WalletId" = w."WalletId"
+                WHERE w."WalletId" = @WalletId
+                  AND w."Type" = 'address'
+                  AND w."Data"->>'generatedBy' = 'receive'
+            """;
+
+            var parameters = new DynamicParameters();
+            parameters.Add("WalletId", walletId.ToString(), DbType.String);
+
+            var rows = await conn.QueryAsync(sql, parameters);
+
+            var addressesById = new Dictionary<string, ReservedAddress>();
+            var labelTrackers = new Dictionary<string, HashSet<string>>();
+
+            foreach (var row in rows)
+            {
+                string id = row.Id;
+
+                if (!addressesById.TryGetValue(id, out var addr))
+                {
+                    DateTimeOffset? reservedAt = null;
+                    if (DateTimeOffset.TryParse(row.ReservedAt, out DateTimeOffset parsed))
+                        reservedAt = parsed;
+
+                    addr = new ReservedAddress
+                    {
+                        Address = id,
+                        ReservedAt = reservedAt,
+                        Labels = new List<TransactionTagModel>()
+                    };
+                    addressesById[id] = addr;
+                    labelTrackers[id] = new HashSet<string>();
+                }
+
+                if (row.LabelId == null) continue;
+
+                string labelId = row.LabelId;
+                if (!labelTrackers[id].Add(labelId)) continue;
+
+                string color = row.LabelColor ?? ColorPalette.Default.DeterministicColor(labelId);
+
+                addr.Labels.Add(new TransactionTagModel
+                {
+                    Text = labelId,
+                    Color = color,
+                    TextColor = ColorPalette.Default.TextColor(color)
+                });
+            }
+
+            return addressesById.Values
+                .OrderByDescending(a => a.ReservedAt)
+                .ToList();
         }
 
         private (string Label, string Color) FormatToLabel(WalletObjectData o)

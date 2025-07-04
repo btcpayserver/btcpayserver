@@ -12,7 +12,7 @@
 * Fix: After connection string replacement, lightning payment would not be detected for 1 min (#6822) @NicolasDorier
 * Fix: In Email Rules show "Send the email to the buyer" checkbox only if trigger supports it (#6653 #6815) @AdamWroblewski
 * Fix: Failure to sign with Vault when a PSBT size exceeds 32KB (#6809) @NicolasDorier
-* Do not prevent block pending payouts processing if a store's lightning is unresponsive @NicolasDorier
+* Do not prevent the processing of other pending payouts if a store's lightning server is unresponsive @NicolasDorier
 
 ## 2.1.5
 

@@ -763,6 +763,15 @@ retry:
             public string? DefaultPaymentMethodId { get; set; }
             public StoreBlob? Blob { get; set; }
         }
+
+        public async Task<Dictionary<string, int>> GetStoreCountsPerUserAsync()
+        {
+            using var context = _ContextFactory.CreateContext();
+            return await context.UserStore
+                .GroupBy(us => us.ApplicationUserId)
+                .Select(group => new { UserId = group.Key, StoreCount = group.Count() })
+                .ToDictionaryAsync(g => g.UserId, g => g.StoreCount);
+        }
     }
 
     public record StoreRoleId

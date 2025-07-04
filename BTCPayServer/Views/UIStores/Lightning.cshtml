@@ -44,7 +44,7 @@
             Public Node Info
         </a>
     </div>
-
+        <vc:lsps1 store-id="@Model.StoreId" />
     @if (Model.Services != null && Model.Services.Any())
     {
         <div permission="@Policies.CanModifyServerSettings" class="mt-5">

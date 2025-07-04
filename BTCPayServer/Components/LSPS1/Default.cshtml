@@ -1,0 +1,70 @@
+@model BTCPayServer.Components.LSPS1.LSPS1ViewModel
+@using BTCPayServer.Lightning
+
+@if (Model.HasLiquidityReport && Model.LiquidityReport != null)
+{
+    var status = Model.LiquidityReport.Liquidity_Status.ToString();
+    var activeInboundSats = Model.LiquidityReport.Active_Inbound_Satoshis.MilliSatoshi / 1000;
+    var pendingInboundSats = Model.LiquidityReport.Pending_Inbound_Satoshis.MilliSatoshi / 1000;
+
+    Func<long, string> formatAmount = sats =>
+    {
+        var btc = (decimal)sats / 100_000_000m;
+        return $"{sats:N0} sats ({btc.ToString("0.00000000")} BTC)";
+    };
+
+    <div class="mt-4 mb-4 p-3 bg-light rounded" id="lsps1-component">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="h4 mb-0">BTC Lightning Inbound Payment Capacity</span>
+
+                @{
+                    var badgeClass = status switch
+                    {
+                        "Good" => "bg-success",
+                        "Pending" => "badge-unusual",
+                        "Bad" => "bg-danger",
+                        _ => "bg-secondary"
+                    };
+                }
+                <span class="badge @badgeClass px-3 py-2">@status</span>
+            </div>
+
+            <div class="card-body">
+                @if (status == "Good")
+                {
+                    <p class="card-text">
+                        <strong>Active Inbound Capacity:</strong>
+                        <span class="text-success">@formatAmount(activeInboundSats)</span>
+                    </p>
+                }
+                else if (status == "Pending")
+                {
+                    <p class="card-text">
+                        <strong>Pending Inbound Capacity:</strong>
+                        <span class="text-warning">@formatAmount(pendingInboundSats)</span>
+                    </p>
+                    <p class="card-text small text-muted">
+                        Your node has pending channels that, once confirmed, will provide sufficient inbound capacity.
+                    </p>
+                }
+                else if (status == "Bad")
+                {
+                    <p class="card-text">
+                        <strong>Active Inbound Capacity:</strong>
+                        <span class="text-danger">@formatAmount(activeInboundSats)</span>
+                    </p>
+                    <p class="card-text small text-muted">
+                        Your node has insufficient inbound capacity. Consider acquiring a channel from a Lightning Service
+                        Provider.
+                    </p>
+                }
+                <p class="card-text small text-muted">@Model.Message</p>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+
+}

@@ -956,15 +956,12 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage(partialText: "Payment request");
 
             var paymentRequestUrl = s.Page.Url;
-            var payReqId = "";
-            if (paymentRequestUrl.Contains("?payReqId="))
-            {
-                var uri = new Uri(paymentRequestUrl);
-                var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
-                payReqId = queryParams["payReqId"];
-            }
+            var uri = new Uri(paymentRequestUrl);
+            var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            var payReqId = queryParams["payReqId"];
+            Assert.NotNull(payReqId);
+            Assert.NotEmpty(payReqId);
             s.TestLogs.LogInformation($"Created payment request with ID: {payReqId}");
-
             var markAsSettledExists = await s.Page.Locator("button:has-text('Mark as settled')").CountAsync();
             Assert.Equal(0, markAsSettledExists);
             var newPagePromise = s.Page.Context.WaitForPageAsync();

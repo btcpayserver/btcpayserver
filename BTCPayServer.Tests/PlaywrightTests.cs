@@ -1058,17 +1058,10 @@ namespace BTCPayServer.Tests
             var markSettledExists = await publicPage.Locator("button:has-text('Mark as settled')").CountAsync();
             s.TestLogs.LogInformation($"Mark as settled button exists on public page: {markSettledExists > 0}");
             
-            if (markSettledExists > 0)
-            {
-                await publicPage.ClickAsync("button:has-text('Mark as settled')");
-                await publicPage.WaitForLoadStateAsync();
-                s.TestLogs.LogInformation("Clicked Mark as settled on public payment request page");
-            }
-            else
-            {
-                s.TestLogs.LogInformation("Mark as settled button not found on public page - payment request might already be settled");
-            }
-            
+            Assert.True(markSettledExists > 0, "Mark as settled button should be visible on public page after invoice is settled");
+            await publicPage.ClickAsync("button:has-text('Mark as settled')");
+            await publicPage.WaitForLoadStateAsync();
+            s.TestLogs.LogInformation("Clicked Mark as settled on public payment request page");
             await publicPage.CloseAsync();
             await s.Page.BringToFrontAsync();
             

@@ -968,8 +968,8 @@ namespace BTCPayServer.Tests
             await s.Page.ClickAsync("a:has-text('View')");
             var newPage = await newPagePromise;
             
-            await newPage.WaitForLoadStateAsync();
             await newPage.BringToFrontAsync();
+            await newPage.WaitForSelectorAsync("button:has-text('Pay')", new() { State = WaitForSelectorState.Visible });
             s.TestLogs.LogInformation($"Public payment request page URL: {newPage.Url}");
             
             await newPage.ClickAsync("button:has-text('Pay')");
@@ -1028,7 +1028,7 @@ namespace BTCPayServer.Tests
             await s.Page.BringToFrontAsync();
             await s.GoToStore();
             await s.Page.ClickAsync("#StoreNav-Invoices");
-            await s.Page.WaitForLoadStateAsync();
+            await s.Page.WaitForSelectorAsync("#StoreNav-Invoices", new() { State = WaitForSelectorState.Visible });
             s.TestLogs.LogInformation("On invoices page, looking for partial payment");
             
             await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-toggle");

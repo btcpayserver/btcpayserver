@@ -435,7 +435,7 @@ goodies:
             await s.GoToUrl(posUrl);
             try
             {
-                Assert.Equal("3 left", await s.Page.TextContentAsync(".posItem:nth-child(3) .badge.inventory"));
+                Assert.Equal("3 left".NormalizeWhitespaces(), (await s.Page.TextContentAsync("#card_rooibos .badge")).NormalizeWhitespaces());
             }
             catch (Exception)
             {

@@ -77,7 +77,7 @@
                             : item.BuyButtonText;
                         buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
                         var categories = new JArray(item.Categories ?? new object[] { });
-                        <div class="col posItem posItem--displayed" :class="{ 'posItem--inStock': inStock(@index) }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)" data-categories='@Safe.Json(categories)'>
+                        <div id="card_@item.Id" class="col posItem posItem--displayed" :class="{ 'posItem--inStock': inStock(@index) }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)" data-categories='@Safe.Json(categories)'>
                             <div class="tile card" v-on:click="addToCart(@index, 1)">
                                 @if (!string.IsNullOrWhiteSpace(item.Image))
                                 {

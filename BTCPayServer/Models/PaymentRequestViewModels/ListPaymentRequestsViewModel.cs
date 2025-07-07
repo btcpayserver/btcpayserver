@@ -225,7 +225,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
                     {
                         Amount = paymentEntity.PaidAmount.Gross,
                         Paid = paymentEntity.InvoicePaidAmount.Net,
-                        ReceivedDate = paymentEntity.ReceivedTime.DateTime,
+                        ReceivedDate = paymentEntity.ReceivedTime,
                         AmountFormatted = displayFormatter.Currency(paymentEntity.PaidAmount.Gross, paymentEntity.PaidAmount.Currency),
                         PaidFormatted = displayFormatter.Currency(paymentEntity.InvoicePaidAmount.Net, invoice.Currency, DisplayFormatter.CurrencyFormat.Symbol),
                         RateFormatted = displayFormatter.Currency(paymentEntity.Rate, invoice.Currency, DisplayFormatter.CurrencyFormat.Symbol),
@@ -244,7 +244,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             public string RateFormatted { get; set; }
             public decimal Paid { get; set; }
             public string PaidFormatted { get; set; }
-            public DateTime ReceivedDate { get; set; }
+            public DateTimeOffset ReceivedDate { get; set; }
             public string Link { get; set; }
             public string Id { get; set; }
             public string Destination { get; set; }

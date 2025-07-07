@@ -964,27 +964,25 @@ namespace BTCPayServer.Tests
             s.TestLogs.LogInformation($"Created payment request with ID: {payReqId}");
             var markAsSettledExists = await s.Page.Locator("button:has-text('Mark as settled')").CountAsync();
             Assert.Equal(0, markAsSettledExists);
-            var newPagePromise = s.Page.Context.WaitForPageAsync();
+            var opening = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("a:has-text('View')");
-            var newPage = await newPagePromise;
-            
-            await newPage.BringToFrontAsync();
-            await newPage.WaitForSelectorAsync("button:has-text('Pay')", new() { State = WaitForSelectorState.Visible });
-            s.TestLogs.LogInformation($"Public payment request page URL: {newPage.Url}");
-            
-            await newPage.ClickAsync("button:has-text('Pay')");
-            s.TestLogs.LogInformation("Clicked Pay button");
-            
-            await newPage.WaitForLoadStateAsync();
-            
-            s.TestLogs.LogInformation($"After clicking Pay, URL is: {newPage.Url}");
-            
-            try 
+            string invoiceId;
+            await using (_ = await s.SwitchPage(opening))
             {
-                await newPage.WaitForSelectorAsync("iframe[name='btcpay']", new() { Timeout = 10000 });
+                await s.Page.WaitForSelectorAsync("button:has-text('Pay')", new() { State = WaitForSelectorState.Visible });
+                s.TestLogs.LogInformation($"Public payment request page URL: {s.Page.Url}");
+                
+                await s.Page.ClickAsync("button:has-text('Pay')");
+                s.TestLogs.LogInformation("Clicked Pay button");
+                
+                await s.Page.WaitForLoadStateAsync();
+                
+                s.TestLogs.LogInformation($"After clicking Pay, URL is: {s.Page.Url}");
+                
+                await s.Page.WaitForSelectorAsync("iframe[name='btcpay']", new() { Timeout = 10000 });
                 s.TestLogs.LogInformation("Found payment iframe");
                 
-                var iframe = newPage.Frame("btcpay");
+                var iframe = s.Page.Frame("btcpay");
                 if (iframe == null)
                 {
                     throw new Exception("Could not find btcpay iframe");
@@ -1003,28 +1001,19 @@ namespace BTCPayServer.Tests
                 
                 await iframe.WaitForSelectorAsync("#CheatSuccessMessage", new() { Timeout = 10000 });
                 s.TestLogs.LogInformation("Partial payment completed successfully");
-            }
-            catch (Exception ex)
-            {
-                s.TestLogs.LogInformation($"Error during partial payment: {ex.Message}");
-                s.TestLogs.LogInformation($"Current URL: {newPage.Url}");
-                s.TestLogs.LogInformation($"Page content: {await newPage.ContentAsync()}");
-                throw;
-            }
-            
-            var invoiceId = "";
-            if (newPage.Url.Contains("/i/"))
-            {
-                var parts = newPage.Url.Split('/');
-                var iIndex = Array.IndexOf(parts, "i");
-                if (iIndex >= 0 && iIndex + 1 < parts.Length)
+                
+                invoiceId = s.Page.Url.Split('/').Last();
+                if (s.Page.Url.Contains("/i/"))
                 {
-                    invoiceId = parts[iIndex + 1];
+                    var parts = s.Page.Url.Split('/');
+                    var iIndex = Array.IndexOf(parts, "i");
+                    if (iIndex >= 0 && iIndex + 1 < parts.Length)
+                    {
+                        invoiceId = parts[iIndex + 1];
+                    }
                 }
+                s.TestLogs.LogInformation($"Invoice ID: {invoiceId}");
             }
-            s.TestLogs.LogInformation($"Invoice ID: {invoiceId}");
-            
-            await newPage.CloseAsync();
             await s.Page.BringToFrontAsync();
             await s.GoToStore();
             await s.Page.ClickAsync("#StoreNav-Invoices");
@@ -1044,23 +1033,21 @@ namespace BTCPayServer.Tests
             await s.Page.WaitForLoadStateAsync();
             s.TestLogs.LogInformation("On payment requests page");
             
-            var publicPagePromise = s.Page.Context.WaitForPageAsync();
+            var opening2 = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("a:has-text('View')");
-            var publicPage = await publicPagePromise;
-            
-            await publicPage.WaitForLoadStateAsync();
-            await publicPage.BringToFrontAsync();
-            s.TestLogs.LogInformation("On public payment request page");
-            
-            var markSettledExists = await publicPage.Locator("button:has-text('Mark as settled')").CountAsync();
-            s.TestLogs.LogInformation($"Mark as settled button exists on public page: {markSettledExists > 0}");
-            
-            Assert.True(markSettledExists > 0, "Mark as settled button should be visible on public page after invoice is settled");
-            await publicPage.ClickAsync("button:has-text('Mark as settled')");
-            await publicPage.WaitForLoadStateAsync();
-            s.TestLogs.LogInformation("Clicked Mark as settled on public payment request page");
-            await publicPage.CloseAsync();
-            await s.Page.BringToFrontAsync();
+            await using (_ = await s.SwitchPage(opening2))
+            {
+                await s.Page.WaitForLoadStateAsync();
+                s.TestLogs.LogInformation("On public payment request page");
+                
+                var markSettledExists = await s.Page.Locator("button:has-text('Mark as settled')").CountAsync();
+                s.TestLogs.LogInformation($"Mark as settled button exists on public page: {markSettledExists > 0}");
+                
+                Assert.True(markSettledExists > 0, "Mark as settled button should be visible on public page after invoice is settled");
+                await s.Page.ClickAsync("button:has-text('Mark as settled')");
+                await s.Page.WaitForLoadStateAsync();
+                s.TestLogs.LogInformation("Clicked Mark as settled on public payment request page");
+            }
             
             await s.GoToStore();
             await s.Page.ClickAsync("#StoreNav-PaymentRequests");

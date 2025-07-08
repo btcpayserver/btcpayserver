@@ -393,7 +393,7 @@ namespace BTCPayServer.Hosting
             services.AddReportProvider<OnChainWalletReportProvider>();
             services.AddReportProvider<ProductsReportProvider>();
             services.AddReportProvider<PayoutsReportProvider>();
-            services.AddReportProvider<LegacyInvoiceExportReportProvider>();
+            services.AddReportProvider<InvoicesReportProvider>();
             services.AddReportProvider<RefundsReportProvider>();
             services.AddWebhooks();
 

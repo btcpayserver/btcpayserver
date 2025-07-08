@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
@@ -17,6 +19,7 @@ using BTCPayServer.Views.Stores;
 using LNURL;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Playwright;
+using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -141,6 +144,192 @@ fruit tea:
 
             // Throws for duplicate IDs
             Assert.Throws<ArgumentException>(() => AppService.Parse(duplicateId, true, true));
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanExportInvoicesWithMetadata()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser();
+            await s.CreateNewStore();
+            var client = await s.AsTestAccount().CreateClient();
+
+            await s.AddDerivationScheme();
+            await s.GoToStore(StoreNavPages.General);
+            await s.Page.SelectOptionAsync("#NetworkFeeMode", "Never");
+            await s.ClickPagePrimary();
+
+
+            var invoiceRepo = s.Server.PayTester.InvoiceRepository;
+            // One expired invoice
+            var expiredInvoiceId = await s.CreateInvoice(amount: 1000m);
+            await invoiceRepo.UpdateInvoiceExpiry(expiredInvoiceId, TimeSpan.Zero);
+            TestLogs.LogInformation($"Expired invoice ID: {expiredInvoiceId}");
+            var newInvoiceId = await s.CreateInvoice(amount: 1000m);
+            TestLogs.LogInformation($"New invoice ID: {newInvoiceId}");
+
+            // One expired invoice with a late payment
+            var expiredLatePaidInvoiceId = await s.CreateInvoice(amount: 1000m);
+            await invoiceRepo.UpdateInvoiceExpiry(expiredLatePaidInvoiceId, TimeSpan.Zero);
+            TestLogs.LogInformation($"Expired late paid invoice ID: {expiredLatePaidInvoiceId}");
+
+            var address = (await client.GetInvoicePaymentMethods(s.StoreId, expiredLatePaidInvoiceId))[0].Destination;
+            await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(address, Network.RegTest), Money.Coins(1.0m));
+
+            // One 0 amount invoice
+            var freeInvoiceId = await s.CreateInvoice(amount: 0m);
+            TestLogs.LogInformation($"Free invoice ID: {freeInvoiceId}");
+
+            // One invoice with two payments
+            var twoPaymentsInvoiceId = await s.CreateInvoice(amount: 5000m);
+            TestLogs.LogInformation($"Invoice with two payments: {twoPaymentsInvoiceId}");
+            await s.GoToInvoiceCheckout(twoPaymentsInvoiceId);
+            await s.PayInvoice(amount: 0.4m, mine: false);
+            await s.PayInvoice(mine: true);
+
+            var expiredLatePaidInvoice = await client.GetInvoice(s.StoreId, expiredLatePaidInvoiceId);
+            Assert.Equal(InvoiceStatus.Expired, expiredLatePaidInvoice.Status);
+            Assert.Equal(InvoiceExceptionStatus.PaidLate, expiredLatePaidInvoice.AdditionalStatus);
+
+            var expiredInvoice = await client.GetInvoice(s.StoreId, expiredInvoiceId);
+            Assert.Equal(InvoiceStatus.Expired, expiredInvoice.Status);
+            Assert.Equal(InvoiceExceptionStatus.None, expiredInvoice.AdditionalStatus);
+
+            await s.GoToStore(s.StoreId);
+            await s.CreateApp("PointOfSale");
+            await s.Page.ClickAsync("label[for='DefaultView_Cart']");
+            await s.Page.FillAsync("#DefaultTaxRate", "10");
+            await s.ClickPagePrimary();
+
+            var o = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("#ViewApp");
+            string posInvoiceId;
+            await using (_ = await s.SwitchPage(o))
+            {
+                await s.Page.ClickAsync("#card_rooibos button");
+                await s.Page.ClickAsync("#card_rooibos button");
+
+                await s.Page.ClickAsync("#card_black-tea button");
+
+                await s.Page.ClickAsync("#CartSubmit");
+                await s.PayInvoice(amount: 0.00012m, mine: false);
+                await s.PayInvoice(mine: true);
+                posInvoiceId = s.Page.Url.Split('/').Last();
+            }
+
+            await s.GoToInvoices(s.StoreId);
+            await s.Page.ClickAsync("#view-report");
+
+            await s.Page.WaitForSelectorAsync($"xpath=//*[text()=\"{freeInvoiceId}\"]");
+
+            var download = await s.Page.RunAndWaitForDownloadAsync(async () =>
+            {
+                await s.ClickPagePrimary();
+            });
+            var csvTxt = await new StreamReader(await download.CreateReadStreamAsync()).ReadToEndAsync();
+            var csvTester = CSVTester.ParseCSV(csvTxt);
+            csvTester
+                .ForInvoice(posInvoiceId)
+                .AssertCount(2)
+                .AssertValues(
+                    ("InvoiceExceptionStatus", ""),
+                    ("rooibos-count", "2"),
+                    ("black-tea-count", "1"),
+                    ("total", "3.74"),
+                    ("subTotal", "3.4"),
+                    ("taxIncluded", "0.34"),
+                    ("InvoiceStatus", "Settled"))
+                .SelectPayment(1)
+                .AssertValues(
+                    ("rooibos-count", ""),
+                    ("taxIncluded", ""),
+                    ("InvoiceStatus", ""));
+
+            Assert.DoesNotContain(expiredInvoiceId, csvTxt);
+            Assert.DoesNotContain(newInvoiceId, csvTxt);
+            csvTester
+                .ForInvoice(expiredLatePaidInvoiceId)
+                .AssertCount(1)
+                .AssertValues(
+                    ("InvoiceDue", "-4000.00"),
+                    ("InvoiceExceptionStatus", "PaidLate"),
+                    ("rooibos-count", ""), ("taxIncluded", ""),
+                    ("InvoiceStatus", "Expired"));
+
+            csvTester
+                .ForInvoice(freeInvoiceId)
+                .AssertCount(1)
+                .AssertValues(
+                    ("InvoiceStatus", "Settled"),
+                    ("PaymentAddress", ""),
+                    ("PaymentReceivedDate", ""));
+
+            csvTester
+                .ForInvoice(twoPaymentsInvoiceId)
+                .AssertCount(2)
+                .AssertValues(
+                    ("InvoiceStatus", "Settled"),
+                    ("PaymentMethodId", "BTC-CHAIN"),
+                    ("PaymentCurrency", "BTC"),
+                    ("PaymentAmount", "0.40000000"),
+                    ("PaymentInvoiceAmount", "2000.00"),
+                    ("Rate", "5000"))
+                .SelectPayment(1)
+                .AssertValues(
+                    ("InvoiceStatus", ""),
+                    ("PaymentCurrency", "BTC"),
+                    ("PaymentAmount", "0.60000000"),
+                    ("Rate", "5000"));
+        }
+
+        class CSVTester
+        {
+            public static CSVTester ParseCSV(string csvText) => new(csvText);
+            private readonly Dictionary<string, int> _indexes;
+            private string invoice = "";
+            private int payment = 0;
+            private readonly List<string[]> _lines;
+
+            public CSVTester(string text)
+            {
+                var lines = text.Split("\r\n").ToList();
+                var headers = lines[0].Split(',');
+                _indexes = headers.Select((h,i) => (h,i)).ToDictionary(h => h.h, h => h.i);
+                _lines = lines.Skip(1).ToList().Select(l => l.Split(',')).ToList();
+            }
+
+            public CSVTester ForInvoice(string invoice)
+            {
+                this.payment = 0;
+                this.invoice = invoice;
+                return this;
+            }
+            public CSVTester SelectPayment(int payment)
+            {
+                this.payment = payment;
+                return this;
+            }
+            public CSVTester AssertCount(int count)
+            {
+                Assert.Equal(count, _lines
+                    .Count(l => l[_indexes["InvoiceId"]] == invoice));
+                return this;
+            }
+
+            public CSVTester AssertValues(params (string, string)[] values)
+            {
+                var payments = _lines
+                    .Where(l => l[_indexes["InvoiceId"]] == invoice)
+                    .ToArray();
+                var line = payments[payment];
+                foreach (var (key, value) in values)
+                {
+                    Assert.Equal(value, line[_indexes[key]]);
+                }
+                return this;
+            }
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]

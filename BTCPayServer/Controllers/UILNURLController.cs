@@ -476,6 +476,10 @@ namespace BTCPayServer
             var store = await _storeRepository.FindStore(lightningAddressSettings.StoreDataId);
             if (store is null)
                 return NotFound(StringLocalizer["Unknown username"]);
+
+            var address = $"{username}@{Request.Host}";
+            var invoiceMetadata = blob?.InvoiceMetadata ?? new();
+            invoiceMetadata.TryAdd("lightningAddress", address);
             var result = await GetLNURLRequest(
                cryptoCode,
                store,
@@ -493,7 +497,7 @@ namespace BTCPayServer
                },
                new Dictionary<string, string>
                {
-                   { "text/identifier", $"{username}@{Request.Host}" }
+                   { "text/identifier", address }
                });
             if (result is not OkObjectResult ok || ok.Value is not LNURLPayRequest payRequest)
                 return result;

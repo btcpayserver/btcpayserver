@@ -23,6 +23,8 @@
             for (let ai = 0; ai < aggregatesIndices.length; ai++) {
                 const v = data[i][aggregatesIndices[ai]];
                 // TODO: support other aggregate functions
+                if (v === null)
+                    continue;
                 if (typeof (v) === 'object' && v.v) {
                     // Amount in the format of `{ v: "1.0000001", d: 8 }`, where v is decimal string and `d` is divisibility
                     const agg = summaryRow[groupIndices.length + ai];

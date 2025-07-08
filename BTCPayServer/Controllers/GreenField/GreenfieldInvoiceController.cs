@@ -539,14 +539,14 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var model = new InvoiceRefundTriggerData
             {
-                CryptoAmountThen = cryptoPaid.RoundToSignificant(paymentPrompt.Divisibility),
-                CryptoAmountNow = Math.Round(paidAmount / rateResult.BidAsk.Bid, paymentPrompt.Divisibility),
-                FiatAmount = paidAmount,
-                CryptoCode = paymentMethodCurrency,
-                CryptoDivisibility = paymentPrompt.Divisibility,
-                InvoiceDivisibility = cdCurrency.Divisibility,
+                PaymentAmountThen = cryptoPaid.RoundToSignificant(paymentPrompt.Divisibility),
+                PaymentAmountNow = Math.Round(paidAmount / rateResult.BidAsk.Bid, paymentPrompt.Divisibility),
+                InvoiceAmount = paidAmount,
+                PaymentCurrency = paymentMethodCurrency,
+                PaymentCurrencyDivisibility = paymentPrompt.Divisibility,
+                InvoiceCurrencyDivisibility = cdCurrency.Divisibility,
                 InvoiceCurrency = invoice.Currency,
-                OverpaidAmount = overpaidAmount
+                OverpaidPaymentAmount = overpaidAmount
             };
 
             return Ok(model);

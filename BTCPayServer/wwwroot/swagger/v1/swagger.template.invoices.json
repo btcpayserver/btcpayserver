@@ -416,7 +416,7 @@
                         "$ref": "#/components/parameters/PaymentMethodId"
                     }
                 ],
-                "description": "View calculated refund amounts (crypto then/now, fiat, overpaid) for the specified invoice/payment-method. This can be used preceding the POST /refund call.",
+                "description": "View calculated refund amounts (payment then/now, invoice, overpaid) for the specified invoice/payment-method. This can be used preceding the POST /refund call.",
                 "operationId": "Invoices_GetInvoiceRefundTriggerData",
                 "responses": {
                     "200": {
@@ -1126,34 +1126,34 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "cryptoAmountThen": {
+                    "paymentAmountThen": {
                         "type": "string",
                         "format": "decimal",
                         "description": "The amount in crypto at the time the invoice was paid.",
                         "example": "5.00"
                     },
-                    "cryptoAmountNow": {
+                    "paymentAmountNow": {
                         "type": "string",
                         "format": "decimal",
                         "description": "The current amount in crypto.",
                         "example": "5.00"
                     },
-                    "fiatAmount": {
+                    "invoiceAmount": {
                         "type": "string",
                         "format": "decimal",
                         "description": "The fiat amount at the rate when the refund will be sent.",
                         "example": "5.00"
                     },
-                    "cryptoCode": {
+                    "paymentCurrency": {
                         "type": "string",
                         "description": "The crypto currency of the invoice",
                         "example": "BTC"
                     },
-                    "cryptoDivisibility": {
+                    "paymentCurrencyDivisibility": {
                         "type": "number",
                         "description": "The maximum divisibility supported by the crypto currency of the invoice"
                     },
-                    "invoiceDivisibility": {
+                    "invoiceCurrencyDivisibility": {
                         "type": "number",
                         "description": "The maximum divisibility supported by the fiat currency of the invoice"
                     },
@@ -1162,7 +1162,7 @@
                         "description": "The fiat currency of the invoice",
                         "example": "USD"
                     },
-                    "overpaidAmount": {
+                    "overpaidPaymentAmount": {
                         "type": "string",
                         "format": "decimal",
                         "nullable": true,

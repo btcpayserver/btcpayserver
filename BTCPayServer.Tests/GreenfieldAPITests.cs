@@ -2921,10 +2921,10 @@ namespace BTCPayServer.Tests
             var accounting = await client.GetInvoiceRefundTriggerData(store.Id, invoice.Id, paymentMethod.PaymentMethodId);
             Assert.NotNull(accounting);
             Assert.Equal("BTC", accounting.InvoiceCurrency);
-            Assert.Equal(0.0002M, accounting.CryptoAmountThen);
-            Assert.Equal(0.0002M, accounting.CryptoAmountNow);
-            Assert.Equal(0.0001M, accounting.OverpaidAmount);
-            Assert.True(accounting.FiatAmount > 0);
+            Assert.Equal(0.0002M, accounting.PaymentAmountThen);
+            Assert.Equal(0.0002M, accounting.PaymentAmountNow);
+            Assert.Equal(0.0001M, accounting.OverpaidPaymentAmount);
+            Assert.True(accounting.InvoiceAmount > 0);
         }
 
         [Fact(Timeout = 60 * 20 * 1000)]

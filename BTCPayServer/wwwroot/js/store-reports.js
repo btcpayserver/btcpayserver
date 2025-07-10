@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     delegate("click", "[data-action='exportCSV']", downloadCSV);
-    
+
     const $viewNameToggle = document.getElementById("ViewNameToggle")
     delegate("click", ".available-view", function (e) {
         e.preventDefault();
@@ -137,8 +137,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 return chart.rows.length || chart.hasGrandTotal;
             },
             titleCase(str, shorten) {
-                const result = str.replace(/([A-Z])/g, " $1");
-                const title = result.charAt(0).toUpperCase() + result.slice(1)
+                const result = str.replace(/([a-z])([A-Z])/g, '$1 $2'); // only split camelCase
+                const title = result.charAt(0).toUpperCase() + result.slice(1);
                 return shorten && title.endsWith(' Amount') ? 'Amount' : title;
             },
             displayValue,

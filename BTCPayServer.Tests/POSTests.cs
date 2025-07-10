@@ -275,13 +275,13 @@ fruit tea:
                     ("PaymentCurrency", "BTC"),
                     ("PaymentAmount", "0.40000000"),
                     ("PaymentInvoiceAmount", "2000.00"),
-                    ("Rate", "5000"))
+                    ("PaymentRate", "5000"))
                 .SelectPayment(1)
                 .AssertValues(
                     ("InvoiceStatus", ""),
                     ("PaymentCurrency", "BTC"),
                     ("PaymentAmount", "0.60000000"),
-                    ("Rate", "5000"));
+                    ("PaymentRate", "5000"));
         }
 
         class CSVTester

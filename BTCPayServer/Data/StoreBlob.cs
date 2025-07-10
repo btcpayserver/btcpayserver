@@ -55,7 +55,7 @@ namespace BTCPayServer.Data
             {
                 _DefaultCurrency = value;
                 if (!string.IsNullOrEmpty(_DefaultCurrency))
-                    _DefaultCurrency = _DefaultCurrency.Trim().ToUpperInvariant();
+                    _DefaultCurrency = _DefaultCurrency.Trim().ToUpperInvariant().Replace("_","");
             }
         }
 
@@ -284,6 +284,34 @@ namespace BTCPayServer.Data
             return new(
                 (PrimaryRateSettings ?? new()).GetRateRules(defaultRules, Spread),
                 FallbackRateSettings?.GetRateRules(defaultRules, Spread));
+        }
+
+        public HashSet<string> GetTrackedCurrencies()
+        {
+            var currencies = new HashSet<string>();
+            if (DefaultCurrency is not null)
+                currencies.Add(DefaultCurrency.ToUpperInvariant().Trim());
+            if (AdditionalTrackedCurrencies is not null)
+                foreach (var curr in AdditionalTrackedCurrencies)
+                    currencies.Add(curr.ToUpperInvariant().Trim());
+            return currencies;
+        }
+
+        private string[] _AdditionalTrackedCurrencies;
+
+        public string[] AdditionalTrackedCurrencies
+        {
+            get
+            {
+                return _AdditionalTrackedCurrencies ?? Array.Empty<string>();
+            }
+            set
+            {
+                if (value is not null)
+                    _AdditionalTrackedCurrencies = value.Select(v => v.ToUpperInvariant().Trim().Replace("_", "")).ToArray();
+                else
+                    _AdditionalTrackedCurrencies = null;
+            }
         }
     }
     public class PaymentMethodCriteria

@@ -1061,5 +1061,72 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain("/login", s.Page.Url);
             await s.CreateNewStore();
         }
+
+        [Fact]
+        public async Task CanSetupEmailRules()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+
+            await s.GoToStore(StoreNavPages.Emails);
+            await s.Page.ClickAsync("#ConfigureEmailRules");
+            Assert.Contains("There are no rules yet.", await s.Page.ContentAsync());
+            Assert.Contains("You need to configure email settings before this feature works", await s.Page.ContentAsync());
+
+            await s.Page.ClickAsync("#CreateEmailRule");
+            await s.Page.SelectOptionAsync("#Trigger", "InvoiceCreated");
+            await s.Page.FillAsync("#To", "invoicecreated@gmail.com");
+            await s.Page.ClickAsync("#CustomerEmail");
+            await s.Page.ClickAsync("#SaveEmailRules");
+
+            await s.FindAlertMessage();
+            Assert.DoesNotContain("There are no rules yet.", await s.Page.ContentAsync());
+            Assert.Contains("invoicecreated@gmail.com", await s.Page.ContentAsync());
+            Assert.Contains("Invoice {Invoice.Id} created", await s.Page.ContentAsync());
+            Assert.Contains("Yes", await s.Page.ContentAsync());
+
+            await s.Page.ClickAsync("#CreateEmailRule");
+            await s.Page.SelectOptionAsync("#Trigger", "PaymentRequestStatusChanged");
+            await s.Page.FillAsync("#To", "statuschanged@gmail.com");
+            await s.Page.FillAsync("#Subject", "Status changed!");
+            await s.Page.Locator(".note-editable").FillAsync("Your Payment Request Status is Changed");
+            await s.Page.ClickAsync("#SaveEmailRules");
+
+            await s.FindAlertMessage();
+            Assert.Contains("statuschanged@gmail.com", await s.Page.ContentAsync());
+            Assert.Contains("Status changed!", await s.Page.ContentAsync());
+
+            var editButtons = s.Page.GetByRole(AriaRole.Link, new() { Name = "Edit" });
+            Assert.True(await editButtons.CountAsync() >= 2);
+            await editButtons.Nth(1).ClickAsync();
+
+            await s.Page.Locator("#To").ClearAsync();
+            await s.Page.FillAsync("#To", "changedagain@gmail.com");
+            await s.Page.ClickAsync("#SaveEmailRules");
+
+            await s.FindAlertMessage();
+            Assert.Contains("changedagain@gmail.com", await s.Page.ContentAsync());
+            Assert.DoesNotContain("statuschanged@gmail.com", await s.Page.ContentAsync());
+
+            var deleteLinks = s.Page.GetByRole(AriaRole.Link, new() { Name = "Remove" });
+            Assert.Equal(2, await deleteLinks.CountAsync());
+
+            await deleteLinks.First.ClickAsync();
+            await s.Page.FillAsync("#ConfirmInput", "REMOVE");
+            await s.Page.ClickAsync("#ConfirmContinue");
+
+            await s.FindAlertMessage();
+            deleteLinks = s.Page.GetByRole(AriaRole.Link, new() { Name = "Remove" });
+            Assert.Equal(1, await deleteLinks.CountAsync());
+
+            await deleteLinks.First.ClickAsync();
+            await s.Page.FillAsync("#ConfirmInput", "REMOVE");
+            await s.Page.ClickAsync("#ConfirmContinue");
+
+            await s.FindAlertMessage();
+            Assert.Contains("There are no rules yet.", await s.Page.ContentAsync());
+        }
     }
 }

@@ -961,7 +961,6 @@ namespace BTCPayServer.Tests
             var payReqId = queryParams["payReqId"];
             Assert.NotNull(payReqId);
             Assert.NotEmpty(payReqId);
-            s.TestLogs.LogInformation($"Created payment request with ID: {payReqId}");
             var markAsSettledExists = await s.Page.Locator("button:has-text('Mark as settled')").CountAsync();
             Assert.Equal(0, markAsSettledExists);
             var opening = s.Page.Context.WaitForPageAsync();
@@ -969,101 +968,53 @@ namespace BTCPayServer.Tests
             string invoiceId;
             await using (_ = await s.SwitchPage(opening))
             {
-                await s.Page.WaitForSelectorAsync("button:has-text('Pay')", new() { State = WaitForSelectorState.Visible });
-                s.TestLogs.LogInformation($"Public payment request page URL: {s.Page.Url}");
-                
                 await s.Page.ClickAsync("button:has-text('Pay')");
-                s.TestLogs.LogInformation("Clicked Pay button");
-                
                 await s.Page.WaitForLoadStateAsync();
                 
-                s.TestLogs.LogInformation($"After clicking Pay, URL is: {s.Page.Url}");
-                
                 await s.Page.WaitForSelectorAsync("iframe[name='btcpay']", new() { Timeout = 10000 });
-                s.TestLogs.LogInformation("Found payment iframe");
                 
                 var iframe = s.Page.Frame("btcpay");
-                if (iframe == null)
-                {
-                    throw new Exception("Could not find btcpay iframe");
-                }
-                
-                s.TestLogs.LogInformation("Switched to iframe context");
-                
-                await iframe.WaitForSelectorAsync("#test-payment-amount", new() { Timeout = 10000 });
-                s.TestLogs.LogInformation("Found test payment amount field in iframe");
+                Assert.NotNull(iframe);
                 
                 await iframe.FillAsync("#test-payment-amount", "0.05");
-                s.TestLogs.LogInformation("Set partial payment amount to 0.05 BTC");
-                
                 await iframe.ClickAsync("#FakePayment");
-                s.TestLogs.LogInformation("Clicked FakePayment button");
-                
                 await iframe.WaitForSelectorAsync("#CheatSuccessMessage", new() { Timeout = 10000 });
-                s.TestLogs.LogInformation("Partial payment completed successfully");
                 
                 invoiceId = s.Page.Url.Split('/').Last();
-                if (s.Page.Url.Contains("/i/"))
-                {
-                    var parts = s.Page.Url.Split('/');
-                    var iIndex = Array.IndexOf(parts, "i");
-                    if (iIndex >= 0 && iIndex + 1 < parts.Length)
-                    {
-                        invoiceId = parts[iIndex + 1];
-                    }
-                }
-                s.TestLogs.LogInformation($"Invoice ID: {invoiceId}");
             }
-            await s.Page.BringToFrontAsync();
-            await s.GoToStore();
-            await s.Page.ClickAsync("#StoreNav-Invoices");
-            await s.Page.WaitForSelectorAsync("#StoreNav-Invoices", new() { State = WaitForSelectorState.Visible });
-            s.TestLogs.LogInformation("On invoices page, looking for partial payment");
+            await s.GoToInvoices();
             
             await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-toggle");
-            s.TestLogs.LogInformation("Clicked on invoice status dropdown");
-            
-            await s.Page.WaitForSelectorAsync("[data-invoice-state-badge] .dropdown-menu", new() { Timeout = 5000 });
             await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-menu button:has-text('Mark as settled')");
             await s.Page.WaitForLoadStateAsync();
-            s.TestLogs.LogInformation("Marked invoice as settled");
             
             await s.GoToStore();
             await s.Page.ClickAsync("#StoreNav-PaymentRequests");
             await s.Page.WaitForLoadStateAsync();
-            s.TestLogs.LogInformation("On payment requests page");
             
             var opening2 = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("a:has-text('View')");
             await using (_ = await s.SwitchPage(opening2))
             {
                 await s.Page.WaitForLoadStateAsync();
-                s.TestLogs.LogInformation("On public payment request page");
                 
                 var markSettledExists = await s.Page.Locator("button:has-text('Mark as settled')").CountAsync();
-                s.TestLogs.LogInformation($"Mark as settled button exists on public page: {markSettledExists > 0}");
-                
                 Assert.True(markSettledExists > 0, "Mark as settled button should be visible on public page after invoice is settled");
                 await s.Page.ClickAsync("button:has-text('Mark as settled')");
                 await s.Page.WaitForLoadStateAsync();
-                s.TestLogs.LogInformation("Clicked Mark as settled on public payment request page");
             }
             
             await s.GoToStore();
             await s.Page.ClickAsync("#StoreNav-PaymentRequests");
             await s.Page.WaitForLoadStateAsync();
-            s.TestLogs.LogInformation("Back on payment requests list for final verification");
             
             var listContent = await s.Page.ContentAsync();
             var isSettledInList = listContent.Contains("Settled");
             var isPendingInList = listContent.Contains("Pending");
             
-            s.TestLogs.LogInformation($"Payment requests list - Shows Settled: {isSettledInList}, Shows Pending: {isPendingInList}");
-            
             var settledBadgeExists = await s.Page.Locator(".badge:has-text('Settled')").CountAsync();
             var pendingBadgeExists = await s.Page.Locator(".badge:has-text('Pending')").CountAsync();
             
-            s.TestLogs.LogInformation($"Badge verification - Settled badges: {settledBadgeExists}, Pending badges: {pendingBadgeExists}");
             Assert.True(isSettledInList || settledBadgeExists > 0, "Payment request should show as Settled in the list");
             Assert.False(isPendingInList && pendingBadgeExists > 0, "Payment request should not show as Pending anymore");
         }

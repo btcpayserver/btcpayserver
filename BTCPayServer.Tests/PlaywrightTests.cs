@@ -17,6 +17,7 @@ using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Playwright;
+using static Microsoft.Playwright.Assertions;
 using NBitcoin;
 using NBitcoin.Payment;
 using NBXplorer.Models;
@@ -30,6 +31,7 @@ namespace BTCPayServer.Tests
     [Collection(nameof(NonParallelizableCollectionDefinition))]
     public class PlaywrightTests(ITestOutputHelper helper) : UnitTestBase(helper)
     {
+        private const int TestTimeout = TestUtils.TestTimeout;
         [Fact]
         public async Task CanNavigateServerSettings()
         {
@@ -934,6 +936,130 @@ namespace BTCPayServer.Tests
                 var visible = await Task.WhenAll(rows.Select(r => r.IsVisibleAsync()));
                 Assert.Single(visible, v => v);
             });
+        }
+
+        [Fact]
+        public async Task CanRequireApprovalForNewAccounts()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+
+            var settings = s.Server.PayTester.GetService<SettingsRepository>();
+            var policies = await settings.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
+            Assert.True(policies.EnableRegistration);
+            Assert.False(policies.RequiresUserApproval);
+
+            await s.RegisterNewUser(true);
+            var admin = s.AsTestAccount();
+            await s.GoToHome();
+            await s.GoToServer(ServerNavPages.Policies);
+            
+            Assert.True(await s.Page.Locator("#EnableRegistration").IsCheckedAsync());
+            Assert.False(await s.Page.Locator("#RequiresUserApproval").IsCheckedAsync());
+            
+            await s.Page.Locator("#RequiresUserApproval").ClickAsync();
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "Policies updated successfully");
+            Assert.True(await s.Page.Locator("#RequiresUserApproval").IsCheckedAsync());
+
+            await Expect(s.Page.Locator("#NotificationsBadge")).Not.ToBeVisibleAsync();
+            await s.Logout();
+
+            await s.GoToRegister();
+            await s.RegisterNewUser();
+            await s.Page.AssertNoError();
+            await s.FindAlertMessage(partialText: "Account created. The new account requires approval by an admin before you can log in");
+            Assert.Contains("/login", s.Page.Url);
+
+            var unapproved = s.AsTestAccount();
+            await s.LogIn(unapproved.RegisterDetails.Email, unapproved.RegisterDetails.Password);
+            await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Warning, partialText: "Your user account requires approval by an admin before you can log in");
+            Assert.Contains("/login", s.Page.Url);
+
+            await s.GoToLogin();
+            await s.LogIn(admin.RegisterDetails.Email, admin.RegisterDetails.Password);
+            await s.GoToHome();
+
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                Assert.Equal("1", await s.Page.Locator("#NotificationsBadge").TextContentAsync());
+            });
+            
+            await s.Page.Locator("#NotificationsHandle").ClickAsync();
+            Assert.Matches($"New user {unapproved.RegisterDetails.Email} requires approval", await s.Page.Locator("#NotificationsList .notification").TextContentAsync());
+            await s.Page.Locator("#NotificationsMarkAllAsSeen").ClickAsync();
+
+            await s.GoToServer(ServerNavPages.Policies);
+            Assert.True(await s.Page.Locator("#EnableRegistration").IsCheckedAsync());
+            Assert.True(await s.Page.Locator("#RequiresUserApproval").IsCheckedAsync());
+            await s.Page.Locator("#RequiresUserApproval").ClickAsync();
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "Policies updated successfully");
+            Assert.False(await s.Page.Locator("#RequiresUserApproval").IsCheckedAsync());
+
+            await s.GoToServer(ServerNavPages.Users);
+            await s.ClickPagePrimary();
+            await Expect(s.Page.Locator("#Approved")).Not.ToBeVisibleAsync();
+
+            await s.Logout();
+
+            await s.GoToLogin();
+            await s.LogIn(unapproved.RegisterDetails.Email, unapproved.RegisterDetails.Password);
+            await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Warning, partialText: "Your user account requires approval by an admin before you can log in");
+            Assert.Contains("/login", s.Page.Url);
+
+            await s.GoToRegister();
+            await s.RegisterNewUser();
+            await s.Page.AssertNoError();
+            Assert.DoesNotContain("/login", s.Page.Url);
+            var autoApproved = s.AsTestAccount();
+            await s.CreateNewStore();
+            await s.Logout();
+
+            await s.GoToLogin();
+            await s.LogIn(admin.RegisterDetails.Email, admin.RegisterDetails.Password);
+            await s.GoToHome();
+            await Expect(s.Page.Locator("#NotificationsBadge")).Not.ToBeVisibleAsync();
+
+            await s.GoToServer(ServerNavPages.Users);
+            var rows = s.Page.Locator("#UsersList tr.user-overview-row");
+            Assert.True(await rows.CountAsync() >= 3);
+
+            await s.Page.Locator("#SearchTerm").ClearAsync();
+            await s.Page.FillAsync("#SearchTerm", autoApproved.RegisterDetails.Email);
+            await s.Page.PressAsync("#SearchTerm", "Enter");
+            Assert.Equal(1, await rows.CountAsync());
+            Assert.Contains(autoApproved.RegisterDetails.Email, await rows.First.TextContentAsync());
+            await Expect(s.Page.Locator("#UsersList tr.user-overview-row:first-child .user-approved")).Not.ToBeVisibleAsync();
+            
+            await s.Page.ClickAsync("#UsersList tr.user-overview-row:first-child .user-edit");
+            await Expect(s.Page.Locator("#Approved")).Not.ToBeVisibleAsync();
+
+            await s.GoToServer(ServerNavPages.Users);
+            await s.Page.Locator("#SearchTerm").ClearAsync();
+            await s.Page.FillAsync("#SearchTerm", unapproved.RegisterDetails.Email);
+            await s.Page.PressAsync("#SearchTerm", "Enter");
+            Assert.Equal(1, await rows.CountAsync());
+            Assert.Contains(unapproved.RegisterDetails.Email, await rows.First.TextContentAsync());
+            Assert.Contains("Pending Approval", await s.Page.Locator("#UsersList tr.user-overview-row:first-child .user-status").TextContentAsync());
+            
+            await s.Page.ClickAsync("#UsersList tr.user-overview-row:first-child .user-edit");
+            await s.Page.ClickAsync("#Approved");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "User successfully updated");
+            
+            await s.GoToServer(ServerNavPages.Users);
+            Assert.Contains(unapproved.RegisterDetails.Email, await s.Page.GetAttributeAsync("#SearchTerm", "value"));
+            Assert.Equal(1, await rows.CountAsync());
+            Assert.Contains(unapproved.RegisterDetails.Email, await rows.First.TextContentAsync());
+            Assert.Contains("Active", await s.Page.Locator("#UsersList tr.user-overview-row:first-child .user-status").TextContentAsync());
+
+            await s.Logout();
+            await s.GoToLogin();
+            await s.LogIn(unapproved.RegisterDetails.Email, unapproved.RegisterDetails.Password);
+            await s.Page.AssertNoError();
+            Assert.DoesNotContain("/login", s.Page.Url);
+            await s.CreateNewStore();
         }
     }
 }

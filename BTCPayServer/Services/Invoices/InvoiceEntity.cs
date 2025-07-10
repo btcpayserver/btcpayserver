@@ -481,6 +481,38 @@ namespace BTCPayServer.Services.Invoices
         [JsonIgnore]
         public bool IsOverPaid => NetDue < 0;
 
+        public decimal TaxInPaymentCurrency()
+        {
+            if (Metadata?.TaxIncluded is null)
+                return 0m;
+
+            if (GetPayments(false) is null || GetPayments(false).Count < 1)
+                return 0m;
+
+            return (decimal)(Metadata.TaxIncluded / GetPayments(false)?.FirstOrDefault()?.Rate);
+        }
+
+        public decimal DiscountInPaymentCurrency()
+        {
+            if (Metadata?.PosData is null)
+                return 0m;
+
+            if (GetPayments(false) is null || GetPayments(false).Count < 1)
+                return 0m;
+
+            return (decimal)((decimal)Metadata.PosData["tax"] / GetPayments(false)?.FirstOrDefault()?.Rate);
+        }
+
+        public decimal TipInPaymentCurrency()
+        {
+            if (Metadata?.PosData is null)
+                return 0m;
+
+            if (GetPayments(false) is null || GetPayments(false).Count < 1)
+                return 0m;
+
+            return (decimal)((decimal)Metadata.PosData["tip"] / GetPayments(false)?.FirstOrDefault()?.Rate);
+        }
 
         /// <summary>
         /// Total of network fee paid by accounted payments

@@ -14,6 +14,8 @@ using BTCPayServer.Services;
 using System.Linq;
 using System.Threading;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Controllers.GreenField;
 
@@ -22,12 +24,15 @@ namespace BTCPayServer.Controllers.GreenField;
 [EnableCors(CorsPolicies.All)]
 public class GreenfieldReportsController : Controller
 {
+    private readonly InvoiceRepository _invoiceRepository;
     public GreenfieldReportsController(
         ApplicationDbContextFactory dbContextFactory,
-        ReportService reportService)
+        ReportService reportService,
+        InvoiceRepository invoiceRepo)
     {
         DBContextFactory = dbContextFactory;
         ReportService = reportService;
+        _invoiceRepository = invoiceRepo;
     }
     public ApplicationDbContextFactory DBContextFactory { get; }
     public ReportService ReportService { get; }
@@ -65,6 +70,42 @@ public class GreenfieldReportsController : Controller
         
         ModelState.AddModelError(nameof(vm.ViewName), "View doesn't exist");
         return this.CreateValidationError(ModelState);
+    }
+
+
+    [HttpPost("~/api/v1/stores/{storeId}/sales-summary")]
+    public async Task<IActionResult> SalesSummary(string storeId, [FromBody] TimePeriod timePeriod, CancellationToken cancellationToken = default)
+    {
+        timePeriod ??= new TimePeriod();
+        timePeriod.To ??= DateTime.UtcNow;
+        timePeriod.From ??= timePeriod.To.Value.AddDays(-1);
+        var invoices = await _invoiceRepository.GetInvoices(
+            new InvoiceQuery
+            {
+                StoreId = [storeId],
+                StartDate = timePeriod.From,
+                EndDate = timePeriod.To,
+                IncludeRefunds = true,
+                Status = [InvoiceStatus.Settled.ToString()]
+            });
+        if (invoices == null || invoices.Length < 1)
+            return Ok(new SalesSummary());
+
+        var summary = new SalesSummary
+        {
+            GrossSales = invoices.Sum(x => x.GetPayments(false).Sum(y => y.PaidAmount.Gross)),
+            NetSales = invoices.Sum(x => x.GetPayments(false).Sum(y => y.PaidAmount.Net)),
+            Refunds = invoices.Sum(x => x.Refunds.Count),
+            SalesCount = invoices.LongLength,
+            Currency = invoices.FirstOrDefault()?.GetPayments(false)?.FirstOrDefault()?.Currency,
+            Taxes = invoices.Sum(x => x.TaxInPaymentCurrency()),
+            Discounts = invoices.Sum(x => x.DiscountInPaymentCurrency()),
+            Tips = invoices.Sum(x => x.TipInPaymentCurrency()),
+        };
+
+        summary.AverageSale = summary.GrossSales / summary.SalesCount;
+
+        return Ok(summary);
     }
 }
 

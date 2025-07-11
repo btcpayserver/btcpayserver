@@ -164,7 +164,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                         if (invoice != null)
                                         {
                                             var handler = _handlers[pmi];
-                                            var details = new BitcoinLikePaymentData(output.outPoint, evt.TransactionData.Transaction.RBF, output.matchedOutput.KeyPath)
+                                            var details = new BitcoinLikePaymentData(output.outPoint, evt.TransactionData.Transaction.RBF, output.matchedOutput.KeyPath, output.matchedOutput.KeyIndex)
                                             {
                                                 AssetId = output.matchedOutput.Value.GetAssetId(network)
                                             };
@@ -414,7 +414,7 @@ namespace BTCPayServer.Payments.Bitcoin
                         Status = PaymentStatus.Processing,
                         Amount = coin.Value.GetValue(network),
                         Currency = network.CryptoCode
-                    }.Set(invoice, handler, new BitcoinLikePaymentData(coin.OutPoint, transaction?.Transaction is null ? true : transaction.Transaction.RBF, coin.KeyPath)
+                    }.Set(invoice, handler, new BitcoinLikePaymentData(coin.OutPoint, transaction?.Transaction is null ? true : transaction.Transaction.RBF, coin.KeyPath, coin.KeyIndex)
                     {
                         AssetId = coin.Value.GetAssetId(network)
                     });

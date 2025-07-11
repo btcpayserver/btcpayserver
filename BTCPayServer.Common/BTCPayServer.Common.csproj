@@ -2,7 +2,7 @@
   <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
   <ItemGroup>
-    <PackageReference Include="NBXplorer.Client" Version="4.3.9" />
+    <PackageReference Include="NBXplorer.Client" Version="5.0.5" />
     <PackageReference Include="NicolasDorier.StandardConfiguration" Version="2.0.1" />
   </ItemGroup>
 </Project>

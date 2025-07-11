@@ -190,6 +190,7 @@ namespace BTCPayServer.Payments.Bitcoin
             paymentMethod.Destination = reserved.Address.ToString();
             paymentContext.TrackedDestinations.Add(Network.GetTrackedDestination(reserved.Address.ScriptPubKey));
             onchainMethod.KeyPath = reserved.KeyPath;
+            onchainMethod.KeyIndex = reserved.Index ?? (int)reserved.KeyPath.Indexes.Last();
             onchainMethod.AccountDerivation = accountDerivation;
             onchainMethod.PayjoinEnabled = blob.PayJoinEnabled &&
                                            accountDerivation.ScriptPubKeyType() != ScriptPubKeyType.Legacy &&

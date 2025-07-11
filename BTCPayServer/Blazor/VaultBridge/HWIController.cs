@@ -159,6 +159,11 @@ public abstract class HWIController : VaultController
             var message = e switch
             {
                 { ErrorCode: HwiErrorCode.ActionCanceled } => ui.StringLocalizer["Action canceled by user"],
+
+                //https://github.com/btcpayserver/BTCPayServer.Vault/issues/88
+                { ErrorCode: HwiErrorCode.BadArgument } when e.Message.StartsWith("Failed to extract input_tx")
+                    => ui.StringLocalizer["The hardware wallet requires previous transactions in the PSBT. Please go to your wallet settings and enable \"Include non-witness UTXO in PSBTs\", then try sending again."],
+
                 _ => ui.StringLocalizer["An unexpected error happened: {0}", $"{e.Message} ({e.ErrorCode})"],
             };
             ui.ShowFeedback(FeedbackType.Failed, message);

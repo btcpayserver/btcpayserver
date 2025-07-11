@@ -11,6 +11,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payouts;
 using BTCPayServer.Rating;
@@ -491,6 +492,64 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var pp = await _pullPaymentService.GetPullPayment(ppId, false);
             return this.Ok(CreatePullPaymentData(pp));
+        }
+
+        [Authorize(Policy = Policies.CanCreateNonApprovedPullPayments,
+    AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/invoices/{invoiceId}/refund/{paymentMethodId}")]
+        public async Task<IActionResult> GetInvoiceRefundTriggerData(string storeId, string invoiceId, string paymentMethodId, CancellationToken cancellationToken)
+        {
+            var invoice = await _invoiceRepository.GetInvoice(invoiceId, true);
+            if (!BelongsToThisStore(invoice))
+                return InvoiceNotFound();
+            var pmi = PaymentMethodId.TryParse(paymentMethodId);
+            if (pmi == null)
+                return this.CreateAPIError("invalid-payment-method", "Invalid payment method");
+
+            var paymentPrompt = invoice.GetPaymentPrompt(pmi);
+            if (paymentPrompt == null)
+                return this.CreateAPIError("invalid-payment-method", "Invalid payment method");
+
+            var accounting = paymentPrompt.Calculate();
+            var cryptoPaid = accounting.Paid;
+            var dueAmount = accounting.TotalDue;
+
+            // If no payment, but settled and marked, assume it has been fully paid
+            if (cryptoPaid is 0 && invoice is { Status: InvoiceStatus.Settled, ExceptionStatus: InvoiceExceptionStatus.Marked })
+            {
+                cryptoPaid = accounting.TotalDue;
+                dueAmount = 0;
+            }
+
+            var paymentMethodCurrency = paymentPrompt.Currency;
+
+            var isPaidOver = invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver;
+            decimal? overpaidAmount = isPaidOver ? Math.Round(cryptoPaid - dueAmount, paymentPrompt.Divisibility) : null;
+            var cdCurrency = _currencyNameTable.GetCurrencyData(invoice.Currency, true);
+
+            var paidAmount = Math.Round(cryptoPaid * paymentPrompt.Rate, cdCurrency.Divisibility);
+            var store = this.HttpContext.GetStoreData();
+            var rules = store.GetStoreBlob().GetRateRules(_defaultRules);
+            var rateResult = await _rateProvider.FetchRate(
+                new CurrencyPair(paymentMethodCurrency, invoice.Currency), rules, new StoreIdRateContext(store.Id),
+                cancellationToken);
+
+            if (rateResult.BidAsk is null)
+                return this.CreateAPIError("rate-failure", "Failed to fetch rate");
+
+            var model = new InvoiceRefundTriggerData
+            {
+                PaymentAmountThen = cryptoPaid.RoundToSignificant(paymentPrompt.Divisibility),
+                PaymentAmountNow = Math.Round(paidAmount / rateResult.BidAsk.Bid, paymentPrompt.Divisibility),
+                InvoiceAmount = paidAmount,
+                PaymentCurrency = paymentMethodCurrency,
+                PaymentCurrencyDivisibility = paymentPrompt.Divisibility,
+                InvoiceCurrencyDivisibility = cdCurrency.Divisibility,
+                InvoiceCurrency = invoice.Currency,
+                OverpaidPaymentAmount = overpaidAmount
+            };
+
+            return Ok(model);
         }
 
         private Client.Models.PullPaymentData CreatePullPaymentData(Data.PullPaymentData pp)

@@ -1498,7 +1498,7 @@ namespace BTCPayServer.Services
   "The following methods assume that you already have an existing wallet created and backed up.": "",
   "The full node is not synched": "",
   "The full node is synched": "",
-  "The hardware wallet requires previous transactions in the PSBT. Please go to your wallet settings and enable \"Include non-witness UTXO in PSBTs": "",
+  "The hardware wallet requires previous transactions in the PSBT. Please go to your wallet settings and enable \"Include non-witness UTXO in PSBTs\"": "",
   "The invoice currency, at the rate when the refund will be sent.": "",
   "The invoice has been archived and will no longer appear in the invoice list by default.": "",
   "The invoice has been unarchived and will appear in the invoice list by default again.": "",

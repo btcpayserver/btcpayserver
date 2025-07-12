@@ -168,7 +168,7 @@
             </div>
             <div class="modal-body">
                 <div class="form-group row">
-                    <label for="dtpStartDate" class="col-sm-3 col-form-label">Start Date</label>
+                    <label for="dtpStartDate" class="col-sm-3 col-form-label" text-translate="true">Start Date</label>
                     <div class="col-sm-9">
                         <div class="input-group">
                             <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
@@ -237,7 +237,7 @@
             <button id="AppOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                 @if (appFilterCount > 0)
                 {
-                    <span>@appFilterCount Plugin@(appFilterCount > 1 ? "s" : "")</span>
+                    <span>@appFilterCount <span text-translate="true">Plugin@(appFilterCount > 1 ? "s" : "")</span></span>
                 }
                 else
                 {
@@ -394,7 +394,7 @@
                                     @if (invoice.ShowCheckout)
                                     {
                                         <span>&nbsp;</span>
-                                        <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId" class="invoice-checkout-link" id="invoice-checkout-@invoice.InvoiceId">Checkout</a>
+                                        <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId" class="invoice-checkout-link" id="invoice-checkout-@invoice.InvoiceId" text-translate="true">Checkout</a>
                                         <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId" class="showInvoice only-for-js" data-invoice-id="@invoice.InvoiceId">[^]</a>
                                     }
                                 </div>

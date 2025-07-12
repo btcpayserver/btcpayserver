@@ -1084,6 +1084,7 @@ namespace BTCPayServer.Services
   "Please wait for your node to be synched": "",
   "Please, confirm on the device first...": "",
   "Please, enter the passphrase on the device.": "",
+  "Plugin": "",
   "Plugin action cancelled.": "",
   "Plugin scheduled to be installed.": "",
   "Plugin scheduled to be uninstalled.": "",

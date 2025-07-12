@@ -65,7 +65,7 @@
             <div class="d-flex flex-column justify-content-center gap-4">
                 <partial name="_StoreHeader" model="(Model.Title, Model.StoreBranding)" />
                 <div class="text-center mt-n3">
-                    Invoice from
+                    <span text-translate="true">Invoice from</span>
                     @if (!string.IsNullOrEmpty(Model.StoreWebsite))
                     {
                         <a href="@Model.StoreWebsite" target="_blank" rel="noreferrer noopener">@Model.StoreName</a>
@@ -90,7 +90,7 @@
                         </h2>
                         <span class="badge only-for-js" :class="`badge-${srvModel.status.toLowerCase()}`" data-test="status" style="font-size:.9rem" v-if="srvModel.status.toLowerCase() !== 'pending'">
                             {{srvModel.status}}
-                            <span v-if="srvModel.archived">(archived)</span>
+                            <span v-if="srvModel.archived" text-translate="true">(archived)</span>
                         </span>
                         @if (Model.Status.ToLowerInvariant() != "pending")
                         {
@@ -99,7 +99,7 @@
                                     @Model.Status
                                     @if (Model.Archived)
                                     {
-                                        <span>(archived)</span>
+                                        <span text-translate="true">(archived)</span>
                                     }
                                 </span>
                             </noscript>
@@ -108,12 +108,12 @@
                     <p>
                         @if (Model.IsPending && Model.ExpiryDate.HasValue)
                         {
-                            <span class="text-muted">Due</span>
+                            <span class="text-muted" text-translate="true">Due</span>
                             <span>@Model.ExpiryDate.Value.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative)</span>
                         }
                         else
                         {
-                            <span class="text-muted">No due date</span>
+                            <span class="text-muted" text-translate="true">No due date</span>
                         }
                     </p>
                     <dl class="mt-n1 mb-4" v-if="srvModel.amountCollected > 0 && srvModel.amountDue > 0">
@@ -125,11 +125,11 @@
                         </div>
                         <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
                             <div class="d-flex d-print-inline-block flex-column gap-1">
-                                <dd class="text-secondary mb-0">Amount paid</dd>
+                                <dd class="text-secondary mb-0" text-translate="true">Amount paid</dd>
                                 <dt class="h4 fw-semibold text-nowrap" v-text="srvModel.amountCollectedFormatted">@Model.AmountCollectedFormatted</dt>
                             </div>
                             <div class="d-flex d-print-inline-block flex-column gap-1">
-                                <dd class="text-secondary mb-0 text-sm-end">Total requested</dd>
+                                <dd class="text-secondary mb-0 text-sm-end" text-translate="true">Total requested</dd>
                                 <dt class="h4 fw-semibold text-nowrap text-sm-end" v-text="srvModel.amountFormatted">@Model.AmountFormatted</dt>
                             </div>
                         </div>
@@ -137,7 +137,7 @@
 
                     <div class="buttons mt-3">
                         <template v-if="srvModel.formId && srvModel.formId !== 'None' && !srvModel.formSubmitted">
-                            <a asp-action="ViewPaymentRequestForm" asp-route-payReqId="@Model.Id" class="btn btn-primary btn-lg" data-test="form-button">
+                            <a asp-action="ViewPaymentRequestForm" asp-route-payReqId="@Model.Id" class="btn btn-primary btn-lg" data-test="form-button" text-translate="true">
                                 Pay Invoice
                             </a>
                         </template>

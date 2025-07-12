@@ -690,7 +690,7 @@ namespace BTCPayServer.Controllers
                 {
                     var book = vm.InvoiceRateBook ?? new();
                     if (vm.WalletRateBook is not null)
-                        book.AddRates(network.CryptoCode, vm.WalletRateBook);
+                        book.AddRates(vm.WalletRateBook);
                     foreach (var trackedCurrency in trackedCurrencies)
                     {
                         var exists = book.TryGetRate(new CurrencyPair(network.CryptoCode, trackedCurrency), out var rate);

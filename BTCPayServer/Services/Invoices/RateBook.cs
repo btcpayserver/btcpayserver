@@ -108,7 +108,7 @@ public class RateBook
         throw new FormatException("Invalid rate rules");
     }
 
-    public void AddRates(string cryptoCode, RateBook? otherBook)
+    public void AddRates(RateBook? otherBook)
     {
         if (otherBook is null)
             return;

@@ -289,11 +289,10 @@ namespace BTCPayServer.Data
         public HashSet<string> GetTrackedCurrencies()
         {
             var currencies = new HashSet<string>();
-            if (DefaultCurrency is not null)
-                currencies.Add(DefaultCurrency.ToUpperInvariant().Trim());
+            currencies.Add(DefaultCurrency);
             if (AdditionalTrackedCurrencies is not null)
                 foreach (var curr in AdditionalTrackedCurrencies)
-                    currencies.Add(curr.ToUpperInvariant().Trim());
+                    currencies.Add(curr);
             return currencies;
         }
 

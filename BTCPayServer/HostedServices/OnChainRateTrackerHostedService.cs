@@ -44,7 +44,6 @@ public class OnChainRateTrackerHostedService(
             // Too late
             if ((transactionEvent.NewTransactionEvent.TransactionData.Timestamp - now).Duration() > TimeSpan.FromMinutes(10))
                 return;
-            var nowMilli = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             var cryptoCode = transactionEvent.NewTransactionEvent.CryptoCode;
 
             var stores = await storeRepository.GetStoresFromDerivation(transactionEvent.PaymentMethodId, derivation);

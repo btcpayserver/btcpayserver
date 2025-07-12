@@ -57,7 +57,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public string DefaultCurrency { get; set; }
 
         [Display(Name = "Additional rates to track")]
-        [MaxLength(10)]
+        [MaxLength(30)]
         public string AdditionalTrackedCurrency { get; set; }
 
         [Display(Name = "Minimum acceptable expiration time for BOLT11 for refunds")]

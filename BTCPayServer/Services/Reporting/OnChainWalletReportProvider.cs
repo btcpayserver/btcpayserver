@@ -168,7 +168,7 @@ public class OnChainWalletReportProvider : ReportProvider
                 continue;
             rates.TryGetValue(invoiceId ?? "", out var r);
             r ??= new("", new());
-            r.AddRates(cryptoCode, rateData);
+            r.AddRates(rateData);
             foreach (var trackedCurrency in trackedCurrencies)
             {
                 if (r.TryGetRate(new CurrencyPair(cryptoCode, trackedCurrency)) is decimal v)

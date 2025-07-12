@@ -55,13 +55,13 @@
                 <div asp-validation-summary="ModelOnly"></div>
             }
             <div class="form-group">
-                <label asp-for="Title" class="form-label" data-required></label>
+                <label asp-for="Title" class="form-label" data-required text-translate="true"></label>
                 <input asp-for="Title" class="form-control" required />
                 <span asp-validation-for="Title" class="text-danger"></span>
             </div>
             <div class="d-flex justify-content-between">
                 <div class="form-group flex-fill me-4">
-                    <label asp-for="Amount" class="form-label" data-required></label>
+                    <label asp-for="Amount" class="form-label" data-required text-translate="true"></label>
                     <input type="number" inputmode="decimal" step="any" asp-for="Amount" class="form-control" required disabled="@(!Model.AmountAndCurrencyEditable)" />
                     <span asp-validation-for="Amount" class="text-danger"></span>
                     @if (!Model.AmountAndCurrencyEditable)
@@ -73,23 +73,23 @@
                     }
                 </div>
                 <div class="form-group">
-                    <label asp-for="Currency" class="form-label"></label>
+                    <label asp-for="Currency" class="form-label" text-translate="true"></label>
                     <input asp-for="Currency" class="form-control w-auto" currency-selection disabled="@(!Model.AmountAndCurrencyEditable)" />
                     <span asp-validation-for="Currency" class="text-danger"></span>
                 </div>
             </div>
             <div class="form-group d-flex">
                 <input asp-for="AllowCustomPaymentAmounts" type="checkbox" class="btcpay-toggle me-3" />
-                <label asp-for="AllowCustomPaymentAmounts" class="form-check-label"></label>
+                <label asp-for="AllowCustomPaymentAmounts" class="form-check-label" text-translate="true"></label>
                 <span asp-validation-for="AllowCustomPaymentAmounts" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="ReferenceId" class="form-label"></label>
+                <label asp-for="ReferenceId" class="form-label" text-translate="true"></label>
                 <input asp-for="ReferenceId" class="form-control" />
                 <span asp-validation-for="ReferenceId" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="ExpiryDate" class="form-label"></label>
+                <label asp-for="ExpiryDate" class="form-label" text-translate="true"></label>
                 <div class="input-group ">
                     <input asp-for="ExpiryDate"
                            value="@(Model.ExpiryDate?.ToString("u", CultureInfo.InvariantCulture))"
@@ -101,7 +101,7 @@
                 <span asp-validation-for="ExpiryDate" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Email" class="form-label"></label>
+                <label asp-for="Email" class="form-label" text-translate="true"></label>
                 <input type="email" asp-for="Email" placeholder="@StringLocalizer["Firstname Lastname <email@example.com>"]" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
                 <div id="PaymentRequestEmailHelpBlock" class="form-text">
@@ -117,7 +117,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label asp-for="FormId" class="form-label"></label>
+                <label asp-for="FormId" class="form-label" text-translate="true"></label>
                 <select asp-for="FormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
                 <span asp-validation-for="FormId" class="text-danger"></span>
             </div>
@@ -134,7 +134,7 @@
     <div class="row">
         <div class="col-xl-10 col-xxl-constrain">
             <div class="form-group">
-                <label asp-for="Description" class="form-label"></label>
+                <label asp-for="Description" class="form-label" text-translate="true"></label>
                 <textarea asp-for="Description" class="form-control richtext"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>

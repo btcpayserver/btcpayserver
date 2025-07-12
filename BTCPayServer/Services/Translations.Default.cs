@@ -917,6 +917,7 @@ namespace BTCPayServer.Services
   "No due date": "",
   "No end date has been set": "",
   "No expiry date has been set for this payment request": "",
+  "No Expiry": "",
   "No invoice has been selected": "",
   "No matching payment method": "",
   "No payment handler found for this payment method": "",

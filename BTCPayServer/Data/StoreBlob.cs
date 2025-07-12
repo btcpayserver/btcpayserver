@@ -299,6 +299,7 @@ namespace BTCPayServer.Data
 
         private string[] _AdditionalTrackedCurrencies;
 
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         public string[] AdditionalTrackedCurrencies
         {
             get
@@ -308,7 +309,7 @@ namespace BTCPayServer.Data
             set
             {
                 if (value is not null)
-                    _AdditionalTrackedCurrencies = value.Select(v => v.ToUpperInvariant().Trim().Replace("_", "")).ToArray();
+                    _AdditionalTrackedCurrencies = value.Select(v => v.ToUpperInvariant().Trim().Replace("_", "")).Where(v => !string.IsNullOrWhiteSpace(v)).ToArray();
                 else
                     _AdditionalTrackedCurrencies = null;
             }

@@ -8,10 +8,13 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
 using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Payments;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
+using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Npgsql;
@@ -258,7 +261,8 @@ namespace BTCPayServer.Services
                 var data = obj.Data is null ? null : JObject.Parse(obj.Data);
                 var info = new WalletTransactionInfo(walletId)
                 {
-                    Comment = data?["comment"]?.Value<string>()
+                    Comment = data?["comment"]?.Value<string>(),
+                    Rates = data?["rates"] is JObject o ? RateBook.FromJObject(o, walletId.CryptoCode) : null
                 };
                 result.Add(obj.Id, info);
                 foreach (var link in obj.GetLinks())
@@ -408,7 +412,7 @@ namespace BTCPayServer.Services
         public async Task EnsureWalletObjectLink(WalletObjectId a, WalletObjectId b, JObject? data = null)
         {
             await EnsureWalletObjectLink(NewWalletObjectLinkData(a, b, data));
-        }  
+        }
         public async Task EnsureWalletObjectLink(WalletObjectLinkData l)
         {
             await using var ctx = _ContextFactory.CreateContext();
@@ -566,7 +570,7 @@ namespace BTCPayServer.Services
         public async Task AddWalletTransactionAttachments((WalletId walletId, string txId,
             IEnumerable<Attachment> attachments, string type)[] reqs)
         {
-            
+
             List<WalletObjectData> objs = new();
             List<WalletObjectLinkData> links = new();
             foreach ((WalletId walletId, string txId, IEnumerable<Attachment> attachments, string type) req in reqs)
@@ -627,7 +631,7 @@ namespace BTCPayServer.Services
                 await RemoveWalletObjectLink(labelObjId, id);
             }
         }
-        
+
         public async Task<bool> RemoveWalletLabels(WalletId id, params string[] labels)
         {
             ArgumentNullException.ThrowIfNull(id);
@@ -677,12 +681,15 @@ namespace BTCPayServer.Services
         {
             walletObjects ??= new List<WalletObjectData>();
             walletObjectLinks ??= new List<WalletObjectLinkData>();
+            if (walletObjects.Count is 0 && walletObjectLinks.Count is 0)
+                return;
             var objs = walletObjects.Concat(ExtractObjectsFromLinks(walletObjectLinks).Except(walletObjects)).ToArray();
             await using var ctx = _ContextFactory.CreateContext();
             var connection = ctx.Database.GetDbConnection();
             await EnsureWalletObjects(ctx,connection, objs);
             await EnsureWalletObjectLinks(ctx,connection, walletObjectLinks);
         }
+
 #nullable restore
     }
 }

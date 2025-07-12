@@ -27,6 +27,12 @@
         <td class="align-middle amount-col">
             <span data-sensitive class="text-@(transaction.Positive ? "success" : "danger")@(transaction.IsConfirmed ? "" : " opacity-50")">@transaction.Balance</span>
         </td>
+        @foreach (var rate in transaction.Rates)
+        {
+            <td class="align-middle rate-col">
+                <span>@rate</span>
+            </td>
+        }
         <td class="align-middle text-end">
             <div class="d-inline-flex gap-3 align-items-center">
 				@if (transaction.CanBumpFee)

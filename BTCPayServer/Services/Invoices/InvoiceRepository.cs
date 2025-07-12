@@ -58,7 +58,7 @@ namespace BTCPayServer.Services.Invoices
                 Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)),
                 StoreId = storeId,
                 Version = InvoiceEntity.Lastest_Version,
-                // Truncating was an unintended side effect of previous code. Might want to remove that one day 
+                // Truncating was an unintended side effect of previous code. Might want to remove that one day
                 InvoiceTime = DateTimeOffset.UtcNow.TruncateMilliSeconds(),
                 Metadata = new InvoiceMetadata(),
 #pragma warning disable CS0618
@@ -169,6 +169,27 @@ namespace BTCPayServer.Services.Invoices
                 .Select(s => s.Delivery)
                 .OrderByDescending(s => s.Timestamp)
                 .ToListAsync();
+        }
+
+        public async Task<Dictionary<string, RateBook>> GetRatesOfInvoices(HashSet<string> invoiceIds)
+        {
+            if (invoiceIds.Count == 0)
+                return new();
+            var res = new Dictionary<string, RateBook>();
+            using var ctx = _applicationDbContextFactory.CreateContext();
+            var conn = ctx.Database.GetDbConnection();
+            var result = await conn.QueryAsync<(string Id, string Rate, string Currency)>(
+                """
+                SELECT "Id", "Blob2"->'rates' AS "Rate", "Currency" FROM unnest(@invoices) AS searched_invoices("Id")
+                JOIN "Invoices" USING ("Id")
+                WHERE "Blob2"->'rates' IS NOT NULL;
+                """, new { invoices = invoiceIds.ToArray() });
+            foreach (var inv in result)
+            {
+                var rates = RateBook.Parse(inv.Rate, inv.Currency);
+                res.Add(inv.Id, rates);
+            }
+            return res;
         }
 
         public async Task<AppData[]> GetAppsTaggingStore(string storeId)
@@ -910,7 +931,7 @@ retry:
                     CurrencyValue = p.Select(v => v.CurrencyValue).Sum()
                 });
             return new InvoiceStatistics(contributions)
-            { 
+            {
                 TotalSettled = totalSettledCurrency,
                 TotalProcessing = totalProcessingCurrency,
                 Total = totalSettledCurrency + totalProcessingCurrency

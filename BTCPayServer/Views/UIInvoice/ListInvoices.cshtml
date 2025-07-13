@@ -15,13 +15,13 @@
 {
     private int CountArrayFilter(string type) =>
         Model.Search.ContainsFilter(type) ? Model.Search.GetFilterArray(type).Length : 0;
-    
+
     private bool HasArrayFilter(string type, string key = null) =>
         Model.Search.ContainsFilter(type) && (key is null || Model.Search.GetFilterArray(type).Contains(key));
 
     private bool HasBooleanFilter(string key) =>
         Model.Search.ContainsFilter(key) && Model.Search.GetFilterBool(key) is true;
-    
+
     private bool HasCustomDateFilter() =>
         Model.Search.ContainsFilter("startdate") && Model.Search.ContainsFilter("enddate");
 }
@@ -112,15 +112,28 @@
             <vc:icon symbol="info" />
         </a>
     </h2>
-    <a id="page-primary"
-       permission="@Policies.CanCreateInvoice"
-       asp-action="CreateInvoice" 
-       asp-route-storeId="@Model.StoreId" 
-       asp-route-searchTerm="@Model.SearchTerm" 
-       class="btn btn-primary mt-3 mt-sm-0"
-       text-translate="true">
-        Create Invoice
-    </a>
+    <div>
+        <a
+            id="view-report"
+            permission="@Policies.CanViewReports"
+            asp-controller="UIReports"
+            asp-action="StoreReports"
+            asp-route-storeId="@Model.StoreId"
+            asp-route-viewName="Invoices"
+            class="btn btn-secondary">
+            <vc:icon symbol="nav-reporting" />
+            <span text-translate="true">Reporting</span>
+        </a>
+        <a id="page-primary"
+           permission="@Policies.CanCreateInvoice"
+           asp-action="CreateInvoice"
+           asp-route-storeId="@Model.StoreId"
+           asp-route-searchTerm="@Model.SearchTerm"
+           class="btn btn-primary"
+           text-translate="true">
+            Create Invoice
+        </a>
+    </div>
 </div>
 
 <div id="descriptor" class="collapse">
@@ -237,7 +250,7 @@
                     <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("appid", app.Id)" class="dropdown-item @(HasArrayFilter("appid", app.Id) ? "custom-active" : "")">@app.AppName</a>
                 }
             </div>
-        </div> 
+        </div>
     }
     <div class="dropdown">
         <button id="DateOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">

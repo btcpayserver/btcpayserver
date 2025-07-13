@@ -165,9 +165,9 @@ namespace BTCPayServer.Controllers
             model.StillDue = details.StillDue;
             model.HasRates = details.HasRates;
 
-            if (additionalData.TryGetValue("receiptData", out object? receiptData))
+            if (additionalData.TryGetValue("receiptData", out var receiptData) && receiptData is Dictionary<string, object> data)
             {
-                model.ReceiptData = (Dictionary<string, object>)receiptData;
+                model.ReceiptData = data;
                 additionalData.Remove("receiptData");
             }
 

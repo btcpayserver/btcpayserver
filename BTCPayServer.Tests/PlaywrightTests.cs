@@ -939,6 +939,89 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public async Task CanMarkPaymentRequestAsSettled()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            await s.GenerateWallet("BTC", "", true);
+
+            // Create a payment request
+            await s.GoToStore();
+            await s.Page.ClickAsync("#StoreNav-PaymentRequests");
+            await s.ClickPagePrimary();
+            await s.Page.FillAsync("#Title", "Test Payment Request");
+            await s.Page.FillAsync("#Amount", "0.1");
+            await s.Page.FillAsync("#Currency", "BTC");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "Payment request");
+
+            var paymentRequestUrl = s.Page.Url;
+            var uri = new Uri(paymentRequestUrl);
+            var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            var payReqId = queryParams["payReqId"];
+            Assert.NotNull(payReqId);
+            Assert.NotEmpty(payReqId);
+            var markAsSettledExists = await s.Page.Locator("button:has-text('Mark as settled')").CountAsync();
+            Assert.Equal(0, markAsSettledExists);
+            var opening = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("a:has-text('View')");
+            string invoiceId;
+            await using (_ = await s.SwitchPage(opening))
+            {
+                await s.Page.ClickAsync("button:has-text('Pay')");
+                await s.Page.WaitForLoadStateAsync();
+                
+                await s.Page.WaitForSelectorAsync("iframe[name='btcpay']", new() { Timeout = 10000 });
+                
+                var iframe = s.Page.Frame("btcpay");
+                Assert.NotNull(iframe);
+                
+                await iframe.FillAsync("#test-payment-amount", "0.05");
+                await iframe.ClickAsync("#FakePayment");
+                await iframe.WaitForSelectorAsync("#CheatSuccessMessage", new() { Timeout = 10000 });
+                
+                invoiceId = s.Page.Url.Split('/').Last();
+            }
+            await s.GoToInvoices();
+            
+            await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-toggle");
+            await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-menu button:has-text('Mark as settled')");
+            await s.Page.WaitForLoadStateAsync();
+            
+            await s.GoToStore();
+            await s.Page.ClickAsync("#StoreNav-PaymentRequests");
+            await s.Page.WaitForLoadStateAsync();
+            
+            var opening2 = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("a:has-text('View')");
+            await using (_ = await s.SwitchPage(opening2))
+            {
+                await s.Page.WaitForLoadStateAsync();
+                
+                var markSettledExists = await s.Page.Locator("button:has-text('Mark as settled')").CountAsync();
+                Assert.True(markSettledExists > 0, "Mark as settled button should be visible on public page after invoice is settled");
+                await s.Page.ClickAsync("button:has-text('Mark as settled')");
+                await s.Page.WaitForLoadStateAsync();
+            }
+            
+            await s.GoToStore();
+            await s.Page.ClickAsync("#StoreNav-PaymentRequests");
+            await s.Page.WaitForLoadStateAsync();
+            
+            var listContent = await s.Page.ContentAsync();
+            var isSettledInList = listContent.Contains("Settled");
+            var isPendingInList = listContent.Contains("Pending");
+            
+            var settledBadgeExists = await s.Page.Locator(".badge:has-text('Settled')").CountAsync();
+            var pendingBadgeExists = await s.Page.Locator(".badge:has-text('Pending')").CountAsync();
+            
+            Assert.True(isSettledInList || settledBadgeExists > 0, "Payment request should show as Settled in the list");
+            Assert.False(isPendingInList && pendingBadgeExists > 0, "Payment request should not show as Pending anymore");
+        }
+
+        [Fact]
         public async Task CanRequireApprovalForNewAccounts()
         {
             await using var s = CreatePlaywrightTester();
@@ -1130,3 +1213,4 @@ namespace BTCPayServer.Tests
         }
     }
 }
+

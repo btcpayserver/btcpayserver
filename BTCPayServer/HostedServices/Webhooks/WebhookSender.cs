@@ -282,6 +282,8 @@ public class WebhookSender(
         WebhookDeliveryData delivery,
         WebhookBlob webhookBlob)
     {
+        // Regex pattern to validate JSONPath: alphanumeric, underscore, dot, hyphen, square brackets, asterisk, single/double quotes
+        private static readonly Regex _jsonPathRegex = new(@"^[a-zA-Z0-9_\.\-\[\]\*'""]*$", RegexOptions.Compiled);
         public WebhookEvent WebhookEvent { get; } = webhookEvent;
         public WebhookDeliveryData Delivery { get; } = delivery;
         public WebhookBlob WebhookBlob { get; } = webhookBlob;
@@ -293,8 +295,6 @@ public class WebhookSender(
             return Task.FromResult(req)!;
         }
 
-        // Regex pattern to validate JSONPath: alphanumeric, underscore, dot, hyphen, square brackets, asterisk, single/double quotes
-        private static readonly Regex _jsonPathRegex =  new(@"^[a-zA-Z0-9_\.\-\[\]\*'""]*$", RegexOptions.Compiled);
         protected static string InterpolateJsonField(string str, string fieldName, JObject obj)
         {
             if (string.IsNullOrEmpty(str) || string.IsNullOrEmpty(fieldName) || obj == null)
@@ -320,17 +320,13 @@ public class WebhookSender(
                 try
                 {
                     if (string.IsNullOrEmpty(jsonpath))
-                    {
                         result = obj.ToString();
-                    }
                     else if (_jsonPathRegex.IsMatch(jsonpath))
-                    {
                         // Only process if JSONPath is valid
                         result = obj.SelectToken(jsonpath)?.ToString() ?? string.Empty;
-                    }
                     // If jsonpath doesn't match the pattern, result remains empty string
                 }
-                catch (Newtonsoft.Json.JsonException)
+                catch (JsonException)
                 {
                     // Handle JSON parsing errors (e.g., invalid JSONPath syntax)
                     result = string.Empty;

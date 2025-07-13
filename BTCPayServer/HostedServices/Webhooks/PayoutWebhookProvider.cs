@@ -14,6 +14,8 @@ public class PayoutWebhookProvider(
     BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings)
     : WebhookProvider<PayoutEvent>(eventAggregator, logger, webhookSender)
 {
+    public override bool SupportsCustomerEmail { get; } = false;
+
     protected override WebhookSender.WebhookDeliveryRequest CreateDeliveryRequest(PayoutEvent payoutEvent, WebhookData webhook)
     {
         var webhookBlob = webhook?.GetBlob();
@@ -35,8 +37,6 @@ public class PayoutWebhookProvider(
 
         return new PayoutWebhookDeliveryRequest(payoutEvent, webhook?.Id, webhookEvent, delivery, webhookBlob, btcPayNetworkJsonSerializerSettings);
     }
-
-    public override bool SupportsCustomerEmail { get; } = false;
 
     public override Dictionary<string, string> GetSupportedWebhookTypes()
     {

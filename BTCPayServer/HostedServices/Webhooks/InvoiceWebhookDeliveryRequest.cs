@@ -49,5 +49,7 @@ public class InvoiceWebhookDeliveryRequest(
     }
 
     public override string ToString()
-        => $"Webhook delivery request ({WebhookEvent.Type})";
+    {
+        return $"Webhook delivery request ({WebhookEvent.Type})";
+    }
 }

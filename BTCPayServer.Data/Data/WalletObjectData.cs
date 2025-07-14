@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -42,6 +43,10 @@ namespace BTCPayServer.Data
         public List<WalletObjectLinkData> Bs { get; set; }
         public List<WalletObjectLinkData> As { get; set; }
 #nullable enable
+        [Timestamp]
+        // With this, update of WalletObjectData will fail if the row was modified by another process
+        public uint XMin { get; set; }
+
         public IEnumerable<(string type, string id, JObject? linkdata, JObject? objectdata)> GetLinks()
         {
             static JObject? AsJObj(string? data) => data is null ? null : JObject.Parse(data);

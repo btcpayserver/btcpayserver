@@ -408,7 +408,7 @@ namespace BTCPayServer.Services
         public async Task EnsureWalletObjectLink(WalletObjectId a, WalletObjectId b, JObject? data = null)
         {
             await EnsureWalletObjectLink(NewWalletObjectLinkData(a, b, data));
-        }  
+        }
         public async Task EnsureWalletObjectLink(WalletObjectLinkData l)
         {
             await using var ctx = _ContextFactory.CreateContext();
@@ -522,19 +522,36 @@ namespace BTCPayServer.Services
         {
             ArgumentNullException.ThrowIfNull(id);
             ArgumentNullException.ThrowIfNull(modify);
-            using var ctx = _ContextFactory.CreateContext();
-            var obj = await ctx.WalletObjects.FindAsync(id.WalletId.ToString(), id.Type, id.Id);
-            if (obj is null)
+            retry:
+            using (var ctx = _ContextFactory.CreateContext())
             {
-                obj = NewWalletObjectData(id);
-                ctx.WalletObjects.Add(obj);
+                var obj = await ctx.WalletObjects.FindAsync(id.WalletId.ToString(), id.Type, id.Id);
+                if (obj is null)
+                {
+                    obj = NewWalletObjectData(id);
+                    ctx.WalletObjects.Add(obj);
+                }
+
+                var currentData = obj.Data is null ? new JObject() : JObject.Parse(obj.Data);
+                modify(currentData);
+                obj.Data = currentData.ToString();
+                if (obj.Data == "{}")
+                    obj.Data = null;
+                try
+                {
+                    await ctx.SaveChangesAsync();
+                }
+                // Race condition, retry
+                catch (DbUpdateConcurrencyException)
+                {
+                    goto retry;
+                }
+                // Got created simultaneously
+                catch (DbUpdateException)
+                {
+                    goto retry;
+                }
             }
-            var currentData = obj.Data is null ? new JObject() : JObject.Parse(obj.Data);
-            modify(currentData);
-            obj.Data = currentData.ToString();
-            if (obj.Data == "{}")
-                obj.Data = null;
-            await ctx.SaveChangesAsync();
         }
 
         const int MaxLabelSize = 50;
@@ -566,7 +583,7 @@ namespace BTCPayServer.Services
         public async Task AddWalletTransactionAttachments((WalletId walletId, string txId,
             IEnumerable<Attachment> attachments, string type)[] reqs)
         {
-            
+
             List<WalletObjectData> objs = new();
             List<WalletObjectLinkData> links = new();
             foreach ((WalletId walletId, string txId, IEnumerable<Attachment> attachments, string type) req in reqs)
@@ -627,7 +644,7 @@ namespace BTCPayServer.Services
                 await RemoveWalletObjectLink(labelObjId, id);
             }
         }
-        
+
         public async Task<bool> RemoveWalletLabels(WalletId id, params string[] labels)
         {
             ArgumentNullException.ThrowIfNull(id);

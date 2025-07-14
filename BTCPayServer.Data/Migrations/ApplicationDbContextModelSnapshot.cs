@@ -966,6 +966,12 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Data")
                         .HasColumnType("JSONB");
 
+                    b.Property<uint>("XMin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("WalletId", "Type", "Id");
 
                     b.HasIndex("Type", "Id");

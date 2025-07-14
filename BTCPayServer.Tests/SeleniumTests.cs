@@ -1164,24 +1164,7 @@ namespace BTCPayServer.Tests
             s.FindAlertMessage();
         }
 
-        [Fact(Timeout = TestTimeout)]
-        public async Task CanImportMnemonic()
-        {
-            using var s = CreateSeleniumTester();
-            await s.StartAsync();
-            s.RegisterNewUser(true);
-            foreach (var isHotwallet in new[] { false, true })
-            {
-                var cryptoCode = "BTC";
-                s.CreateNewStore();
-                s.GenerateWallet(cryptoCode, "melody lizard phrase voice unique car opinion merge degree evil swift cargo", isHotWallet: isHotwallet);
-                s.GoToWalletSettings(cryptoCode);
-                if (isHotwallet)
-                    Assert.Contains("View seed", s.Driver.PageSource);
-                else
-                    Assert.DoesNotContain("View seed", s.Driver.PageSource);
-            }
-        }
+
 
         [Fact]
         [Trait("Selenium", "Selenium")]

@@ -1260,6 +1260,50 @@ namespace BTCPayServer.Tests
 
             Assert.DoesNotContain("/server/services/dynamic-dns/pouet.hello.com/delete", await s.Page.ContentAsync());
         }
+
+        [Fact]
+        public async Task CanCreateInvoiceInUI()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            await s.GoToInvoices();
+
+            await s.ClickPagePrimary();
+            Assert.Contains("To create an invoice, you need to", await s.Page.ContentAsync());
+
+            await s.AddDerivationScheme();
+            await s.GoToInvoices();
+            var invoiceId = await s.CreateInvoice();
+            await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-toggle");
+            await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-menu button:first-child");
+            await TestUtils.EventuallyAsync(async () => Assert.Contains("Invalid (marked)", await s.Page.ContentAsync()));
+            await s.Page.ReloadAsync();
+
+            await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-toggle");
+            await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-menu button:first-child");
+            await TestUtils.EventuallyAsync(async () => Assert.Contains("Settled (marked)", await s.Page.ContentAsync()));
+
+            await s.Page.ReloadAsync();
+
+            await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-toggle");
+            await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-menu button:first-child");
+            await TestUtils.EventuallyAsync(async () => Assert.Contains("Invalid (marked)", await s.Page.ContentAsync()));
+            await s.Page.ReloadAsync();
+
+            await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-toggle");
+            await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-menu button:first-child");
+            await TestUtils.EventuallyAsync(async () => Assert.Contains("Settled (marked)", await s.Page.ContentAsync()));
+
+            // Zero amount invoice should redirect to receipt
+            var zeroAmountId = await s.CreateInvoice(0);
+            await s.GoToUrl($"/i/{zeroAmountId}");
+            Assert.EndsWith("/receipt", s.Page.Url);
+            Assert.Contains("$0.00", await s.Page.ContentAsync());
+            await s.GoToInvoice(zeroAmountId);
+            Assert.Equal("Settled", (await s.Page.Locator("[data-invoice-state-badge]").TextContentAsync())?.Trim());
+        }
     }
 }
 

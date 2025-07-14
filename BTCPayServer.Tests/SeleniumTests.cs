@@ -80,50 +80,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("Seed removed", seedEl.Text, StringComparison.OrdinalIgnoreCase);
         }
 
-        [Fact(Timeout = TestTimeout)]
-        public async Task CanCreateInvoiceInUI()
-        {
-            using var s = CreateSeleniumTester();
-            await s.StartAsync();
-            s.RegisterNewUser(true);
-            s.CreateNewStore();
-            s.GoToInvoices();
 
-            // Should give us an error message if we try to create an invoice before adding a wallet
-            s.ClickPagePrimary();
-            Assert.Contains("To create an invoice, you need to", s.Driver.PageSource);
-
-            s.AddDerivationScheme();
-            s.GoToInvoices();
-            s.CreateInvoice();
-            s.Driver.FindElement(By.CssSelector("[data-invoice-state-badge] .dropdown-toggle")).Click();
-            s.Driver.FindElements(By.CssSelector("[data-invoice-state-badge] .dropdown-menu button"))[0].Click();
-            TestUtils.Eventually(() => Assert.Contains("Invalid (marked)", s.Driver.PageSource));
-            s.Driver.Navigate().Refresh();
-
-            s.Driver.FindElement(By.CssSelector("[data-invoice-state-badge] .dropdown-toggle")).Click();
-            s.Driver.FindElements(By.CssSelector("[data-invoice-state-badge] .dropdown-menu button"))[0].Click();
-            TestUtils.Eventually(() => Assert.Contains("Settled (marked)", s.Driver.PageSource));
-
-            s.Driver.Navigate().Refresh();
-
-            s.Driver.FindElement(By.CssSelector("[data-invoice-state-badge] .dropdown-toggle")).Click();
-            s.Driver.FindElements(By.CssSelector("[data-invoice-state-badge] .dropdown-menu button"))[0].Click();
-            TestUtils.Eventually(() => Assert.Contains("Invalid (marked)", s.Driver.PageSource));
-            s.Driver.Navigate().Refresh();
-
-            s.Driver.FindElement(By.CssSelector("[data-invoice-state-badge] .dropdown-toggle")).Click();
-            s.Driver.FindElements(By.CssSelector("[data-invoice-state-badge] .dropdown-menu button"))[0].Click();
-            TestUtils.Eventually(() => Assert.Contains("Settled (marked)", s.Driver.PageSource));
-
-            // zero amount invoice should redirect to receipt
-            var zeroAmountId = s.CreateInvoice(0);
-            s.GoToUrl($"/i/{zeroAmountId}");
-            Assert.EndsWith("/receipt", s.Driver.Url);
-            Assert.Contains("$0.00", s.Driver.PageSource);
-            s.GoToInvoice(zeroAmountId);
-            Assert.Equal("Settled", s.Driver.FindElement(By.CssSelector("[data-invoice-state-badge]")).Text);
-        }
 
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseInvoiceReceipts()

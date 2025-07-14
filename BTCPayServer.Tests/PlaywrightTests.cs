@@ -1304,6 +1304,30 @@ namespace BTCPayServer.Tests
             await s.GoToInvoice(zeroAmountId);
             Assert.Equal("Settled", (await s.Page.Locator("[data-invoice-state-badge]").TextContentAsync())?.Trim());
         }
+
+        [Fact]
+        public async Task CanImportMnemonic()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            foreach (var isHotwallet in new[] { false, true })
+            {
+                var cryptoCode = "BTC";
+                await s.CreateNewStore();
+                await s.GenerateWallet(cryptoCode, "melody lizard phrase voice unique car opinion merge degree evil swift cargo", isHotWallet: isHotwallet);
+                await s.GoToWalletSettings(cryptoCode);
+                if (isHotwallet)
+                {
+                    await s.Page.ClickAsync("#ActionsDropdownToggle");
+                    Assert.True(await s.Page.Locator("#ViewSeed").IsVisibleAsync());
+                }
+                else
+                {
+                    Assert.False(await s.Page.Locator("#ViewSeed").IsVisibleAsync());
+                }
+            }
+        }
     }
 }
 

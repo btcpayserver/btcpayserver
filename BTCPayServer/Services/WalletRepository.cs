@@ -386,23 +386,17 @@ namespace BTCPayServer.Services
         public async Task<bool> RemoveWalletObjects(WalletObjectId walletObjectId)
         {
             await using var ctx = _ContextFactory.CreateContext();
-            var entity = new WalletObjectData()
-            {
-                WalletId = walletObjectId.WalletId.ToString(),
-                Type = walletObjectId.Type,
-                Id = walletObjectId.Id
-            };
-            ctx.WalletObjects.Add(entity);
-            ctx.Entry(entity).State = EntityState.Deleted;
-            try
-            {
-                await ctx.SaveChangesAsync();
-                return true;
-            }
-            catch (DbUpdateException) // doesn't exists
-            {
-                return false;
-            }
+            return await ctx.Database
+                .GetDbConnection()
+                .ExecuteAsync("""
+                              DELETE FROM "WalletObjects" WHERE "WalletId"=@WalletId AND "Type"=@Type AND "Id"=@Id
+                              """,
+                    new
+                    {
+                        WalletId = walletObjectId.WalletId.ToString(),
+                        Type = walletObjectId.Type,
+                        Id = walletObjectId.Id
+                    }) == 1;
         }
 
         public async Task EnsureWalletObjectLink(WalletObjectId a, WalletObjectId b, JObject? data = null)

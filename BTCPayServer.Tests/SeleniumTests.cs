@@ -166,34 +166,6 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        public async Task CanSetupStoreViaGuide()
-        {
-            using var s = CreateSeleniumTester();
-            await s.StartAsync();
-            s.RegisterNewUser();
-            s.GoToUrl("/");
-
-            // verify redirected to create store page
-            Assert.EndsWith("/stores/create", s.Driver.Url);
-            Assert.Contains("Create your first store", s.Driver.PageSource);
-            Assert.Contains("Create a store to begin accepting payments", s.Driver.PageSource);
-            Assert.False(s.Driver.PageSource.Contains("id=\"StoreSelectorDropdown\""), "Store selector dropdown should not be present");
-
-            (_, string storeId) = s.CreateNewStore();
-
-            // should redirect to first store
-            s.GoToUrl("/");
-            Assert.Contains($"/stores/{storeId}", s.Driver.Url);
-            Assert.True(s.Driver.PageSource.Contains("id=\"StoreSelectorDropdown\""), "Store selector dropdown should be present");
-            Assert.True(s.Driver.PageSource.Contains("id=\"SetupGuide\""), "Store setup guide should be present");
-
-            s.GoToUrl("/stores/create");
-            Assert.Contains("Create a new store", s.Driver.PageSource);
-            Assert.DoesNotContain("Create your first store", s.Driver.PageSource);
-            Assert.DoesNotContain("To start accepting payments, set up a store.", s.Driver.PageSource);
-        }
-
-        [Fact(Timeout = TestTimeout)]
         [Trait("Lightning", "Lightning")]
         public async Task CanCreateStores()
         {

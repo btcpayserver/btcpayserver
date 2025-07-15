@@ -9,7 +9,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
-using McMaster.NETCore.Plugins;
+using BTCPayServer.Plugins.Dotnet;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -154,6 +154,7 @@ namespace BTCPayServer.Plugins
             }
 
             ReorderPlugins(pluginsFolder, pluginsToLoad);
+            Dictionary<string, PluginLoader> loaders = new();
 			var crashedPlugins = new List<string>();
             foreach (var toLoad in pluginsToLoad)
             {
@@ -181,10 +182,13 @@ namespace BTCPayServer.Plugins
 					}
                     else
                     {
+                        AssertDependencies(p, plugins);
+                        plugin.AddAssemblyLoadContexts(p.Dependencies.Where(d => d.Identifier != "BTCPayServer").Select(d => loaders[d.Identifier]));
                         mvcBuilder.AddPluginLoader(plugin);
                         _pluginAssemblies.Add(pluginAssembly);
                         p.SystemPlugin = false;
                         plugins.Add(p);
+                        loaders.Add(p.Identifier, plugin);
                     }
                 }
                 catch (Exception e)
@@ -218,6 +222,24 @@ namespace BTCPayServer.Plugins
 				throw new ConfigException($"The following plugin(s) crashed at startup, they will be disabled and the server will restart: {crashedPluginsStr}");
 			}
 			return mvcBuilder;
+        }
+
+        private static void AssertDependencies(IBTCPayServerPlugin plugin, List<IBTCPayServerPlugin> loaded)
+        {
+            var missing = new List<IBTCPayServerPlugin.PluginDependency>();
+            var installed = loaded.ToDictionary(l => l.Identifier, l => l.Version);
+            foreach (var d in plugin.Dependencies)
+            {
+                if (!DependencyMet(d, installed))
+                {
+                    missing.Add(d);
+                }
+            }
+            if (missing.Any())
+            {
+                throw new ConfigException(
+                    $"Plugin {plugin.Identifier} is missing dependencies: {String.Join(", ", missing.Select(d => d.ToString()))}");
+            }
         }
 
         private static void ReorderPlugins(string pluginsFolder, List<(string PluginIdentifier, string PluginFilePath)> pluginsToLoad)
@@ -280,7 +302,7 @@ namespace BTCPayServer.Plugins
 
         private static IBTCPayServerPlugin GetPluginInstanceFromAssembly(string pluginIdentifier, Assembly assembly)
         {
-            return GetPluginInstancesFromAssembly(assembly, false).FirstOrDefault(plugin => plugin.Identifier == pluginIdentifier);
+            return GetPluginInstancesFromAssembly(assembly, true).FirstOrDefault(plugin => plugin.Identifier == pluginIdentifier);
         }
 
         private static bool ExecuteCommands(string pluginsFolder, Dictionary<string, Version> installed = null)
@@ -452,7 +474,7 @@ namespace BTCPayServer.Plugins
             if (File.Exists(Path.Combine(pluginDir, plugin, BTCPayPluginSuffix)))
             {
                 File.Delete(Path.Combine(pluginDir, plugin, BTCPayPluginSuffix));
-            } 
+            }
             if (File.Exists(Path.Combine(pluginDir, plugin, ".json")))
             {
                 File.Delete(Path.Combine(pluginDir, plugin, ".json"));

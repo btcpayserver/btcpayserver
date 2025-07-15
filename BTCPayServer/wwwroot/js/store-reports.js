@@ -23,7 +23,9 @@ srv.sortBy = function (field, event) {
     })
     const {sort} = event.currentTarget.dataset;
     const next = sort === '' || sort === 'desc' ? 'asc' : 'desc';
-    event.currentTarget.innerHTML = event.currentTarget.innerHTML.replace(`#actions-sort"`, `#actions-sort-${next}"`)
+    const icon = event.currentTarget.querySelector('svg');
+    if (icon)
+        icon.setAttribute('href', `#actions-sort-${next}`);
 }
 
 srv.applySort = function () {
@@ -218,6 +220,7 @@ async function fetchStoreReports(abort) {
     abortFetching = new AbortController();
     fetchPromise = (async () => {
         setLoading(true);
+        searchBtnApp.error = "";
         try {
             const result = await fetch(window.location, {
                 method: 'POST',

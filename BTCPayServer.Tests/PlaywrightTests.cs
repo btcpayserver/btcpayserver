@@ -1356,6 +1356,30 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain("Create your first store", await s.Page.ContentAsync());
             Assert.DoesNotContain("To start accepting payments, set up a store.", await s.Page.ContentAsync());
         }
+
+        [Fact]
+        public async Task CanImportWallet()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            const string cryptoCode = "BTC";
+            var mnemonic = await s.GenerateWallet(cryptoCode, "click chunk owner kingdom faint steak safe evidence bicycle repeat bulb wheel");
+
+            // Make sure wallet info is correct
+            await s.GoToWalletSettings(cryptoCode);
+            Assert.Contains(mnemonic.DeriveExtKey().GetPublicKey().GetHDFingerPrint().ToString(),
+                await s.Page.GetAttributeAsync("#AccountKeys_0__MasterFingerprint", "value"));
+            Assert.Contains("m/84'/1'/0'",
+                await s.Page.GetAttributeAsync("#AccountKeys_0__AccountKeyPath", "value"));
+
+            // Transactions list is empty
+            await s.Page.ClickAsync($"#StoreNav-Wallet{cryptoCode}");
+            await s.Page.WaitForSelectorAsync("#WalletTransactions[data-loaded='true']");
+            Assert.Contains("There are no transactions yet", await s.Page.Locator("#WalletTransactions").TextContentAsync());
+        }
     }
 }
+
 

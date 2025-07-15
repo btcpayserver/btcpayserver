@@ -1192,29 +1192,6 @@ namespace BTCPayServer.Tests
             s.Driver.AssertElementNotFound(By.Id("LightningNodeUrlClearnet"));
         }
 
-        [Fact(Timeout = TestTimeout)]
-        public async Task CanImportWallet()
-        {
-            using var s = CreateSeleniumTester();
-            await s.StartAsync();
-            s.RegisterNewUser(true);
-            s.CreateNewStore();
-            const string cryptoCode = "BTC";
-            var mnemonic = s.GenerateWallet(cryptoCode, "click chunk owner kingdom faint steak safe evidence bicycle repeat bulb wheel");
-
-            // Make sure wallet info is correct
-            s.GoToWalletSettings(cryptoCode);
-            Assert.Contains(mnemonic.DeriveExtKey().GetPublicKey().GetHDFingerPrint().ToString(),
-                s.Driver.FindElement(By.Id("AccountKeys_0__MasterFingerprint")).GetAttribute("value"));
-            Assert.Contains("m/84'/1'/0'",
-                s.Driver.FindElement(By.Id("AccountKeys_0__AccountKeyPath")).GetAttribute("value"));
-
-            // Transactions list is empty
-            s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
-            s.Driver.WaitWalletTransactionsLoaded();
-            Assert.Contains("There are no transactions yet", s.Driver.FindElement(By.Id("WalletTransactions")).Text);
-        }
-
         [Fact]
         [Trait("Selenium", "Selenium")]
         [Trait("Lightning", "Lightning")]

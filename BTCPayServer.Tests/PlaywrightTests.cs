@@ -1328,6 +1328,34 @@ namespace BTCPayServer.Tests
                 }
             }
         }
+
+        [Fact]
+        public async Task CanSetupStoreViaGuide()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser();
+            await s.GoToUrl("/");
+
+            // verify redirected to create store page
+            Assert.EndsWith("/stores/create", s.Page.Url);
+            Assert.Contains("Create your first store", await s.Page.ContentAsync());
+            Assert.Contains("Create a store to begin accepting payments", await s.Page.ContentAsync());
+            Assert.Equal(0, await s.Page.Locator("#StoreSelectorDropdown").CountAsync());
+
+            (_, string storeId) = await s.CreateNewStore();
+
+            // should redirect to first store
+            await s.GoToUrl("/");
+            Assert.Contains($"/stores/{storeId}", s.Page.Url);
+            Assert.Equal(1, await s.Page.Locator("#StoreSelectorDropdown").CountAsync());
+            Assert.Equal(1, await s.Page.Locator("#SetupGuide").CountAsync());
+
+            await s.GoToUrl("/stores/create");
+            Assert.Contains("Create a new store", await s.Page.ContentAsync());
+            Assert.DoesNotContain("Create your first store", await s.Page.ContentAsync());
+            Assert.DoesNotContain("To start accepting payments, set up a store.", await s.Page.ContentAsync());
+        }
     }
 }
 

@@ -1211,6 +1211,123 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage();
             Assert.Contains("There are no rules yet.", await s.Page.ContentAsync());
         }
+
+        [Fact]
+        public async Task CanUseDynamicDns()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(isAdmin: true);
+            await s.GoToUrl("/server/services");
+            Assert.Contains("Dynamic DNS", await s.Page.ContentAsync());
+
+            await s.GoToUrl("/server/services/dynamic-dns");
+            await s.Page.AssertNoError();
+            if ((await s.Page.ContentAsync()).Contains("pouet.hello.com"))
+            {
+                await s.GoToUrl("/server/services/dynamic-dns/pouet.hello.com/delete");
+                await s.Page.ClickAsync("#ConfirmContinue");
+            }
+
+            await s.ClickPagePrimary();
+            await s.Page.AssertNoError();
+            await s.Page.FillAsync("#ServiceUrl", s.Link("/"));
+            await s.Page.FillAsync("#Settings_Hostname", "pouet.hello.com");
+            await s.Page.FillAsync("#Settings_Login", "MyLog");
+            await s.Page.FillAsync("#Settings_Password", "MyLog");
+            await s.ClickPagePrimary();
+            await s.Page.AssertNoError();
+            Assert.Contains("The Dynamic DNS has been successfully queried", await s.Page.ContentAsync());
+            Assert.EndsWith("/server/services/dynamic-dns", s.Page.Url);
+
+            // Try to create the same hostname (should fail)
+            await s.ClickPagePrimary();
+            await s.Page.AssertNoError();
+            await s.Page.FillAsync("#ServiceUrl", s.Link("/"));
+            await s.Page.FillAsync("#Settings_Hostname", "pouet.hello.com");
+            await s.Page.FillAsync("#Settings_Login", "MyLog");
+            await s.Page.FillAsync("#Settings_Password", "MyLog");
+            await s.ClickPagePrimary();
+            await s.Page.AssertNoError();
+            Assert.Contains("This hostname already exists", await s.Page.ContentAsync());
+
+            // Delete the hostname
+            await s.GoToUrl("/server/services/dynamic-dns");
+            Assert.Contains("/server/services/dynamic-dns/pouet.hello.com/delete", await s.Page.ContentAsync());
+            await s.GoToUrl("/server/services/dynamic-dns/pouet.hello.com/delete");
+            await s.Page.ClickAsync("#ConfirmContinue");
+            await s.Page.AssertNoError();
+
+            Assert.DoesNotContain("/server/services/dynamic-dns/pouet.hello.com/delete", await s.Page.ContentAsync());
+        }
+
+        [Fact]
+        public async Task CanCreateInvoiceInUI()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            await s.GoToInvoices();
+
+            await s.ClickPagePrimary();
+            Assert.Contains("To create an invoice, you need to", await s.Page.ContentAsync());
+
+            await s.AddDerivationScheme();
+            await s.GoToInvoices();
+            var invoiceId = await s.CreateInvoice();
+            await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-toggle");
+            await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-menu button:first-child");
+            await TestUtils.EventuallyAsync(async () => Assert.Contains("Invalid (marked)", await s.Page.ContentAsync()));
+            await s.Page.ReloadAsync();
+
+            await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-toggle");
+            await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-menu button:first-child");
+            await TestUtils.EventuallyAsync(async () => Assert.Contains("Settled (marked)", await s.Page.ContentAsync()));
+
+            await s.Page.ReloadAsync();
+
+            await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-toggle");
+            await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-menu button:first-child");
+            await TestUtils.EventuallyAsync(async () => Assert.Contains("Invalid (marked)", await s.Page.ContentAsync()));
+            await s.Page.ReloadAsync();
+
+            await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-toggle");
+            await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-menu button:first-child");
+            await TestUtils.EventuallyAsync(async () => Assert.Contains("Settled (marked)", await s.Page.ContentAsync()));
+
+            // Zero amount invoice should redirect to receipt
+            var zeroAmountId = await s.CreateInvoice(0);
+            await s.GoToUrl($"/i/{zeroAmountId}");
+            Assert.EndsWith("/receipt", s.Page.Url);
+            Assert.Contains("$0.00", await s.Page.ContentAsync());
+            await s.GoToInvoice(zeroAmountId);
+            Assert.Equal("Settled", (await s.Page.Locator("[data-invoice-state-badge]").TextContentAsync())?.Trim());
+        }
+
+        [Fact]
+        public async Task CanImportMnemonic()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            foreach (var isHotwallet in new[] { false, true })
+            {
+                var cryptoCode = "BTC";
+                await s.CreateNewStore();
+                await s.GenerateWallet(cryptoCode, "melody lizard phrase voice unique car opinion merge degree evil swift cargo", isHotWallet: isHotwallet);
+                await s.GoToWalletSettings(cryptoCode);
+                if (isHotwallet)
+                {
+                    await s.Page.ClickAsync("#ActionsDropdownToggle");
+                    Assert.True(await s.Page.Locator("#ViewSeed").IsVisibleAsync());
+                }
+                else
+                {
+                    Assert.False(await s.Page.Locator("#ViewSeed").IsVisibleAsync());
+                }
+            }
+        }
     }
 }
 

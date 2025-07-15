@@ -80,99 +80,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("Seed removed", seedEl.Text, StringComparison.OrdinalIgnoreCase);
         }
 
-        [Fact(Timeout = TestTimeout)]
-        public async Task CanUseDynamicDns()
-        {
-            using var s = CreateSeleniumTester();
-            await s.StartAsync();
-            s.RegisterNewUser(isAdmin: true);
-            s.Driver.Navigate().GoToUrl(s.Link("/server/services"));
-            Assert.Contains("Dynamic DNS", s.Driver.PageSource);
 
-            s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns"));
-            s.Driver.AssertNoError();
-            if (s.Driver.PageSource.Contains("pouet.hello.com"))
-            {
-                // Cleanup old test run
-                s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns/pouet.hello.com/delete"));
-                s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
-            }
-
-            s.ClickPagePrimary();
-            s.Driver.AssertNoError();
-            // We will just cheat for test purposes by only querying the server
-            s.Driver.FindElement(By.Id("ServiceUrl")).SendKeys(s.Link("/"));
-            s.Driver.FindElement(By.Id("Settings_Hostname")).SendKeys("pouet.hello.com");
-            s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("MyLog");
-            s.Driver.FindElement(By.Id("Settings_Password")).SendKeys("MyLog" + Keys.Enter);
-            s.Driver.AssertNoError();
-            Assert.Contains("The Dynamic DNS has been successfully queried", s.Driver.PageSource);
-            Assert.EndsWith("/server/services/dynamic-dns", s.Driver.Url);
-
-            // Try to do the same thing should fail (hostname already exists)
-            s.ClickPagePrimary();
-            s.Driver.AssertNoError();
-            s.Driver.FindElement(By.Id("ServiceUrl")).SendKeys(s.Link("/"));
-            s.Driver.FindElement(By.Id("Settings_Hostname")).SendKeys("pouet.hello.com");
-            s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("MyLog");
-            s.Driver.FindElement(By.Id("Settings_Password")).SendKeys("MyLog" + Keys.Enter);
-            s.Driver.AssertNoError();
-            Assert.Contains("This hostname already exists", s.Driver.PageSource);
-
-            // Delete it
-            s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns"));
-            Assert.Contains("/server/services/dynamic-dns/pouet.hello.com/delete", s.Driver.PageSource);
-            s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns/pouet.hello.com/delete"));
-            s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
-            s.Driver.AssertNoError();
-
-            Assert.DoesNotContain("/server/services/dynamic-dns/pouet.hello.com/delete", s.Driver.PageSource);
-        }
-
-        [Fact(Timeout = TestTimeout)]
-        public async Task CanCreateInvoiceInUI()
-        {
-            using var s = CreateSeleniumTester();
-            await s.StartAsync();
-            s.RegisterNewUser(true);
-            s.CreateNewStore();
-            s.GoToInvoices();
-
-            // Should give us an error message if we try to create an invoice before adding a wallet
-            s.ClickPagePrimary();
-            Assert.Contains("To create an invoice, you need to", s.Driver.PageSource);
-
-            s.AddDerivationScheme();
-            s.GoToInvoices();
-            s.CreateInvoice();
-            s.Driver.FindElement(By.CssSelector("[data-invoice-state-badge] .dropdown-toggle")).Click();
-            s.Driver.FindElements(By.CssSelector("[data-invoice-state-badge] .dropdown-menu button"))[0].Click();
-            TestUtils.Eventually(() => Assert.Contains("Invalid (marked)", s.Driver.PageSource));
-            s.Driver.Navigate().Refresh();
-
-            s.Driver.FindElement(By.CssSelector("[data-invoice-state-badge] .dropdown-toggle")).Click();
-            s.Driver.FindElements(By.CssSelector("[data-invoice-state-badge] .dropdown-menu button"))[0].Click();
-            TestUtils.Eventually(() => Assert.Contains("Settled (marked)", s.Driver.PageSource));
-
-            s.Driver.Navigate().Refresh();
-
-            s.Driver.FindElement(By.CssSelector("[data-invoice-state-badge] .dropdown-toggle")).Click();
-            s.Driver.FindElements(By.CssSelector("[data-invoice-state-badge] .dropdown-menu button"))[0].Click();
-            TestUtils.Eventually(() => Assert.Contains("Invalid (marked)", s.Driver.PageSource));
-            s.Driver.Navigate().Refresh();
-
-            s.Driver.FindElement(By.CssSelector("[data-invoice-state-badge] .dropdown-toggle")).Click();
-            s.Driver.FindElements(By.CssSelector("[data-invoice-state-badge] .dropdown-menu button"))[0].Click();
-            TestUtils.Eventually(() => Assert.Contains("Settled (marked)", s.Driver.PageSource));
-
-            // zero amount invoice should redirect to receipt
-            var zeroAmountId = s.CreateInvoice(0);
-            s.GoToUrl($"/i/{zeroAmountId}");
-            Assert.EndsWith("/receipt", s.Driver.Url);
-            Assert.Contains("$0.00", s.Driver.PageSource);
-            s.GoToInvoice(zeroAmountId);
-            Assert.Equal("Settled", s.Driver.FindElement(By.CssSelector("[data-invoice-state-badge]")).Text);
-        }
 
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseInvoiceReceipts()
@@ -1256,24 +1164,7 @@ namespace BTCPayServer.Tests
             s.FindAlertMessage();
         }
 
-        [Fact(Timeout = TestTimeout)]
-        public async Task CanImportMnemonic()
-        {
-            using var s = CreateSeleniumTester();
-            await s.StartAsync();
-            s.RegisterNewUser(true);
-            foreach (var isHotwallet in new[] { false, true })
-            {
-                var cryptoCode = "BTC";
-                s.CreateNewStore();
-                s.GenerateWallet(cryptoCode, "melody lizard phrase voice unique car opinion merge degree evil swift cargo", isHotWallet: isHotwallet);
-                s.GoToWalletSettings(cryptoCode);
-                if (isHotwallet)
-                    Assert.Contains("View seed", s.Driver.PageSource);
-                else
-                    Assert.DoesNotContain("View seed", s.Driver.PageSource);
-            }
-        }
+
 
         [Fact]
         [Trait("Selenium", "Selenium")]

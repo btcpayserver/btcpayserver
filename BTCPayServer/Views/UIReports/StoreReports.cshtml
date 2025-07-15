@@ -70,25 +70,19 @@
                        data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
                        placeholder="@StringLocalizer["End Date"]" />
             </div>
-        </div>
-
-        <div id="searchGroup" v-cloak class="form-group">
-            <button id="searchBtn" class="btn btn-primary text-nowrap" :disabled="loading" type="button">
-                <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                <span v-else class="me-2"><vc:icon symbol="actions-search" /></span>
-                <span text-translate="true">Search</span>
-            </button>
-            <span class="text-danger invalid-feedback field-validation-error" v-if="error">{{ error }}</span>
+            <div id="searchGroup" v-cloak class="form-group d-flex align-items-end">
+                <button id="searchBtn" class="btn btn-primary" :disabled="loading" type="button">
+                    <span v-if="loading" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    <span v-else class="me-1"><vc:icon symbol="actions-search" /></span>
+                    <span text-translate="true">Search</span>
+                </button>
+                <span class="text-danger invalid-feedback field-validation-error" v-if="error">{{ error }}</span>
+            </div>
         </div>
     </div>
 </div>
 
 <div id="app" v-if="!loading" v-cloak class="w-100-fixed">
-    @* <div v-if="loading" class="text-center mb-4"> *@
-    @*     <div class="spinner-border" role="status"> *@
-    @*         <span class="visually-hidden">@StringLocalizer["Loading..."]</span> *@
-    @*     </div> *@
-    @* </div> *@
     <div v-if="srv.charts && srv.charts.some(hasChartData)" id="charts" class="d-flex flex-wrap mb-3">
         <article v-for="chart in srv.charts" v-if="hasChartData(chart)">
             <h3>{{ chart.name }}</h3>

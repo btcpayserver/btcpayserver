@@ -378,7 +378,7 @@ h2 .icon.icon-info {
 .widget {
     --widget-padding: var(--btcpay-space-m);
     --widget-chart-width: 100vw;
-    
+
     border: 1px solid var(--btcpay-body-border-light);
     border-radius: var(--btcpay-border-radius-l);
     padding: var(--widget-padding);
@@ -546,7 +546,7 @@ h2 .icon.icon-info {
     .widget.store-lightning-services .services-list .service {
         --service-width: 3rem;
     }
-    
+
     .widget .store-number {
         flex: 0 1 100%;
     }
@@ -598,7 +598,7 @@ h2 .icon.icon-info {
         grid-column-start: 9;
         grid-column-end: 13;
     }
-    
+
     .widget.store-numbers {
         flex-direction: column;
         justify-content: start;
@@ -650,7 +650,7 @@ h2 .icon.icon-info {
 .btcpay-list-select-item {
     display: flex;
     flex-wrap: wrap;
-    flex: 1 1 45%; 
+    flex: 1 1 45%;
     align-items: center;
     padding: .75rem var(--btcpay-space-s);
     cursor: pointer;
@@ -697,7 +697,7 @@ input:checked + label.btcpay-list-select-item {
         --wrap-max-width: none;
         --wrap-padding-vertical: var(--btcpay-space-l);
         --wrap-padding-horizontal: var(--btcpay-space-m);
-        
+
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
@@ -705,7 +705,7 @@ input:checked + label.btcpay-list-select-item {
         margin: 0 auto;
         padding: var(--wrap-padding-vertical) var(--wrap-padding-horizontal);
     }
-    
+
     /* gradually try to set better but less supported values and units */
     .min-vh-100,
     .public-page-wrap {
@@ -808,7 +808,7 @@ a.store-powered-by:hover .logo-brand-dark {
     --icon-size: 64px;
     --icon-border-size: var(--btcpay-space-xs);
     --icon-border-color: var(--btcpay-white);
-    
+
     max-width: 320px;
     min-width: var(--qr-size);
     margin: 0 auto;
@@ -1090,7 +1090,7 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
         border-radius: var(--btcpay-border-radius-l);
         padding: var(--btcpay-space-xs) var(--btcpay-space-s);
     }
-    
+
     .truncate-center-text {
         color: transparent;
         position: absolute;
@@ -1161,6 +1161,12 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 .blazor-status .btn-close .icon {
     --icon-size: .75rem;
 }
+
+.btn .icon {
+    --icon-size: 1.25rem;
+    vertical-align: text-bottom;
+}
+
 .btn.btn-lg .icon {
     --icon-size: 1.75rem;
 }

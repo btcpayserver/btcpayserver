@@ -1563,6 +1563,36 @@ namespace BTCPayServer.Tests
             await s.Page.WaitForSelectorAsync("#WalletTransactions[data-loaded='true']");
             Assert.Contains("There are no transactions yet", await s.Page.Locator("#WalletTransactions").TextContentAsync());
         }
+
+        [Fact]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanUseLndSeedBackup()
+        {
+            await using var s = CreatePlaywrightTester();
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.GoToHome();
+            await s.GoToServer(ServerNavPages.Services);
+            await s.Page.AssertNoError();
+            s.TestLogs.LogInformation("Let's see if we can access LND's seed");
+            Assert.Contains("server/services/lndseedbackup/BTC", await s.Page.ContentAsync());
+            await s.GoToUrl("/server/services/lndseedbackup/BTC");
+            await s.Page.ClickAsync("#details");
+            var seedEl = s.Page.Locator("#Seed");
+            await Expect(seedEl).ToBeVisibleAsync();
+            Assert.Contains("about over million", await seedEl.GetAttributeAsync("value"), StringComparison.OrdinalIgnoreCase);
+            var passEl = s.Page.Locator("#WalletPassword");
+            await Expect(passEl).ToBeVisibleAsync();
+            Assert.Contains(await passEl.TextContentAsync(), "hellorockstar", StringComparison.OrdinalIgnoreCase);
+            await s.Page.ClickAsync("#delete");
+            await s.Page.WaitForSelectorAsync("#ConfirmInput");
+            await s.Page.FillAsync("#ConfirmInput", "DELETE");
+            await s.Page.ClickAsync("#ConfirmContinue");
+            await s.FindAlertMessage();
+            seedEl = s.Page.Locator("#Seed");
+            Assert.Contains("Seed removed", await seedEl.TextContentAsync(), StringComparison.OrdinalIgnoreCase);
+        }
     }
 }
 

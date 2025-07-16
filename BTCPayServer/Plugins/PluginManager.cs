@@ -174,7 +174,7 @@ namespace BTCPayServer.Plugins
                         });
                     var pluginAssembly = plugin.LoadDefaultAssembly();
 
-                    var p = GetPluginInstanceFromAssembly(toLoad.PluginIdentifier, pluginAssembly);
+                    var p = GetPluginInstanceFromAssembly(toLoad.PluginIdentifier, pluginAssembly, silentlyFails: true);
                     if (p == null)
                     {
                         logger.LogError($"The plugin assembly doesn't contain the plugin {toLoad.PluginIdentifier}");
@@ -184,6 +184,8 @@ namespace BTCPayServer.Plugins
                     {
                         AssertDependencies(p, plugins);
                         plugin.AddAssemblyLoadContexts(p.Dependencies.Where(d => d.Identifier != "BTCPayServer").Select(d => loaders[d.Identifier]));
+                        // silentlyFails is false, because we want this to throw if there is any missing assembly.
+                        p = GetPluginInstanceFromAssembly(toLoad.PluginIdentifier, pluginAssembly, silentlyFails: false);
                         mvcBuilder.AddPluginLoader(plugin);
                         _pluginAssemblies.Add(pluginAssembly);
                         p.SystemPlugin = false;
@@ -300,9 +302,9 @@ namespace BTCPayServer.Plugins
             }
         }
 
-        private static IBTCPayServerPlugin GetPluginInstanceFromAssembly(string pluginIdentifier, Assembly assembly)
+        private static IBTCPayServerPlugin GetPluginInstanceFromAssembly(string pluginIdentifier, Assembly assembly, bool silentlyFails)
         {
-            return GetPluginInstancesFromAssembly(assembly, true).FirstOrDefault(plugin => plugin.Identifier == pluginIdentifier);
+            return GetPluginInstancesFromAssembly(assembly, silentlyFails).FirstOrDefault(plugin => plugin.Identifier == pluginIdentifier);
         }
 
         private static bool ExecuteCommands(string pluginsFolder, Dictionary<string, Version> installed = null)

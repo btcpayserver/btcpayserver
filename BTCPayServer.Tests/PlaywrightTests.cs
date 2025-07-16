@@ -9,6 +9,7 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
@@ -1787,6 +1788,53 @@ namespace BTCPayServer.Tests
             await newPage.Locator(".btcpay-status--disabled").WaitForAsync();
             await Expect(newPage.Locator("#LightningNodeUrlClearnet")).ToBeHiddenAsync();
         }
+
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanEditPullPaymentUI()
+        {
+            await using var s = CreatePlaywrightTester();
+            s.Server.ActivateLightning(LightningConnectionType.LndREST);
+            await s.StartAsync();
+            await s.Server.EnsureChannelsSetup();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            await s.GenerateWallet("BTC", "", true, true);
+            await s.Server.ExplorerNode.GenerateAsync(1);
+            await s.FundStoreWallet(denomination: 50.0m);
+
+            await s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
+
+            await s.ClickPagePrimary();
+            await s.Page.FillAsync("#Name", "PP1");
+            await s.Page.Locator("#Amount").ClearAsync();
+            await s.Page.FillAsync("#Amount", "99.0");
+            await s.ClickPagePrimary();
+
+            var opening = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("text=View");
+            var newPage = await opening;
+            await Expect(newPage.Locator("body")).ToContainTextAsync("PP1");
+            await newPage.CloseAsync();
+
+            await s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
+
+            await s.Page.ClickAsync("text=PP1");
+            var name = s.Page.Locator("#Name");
+            await name.ClearAsync();
+            await name.FillAsync("PP1 Edited");
+            var description = s.Page.Locator(".card-block");
+            await description.FillAsync("Description Edit");
+            await s.ClickPagePrimary();
+
+            opening = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("text=View");
+            newPage = await opening;
+            await Expect(newPage.Locator("body")).ToContainTextAsync("Description Edit");
+            await Expect(newPage.Locator("body")).ToContainTextAsync("PP1 Edited");
+        }
+
     }
 }
 

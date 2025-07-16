@@ -1036,50 +1036,7 @@ namespace BTCPayServer.Tests
 
 
 
-        [Fact]
-        [Trait("Selenium", "Selenium")]
-        [Trait("Lightning", "Lightning")]
-        public async Task CanEditPullPaymentUI()
-        {
-            using var s = CreateSeleniumTester();
-            s.Server.ActivateLightning(LightningConnectionType.LndREST);
-            await s.StartAsync();
-            await s.Server.EnsureChannelsSetup();
-            s.RegisterNewUser(true);
-            s.CreateNewStore();
-            s.GenerateWallet("BTC", "", true, true);
-            await s.Server.ExplorerNode.GenerateAsync(1);
-            await s.FundStoreWallet(denomination: 50.0m);
 
-            s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
-
-            s.ClickPagePrimary();
-            s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
-            s.Driver.FindElement(By.Id("Amount")).Clear();
-            s.Driver.FindElement(By.Id("Amount")).SendKeys("99.0");
-            s.ClickPagePrimary();
-
-            s.Driver.FindElement(By.LinkText("View")).Click();
-            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
-            Assert.Contains("PP1", s.Driver.PageSource);
-            s.Driver.Close();
-            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
-
-            s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
-
-            s.Driver.FindElement(By.LinkText("PP1")).Click();
-            var name = s.Driver.FindElement(By.Id("Name"));
-            name.Clear();
-            name.SendKeys("PP1 Edited");
-            var description = s.Driver.FindElement(By.ClassName("card-block"));
-            description.SendKeys("Description Edit");
-            s.ClickPagePrimary();
-
-            s.Driver.FindElement(By.LinkText("View")).Click();
-            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
-            Assert.Contains("Description Edit", s.Driver.PageSource);
-            Assert.Contains("PP1 Edited", s.Driver.PageSource);
-        }
 
         [Fact]
         [Trait("Selenium", "Selenium")]

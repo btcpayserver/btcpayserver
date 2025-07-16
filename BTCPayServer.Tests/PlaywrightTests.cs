@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
@@ -1833,6 +1834,108 @@ namespace BTCPayServer.Tests
             newPage = await opening;
             await Expect(newPage.Locator("body")).ToContainTextAsync("Description Edit");
             await Expect(newPage.Locator("body")).ToContainTextAsync("PP1 Edited");
+        }
+
+        [Fact]
+        public async Task CookieReflectProperPermissions()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            var alice = s.Server.NewAccount();
+            alice.Register(false);
+            await alice.CreateStoreAsync();
+            var bob = s.Server.NewAccount();
+            await bob.CreateStoreAsync();
+            await bob.AddGuest(alice.UserId);
+
+            await s.GoToLogin();
+            await s.LogIn(alice.Email, alice.Password);
+            await s.GoToUrl($"/cheat/permissions/stores/{bob.StoreId}");
+            var pageSource = await s.Page.ContentAsync();
+            AssertPermissions(pageSource, true,
+                new[]
+                {
+                    Policies.CanViewInvoices,
+                    Policies.CanModifyInvoices,
+                    Policies.CanViewPaymentRequests,
+                    Policies.CanViewPullPayments,
+                    Policies.CanViewPayouts,
+                    Policies.CanModifyStoreSettingsUnscoped,
+                    Policies.CanDeleteUser
+                });
+            AssertPermissions(pageSource, false,
+             new[]
+             {
+                    Policies.CanModifyStoreSettings,
+                    Policies.CanCreateNonApprovedPullPayments,
+                    Policies.CanCreatePullPayments,
+                    Policies.CanManagePullPayments,
+                    Policies.CanModifyServerSettings
+             });
+
+            await s.GoToUrl($"/cheat/permissions/stores/{alice.StoreId}");
+            pageSource = await s.Page.ContentAsync();
+
+            AssertPermissions(pageSource, true,
+                new[]
+                {
+                    Policies.CanViewInvoices,
+                    Policies.CanModifyInvoices,
+                    Policies.CanViewPaymentRequests,
+                    Policies.CanViewStoreSettings,
+                    Policies.CanModifyStoreSettingsUnscoped,
+                    Policies.CanDeleteUser,
+                    Policies.CanModifyStoreSettings,
+                    Policies.CanCreateNonApprovedPullPayments,
+                    Policies.CanCreatePullPayments,
+                    Policies.CanManagePullPayments,
+                    Policies.CanArchivePullPayments,
+                });
+            AssertPermissions(pageSource, false,
+             new[]
+             {
+                    Policies.CanModifyServerSettings
+             });
+
+            await s.GoToUrl("/logout");
+            await alice.MakeAdmin();
+
+            await s.GoToLogin();
+            await s.LogIn(alice.Email, alice.Password);
+            await s.GoToUrl($"/cheat/permissions/stores/{alice.StoreId}");
+            pageSource = await s.Page.ContentAsync();
+
+            AssertPermissions(pageSource, true,
+            new[]
+            {
+                    Policies.CanViewInvoices,
+                    Policies.CanModifyInvoices,
+                    Policies.CanViewPaymentRequests,
+                    Policies.CanViewStoreSettings,
+                    Policies.CanModifyStoreSettingsUnscoped,
+                    Policies.CanDeleteUser,
+                    Policies.CanModifyStoreSettings,
+                    Policies.CanCreateNonApprovedPullPayments,
+                    Policies.CanCreatePullPayments,
+                    Policies.CanManagePullPayments,
+                    Policies.CanModifyServerSettings,
+                    Policies.CanCreateUser,
+                    Policies.CanManageUsers
+            });
+        }
+
+        void AssertPermissions(string source, bool expected, string[] permissions)
+        {
+            if (expected)
+            {
+                foreach (var p in permissions)
+                    Assert.Contains(p + "<", source);
+            }
+            else
+            {
+                foreach (var p in permissions)
+                    Assert.DoesNotContain(p + "<", source);
+            }
         }
 
     }

@@ -1732,6 +1732,61 @@ namespace BTCPayServer.Tests
             });
         }
 
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanManageLightningNode()
+        {
+            await using var s = CreatePlaywrightTester();
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+            await s.Server.EnsureChannelsSetup();
+            await s.RegisterNewUser(true);
+            (string storeName, _) = await s.CreateNewStore();
+
+            // Check status in navigation
+            await s.Page.Locator("#StoreNav-LightningBTC .btcpay-status--pending").WaitForAsync();
+
+            // Set up LN node
+            await s.AddLightningNode();
+            await s.Page.Locator("#StoreNav-LightningBTC .btcpay-status--enabled").WaitForAsync();
+
+            // Check public node info for availability
+            var opening = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("#PublicNodeInfo");
+            var newPage = await opening;
+            await Expect(newPage.Locator(".store-name")).ToHaveTextAsync(storeName);
+            await Expect(newPage.Locator("#LightningNodeTitle")).ToHaveTextAsync("BTC Lightning Node");
+            await Expect(newPage.Locator("#LightningNodeStatus")).ToHaveTextAsync("Online");
+            await newPage.Locator(".btcpay-status--enabled").WaitForAsync();
+            await newPage.Locator("#LightningNodeUrlClearnet").WaitForAsync();
+            await newPage.CloseAsync();
+
+            // Set wrong node connection string to simulate offline node
+            await s.GoToLightningSettings();
+            await s.Page.ClickAsync("#SetupLightningNodeLink");
+            await s.Page.ClickAsync("label[for=\"LightningNodeType-Custom\"]");
+            await s.Page.Locator("#ConnectionString").WaitForAsync();
+            await s.Page.Locator("#ConnectionString").ClearAsync();
+            await s.Page.FillAsync("#ConnectionString", "type=lnd-rest;server=https://doesnotwork:8080/");
+            await s.Page.ClickAsync("#test");
+            await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error);
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "BTC Lightning node updated.");
+
+            // Check offline state is communicated in nav item
+            await s.Page.Locator("#StoreNav-LightningBTC .btcpay-status--disabled").WaitForAsync();
+
+            // Check public node info for availability
+            opening = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("#PublicNodeInfo");
+            newPage = await opening;
+            await Expect(newPage.Locator(".store-name")).ToHaveTextAsync(storeName);
+            await Expect(newPage.Locator("#LightningNodeTitle")).ToHaveTextAsync("BTC Lightning Node");
+            await Expect(newPage.Locator("#LightningNodeStatus")).ToHaveTextAsync("Unavailable");
+            await newPage.Locator(".btcpay-status--disabled").WaitForAsync();
+            await Expect(newPage.Locator("#LightningNodeUrlClearnet")).ToBeHiddenAsync();
+        }
     }
 }
 

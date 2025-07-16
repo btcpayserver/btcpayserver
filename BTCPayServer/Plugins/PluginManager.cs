@@ -68,12 +68,12 @@ namespace BTCPayServer.Plugins
         class PreloadedPlugins : IEnumerable<PreloadedPlugin>
         {
             List<PreloadedPlugin> _plugins = new();
-            readonly Dictionary<string, PreloadedPlugin> _preloadedPuginsByIdentifier = new(StringComparer.OrdinalIgnoreCase);
+            readonly Dictionary<string, PreloadedPlugin> _preloadedPluginsByIdentifier = new(StringComparer.OrdinalIgnoreCase);
 
-            public bool Contains(string identifier) => _preloadedPuginsByIdentifier.ContainsKey(identifier);
+            public bool Contains(string identifier) => _preloadedPluginsByIdentifier.ContainsKey(identifier);
             public void Add(PreloadedPlugin  plugin)
             {
-                if (!_preloadedPuginsByIdentifier.TryAdd(plugin.Instance.Identifier, plugin))
+                if (!_preloadedPluginsByIdentifier.TryAdd(plugin.Instance.Identifier, plugin))
                     return;
                 _plugins.Add(plugin);
             }
@@ -84,7 +84,7 @@ namespace BTCPayServer.Plugins
             public void Clear()
             {
                 _plugins.Clear();
-                _preloadedPuginsByIdentifier.Clear();
+                _preloadedPluginsByIdentifier.Clear();
             }
 
             public void TopologicalSort()
@@ -105,7 +105,7 @@ namespace BTCPayServer.Plugins
 
             public PreloadedPlugin? TryGet(string identifier)
             {
-                _preloadedPuginsByIdentifier.TryGetValue(identifier, out var p);
+                _preloadedPluginsByIdentifier.TryGetValue(identifier, out var p);
                 return p;
             }
         }

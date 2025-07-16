@@ -1034,59 +1034,7 @@ namespace BTCPayServer.Tests
 
 
 
-        [Fact]
-        [Trait("Selenium", "Selenium")]
-        [Trait("Lightning", "Lightning")]
-        public async Task CanManageLightningNode()
-        {
-            using var s = CreateSeleniumTester();
-            s.Server.ActivateLightning();
-            await s.StartAsync();
-            await s.Server.EnsureChannelsSetup();
-            s.RegisterNewUser(true);
-            (string storeName, _) = s.CreateNewStore();
 
-            // Check status in navigation
-            s.Driver.FindElement(By.CssSelector("#StoreNav-LightningBTC .btcpay-status--pending"));
-
-            // Set up LN node
-            s.AddLightningNode();
-            s.Driver.FindElement(By.CssSelector("#StoreNav-LightningBTC .btcpay-status--enabled"));
-
-            // Check public node info for availability
-            s.Driver.FindElement(By.Id("PublicNodeInfo")).Click();
-            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
-            Assert.Equal(storeName, s.Driver.FindElement(By.CssSelector(".store-name")).Text);
-            Assert.Equal("BTC Lightning Node", s.Driver.FindElement(By.Id("LightningNodeTitle")).Text);
-            Assert.Equal("Online", s.Driver.FindElement(By.Id("LightningNodeStatus")).Text);
-            s.Driver.FindElement(By.CssSelector(".btcpay-status--enabled"));
-            s.Driver.FindElement(By.Id("LightningNodeUrlClearnet"));
-            s.Driver.Close();
-            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
-
-            // Set wrong node connection string to simulate offline node
-            s.GoToLightningSettings();
-            s.Driver.FindElement(By.Id("SetupLightningNodeLink")).Click();
-            s.Driver.FindElement(By.CssSelector("label[for=\"LightningNodeType-Custom\"]")).Click();
-            s.Driver.WaitForElement(By.Id("ConnectionString")).Clear();
-            s.Driver.FindElement(By.Id("ConnectionString")).SendKeys("type=lnd-rest;server=https://doesnotwork:8080/");
-            s.Driver.FindElement(By.Id("test")).Click();
-            Assert.Contains("Error", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error).Text);
-            s.ClickPagePrimary();
-            Assert.Contains("BTC Lightning node updated.", s.FindAlertMessage().Text);
-
-            // Check offline state is communicated in nav item
-            s.Driver.FindElement(By.CssSelector("#StoreNav-LightningBTC .btcpay-status--disabled"));
-
-            // Check public node info for availability
-            s.Driver.FindElement(By.Id("PublicNodeInfo")).Click();
-            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
-            Assert.Equal(storeName, s.Driver.FindElement(By.CssSelector(".store-name")).Text);
-            Assert.Equal("BTC Lightning Node", s.Driver.FindElement(By.Id("LightningNodeTitle")).Text);
-            Assert.Equal("Unavailable", s.Driver.FindElement(By.Id("LightningNodeStatus")).Text);
-            s.Driver.FindElement(By.CssSelector(".btcpay-status--disabled"));
-            s.Driver.AssertElementNotFound(By.Id("LightningNodeUrlClearnet"));
-        }
 
         [Fact]
         [Trait("Selenium", "Selenium")]

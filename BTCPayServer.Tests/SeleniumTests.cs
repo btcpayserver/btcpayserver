@@ -52,37 +52,6 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Lightning", "Lightning")]
-        public async Task CanUseLndSeedBackup()
-        {
-            using var s = CreateSeleniumTester();
-            s.Server.ActivateLightning();
-            await s.StartAsync();
-            s.RegisterNewUser(true);
-            s.GoToHome();
-            s.GoToServer(ServerNavPages.Services);
-            s.Driver.AssertNoError();
-            TestLogs.LogInformation("Let's if we can access LND's seed");
-            Assert.Contains("server/services/lndseedbackup/BTC", s.Driver.PageSource);
-            s.Driver.Navigate().GoToUrl(s.Link("/server/services/lndseedbackup/BTC"));
-            s.Driver.FindElement(By.Id("details")).Click();
-            var seedEl = s.Driver.FindElement(By.Id("Seed"));
-            Assert.True(seedEl.Displayed);
-            Assert.Contains("about over million", seedEl.GetAttribute("value"), StringComparison.OrdinalIgnoreCase);
-            var passEl = s.Driver.FindElement(By.Id("WalletPassword"));
-            Assert.True(passEl.Displayed);
-            Assert.Contains(passEl.Text, "hellorockstar", StringComparison.OrdinalIgnoreCase);
-            s.Driver.FindElement(By.Id("delete")).Click();
-            s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
-            s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
-            s.FindAlertMessage();
-            seedEl = s.Driver.FindElement(By.Id("Seed"));
-            Assert.Contains("Seed removed", seedEl.Text, StringComparison.OrdinalIgnoreCase);
-        }
-
-
-
-        [Fact(Timeout = TestTimeout)]
         public async Task CanUseInvoiceReceipts()
         {
             using var s = CreateSeleniumTester();

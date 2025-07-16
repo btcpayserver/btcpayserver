@@ -176,7 +176,7 @@ public class MultisigTests : UnitTestBase
         var resp1 = new GenerateWalletResponse
         {
             MasterHDKey = key1,
-            DerivationScheme = parser.Parse(derivation),
+            DerivationScheme = (StandardDerivationStrategyBase)parser.Parse(derivation),
             AccountKeyPath = RootedKeyPath.Parse(keypath)
         };
         return resp1;

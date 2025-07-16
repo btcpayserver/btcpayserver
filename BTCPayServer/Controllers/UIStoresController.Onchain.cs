@@ -184,7 +184,7 @@ public partial class UIStoresController
             }
             catch
             {
-                ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer["Invalid derivation scheme"]);
+                ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer["NBXplorer is unable to track this derivation scheme. You may need to update it."]);
                 return View(vm.ViewName, vm);
             }
             await _storeRepo.UpdateStore(store);

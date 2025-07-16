@@ -1657,6 +1657,81 @@ namespace BTCPayServer.Tests
                 return Task.CompletedTask;
             });
         }
+
+        [Fact]
+        public async Task CanUseCoinSelectionFilters()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            (_, string storeId) = await s.CreateNewStore();
+            await s.GenerateWallet("BTC", "", false, true);
+            var walletId = new WalletId(storeId, "BTC");
+
+            await s.GoToWallet(walletId, WalletsNavPages.Receive);
+            var addressStr = await s.Page.GetAttributeAsync("#Address", "data-text");
+            var address = BitcoinAddress.Create(addressStr,
+                ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
+
+            await s.Server.ExplorerNode.GenerateAsync(1);
+
+            const decimal AmountTiny = 0.001m;
+            const decimal AmountSmall = 0.005m;
+            const decimal AmountMedium = 0.009m;
+            const decimal AmountLarge = 0.02m;
+
+            List<uint256> txs =
+            [
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(AmountTiny)),
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(AmountSmall)),
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(AmountMedium)),
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(AmountLarge))
+            ];
+
+            await s.Server.ExplorerNode.GenerateAsync(1);
+            await s.GoToWallet(walletId);
+            await s.Page.ClickAsync("#toggleInputSelection");
+
+            var input = s.Page.Locator("input[placeholder^='Filter']");
+            await input.WaitForAsync();
+            Assert.NotNull(input);
+
+            // Test amountmin
+            await input.ClearAsync();
+            await input.FillAsync("amountmin:0.01");
+            await TestUtils.EventuallyAsync(async () => {
+                Assert.Single(await s.Page.Locator("li.list-group-item").AllAsync());
+            });
+
+            // Test amountmax
+            await input.ClearAsync();
+            await input.FillAsync("amountmax:0.002");
+            await TestUtils.EventuallyAsync(async () => {
+                Assert.Single(await s.Page.Locator("li.list-group-item").AllAsync());
+            });
+
+            // Test general text (txid)
+            await input.ClearAsync();
+            await input.FillAsync(txs[2].ToString()[..8]);
+            await TestUtils.EventuallyAsync(async () => {
+                Assert.Single(await s.Page.Locator("li.list-group-item").AllAsync());
+            });
+
+            // Test timestamp before/after
+            await input.ClearAsync();
+            await input.FillAsync("after:2099-01-01");
+            await TestUtils.EventuallyAsync(async () => {
+                Assert.Empty(await s.Page.Locator("li.list-group-item").AllAsync());
+            });
+
+            await input.ClearAsync();
+            await input.FillAsync("before:2099-01-01");
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                Assert.True((await s.Page.Locator("li.list-group-item").AllAsync()).Count >= 4);
+            });
+        }
+
     }
 }
 

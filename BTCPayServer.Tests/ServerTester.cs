@@ -275,5 +275,16 @@ namespace BTCPayServer.Tests
                 PayTester.Dispose();
             TestLogs.LogInformation("BTCPayTester disposed");
         }
+
+        public RPCClient GetExplorerNode(string cryptoCode) =>
+            cryptoCode == "BTC" ? ExplorerNode :
+            cryptoCode == "LTC" ? LTCExplorerNode :
+            throw new NotSupportedException();
+
+        public BTCPayNetwork GetNetwork(string cryptoCode)
+            => cryptoCode == "BTC" ? NetworkProvider.GetNetwork<BTCPayNetwork>("BTC") :
+                cryptoCode == "LTC" ? NetworkProvider.GetNetwork<BTCPayNetwork>("LTC") :
+                cryptoCode == "LBTC" ? NetworkProvider.GetNetwork<BTCPayNetwork>("LBTC") :
+                throw new NotSupportedException();
     }
 }

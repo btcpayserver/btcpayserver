@@ -14,6 +14,7 @@ using Dapper;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -701,6 +702,20 @@ retry:
                       'btcpay.store.canmodifystoresettings' = ANY(sr."Permissions")
                 LIMIT 1;
                 """, new { storeId })) is true;
+        }
+
+        public async Task<string[]> GetStoresFromDerivation(PaymentMethodId paymentMethodId, DerivationStrategyBase derivation)
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            var connection = ctx.Database.GetDbConnection();
+            var res = await connection.QueryAsync<string>(
+                """
+                SELECT "Id" FROM "Stores"
+                WHERE jsonb_extract_path_text("DerivationStrategies", @pmi, 'accountDerivation') = @derivation;
+                """,
+                new { pmi = paymentMethodId.ToString(), derivation = derivation.ToString() }
+            );
+            return res.ToArray();
         }
 
         public async Task<StoreData> GetDefaultStoreTemplate()

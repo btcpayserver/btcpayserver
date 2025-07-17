@@ -1,4 +1,4 @@
-let app, origData;
+let app, searchBtnApp, origData;
 srv.sortBy = function (field, event) {
     for (let key in this.fieldViews) {
         if (this.fieldViews.hasOwnProperty(key)) {
@@ -8,12 +8,10 @@ srv.sortBy = function (field, event) {
             if (sortedField && (fieldView.sortBy === "" || fieldView.sortBy === "desc")) {
                 fieldView.sortByTitle = "asc";
                 fieldView.sortBy = "asc";
-            }
-            else if (sortedField && (fieldView.sortByTitle === "asc")) {
+            } else if (sortedField && (fieldView.sortByTitle === "asc")) {
                 fieldView.sortByTitle = "desc";
                 fieldView.sortBy = "desc";
-            }
-            else {
+            } else {
                 fieldView.sortByTitle = "";
                 fieldView.sortBy = "";
             }
@@ -23,9 +21,11 @@ srv.sortBy = function (field, event) {
     document.querySelectorAll('.sort-column').forEach($a => {
         $a.innerHTML = $a.innerHTML.replace(/#actions-sort-(asc|desc)"/, '#actions-sort"')
     })
-    const { sort } = event.currentTarget.dataset;
+    const {sort} = event.currentTarget.dataset;
     const next = sort === '' || sort === 'desc' ? 'asc' : 'desc';
-    event.currentTarget.innerHTML = event.currentTarget.innerHTML.replace(`#actions-sort"`, `#actions-sort-${next}"`)
+    const icon = event.currentTarget.querySelector('svg');
+    if (icon)
+        icon.setAttribute('href', `#actions-sort-${next}`);
 }
 
 srv.applySort = function () {
@@ -74,15 +74,17 @@ srv.updateFieldViews = function () {
         const field = this.result.fields[i];
         if (!this.fieldViews.hasOwnProperty(field.name)) {
             this.fieldViews[field.name] =
-            {
-                sortBy: "",
-                sortByTitle: ""
-            };
+                {
+                    sortBy: "",
+                    sortByTitle: ""
+                };
         }
     }
 };
-
 document.addEventListener("DOMContentLoaded", () => {
+    delegate("click", "#searchBtn", function () {
+        fetchStoreReports();
+    })
     delegate("input", ".flatdtpicker", function () {
         // We don't use vue to bind dates, because VueJS break the flatpickr as soon as binding occurs.
         let to = document.getElementById("toDate").value
@@ -96,20 +98,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         srv.request.timePeriod.from = from;
         srv.request.timePeriod.to = to;
-        fetchStoreReports();
     });
 
     delegate("click", "[data-action='exportCSV']", downloadCSV);
-    
-    const $viewNameToggle = document.getElementById("ViewNameToggle")
+
     delegate("click", ".available-view", function (e) {
         e.preventDefault();
-        const { view } = e.target.dataset;
-        $viewNameToggle.innerText = view;
-        document.querySelectorAll(".available-view").forEach($el => $el.classList.remove("custom-active"));
-        e.target.classList.add("custom-active");
+        const {view} = e.target.dataset;
+        document.querySelectorAll(".available-view").forEach($el => $el.classList.remove("active"));
+        e.target.classList.add("active");
         srv.request.viewName = view;
-        fetchStoreReports();
+        fetchStoreReports(true)
     });
 
     let to = new Date();
@@ -124,34 +123,42 @@ document.addEventListener("DOMContentLoaded", () => {
     srv.request = srv.request || {};
     srv.request.timePeriod = srv.request.timePeriod || {};
     srv.request.timePeriod.to = moment(to).unix();
-    srv.request.viewName = srv.request.viewName || "Payments";
+    srv.request.viewName = srv.request.viewName || "Invoices";
     srv.request.timePeriod.from = moment(from).unix();
     srv.request.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    srv.result = { fields: [], values: [] };
-    updateUIDateRange();
+    srv.result = {fields: [], values: []};
+    searchBtnApp = new Vue({
+        el: '#searchGroup',
+        data() {
+            return { loading: false, error: "" };
+        },
+    });
     app = new Vue({
         el: '#app',
-        data() { return { srv } },
+        data() {
+            return {srv, loading: false};
+        },
         methods: {
             hasChartData(chart) {
-                return chart.rows.length || chart.hasGrandTotal;
+                return chart && (chart.rows.length || chart.hasGrandTotal);
             },
             titleCase(str, shorten) {
-                const result = str.replace(/([A-Z])/g, " $1");
-                const title = result.charAt(0).toUpperCase() + result.slice(1)
+                const result = str.replace(/([a-z])([A-Z])/g, '$1 $2'); // only split camelCase
+                const title = result.charAt(0).toUpperCase() + result.slice(1);
                 return shorten && title.endsWith(' Amount') ? 'Amount' : title;
             },
             displayValue,
             displayDate
         }
     });
+    updateUIDateRange();
     fetchStoreReports();
 });
 
-const dtFormatter = new Intl.DateTimeFormat('default', { dateStyle: 'short', timeStyle: 'short' });
+const dtFormatter = new Intl.DateTimeFormat('default', {dateStyle: 'short', timeStyle: 'short'});
 
 function displayDate(val) {
-    if(!val){
+    if (!val) {
         return val;
     }
     const date = new Date(val);
@@ -170,7 +177,7 @@ function updateUIDateRange() {
 // This function modify all the fields of a given type
 function modifyFields(fields, data, type, action) {
     const fieldIndices = fields
-        .map((f, i) => ({ i: i, type: f.type }))
+        .map((f, i) => ({i: i, type: f.type}))
         .filter(f => f.type === type)
         .map(f => f.i);
     if (fieldIndices.length === 0)
@@ -181,6 +188,7 @@ function modifyFields(fields, data, type, action) {
         }
     }
 }
+
 function downloadCSV() {
     if (!origData) return;
     const data = clone(origData);
@@ -188,42 +196,72 @@ function downloadCSV() {
     // Convert ISO8601 dates to YYYY-MM-DD HH:mm:ss so the CSV easily integrate with Excel
     modifyFields(srv.result.fields, data, 'amount', displayValue)
     modifyFields(srv.result.fields, data, 'datetime', v => v ? moment(v).format('YYYY-MM-DD HH:mm:ss') : v);
-    const csv = Papa.unparse({ fields: srv.result.fields.map(f => f.name), data });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const csv = Papa.unparse({fields: srv.result.fields.map(f => f.name), data});
+    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
     saveAs(blob, "export.csv");
 }
 
-async function fetchStoreReports() {
-    const result = await fetch(window.location, {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(srv.request)
-    });
+let fetchPromise = null;
+var abortFetching = new AbortController()
 
-    srv.result = await result.json();
-    srv.dataUpdated();
-
-    // Dates from API are UTC, convert them to local time
-    modifyFields(srv.result.fields, srv.result.data, 'datetime', a => a? moment(a).format(): a);
-    var urlParams = new URLSearchParams(new URL(window.location).search);
-    urlParams.set("viewName", srv.request.viewName);
-    urlParams.set("from", srv.request.timePeriod.from);
-    urlParams.set("to", srv.request.timePeriod.to);
-    history.replaceState(null, null, "?" + urlParams.toString());
-    updateUIDateRange();
-
-    srv.charts = [];
-    for (let i = 0; i < srv.result.charts.length; i++) {
-        const chart = srv.result.charts[i];
-        const table = createTable(chart, srv.result.fields.map(f => f.name), srv.result.data);
-        table.name = chart.name;
-        srv.charts.push(table);
+function setLoading(val)
+{
+    searchBtnApp.loading = val;
+    app.loading = val;
+}
+async function fetchStoreReports(abort) {
+    if (abort)
+    {
+        abortFetching.abort();
     }
+    if (fetchPromise) {
+        await fetchPromise;
+    }
+    abortFetching = new AbortController();
+    fetchPromise = (async () => {
+        setLoading(true);
+        searchBtnApp.error = "";
+        try {
+            const result = await fetch(window.location, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(srv.request),
+                signal: abortFetching.signal
+            });
 
-    app.srv = srv;
+            srv.result = await result.json();
+            srv.dataUpdated();
+            setLoading(false);
+
+            // Dates from API are UTC, convert them to local time
+            modifyFields(srv.result.fields, srv.result.data, 'datetime', a => a ? moment(a).format() : a);
+            var urlParams = new URLSearchParams(new URL(window.location).search);
+            urlParams.set("viewName", srv.request.viewName);
+            urlParams.set("from", srv.request.timePeriod.from);
+            urlParams.set("to", srv.request.timePeriod.to);
+            history.replaceState(null, null, "?" + urlParams.toString());
+            updateUIDateRange();
+
+            srv.charts = [];
+            for (let i = 0; i < srv.result.charts.length; i++) {
+                const chart = srv.result.charts[i];
+                const table = createTable(chart, srv.result.fields.map(f => f.name), srv.result.data);
+                table.name = chart.name;
+                srv.charts.push(table);
+            }
+
+            app.srv = srv;
+        } catch (e) {
+            setLoading(false);
+            if (e.name !== 'AbortError') {
+                searchBtnApp.error = e.message;
+            }
+        }
+    })();
+    await fetchPromise;
 }
 
 function getInvoiceUrl(value) {
@@ -231,6 +269,7 @@ function getInvoiceUrl(value) {
         return;
     return srv.invoiceTemplateUrl.replace("INVOICE_ID", value);
 }
+
 window.getInvoiceUrl = getInvoiceUrl;
 
 function getExplorerUrl(tx_id, cryptoCode) {
@@ -241,4 +280,5 @@ function getExplorerUrl(tx_id, cryptoCode) {
         return null;
     return explorer.replace("TX_ID", tx_id);
 }
+
 window.getExplorerUrl = getExplorerUrl;

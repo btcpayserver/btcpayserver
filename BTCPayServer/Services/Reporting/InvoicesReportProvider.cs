@@ -6,8 +6,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Data;
+using BTCPayServer.Rating;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Reporting;
@@ -26,14 +29,13 @@ public class InvoicesReportProvider : ReportProvider
             foreach (var field in viewDefinitionFields)
                 _baseFields.Add(field.Name);
         }
-        public bool HasField(string fieldName) => _dict.ContainsKey(fieldName);
 
         public List<StoreReportResponse.Field> Fields { get; } = new();
         public Dictionary<string, object?> Values { get; } = new();
 
-        public void TryAdd(string fieldName, object? value)
+        public void TryAdd(string fieldName, object? value, string? columnType = null)
         {
-            var type = GeColumnType(value);
+            var type = columnType ?? GetColumnType(value);
             if (type is null || _baseFields.Contains(fieldName))
                 return;
             var field = new StoreReportResponse.Field(fieldName, type);
@@ -47,7 +49,7 @@ public class InvoicesReportProvider : ReportProvider
             Values.TryAdd(fieldName, value);
         }
 
-        private string? GeColumnType(object? value)
+        private string? GetColumnType(object? value)
             => value switch
             {
                 null => "text",
@@ -69,13 +71,11 @@ public class InvoicesReportProvider : ReportProvider
         }
 
         public HashSet<string> CartItems = new();
-        public void HasCartItem(string itemId)
-        {
-            CartItems.Add(itemId);
-        }
+        public void HasCartItem(string itemId) => CartItems.Add(itemId);
     }
 
     private readonly InvoiceRepository _invoiceRepository;
+    private readonly StoreRepository _storeRepository;
 
 
     public override string Name { get; } = "Invoices";
@@ -104,7 +104,7 @@ public class InvoicesReportProvider : ReportProvider
 
                 new("PaymentReceivedDate", "datetime"),
                 new("PaymentId", "text"),
-                new("Rate", "amount"),
+                new("PaymentRate", "amount"),
                 new("PaymentAddress", "text"),
                 new("PaymentMethodId", "text"),
                 new("PaymentCurrency", "text"),
@@ -114,12 +114,27 @@ public class InvoicesReportProvider : ReportProvider
             }
         };
 
+        var trackedCurrencies = (await _storeRepository.FindStore(queryContext.StoreId))?.GetStoreBlob().GetTrackedRates().ToHashSet() ?? new();
+
         var metadataFields = new MetadataFields(queryContext.ViewDefinition.Fields);
         foreach (var invoiceEntity in invoices)
         {
             var payments = invoiceEntity.GetPayments(true);
-
             metadataFields.Values.Clear();
+
+            foreach (var currencyPair in
+                     (from p in invoiceEntity
+                                .GetPaymentPrompts()
+                                .Select(c => c.Currency)
+                         from c in trackedCurrencies.Concat([invoiceEntity.Currency])
+                         where p != c
+                         select new CurrencyPair(p, c)).Distinct())
+            {
+                if (!invoiceEntity.TryGetRate(currencyPair, out var rate))
+                    metadataFields.TryAdd($"Rate ({currencyPair})", null, "number");
+                else
+                    metadataFields.TryAdd($"Rate ({currencyPair})", rate);
+            }
 
             var firstPayment = payments.FirstOrDefault();
             if (firstPayment is not null)
@@ -275,9 +290,10 @@ public class InvoicesReportProvider : ReportProvider
         }
     }
 
-    public InvoicesReportProvider(DisplayFormatter displayFormatter, InvoiceRepository invoiceRepository)
+    public InvoicesReportProvider(DisplayFormatter displayFormatter, InvoiceRepository invoiceRepository, StoreRepository storeRepository)
     {
         DisplayFormatter = displayFormatter;
         _invoiceRepository = invoiceRepository;
+        _storeRepository = storeRepository;
     }
 }

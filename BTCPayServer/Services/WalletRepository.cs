@@ -8,10 +8,13 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
 using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Payments;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
+using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Npgsql;
@@ -258,7 +261,8 @@ namespace BTCPayServer.Services
                 var data = obj.Data is null ? null : JObject.Parse(obj.Data);
                 var info = new WalletTransactionInfo(walletId)
                 {
-                    Comment = data?["comment"]?.Value<string>()
+                    Comment = data?["comment"]?.Value<string>(),
+                    Rates = data?["rates"] is JObject o ? RateBook.FromJObject(o, walletId.CryptoCode) : null
                 };
                 result.Add(obj.Id, info);
                 foreach (var link in obj.GetLinks())
@@ -485,9 +489,9 @@ namespace BTCPayServer.Services
             ArgumentNullException.ThrowIfNull(id);
             ArgumentNullException.ThrowIfNull(comment);
             if (!string.IsNullOrEmpty(comment))
-                await ModifyWalletObjectData(id, (o) => o["comment"] = comment.Trim().Truncate(MaxCommentSize));
+                await AddOrUpdateWalletObjectData(id, new UpdateOperation.MergeObject(new(){ ["comment"] = comment.Trim().Truncate(MaxCommentSize) }));
             else
-                await ModifyWalletObjectData(id, (o) => o.Remove("comment"));
+                await AddOrUpdateWalletObjectData(id, new UpdateOperation.RemoveProperty("comment"));
         }
 
 
@@ -512,6 +516,8 @@ namespace BTCPayServer.Services
                 Data = data?.ToString()
             };
         }
+
+        [Obsolete("Use AddOrUpdateWalletObjectData instead")]
         public async Task ModifyWalletObjectData(WalletObjectId id, Action<JObject> modify)
         {
             ArgumentNullException.ThrowIfNull(id);
@@ -683,17 +689,57 @@ namespace BTCPayServer.Services
             await conn.ExecuteAsync("INSERT INTO \"WalletObjects\" VALUES (@WalletId, @Type, @Id, @Data::JSONB) ON CONFLICT DO NOTHING", walletObjectDatas);
         }
 
+        public record UpdateOperation
+        {
+            public record RemoveProperty(string Property) : UpdateOperation;
+
+            public record MergeObject(JObject Data) : UpdateOperation;
+        }
+
+        public async Task AddOrUpdateWalletObjectData(WalletObjectId walletObjectId, UpdateOperation? op)
+        {
+            if (op is UpdateOperation.MergeObject { Data: { } data })
+            {
+                using var ctx = this._ContextFactory.CreateContext();
+                var conn = ctx.Database.GetDbConnection();
+                await conn.ExecuteAsync("""
+                                        INSERT INTO "WalletObjects" VALUES (@WalletId, @Type, @Id, @Data::JSONB)
+                                        ON CONFLICT ("WalletId", "Type", "Id")
+                                        DO UPDATE SET "Data" = COALESCE("WalletObjects"."Data", '{}'::JSONB) || EXCLUDED."Data"
+                                        """,
+                    new { WalletId = walletObjectId.WalletId.ToString(), Type = walletObjectId.Type, Id = walletObjectId.Id, Data = data.ToString() });
+            }
+            if (op is UpdateOperation.RemoveProperty { Property: { } prop })
+            {
+                using var ctx = this._ContextFactory.CreateContext();
+                var conn = ctx.Database.GetDbConnection();
+                await conn.ExecuteAsync("""
+                                        INSERT INTO "WalletObjects" VALUES (@WalletId, @Type, @Id)
+                                        ON CONFLICT ("WalletId", "Type", "Id")
+                                        DO UPDATE SET "Data" = COALESCE("WalletObjects"."Data", '{}'::JSONB) - @Property
+                                        """,
+                    new { WalletId = walletObjectId.WalletId.ToString(), Type = walletObjectId.Type, Id = walletObjectId.Id, Property = prop });
+            }
+            else if (op is null)
+            {
+                await EnsureWalletObject(walletObjectId);
+            }
+        }
+
         public async Task EnsureCreated(List<WalletObjectData>? walletObjects,
             List<WalletObjectLinkData>? walletObjectLinks)
         {
             walletObjects ??= new List<WalletObjectData>();
             walletObjectLinks ??= new List<WalletObjectLinkData>();
+            if (walletObjects.Count is 0 && walletObjectLinks.Count is 0)
+                return;
             var objs = walletObjects.Concat(ExtractObjectsFromLinks(walletObjectLinks).Except(walletObjects)).ToArray();
             await using var ctx = _ContextFactory.CreateContext();
             var connection = ctx.Database.GetDbConnection();
             await EnsureWalletObjects(ctx,connection, objs);
             await EnsureWalletObjectLinks(ctx,connection, walletObjectLinks);
         }
+
 #nullable restore
     }
 }

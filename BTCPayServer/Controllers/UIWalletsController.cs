@@ -76,6 +76,7 @@ namespace BTCPayServer.Controllers
         private readonly DefaultRulesCollection _defaultRules;
         private readonly Dictionary<PaymentMethodId, ICheckoutModelExtension> _paymentModelExtensions;
         private readonly TransactionLinkProviders _transactionLinkProviders;
+        private readonly InvoiceRepository _invoiceRepository;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
         private readonly WalletHistogramService _walletHistogramService;
 
@@ -109,6 +110,7 @@ namespace BTCPayServer.Controllers
             Dictionary<PaymentMethodId, ICheckoutModelExtension> paymentModelExtensions,
             IStringLocalizer stringLocalizer,
             TransactionLinkProviders transactionLinkProviders,
+            InvoiceRepository invoiceRepository,
             DisplayFormatter displayFormatter)
         {
             _pendingTransactionService = pendingTransactionService;
@@ -118,6 +120,7 @@ namespace BTCPayServer.Controllers
             _handlers = handlers;
             _paymentModelExtensions = paymentModelExtensions;
             _transactionLinkProviders = transactionLinkProviders;
+            _invoiceRepository = invoiceRepository;
             Repository = repo;
             WalletRepository = walletRepository;
             RateFetcher = rateProvider;
@@ -621,6 +624,7 @@ namespace BTCPayServer.Controllers
             var model = new ListTransactionsViewModel { Skip = skip, Count = count };
 
             model.PendingTransactions = await _pendingTransactionService.GetPendingTransactions(walletId.CryptoCode, walletId.StoreId);
+            model.Rates = GetCurrentStore().GetStoreBlob().GetTrackedRates().ToList();
 
             model.Labels.AddRange(
                 (await WalletRepository.GetWalletLabels(walletId))
@@ -663,11 +667,35 @@ namespace BTCPayServer.Controllers
                         var labels = _labelService.CreateTransactionTagModels(transactionInfo, Request);
                         vm.Tags.AddRange(labels);
                         vm.Comment = transactionInfo.Comment;
+                        vm.InvoiceId = transactionInfo.Attachments.FirstOrDefault(a => a.Type == WalletObjectData.Types.Invoice)?.Id;
+                        vm.WalletRateBook = transactionInfo.Rates;
                     }
 
                     if (labelFilter == null ||
                         vm.Tags.Any(l => l.Text.Equals(labelFilter, StringComparison.OrdinalIgnoreCase)))
                         model.Transactions.Add(vm);
+                }
+
+                var trackedCurrencies = GetCurrentStore().GetStoreBlob().GetTrackedRates();
+                var rates = await _invoiceRepository.GetRatesOfInvoices(model.Transactions.Select(r => r.InvoiceId).Where(r => r is not null).ToHashSet());
+                foreach (var vm in model.Transactions)
+                {
+                    if (vm.InvoiceId is null)
+                        continue;
+                    rates.TryGetValue(vm.InvoiceId, out var book);
+                    vm.InvoiceRateBook = book;
+                }
+
+                foreach (var vm in model.Transactions)
+                {
+                    var book = vm.InvoiceRateBook ?? new();
+                    if (vm.WalletRateBook is not null)
+                        book.AddRates(vm.WalletRateBook);
+                    foreach (var trackedCurrency in trackedCurrencies)
+                    {
+                        var exists = book.TryGetRate(new CurrencyPair(network.CryptoCode, trackedCurrency), out var rate);
+                        vm.Rates.Add(exists ?  _displayFormatter.Currency(rate, trackedCurrency) : null);
+                    }
                 }
 
                 model.Total = preFiltering ? null : model.Transactions.Count;

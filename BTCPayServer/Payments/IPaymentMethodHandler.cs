@@ -308,9 +308,13 @@ namespace BTCPayServer.Payments
             // We need to fetch the rates necessary for the evaluation of the payment method criteria
             var currency = Prompt.Currency;
             if (currency is not null)
+            {
                 RequiredRates.Add(currency);
+                foreach (var r in StoreBlob.AdditionalTrackedRates ?? [])
+                    OptionalRates.Add(new CurrencyPair(currency, r));
+            }
             if (currency is not null
-                 && Status is PaymentMethodContext.ContextStatus.WaitingForCreation or PaymentMethodContext.ContextStatus.WaitingForActivation)
+                && Status is PaymentMethodContext.ContextStatus.WaitingForCreation or PaymentMethodContext.ContextStatus.WaitingForActivation)
             {
                 foreach (var paymentMethodCriteria in StoreBlob.PaymentMethodCriteria
                     .Where(c => c.Value?.Currency is not null && c.PaymentMethod == PaymentMethodId))

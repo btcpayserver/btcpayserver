@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
@@ -15,11 +16,15 @@ using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
+using Dapper;
+using ExchangeSharp;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
 using static Microsoft.Playwright.Assertions;
 using NBitcoin;
 using NBitcoin.Payment;
+using NBXplorer;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -591,6 +596,185 @@ namespace BTCPayServer.Tests
             Assert.Equal(TimeSpan.FromMinutes(5), newStore.DisplayExpirationTimer);
             Assert.Equal(TimeSpan.FromMinutes(15), newStore.InvoiceExpiration);
         }
+
+        [Fact]
+        [Trait("Altcoins", "Altcoins")]
+        public async Task CanExposeRates()
+        {
+            await using var s = CreatePlaywrightTester();
+            s.Server.ActivateLTC();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+
+            await s.AddDerivationScheme("BTC", new ExtKey().Neuter().GetWif(Network.RegTest).ToString() + "-[legacy]");
+            await s.AddDerivationScheme("LTC", new ExtKey().Neuter().GetWif(NBitcoin.Altcoins.Litecoin.Instance.Regtest).ToString()  + "-[legacy]");
+
+            await s.GoToStore();
+            await s.Page.FillAsync("[name='DefaultCurrency']", "USD");
+            await s.Page.FillAsync("[name='AdditionalTrackedRates']", "CAD,JPY,EUR");
+            await s.ClickPagePrimary();
+
+            await s.GoToStore(StoreNavPages.Rates);
+            await s.Page.ClickAsync($"#PrimarySource_ShowScripting_submit");
+            await s.FindAlertMessage();
+
+            // BTC can solves USD,EUR,CAD
+            // LTC can solves and JPY and USD
+            await s.Page.FillAsync("[name='PrimarySource.Script']",
+                """
+                BTC_JPY = bitflyer(BTC_JPY);
+
+                BTC_USD = coingecko(BTC_USD);
+                BTC_EUR = coingecko(BTC_EUR);
+                BTC_CAD = coingecko(BTC_CAD);
+                LTC_BTC = coingecko(LTC_BTC);
+
+                LTC_USD = coingecko(LTC_USD);
+                LTC_JPY = LTC_BTC * BTC_JPY;
+                """);
+            await s.ClickPagePrimary();
+            var expectedSolvablePairs = new[]
+            {
+                (Crypto: "BTC", Currency: "JPY"),
+                (Crypto: "BTC", Currency: "USD"),
+                (Crypto: "BTC", Currency: "CAD"),
+                (Crypto: "BTC", Currency: "EUR"),
+                (Crypto: "LTC", Currency: "JPY"),
+                (Crypto: "LTC", Currency: "USD"),
+            };
+            var expectedUnsolvablePairs = new[]
+            {
+                (Crypto: "LTC", Currency: "CAD"),
+                (Crypto: "LTC", Currency: "EUR"),
+            };
+
+            Dictionary<string, uint256> txIds = new();
+            foreach (var cryptoCode in new[] { "BTC", "LTC" })
+            {
+                await s.Server.GetExplorerNode(cryptoCode).EnsureGenerateAsync(1);
+                await s.GoToWallet(new(s.StoreId, cryptoCode), WalletsNavPages.Receive);
+                var address = await s.Page.GetAttributeAsync("#Address", "data-text");
+                var network = s.Server.GetNetwork(cryptoCode);
+
+                var txId = uint256.Zero;
+                await s.Server.WaitForEvent<NewOnChainTransactionEvent>(async () =>
+                {
+                    txId = await s.Server.GetExplorerNode(cryptoCode)
+                        .SendToAddressAsync(BitcoinAddress.Create(address!, network.NBitcoinNetwork), Money.Coins(1));
+                });
+                txIds.Add(cryptoCode, txId);
+                // The rates are fetched asynchronously... let's wait it's done.
+                await Task.Delay(500);
+                var pmo = await s.GoToWalletTransactions(new(s.StoreId, cryptoCode));
+                await pmo.WaitTransactionsLoaded();
+                if (cryptoCode == "BTC")
+                {
+                    await pmo.AssertRowContains(txId, "4,500.00 CAD");
+                    await pmo.AssertRowContains(txId, "700,000 JPY");
+                    await pmo.AssertRowContains(txId, "4 000,00 EUR");
+                    await pmo.AssertRowContains(txId, "5,000.00 USD");
+                }
+                else if (cryptoCode == "LTC")
+                {
+                    await pmo.AssertRowContains(txId, "4,321 JPY");
+                    await pmo.AssertRowContains(txId, "500.00 USD");
+                }
+            }
+            await s.GoToWallet(new(s.StoreId, "BTC"), WalletsNavPages.Transactions);
+            await s.ClickViewReport();
+
+            var csvTxt = await s.DownloadReportCSV();
+            var csvTester = new CSVWalletsTester(csvTxt);
+
+            foreach (var cryptoCode in new[] { "BTC", "LTC" })
+            {
+                if (cryptoCode == "BTC")
+                {
+                    csvTester
+                        .ForTxId(txIds[cryptoCode].ToString())
+                        .AssertValues(
+                            ("Rate (USD)", "5000"),
+                            ("Rate (CAD)", "4500"),
+                            ("Rate (JPY)", "700000"),
+                            ("Rate (EUR)", "4000")
+                        );
+                }
+                else
+                {
+                    csvTester
+                        .ForTxId(txIds[cryptoCode].ToString())
+                        .AssertValues(
+                            ("Rate (USD)", "500"),
+                            ("Rate (CAD)", ""),
+                            ("Rate (JPY)", "4320.9876543209875"),
+                            ("Rate (EUR)", "")
+                        );
+                }
+            }
+
+            var invId = await s.CreateInvoice(storeId: s.StoreId, amount: 10_000);
+            await s.GoToInvoiceCheckout(invId);
+            await s.PayInvoice();
+            await s.GoToInvoices(s.StoreId);
+            await s.ClickViewReport();
+
+            await s.Page.ReloadAsync();
+            csvTxt = await s.DownloadReportCSV();
+            var csvInvTester = new CSVInvoicesTester(csvTxt);
+            csvInvTester
+                .ForInvoice(invId)
+                .AssertValues(
+                    ("Rate (BTC_CAD)", "4500"),
+                    ("Rate (BTC_JPY)", "700000"),
+                    ("Rate (BTC_EUR)", "4000"),
+                    ("Rate (BTC_USD)", "5000"),
+                    ("Rate (LTC_USD)", "500"),
+                    ("Rate (LTC_JPY)", "4320.9876543209875"),
+                    ("Rate (LTC_CAD)", ""),
+                    ("Rate (LTC_EUR)", "")
+                    );
+
+            var txId2 = new uint256(csvInvTester.GetPaymentId().Split("-")[0]);
+            var pmo2 = await s.GoToWalletTransactions(new(s.StoreId, "BTC"));
+            await pmo2.WaitTransactionsLoaded();
+            await pmo2.AssertRowContains(txId2, "5,000.00 USD");
+
+            // When removing the wallet rates, we should still have the rates from the invoice
+            var ctx = s.Server.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
+            Assert.Equal(1, await ctx.Database
+                .GetDbConnection()
+                .ExecuteAsync("""
+                              UPDATE "WalletObjects" SET "Data"='{}'::JSONB WHERE "Id"=@txId
+                              """, new{ txId = txId2.ToString() }));
+
+            pmo2 = await s.GoToWalletTransactions(new(s.StoreId, "BTC"));
+            await pmo2.WaitTransactionsLoaded();
+            await pmo2.AssertRowContains(txId2, "5,000.00 USD");
+        }
+
+        class CSVWalletsTester(string text) : CSVTester(text)
+        {
+            string txId = "";
+
+            public CSVWalletsTester ForTxId(string txId)
+            {
+                this.txId = txId;
+                return this;
+            }
+
+            public CSVWalletsTester AssertValues(params (string, string)[] values)
+            {
+                var line = _lines
+                    .First(l => l[_indexes["TransactionId"]] == txId);
+                foreach (var (key, value) in values)
+                {
+                    Assert.Equal(value, line[_indexes[key]]);
+                }
+                return this;
+            }
+        }
+
 
         [Fact]
         public async Task CanManageWallet()

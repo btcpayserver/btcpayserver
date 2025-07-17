@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
@@ -18,6 +21,7 @@ using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
 using Dapper;
 using ExchangeSharp;
+using LNURL;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
@@ -1563,6 +1567,377 @@ namespace BTCPayServer.Tests
             await s.Page.WaitForSelectorAsync("#WalletTransactions[data-loaded='true']");
             Assert.Contains("There are no transactions yet", await s.Page.Locator("#WalletTransactions").TextContentAsync());
         }
+
+        [Fact]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanUseLndSeedBackup()
+        {
+            await using var s = CreatePlaywrightTester();
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.GoToHome();
+            await s.GoToServer(ServerNavPages.Services);
+            await s.Page.AssertNoError();
+            s.TestLogs.LogInformation("Let's see if we can access LND's seed");
+            Assert.Contains("server/services/lndseedbackup/BTC", await s.Page.ContentAsync());
+            await s.GoToUrl("/server/services/lndseedbackup/BTC");
+            await s.Page.ClickAsync("#details");
+            var seedEl = s.Page.Locator("#Seed");
+            await Expect(seedEl).ToBeVisibleAsync();
+            Assert.Contains("about over million", await seedEl.GetAttributeAsync("value"), StringComparison.OrdinalIgnoreCase);
+            var passEl = s.Page.Locator("#WalletPassword");
+            await Expect(passEl).ToBeVisibleAsync();
+            Assert.Contains(await passEl.TextContentAsync(), "hellorockstar", StringComparison.OrdinalIgnoreCase);
+            await s.Page.ClickAsync("#delete");
+            await s.Page.WaitForSelectorAsync("#ConfirmInput");
+            await s.Page.FillAsync("#ConfirmInput", "DELETE");
+            await s.Page.ClickAsync("#ConfirmContinue");
+            await s.FindAlertMessage();
+            seedEl = s.Page.Locator("#Seed");
+            Assert.Contains("Seed removed", await seedEl.TextContentAsync(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task CanUseLNURLAuth()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            var user = await s.RegisterNewUser(true);
+            await s.GoToHome();
+            await s.GoToProfile(ManageNavPages.TwoFactorAuthentication);
+            await s.Page.FillAsync("[name='Name']", "ln wallet");
+            await s.Page.SelectOptionAsync("[name='type']", $"{(int)Fido2Credential.CredentialType.LNURLAuth}");
+            await s.Page.ClickAsync("#btn-add");
+            var linkElements = await s.Page.Locator(".tab-content a").AllAsync();
+            var links = new List<string>();
+            foreach (var element in linkElements)
+            {
+                var href = await element.GetAttributeAsync("href");
+                if (href != null) links.Add(href);
+            }
+            Assert.Equal(2, links.Count);
+            Uri prevEndpoint = null;
+            foreach (string link in links)
+            {
+                var endpoint = LNURL.LNURL.Parse(link, out var tag);
+                Assert.Equal("login", tag);
+                if (endpoint.Scheme != "https")
+                    prevEndpoint = endpoint;
+            }
+
+            var linkingKey = new Key();
+            var request = Assert.IsType<LNAuthRequest>(await LNURL.LNURL.FetchInformation(prevEndpoint, null));
+            _ = await request.SendChallenge(linkingKey, new HttpClient());
+            await TestUtils.EventuallyAsync(async () => await s.FindAlertMessage());
+
+            await s.CreateNewStore(); // create a store to prevent redirect after login
+            await s.Logout();
+            await s.LogIn(user, "123456");
+            var section = s.Page.Locator("#lnurlauth-section");
+            linkElements = await section.Locator(".tab-content a").AllAsync();
+            links = new List<string>();
+            foreach (var element in linkElements)
+            {
+                var href = await element.GetAttributeAsync("href");
+                if (href != null) links.Add(href);
+            }
+            Assert.Equal(2, links.Count);
+            prevEndpoint = null;
+            foreach (string link in links)
+            {
+                var endpoint = LNURL.LNURL.Parse(link, out var tag);
+                Assert.Equal("login", tag);
+                if (endpoint.Scheme != "https")
+                    prevEndpoint = endpoint;
+            }
+            request = Assert.IsType<LNAuthRequest>(await LNURL.LNURL.FetchInformation(prevEndpoint, null));
+            _ = await request.SendChallenge(linkingKey, new HttpClient());
+            await TestUtils.EventuallyAsync(() =>
+            {
+                Assert.StartsWith(s.ServerUri.ToString(), s.Page.Url);
+                return Task.CompletedTask;
+            });
+        }
+
+        [Fact]
+        public async Task CanUseCoinSelectionFilters()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            (_, string storeId) = await s.CreateNewStore();
+            await s.GenerateWallet("BTC", "", false, true);
+            var walletId = new WalletId(storeId, "BTC");
+
+            await s.GoToWallet(walletId, WalletsNavPages.Receive);
+            var addressStr = await s.Page.GetAttributeAsync("#Address", "data-text");
+            var address = BitcoinAddress.Create(addressStr,
+                ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
+
+            await s.Server.ExplorerNode.GenerateAsync(1);
+
+            const decimal AmountTiny = 0.001m;
+            const decimal AmountSmall = 0.005m;
+            const decimal AmountMedium = 0.009m;
+            const decimal AmountLarge = 0.02m;
+
+            List<uint256> txs =
+            [
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(AmountTiny)),
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(AmountSmall)),
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(AmountMedium)),
+                await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(AmountLarge))
+            ];
+
+            await s.Server.ExplorerNode.GenerateAsync(1);
+            await s.GoToWallet(walletId);
+            await s.Page.ClickAsync("#toggleInputSelection");
+
+            var input = s.Page.Locator("input[placeholder^='Filter']");
+            await input.WaitForAsync();
+            Assert.NotNull(input);
+
+            // Test amountmin
+            await input.ClearAsync();
+            await input.FillAsync("amountmin:0.01");
+            await TestUtils.EventuallyAsync(async () => {
+                Assert.Single(await s.Page.Locator("li.list-group-item").AllAsync());
+            });
+
+            // Test amountmax
+            await input.ClearAsync();
+            await input.FillAsync("amountmax:0.002");
+            await TestUtils.EventuallyAsync(async () => {
+                Assert.Single(await s.Page.Locator("li.list-group-item").AllAsync());
+            });
+
+            // Test general text (txid)
+            await input.ClearAsync();
+            await input.FillAsync(txs[2].ToString()[..8]);
+            await TestUtils.EventuallyAsync(async () => {
+                Assert.Single(await s.Page.Locator("li.list-group-item").AllAsync());
+            });
+
+            // Test timestamp before/after
+            await input.ClearAsync();
+            await input.FillAsync("after:2099-01-01");
+            await TestUtils.EventuallyAsync(async () => {
+                Assert.Empty(await s.Page.Locator("li.list-group-item").AllAsync());
+            });
+
+            await input.ClearAsync();
+            await input.FillAsync("before:2099-01-01");
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                Assert.True((await s.Page.Locator("li.list-group-item").AllAsync()).Count >= 4);
+            });
+        }
+
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanManageLightningNode()
+        {
+            await using var s = CreatePlaywrightTester();
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+            await s.Server.EnsureChannelsSetup();
+            await s.RegisterNewUser(true);
+            (string storeName, _) = await s.CreateNewStore();
+
+            // Check status in navigation
+            await s.Page.Locator("#StoreNav-LightningBTC .btcpay-status--pending").WaitForAsync();
+
+            // Set up LN node
+            await s.AddLightningNode();
+            await s.Page.Locator("#StoreNav-LightningBTC .btcpay-status--enabled").WaitForAsync();
+
+            // Check public node info for availability
+            var opening = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("#PublicNodeInfo");
+            var newPage = await opening;
+            await Expect(newPage.Locator(".store-name")).ToHaveTextAsync(storeName);
+            await Expect(newPage.Locator("#LightningNodeTitle")).ToHaveTextAsync("BTC Lightning Node");
+            await Expect(newPage.Locator("#LightningNodeStatus")).ToHaveTextAsync("Online");
+            await newPage.Locator(".btcpay-status--enabled").WaitForAsync();
+            await newPage.Locator("#LightningNodeUrlClearnet").WaitForAsync();
+            await newPage.CloseAsync();
+
+            // Set wrong node connection string to simulate offline node
+            await s.GoToLightningSettings();
+            await s.Page.ClickAsync("#SetupLightningNodeLink");
+            await s.Page.ClickAsync("label[for=\"LightningNodeType-Custom\"]");
+            await s.Page.Locator("#ConnectionString").WaitForAsync();
+            await s.Page.Locator("#ConnectionString").ClearAsync();
+            await s.Page.FillAsync("#ConnectionString", "type=lnd-rest;server=https://doesnotwork:8080/");
+            await s.Page.ClickAsync("#test");
+            await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error);
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "BTC Lightning node updated.");
+
+            // Check offline state is communicated in nav item
+            await s.Page.Locator("#StoreNav-LightningBTC .btcpay-status--disabled").WaitForAsync();
+
+            // Check public node info for availability
+            opening = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("#PublicNodeInfo");
+            newPage = await opening;
+            await Expect(newPage.Locator(".store-name")).ToHaveTextAsync(storeName);
+            await Expect(newPage.Locator("#LightningNodeTitle")).ToHaveTextAsync("BTC Lightning Node");
+            await Expect(newPage.Locator("#LightningNodeStatus")).ToHaveTextAsync("Unavailable");
+            await newPage.Locator(".btcpay-status--disabled").WaitForAsync();
+            await Expect(newPage.Locator("#LightningNodeUrlClearnet")).ToBeHiddenAsync();
+        }
+
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanEditPullPaymentUI()
+        {
+            await using var s = CreatePlaywrightTester();
+            s.Server.ActivateLightning(LightningConnectionType.LndREST);
+            await s.StartAsync();
+            await s.Server.EnsureChannelsSetup();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            await s.GenerateWallet("BTC", "", true, true);
+            await s.Server.ExplorerNode.GenerateAsync(1);
+            await s.FundStoreWallet(denomination: 50.0m);
+
+            await s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
+
+            await s.ClickPagePrimary();
+            await s.Page.FillAsync("#Name", "PP1");
+            await s.Page.Locator("#Amount").ClearAsync();
+            await s.Page.FillAsync("#Amount", "99.0");
+            await s.ClickPagePrimary();
+
+            var opening = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("text=View");
+            var newPage = await opening;
+            await Expect(newPage.Locator("body")).ToContainTextAsync("PP1");
+            await newPage.CloseAsync();
+
+            await s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
+
+            await s.Page.ClickAsync("text=PP1");
+            var name = s.Page.Locator("#Name");
+            await name.ClearAsync();
+            await name.FillAsync("PP1 Edited");
+            var description = s.Page.Locator(".card-block");
+            await description.FillAsync("Description Edit");
+            await s.ClickPagePrimary();
+
+            opening = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("text=View");
+            newPage = await opening;
+            await Expect(newPage.Locator("body")).ToContainTextAsync("Description Edit");
+            await Expect(newPage.Locator("body")).ToContainTextAsync("PP1 Edited");
+        }
+
+        [Fact]
+        public async Task CookieReflectProperPermissions()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            var alice = s.Server.NewAccount();
+            alice.Register(false);
+            await alice.CreateStoreAsync();
+            var bob = s.Server.NewAccount();
+            await bob.CreateStoreAsync();
+            await bob.AddGuest(alice.UserId);
+
+            await s.GoToLogin();
+            await s.LogIn(alice.Email, alice.Password);
+            await s.GoToUrl($"/cheat/permissions/stores/{bob.StoreId}");
+            var pageSource = await s.Page.ContentAsync();
+            AssertPermissions(pageSource, true,
+                new[]
+                {
+                    Policies.CanViewInvoices,
+                    Policies.CanModifyInvoices,
+                    Policies.CanViewPaymentRequests,
+                    Policies.CanViewPullPayments,
+                    Policies.CanViewPayouts,
+                    Policies.CanModifyStoreSettingsUnscoped,
+                    Policies.CanDeleteUser
+                });
+            AssertPermissions(pageSource, false,
+             new[]
+             {
+                    Policies.CanModifyStoreSettings,
+                    Policies.CanCreateNonApprovedPullPayments,
+                    Policies.CanCreatePullPayments,
+                    Policies.CanManagePullPayments,
+                    Policies.CanModifyServerSettings
+             });
+
+            await s.GoToUrl($"/cheat/permissions/stores/{alice.StoreId}");
+            pageSource = await s.Page.ContentAsync();
+
+            AssertPermissions(pageSource, true,
+                new[]
+                {
+                    Policies.CanViewInvoices,
+                    Policies.CanModifyInvoices,
+                    Policies.CanViewPaymentRequests,
+                    Policies.CanViewStoreSettings,
+                    Policies.CanModifyStoreSettingsUnscoped,
+                    Policies.CanDeleteUser,
+                    Policies.CanModifyStoreSettings,
+                    Policies.CanCreateNonApprovedPullPayments,
+                    Policies.CanCreatePullPayments,
+                    Policies.CanManagePullPayments,
+                    Policies.CanArchivePullPayments,
+                });
+            AssertPermissions(pageSource, false,
+             new[]
+             {
+                    Policies.CanModifyServerSettings
+             });
+
+            await s.GoToUrl("/logout");
+            await alice.MakeAdmin();
+
+            await s.GoToLogin();
+            await s.LogIn(alice.Email, alice.Password);
+            await s.GoToUrl($"/cheat/permissions/stores/{alice.StoreId}");
+            pageSource = await s.Page.ContentAsync();
+
+            AssertPermissions(pageSource, true,
+            new[]
+            {
+                    Policies.CanViewInvoices,
+                    Policies.CanModifyInvoices,
+                    Policies.CanViewPaymentRequests,
+                    Policies.CanViewStoreSettings,
+                    Policies.CanModifyStoreSettingsUnscoped,
+                    Policies.CanDeleteUser,
+                    Policies.CanModifyStoreSettings,
+                    Policies.CanCreateNonApprovedPullPayments,
+                    Policies.CanCreatePullPayments,
+                    Policies.CanManagePullPayments,
+                    Policies.CanModifyServerSettings,
+                    Policies.CanCreateUser,
+                    Policies.CanManageUsers
+            });
+        }
+
+        void AssertPermissions(string source, bool expected, string[] permissions)
+        {
+            if (expected)
+            {
+                foreach (var p in permissions)
+                    Assert.Contains(p + "<", source);
+            }
+            else
+            {
+                foreach (var p in permissions)
+                    Assert.DoesNotContain(p + "<", source);
+            }
+        }
+
     }
 }
 

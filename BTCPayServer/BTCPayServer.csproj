@@ -62,7 +62,6 @@
     <PackageReference Include="Fido2.AspNet" Version="3.0.1" />
     <PackageReference Include="LNURL" Version="0.0.36" />
     <PackageReference Include="MailKit" Version="4.8.0" />
-    <PackageReference Include="BTCPayServer.NETCore.Plugins.Mvc" Version="1.4.4" />
     <PackageReference Include="QRCoder" Version="1.6.0" />
     <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.39" />

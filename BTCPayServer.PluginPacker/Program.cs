@@ -9,7 +9,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
-using McMaster.NETCore.Plugins;
+using BTCPayServer.Plugins.Dotnet;
 using NBitcoin.Crypto;
 using NBitcoin.DataEncoders;
 using NBitcoin.Secp256k1;

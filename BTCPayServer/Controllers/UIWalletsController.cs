@@ -658,6 +658,7 @@ namespace BTCPayServer.Controllers
                     vm.Positive = tx.BalanceChange.GetValue(wallet.Network) >= 0;
                     vm.Balance = tx.BalanceChange.ShowMoney(wallet.Network);
                     vm.IsConfirmed = tx.Confirmations != 0;
+                    vm.HistoryLine = tx;
                     // If support isn't possible, we want the user to be able to click so he can see why it doesn't work
                     vm.CanBumpFee =
                         tx.Confirmations == 0 &&

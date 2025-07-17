@@ -252,6 +252,7 @@ namespace BTCPayServer.Services.Wallets
             }
             return await completionSource.Task;
         }
+        public bool ForceInefficientPath { get; set; }
         List<TransactionInformation> dummy = new List<TransactionInformation>();
         public async Task<IList<TransactionHistoryLine>> FetchTransactionHistory(DerivationStrategyBase derivationStrategyBase, int? skip = null, int? count = null, TimeSpan? interval = null, CancellationToken cancellationToken = default)
         {
@@ -259,7 +260,7 @@ namespace BTCPayServer.Services.Wallets
             // * Sometimes we can ask the DB to do the filtering of rows: If that's the case, we should try to filter at the DB level directly as it is the most efficient.
             // * Sometimes we can't query the DB or the given network need to do additional filtering. In such case, we can't really filter at the DB level, and we need to fetch all transactions in memory.
             var needAdditionalFiltering = _Network.FilterValidTransactions(dummy) != dummy;
-            if (!NbxplorerConnectionFactory.Available || needAdditionalFiltering)
+            if (ForceInefficientPath || !NbxplorerConnectionFactory.Available || needAdditionalFiltering)
             {
                 var txs = await FetchTransactions(derivationStrategyBase);
                 var txinfos = txs.UnconfirmedTransactions.Transactions.Concat(txs.ConfirmedTransactions.Transactions)
@@ -282,7 +283,7 @@ namespace BTCPayServer.Services.Wallets
             {
                 await using var ctx = await NbxplorerConnectionFactory.OpenConnection();
                 var cmd = new CommandDefinition(
-                    commandText: "SELECT r.tx_id, r.seen_at, t.blk_id, t.blk_height, r.balance_change, r.asset_id, COALESCE((SELECT height FROM get_tip('BTC')) - t.blk_height + 1, 0) AS confs " +
+                    commandText: $"SELECT r.tx_id, r.seen_at, t.blk_id, t.blk_height, r.balance_change, r.asset_id, COALESCE((SELECT height FROM get_tip('BTC')) - t.blk_height + 1, 0) AS confs, {SelectFeeColumns()} " +
                     "FROM get_wallets_recent(@wallet_id, @code, @interval, @count, @skip) r " +
                     "JOIN txs t USING (code, tx_id) " +
                     "ORDER BY r.seen_at DESC",
@@ -295,7 +296,7 @@ namespace BTCPayServer.Services.Wallets
                         interval = interval is TimeSpan t ? t : TimeSpan.FromDays(365 * 1000)
                     },
                     cancellationToken: cancellationToken);
-                var rows = await ctx.QueryAsync<(string tx_id, DateTimeOffset seen_at, string blk_id, long? blk_height, long balance_change, string asset_id, long confs)>(cmd);
+                var rows = await ctx.QueryAsync<(string tx_id, DateTimeOffset seen_at, string blk_id, long? blk_height, long balance_change, string asset_id, long confs, long? fee, decimal? feerate)>(cmd);
                 rows.TryGetNonEnumeratedCount(out int c);
                 var lines = new List<TransactionHistoryLine>(c);
                 foreach (var row in rows)
@@ -307,12 +308,22 @@ namespace BTCPayServer.Services.Wallets
                         SeenAt = row.seen_at,
                         TransactionId = uint256.Parse(row.tx_id),
                         Confirmations = row.confs,
-                        BlockHash = string.IsNullOrEmpty(row.blk_id) ? null : uint256.Parse(row.blk_id)
+                        BlockHash = string.IsNullOrEmpty(row.blk_id) ? null : uint256.Parse(row.blk_id),
+                        Fee = row.fee is null ? null : Money.Satoshis(row.fee.Value),
+                        FeeRate = row.feerate is null ? null : new FeeRate(row.feerate.Value)
                     });
                 }
                 return lines;
             }
         }
+
+        internal string SelectFeeColumns()
+        => HasFeeInformation() ? "(metadata->'fees')::BIGINT AS fee, (metadata->'feeRate')::NUMERIC AS feerate"  : "NULL AS fee, NULL AS feerate";
+
+        public bool? ForceHasFeeInformation { get; set; }
+        internal bool HasFeeInformation()
+        => ForceHasFeeInformation ?? AsVersion(this.Dashboard.Get(Network.CryptoCode)?.Status?.Version ?? "") >= new Version("2.5.18");
+
         public async Task<BumpableTransactions> GetBumpableTransactions(DerivationStrategyBase derivationStrategyBase, CancellationToken cancellationToken)
         {
             var result = new BumpableTransactions();
@@ -440,7 +451,9 @@ namespace BTCPayServer.Services.Wallets
                 Confirmations = t.Confirmations,
                 Height = t.Height,
                 SeenAt = t.Timestamp,
-                TransactionId = t.TransactionId
+                TransactionId = t.TransactionId,
+                Fee = t.Metadata?.Fees,
+                FeeRate = t.Metadata?.FeeRate
             };
         }
 
@@ -570,5 +583,7 @@ namespace BTCPayServer.Services.Wallets
         public uint256 TransactionId { get; set; }
         public uint256 BlockHash { get; set; }
         public IMoney BalanceChange { get; set; }
+        public FeeRate FeeRate { get; set; }
+        public Money Fee { get; set; }
     }
 }

@@ -208,6 +208,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 //we do not include PaymentMethodCriteria because moving the CurrencyValueJsonConverter to the Client csproj is hard and requires a refactor (#1571 & #1572)
                 NetworkFeeMode = storeBlob.NetworkFeeMode,
                 DefaultCurrency = storeBlob.DefaultCurrency,
+                AdditionalTrackedRates = (storeBlob.AdditionalTrackedRates ?? []).ToList(),
                 Receipt = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, null),
                 LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi,
                 LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints,
@@ -259,6 +260,7 @@ namespace BTCPayServer.Controllers.Greenfield
             //we do not include OnChainMinValue and LightningMaxValue because moving the CurrencyValueJsonConverter to the Client csproj is hard and requires a refactor (#1571 & #1572)
             blob.NetworkFeeMode = restModel.NetworkFeeMode.Value;
             blob.DefaultCurrency = restModel.DefaultCurrency;
+            blob.AdditionalTrackedRates = restModel.AdditionalTrackedRates?.ToArray();
             blob.ReceiptOptions = InvoiceDataBase.ReceiptOptions.Merge(restModel.Receipt, null);
             blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi.Value;
             blob.LightningPrivateRouteHints = restModel.LightningPrivateRouteHints.Value;

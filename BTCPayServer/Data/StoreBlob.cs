@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
@@ -53,9 +54,7 @@ namespace BTCPayServer.Data
             }
             set
             {
-                _DefaultCurrency = value;
-                if (!string.IsNullOrEmpty(_DefaultCurrency))
-                    _DefaultCurrency = _DefaultCurrency.Trim().ToUpperInvariant();
+                _DefaultCurrency = NormalizeCurrency(value);
             }
         }
 
@@ -285,6 +284,32 @@ namespace BTCPayServer.Data
                 (PrimaryRateSettings ?? new()).GetRateRules(defaultRules, Spread),
                 FallbackRateSettings?.GetRateRules(defaultRules, Spread));
         }
+
+        public HashSet<string> GetTrackedRates() => AdditionalTrackedRates.Concat([DefaultCurrency]).ToHashSet();
+
+        private string[] _additionalTrackedRates;
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        public string[] AdditionalTrackedRates
+        {
+            get
+            {
+                return _additionalTrackedRates ?? Array.Empty<string>();
+            }
+            set
+            {
+                if (value is not null)
+                    _additionalTrackedRates = value
+                        .Select(NormalizeCurrency)
+                        .Where(v => v is not null).ToArray();
+                else
+                    _additionalTrackedRates = null;
+            }
+        }
+
+        private string NormalizeCurrency(string v) =>
+            v is null ? null :
+            Regex.Replace(v.ToUpperInvariant(), "[^A-Z]", "").Trim() is { Length: > 0 } normalized ? normalized : null;
     }
     public class PaymentMethodCriteria
     {

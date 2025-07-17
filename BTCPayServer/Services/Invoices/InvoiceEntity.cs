@@ -315,55 +315,19 @@ namespace BTCPayServer.Services.Invoices
                 throw new InvalidOperationException("The Currency of the invoice isn't set");
             return GetRate(new CurrencyPair(currency, Currency));
         }
-        public RateRules GetRateRules()
-        {
-            StringBuilder builder = new StringBuilder();
+
+        public RateRules GetRateRules() => GetInvoiceRates().GetRateRules();
+
+        public bool TryGetRate(string currency, out decimal rate) => GetInvoiceRates().TryGetRate(new(currency, Currency), out rate);
+
+        public bool TryGetRate(CurrencyPair pair, out decimal rate) => GetInvoiceRates().TryGetRate(pair, out rate);
+
+        public decimal GetRate(CurrencyPair pair) => GetInvoiceRates().GetRate(pair);
+
 #pragma warning disable CS0618 // Type or member is obsolete
-            foreach (var r in Rates)
-            {
-                if (r.Key.Contains('_', StringComparison.Ordinal))
-                    builder.AppendLine($"{r.Key} = {r.Value.ToString(CultureInfo.InvariantCulture)};");
-                else
-                    builder.AppendLine($"{r.Key}_{Currency} = {r.Value.ToString(CultureInfo.InvariantCulture)};");
-            }
+        private RateBook GetInvoiceRates() => new RateBook(Currency, Rates);
 #pragma warning restore CS0618 // Type or member is obsolete
-            if (RateRules.TryParse(builder.ToString(), out var rules))
-                return rules;
-            throw new FormatException("Invalid rate rules");
-        }
-        public bool TryGetRate(string currency, out decimal rate)
-        {
-            return TryGetRate(new CurrencyPair(currency, Currency), out rate);
-        }
-        public bool TryGetRate(CurrencyPair pair, out decimal rate)
-        {
-#pragma warning disable CS0618 // Type or member is obsolete
-            if (pair.Right == Currency && Rates.TryGetValue(pair.Left, out rate)) // Fast lane
-                return true;
-#pragma warning restore CS0618 // Type or member is obsolete
-            var rule = GetRateRules().GetRuleFor(pair);
-            rule.Reevaluate();
-            if (rule.BidAsk is null)
-            {
-                rate = 0.0m;
-                return false;
-            }
-            rate = rule.BidAsk.Bid;
-            return true;
-        }
-        public decimal GetRate(CurrencyPair pair)
-        {
-            ArgumentNullException.ThrowIfNull(pair);
-#pragma warning disable CS0618 // Type or member is obsolete
-            if (pair.Right == Currency && Rates.TryGetValue(pair.Left, out var rate)) // Fast lane
-                return rate;
-#pragma warning restore CS0618 // Type or member is obsolete
-            var rule = GetRateRules().GetRuleFor(pair);
-            rule.Reevaluate();
-            if (rule.BidAsk is null)
-                throw new InvalidOperationException($"Rate rule is not evaluated ({rule.Errors.First()})");
-            return rule.BidAsk.Bid;
-        }
+
         public void AddRate(CurrencyPair pair, decimal rate)
         {
 #pragma warning disable CS0618 // Type or member is obsolete

@@ -68,7 +68,7 @@ namespace BTCPayServer.Controllers.GreenField
             var result = new List<StoreRateResult>();
             foreach (var rateTask in rateTasks)
             {
-                var rateTaskResult = rateTask.Value.Result;
+                var rateTaskResult = await rateTask.Value;
 
                 result.Add(new StoreRateResult()
                 {

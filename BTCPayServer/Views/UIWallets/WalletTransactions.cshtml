@@ -13,6 +13,7 @@
     var cryptoCode = Context.GetRouteValue("cryptoCode")?.ToString();
     var labelFilter = Context.Request.Query["labelFilter"].ToString();
     var wallet = walletId != null ? WalletId.Parse(walletId) : new WalletId(storeId, cryptoCode);
+    storeId = wallet.StoreId;
 
     ViewData.SetActivePage(WalletsNavPages.Transactions, StringLocalizer["{0} Transactions", Model.CryptoCode], walletId);
 }
@@ -42,7 +43,7 @@
                 order: 1;
             }
         }
-        
+
         #LoadingIndicator {
             margin-bottom: 1.5rem;
         }
@@ -59,24 +60,24 @@
         const $list = document.getElementById('WalletTransactionsList');
         const $dropdowns = document.getElementById('Dropdowns');
         const $indicator = document.getElementById('LoadingIndicator');
-        
+
         delegate('click', '#GoToTop', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
-        
+
         if ($actions && $actions.offsetTop - window.innerHeight > 0) {
             document.getElementById('GoToTop').classList.remove('d-none');
         }
-        
+
         const count = @Safe.Json(Model.Count);
         const skipInitial = @Safe.Json(Model.Skip);
 		const loadMoreUrl = @Safe.Json(Url.Action("WalletTransactions", new {walletId, labelFilter, skip = Model.Skip, count = Model.Count, loadTransactions = true}));
 		// The next time we load transactions, skip will become 0
         let skip = @Safe.Json(Model.Skip) - count;
-        
+
         async function loadMoreTransactions() {
             $indicator.classList.remove('d-none');
-            
+
             const skipNext = skip + count;
             const url = loadMoreUrl.replace(`skip=${skipInitial}`, `skip=${skipNext}`)
             const response = await fetch(url, {
@@ -85,13 +86,13 @@
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             });
-            
+
             if (response.ok) {
                 const html = await response.text();
                 const responseEmpty = html.trim() === '';
                 $list.insertAdjacentHTML('beforeend', html);
                 skip = skipNext;
-                
+
                 if (responseEmpty) {
                     // in case the response html was empty, remove the observer and stop loading
                     observer.unobserve($actions);
@@ -105,19 +106,19 @@
                     }
                 }
             }
-            
+
             $indicator.classList.add('d-none');
             formatDateTimes(document.querySelector('#WalletTransactions .switch-time-format').dataset.mode);
             initLabelManagers();
         }
-        
+
 		const observer = new IntersectionObserver(async entries => {
             const { isIntersecting } = entries[0];
             if (isIntersecting) {
                 await loadMoreTransactions();
             }
         }, { rootMargin: '128px' });
-        
+
         // the actions div marks the end of the list table
         observer.observe($actions);
     </script>
@@ -156,7 +157,19 @@
             </ul>
         </div>
     }
+
     <div class="dropdown d-inline-flex align-items-center gap-3 ms-auto" id="Export">
+        <a
+            id="view-report"
+            permission="@Policies.CanViewReports"
+            asp-controller="UIReports"
+            asp-action="StoreReports"
+            asp-route-storeId="@storeId"
+            asp-route-viewName="Wallets"
+            class="btn btn-secondary">
+            <vc:icon symbol="nav-reporting" />
+            <span text-translate="true">Reporting</span>
+        </a>
         <button class="btn btn-secondary dropdown-toggle" type="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" text-translate="true">
             Export
         </button>
@@ -175,7 +188,7 @@
         <table class="table table-hover ">
             <thead>
                 <th>Id</th>
-                <th>State</th> 
+                <th>State</th>
                 <th>Signatures</th>
                 <th>Scheme</th>
                 <th>Actions</th>
@@ -190,10 +203,10 @@
                     <td><span id="Sigs_@(index)__Collected">@ptblob?.SignaturesCollected</span></td>
                     <td><span id="Sigs_@(index)__Scheme">@ptblob?.SignaturesNeeded/@ptblob?.SignaturesTotal</span></td>
                     <td>
-                        <a asp-action="ViewPendingTransaction" asp-route-walletId="@walletId" 
+                        <a asp-action="ViewPendingTransaction" asp-route-walletId="@walletId"
                            asp-route-pendingTransactionId="@pendingTransaction.Id">@(pendingTransaction.State == PendingTransactionState.Signed ? "Broadcast" : "View")</a>
                         -
-                        <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId" 
+                        <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId"
                            asp-route-pendingTransactionId="@pendingTransaction.Id">Abort</a>
                     </td>
                 </tr>
@@ -221,6 +234,10 @@
             <th text-translate="true" style="min-width:125px">Label</th>
             <th text-translate="true">Transaction</th>
             <th text-translate="true" class="amount-col">Amount</th>
+            @foreach (var rate in Model.Rates)
+            {
+                <th class="rate-col"><span text-translate="true">Rate</span>&nbsp;<span>(@rate)</span></th>
+            }
             <th></th>
         </tr>
         </thead>
@@ -230,7 +247,7 @@
                 <input type="checkbox" class="form-check-input mass-action-select-all" />
             </th>
             <th colspan="5">
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex flex-wrap align-items-center gap-3">
                     <div>
                         <strong class="mass-action-selected-count">0</strong>
                             <span text-translate="true">selected</span>
@@ -265,6 +282,6 @@
 
 <p class="mt-4 mb-0">
     @ViewLocalizer["If BTCPay Server shows you an invalid balance, {0}.<br />If some transactions appear in BTCPay Server, but are missing in another wallet, {1}.",
-        Html.ActionLink(StringLocalizer["rescan your wallet"], "WalletRescan", "UIWallets", new { walletId = Context.GetRouteValue("walletId") }), 
+        Html.ActionLink(StringLocalizer["rescan your wallet"], "WalletRescan", "UIWallets", new { walletId = Context.GetRouteValue("walletId") }),
         new HtmlString($"<a href=\"https://docs.btcpayserver.org/FAQ/Wallet/#missing-payments-in-my-software-or-hardware-wallet\" target=\"_blank\" rel=\"noreferrer noopener\">{StringLocalizer["follow these instructions"]}</a>")]
 </p>

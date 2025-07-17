@@ -507,6 +507,15 @@
                         "default": "USD",
                         "example": "USD"
                     },
+                    "additionalTrackedRates": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "Additional rates to track.\nThe rates of those currencies, in addition to the default currency, will be recorded when a new invoice is created. The rates will then be accessible through reports.",
+                        "default": [],
+                        "example": ["JPY", "EUR"]
+                    },
                     "invoiceExpiration": {
                         "default": 900,
                         "minimum": 60,

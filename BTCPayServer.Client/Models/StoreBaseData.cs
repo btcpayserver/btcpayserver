@@ -46,6 +46,7 @@ namespace BTCPayServer.Client.Models
         public double? PaymentTolerance { get; set; }
         public bool? AnyoneCanCreateInvoice { get; set; }
         public string DefaultCurrency { get; set; }
+        public List<string> AdditionalTrackedRates { get; set; }
 
         public bool? LightningAmountInSatoshi { get; set; }
         public bool? LightningPrivateRouteHints { get; set; }

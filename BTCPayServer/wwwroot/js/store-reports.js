@@ -143,8 +143,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 return chart && (chart.rows.length || chart.hasGrandTotal);
             },
             titleCase(str, shorten) {
-                const result = str.replace(/([A-Z])/g, " $1");
-                const title = result.charAt(0).toUpperCase() + result.slice(1)
+                const result = str.replace(/([a-z])([A-Z])/g, '$1 $2'); // only split camelCase
+                const title = result.charAt(0).toUpperCase() + result.slice(1);
                 return shorten && title.endsWith(' Amount') ? 'Amount' : title;
             },
             displayValue,

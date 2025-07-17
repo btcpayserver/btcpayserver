@@ -1165,6 +1165,9 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 .btn .icon {
     --icon-size: 1.25rem;
     vertical-align: text-bottom;
+    /*Without this the icon + text are in the middle,*/
+    /*but the visual balance is off, and it doesn't feel center*/
+    margin-left: calc(var(--icon-size) / -2);
 }
 
 .btn.btn-lg .icon {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
@@ -18,6 +19,7 @@ using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
 using Dapper;
 using ExchangeSharp;
+using LNURL;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
@@ -1592,6 +1594,68 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage();
             seedEl = s.Page.Locator("#Seed");
             Assert.Contains("Seed removed", await seedEl.TextContentAsync(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task CanUseLNURLAuth()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            var user = await s.RegisterNewUser(true);
+            await s.GoToHome();
+            await s.GoToProfile(ManageNavPages.TwoFactorAuthentication);
+            await s.Page.FillAsync("[name='Name']", "ln wallet");
+            await s.Page.SelectOptionAsync("[name='type']", $"{(int)Fido2Credential.CredentialType.LNURLAuth}");
+            await s.Page.ClickAsync("#btn-add");
+            var linkElements = await s.Page.Locator(".tab-content a").AllAsync();
+            var links = new List<string>();
+            foreach (var element in linkElements)
+            {
+                var href = await element.GetAttributeAsync("href");
+                if (href != null) links.Add(href);
+            }
+            Assert.Equal(2, links.Count);
+            Uri prevEndpoint = null;
+            foreach (string link in links)
+            {
+                var endpoint = LNURL.LNURL.Parse(link, out var tag);
+                Assert.Equal("login", tag);
+                if (endpoint.Scheme != "https")
+                    prevEndpoint = endpoint;
+            }
+
+            var linkingKey = new Key();
+            var request = Assert.IsType<LNAuthRequest>(await LNURL.LNURL.FetchInformation(prevEndpoint, null));
+            _ = await request.SendChallenge(linkingKey, new HttpClient());
+            await TestUtils.EventuallyAsync(async () => await s.FindAlertMessage());
+
+            await s.CreateNewStore(); // create a store to prevent redirect after login
+            await s.Logout();
+            await s.LogIn(user, "123456");
+            var section = s.Page.Locator("#lnurlauth-section");
+            linkElements = await section.Locator(".tab-content a").AllAsync();
+            links = new List<string>();
+            foreach (var element in linkElements)
+            {
+                var href = await element.GetAttributeAsync("href");
+                if (href != null) links.Add(href);
+            }
+            Assert.Equal(2, links.Count);
+            prevEndpoint = null;
+            foreach (string link in links)
+            {
+                var endpoint = LNURL.LNURL.Parse(link, out var tag);
+                Assert.Equal("login", tag);
+                if (endpoint.Scheme != "https")
+                    prevEndpoint = endpoint;
+            }
+            request = Assert.IsType<LNAuthRequest>(await LNURL.LNURL.FetchInformation(prevEndpoint, null));
+            _ = await request.SendChallenge(linkingKey, new HttpClient());
+            await TestUtils.EventuallyAsync(() =>
+            {
+                Assert.StartsWith(s.ServerUri.ToString(), s.Page.Url);
+                return Task.CompletedTask;
+            });
         }
     }
 }

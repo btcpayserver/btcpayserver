@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Wallets;
 
 namespace BTCPayServer.Models.WalletViewModels
 {
@@ -23,6 +24,7 @@ namespace BTCPayServer.Models.WalletViewModels
             public RateBook WalletRateBook { get; set; }
             public RateBook InvoiceRateBook { get; set; }
             public string InvoiceId { get; set; }
+            public TransactionHistoryLine HistoryLine { get; set; }
         }
         public HashSet<(string Text, string Color, string TextColor)> Labels { get; set; } = new();
         public List<TransactionViewModel> Transactions { get; set; } = new();

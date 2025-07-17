@@ -9,6 +9,7 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Services.Wallets;
 using Dapper;
 using NBitcoin;
 
@@ -19,7 +20,8 @@ public class OnChainWalletReportProvider(
     StoreRepository storeRepository,
     InvoiceRepository invoiceRepository,
     PaymentMethodHandlerDictionary handlers,
-    WalletRepository walletRepository)
+    WalletRepository walletRepository,
+    BTCPayWalletProvider walletProvider)
     : ReportProvider
 {
     public override string Name => "Wallets";
@@ -37,6 +39,8 @@ public class OnChainWalletReportProvider(
                 new("InvoiceId", "invoice_id"),
                 new("Confirmed", "boolean"),
                 new("BalanceChange", "amount"),
+                new("Fee", "amount"),
+                new("FeeRate", "number"),
             },
             Charts =
             {
@@ -68,10 +72,12 @@ public class OnChainWalletReportProvider(
             var network = ((IHasNetwork)handlers[pmi]).Network;
             cryptoCodes.Add(network.CryptoCode);
             var walletId = new WalletId(store.Id, network.CryptoCode);
+
+            var selectFee = walletProvider.GetWallet(network).SelectFeeColumns();
             var command = new CommandDefinition(
                 commandText:
-                """
-                SELECT r.tx_id, r.seen_at, t.blk_id, t.blk_height, r.balance_change
+                $"""
+                SELECT r.tx_id, r.seen_at, t.blk_id, t.blk_height, r.balance_change, {selectFee}
                 FROM get_wallets_recent(@wallet_id, @code, @asset_id, @interval, NULL, NULL) r
                 JOIN txs t USING (code, tx_id)
                 ORDER BY r.seen_at
@@ -99,6 +105,11 @@ public class OnChainWalletReportProvider(
                 values.Add(null);
                 values.Add((long?)r.blk_height is not null);
                 values.Add(new FormattedAmount(balanceChange, network.Divisibility).ToJObject());
+
+                decimal? fee = r.fee is null ? null : Money.Satoshis((long)r.fee).ToDecimal(MoneyUnit.BTC);
+                decimal? feeRate = r.feerate is null ? null : (decimal)r.feerate;
+                values.Add(fee is null ? null : new FormattedAmount(fee.Value, network.Divisibility).ToJObject());
+                values.Add(feeRate);
             }
 
             var objects = await walletRepository.GetWalletObjects(new GetWalletObjectsQuery

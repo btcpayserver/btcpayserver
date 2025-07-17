@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -15,6 +16,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Wallets;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
@@ -611,7 +613,8 @@ namespace BTCPayServer.Tests
             await s.RegisterNewUser(true);
             await s.CreateNewStore();
 
-            await s.AddDerivationScheme("BTC", new ExtKey().Neuter().GetWif(Network.RegTest).ToString() + "-[legacy]");
+            var btcDerivationScheme = new ExtKey().Neuter().GetWif(Network.RegTest).ToString() + "-[legacy]";
+            await s.AddDerivationScheme("BTC", btcDerivationScheme);
             await s.AddDerivationScheme("LTC", new ExtKey().Neuter().GetWif(NBitcoin.Altcoins.Litecoin.Instance.Regtest).ToString()  + "-[legacy]");
 
             await s.GoToStore();
@@ -685,9 +688,41 @@ namespace BTCPayServer.Tests
                     await pmo.AssertRowContains(txId, "500.00 USD");
                 }
             }
-            await s.GoToWallet(new(s.StoreId, "BTC"), WalletsNavPages.Transactions);
-            await s.ClickViewReport();
 
+            var fee = Money.Zero;
+            var feeRate = FeeRate.Zero;
+            // Quick check on some internal of wallet that isn't related to this test
+            var wallet = s.Server.PayTester.GetService<BTCPayWalletProvider>().GetWallet("BTC");
+            var derivation = s.Server.GetNetwork("BTC").NBXplorerNetwork.DerivationStrategyFactory.Parse(btcDerivationScheme);
+            foreach (var forceHasFeeInfo in new bool?[]{ true, false, null})
+            foreach (var inefficient in new[] { true, false })
+            {
+                wallet.ForceInefficientPath = inefficient;
+                wallet.ForceHasFeeInformation = forceHasFeeInfo;
+                wallet.InvalidateCache(derivation);
+                var fetched = await wallet.FetchTransactionHistory(derivation);
+                var tx = fetched.First(f => f.TransactionId == txIds["BTC"]);
+                if (forceHasFeeInfo is true or null || inefficient)
+                {
+                    Assert.NotNull(tx.Fee);
+                    Assert.NotNull(tx.FeeRate);
+                    fee = tx.Fee;
+                    feeRate = tx.FeeRate;
+                }
+                else
+                {
+                    Assert.Null(tx.Fee);
+                    Assert.Null(tx.FeeRate);
+                }
+            }
+            wallet.InvalidateCache(derivation);
+            wallet.ForceHasFeeInformation = null;
+            wallet.ForceInefficientPath = false;
+
+            var pmo3 = await s.GoToWalletTransactions(new(s.StoreId, "BTC"));
+            await pmo3.AssertRowContains(txIds["BTC"], $"{fee} ({feeRate})");
+
+            await s.ClickViewReport();
             var csvTxt = await s.DownloadReportCSV();
             var csvTester = new CSVWalletsTester(csvTxt);
 
@@ -698,6 +733,8 @@ namespace BTCPayServer.Tests
                     csvTester
                         .ForTxId(txIds[cryptoCode].ToString())
                         .AssertValues(
+                            ("FeeRate", feeRate.SatoshiPerByte.ToString(CultureInfo.InvariantCulture)),
+                            ("Fee", fee.ToString()),
                             ("Rate (USD)", "5000"),
                             ("Rate (CAD)", "4500"),
                             ("Rate (JPY)", "700000"),
@@ -716,6 +753,23 @@ namespace BTCPayServer.Tests
                         );
                 }
             }
+
+            // This shouldn't crash if NBX doesn't support fee fetching
+            wallet.ForceHasFeeInformation = false;
+            await s.Page.ReloadAsync();
+            csvTxt = await s.DownloadReportCSV();
+            csvTester = new CSVWalletsTester(csvTxt);
+            csvTester
+                .ForTxId(txIds["BTC"].ToString())
+                .AssertValues(
+                    ("FeeRate", ""),
+                    ("Fee", ""),
+                    ("Rate (USD)", "5000"),
+                    ("Rate (CAD)", "4500"),
+                    ("Rate (JPY)", "700000"),
+                    ("Rate (EUR)", "4000")
+                );
+            wallet.ForceHasFeeInformation = null;
 
             var invId = await s.CreateInvoice(storeId: s.StoreId, amount: 10_000);
             await s.GoToInvoiceCheckout(invId);
@@ -1160,51 +1214,51 @@ namespace BTCPayServer.Tests
             {
                 await s.Page.ClickAsync("button:has-text('Pay')");
                 await s.Page.WaitForLoadStateAsync();
-                
+
                 await s.Page.WaitForSelectorAsync("iframe[name='btcpay']", new() { Timeout = 10000 });
-                
+
                 var iframe = s.Page.Frame("btcpay");
                 Assert.NotNull(iframe);
-                
+
                 await iframe.FillAsync("#test-payment-amount", "0.05");
                 await iframe.ClickAsync("#FakePayment");
                 await iframe.WaitForSelectorAsync("#CheatSuccessMessage", new() { Timeout = 10000 });
-                
+
                 invoiceId = s.Page.Url.Split('/').Last();
             }
             await s.GoToInvoices();
-            
+
             await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-toggle");
             await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-menu button:has-text('Mark as settled')");
             await s.Page.WaitForLoadStateAsync();
-            
+
             await s.GoToStore();
             await s.Page.ClickAsync("#StoreNav-PaymentRequests");
             await s.Page.WaitForLoadStateAsync();
-            
+
             var opening2 = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("a:has-text('View')");
             await using (_ = await s.SwitchPage(opening2))
             {
                 await s.Page.WaitForLoadStateAsync();
-                
+
                 var markSettledExists = await s.Page.Locator("button:has-text('Mark as settled')").CountAsync();
                 Assert.True(markSettledExists > 0, "Mark as settled button should be visible on public page after invoice is settled");
                 await s.Page.ClickAsync("button:has-text('Mark as settled')");
                 await s.Page.WaitForLoadStateAsync();
             }
-            
+
             await s.GoToStore();
             await s.Page.ClickAsync("#StoreNav-PaymentRequests");
             await s.Page.WaitForLoadStateAsync();
-            
+
             var listContent = await s.Page.ContentAsync();
             var isSettledInList = listContent.Contains("Settled");
             var isPendingInList = listContent.Contains("Pending");
-            
+
             var settledBadgeExists = await s.Page.Locator(".badge:has-text('Settled')").CountAsync();
             var pendingBadgeExists = await s.Page.Locator(".badge:has-text('Pending')").CountAsync();
-            
+
             Assert.True(isSettledInList || settledBadgeExists > 0, "Payment request should show as Settled in the list");
             Assert.False(isPendingInList && pendingBadgeExists > 0, "Payment request should not show as Pending anymore");
         }
@@ -1224,10 +1278,10 @@ namespace BTCPayServer.Tests
             var admin = s.AsTestAccount();
             await s.GoToHome();
             await s.GoToServer(ServerNavPages.Policies);
-            
+
             Assert.True(await s.Page.Locator("#EnableRegistration").IsCheckedAsync());
             Assert.False(await s.Page.Locator("#RequiresUserApproval").IsCheckedAsync());
-            
+
             await s.Page.Locator("#RequiresUserApproval").ClickAsync();
             await s.ClickPagePrimary();
             await s.FindAlertMessage(partialText: "Policies updated successfully");
@@ -1255,7 +1309,7 @@ namespace BTCPayServer.Tests
             {
                 Assert.Equal("1", await s.Page.Locator("#NotificationsBadge").TextContentAsync());
             });
-            
+
             await s.Page.Locator("#NotificationsHandle").ClickAsync();
             Assert.Matches($"New user {unapproved.RegisterDetails.Email} requires approval", await s.Page.Locator("#NotificationsList .notification").TextContentAsync());
             await s.Page.Locator("#NotificationsMarkAllAsSeen").ClickAsync();
@@ -1302,7 +1356,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(1, await rows.CountAsync());
             Assert.Contains(autoApproved.RegisterDetails.Email, await rows.First.TextContentAsync());
             await Expect(s.Page.Locator("#UsersList tr.user-overview-row:first-child .user-approved")).Not.ToBeVisibleAsync();
-            
+
             await s.Page.ClickAsync("#UsersList tr.user-overview-row:first-child .user-edit");
             await Expect(s.Page.Locator("#Approved")).Not.ToBeVisibleAsync();
 
@@ -1313,12 +1367,12 @@ namespace BTCPayServer.Tests
             Assert.Equal(1, await rows.CountAsync());
             Assert.Contains(unapproved.RegisterDetails.Email, await rows.First.TextContentAsync());
             Assert.Contains("Pending Approval", await s.Page.Locator("#UsersList tr.user-overview-row:first-child .user-status").TextContentAsync());
-            
+
             await s.Page.ClickAsync("#UsersList tr.user-overview-row:first-child .user-edit");
             await s.Page.ClickAsync("#Approved");
             await s.ClickPagePrimary();
             await s.FindAlertMessage(partialText: "User successfully updated");
-            
+
             await s.GoToServer(ServerNavPages.Users);
             Assert.Contains(unapproved.RegisterDetails.Email, await s.Page.GetAttributeAsync("#SearchTerm", "value"));
             Assert.Equal(1, await rows.CountAsync());

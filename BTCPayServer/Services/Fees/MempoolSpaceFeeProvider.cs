@@ -3,14 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using NBitcoin;
-using Org.BouncyCastle.Asn1.X509;
-using YamlDotNet.Core.Tokens;
 
 namespace BTCPayServer.Services.Fees;
 
@@ -20,7 +15,7 @@ public class MempoolSpaceFeeProvider(
     IHttpClientFactory httpClientFactory,
     bool testnet) : IFeeProvider
 {
-    private string ExplorerLink = testnet switch
+    private readonly string _explorerLink = testnet switch
     {
         true => "https://mempool.space/testnet/api/v1/fees/recommended",
         false => "https://mempool.space/api/v1/fees/recommended"
@@ -31,30 +26,31 @@ public class MempoolSpaceFeeProvider(
         var result = await GetFeeRatesAsync();
 
         return InterpolateOrBound(result, blockTarget);
-            
+
     }
-    
+
     internal static FeeRate InterpolateOrBound(BlockFeeRate[] ordered, int target)
     {
-        (BlockFeeRate lb, BlockFeeRate hb) = (ordered[0], ordered[^1]);
+        var (lb, hb) = (ordered[0], ordered[^1]);
         target = Math.Clamp(target, lb.Blocks, hb.Blocks);
-        for (int i = 0; i < ordered.Length; i++)
+        foreach (var t in ordered)
         {
-            if (ordered[i].Blocks > lb.Blocks && ordered[i].Blocks <= target)
-                lb = ordered[i];
-            if (ordered[i].Blocks < hb.Blocks && ordered[i].Blocks >= target)
-                hb = ordered[i];
+            if (t.Blocks > lb.Blocks && t.Blocks <= target)
+                lb = t;
+            if (t.Blocks < hb.Blocks && t.Blocks >= target)
+                hb = t;
         }
         if (hb.Blocks == lb.Blocks)
             return hb.FeeRate;
-        var a = (decimal)(target - lb.Blocks) / (decimal)(hb.Blocks - lb.Blocks);
+        var a = (decimal)(target - lb.Blocks) / (hb.Blocks - lb.Blocks);
         return new FeeRate((1 - a) * lb.FeeRate.SatoshiPerByte + a * hb.FeeRate.SatoshiPerByte);
     }
-    readonly TimeSpan Expiration = TimeSpan.FromMinutes(25);
+
+    private readonly TimeSpan _expiration = TimeSpan.FromMinutes(25);
     public async Task RefreshCache()
     {
         var rate = await GetFeeRatesCore();
-        memoryCache.Set(cacheKey, rate, Expiration);
+        memoryCache.Set(cacheKey, rate, _expiration);
     }
 
     public bool CachedOnly { get; set; }
@@ -66,7 +62,7 @@ public class MempoolSpaceFeeProvider(
         {
             return  (await  memoryCache.GetOrCreateAsync(cacheKey, async entry =>
             {
-                entry.AbsoluteExpirationRelativeToNow = Expiration;
+                entry.AbsoluteExpirationRelativeToNow = _expiration;
                 return await GetFeeRatesCore();
             }))!;
         }
@@ -80,11 +76,12 @@ public class MempoolSpaceFeeProvider(
     async Task<BlockFeeRate[]> GetFeeRatesCore()
     {
         var client = httpClientFactory.CreateClient(nameof(MempoolSpaceFeeProvider));
-        using var result = await client.GetAsync(ExplorerLink);
+        using var result = await client.GetAsync(_explorerLink);
         result.EnsureSuccessStatusCode();
         var recommendedFees = await result.Content.ReadAsAsync<Dictionary<string, decimal>>();
         var r = new List<BlockFeeRate>();
-        foreach ((var feeId, decimal value) in recommendedFees)
+
+        foreach (var (feeId, value) in recommendedFees)
         {
             var target = feeId switch
             {
@@ -98,6 +95,7 @@ public class MempoolSpaceFeeProvider(
             };
             r.Add(new(target, new FeeRate(value)));
         }
+
         var ordered = r.OrderBy(k => k.Blocks).ToArray();
         for (var i = 0; i < ordered.Length; i++)
         {
@@ -108,18 +106,12 @@ public class MempoolSpaceFeeProvider(
         }
         return ordered;
     }
-    
+
     internal static decimal RandomizeByPercentage(decimal value, decimal percentage)
     {
-        if (value is 1)
-            return 1;
-        decimal range = (value * percentage) / 100m;
-        var res = value + (range * 2.0m) * ((decimal)(Random.Shared.NextDouble() - 0.5));
-        return res switch
-        {
-            < 1m => 1m,
-            > 2000m => 2000m,
-            _ => res
-        };
+        if (value == 1.0m)
+            return 1.0m;
+        var range = (value * percentage) / 100m;
+        return value + (range * 2.0m) * ((decimal)(Random.Shared.NextDouble() - 0.5));
     }
 }

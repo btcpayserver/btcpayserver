@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Models.WalletViewModels;

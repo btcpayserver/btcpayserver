@@ -148,7 +148,7 @@ namespace BTCPayServer.Plugins
             });
             logger.LogInformation($"Loading plugins from {pluginsFolder}");
             Directory.CreateDirectory(pluginsFolder);
-            ExecuteCommands(pluginsFolder);
+            ExecuteCommands(pluginsFolder, new());
 
             var disabledPluginIdentifiers = GetDisabledPluginIdentifiers(pluginsFolder);
             var systemAssembly = typeof(Program).Assembly;
@@ -348,7 +348,7 @@ namespace BTCPayServer.Plugins
             return GetPluginInstancesFromAssembly(assembly, silentlyFails).FirstOrDefault(plugin => plugin.Identifier == pluginIdentifier);
         }
 
-        private static bool ExecuteCommands(string pluginsFolder, Dictionary<string, Version>? installed = null)
+        private static bool ExecuteCommands(string pluginsFolder, Dictionary<string, Version> installed)
         {
             var pendingCommands = GetPendingCommands(pluginsFolder);
             if (!pendingCommands.Any())
@@ -411,13 +411,6 @@ namespace BTCPayServer.Plugins
             var dirName = Path.Combine(pluginsFolder, command.extension);
             switch (command.command)
             {
-                case "update":
-                    if (!DependenciesMet(pluginsFolder, command.extension, installed))
-                        return false;
-                    ExecuteCommand(("delete", command.extension), pluginsFolder, installed);
-                    ExecuteCommand(("install", command.extension), pluginsFolder, installed);
-                    break;
-
                 case "delete":
                     ExecuteCommand(("enable", command.extension), pluginsFolder, installed);
                     if (File.Exists(dirName))
@@ -433,12 +426,12 @@ namespace BTCPayServer.Plugins
                 case "install":
                     var fileName = dirName + BTCPayPluginSuffix;
                     var manifestFileName = dirName + ".json";
-                    if (!DependenciesMet(pluginsFolder, command.extension, installed))
-                        return false;
-
                     ExecuteCommand(("enable", command.extension), pluginsFolder, installed);
+
                     if (File.Exists(fileName))
                     {
+                        if (File.Exists(dirName) || Directory.Exists(dirName))
+                            ExecuteCommand(("delete", dirName), pluginsFolder, installed);
                         ZipFile.ExtractToDirectory(fileName, dirName, true);
                         File.Delete(fileName);
                         if (File.Exists(manifestFileName))
@@ -538,58 +531,15 @@ namespace BTCPayServer.Plugins
         }
 
         public static bool DependencyMet(IBTCPayServerPlugin.PluginDependency dependency,
-            Dictionary<string, Version>? installed = null)
+            Dictionary<string, Version> installed)
         {
-            var plugin = dependency.Identifier.ToLowerInvariant();
-            var versionReq = dependency.Condition;
-            // ensure installed is not null and has lowercased keys for comparison
-            installed = installed == null
-                ? new Dictionary<string, Version>()
-                : installed.ToDictionary(x => x.Key.ToLowerInvariant(), x => x.Value);
-            if (!installed.ContainsKey(plugin) && !versionReq.Equals("!"))
-            {
-                return false;
-            }
-
-            var versionConditions = versionReq.Split("||", StringSplitOptions.RemoveEmptyEntries);
-            return versionConditions.Any(s =>
-            {
-                s = s.Trim();
-                var v = s.Substring(1);
-                if (s[1] == '=')
-                {
-                    v = s.Substring(2);
-                }
-
-                var parsedV = Version.Parse(v);
-                switch (s)
-                {
-                    case { } xx when xx.StartsWith(">="):
-                        return installed[plugin] >= parsedV;
-                    case { } xx when xx.StartsWith("<="):
-                        return installed[plugin] <= parsedV;
-                    case { } xx when xx.StartsWith(">"):
-                        return installed[plugin] > parsedV;
-                    case { } xx when xx.StartsWith("<"):
-                        return installed[plugin] < parsedV;
-                    case { } xx when xx.StartsWith("^"):
-                        return installed[plugin] >= parsedV && installed[plugin].Major == parsedV.Major;
-                    case { } xx when xx.StartsWith("~"):
-                        return installed[plugin] >= parsedV && installed[plugin].Major == parsedV.Major &&
-                               installed[plugin].Minor == parsedV.Minor;
-                    case { } xx when xx.StartsWith("!="):
-                        return installed[plugin] != parsedV;
-                    case { } xx when xx.StartsWith("=="):
-                    default:
-                        return installed[plugin] == parsedV;
-                }
-            });
+            var condition = dependency.ParseCondition();
+            if (!installed.TryGetValue(dependency.Identifier, out var v))
+                return condition is VersionCondition.Not;
+            return condition.IsFulfilled(v);
         }
 
         public static bool DependenciesMet(IEnumerable<IBTCPayServerPlugin.PluginDependency> dependencies,
-            Dictionary<string, Version>? installed)
-        {
-            return dependencies.All(dependency => DependencyMet(dependency, installed));
-        }
+            Dictionary<string, Version> installed) => dependencies.All(dependency => DependencyMet(dependency, installed));
     }
 }

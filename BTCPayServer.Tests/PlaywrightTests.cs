@@ -1992,6 +1992,54 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Fact]
+        public async Task CanUseAwaitProgressForInProgressPayout()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            await s.GenerateWallet(isHotWallet: true);
+            await s.FundStoreWallet(denomination: 50.0m);
+
+            await s.GoToStore(s.StoreId, StoreNavPages.PayoutProcessors);
+            await s.Page.ClickAsync("#Configure-BTC-CHAIN");
+            await s.Page.SetCheckedAsync("#ProcessNewPayoutsInstantly", true);
+            await s.ClickPagePrimary();
+
+            await s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
+            await s.ClickPagePrimary();
+            await s.Page.FillAsync("#Name", "PP1");
+            await s.Page.FillAsync("#Amount", "99.0");
+            await s.Page.SetCheckedAsync("#AutoApproveClaims", true);
+            await s.ClickPagePrimary();
+
+            await s.Page.ClickAsync("text=View");
+            var newPage = await s.Page.Context.WaitForPageAsync();
+
+            var address = await s.Server.ExplorerNode.GetNewAddressAsync();
+            await newPage.FillAsync("#Destination", address.ToString());
+            await newPage.PressAsync("#Destination", "Enter");
+            
+            await s.GoToStore(s.StoreId, StoreNavPages.Payouts);
+            await s.Page.ClickAsync("#InProgress-view");
+
+            // Wait for the payment processor to process the payment
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                await s.Page.ReloadAsync();
+                var massActionSelect = s.Page.Locator(".mass-action-select-all[data-payout-state='InProgress']");
+                await Expect(massActionSelect).ToBeVisibleAsync();
+            });
+
+            await s.Page.ClickAsync(".mass-action-select-all[data-payout-state='InProgress']");
+            await s.Page.ClickAsync("#InProgress-mark-awaiting-payment");
+            await s.Page.ClickAsync("#AwaitingPayment-view");
+            
+            var pageContent = await s.Page.ContentAsync();
+            Assert.Contains("PP1", pageContent);
+        }
+
     }
 }
 

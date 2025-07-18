@@ -70,23 +70,33 @@ namespace BTCPayServer.Plugins
             }).ToArray();
         }
 
-        public async Task<AvailablePlugin> DownloadRemotePlugin(string pluginIdentifier, string version)
+        public async Task<AvailablePlugin> DownloadRemotePlugin(string pluginIdentifier, string version, VersionCondition condition = null)
         {
             if (version is null)
             {
                 string btcpayVersion = Env.Version.TrimStart('v').Split('+')[0];
                 var versions = await _pluginBuilderClient.GetPublishedVersions(
-                    btcpayVersion, _policiesSettings.PluginPreReleases, searchPluginIdentifier: pluginIdentifier);
-                version = versions
+                    btcpayVersion, _policiesSettings.PluginPreReleases, searchPluginIdentifier: pluginIdentifier, includeAllVersions: true);
+                var potentialVersions = versions
                     .Select(v => v.ManifestInfo?.ToObject<AvailablePlugin>())
                     .Where(v => v is not null)
                     .Where(v => v.Identifier == pluginIdentifier)
                     .Select(v => v.Version)
-                    .FirstOrDefault()?
-                    .ToString();
-                if (string.IsNullOrEmpty(version))
+                    .ToList();
+                if (potentialVersions.Count == 0)
                 {
                     throw new InvalidOperationException($"Plugin {pluginIdentifier} not found");
+                }
+
+                if (condition is not null)
+                {
+                    version = potentialVersions
+                        .OrderDescending()
+                        .FirstOrDefault(condition.IsFulfilled)?.ToString();
+                    if (version is null)
+                    {
+                        throw new InvalidOperationException($"No version of plugin {pluginIdentifier} can satisfy condition {condition}");
+                    }
                 }
             }
 
@@ -108,9 +118,7 @@ namespace BTCPayServer.Plugins
 
         public void InstallPlugin(string plugin)
         {
-            var dest = _dataDirectories.Value.PluginDir;
-            UninstallPlugin(plugin);
-            PluginManager.QueueCommands(dest, ("install", plugin));
+            PluginManager.QueueCommands(_dataDirectories.Value.PluginDir, ("install", plugin));
         }
 
         public async Task UploadPlugin(IFormFile plugin)

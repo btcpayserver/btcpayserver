@@ -105,7 +105,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> InstallPlugin(
             [FromServices] PluginService pluginService, string plugin, bool update = false, string version = null)
         {
-            var ctx = new DownloadPluginContext(pluginService, plugin, version, new(), new());
+            var ctx = new DownloadPluginContext(pluginService, plugin, version, new(), new(), null);
             await DownloadPluginAndDepedencies(ctx);
             if (ctx.DependencyFailed.Count == 0)
             {
@@ -130,7 +130,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction("ListPlugins");
         }
 
-        public record DownloadPluginContext(PluginService PluginService, string Plugin, string Version, Dictionary<string, AvailablePlugin> Downloaded, Dictionary<string, string> DependencyFailed);
+        public record DownloadPluginContext(PluginService PluginService, string Plugin, string Version, Dictionary<string, AvailablePlugin> Downloaded, Dictionary<string, string> DependencyFailed, VersionCondition VersionCondition);
         private async Task DownloadPluginAndDepedencies(DownloadPluginContext ctx)
         {
             if (ctx.Downloaded.ContainsKey(ctx.Plugin)
@@ -140,7 +140,7 @@ namespace BTCPayServer.Controllers
             AvailablePlugin manifest;
             try
             {
-                manifest = await ctx.PluginService.DownloadRemotePlugin(ctx.Plugin, ctx.Version);
+                manifest = await ctx.PluginService.DownloadRemotePlugin(ctx.Plugin, ctx.Version, ctx.VersionCondition);
             }
             catch(Exception ex)
             {
@@ -152,11 +152,19 @@ namespace BTCPayServer.Controllers
             {
                 if (!PluginManager.DependencyMet(dep, ctx.PluginService.Installed))
                 {
+                    var cond = dep.ParseCondition();
                     var childCtx = ctx with
                     {
                         Plugin = dep.Identifier,
-                        Version = GetVersion(dep.ParseCondition())?.ToString()
+                        Version = null,
+                        VersionCondition = cond
                     };
+                    if (childCtx.VersionCondition is VersionCondition.Not)
+                    {
+                        ctx.DependencyFailed.Add(ctx.Plugin, $"The currently installed plugin {dep.Identifier} is incompatible with this plugin.");
+                        return;
+                    }
+
                     await DownloadPluginAndDepedencies(childCtx);
                     if (childCtx.DependencyFailed.ContainsKey(childCtx.Plugin))
                     {
@@ -168,23 +176,6 @@ namespace BTCPayServer.Controllers
 
             ctx.PluginService.InstallPlugin(ctx.Plugin);
             ctx.Downloaded.Add(ctx.Plugin, manifest);
-        }
-
-        // Trying to get the version from the condition. Not perfect, but good enough for most cases.
-        private Version GetVersion(VersionCondition condition)
-        {
-            if (condition is VersionCondition.Op op)
-            {
-                if (op.Operation is ">=" or ">" or "^" or "~")
-                    return null; // Take the highest we can
-                if (op.Operation is "==")
-                    return op.Version;
-            }
-            else if (condition is VersionCondition.Yes)
-                return null;
-            else if (condition is VersionCondition.Multiple m)
-                return m.Conditions.Select(GetVersion).FirstOrDefault();
-            return null;
         }
 
         [HttpPost("server/plugins/upload")]

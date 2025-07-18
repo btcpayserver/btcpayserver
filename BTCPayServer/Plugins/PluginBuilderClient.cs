@@ -55,7 +55,7 @@ namespace BTCPayServer.Plugins
             this.httpClient = httpClient;
         }
         static JsonSerializerSettings serializerSettings = new() { ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver() };
-        public async Task<PublishedVersion[]> GetPublishedVersions(string btcpayVersion, bool includePreRelease, string searchPluginName = null, string searchPluginIdentifier = null)
+        public async Task<PublishedVersion[]> GetPublishedVersions(string btcpayVersion, bool includePreRelease, string searchPluginName = null, string searchPluginIdentifier = null, bool? includeAllVersions = null)
         {
             var queryString = $"?includePreRelease={includePreRelease}";
             if (btcpayVersion is not null)
@@ -64,6 +64,8 @@ namespace BTCPayServer.Plugins
                 queryString += $"&searchPluginName={searchPluginName}";
             if (searchPluginIdentifier is not null)
                 queryString += $"&searchPluginIdentifier={searchPluginIdentifier}";
+            if (includeAllVersions is not null)
+                queryString += $"&includeAllVersions={includeAllVersions}";
             var result = await httpClient.GetStringAsync($"api/v1/plugins{queryString}");
             return JsonConvert.DeserializeObject<PublishedVersion[]>(result, serializerSettings) ?? throw new InvalidOperationException();
         }

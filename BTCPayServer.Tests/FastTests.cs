@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -486,6 +487,62 @@ namespace BTCPayServer.Tests
 
             Assert.Equal(new FeeRate(Money.Satoshis(3110), 350), minFeeRate);
             Assert.Equal(Money.Satoshis(200), bump.NewTxFee);
+        }
+
+        [Theory]
+        [InlineData(">= 1.0.0.0", "1.0.0.0", true)]
+        [InlineData("> 1.0.0.0", "1.0.0.0", false)]
+        [InlineData("> 1.0.0.0", "1.0.0.1", true)]
+        [InlineData(">= 1.0.0.0", "1.0.0.1", true)]
+        [InlineData("<= 1.0.0.0", "1.0.0.0", true)]
+        [InlineData("< 1.0.0.0", "1.0.0.0", false)]
+        [InlineData("< 1.0.0.0", "1.0.0.1", false)]
+        [InlineData("<= 1.0.0.0", "1.0.0.1", false)]
+        [InlineData("!= 1.0.0.0", "1.0.0.0", false)]
+        [InlineData("!= 1.0.0.0", "1.0.0.1", true)]
+        [InlineData("== 1.0.0.0 || == 1.0.0.1", "1.0.0.1", true)]
+        [InlineData("== 1.0.0.0 || == 1.0.0.1", "1.0.0.0", true)]
+        [InlineData("== 1.0.0.0 || == 1.0.0.1", "1.0.0.3", false)]
+        [InlineData("== 1.0.0.0 || == 1.0.0.1", "0.0.0.9", false)]
+        // All
+        [InlineData(">= 1.2.1.0 && < 1.2.2.0", "1.2.1.0", true)]
+        [InlineData(">= 1.2.1.0 && < 1.2.2.0", "1.2.2.0", false)]
+        [InlineData(">= 1.2.1.0 && < 1.2.2.0", "1.2.1.5", true)]
+        // Above, same major
+        [InlineData("^ 1.0.0.5", "1.2.3.4", true)]
+        [InlineData("^ 1.0.0.5", "1.0.0.4", false)]
+        [InlineData("^ 1.0.0.5", "1.0.0.6", true)]
+        [InlineData("^ 1.0.0.5", "2.0.0.4", false)]
+        // Above, same major + minor
+        [InlineData("~ 1.0.0.5", "1.2.3.4", false)]
+        [InlineData("~ 1.0.0.5", "1.0.0.4", false)]
+        [InlineData("~ 1.0.0.5", "1.0.0.6", true)]
+        [InlineData("~ 1.0.2.5", "2.0.0.4", false)]
+        [InlineData("~ 1.0.2.5", "1.0.2.6", true)]
+        [InlineData("~ 1.0.2.5", "1.0.2.4", false)]
+        [InlineData("", "0.0.0.9", true)]
+        public void CanParseVersionConditions(string condition, string version, bool expected)
+        {
+            Assert.True(VersionCondition.TryParse(condition, out var cond));
+            Assert.Equal(expected, cond.IsFulfilled(Version.Parse(version)));
+            Assert.Equal(condition, cond.ToString());
+        }
+
+        [Theory]
+        [InlineData(" ~ 1.0.2.5 ", "~ 1.0.2.5")]
+        [InlineData(" == 1.0.2.5||>1.2.3", "== 1.0.2.5 || > 1.2.3")]
+        public void CanParseBadSpaceVersionCondition(string parsed, string formatted)
+        {
+            Assert.True(VersionCondition.TryParse(parsed, out var cond));
+            Assert.Equal(formatted, cond.ToString());
+            Assert.True(VersionCondition.TryParse(formatted, out cond));
+            Assert.Equal(formatted, cond.ToString());
+
+            Assert.Equal("Test: " + formatted, new IBTCPayServerPlugin.PluginDependency()
+            {
+                Identifier = "Test",
+                Condition = parsed
+            }.ToString());
         }
 
         [Fact]

@@ -28,15 +28,18 @@ namespace BTCPayServer.Plugins
             BTCPayServerEnvironment env)
         {
             LoadedPlugins = btcPayServerPlugins;
+            Installed = btcPayServerPlugins.ToDictionary(p => p.Identifier, p => p.Version, StringComparer.OrdinalIgnoreCase);
             _pluginBuilderClient = pluginBuilderClient;
             _dataDirectories = dataDirectories;
             _policiesSettings = policiesSettings;
             Env = env;
         }
 
+        public Dictionary<string, Version> Installed { get; set; }
+
         public IEnumerable<IBTCPayServerPlugin> LoadedPlugins { get; }
         public BTCPayServerEnvironment Env { get; }
-        
+
         public Version GetVersionOfPendingInstall(string plugin)
         {
             var dirName = Path.Combine(_dataDirectories.Value.PluginDir, plugin);
@@ -67,8 +70,36 @@ namespace BTCPayServer.Plugins
             }).ToArray();
         }
 
-        public async Task DownloadRemotePlugin(string pluginIdentifier, string version)
+        public async Task<AvailablePlugin> DownloadRemotePlugin(string pluginIdentifier, string version, VersionCondition condition = null)
         {
+            if (version is null)
+            {
+                string btcpayVersion = Env.Version.TrimStart('v').Split('+')[0];
+                var versions = await _pluginBuilderClient.GetPublishedVersions(
+                    btcpayVersion, _policiesSettings.PluginPreReleases, searchPluginIdentifier: pluginIdentifier, includeAllVersions: true);
+                var potentialVersions = versions
+                    .Select(v => v.ManifestInfo?.ToObject<AvailablePlugin>())
+                    .Where(v => v is not null)
+                    .Where(v => v.Identifier == pluginIdentifier)
+                    .Select(v => v.Version)
+                    .ToList();
+                if (potentialVersions.Count == 0)
+                {
+                    throw new InvalidOperationException($"Plugin {pluginIdentifier} not found");
+                }
+
+                if (condition is not null)
+                {
+                    version = potentialVersions
+                        .OrderDescending()
+                        .FirstOrDefault(condition.IsFulfilled)?.ToString();
+                    if (version is null)
+                    {
+                        throw new InvalidOperationException($"No version of plugin {pluginIdentifier} can satisfy condition {condition}");
+                    }
+                }
+            }
+
             var dest = _dataDirectories.Value.PluginDir;
             var filedest = Path.Join(dest, pluginIdentifier + ".btcpay");
             var filemanifestdest = Path.Join(dest, pluginIdentifier + ".json");
@@ -82,19 +113,12 @@ namespace BTCPayServer.Plugins
             await using var fs = new FileStream(filedest, FileMode.Create, FileAccess.ReadWrite);
             await resp2.Content.CopyToAsync(fs);
             await fs.FlushAsync();
+            return manifest;
         }
 
         public void InstallPlugin(string plugin)
         {
-            var dest = _dataDirectories.Value.PluginDir;
-            UninstallPlugin(plugin);
-            PluginManager.QueueCommands(dest, ("install", plugin));
-        }
-
-        public void UpdatePlugin(string plugin)
-        {
-            var dest = _dataDirectories.Value.PluginDir;
-            PluginManager.QueueCommands(dest, ("update", plugin));
+            PluginManager.QueueCommands(_dataDirectories.Value.PluginDir, ("install", plugin));
         }
 
         public async Task UploadPlugin(IFormFile plugin)

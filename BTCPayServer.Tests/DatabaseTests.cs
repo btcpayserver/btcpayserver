@@ -30,7 +30,9 @@ namespace BTCPayServer.Tests
 
             var wid = new WalletObjectId(new WalletId("AAA", "ddd"), "a", "b");
             var all = Enumerable.Range(0, 10)
+#pragma warning disable CS0618 // Type or member is obsolete
                 .Select(i => walletRepo.ModifyWalletObjectData(wid, (o) => { o["idx"] = i; }))
+#pragma warning restore CS0618 // Type or member is obsolete
                 .ToArray();
             foreach (var task in all)
             {

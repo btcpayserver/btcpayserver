@@ -40,7 +40,8 @@ namespace BTCPayServer.Controllers
                 availablePluginsByIdentifier.TryAdd(p.Identifier, p);
             var res = new ListPluginsViewModel()
             {
-                Installed = pluginService.LoadedPlugins,
+                Plugins = pluginService.LoadedPlugins,
+                Installed = pluginService.Installed,
                 Available = availablePlugins,
                 Commands = pluginService.GetPendingCommands(),
                 Disabled = pluginService.GetDisabledPlugins(),
@@ -52,12 +53,13 @@ namespace BTCPayServer.Controllers
 
         public class ListPluginsViewModel
         {
-            public IEnumerable<IBTCPayServerPlugin> Installed { get; set; }
+            public IEnumerable<IBTCPayServerPlugin> Plugins { get; set; }
             public IEnumerable<PluginService.AvailablePlugin> Available { get; set; }
             public (string command, string plugin)[] Commands { get; set; }
             public bool CanShowRestart { get; set; }
             public Dictionary<string, Version> Disabled { get; set; }
             public Dictionary<string, AvailablePlugin> DownloadedPluginsByIdentifier { get; set; } = new Dictionary<string, AvailablePlugin>();
+            public Dictionary<string, Version> Installed { get; set; }
         }
 
         [HttpPost("server/plugins/uninstall-all")]
@@ -102,33 +104,83 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> InstallPlugin(
             [FromServices] PluginService pluginService, string plugin, bool update = false, string version = null)
         {
-            try
+            var ctx = new DownloadPluginContext(pluginService, plugin, version, new(), new(), null);
+            await DownloadPluginAndDependencies(ctx);
+            if (ctx.DependencyFailed.Count == 0)
             {
-                await pluginService.DownloadRemotePlugin(plugin, version);
-                if (update)
-                {
-                    pluginService.UpdatePlugin(plugin);
-                }
-                else
-                {
-                    pluginService.InstallPlugin(plugin);
-                }
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Message = StringLocalizer["Plugin scheduled to be installed."].Value,
                     Severity = StatusMessageModel.StatusSeverity.Success
                 });
             }
-            catch (Exception)
+            else
             {
+                var error = String.Join(" \n", ctx.DependencyFailed
+                    .Select(d => $"{d.Key}: {d.Value}")
+                    .ToArray());
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
-                    Message = StringLocalizer["The plugin could not be downloaded. Try again later."].Value,
+                    Message = StringLocalizer["The plugin could not be downloaded. Try again later."].Value + " \n" + error,
                     Severity = StatusMessageModel.StatusSeverity.Error
                 });
             }
 
             return RedirectToAction("ListPlugins");
+        }
+
+        public record DownloadPluginContext(PluginService PluginService, string Plugin, string Version, Dictionary<string, AvailablePlugin> Downloaded, Dictionary<string, string> DependencyFailed, VersionCondition VersionCondition);
+        private async Task DownloadPluginAndDependencies(DownloadPluginContext ctx)
+        {
+            if (ctx.Downloaded.ContainsKey(ctx.Plugin)
+                ||
+                ctx.DependencyFailed.ContainsKey(ctx.Plugin))
+                return;
+            AvailablePlugin manifest;
+            try
+            {
+                manifest = await ctx.PluginService.DownloadRemotePlugin(ctx.Plugin, ctx.Version, ctx.VersionCondition);
+            }
+            catch(Exception ex)
+            {
+                ctx.DependencyFailed.Add(ctx.Plugin, ex.Message);
+                return;
+            }
+
+            foreach (var dep in manifest.Dependencies)
+            {
+                if (!PluginManager.DependencyMet(dep, ctx.PluginService.Installed))
+                {
+                    if (dep.Identifier.Equals("BTCPayServer", StringComparison.OrdinalIgnoreCase))
+                    {
+                        ctx.DependencyFailed.Add(ctx.Plugin, $"This condition can't be satisfied {dep}");
+                        return;
+                    }
+
+                    var cond = dep.ParseCondition();
+                    var childCtx = ctx with
+                    {
+                        Plugin = dep.Identifier,
+                        Version = null,
+                        VersionCondition = cond
+                    };
+                    if (childCtx.VersionCondition is VersionCondition.Not)
+                    {
+                        ctx.DependencyFailed.Add(ctx.Plugin, $"The currently installed plugin {dep.Identifier} is incompatible with this plugin.");
+                        return;
+                    }
+
+                    await DownloadPluginAndDependencies(childCtx);
+                    if (childCtx.DependencyFailed.ContainsKey(childCtx.Plugin))
+                    {
+                        ctx.DependencyFailed.Add(ctx.Plugin, $"Failed to download dependency {dep.Identifier}");
+                        return;
+                    }
+                }
+            }
+
+            ctx.PluginService.InstallPlugin(ctx.Plugin);
+            ctx.Downloaded.Add(ctx.Plugin, manifest);
         }
 
         [HttpPost("server/plugins/upload")]

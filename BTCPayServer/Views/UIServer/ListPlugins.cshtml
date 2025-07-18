@@ -6,13 +6,13 @@
 @{
     Layout = "_Layout";
     ViewData.SetActivePage(ServerNavPages.Plugins);
-    var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
+    var installed = Model.Installed;
     var availableAndNotInstalled = new List<PluginService.AvailablePlugin>();
     var availableAndNotInstalledx = Model.Available
         .Where(plugin => !installed.ContainsKey(plugin.Identifier))
         .GroupBy(plugin => plugin.Identifier)
         .ToList();
-    
+
     foreach (var availableAndNotInstalledItem in availableAndNotInstalledx)
     {
         var ordered = availableAndNotInstalledItem.OrderByDescending(plugin => plugin.Version).ToArray();
@@ -21,7 +21,7 @@
 
     bool DependentOn(string plugin)
     {
-        foreach (var installedPlugin in Model.Installed)
+        foreach (var installedPlugin in Model.Plugins)
         {
             if (installedPlugin.Dependencies.Any(dep => dep.Identifier.Equals(plugin, StringComparison.InvariantCultureIgnoreCase)))
             {
@@ -53,7 +53,7 @@
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
         <vc:icon symbol="close" />
     </button>
-    <h5 class="alert-heading" text-translate="true">Important notice about plugins</h5> 
+    <h5 class="alert-heading" text-translate="true">Important notice about plugins</h5>
     <p class="mb-0">
         <span text-translate="true">Plugins are developed by third parties. They need to be updated and maintained regularly in addition to BTCPay Server. Use plugins at your own risk.</span>
         <a href="#warning-details" data-bs-toggle="collapse" class="alert-link" text-translate="true">Read more</a>
@@ -121,11 +121,11 @@
     </div>
 }
 
-@if (Model.Installed.Any())
+@if (Model.Plugins.Any())
 {
     <h3 class="mb-4">Installed Plugins</h3>
     <div class="row mb-4">
-        @foreach (var plugin in Model.Installed.Where(i => !i.SystemPlugin))
+        @foreach (var plugin in Model.Plugins.Where(i => !i.SystemPlugin))
         {
             Model.DownloadedPluginsByIdentifier.TryGetValue(plugin.Identifier, out var downloadInfo);
             var matchedAvailable = Model.Available.Where(availablePlugin => availablePlugin.Identifier == plugin.Identifier && availablePlugin.Version > plugin.Version).OrderByDescending(availablePlugin => availablePlugin.Version).ToArray();
@@ -252,7 +252,7 @@
                     @{
                         var pendingAction = Model.Commands.LastOrDefault(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)).command;
                         var exclusivePendingAction = true;
-                        
+
                         var versionOfPendingInstall = PluginService.GetVersionOfPendingInstall(plugin.Identifier);
                     }
                     <div class="card-footer border-0 pb-3 d-flex gap-2">
@@ -276,13 +276,13 @@
                             {
                                 if (PluginManager.DependenciesMet(x.Dependencies, installed))
                                 {
-                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3">
+                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" class="me-3">
                                         <button type="submit" class="btn btn-secondary" text-translate="true">Update</button>
                                     </form>
                                 }
                                 else
                                 {
-                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3">
+                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" class="me-3">
                                         <button title="Schedule upgrade for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-secondary" text-translate="true">Schedule update</button>
                                     </form>
                                 }
@@ -346,7 +346,7 @@
         <div class="col mb-4" style="margin-left:10px;" text-translate="true">No plugins found</div>
     </div>
 }
-else 
+else
 {
     <h3 class="mb-4">Available Plugins</h3>
     <div class="row mb-4">
@@ -473,7 +473,7 @@ else
                                 }
                                 else if (disabled != plugin.Version)
                                 {
-                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version" asp-route-update="true">
+                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version">
                                         <button type="submit" class="btn btn-primary" text-translate="true">Update</button>
                                     </form>
                                 }

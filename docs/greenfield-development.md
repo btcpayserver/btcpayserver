@@ -68,5 +68,5 @@ Adding a property on a model can potentially be a breaking change. It is a break
 
 ### <a name="missing-properties-detect"></a>Detecting missing properties in a JSON model.
 Possible solutions:
-* Read the raw JSON object in the controller action and and search for the lack of a specific property.
+* Read the raw JSON object in the controller action and search for the lack of a specific property.
 * Use [`JSON.NET Serialization Callabacks`](https://www.newtonsoft.com/json/help/html/SerializationCallbacks.htm) to set a `List<string> MissingProperties;` variable.

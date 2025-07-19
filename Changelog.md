@@ -1,5 +1,32 @@
 # Changelog
 
+## 2.1.7
+
+We recommend you to update NBXplorer to version 2.5.28 to enjoy all the features that this release has to offer.
+
+### Features
+
+* Renamed and reordered columns in the Invoice report (#6835) @NicolasDorier
+* Export all invoice metadata in the Invoice report (#6835) @NicolasDorier
+* Added wallet policy/miniscript support (#6765) @NicolasDorier
+* Added transaction fee and fee rate information in the wallet transaction list and the wallet report (#6857) @NicolasDorier
+* Added Tracking of exchange rate when a new transaction is detected in the wallet (#6841) @NicolasDorier
+* Included rate information in the wallet transaction list, wallet report, and invoice report (#6841) @NicolasDorier
+* Added ability to track additional rates via `Additional rates to track` in store settings (#6841) @NicolasDorier
+* API: Added endpoint to retrieve invoice refund trigger data (#6818) @IzyPro
+* API: Enabled fallback exchange rate via API (#6839) @Abhijay007
+
+### Bug Fixes
+
+* Fixed line break rendering in dropdowns using html-translate (#6820) @bhola-dev58
+* Fixed timezone mismatch in receipts (#6832 #6756) @thgO-O
+* Fix: A plugin could not use types provided by another plugin. (#6851) @NicolasDorier
+
+### Improvements
+
+* Improved responsiveness and UX of the Reporting page (#6846) @NicolasDorier
+* Added a "Reporting" button for easier access to reports from the invoice and wallet transactions lists (#6841 #6835) @NicolasDorier
+
 ## 2.1.6
 
 ### Features

@@ -33,7 +33,7 @@
             <vc:icon symbol="info" />
         </a>
     </h2>
-	<a id="page-primary" asp-action="EditPaymentRequest" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" permission="@Policies.CanModifyPaymentRequests">
+	<a id="page-primary" asp-action="EditPaymentRequest" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" permission="@Policies.CanModifyPaymentRequests" text-translate="true">
         Create Request
     </a>
 </div>
@@ -62,7 +62,7 @@
         <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             @if (statusFilterCount > 0)
             {
-                <span>@statusFilterCount Status</span>
+                <span>@statusFilterCount <span text-translate="true">Status</span></span>
             }
             else
             {
@@ -108,7 +108,7 @@
                             <a asp-action="EditPaymentRequest" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="Edit-@item.Id">@item.Title</a>
                         </td>
                         <td class="date-col">
-                            @(item.ExpiryDate?.ToBrowserDate() ?? new HtmlString("<span class=\"text-muted\">No Expiry</span>"))
+                             @(item.ExpiryDate?.ToBrowserDate() ?? new HtmlString("<span class=\"text-muted\">No Expiry</span>"))
                         </td>
                         <td>
                             @item.ReferenceId

@@ -57,7 +57,7 @@
                     <a class="page-link p-0" href="#" v-on:click.prevent="page = page - 1">«</a>
                 </li>
                 <li class="page-item disabled">
-                    <span class="page-link p-0" text-translate="true">Showing {{ pageStart + 1 }}–{{ pageEnd }} of {{ @Model.Addresses.Count }}</span>
+                    <span class="page-link p-0">@ViewLocalizer["Showing {0} – {1} of {2}", "{{ pageStart + 1 }}", "{{ pageEnd }}" , @Model.Addresses.Count.ToString()]</span>
                 </li>
                 <li class="page-item" :class="{ disabled: pageEnd >= @Model.Addresses.Count }">
                     <a class="page-link p-0" href="#" v-on:click.prevent="page = page + 1">»</a>

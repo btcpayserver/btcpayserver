@@ -16,7 +16,6 @@
   "invoice_id": "Invoice ID",
   "order_id": "Order ID",
   "total_price": "Total Price",
-  "tax_included": "Total Taxes",
   "total_fiat": "Total Fiat",
   "exchange_rate": "Exchange Rate",
   "amount_paid": "Amount Paid",

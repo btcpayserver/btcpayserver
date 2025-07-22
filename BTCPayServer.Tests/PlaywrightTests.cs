@@ -2519,6 +2519,67 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        public async Task CanChangeUserRoles()
+        {
+            await using var s = CreatePlaywrightTester(newDb: true);
+            await s.StartAsync();
+
+            // Setup users and store
+            var employee = await s.RegisterNewUser();
+            await s.Logout();
+            await s.GoToRegister();
+            var owner = await s.RegisterNewUser(true);
+            var (_, storeId) = await s.CreateNewStore();
+            await s.GoToStore();
+            await s.AddUserToStore(storeId, employee, "Employee");
+
+            // Should successfully change the role
+            var userRows = await s.Page.Locator("#StoreUsersList tr").AllAsync();
+            Assert.Equal(2, userRows.Count);
+            ILocator employeeRow = null;
+            foreach (var row in userRows)
+            {
+                if ((await row.InnerTextAsync()).Contains(employee, StringComparison.InvariantCultureIgnoreCase)) employeeRow = row;
+            }
+            Assert.NotNull(employeeRow);
+            await employeeRow.Locator("a[data-bs-target='#EditModal']").ClickAsync();
+            Assert.Equal(employee, await s.Page.Locator("#EditUserEmail").InnerTextAsync());
+            await s.Page.Locator("#EditUserRole").SelectOptionAsync("Manager");
+            await s.Page.Locator("#EditContinue").ClickAsync();
+            Assert.Contains($"The role of {employee} has been changed to Manager.", await (await s.FindAlertMessage()).InnerTextAsync());
+
+            // Should not see a message when not changing role
+            userRows = await s.Page.Locator("#StoreUsersList tr").AllAsync();
+            Assert.Equal(2, userRows.Count);
+            employeeRow = null;
+            foreach (var row in userRows)
+            {
+                if ((await row.InnerTextAsync()).Contains(employee, StringComparison.InvariantCultureIgnoreCase)) employeeRow = row;
+            }
+            Assert.NotNull(employeeRow);
+            await employeeRow.Locator("a[data-bs-target='#EditModal']").ClickAsync();
+            Assert.Equal(employee, await s.Page.Locator("#EditUserEmail").InnerTextAsync());
+            await s.Page.Locator("#EditContinue").ClickAsync();
+            Assert.Contains("The user already has the role Manager.", await (await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error)).InnerTextAsync());
+
+            // Should not change last owner
+            userRows = await s.Page.Locator("#StoreUsersList tr").AllAsync();
+            Assert.Equal(2, userRows.Count);
+            ILocator ownerRow = null;
+            foreach (var row in userRows)
+            {
+                if ((await row.InnerTextAsync()).Contains(owner, StringComparison.InvariantCultureIgnoreCase)) ownerRow = row;
+            }
+            Assert.NotNull(ownerRow);
+            await ownerRow.Locator("a[data-bs-target='#EditModal']").ClickAsync();
+            Assert.Equal(owner, await s.Page.Locator("#EditUserEmail").InnerTextAsync());
+            await s.Page.Locator("#EditUserRole").SelectOptionAsync("Employee");
+            await s.Page.Locator("#EditContinue").ClickAsync();
+            Assert.Contains("The user is the last owner. Their role cannot be changed.", await (await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error)).InnerTextAsync());
+        }
+
     }
 }
 

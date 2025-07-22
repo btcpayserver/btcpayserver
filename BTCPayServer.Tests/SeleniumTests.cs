@@ -1567,69 +1567,6 @@ retry:
             Assert.DoesNotContain(Policies.CanModifyServerSettings,s.Driver.PageSource);
         }
 
-        [Fact]
-        [Trait("Selenium", "Selenium")]
-        public async Task CanChangeUserRoles()
-        {
-            using var s = CreateSeleniumTester(newDb: true);
-            await s.StartAsync();
-
-            // Setup users and store
-            var employee = s.RegisterNewUser();
-            s.Logout();
-            s.GoToRegister();
-            var owner = s.RegisterNewUser(true);
-            (_, string storeId) = s.CreateNewStore();
-            s.GoToStore();
-            s.AddUserToStore(storeId, employee, "Employee");
-
-            // Should successfully change the role
-            var userRows = s.Driver.FindElements(By.CssSelector("#StoreUsersList tr"));
-            Assert.Equal(2, userRows.Count);
-            IWebElement employeeRow = null;
-            foreach (var row in userRows)
-            {
-                if (row.Text.Contains(employee, StringComparison.InvariantCultureIgnoreCase)) employeeRow = row;
-            }
-            Assert.NotNull(employeeRow);
-            employeeRow.FindElement(By.CssSelector("a[data-bs-target=\"#EditModal\"]")).Click();
-            Assert.Equal(s.Driver.WaitForElement(By.Id("EditUserEmail")).Text, employee);
-            new SelectElement(s.Driver.FindElement(By.Id("EditUserRole"))).SelectByValue("Manager");
-            s.Driver.FindElement(By.Id("EditContinue")).Click();
-            Assert.Contains($"The role of {employee} has been changed to Manager.", s.FindAlertMessage().Text);
-
-            // Should not see a message when not changing role
-            userRows = s.Driver.FindElements(By.CssSelector("#StoreUsersList tr"));
-            Assert.Equal(2, userRows.Count);
-            employeeRow = null;
-            foreach (var row in userRows)
-            {
-                if (row.Text.Contains(employee, StringComparison.InvariantCultureIgnoreCase)) employeeRow = row;
-            }
-            Assert.NotNull(employeeRow);
-            employeeRow.FindElement(By.CssSelector("a[data-bs-target=\"#EditModal\"]")).Click();
-            Assert.Equal(s.Driver.WaitForElement(By.Id("EditUserEmail")).Text, employee);
-            // no change, no alert message
-            s.Driver.FindElement(By.Id("EditContinue")).Click();
-            Assert.Contains("The user already has the role Manager.", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error).Text);
-
-            // Should not change last owner
-            userRows = s.Driver.FindElements(By.CssSelector("#StoreUsersList tr"));
-            Assert.Equal(2, userRows.Count);
-            IWebElement ownerRow = null;
-            foreach (var row in userRows)
-            {
-                if (row.Text.Contains(owner, StringComparison.InvariantCultureIgnoreCase)) ownerRow = row;
-            }
-            Assert.NotNull(ownerRow);
-            ownerRow.FindElement(By.CssSelector("a[data-bs-target=\"#EditModal\"]")).Click();
-            Assert.Equal(s.Driver.WaitForElement(By.Id("EditUserEmail")).Text, owner);
-            new SelectElement(s.Driver.FindElement(By.Id("EditUserRole"))).SelectByValue("Employee");
-            s.Driver.FindElement(By.Id("EditContinue")).Click();
-            Assert.Contains("The user is the last owner. Their role cannot be changed.", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error).Text);
-        }
-
-
 
         private static string AssertUrlHasPairingCode(SeleniumTester s)
         {

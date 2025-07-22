@@ -2,7 +2,13 @@
 
 ## 2.1.7
 
-We recommend you to update NBXplorer to version 2.5.28 to enjoy all the features that this release has to offer.
+We recommend updating NBXplorer to version `2.5.28` to take full advantage of the features in this release.
+
+**Breaking change:** This release renames and reorders the columns of the `Legacy Invoice Export`, now called `Invoice Export`. While we encourage you to utilize the updated report, we recognize this may disrupt workflows that rely on the old format.
+
+If you need to restore the `Legacy Invoice Export`, install the `Legacy Invoice Export` plugin.
+
+As a server administrator, go to `Manage Plugins`, search for `[LegacyInvoiceExport]`, install it, and restart your server.
 
 ### Features
 

@@ -2385,6 +2385,52 @@ namespace BTCPayServer.Tests
             await s.Logout();
         }
 
+        [Fact]
+        public async Task CanUsePairing()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.Page.GotoAsync(s.Link("/api-access-request"));
+            Assert.Contains("ReturnUrl", s.Page.Url);
+            await s.GoToRegister();
+            await s.RegisterNewUser();
+            await s.CreateNewStore();
+            await s.AddDerivationScheme();
+
+            await s.GoToStore(s.StoreId, StoreNavPages.Tokens);
+            await s.Page.Locator("#CreateNewToken").ClickAsync();
+            await s.ClickPagePrimary();
+            var url = s.Page.Url;
+            var pairingCode = System.Text.RegularExpressions.Regex.Match(new Uri(url, UriKind.Absolute).Query, "pairingCode=([^&]*)").Groups[1].Value;
+
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage();
+            Assert.Contains(pairingCode, await s.Page.ContentAsync());
+
+            var client = new NBitpayClient.Bitpay(new NBitcoin.Key(), s.ServerUri);
+            await client.AuthorizeClient(new NBitpayClient.PairingCode(pairingCode));
+            await client.CreateInvoiceAsync(
+                new NBitpayClient.Invoice() { Price = 1.000000012m, Currency = "USD", FullNotifications = true },
+                NBitpayClient.Facade.Merchant);
+
+            client = new NBitpayClient.Bitpay(new NBitcoin.Key(), s.ServerUri);
+
+            var code = await client.RequestClientAuthorizationAsync("hehe", NBitpayClient.Facade.Merchant);
+            await s.Page.GotoAsync(code.CreateLink(s.ServerUri).ToString());
+            await s.ClickPagePrimary();
+
+            await client.CreateInvoiceAsync(
+                new NBitpayClient.Invoice() { Price = 1.000000012m, Currency = "USD", FullNotifications = true },
+                NBitpayClient.Facade.Merchant);
+
+            await s.Page.GotoAsync(s.Link("/api-tokens"));
+            await s.ClickPagePrimary(); // Request
+            await s.ClickPagePrimary(); // Approve
+            var url2 = s.Page.Url;
+            var pairingCode2 = System.Text.RegularExpressions.Regex.Match(new Uri(url2, UriKind.Absolute).Query, "pairingCode=([^&]*)").Groups[1].Value;
+            Assert.False(string.IsNullOrEmpty(pairingCode2));
+        }
+
     }
 }
 

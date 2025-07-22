@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
@@ -94,6 +95,7 @@ namespace BTCPayServer.Controllers.Greenfield
             DateTimeOffset? endDate = null,
             [FromQuery] string? textSearch = null,
             [FromQuery] bool includeArchived = false,
+            [FromQuery] bool includePaymentMethods = false,
             [FromQuery] int? skip = null,
             [FromQuery] int? take = null
             )
@@ -122,8 +124,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     Status = status,
                     TextSearch = textSearch
                 });
-
-            return Ok(invoices.Select(ToModel));
+            return Ok(invoices.Select(invoice => ToModel(invoice, includePaymentMethods)));
         }
 
         [Authorize(Policy = Policies.CanViewInvoices,
@@ -582,7 +583,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return this.CreateAPIError(404, "invoice-not-found", "The invoice was not found");
         }
 
-        private InvoicePaymentMethodDataModel[] ToPaymentMethodModels(InvoiceEntity entity, bool includeAccountedPaymentOnly, bool includeSensitive)
+        private InvoicePaymentMethodDataModel[] ToPaymentMethodModels(InvoiceEntity entity, bool includeAccountedPaymentOnly = true, bool includeSensitive = false)
         {
             return entity.GetPaymentPrompts().Select(
                 prompt =>
@@ -639,9 +640,13 @@ namespace BTCPayServer.Controllers.Greenfield
             };
         }
 
-        private InvoiceData ToModel(InvoiceEntity entity)
+        private InvoiceData ToModel(InvoiceEntity entity, bool includePaymentMethods = false)
         {
-            return ToModel(entity, _linkGenerator, _currencyNameTable, Request);
+            var invoiceData = ToModel(entity, _linkGenerator, _currencyNameTable, Request);
+            if (includePaymentMethods)
+                invoiceData.PaymentMethods = ToPaymentMethodModels(entity);
+
+            return invoiceData;
         }
 
         public static InvoiceData ToModel(InvoiceEntity entity, LinkGenerator linkGenerator, CurrencyNameTable currencyNameTable, HttpRequest? request)

@@ -2352,6 +2352,174 @@ namespace BTCPayServer.Tests
             Assert.False(string.IsNullOrEmpty(pairingCode2));
         }
 
+        [Fact]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanCreateStores()
+        {
+            await using var s = CreatePlaywrightTester();
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+            var alice = await s.RegisterNewUser(true);
+            var (storeName, storeId) = await s.CreateNewStore();
+            var storeUrl = $"/stores/{storeId}";
+
+            await s.GoToStore(storeId);
+            Assert.Contains(storeName, await s.Page.ContentAsync());
+            Assert.DoesNotContain("id=\"Dashboard\"", await s.Page.ContentAsync());
+
+            // verify steps for wallet setup are displayed correctly
+            await s.GoToStore(storeId, StoreNavPages.Dashboard);
+            Assert.True(await s.Page.Locator("#SetupGuide-StoreDone").IsVisibleAsync());
+            Assert.True(await s.Page.Locator("#SetupGuide-Wallet").IsVisibleAsync());
+            Assert.True(await s.Page.Locator("#SetupGuide-Lightning").IsVisibleAsync());
+
+            // setup onchain wallet
+            await s.Page.Locator("#SetupGuide-Wallet").ClickAsync();
+            await s.AddDerivationScheme();
+            await s.Page.AssertNoError();
+
+            await s.GoToStore(storeId, StoreNavPages.Dashboard);
+            Assert.DoesNotContain("id=\"SetupGuide\"", await s.Page.ContentAsync());
+            Assert.True(await s.Page.Locator("#Dashboard").IsVisibleAsync());
+
+            // setup offchain wallet
+            await s.Page.Locator("#StoreNav-LightningBTC").ClickAsync();
+            await s.AddLightningNode();
+            await s.Page.AssertNoError();
+            var successAlert = await s.FindAlertMessage();
+            Assert.Contains("BTC Lightning node updated.", await successAlert.InnerTextAsync());
+
+            // Only click on section links if they exist
+            if (await s.Page.Locator("#SectionNav .nav-link").CountAsync() > 0)
+            {
+                await s.ClickOnAllSectionLinks();
+            }
+
+            await s.GoToInvoices(storeId);
+            Assert.Contains("There are no invoices matching your criteria.", await s.Page.ContentAsync());
+            var invoiceId = await s.CreateInvoice(storeId);
+            await s.FindAlertMessage();
+
+            var invoiceUrl = s.Page.Url;
+
+            //let's test archiving an invoice
+            Assert.DoesNotContain("Archived", await s.Page.Locator("#btn-archive-toggle").InnerTextAsync());
+            await s.Page.Locator("#btn-archive-toggle").ClickAsync();
+            Assert.Contains("Unarchive", await s.Page.Locator("#btn-archive-toggle").InnerTextAsync());
+
+            //check that it no longer appears in list
+            await s.GoToInvoices(storeId);
+            Assert.DoesNotContain(invoiceId, await s.Page.ContentAsync());
+
+            //ok, let's unarchive and see that it shows again
+            await s.Page.GotoAsync(invoiceUrl);
+            await s.Page.Locator("#btn-archive-toggle").ClickAsync();
+            await s.FindAlertMessage();
+            Assert.DoesNotContain("Unarchive", await s.Page.Locator("#btn-archive-toggle").InnerTextAsync());
+            await s.GoToInvoices(storeId);
+            Assert.Contains(invoiceId, await s.Page.ContentAsync());
+
+            // archive via list
+            await s.Page.Locator($".mass-action-select[value=\"{invoiceId}\"]").ClickAsync();
+            await s.Page.Locator("#ArchiveSelected").ClickAsync();
+            Assert.Contains("1 invoice archived", await (await s.FindAlertMessage()).InnerTextAsync());
+            Assert.DoesNotContain(invoiceId, await s.Page.ContentAsync());
+
+            // unarchive via list
+            await s.Page.Locator("#StatusOptionsToggle").ClickAsync();
+            await s.Page.Locator("#StatusOptionsIncludeArchived").ClickAsync();
+            Assert.Contains(invoiceId, await s.Page.ContentAsync());
+            await s.Page.Locator($".mass-action-select[value=\"{invoiceId}\"]").ClickAsync();
+            await s.Page.Locator("#UnarchiveSelected").ClickAsync();
+            Assert.Contains("1 invoice unarchived", await (await s.FindAlertMessage()).InnerTextAsync());
+            Assert.Contains(invoiceId, await s.Page.ContentAsync());
+
+            // When logout out we should not be able to access store and invoice details
+            await s.Logout();
+            await s.GoToUrl(storeUrl);
+            Assert.Contains("ReturnUrl", s.Page.Url);
+            await s.Page.GotoAsync(invoiceUrl);
+            Assert.Contains("ReturnUrl", s.Page.Url);
+            await s.GoToRegister();
+
+            // When logged in as different user we should not be able to access store and invoice details
+            var bob = await s.RegisterNewUser();
+            await s.GoToUrl(storeUrl);
+            Assert.Contains("ReturnUrl", s.Page.Url);
+            await s.Page.GotoAsync(invoiceUrl);
+            Assert.Contains("ReturnUrl", s.Page.Url);
+            // s.AssertAccessDenied(); // TODO: Playwright equivalent if needed
+            await s.GoToHome();
+            await s.Logout();
+
+            // Let's add Bob as an employee to alice's store
+            await s.LogIn(alice);
+            await s.AddUserToStore(storeId, bob, "Employee");
+            await s.Logout();
+
+            // Bob should not have access to store, but should have access to invoice
+            await s.LogIn(bob);
+            await s.GoToUrl(storeUrl);
+            Assert.Contains("ReturnUrl", s.Page.Url);
+            await s.GoToUrl(invoiceUrl);
+            await s.Page.AssertNoError();
+
+            await s.Logout();
+            await s.LogIn(alice);
+
+            // Check if we can enable the payment button
+            await s.GoToStore(storeId, StoreNavPages.PayButton);
+            await s.Page.Locator("#enable-pay-button").ClickAsync();
+            await s.Page.Locator("#disable-pay-button").ClickAsync();
+            await s.FindAlertMessage();
+            await s.GoToStore(storeId);
+            Assert.False(await s.Page.Locator("#AnyoneCanCreateInvoice").IsCheckedAsync());
+            await s.Page.Locator("#AnyoneCanCreateInvoice").CheckAsync();
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage();
+            Assert.True(await s.Page.Locator("#AnyoneCanCreateInvoice").IsCheckedAsync());
+
+            // Store settings: Set and unset brand color
+            await s.GoToStore(storeId);
+            await s.Page.Locator("#BrandColor").FillAsync("#f7931a");
+            await s.ClickPagePrimary();
+            Assert.Contains("Store successfully updated", await (await s.FindAlertMessage()).InnerTextAsync());
+            Assert.Equal("#f7931a", await s.Page.Locator("#BrandColor").InputValueAsync());
+            await s.Page.Locator("#BrandColor").FillAsync("");
+            await s.ClickPagePrimary();
+            Assert.Contains("Store successfully updated", await (await s.FindAlertMessage()).InnerTextAsync());
+            Assert.Equal(string.Empty, await s.Page.Locator("#BrandColor").InputValueAsync());
+
+            // Alice should be able to delete the store
+            await s.GoToStore(storeId);
+            await s.Page.Locator("#DeleteStore").ClickAsync();
+            await s.Page.Locator("#ConfirmInput").FillAsync("DELETE");
+            await s.Page.Locator("#ConfirmContinue").ClickAsync();
+            await s.GoToUrl(storeUrl);
+            Assert.Contains("ReturnUrl", s.Page.Url);
+
+            // Archive store
+            (storeName, storeId) = await s.CreateNewStore();
+
+            await s.Page.Locator("#StoreSelectorToggle").ClickAsync();
+            Assert.Contains(storeName, await s.Page.Locator("#StoreSelectorMenu").InnerTextAsync());
+            await s.Page.Locator($"#StoreSelectorMenuItem-{storeId}").ClickAsync();
+            await s.GoToStore(storeId);
+            await s.Page.Locator("#btn-archive-toggle").ClickAsync();
+            Assert.Contains("The store has been archived and will no longer appear in the stores list by default.", await (await s.FindAlertMessage()).InnerTextAsync());
+
+            await s.Page.Locator("#StoreSelectorToggle").ClickAsync();
+            Assert.DoesNotContain(storeName, await s.Page.Locator("#StoreSelectorMenu").InnerTextAsync());
+            Assert.Contains("1 Archived Store", await s.Page.Locator("#StoreSelectorMenu").InnerTextAsync());
+            await s.Page.Locator("#StoreSelectorArchived").ClickAsync();
+
+            var storeLink = s.Page.Locator($"#Store-{storeId}");
+            Assert.Contains(storeName, await storeLink.InnerTextAsync());
+            await s.GoToStore(storeId);
+            await s.Page.Locator("#btn-archive-toggle").ClickAsync();
+            Assert.Contains("The store has been unarchived and will appear in the stores list by default again.", await (await s.FindAlertMessage()).InnerTextAsync());
+        }
+
     }
 }
 

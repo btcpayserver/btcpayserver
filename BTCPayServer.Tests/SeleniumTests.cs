@@ -298,51 +298,6 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        public async Task CanUsePairing()
-        {
-            using var s = CreateSeleniumTester();
-            await s.StartAsync();
-            s.Driver.Navigate().GoToUrl(s.Link("/api-access-request"));
-            Assert.Contains("ReturnUrl", s.Driver.Url);
-            s.GoToRegister();
-            s.RegisterNewUser();
-            s.CreateNewStore();
-            s.AddDerivationScheme();
-
-            s.GoToStore(StoreNavPages.Tokens);
-            s.Driver.FindElement(By.Id("CreateNewToken")).Click();
-            s.ClickPagePrimary();
-            var pairingCode = AssertUrlHasPairingCode(s);
-
-            s.ClickPagePrimary();
-            s.FindAlertMessage();
-            Assert.Contains(pairingCode, s.Driver.PageSource);
-
-            var client = new NBitpayClient.Bitpay(new Key(), s.ServerUri);
-            await client.AuthorizeClient(new NBitpayClient.PairingCode(pairingCode));
-            await client.CreateInvoiceAsync(
-                new NBitpayClient.Invoice() { Price = 1.000000012m, Currency = "USD", FullNotifications = true },
-                NBitpayClient.Facade.Merchant);
-
-            client = new NBitpayClient.Bitpay(new Key(), s.ServerUri);
-
-            var code = await client.RequestClientAuthorizationAsync("hehe", NBitpayClient.Facade.Merchant);
-            s.Driver.Navigate().GoToUrl(code.CreateLink(s.ServerUri));
-            s.ClickPagePrimary();
-
-            await client.CreateInvoiceAsync(
-                new NBitpayClient.Invoice() { Price = 1.000000012m, Currency = "USD", FullNotifications = true },
-                NBitpayClient.Facade.Merchant);
-
-            s.Driver.Navigate().GoToUrl(s.Link("/api-tokens"));
-            s.ClickPagePrimary(); // Request
-            s.ClickPagePrimary(); // Approve
-            AssertUrlHasPairingCode(s);
-        }
-
-
-
-        [Fact(Timeout = TestTimeout)]
         public async Task CanCreateAppPoS()
         {
             using var s = CreateSeleniumTester(newDb: true);

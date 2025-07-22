@@ -2591,6 +2591,62 @@ namespace BTCPayServer.Tests
             Assert.Equal(spentOutpoint, tx.Inputs[0].PrevOut);
         }
 
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanAccessUserStoreAsAdmin()
+        {
+            await using var s = CreatePlaywrightTester(newDb: true);
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+            await s.Server.EnsureChannelsSetup();
+
+            // Setup user, store and wallets
+            await s.RegisterNewUser();
+            var (_, storeId) = await s.CreateNewStore();
+            await s.GoToStore();
+            await s.GenerateWallet(isHotWallet: true);
+            await s.AddLightningNode(LightningConnectionType.CLightning, false);
+
+            // Add apps
+            await s.CreateApp("PointOfSale");
+            await s.CreateApp("Crowdfund");
+            await s.Logout();
+
+            // Setup admin and check access
+            await s.GoToRegister();
+            await s.RegisterNewUser(true);
+            string GetStorePath(string subPath) => $"/stores/{storeId}/{subPath}";
+
+            // Admin access
+            await s.AssertPageAccess(false, GetStorePath(""));
+            await s.AssertPageAccess(true, GetStorePath("reports"));
+            await s.AssertPageAccess(true, GetStorePath("invoices"));
+            await s.AssertPageAccess(false, GetStorePath("invoices/create"));
+            await s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            await s.AssertPageAccess(false, GetStorePath("payment-requests/edit"));
+            await s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            await s.AssertPageAccess(true, GetStorePath("payouts"));
+            await s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
+            await s.AssertPageAccess(false, GetStorePath("onchain/BTC/settings"));
+            await s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
+            await s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
+            await s.AssertPageAccess(false, GetStorePath("apps/create"));
+
+            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks",
+                "payout-processors", "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC",
+                "emails/rules", "email-settings", "forms"};
+            foreach (var path in storeSettingsPaths)
+            {   // should have view access to settings, but no submit buttons or create links
+                s.TestLogs.LogInformation($"Checking access to store page {path} as admin");
+                await s.AssertPageAccess(true, $"stores/{storeId}/{path}");
+                if (path != "payout-processors")
+                {
+                    Assert.Equal(0, await s.Page.Locator("#mainContent .btn-primary").CountAsync());
+                }
+            }
+        }
+
     }
 }
 

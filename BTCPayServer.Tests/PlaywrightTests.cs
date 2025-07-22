@@ -2174,6 +2174,364 @@ namespace BTCPayServer.Tests
             await newPage.CloseAsync();
         }
 
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanUsePredefinedRoles()
+        {
+            await using var s = CreatePlaywrightTester(newDb: true);
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+            await s.Server.EnsureChannelsSetup();
+            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks", "payout-processors",
+                "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC", "emails/rules", "email-settings", "forms"};
+
+            // Setup users
+            var manager = await s.RegisterNewUser();
+            await s.Logout();
+            await s.GoToRegister();
+            var employee = await s.RegisterNewUser();
+            await s.Logout();
+            await s.GoToRegister();
+            var guest = await s.RegisterNewUser();
+            await s.Logout();
+            await s.GoToRegister();
+
+            // Setup store, wallets and add users
+            await s.RegisterNewUser(true);
+            var (_, storeId) = await s.CreateNewStore();
+            await s.GoToStore();
+            await s.GenerateWallet(isHotWallet: true);
+            await s.AddLightningNode("CLightning", false);
+            await s.AddUserToStore(storeId, manager, "Manager");
+            await s.AddUserToStore(storeId, employee, "Employee");
+            await s.AddUserToStore(storeId, guest, "Guest");
+
+            // Add apps
+            var (_, posId) = await s.CreateApp("PointOfSale");
+            var (_, crowdfundId) = await s.CreateApp("Crowdfund");
+
+            string GetStorePath(string subPath) => $"/stores/{storeId}" + (string.IsNullOrEmpty(subPath) ? "" : $"/{subPath}");
+
+            // Owner access
+            await s.AssertPageAccess(true, GetStorePath(""));
+            await s.AssertPageAccess(true, GetStorePath("reports"));
+            await s.AssertPageAccess(true, GetStorePath("invoices"));
+            await s.AssertPageAccess(true, GetStorePath("invoices/create"));
+            await s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            await s.AssertPageAccess(true, GetStorePath("payment-requests/edit"));
+            await s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            await s.AssertPageAccess(true, GetStorePath("payouts"));
+            await s.AssertPageAccess(true, GetStorePath("onchain/BTC"));
+            await s.AssertPageAccess(true, GetStorePath("onchain/BTC/settings"));
+            await s.AssertPageAccess(true, GetStorePath("lightning/BTC"));
+            await s.AssertPageAccess(true, GetStorePath("lightning/BTC/settings"));
+            await s.AssertPageAccess(true, GetStorePath("apps/create"));
+            await s.AssertPageAccess(true, $"/apps/{posId}/settings/pos");
+            await s.AssertPageAccess(true, $"/apps/{crowdfundId}/settings/crowdfund");
+            foreach (var path in storeSettingsPaths)
+            {   // should have manage access to settings, hence should see submit buttons or create links
+                s.TestLogs.LogInformation($"Checking access to store page {path} as owner");
+                await s.AssertPageAccess(true, $"stores/{storeId}/{path}");
+                if (path != "payout-processors")
+                {
+                    var saveButton = s.Page.GetByRole(AriaRole.Button, new() { Name = "Save" });
+                    if (await saveButton.CountAsync() > 0)
+                    {
+                        Assert.True(await saveButton.IsVisibleAsync());
+                    }
+                }
+            }
+            await s.Logout();
+
+            // Manager access
+            await s.LogIn(manager);
+            await s.AssertPageAccess(false, GetStorePath(""));
+            await s.AssertPageAccess(true, GetStorePath("reports"));
+            await s.AssertPageAccess(true, GetStorePath("invoices"));
+            await s.AssertPageAccess(true, GetStorePath("invoices/create"));
+            await s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            await s.AssertPageAccess(true, GetStorePath("payment-requests/edit"));
+            await s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            await s.AssertPageAccess(true, GetStorePath("payouts"));
+            await s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
+            await s.AssertPageAccess(false, GetStorePath("onchain/BTC/settings"));
+            await s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
+            await s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
+            await s.AssertPageAccess(false, GetStorePath("apps/create"));
+            await s.AssertPageAccess(true, $"/apps/{posId}/settings/pos");
+            await s.AssertPageAccess(true, $"/apps/{crowdfundId}/settings/crowdfund");
+            foreach (var path in storeSettingsPaths)
+            {   // should have view access to settings, but no submit buttons or create links
+                s.TestLogs.LogInformation($"Checking access to store page {path} as manager");
+                await s.AssertPageAccess(true, $"stores/{storeId}/{path}");
+                Assert.False(await s.Page.GetByRole(AriaRole.Button, new() { Name = "Save" }).IsVisibleAsync());
+            }
+            await s.Logout();
+
+            // Employee access
+            await s.LogIn(employee);
+            await s.AssertPageAccess(false, GetStorePath(""));
+            await s.AssertPageAccess(false, GetStorePath("reports"));
+            await s.AssertPageAccess(true, GetStorePath("invoices"));
+            await s.AssertPageAccess(true, GetStorePath("invoices/create"));
+            await s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            await s.AssertPageAccess(true, GetStorePath("payment-requests/edit"));
+            await s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            await s.AssertPageAccess(true, GetStorePath("payouts"));
+            await s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
+            await s.AssertPageAccess(false, GetStorePath("onchain/BTC/settings"));
+            await s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
+            await s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
+            await s.AssertPageAccess(false, GetStorePath("apps/create"));
+            await s.AssertPageAccess(false, $"/apps/{posId}/settings/pos");
+            await s.AssertPageAccess(false, $"/apps/{crowdfundId}/settings/crowdfund");
+            foreach (var path in storeSettingsPaths)
+            {   // should not have access to settings
+                s.TestLogs.LogInformation($"Checking access to store page {path} as employee");
+                await s.AssertPageAccess(false, $"stores/{storeId}/{path}");
+            }
+            await s.Logout();
+
+            // Guest access
+            await s.LogIn(guest);
+            await s.AssertPageAccess(false, GetStorePath(""));
+            await s.AssertPageAccess(false, GetStorePath("reports"));
+            await s.AssertPageAccess(true, GetStorePath("invoices"));
+            await s.AssertPageAccess(true, GetStorePath("invoices/create"));
+            await s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            await s.AssertPageAccess(false, GetStorePath("payment-requests/edit"));
+            await s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            await s.AssertPageAccess(true, GetStorePath("payouts"));
+            await s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
+            await s.AssertPageAccess(false, GetStorePath("onchain/BTC/settings"));
+            await s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
+            await s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
+            await s.AssertPageAccess(false, GetStorePath("apps/create"));
+            await s.AssertPageAccess(false, $"/apps/{posId}/settings/pos");
+            await s.AssertPageAccess(false, $"/apps/{crowdfundId}/settings/crowdfund");
+            foreach (var path in storeSettingsPaths)
+            {   // should not have access to settings
+                s.TestLogs.LogInformation($"Checking access to store page {path} as guest");
+                await s.AssertPageAccess(false, $"stores/{storeId}/{path}");
+            }
+            await s.Logout();
+        }
+
+        [Fact]
+        public async Task CanUsePairing()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.Page.GotoAsync(s.Link("/api-access-request"));
+            Assert.Contains("ReturnUrl", s.Page.Url);
+            await s.GoToRegister();
+            await s.RegisterNewUser();
+            await s.CreateNewStore();
+            await s.AddDerivationScheme();
+
+            await s.GoToStore(s.StoreId, StoreNavPages.Tokens);
+            await s.Page.Locator("#CreateNewToken").ClickAsync();
+            await s.ClickPagePrimary();
+            var url = s.Page.Url;
+            var pairingCode = System.Text.RegularExpressions.Regex.Match(new Uri(url, UriKind.Absolute).Query, "pairingCode=([^&]*)").Groups[1].Value;
+
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage();
+            Assert.Contains(pairingCode, await s.Page.ContentAsync());
+
+            var client = new NBitpayClient.Bitpay(new NBitcoin.Key(), s.ServerUri);
+            await client.AuthorizeClient(new NBitpayClient.PairingCode(pairingCode));
+            await client.CreateInvoiceAsync(
+                new NBitpayClient.Invoice() { Price = 1.000000012m, Currency = "USD", FullNotifications = true },
+                NBitpayClient.Facade.Merchant);
+
+            client = new NBitpayClient.Bitpay(new NBitcoin.Key(), s.ServerUri);
+
+            var code = await client.RequestClientAuthorizationAsync("hehe", NBitpayClient.Facade.Merchant);
+            await s.Page.GotoAsync(code.CreateLink(s.ServerUri).ToString());
+            await s.ClickPagePrimary();
+
+            await client.CreateInvoiceAsync(
+                new NBitpayClient.Invoice() { Price = 1.000000012m, Currency = "USD", FullNotifications = true },
+                NBitpayClient.Facade.Merchant);
+
+            await s.Page.GotoAsync(s.Link("/api-tokens"));
+            await s.ClickPagePrimary(); // Request
+            await s.ClickPagePrimary(); // Approve
+            var url2 = s.Page.Url;
+            var pairingCode2 = System.Text.RegularExpressions.Regex.Match(new Uri(url2, UriKind.Absolute).Query, "pairingCode=([^&]*)").Groups[1].Value;
+            Assert.False(string.IsNullOrEmpty(pairingCode2));
+        }
+
+        [Fact]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanCreateStores()
+        {
+            await using var s = CreatePlaywrightTester();
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+            var alice = await s.RegisterNewUser(true);
+            var (storeName, storeId) = await s.CreateNewStore();
+            var storeUrl = $"/stores/{storeId}";
+
+            await s.GoToStore(storeId);
+            Assert.Contains(storeName, await s.Page.ContentAsync());
+            Assert.DoesNotContain("id=\"Dashboard\"", await s.Page.ContentAsync());
+
+            // verify steps for wallet setup are displayed correctly
+            await s.GoToStore(storeId, StoreNavPages.Dashboard);
+            Assert.True(await s.Page.Locator("#SetupGuide-StoreDone").IsVisibleAsync());
+            Assert.True(await s.Page.Locator("#SetupGuide-Wallet").IsVisibleAsync());
+            Assert.True(await s.Page.Locator("#SetupGuide-Lightning").IsVisibleAsync());
+
+            // setup onchain wallet
+            await s.Page.Locator("#SetupGuide-Wallet").ClickAsync();
+            await s.AddDerivationScheme();
+            await s.Page.AssertNoError();
+
+            await s.GoToStore(storeId, StoreNavPages.Dashboard);
+            Assert.DoesNotContain("id=\"SetupGuide\"", await s.Page.ContentAsync());
+            Assert.True(await s.Page.Locator("#Dashboard").IsVisibleAsync());
+
+            // setup offchain wallet
+            await s.Page.Locator("#StoreNav-LightningBTC").ClickAsync();
+            await s.AddLightningNode();
+            await s.Page.AssertNoError();
+            var successAlert = await s.FindAlertMessage();
+            Assert.Contains("BTC Lightning node updated.", await successAlert.InnerTextAsync());
+
+            // Only click on section links if they exist
+            if (await s.Page.Locator("#SectionNav .nav-link").CountAsync() > 0)
+            {
+                await s.ClickOnAllSectionLinks();
+            }
+
+            await s.GoToInvoices(storeId);
+            Assert.Contains("There are no invoices matching your criteria.", await s.Page.ContentAsync());
+            var invoiceId = await s.CreateInvoice(storeId);
+            await s.FindAlertMessage();
+
+            var invoiceUrl = s.Page.Url;
+
+            //let's test archiving an invoice
+            Assert.DoesNotContain("Archived", await s.Page.Locator("#btn-archive-toggle").InnerTextAsync());
+            await s.Page.Locator("#btn-archive-toggle").ClickAsync();
+            Assert.Contains("Unarchive", await s.Page.Locator("#btn-archive-toggle").InnerTextAsync());
+
+            //check that it no longer appears in list
+            await s.GoToInvoices(storeId);
+            Assert.DoesNotContain(invoiceId, await s.Page.ContentAsync());
+
+            //ok, let's unarchive and see that it shows again
+            await s.Page.GotoAsync(invoiceUrl);
+            await s.Page.Locator("#btn-archive-toggle").ClickAsync();
+            await s.FindAlertMessage();
+            Assert.DoesNotContain("Unarchive", await s.Page.Locator("#btn-archive-toggle").InnerTextAsync());
+            await s.GoToInvoices(storeId);
+            Assert.Contains(invoiceId, await s.Page.ContentAsync());
+
+            // archive via list
+            await s.Page.Locator($".mass-action-select[value=\"{invoiceId}\"]").ClickAsync();
+            await s.Page.Locator("#ArchiveSelected").ClickAsync();
+            Assert.Contains("1 invoice archived", await (await s.FindAlertMessage()).InnerTextAsync());
+            Assert.DoesNotContain(invoiceId, await s.Page.ContentAsync());
+
+            // unarchive via list
+            await s.Page.Locator("#StatusOptionsToggle").ClickAsync();
+            await s.Page.Locator("#StatusOptionsIncludeArchived").ClickAsync();
+            Assert.Contains(invoiceId, await s.Page.ContentAsync());
+            await s.Page.Locator($".mass-action-select[value=\"{invoiceId}\"]").ClickAsync();
+            await s.Page.Locator("#UnarchiveSelected").ClickAsync();
+            Assert.Contains("1 invoice unarchived", await (await s.FindAlertMessage()).InnerTextAsync());
+            Assert.Contains(invoiceId, await s.Page.ContentAsync());
+
+            // When logout out we should not be able to access store and invoice details
+            await s.Logout();
+            await s.GoToUrl(storeUrl);
+            Assert.Contains("ReturnUrl", s.Page.Url);
+            await s.Page.GotoAsync(invoiceUrl);
+            Assert.Contains("ReturnUrl", s.Page.Url);
+            await s.GoToRegister();
+
+            // When logged in as different user we should not be able to access store and invoice details
+            var bob = await s.RegisterNewUser();
+            await s.GoToUrl(storeUrl);
+            Assert.Contains("ReturnUrl", s.Page.Url);
+            await s.Page.GotoAsync(invoiceUrl);
+            Assert.Contains("ReturnUrl", s.Page.Url);
+            // s.AssertAccessDenied(); // TODO: Playwright equivalent if needed
+            await s.GoToHome();
+            await s.Logout();
+
+            // Let's add Bob as an employee to alice's store
+            await s.LogIn(alice);
+            await s.AddUserToStore(storeId, bob, "Employee");
+            await s.Logout();
+
+            // Bob should not have access to store, but should have access to invoice
+            await s.LogIn(bob);
+            await s.GoToUrl(storeUrl);
+            Assert.Contains("ReturnUrl", s.Page.Url);
+            await s.GoToUrl(invoiceUrl);
+            await s.Page.AssertNoError();
+
+            await s.Logout();
+            await s.LogIn(alice);
+
+            // Check if we can enable the payment button
+            await s.GoToStore(storeId, StoreNavPages.PayButton);
+            await s.Page.Locator("#enable-pay-button").ClickAsync();
+            await s.Page.Locator("#disable-pay-button").ClickAsync();
+            await s.FindAlertMessage();
+            await s.GoToStore(storeId);
+            Assert.False(await s.Page.Locator("#AnyoneCanCreateInvoice").IsCheckedAsync());
+            await s.Page.Locator("#AnyoneCanCreateInvoice").CheckAsync();
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage();
+            Assert.True(await s.Page.Locator("#AnyoneCanCreateInvoice").IsCheckedAsync());
+
+            // Store settings: Set and unset brand color
+            await s.GoToStore(storeId);
+            await s.Page.Locator("#BrandColor").FillAsync("#f7931a");
+            await s.ClickPagePrimary();
+            Assert.Contains("Store successfully updated", await (await s.FindAlertMessage()).InnerTextAsync());
+            Assert.Equal("#f7931a", await s.Page.Locator("#BrandColor").InputValueAsync());
+            await s.Page.Locator("#BrandColor").FillAsync("");
+            await s.ClickPagePrimary();
+            Assert.Contains("Store successfully updated", await (await s.FindAlertMessage()).InnerTextAsync());
+            Assert.Equal(string.Empty, await s.Page.Locator("#BrandColor").InputValueAsync());
+
+            // Alice should be able to delete the store
+            await s.GoToStore(storeId);
+            await s.Page.Locator("#DeleteStore").ClickAsync();
+            await s.Page.Locator("#ConfirmInput").FillAsync("DELETE");
+            await s.Page.Locator("#ConfirmContinue").ClickAsync();
+            await s.GoToUrl(storeUrl);
+            Assert.Contains("ReturnUrl", s.Page.Url);
+
+            // Archive store
+            (storeName, storeId) = await s.CreateNewStore();
+
+            await s.Page.Locator("#StoreSelectorToggle").ClickAsync();
+            Assert.Contains(storeName, await s.Page.Locator("#StoreSelectorMenu").InnerTextAsync());
+            await s.Page.Locator($"#StoreSelectorMenuItem-{storeId}").ClickAsync();
+            await s.GoToStore(storeId);
+            await s.Page.Locator("#btn-archive-toggle").ClickAsync();
+            Assert.Contains("The store has been archived and will no longer appear in the stores list by default.", await (await s.FindAlertMessage()).InnerTextAsync());
+
+            await s.Page.Locator("#StoreSelectorToggle").ClickAsync();
+            Assert.DoesNotContain(storeName, await s.Page.Locator("#StoreSelectorMenu").InnerTextAsync());
+            Assert.Contains("1 Archived Store", await s.Page.Locator("#StoreSelectorMenu").InnerTextAsync());
+            await s.Page.Locator("#StoreSelectorArchived").ClickAsync();
+
+            var storeLink = s.Page.Locator($"#Store-{storeId}");
+            Assert.Contains(storeName, await storeLink.InnerTextAsync());
+            await s.GoToStore(storeId);
+            await s.Page.Locator("#btn-archive-toggle").ClickAsync();
+            Assert.Contains("The store has been unarchived and will appear in the stores list by default again.", await (await s.FindAlertMessage()).InnerTextAsync());
+        }
+
     }
 }
 

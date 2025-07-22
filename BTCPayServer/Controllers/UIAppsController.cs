@@ -60,10 +60,6 @@ namespace BTCPayServer.Controllers
             public string AppId { get; set; }
             public object Settings { get; set; }
             public string StoreId { get; set; }
-            public override string ToString()
-            {
-                return string.Empty;
-            }
         }
 
         [HttpGet("/apps/{appId}")]
@@ -212,7 +208,7 @@ namespace BTCPayServer.Controllers
 
             return RedirectToAction(nameof(UIStoresController.Dashboard), "UIStores", new { storeId = app.StoreDataId });
         }
-        
+
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpPost("{appId}/archive")]
         public async Task<IActionResult> ToggleArchive(string appId)
@@ -220,7 +216,7 @@ namespace BTCPayServer.Controllers
             var app = GetCurrentApp();
             if (app == null)
                 return NotFound();
-            
+
             var type = _appService.GetAppType(app.AppType);
             if (type is null)
             {
@@ -240,7 +236,7 @@ namespace BTCPayServer.Controllers
                     ? StringLocalizer["Failed to archive the app."].Value
                     : StringLocalizer["Failed to unarchive the app."].Value;
             }
-            
+
             var url = await type.ConfigureLink(app);
             return Redirect(url);
         }

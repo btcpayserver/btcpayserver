@@ -1266,7 +1266,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public async Task CanRequireApprovalForNewAccounts()
         {
-            await using var s = CreatePlaywrightTester();
+            await using var s = CreatePlaywrightTester(newDb: true);
             await s.StartAsync();
 
             var settings = s.Server.PayTester.GetService<SettingsRepository>();

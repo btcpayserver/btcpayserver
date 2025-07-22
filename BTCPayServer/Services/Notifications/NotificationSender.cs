@@ -12,10 +12,6 @@ namespace BTCPayServer.Services.Notifications
     public class UserNotificationsUpdatedEvent
     {
         public string UserId { get; set; }
-        public override string ToString()
-        {
-            return string.Empty;
-        }
     }
     public class NotificationSender
     {
@@ -101,7 +97,7 @@ namespace BTCPayServer.Services.Notifications
             query = query.Where(store => store.DisabledNotifications != "all");
             foreach (string term in terms)
             {
-                // Cannot specify StringComparison as EF core does not support it and would attempt client-side evaluation 
+                // Cannot specify StringComparison as EF core does not support it and would attempt client-side evaluation
                 // ReSharper disable once CA1307
 #pragma warning disable CA1307 // Specify StringComparison
                 query = query.Where(user => user.DisabledNotifications == null || !user.DisabledNotifications.Contains(term));

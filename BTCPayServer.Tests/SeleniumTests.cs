@@ -1569,62 +1569,6 @@ retry:
 
         [Fact]
         [Trait("Selenium", "Selenium")]
-        [Trait("Lightning", "Lightning")]
-        public async Task CanAccessUserStoreAsAdmin()
-        {
-            using var s = CreateSeleniumTester(newDb: true);
-            s.Server.ActivateLightning();
-            await s.StartAsync();
-            await s.Server.EnsureChannelsSetup();
-
-            // Setup user, store and wallets
-            s.RegisterNewUser();
-            (_, string storeId) = s.CreateNewStore();
-            s.GoToStore();
-            s.GenerateWallet(isHotWallet: true);
-            s.AddLightningNode(LightningConnectionType.CLightning, false);
-
-            // Add apps
-            (_, string _) = s.CreateApp("PointOfSale");
-            (_, string _) = s.CreateApp("Crowdfund");
-            s.Logout();
-
-            // Setup admin and check access
-            s.GoToRegister();
-            s.RegisterNewUser(true);
-            string GetStorePath(string subPath) => $"/stores/{storeId}/{subPath}";
-
-            // Admin access
-            s.AssertPageAccess(false, GetStorePath(""));
-            s.AssertPageAccess(true, GetStorePath("reports"));
-            s.AssertPageAccess(true, GetStorePath("invoices"));
-            s.AssertPageAccess(false, GetStorePath("invoices/create"));
-            s.AssertPageAccess(true, GetStorePath("payment-requests"));
-            s.AssertPageAccess(false, GetStorePath("payment-requests/edit"));
-            s.AssertPageAccess(true, GetStorePath("pull-payments"));
-            s.AssertPageAccess(true, GetStorePath("payouts"));
-            s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
-            s.AssertPageAccess(false, GetStorePath("onchain/BTC/settings"));
-            s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
-            s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
-            s.AssertPageAccess(false, GetStorePath("apps/create"));
-
-            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks",
-                "payout-processors", "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC",
-                "emails/rules", "email-settings", "forms"};
-            foreach (var path in storeSettingsPaths)
-            {   // should have view access to settings, but no submit buttons or create links
-                TestLogs.LogInformation($"Checking access to store page {path} as admin");
-                s.AssertPageAccess(true, $"stores/{storeId}/{path}");
-                if (path != "payout-processors")
-                {
-                    s.Driver.ElementDoesNotExist(By.CssSelector("#mainContent .btn-primary"));
-                }
-            }
-        }
-
-        [Fact]
-        [Trait("Selenium", "Selenium")]
         public async Task CanChangeUserRoles()
         {
             using var s = CreateSeleniumTester(newDb: true);

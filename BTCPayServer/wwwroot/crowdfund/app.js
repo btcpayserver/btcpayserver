@@ -327,9 +327,8 @@ app = new Vue({
  * @returns String formatted as a number according to current browser locale and correct fraction amount
  */
 function formatAmount(amount, divisibility) {
-    var parsedAmount = parseFloat(amount).toFixed(divisibility);
-    var [wholeAmount, fractionAmount] = parsedAmount.split('.');
-    var formattedWholeAmount = new Intl.NumberFormat().format(parseInt(wholeAmount, 10));
-
-    return formattedWholeAmount + (fractionAmount ? '.' + fractionAmount : '');
+    return new Intl.NumberFormat(undefined, {
+        minimumFractionDigits: divisibility,
+        maximumFractionDigits: divisibility
+    }).format(parseFloat(amount));
 }

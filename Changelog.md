@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.1.7
+## 2.2.0
 
 We recommend updating NBXplorer to version `2.5.28` to take full advantage of the features in this release.
 
@@ -19,6 +19,7 @@ As a server administrator, go to `Manage Plugins`, search for `[LegacyInvoiceExp
 * Added Tracking of exchange rate when a new transaction is detected in the wallet (#6841) @NicolasDorier
 * Included rate information in the wallet transaction list, wallet report, and invoice report (#6841) @NicolasDorier
 * Added ability to track additional rates via `Additional rates to track` in store settings (#6841) @NicolasDorier
+* Fix crowdfund number formatting for non-English locales (#6865) @bc1cindy
 * API: Added endpoint to retrieve invoice refund trigger data (#6818) @IzyPro
 * API: Enabled fallback exchange rate via API (#6839) @Abhijay007
 

@@ -708,7 +708,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private async Task FillUsers(UpdatePointOfSaleViewModel vm)
         {
             var users = await _storeRepository.GetStoreUsers(GetCurrentStore().Id);
-            vm.StoreUsers = users.Where(u => u.Id == _userManager.GetUserId(User)).Select(u => (u.Id, u.Email, u.StoreRole.Role)).ToDictionary(u => u.Id, u => $"{u.Email} ({u.Role})");
+
+            if (!User.IsInRole(Roles.ServerAdmin))
+                users = users.Where(u => u.Id == _userManager.GetUserId(User)).ToArray();
+
+            vm.StoreUsers = users.Select(u => (u.Id, u.Email, u.StoreRole.Role))
+                .ToDictionary(u => u.Id, u => $"{u.Email} ({u.Role})");
         }
     }
 }

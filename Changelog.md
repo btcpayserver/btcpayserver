@@ -22,12 +22,15 @@ As a server administrator, go to `Manage Plugins`, search for `[LegacyInvoiceExp
 * Fix crowdfund number formatting for non-English locales (#6865) @bc1cindy
 * API: Added endpoint to retrieve invoice refund trigger data (#6818) @IzyPro
 * API: Enabled fallback exchange rate via API (#6839) @Abhijay007
+* Asking for confirmation to display QR code if user is store owner (#6878) @rockstardev
+* Automatic installation of plugin dependencies (#6858 #6873) @NicolasDorier @thgO-O
 
 ### Bug Fixes
 
 * Fixed line break rendering in dropdowns using html-translate (#6820) @bhola-dev58
 * Fixed timezone mismatch in receipts (#6832 #6756) @thgO-O
 * Fix: A plugin could not use types provided by another plugin. (#6851) @NicolasDorier
+* Fix time icon spacing in wallet transactions header (#6877) @bc1cindy
 
 ### Improvements
 

@@ -2708,7 +2708,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("The user is the last owner. Their role cannot be changed.", await (await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error)).InnerTextAsync());
         }
 
-        
+
         [Fact]
         [Trait("Playwright", "Playwright")]
         public async Task CanUseRoleManager()
@@ -2745,30 +2745,25 @@ namespace BTCPayServer.Tests
                 }
             }
 
-
             Assert.NotNull(ownerRow);
             Assert.NotNull(managerRow);
             Assert.NotNull(employeeRow);
             Assert.NotNull(guestRow);
-
 
             var ownerBadges = await ownerRow.Locator(".badge").AllAsync();
             var ownerBadgeTexts = await Task.WhenAll(ownerBadges.Select(async element => await element.TextContentAsync()));
             Assert.Contains(ownerBadgeTexts, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
             Assert.Contains(ownerBadgeTexts, text => text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
 
-
             var managerBadges = await managerRow.Locator(".badge").AllAsync();
             var managerBadgeTexts = await Task.WhenAll(managerBadges.Select(async element => await element.TextContentAsync()));
             Assert.DoesNotContain(managerBadgeTexts, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
             Assert.Contains(managerBadgeTexts, text => text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
 
-
             var employeeBadges = await employeeRow.Locator(".badge").AllAsync();
             var employeeBadgeTexts = await Task.WhenAll(employeeBadges.Select(async element => await element.TextContentAsync()));
             Assert.DoesNotContain(employeeBadgeTexts, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
             Assert.Contains(employeeBadgeTexts, text => text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
-
 
             var guestBadges = await guestRow.Locator(".badge").AllAsync();
             var guestBadgeTexts = await Task.WhenAll(guestBadges.Select(async element => await element.TextContentAsync()));
@@ -2776,7 +2771,6 @@ namespace BTCPayServer.Tests
             Assert.Contains(guestBadgeTexts, text => text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
             await guestRow.Locator("#SetDefault").ClickAsync();
             await s.FindAlertMessage(partialText: "Role set default");
-
 
             existingServerRoles = await s.Page.Locator("table tr").AllAsync();
             foreach (var roleItem in existingServerRoles)
@@ -2795,16 +2789,12 @@ namespace BTCPayServer.Tests
             var guestBadgeTexts2 = await Task.WhenAll(guestBadges.Select(async element => await element.TextContentAsync()));
             Assert.Contains(guestBadgeTexts2, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
 
-
             ownerBadges = await ownerRow.Locator(".badge").AllAsync();
             var ownerBadgeTexts2 = await Task.WhenAll(ownerBadges.Select(async element => await element.TextContentAsync()));
             Assert.DoesNotContain(ownerBadgeTexts2, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
             await ownerRow.Locator("#SetDefault").ClickAsync();
-            await s.FindAlertMessage();
-
 
             await s.FindAlertMessage(partialText: "Role set default");
-
 
             await s.CreateNewStore();
             await s.GoToStore(StoreNavPages.Roles);
@@ -2812,7 +2802,6 @@ namespace BTCPayServer.Tests
             Assert.Equal(5, existingServerRoles.Count);
             var serverRoleTexts = await Task.WhenAll(existingServerRoles.Select(async element => await element.TextContentAsync()));
             Assert.Equal(4, serverRoleTexts.Count(text => text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)));
-
 
             foreach (var roleItem in existingServerRoles)
             {
@@ -2823,7 +2812,6 @@ namespace BTCPayServer.Tests
                     break;
                 }
             }
-
 
             await ownerRow.Locator("text=Remove").ClickAsync();
             Assert.DoesNotContain("ConfirmContinue", await s.Page.ContentAsync());
@@ -2839,22 +2827,18 @@ namespace BTCPayServer.Tests
                 }
             }
 
-
             await guestRow.Locator("text=Remove").ClickAsync();
             await s.Page.Locator("#ConfirmContinue").ClickAsync();
             await s.FindAlertMessage();
 
-
             await s.GoToStore(StoreNavPages.Roles);
             await s.ClickPagePrimary();
-
 
             Assert.Contains("Create role", await s.Page.ContentAsync());
             await s.ClickPagePrimary();
             await s.Page.Locator("#Role").FillAsync("store role");
             await s.ClickPagePrimary();
             await s.FindAlertMessage();
-
 
             existingServerRoles = await s.Page.Locator("table tr").AllAsync();
             foreach (var roleItem in existingServerRoles)
@@ -2866,7 +2850,6 @@ namespace BTCPayServer.Tests
                     break;
                 }
             }
-
 
             guestBadges = await guestRow.Locator(".badge").AllAsync();
             var guestBadgeTexts3 = await Task.WhenAll(guestBadges.Select(async element => await element.TextContentAsync()));
@@ -2889,7 +2872,6 @@ namespace BTCPayServer.Tests
             var optionTexts2 = await Task.WhenAll(options.Select(async element => await element.TextContentAsync()));
             Assert.DoesNotContain(optionTexts2, text => text.Equals("store role", StringComparison.InvariantCultureIgnoreCase));
 
-
             await s.Page.Locator("#Email").FillAsync(s.AsTestAccount().Email);
             await s.Page.Locator("#Role").SelectOptionAsync("Owner");
             await s.Page.Locator("#AddUser").ClickAsync();
@@ -2898,14 +2880,11 @@ namespace BTCPayServer.Tests
             await s.Page.Locator("#AddUser").ClickAsync();
             Assert.Contains("The user is the last owner. Their role cannot be changed.", await s.Page.Locator(".validation-summary-errors").TextContentAsync());
 
-
             await s.GoToStore(StoreNavPages.Roles);
             await s.ClickPagePrimary();
             await s.Page.Locator("#Role").FillAsync("Malice");
 
-
             await s.Page.EvaluateAsync($"document.getElementById('Policies')['{Policies.CanModifyServerSettings}']=new Option('{Policies.CanModifyServerSettings}', '{Policies.CanModifyServerSettings}', true,true);");
-
 
             await s.ClickPagePrimary();
             await s.FindAlertMessage();

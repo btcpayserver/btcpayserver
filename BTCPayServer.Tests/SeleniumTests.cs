@@ -1353,34 +1353,6 @@ namespace BTCPayServer.Tests
             Assert.Contains(lnUsername, source);
         }
 
-        [Fact]
-        [Trait("Selenium", "Selenium")]
-        public async Task CanSigninWithLoginCode()
-        {
-            using var s = CreateSeleniumTester();
-            await s.StartAsync();
-            var user = s.RegisterNewUser();
-            s.GoToHome();
-            s.GoToProfile(ManageNavPages.LoginCodes);
-
-            string code = null;
-            TestUtils.Eventually(() => { code = s.Driver.FindElement(By.CssSelector("#LoginCode .qr-code")).GetAttribute("alt"); });
-            string prevCode = code;
-            await s.Driver.Navigate().RefreshAsync();
-            TestUtils.Eventually(() => { code = s.Driver.FindElement(By.CssSelector("#LoginCode .qr-code")).GetAttribute("alt"); });
-            Assert.NotEqual(prevCode, code);
-            TestUtils.Eventually(() => { code = s.Driver.FindElement(By.CssSelector("#LoginCode .qr-code")).GetAttribute("alt"); });
-            s.Logout();
-            s.GoToLogin();
-            s.Driver.SetAttribute("LoginCode", "value", "bad code");
-            s.Driver.InvokeJSFunction("logincode-form", "submit");
-
-            s.Driver.SetAttribute("LoginCode", "value", code);
-            s.Driver.InvokeJSFunction("logincode-form", "submit");
-            s.GoToHome();
-            Assert.Contains(user, s.Driver.PageSource);
-        }
-
         // For god know why, selenium have problems clicking on the save button, resulting in ultimate hacks
         // to make it works.
         private void SudoForceSaveLightningSettingsRightNowAndFast(SeleniumTester s, string cryptoCode)

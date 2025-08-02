@@ -2720,35 +2720,22 @@ namespace BTCPayServer.Tests
             await s.GoToServer(ServerNavPages.Roles);
             var existingServerRoles = await s.Page.Locator("table tr").AllAsync();
             Assert.Equal(5, existingServerRoles.Count);
-            ILocator ownerRow = null;
-            ILocator managerRow = null;
-            ILocator employeeRow = null;
-            ILocator guestRow = null;
-            foreach (var roleItem in existingServerRoles)
+            async Task<ILocator> FindRoleRow(string roleName)
             {
-                var text = await roleItem.TextContentAsync();
-                if (text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
+              var rows = await s.Page.Locator("table tr").AllAsync();
+                foreach (var row in rows)
                 {
-                    ownerRow = roleItem;
+                    var text = await row.TextContentAsync();
+                    if (text.Contains(roleName, StringComparison.InvariantCultureIgnoreCase))
+                        return row;
                 }
-                else if (text.Contains("manager", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    managerRow = roleItem;
-                }
-                else if (text.Contains("employee", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    employeeRow = roleItem;
-                }
-                else if (text.Contains("guest", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    guestRow = roleItem;
-                }
+                return null;
             }
-
-            Assert.NotNull(ownerRow);
-            Assert.NotNull(managerRow);
-            Assert.NotNull(employeeRow);
-            Assert.NotNull(guestRow);
+            
+            var ownerRow = await FindRoleRow("owner");
+            var managerRow = await FindRoleRow("manager");
+            var employeeRow = await FindRoleRow("employee");
+            var guestRow = await FindRoleRow("guest");
 
             var ownerBadges = await ownerRow.Locator(".badge").AllAsync();
             var ownerBadgeTexts = await Task.WhenAll(ownerBadges.Select(async element => await element.TextContentAsync()));

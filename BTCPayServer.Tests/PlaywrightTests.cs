@@ -2811,7 +2811,6 @@ namespace BTCPayServer.Tests
             }
 
             await ownerRow.Locator("text=Remove").ClickAsync();
-            await s.Page.WaitForLoadStateAsync();
             Assert.DoesNotContain("ConfirmContinue", await s.Page.ContentAsync());
             await s.Page.GoBackAsync();
             existingServerRoles = await s.Page.Locator("table tr").AllAsync();
@@ -2826,7 +2825,7 @@ namespace BTCPayServer.Tests
             }
 
             await guestRow.Locator("text=Remove").ClickAsync();
-            await s.Page.ClickAsync("#ConfirmContinue");
+            await s.Page.Locator("#ConfirmContinue").ClickAsync();
             await s.FindAlertMessage();
 
             await s.GoToStore(StoreNavPages.Roles);
@@ -2872,10 +2871,10 @@ namespace BTCPayServer.Tests
 
             await s.Page.Locator("#Email").FillAsync(s.AsTestAccount().Email);
             await s.Page.Locator("#Role").SelectOptionAsync("Owner");
-            await s.Page.ClickAsync("#AddUser");
+            await s.Page.Locator("#AddUser").ClickAsync();
             Assert.Contains("The user already has the role Owner.", await s.Page.Locator(".validation-summary-errors").TextContentAsync());
             await s.Page.Locator("#Role").SelectOptionAsync("Manager");
-            await s.Page.ClickAsync("#AddUser");
+            await s.Page.Locator("#AddUser").ClickAsync();
             Assert.Contains("The user is the last owner. Their role cannot be changed.", await s.Page.Locator(".validation-summary-errors").TextContentAsync());
 
             await s.GoToStore(StoreNavPages.Roles);
@@ -2929,6 +2928,102 @@ namespace BTCPayServer.Tests
             var content = await s.Page.ContentAsync();
             Assert.Contains(user, content);
         }
+
+        [Fact]
+        public async Task CanUseInvoiceReceipts()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            await s.AddDerivationScheme();
+            await s.GoToInvoices();
+            var i = await s.CreateInvoice(100);
+            await s.Server.PayTester.InvoiceRepository.MarkInvoiceStatus(i, InvoiceStatus.Settled);
+            
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                await s.Page.ReloadAsync();
+                await s.Page.Locator("#Receipt").ClickAsync();
+            });
+            
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                await s.Page.ReloadAsync();
+                var content = await s.Page.ContentAsync();
+                Assert.DoesNotContain("invoice-unsettled", content);
+                Assert.DoesNotContain("invoice-processing", content);
+            });
+
+            var content = await s.Page.ContentAsync();
+            Assert.Contains("100.00 USD", content);
+            Assert.Contains(i, content);
+
+            await s.GoToInvoices(s.StoreId);
+            i = await s.CreateInvoice();
+            await s.GoToInvoiceCheckout(i);
+            var receipturl = s.Page.Url + "/receipt";
+            await s.GoToUrl(receipturl);
+            await s.Page.Locator("#invoice-unsettled").WaitForAsync();
+
+            await s.GoToInvoices(s.StoreId);
+            await s.GoToInvoiceCheckout(i);
+            var checkouturi = s.Page.Url;
+            await s.PayInvoice(mine: true);
+            
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                await s.Page.ReloadAsync();
+                await s.Page.Locator("#ReceiptLink").ClickAsync();
+            });
+            
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                await s.Page.ReloadAsync();
+                var pageContent = await s.Page.ContentAsync();
+                Assert.DoesNotContain("invoice-unsettled", pageContent);
+                Assert.Contains("\"PaymentDetails\"", pageContent);
+            });
+            
+            await s.GoToUrl(checkouturi);
+
+            await s.Server.PayTester.InvoiceRepository.MarkInvoiceStatus(i, InvoiceStatus.Settled);
+
+            await TestUtils.EventuallyAsync(async () => await s.Page.Locator("#ReceiptLink").ClickAsync());
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                await s.Page.ReloadAsync();
+                var pageContent = await s.Page.ContentAsync();
+                Assert.DoesNotContain("invoice-unsettled", pageContent);
+                Assert.DoesNotContain("invoice-processing", pageContent);
+            });
+
+            // ensure archived invoices are not accessible for logged out users
+            await s.Server.PayTester.InvoiceRepository.ToggleInvoiceArchival(i, true);
+            await s.Logout();
+
+            await s.GoToUrl(s.Page.Url + $"/i/{i}/receipt");
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var title = await s.Page.TitleAsync();
+                Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
+            });
+
+            await s.GoToUrl(s.Page.Url + $"i/{i}");
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var title = await s.Page.TitleAsync();
+                Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
+            });
+
+            await s.GoToUrl(s.Page.Url + $"i/{i}/status");
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var title = await s.Page.TitleAsync();
+                Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
+            });
+        }
+
     }
 }
 

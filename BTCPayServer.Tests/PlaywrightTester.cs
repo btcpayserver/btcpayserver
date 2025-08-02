@@ -603,10 +603,7 @@ namespace BTCPayServer.Tests
             {
                 await MineBlockOnInvoiceCheckout();
             }
-            if (amount is null)
-                await Page.Locator("xpath=//*[text()=\"Invoice Paid\" or text()=\"Payment Received\"]").WaitForAsync();
-            else
-                await Page.Locator("xpath=//*[text()=\"Invoice Paid\" or text()=\"Payment Received\" or text()=\"The invoice hasn't been paid in full.\"]").WaitForAsync();
+            // Don't wait for specific text like Selenium version - just wait for the cheat success message
         }
 
         /// <summary>

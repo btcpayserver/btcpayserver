@@ -2576,7 +2576,6 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error, "The user is the last owner. Their role cannot be changed.");
         }
 
-
         [Fact]
         [Trait("Playwright", "Playwright")]
         public async Task CanUseRoleManager()
@@ -2893,6 +2892,149 @@ namespace BTCPayServer.Tests
                 var title = await s.Page.TitleAsync();
                 Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
             });
+        }
+
+        [Fact]
+        public async Task CanCreateCrowdfundingApp()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser();
+            await s.CreateNewStore();
+            await s.AddDerivationScheme();
+
+            (_, string appId) = await s.CreateApp("Crowdfund");
+            await s.Page.Locator("#Title").ClearAsync();
+            await s.Page.Locator("#Title").FillAsync("Kukkstarter");
+            await s.Page.Locator("div.note-editable.card-block").FillAsync("1BTC = 1BTC");
+            await s.Page.Locator("#TargetCurrency").ClearAsync();
+            await s.Page.Locator("#TargetCurrency").FillAsync("EUR");
+            await s.Page.Locator("#TargetAmount").FillAsync("700");
+
+            // test wrong dates
+            await s.Page.EvaluateAsync(@"
+                const now = new Date();
+                document.getElementById('StartDate').value = now.toISOString();
+                const yst = new Date(now.setDate(now.getDate() - 1));
+                document.getElementById('EndDate').value = yst.toISOString();
+            ");
+            await s.ClickPagePrimary();
+            var pageContent = await s.Page.ContentAsync();
+            Assert.Contains("End date cannot be before start date", pageContent);
+            Assert.DoesNotContain("App updated", pageContent);
+
+            // unset end date
+            await s.Page.EvaluateAsync("document.getElementById('EndDate').value = ''");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "App updated");
+            var editUrl = s.Page.Url;
+
+            // Check public page
+            await s.Page.Locator("#ViewApp").ClickAsync();
+            var newPage = await s.Page.Context.WaitForPageAsync();
+            await using var pageSwitch = await s.SwitchPage(newPage);
+            var cfUrl = s.Page.Url;
+
+            Assert.Equal("Currently active!", await s.Page.Locator("[data-test='time-state']").TextContentAsync());
+
+            // Contribute
+            await s.Page.Locator("#crowdfund-body-header-cta").ClickAsync();
+            await s.Page.WaitForSelectorAsync("iframe[name='btcpay']", new() { Timeout = 10000 });
+
+            var frameElement = s.Page.Frame("btcpay");
+            Assert.NotNull(frameElement);
+            await frameElement.WaitForSelectorAsync("#Checkout");
+
+            var closeButton = frameElement.Locator("#close");
+            Assert.True(await closeButton.IsVisibleAsync());
+            await closeButton.ClickAsync();
+
+            await s.Page.WaitForSelectorAsync("iframe[name='btcpay']", new() { State = WaitForSelectorState.Hidden });
+
+            // Back to admin view - don't close the page, just switch back
+            await s.Page.Context.Pages.First().BringToFrontAsync();
+
+            // Archive - navigate to the app edit page and archive it
+            await s.Page.GotoAsync(editUrl);
+            await s.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await s.Page.Locator("#btn-archive-toggle").ClickAsync();
+            await s.FindAlertMessage(partialText: "The app has been archived and will no longer appear in the apps list by default.");
+
+            Assert.Equal(0, await s.Page.Locator("#ViewApp").CountAsync());
+            Assert.Contains("1 Archived App", await s.Page.Locator("#Nav-ArchivedApps").TextContentAsync());
+            await s.Page.GotoAsync(cfUrl);
+            Assert.Contains("Page not found", await s.Page.TitleAsync(), StringComparison.OrdinalIgnoreCase);
+            await s.Page.GotoAsync(editUrl);
+            await s.Page.Locator("#Nav-ArchivedApps").ClickAsync();
+
+            // Unarchive
+            await s.Page.Locator($"#App-{appId}").ClickAsync();
+            await s.Page.Locator("#btn-archive-toggle").ClickAsync();
+            await s.FindAlertMessage(partialText: "The app has been unarchived and will appear in the apps list by default again.");
+
+            // Crowdfund with form
+            await s.GoToUrl(editUrl);
+            await s.Page.Locator("#FormId").SelectOptionAsync("Email");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "App updated");
+
+            await s.Page.Locator("#ViewApp").ClickAsync();
+            var formPage = await s.Page.Context.WaitForPageAsync();
+            await using var formPageSwitch = await s.SwitchPage(formPage);
+            await s.Page.Locator("#crowdfund-body-header-cta").ClickAsync();
+
+            pageContent = await s.Page.ContentAsync();
+            Assert.Contains("Enter your email", pageContent);
+            await s.Page.Locator("[name='buyerEmail']").FillAsync("test-without-perk@crowdfund.com");
+            await s.Page.Locator("input[type='submit']").ClickAsync();
+
+            await s.PayInvoice(true, 10);
+            var invoiceId = s.Page.Url[(s.Page.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
+            await s.Page.Context.Pages.First().BringToFrontAsync();
+            await s.GoToInvoice(invoiceId);
+            pageContent = await s.Page.ContentAsync();
+            Assert.Contains("test-without-perk@crowdfund.com", pageContent);
+
+            // Crowdfund with perk
+            await s.GoToUrl(editUrl);
+            await s.Page.Locator("#btAddItem").ScrollIntoViewIfNeededAsync();
+            await s.Page.Locator("#btAddItem").ClickAsync();
+            await s.Page.Locator("#EditorTitle").WaitForAsync();
+            await s.Page.Locator("#EditorTitle").FillAsync("Perk 1");
+            await s.Page.Locator("#EditorAmount").FillAsync("20");
+            // Test autogenerated ID
+            Assert.Equal("perk-1", await s.Page.Locator("#EditorId").InputValueAsync());
+            await s.Page.Locator("#EditorId").ClearAsync();
+            await s.Page.Locator("#EditorId").FillAsync("Perk-1");
+            await s.Page.Locator(".offcanvas-header button").ClickAsync();
+            await s.Page.Locator("#CodeTabButton").WaitForAsync();
+            await s.Page.Locator("#CodeTabButton").ScrollIntoViewIfNeededAsync();
+            await s.Page.Locator("#CodeTabButton").ClickAsync();
+            var template = await s.Page.Locator("#TemplateConfig").InputValueAsync();
+            Assert.Contains("\"title\": \"Perk 1\"", template);
+            Assert.Contains("\"id\": \"Perk-1\"", template);
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "App updated");
+
+            await s.Page.Locator("#ViewApp").ClickAsync();
+            var perkPage = await s.Page.Context.WaitForPageAsync();
+            await using var perkPageSwitch = await s.SwitchPage(perkPage);
+            await s.Page.Locator(".perk.unexpanded[id='Perk-1']").WaitForAsync();
+            await s.Page.Locator(".perk.unexpanded[id='Perk-1']").ClickAsync();
+            await s.Page.Locator(".perk.expanded[id='Perk-1'] button[type=\"submit\"]").WaitForAsync();
+            await s.Page.Locator(".perk.expanded[id='Perk-1'] button[type=\"submit\"]").ClickAsync();
+
+            pageContent = await s.Page.ContentAsync();
+            Assert.Contains("Enter your email", pageContent);
+            await s.Page.Locator("[name='buyerEmail']").FillAsync("test-with-perk@crowdfund.com");
+            await s.Page.Locator("input[type='submit']").ClickAsync();
+
+            await s.PayInvoice(true, 20);
+            invoiceId = s.Page.Url[(s.Page.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
+            await s.Page.Context.Pages.First().BringToFrontAsync();
+            await s.GoToInvoice(invoiceId);
+            pageContent = await s.Page.ContentAsync();
+            Assert.Contains("test-with-perk@crowdfund.com", pageContent);
         }
 
     }

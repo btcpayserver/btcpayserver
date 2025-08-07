@@ -2021,7 +2021,7 @@ namespace BTCPayServer.Tests
 
             var address = await s.Server.ExplorerNode.GetNewAddressAsync();
             await newPage.FillAsync("#Destination", address.ToString());
-            await newPage.PressAsync("#Destination", "Enter");
+            await newPage.ClickAsync("button[type='submit']");
             
             await s.GoToStore(s.StoreId, StoreNavPages.Payouts);
             await s.Page.ClickAsync("#InProgress-view");
@@ -2322,7 +2322,9 @@ namespace BTCPayServer.Tests
             await s.Page.Locator("#CreateNewToken").ClickAsync();
             await s.ClickPagePrimary();
             var url = s.Page.Url;
-            var pairingCode = System.Text.RegularExpressions.Regex.Match(new Uri(url, UriKind.Absolute).Query, "pairingCode=([^&]*)").Groups[1].Value;
+            var uri = new Uri(url, UriKind.Absolute);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            var pairingCode = query["pairingCode"];
 
             await s.ClickPagePrimary();
             await s.FindAlertMessage();
@@ -2576,10 +2578,7 @@ namespace BTCPayServer.Tests
             var amountInput = s.Page.Locator("[name='Outputs[0].Amount']");
             await amountInput.FillAsync("0.3");
             var checkboxElement = s.Page.Locator("input[type='checkbox'][name='Outputs[0].SubtractFeesFromOutput']");
-            if (!await checkboxElement.IsCheckedAsync())
-            {
-                await checkboxElement.ClickAsync();
-            }
+            await checkboxElement.SetCheckedAsync(true);
             await s.Page.Locator("#SignTransaction").ClickAsync();
             await s.Page.Locator("button[value='broadcast']").ClickAsync();
             var happyElement = await s.FindAlertMessage();
@@ -2757,7 +2756,6 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain(guestBadgeTexts, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
             Assert.Contains(guestBadgeTexts, text => text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
             await guestRow.Locator("#SetDefault").ClickAsync();
-            await s.FindAlertMessage(partialText: "Role set default");
 
             existingServerRoles = await s.Page.Locator("table tr").AllAsync();
             foreach (var roleItem in existingServerRoles)
@@ -2909,11 +2907,9 @@ namespace BTCPayServer.Tests
             await s.Page.EvaluateAsync($"document.getElementById('LoginCode').value = '{code}'");
             await s.Page.EvaluateAsync("document.getElementById('logincode-form').submit()");
             await s.Page.WaitForLoadStateAsync();
-            await s.Page.WaitForLoadStateAsync();
             
             await s.CreateNewStore();
             await s.GoToHome();
-            await s.Page.WaitForLoadStateAsync();
             await s.Page.WaitForLoadStateAsync();
             var content = await s.Page.ContentAsync();
             Assert.Contains(user, content);

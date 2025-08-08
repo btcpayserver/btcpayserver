@@ -256,6 +256,17 @@ namespace BTCPayServer.Services.Wallets
         List<TransactionInformation> dummy = new List<TransactionInformation>();
         public async Task<IList<TransactionHistoryLine>> FetchTransactionHistory(DerivationStrategyBase derivationStrategyBase, int? skip = null, int? count = null, TimeSpan? interval = null, CancellationToken cancellationToken = default)
         {
+            HashSet<uint256> replacedTxs = null;
+            try
+            {
+                replacedTxs = await GetReplacedTransactions(derivationStrategyBase, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                Logs.PayServer.LogWarning(ex, $"Error getting replaced transactions for history: {derivationStrategyBase}");
+                replacedTxs = new HashSet<uint256>();
+            }
+
             // This is two paths:
             // * Sometimes we can ask the DB to do the filtering of rows: If that's the case, we should try to filter at the DB level directly as it is the most efficient.
             // * Sometimes we can't query the DB or the given network need to do additional filtering. In such case, we can't really filter at the DB level, and we need to fetch all transactions in memory.
@@ -274,7 +285,9 @@ namespace BTCPayServer.Services.Wallets
                     if (timestampLimit is DateTimeOffset l &&
                         t.Timestamp <= l)
                         break;
-                    lines.Add(FromTransactionInformation(t));
+                    var line = FromTransactionInformation(t);
+                    line.IsReplaced = replacedTxs.Contains(t.TransactionId);
+                    lines.Add(line);
                 }
                 return lines;
             }
@@ -301,16 +314,18 @@ namespace BTCPayServer.Services.Wallets
                 var lines = new List<TransactionHistoryLine>(c);
                 foreach (var row in rows)
                 {
+                    var txId = uint256.Parse(row.tx_id);
                     lines.Add(new TransactionHistoryLine()
                     {
                         BalanceChange = string.IsNullOrEmpty(row.asset_id) ? Money.Satoshis(row.balance_change) : new AssetMoney(uint256.Parse(row.asset_id), row.balance_change),
                         Height = row.blk_height,
                         SeenAt = row.seen_at,
-                        TransactionId = uint256.Parse(row.tx_id),
+                        TransactionId = txId,
                         Confirmations = row.confs,
                         BlockHash = string.IsNullOrEmpty(row.blk_id) ? null : uint256.Parse(row.blk_id),
                         Fee = row.fee is null ? null : Money.Satoshis(row.fee.Value),
-                        FeeRate = row.feerate is null ? null : new FeeRate(row.feerate.Value)
+                        FeeRate = row.feerate is null ? null : new FeeRate(row.feerate.Value),
+                        IsReplaced = replacedTxs.Contains(txId)
                     });
                 }
                 return lines;
@@ -509,31 +524,107 @@ namespace BTCPayServer.Services.Wallets
         )
         {
             ArgumentNullException.ThrowIfNull(derivationStrategy);
-            return (await GetUTXOChanges(derivationStrategy, cancellation))
-                          .GetUnspentUTXOs(excludeUnconfirmed)
-                          .Select(c => new ReceivedCoin()
-                          {
-                              KeyPath = c.KeyPath,
-                              KeyIndex = c.KeyIndex,
-                              Value = c.Value,
-                              Timestamp = c.Timestamp,
-                              OutPoint = c.Outpoint,
-                              ScriptPubKey = c.ScriptPubKey,
-                              Coin = c.AsCoin(derivationStrategy),
-                              Confirmations = c.Confirmations,
-                              // Some old version of NBX doesn't have Address in this call
-                              Address = c.Address ?? c.ScriptPubKey.GetDestinationAddress(Network.NBitcoinNetwork)
-                          }).ToArray();
+            
+            var utxos = (await GetUTXOChanges(derivationStrategy, cancellation))
+                          .GetUnspentUTXOs(excludeUnconfirmed);
+
+            HashSet<uint256> replacedTxs = null;
+            try
+            {
+                replacedTxs = await GetReplacedTransactions(derivationStrategy, cancellation);
+            }
+            catch (Exception ex)
+            {
+                Logs.PayServer.LogWarning(ex, $"Error getting replaced transactions for coin selection: {derivationStrategy}");
+                replacedTxs = new HashSet<uint256>();
+            }
+
+            return utxos
+                .Where(c => !replacedTxs.Contains(c.Outpoint.Hash))
+                .Select(c => new ReceivedCoin()
+                {
+                    KeyPath = c.KeyPath,
+                    KeyIndex = c.KeyIndex,
+                    Value = c.Value,
+                    Timestamp = c.Timestamp,
+                    OutPoint = c.Outpoint,
+                    ScriptPubKey = c.ScriptPubKey,
+                    Coin = c.AsCoin(derivationStrategy),
+                    Confirmations = c.Confirmations,
+                    // Some old version of NBX doesn't have Address in this call
+                    Address = c.Address ?? c.ScriptPubKey.GetDestinationAddress(Network.NBitcoinNetwork)
+                }).ToArray();
         }
 
-        public Task<GetBalanceResponse> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
+        public async Task<HashSet<uint256>> GetReplacedTransactions(
+            DerivationStrategyBase derivationStrategy, 
+            CancellationToken cancellationToken = default)
         {
-            return _MemoryCache.GetOrCreateAsync("CACHEDBALANCE_" + derivationStrategy, async (entry) =>
+            ArgumentNullException.ThrowIfNull(derivationStrategy);
+            
+            return await _MemoryCache.GetOrCreateAsync($"REPLACEDTXS_{derivationStrategy}", async (entry) =>
+            {
+                var replacedTxs = new HashSet<uint256>();
+                
+                try
+                {
+                    var txs = await _Client.GetTransactionsAsync(derivationStrategy, cancellation: cancellationToken);
+                    
+                    if (txs.ReplacedTransactions?.Transactions != null)
+                    {
+                        foreach (var replacedTx in txs.ReplacedTransactions.Transactions)
+                        {
+                            replacedTxs.Add(replacedTx.TransactionId);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logs.PayServer.LogWarning(ex, $"Error getting replaced transactions for {derivationStrategy}");
+                }
+                
+                entry.AbsoluteExpiration = DateTimeOffset.UtcNow + TimeSpan.FromMinutes(1);
+                return replacedTxs;
+            });
+        }
+
+        public async Task<GetBalanceResponse> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
+        {
+            var balance = await _MemoryCache.GetOrCreateAsync("CACHEDBALANCE_" + derivationStrategy, async (entry) =>
             {
                 var result = await _Client.GetBalanceAsync(derivationStrategy, cancellation);
                 entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
                 return result;
             });
+
+            try
+            {
+                var replacedTxs = await GetReplacedTransactions(derivationStrategy, cancellation);
+                if (replacedTxs.Count > 0)
+                {
+                    var utxoChanges = await GetUTXOChanges(derivationStrategy, cancellation);
+                    var replacedValue = utxoChanges.Unconfirmed.UTXOs
+                        .Where(u => replacedTxs.Contains(u.Outpoint.Hash))
+                        .Sum(u => u.Value.GetValue(Network));
+
+                    if (replacedValue > 0 && balance.Available != null)
+                    {
+                        balance = new GetBalanceResponse
+                        {
+                            Available = Money.Coins(Math.Max(0, balance.Available.GetValue(Network) - replacedValue)),
+                            Total = balance.Total,
+                            Immature = balance.Immature,
+                            Confirmed = balance.Confirmed
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logs.PayServer.LogWarning(ex, $"Error adjusting balance for replaced transactions: {derivationStrategy}");
+            }
+
+            return balance;
         }
     }
     public record ReplacementInfo(MempoolEntry Entry, FeeRate IncrementalRelayFee, FeeRate MinMempoolFeeRate)
@@ -585,5 +676,6 @@ namespace BTCPayServer.Services.Wallets
         public IMoney BalanceChange { get; set; }
         public FeeRate FeeRate { get; set; }
         public Money Fee { get; set; }
+        public bool IsReplaced { get; set; }
     }
 }

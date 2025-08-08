@@ -22,7 +22,13 @@
                 display-inline="true"/>
         </td>
         <td>
-            <vc:truncate-center text="@transaction.Id" link="@transaction.Link" classes="truncate-center-id" />
+            <div class="d-flex align-items-center gap-2">
+                <vc:truncate-center text="@transaction.Id" link="@transaction.Link" classes="truncate-center-id" />
+                @if (transaction.HistoryLine?.IsReplaced == true)
+                {
+                    <span class="badge bg-light text-muted" title="Transaction was replaced by RBF">RBF'd</span>
+                }
+            </div>
         </td>
         <td class="align-middle amount-col">
             <span data-sensitive class="text-@(transaction.Positive ? "success" : "danger")@(transaction.IsConfirmed ? "" : " opacity-50")">@transaction.Balance</span>

@@ -319,7 +319,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     res = res.filter(i => i !== item.outpoint);
                 }
 
-                $("select option").each(function () {
+                // Do NOT use $("select option") or you'll break other selects like output labels
+                $("select[name='SelectedInputs'] option").each(function () {
                     var selected = res.indexOf($(this).attr("value")) !== -1;
                     $(this).attr("selected", selected ? "selected" : null);
                 });

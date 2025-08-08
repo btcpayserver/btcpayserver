@@ -175,6 +175,132 @@ namespace BTCPayServer.Tests
             Assert.Equal(4, selectOptions);
         }
 
+        [Fact]
+        public async Task CanCreatePayRequest()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser();
+            await s.CreateNewStore();
+            await s.Page.ClickAsync("#StoreNav-PaymentRequests");
+            async Task<string> ReadStatusAsync()
+            {
+                var locator = s.Page.Locator(".only-for-js[data-test='status']");
+                await locator.WaitForAsync(new() { State = WaitForSelectorState.Visible });
+                return (await locator.InnerTextAsync()).Trim();
+            }
+
+            Task WaitStatusContains(string text)
+                => s.Page
+                    .Locator(".only-for-js[data-test='status']")
+                    .Filter(new() { HasTextString = text })
+                    .WaitForAsync(new() { State = WaitForSelectorState.Visible });
+
+            // Should give us an error message if we try to create a payment request before adding a wallet
+            await s.ClickPagePrimary();
+            Assert.Contains("To create a payment request, you need to", await s.Page.ContentAsync());
+
+            await s.AddDerivationScheme();
+            await s.Page.ClickAsync("#StoreNav-PaymentRequests");
+            await s.ClickPagePrimary();
+            await s.Page.FillAsync("#Title", "Pay123");
+            await s.Page.FillAsync("#Amount", ".01");
+
+            var currencyValue = await s.Page.InputValueAsync("#Currency");
+            Assert.Equal("USD", currencyValue);
+            await s.Page.FillAsync("#Currency", "BTC");
+
+            await s.ClickPagePrimary();
+            await s.Page.Locator("a[id^='Edit-']").First.ClickAsync();
+            var editUrl = s.Page.Url;
+
+            var opening = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("#ViewPaymentRequest");
+            string viewUrl;
+            await using (await s.SwitchPage(opening))
+            {
+                viewUrl = s.Page.Url;
+                Assert.Equal("Pay Invoice", (await s.Page.InnerTextAsync("#PayInvoice")).Trim());
+            }
+
+            // expire
+            await s.Page.EvaluateAsync("() => document.getElementById('ExpiryDate').value = '2021-01-21T21:00:00.000Z'");
+            await s.ClickPagePrimary();
+            await s.Page.Locator("a[id^='Edit-']").First.ClickAsync();
+
+            await s.GoToUrl(viewUrl);
+            await WaitStatusContains("Expired");
+
+            // unexpire
+            await s.GoToUrl(editUrl);
+            await s.Page.ClickAsync("#ClearExpiryDate");
+            await s.ClickPagePrimary();
+            await s.Page.Locator("a[id^='Edit-']").First.ClickAsync();
+
+            // amount and currency should be editable, because no invoice exists
+            await s.GoToUrl(editUrl);
+            Assert.True(await s.Page.IsEnabledAsync("#Amount"));
+            Assert.True(await s.Page.IsEnabledAsync("#Currency"));
+
+            await s.GoToUrl(viewUrl);
+            Assert.Equal("Pay Invoice", (await s.Page.InnerTextAsync("#PayInvoice")).Trim());
+
+            // test invoice creation
+            await s.Page.ClickAsync("#PayInvoice");
+            await s.Page.Locator("iframe[name='btcpay']").WaitForAsync();
+            var checkoutFrame = s.Page.FrameLocator("iframe[name='btcpay']");
+            await checkoutFrame.Locator("#Checkout").WaitForAsync();
+
+            await checkoutFrame.Locator("#close").WaitForAsync();
+            await checkoutFrame.Locator("#close").ClickAsync();
+            await s.Page.Locator("iframe[name='btcpay']").WaitForAsync(new() { State = WaitForSelectorState.Detached });
+
+            // amount and currency should not be editable, because invoice exists
+            await s.GoToUrl(editUrl);
+            Assert.False(await s.Page.IsEnabledAsync("#Amount"));
+            Assert.False(await s.Page.IsEnabledAsync("#Currency"));
+
+            // archive (from details page)
+            var payReqId = s.Page.Url.Split('/').Last();
+            await s.Page.ClickAsync("#ArchivePaymentRequest");
+            await s.FindAlertMessage(partialText: "The payment request has been archived");
+            Assert.DoesNotContain("Pay123", await s.Page.ContentAsync());
+            await s.Page.ClickAsync("#StatusOptionsToggle");
+            await s.Page.ClickAsync("#StatusOptionsIncludeArchived");
+            Assert.Contains("Pay123", await s.Page.ContentAsync());
+
+            // unarchive (from list)
+            await s.Page.ClickAsync($"#ToggleActions-{payReqId}");
+            await s.Page.ClickAsync($"#ToggleArchival-{payReqId}");
+            await s.FindAlertMessage(partialText: "The payment request has been unarchived");
+            Assert.Contains("Pay123", await s.Page.ContentAsync());
+
+            // payment
+            await s.GoToUrl(viewUrl);
+            await s.Page.ClickAsync("#PayInvoice");
+            await s.Page.Locator("iframe[name='btcpay']").WaitForAsync();
+            checkoutFrame = s.Page.FrameLocator("iframe[name='btcpay']");
+            await checkoutFrame.Locator("#Checkout").WaitForAsync();
+
+            // Pay full amount
+            await checkoutFrame.Locator("#FakePayment").ClickAsync();
+
+            // Processing (do not assert page badge; just wait for cheat success to avoid flakiness)
+            await checkoutFrame.Locator("#CheatSuccessMessage").WaitForAsync();
+
+            // Mine
+            await checkoutFrame.Locator("#mine-block button").ClickAsync();
+            await checkoutFrame.Locator("#CheatSuccessMessage").WaitForAsync();
+            Assert.Contains("Mined 1 block", await checkoutFrame.Locator("#CheatSuccessMessage").InnerTextAsync());
+
+            await checkoutFrame.Locator("#close").ClickAsync();
+            await s.Page.Locator("iframe[name='btcpay']").WaitForAsync(new() { State = WaitForSelectorState.Detached });
+
+            // One last refresh to ensure UI reflects final state
+            await s.Page.ReloadAsync();
+            await WaitStatusContains("Settled");
+        }
+
 
         [Fact]
         public async Task CanChangeUserMail()

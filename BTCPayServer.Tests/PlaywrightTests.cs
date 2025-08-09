@@ -2402,9 +2402,9 @@ namespace BTCPayServer.Tests
 
             // Check which events are selected
             var pageContent = await s.Page.ContentAsync();
-            Assert.Contains("value=\"InvoiceProcessing\" checked", pageContent);
-            Assert.Contains("value=\"InvoiceCreated\" checked", pageContent);
-            Assert.DoesNotContain("value=\"InvoiceReceivedPayment\" checked", pageContent);
+            await Expect(s.Page.Locator("input[value='InvoiceProcessing']")).ToBeCheckedAsync();
+            await Expect(s.Page.Locator("input[value='InvoiceCreated']")).ToBeCheckedAsync();
+            await Expect(s.Page.Locator("input[value='InvoiceReceivedPayment']")).Not.ToBeCheckedAsync();
 
             await s.Page.ClickAsync("[name='update']");
             await s.FindAlertMessage();
@@ -2418,7 +2418,15 @@ namespace BTCPayServer.Tests
             var request = await server.GetNextRequest();
             var headers = request.Request.Headers;
             var actualSig = headers["BTCPay-Sig"].First();
-            var bytes = await request.Request.Body.ReadBytesAsync((int)headers.ContentLength.Value);
+            byte[] bytes;
+            if (headers.ContentLength is { } len)
+                bytes = await request.Request.Body.ReadBytesAsync((int)len);
+            else
+            {
+                using var ms = new MemoryStream();
+                await request.Request.Body.CopyToAsync(ms);
+                bytes = ms.ToArray();
+            }
             var expectedSig =
                 $"sha256={Encoders.Hex.EncodeData(NBitcoin.Crypto.Hashes.HMACSHA256(Encoding.UTF8.GetBytes("HelloWorld"), bytes))}";
             Assert.Equal(expectedSig, actualSig);
@@ -2485,9 +2493,8 @@ namespace BTCPayServer.Tests
         public async Task CanUsePredefinedRoles()
         {
             await using var s = CreatePlaywrightTester(newDb: true);
-            s.Server.ActivateLightning();
+            s.Server.ActivateLightning(LightningConnectionType.LndREST);
             await s.StartAsync();
-            await s.Server.EnsureChannelsSetup();
             var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks", "payout-processors",
                 "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC", "emails/rules", "email-settings", "forms"};
 
@@ -2507,7 +2514,7 @@ namespace BTCPayServer.Tests
             var (_, storeId) = await s.CreateNewStore();
             await s.GoToStore();
             await s.GenerateWallet(isHotWallet: true);
-            await s.AddLightningNode("CLightning", false);
+            await s.AddLightningNode(LightningConnectionType.LndREST, false);
             await s.AddUserToStore(storeId, manager, "Manager");
             await s.AddUserToStore(storeId, employee, "Employee");
             await s.AddUserToStore(storeId, guest, "Guest");
@@ -2568,9 +2575,9 @@ namespace BTCPayServer.Tests
             await s.AssertPageAccess(true, $"/apps/{crowdfundId}/settings/crowdfund");
             foreach (var path in storeSettingsPaths)
             {   // should have view access to settings, but no submit buttons or create links
-                s.TestLogs.LogInformation($"Checking access to store page {path} as manager");
                 await s.AssertPageAccess(true, $"stores/{storeId}/{path}");
-                Assert.False(await s.Page.GetByRole(AriaRole.Button, new() { Name = "Save" }).IsVisibleAsync());
+                var saveButton = s.Page.GetByRole(AriaRole.Button, new() { Name = "Save" });
+                Assert.False(await saveButton.CountAsync() > 0 && await saveButton.IsVisibleAsync());
             }
             await s.Logout();
 

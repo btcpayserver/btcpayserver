@@ -522,6 +522,186 @@ namespace BTCPayServer.Tests
                 Assert.True(payoutsData2.All(p => p.State == PayoutState.Completed));
             }
         }
+
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanUseLNAddress()
+        {
+            await using var s = CreatePlaywrightTester();
+            s.Server.DeleteStore = false;
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+
+            //ensure ln address is not available as Lightning is not enable
+            Assert.Equal(0, await s.Page.Locator("#StoreNav-LightningAddress").CountAsync());
+
+            await s.AddLightningNode(LightningConnectionType.LndREST, false);
+
+            await s.Page.ClickAsync("#StoreNav-LightningAddress");
+
+            // Add first lightning address (defaults)
+            await s.ClickPagePrimary();
+            var lnaddress1 = Guid.NewGuid().ToString();
+            await s.Page.FillAsync("#Add_Username", lnaddress1);
+            await s.Page.ClickAsync("button[value='add']");
+            await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+
+            // Add second lightning address with advanced settings
+            // Ensure the add form is open
+            if (!await s.Page.Locator("#Add_Username").IsVisibleAsync())
+            {
+                await s.ClickPagePrimary();
+            }
+            var lnaddress2 = "EUR" + Guid.NewGuid();
+            await s.Page.FillAsync("#Add_Username", lnaddress2);
+            await s.Page.ClickAsync("#AdvancedSettingsButton");
+            await s.Page.FillAsync("#Add_CurrencyCode", "EUR");
+            await s.Page.FillAsync("#Add_Min", "2");
+            await s.Page.FillAsync("#Add_Max", "10");
+            await s.Page.FillAsync("#Add_InvoiceMetadata", "{\"test\":\"lol\"}");
+            await s.Page.ClickAsync("button[value='add']");
+            await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+
+            //cannot test this directly as https is not supported on our e2e tests
+            // Verify addresses are listed and resolve LNURLP metadata
+            var addresses = s.Page.Locator(".lightning-address-value");
+            Assert.Equal(2, await addresses.CountAsync());
+            var callbacks = new List<Uri>();
+            var lnaddress2Resolved = lnaddress2.ToLowerInvariant();
+
+            for (var i = 0; i < await addresses.CountAsync(); i++)
+            {
+                var value = await addresses.Nth(i).GetAttributeAsync("value");
+                var lnurl = new Uri(LNURL.LNURL.ExtractUriFromInternetIdentifier(value).ToString().Replace("https", "http"));
+                var request = (LNURL.LNURLPayRequest)await LNURL.LNURL.FetchInformation(lnurl, new HttpClient());
+                var m = request.ParsedMetadata.ToDictionary(o => o.Key, o => o.Value);
+                if (value.StartsWith(lnaddress2Resolved, StringComparison.OrdinalIgnoreCase))
+                {
+                    Assert.StartsWith(lnaddress2Resolved + "@", m["text/identifier"]);
+                    lnaddress2Resolved = m["text/identifier"];
+                    Assert.Equal(2, request.MinSendable.ToDecimal(LightMoneyUnit.Satoshi));
+                    Assert.Equal(10, request.MaxSendable.ToDecimal(LightMoneyUnit.Satoshi));
+                    callbacks.Add(request.Callback);
+                }
+                else if (value.StartsWith(lnaddress1, StringComparison.OrdinalIgnoreCase))
+                {
+                    Assert.StartsWith(lnaddress1 + "@", m["text/identifier"]);
+                    lnaddress1 = m["text/identifier"];
+                    Assert.Equal(1, request.MinSendable.ToDecimal(LightMoneyUnit.Satoshi));
+                    Assert.Equal(6.12m, request.MaxSendable.ToDecimal(LightMoneyUnit.BTC));
+                    callbacks.Add(request.Callback);
+                }
+                else
+                {
+                    Assert.Fail("Should have matched");
+                }
+            }
+
+            var repo = s.Server.PayTester.GetService<InvoiceRepository>();
+            var invoices = await repo.GetInvoices(new InvoiceQuery() { StoreId = new[] { s.StoreId } });
+            // Resolving a ln address shouldn't create any btcpay invoice.
+            // This must be done because some NOST clients resolve ln addresses preemptively without user interaction
+            Assert.Empty(invoices);
+
+            // Calling the callbacks should create the invoices
+            foreach (var callback in callbacks)
+            {
+                using var r = await s.Server.PayTester.HttpClient.GetAsync(callback);
+                await r.Content.ReadAsStringAsync();
+            }
+            invoices = await repo.GetInvoices(new InvoiceQuery() { StoreId = new[] { s.StoreId } });
+            Assert.Equal(2, invoices.Length);
+            foreach (var inv in invoices)
+            {
+                var prompt = inv.GetPaymentPrompt(PaymentTypes.LNURL.GetPaymentMethodId("BTC"));
+                var handlers = s.Server.PayTester.GetService<PaymentMethodHandlerDictionary>();
+                var details = (LNURLPayPaymentMethodDetails)handlers.ParsePaymentPromptDetails(prompt);
+                Assert.Contains(details.ConsumedLightningAddress, new[] { lnaddress1, lnaddress2Resolved });
+                if (details.ConsumedLightningAddress == lnaddress2Resolved)
+                {
+                    Assert.Equal("lol", inv.Metadata.AdditionalData["test"].Value<string>());
+                }
+            }
+
+            // Check if we can get the same payrequest through the callback
+            var lnUsername = lnaddress1.Split('@')[0];
+            LNURLPayRequest req;
+            using (var resp = await s.Server.PayTester.HttpClient.GetAsync($"/.well-known/lnurlp/{lnUsername}"))
+            {
+                var str = await resp.Content.ReadAsStringAsync();
+                req = JsonConvert.DeserializeObject<LNURLPayRequest>(str);
+                Assert.Contains(req.ParsedMetadata, mm => mm.Key == "text/identifier" && mm.Value == lnaddress1);
+                Assert.Contains(req.ParsedMetadata, mm => mm.Key == "text/plain" && mm.Value.StartsWith("Paid to"));
+                Assert.NotNull(req.Callback);
+                Assert.Equal(new LightMoney(1000), req.MinSendable);
+                Assert.Equal(LightMoney.FromUnit(6.12m, LightMoneyUnit.BTC), req.MaxSendable);
+            }
+
+            lnUsername = lnaddress2Resolved.Split('@')[0];
+            using (var resp = await s.Server.PayTester.HttpClient.GetAsync($"/.well-known/lnurlp/{lnUsername}"))
+            {
+                var str = await resp.Content.ReadAsStringAsync();
+                req = JsonConvert.DeserializeObject<LNURLPayRequest>(str);
+                Assert.Equal(new LightMoney(2000), req.MinSendable);
+                Assert.Equal(new LightMoney(10_000), req.MaxSendable);
+            }
+
+            // Check via callback without amount
+            using (var resp = await s.Server.PayTester.HttpClient.GetAsync(req.Callback))
+            {
+                var str = await resp.Content.ReadAsStringAsync();
+                req = JsonConvert.DeserializeObject<LNURLPayRequest>(str);
+                Assert.Equal(new LightMoney(2000), req.MinSendable);
+                Assert.Equal(new LightMoney(10_000), req.MaxSendable);
+            }
+
+            // Can we ask for invoice? (Should fail, below minSpendable)
+            using (var resp = await s.Server.PayTester.HttpClient.GetAsync(req.Callback + "?amount=1999"))
+            {
+                var str = await resp.Content.ReadAsStringAsync();
+                var err = JsonConvert.DeserializeObject<LNUrlStatusResponse>(str);
+                Assert.Equal("Amount is out of bounds.", err.Reason);
+            }
+
+            // Can we ask for invoice?
+            using (var resp = await s.Server.PayTester.HttpClient.GetAsync(req.Callback + "?amount=2000"))
+            {
+                var str = await resp.Content.ReadAsStringAsync();
+                var succ = JsonConvert.DeserializeObject<LNURLPayRequest.LNURLPayRequestCallbackResponse>(str);
+                Assert.NotNull(succ.Pr);
+                Assert.Equal(new LightMoney(2000), BOLT11PaymentRequest.Parse(succ.Pr, Network.RegTest).MinimumAmount);
+            }
+
+            // Can we change comment?
+            using (var resp = await s.Server.PayTester.HttpClient.GetAsync(req.Callback + "?amount=2001"))
+            {
+                var str = await resp.Content.ReadAsStringAsync();
+                var succ = JsonConvert.DeserializeObject<LNURLPayRequest.LNURLPayRequestCallbackResponse>(str);
+                Assert.NotNull(succ.Pr);
+                try { await s.Server.CustomerLightningD.Pay(succ.Pr); } catch { }
+            }
+
+            // Can we find our comment and address in the payment list?
+            var allInvoices = await repo.GetInvoices(new InvoiceQuery() { StoreId = new[] { s.StoreId } });
+            var handlers2 = s.Server.PayTester.GetService<PaymentMethodHandlerDictionary>();
+            var match = allInvoices.FirstOrDefault(i =>
+            {
+                try
+                {
+                    var prompt = i.GetPaymentPrompt(PaymentTypes.LNURL.GetPaymentMethodId("BTC"));
+                    var det = (LNURLPayPaymentMethodDetails)handlers2.ParsePaymentPromptDetails(prompt);
+                    return det.ConsumedLightningAddress?.StartsWith(lnUsername, StringComparison.OrdinalIgnoreCase) == true;
+                }
+                catch { return false; }
+            });
+            Assert.NotNull(match);
+            await s.GoToInvoice(match!.Id);
+            var source = await s.Page.ContentAsync();
+            Assert.Contains(lnUsername, source);
+        }
         
         [Fact]
         public async Task CanManageUsers()

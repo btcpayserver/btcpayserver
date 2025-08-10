@@ -985,6 +985,16 @@ namespace BTCPayServer.Tests
             var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
             await ws.FillAddress(bob);
             await ws.FillAmount(1);
+
+            // Add labels to the transaction output
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                await s.Page.ClickAsync("div.label-manager input");
+                await s.Page.FillAsync("div.label-manager input", "tx-label");
+                await s.Page.Keyboard.PressAsync("Enter");
+                await s.Page.WaitForSelectorAsync("[data-value='tx-label']");
+            });
+
             await ws.Sign();
             // Back button should lead back to the previous page inside the send wizard
             var backUrl = await s.Page.Locator("#GoBack").GetAttributeAsync("href");
@@ -998,6 +1008,8 @@ namespace BTCPayServer.Tests
             await wb.AssertSending(bob, 1.0m);
             await wb.Broadcast();
             Assert.Equal(walletTransactionUri.ToString(), s.Page.Url);
+            // Assert that the added label is associated with the transaction
+            await wt.AssertHasLabels("tx-label");
 
             await s.Page.ClickAsync($"#StoreNav-Wallet{cryptoCode}");
             await s.Page.ClickAsync("#WalletNav-Send");

@@ -3128,7 +3128,8 @@ namespace BTCPayServer.Tests
             await s.CreateInvoice();
             var request = await server.GetNextRequest();
             var headers = request.Request.Headers;
-            var actualSig = headers["BTCPay-Sig"].First();
+            Assert.True(headers.TryGetValue("BTCPay-Sig", out var sigValues), "Missing BTCPay-Sig header");
+            var actualSig = sigValues.ToString();
             byte[] bytes;
             if (headers.ContentLength is { } len)
                 bytes = await request.Request.Body.ReadBytesAsync((int)len);
@@ -3254,8 +3255,7 @@ namespace BTCPayServer.Tests
             await s.AssertPageAccess(true, $"/apps/{crowdfundId}/settings/crowdfund");
             foreach (var path in storeSettingsPaths)
             {   // should have manage access to settings, hence should see submit buttons or create links
-                s.TestLogs.LogInformation($"Checking access to store page {path} as owner");
-                await s.AssertPageAccess(true, $"stores/{storeId}/{path}");
+                await s.AssertPageAccess(true, $"/stores/{storeId}/{path}");
                 if (path != "payout-processors")
                 {
                     var saveButton = s.Page.GetByRole(AriaRole.Button, new() { Name = "Save" });
@@ -3672,8 +3672,7 @@ namespace BTCPayServer.Tests
                 "emails/rules", "email-settings", "forms"};
             foreach (var path in storeSettingsPaths)
             {   // should have view access to settings, but no submit buttons or create links
-                s.TestLogs.LogInformation($"Checking access to store page {path} as admin");
-                await s.AssertPageAccess(true, $"stores/{storeId}/{path}");
+                await s.AssertPageAccess(true, $"/stores/{storeId}/{path}");
                 if (path != "payout-processors")
                 {
                     Assert.Equal(0, await s.Page.Locator("#mainContent .btn-primary").CountAsync());

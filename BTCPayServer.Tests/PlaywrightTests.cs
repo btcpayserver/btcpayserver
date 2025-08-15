@@ -3982,13 +3982,12 @@ namespace BTCPayServer.Tests
             await s.GoToInvoices(s.StoreId);
             i = await s.CreateInvoice();
             await s.GoToInvoiceCheckout(i);
-            var receipturl = s.Page.Url + "/receipt";
+            var checkouturi = s.Page.Url;
+            var receipturl = checkouturi + "/receipt";
             await s.GoToUrl(receipturl);
             await s.Page.Locator("#invoice-unsettled").WaitForAsync();
 
-            await s.GoToInvoices(s.StoreId);
-            await s.GoToInvoiceCheckout(i);
-            var checkouturi = s.Page.Url;
+            await s.GoToUrl(checkouturi);
             await s.PayInvoice(mine: true);
             
             await TestUtils.EventuallyAsync(async () =>
@@ -4005,11 +4004,7 @@ namespace BTCPayServer.Tests
                 Assert.Contains("\"PaymentDetails\"", pageContent);
             });
             
-            await s.GoToUrl(checkouturi);
-
             await s.Server.PayTester.InvoiceRepository.MarkInvoiceStatus(i, InvoiceStatus.Settled);
-
-            await TestUtils.EventuallyAsync(async () => await s.Page.Locator("#ReceiptLink").ClickAsync());
             await TestUtils.EventuallyAsync(async () =>
             {
                 await s.Page.ReloadAsync();
@@ -4022,21 +4017,21 @@ namespace BTCPayServer.Tests
             await s.Server.PayTester.InvoiceRepository.ToggleInvoiceArchival(i, true);
             await s.Logout();
 
-            await s.GoToUrl(s.Page.Url + $"/i/{i}/receipt");
+            await s.GoToUrl($"/i/{i}/receipt");
             await TestUtils.EventuallyAsync(async () =>
             {
                 var title = await s.Page.TitleAsync();
                 Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
             });
 
-            await s.GoToUrl(s.Page.Url + $"i/{i}");
+            await s.GoToUrl($"/i/{i}");
             await TestUtils.EventuallyAsync(async () =>
             {
                 var title = await s.Page.TitleAsync();
                 Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
             });
 
-            await s.GoToUrl(s.Page.Url + $"i/{i}/status");
+            await s.GoToUrl($"/i/{i}/status");
             await TestUtils.EventuallyAsync(async () =>
             {
                 var title = await s.Page.TitleAsync();

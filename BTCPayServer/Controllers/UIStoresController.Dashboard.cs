@@ -20,7 +20,7 @@ namespace BTCPayServer.Controllers;
 public partial class UIStoresController
 {
     [HttpGet("{storeId}")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Dashboard()
     {
         var store = CurrentStore;
@@ -66,7 +66,7 @@ public partial class UIStoresController
     }
 
     [HttpGet("{storeId}/dashboard/{cryptoCode}/lightning/balance")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult LightningBalance(string storeId, string cryptoCode)
     {
         var store = HttpContext.GetStoreData();
@@ -76,7 +76,7 @@ public partial class UIStoresController
     }
 
     [HttpGet("{storeId}/dashboard/{cryptoCode}/numbers")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult StoreNumbers(string storeId, string cryptoCode)
     {
         var store = HttpContext.GetStoreData();
@@ -86,7 +86,7 @@ public partial class UIStoresController
     }
 
     [HttpGet("{storeId}/dashboard/{cryptoCode}/recent-transactions")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult RecentTransactions(string storeId, string cryptoCode)
     {
         var store = HttpContext.GetStoreData();
@@ -96,7 +96,7 @@ public partial class UIStoresController
     }
 
     [HttpGet("{storeId}/dashboard/{cryptoCode}/recent-invoices")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult RecentInvoices(string storeId, string cryptoCode)
     {
         var store = HttpContext.GetStoreData();

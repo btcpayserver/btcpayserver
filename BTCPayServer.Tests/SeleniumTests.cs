@@ -2138,7 +2138,7 @@ retry:
 
             // Manager access
             s.LogIn(manager);
-            s.AssertPageAccess(false, GetStorePath(""));
+            s.AssertPageAccess(true, GetStorePath(""));
             s.AssertPageAccess(true, GetStorePath("reports"));
             s.AssertPageAccess(true, GetStorePath("invoices"));
             s.AssertPageAccess(true, GetStorePath("invoices/create"));

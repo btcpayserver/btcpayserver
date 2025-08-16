@@ -31,7 +31,7 @@
                 <div class="accordion-item" permission="@Policies.CanViewStoreSettings">
                     <div class="accordion-body">
                         <ul class="navbar-nav">
-                            <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
+                            <li class="nav-item" permission="@Policies.CanViewStoreSettings">
                                 <a id="StoreNav-@(nameof(StoreNavPages.Dashboard))" asp-area="" asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Dashboard)">
                                     <vc:icon symbol="nav-dashboard"/>
                                     <span text-translate="true">Dashboard</span>

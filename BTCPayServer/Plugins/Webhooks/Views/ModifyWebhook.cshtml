@@ -25,11 +25,11 @@
         </nav>
         @if (Model.IsNew)
         {
-            <button id="page-primary" name="add" type="submit" class="btn btn-primary" value="New">Add Webhook</button>
+            <button id="page-primary" name="add" type="submit" class="btn btn-primary" value="New" text-translate="true">Add Webhook</button>
         }
         else
         {
-			<button id="page-primary" name="update" type="submit" class="btn btn-primary" value="Save" >Update Webhook</button>
+			<button id="page-primary" name="update" type="submit" class="btn btn-primary" value="Save" text-translate="true">Update Webhook</button>
         }
     </div>
     <partial name="_StatusMessage" />

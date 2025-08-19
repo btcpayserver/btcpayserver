@@ -8,7 +8,7 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a asp-action="Services">Services</a>
+                <a asp-action="Services" text-translate="true">Services</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
         </ol>
@@ -25,7 +25,7 @@
     <p text-translate="true">BTCPay exposes Core Lightning's REST service for outside consumption, you will find connection information here.</p>
 </div>
 
-<h5 class="mb-3">Compatible wallets</h5>
+<h5 class="mb-3" text-translate="true">Compatible wallets</h5>
 <div class="services-list">
     <a href="https://github.com/ZeusLN/zeus" target="_blank" class="service" rel="noreferrer noopener">
         <img src="~/img/zeus.jpg" asp-append-version="true" alt="Zeus" />
@@ -44,7 +44,7 @@
     {
         <div class="form-group">
             <form method="post">
-                <button type="submit" class="btn btn-primary mt-2">Show QR Code</button>
+                <button type="submit" class="btn btn-primary mt-2" text-translate="true">Show QR Code</button>
             </form>
         </div>
     }
@@ -54,10 +54,10 @@
             <div id="qrCode"></div>
             <div id="qrCodeData" data-url="@Model.QRCode"></div>
         </div>
-        <p>See QR Code information by clicking <a href="#detailsQR" data-bs-toggle="collapse">here</a></p>
+        <p text-translate="true">See QR Code information by clicking <a href="#detailsQR" data-bs-toggle="collapse" text-translate="true">here</a></p>
         <div id="detailsQR" class="collapse"><h4 class="mt-4 mb-3">QR Code connection</h4>
             <div class="form-group">
-                <label class="form-label">QR Code data</label>
+                <label class="form-label" text-translate="true">QR Code data</label>
                 <input asp-for="QRCode" readonly class="form-control" />
             </div>
             <div class="form-group">
@@ -67,8 +67,8 @@
     }
 
     <div class="form-group">
-        <h5>More details...</h5>
-        <p>Alternatively, you can see the settings by clicking <a href="#details" data-bs-toggle="collapse">here</a></p>
+        <h5 text-translate="true">More details...</h5>
+        <p text-translate="true">Alternatively, you can see the settings by clicking <a href="#details" data-bs-toggle="collapse" text-translate="true">here</a></p>
     </div>
     <div id="details" class="collapse">
         @if (Model.Uri == null)

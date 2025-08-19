@@ -78,13 +78,13 @@
     <div id="InvoiceSummary" style="max-width:600px">
         @if (isProcessing)
         {
-            <div class="lead text-center fw-semibold" id="invoice-processing">
+            <div class="lead text-center fw-semibold" id="invoice-processing" text-translate="true">
                 The invoice has detected a payment but is still waiting to be settled.
             </div>
         }
         else if (!isSettled)
         {
-            <div class="lead text-center fw-semibold" id="invoice-unsettled">
+            <div class="lead text-center fw-semibold" id="invoice-unsettled" text-translate="true">
                 The invoice is not settled.
             </div>
         }
@@ -140,35 +140,35 @@
                         @if (posData.ItemsTotal != null)
                         {
                             <tr class="sums-data">
-                                <td class="key text-secondary">Items total</td>
+                                <td class="key text-secondary" text-translate="true">Items total</td>
                                 <td class="val text-end">@posData.ItemsTotal</td>
                             </tr>
                         }
                         @if (posData.Discount != null)
                         {
                             <tr class="sums-data">
-                                <td class="key text-secondary">Discount</td>
+                                <td class="key text-secondary" text-translate="true">Discount</td>
                                 <td class="val text-end">@posData.Discount</td>
                             </tr>
                         }
                         @if (posData.Subtotal != null)
                         {
                             <tr class="sums-data">
-                                <td class="key text-secondary">Subtotal</td>
+                                <td class="key text-secondary" text-translate="true">Subtotal</td>
                                 <td class="val text-end">@posData.Subtotal</td>
                             </tr>
                         }
                         @if (posData.Tax != null)
                         {
                             <tr class="sums-data">
-                                <td class="key text-secondary">Tax</td>
+                                <td class="key text-secondary" text-translate="true">Tax</td>
                                 <td class="val text-end">@posData.Tax</td>
                             </tr>
                         }
                         @if (posData.Tip != null)
                         {
                             <tr class="sums-data">
-                                <td class="key text-secondary">Tip</td>
+                                <td class="key text-secondary" text-translate="true">Tip</td>
                                 <td class="val text-end">@posData.Tip</td>
                             </tr>
                         }
@@ -178,7 +178,7 @@
                                 <td colspan="2"><hr class="w-100 my-0"/></td>
                             </tr>
                             <tr class="sums-data">
-                                <td class="key text-secondary">Total</td>
+                                <td class="key text-secondary" text-translate="true">Total</td>
                                 <td class="val text-end fw-semibold">@posData.Total</td>
                             </tr>
                         }
@@ -186,7 +186,7 @@
                     else
                     {
                         <tr class="sums-data">
-                            <td class="key text-nowrap text-secondary">Total</td>
+                            <td class="key text-nowrap text-secondary" text-translate="true">Total</td>
                             <td class="val text-end fw-semibold">@DisplayFormatter.Currency(Model.Amount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</td>
                         </tr>
                     }
@@ -204,7 +204,7 @@
                                     <td colspan="2" class="text-nowrap text-secondary">Payment @(i + 1)</td>
                                 </tr>
                                 <tr class="payment-data">
-                                    <td class="text-nowrap">Received</td>
+                                    <td class="text-nowrap" text-translate="true">Received</td>
                                     <td>@payment.ReceivedDate.ToBrowserDate()</td>
                                 </tr>
                             }
@@ -216,13 +216,13 @@
                                 <td colspan="2" class="text-end">@payment.PaidFormatted</td>
                             </tr>
                             <tr class="payment-data">
-                                <td class="text-nowrap text-secondary">Rate</td>
+                                <td class="text-nowrap text-secondary" text-translate="true">Rate</td>
                                 <td class="text-end">@payment.RateFormatted</td>
                             </tr>
                             @if (!string.IsNullOrEmpty(payment.Destination))
                             {
                                 <tr class="payment-data">
-                                    <td class="text-nowrap text-secondary">Destination</td>
+                                    <td class="text-nowrap text-secondary" text-translate="true">Destination</td>
                                     <td class="text-break">
                                         @if (payment.Destination.Length > 69)
                                         {
@@ -242,7 +242,7 @@
                             @if (!string.IsNullOrEmpty(payment.PaymentProof))
                             {
                                 <tr class="payment-data">
-                                    <td class="text-nowrap text-secondary">Pay Proof</td>
+                                    <td class="text-nowrap text-secondary" text-translate="true">Pay Proof</td>
                                     <td class="text-break">@payment.PaymentProof</td>
                                 </tr>
                             }
@@ -260,7 +260,7 @@
         }
     </div>
     <div class="store-footer p-3">
-        <a class="store-powered-by" style="color:#000;"><span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" /></a>
+        <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener" style="color:#000;"><span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" /></a>
     </div>
     <hr class="w-100 my-0 bg-none"/>
 </center>

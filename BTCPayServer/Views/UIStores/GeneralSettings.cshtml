@@ -63,7 +63,7 @@
                     @if (!string.IsNullOrEmpty(Model.LogoUrl))
                     {
                         <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveLogoFile" value="true">
-                            <vc:icon symbol="cross" /> Remove
+                            <vc:icon symbol="cross" /> <span text-translate="true">Remove</span>
                         </button>
                     }
                 </div>
@@ -90,7 +90,7 @@
                     @if (!string.IsNullOrEmpty(Model.CssUrl))
                     {
                         <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveCssFile" value="true">
-                            <vc:icon symbol="cross" /> Remove
+                            <vc:icon symbol="cross" /> <span text-translate="true">Remove</span>
                         </button>
                     }
                 </div>
@@ -100,7 +100,7 @@
                         <input asp-for="CssFile" type="file" class="form-control flex-grow">
                         @if (!string.IsNullOrEmpty(Model.CssUrl))
                         {
-                            <a href="@Model.CssUrl" target="_blank" rel="noreferrer noopener" class="text-nowrap">Custom CSS</a>
+                            <a href="@Model.CssUrl" target="_blank" rel="noreferrer noopener" class="text-nowrap" text-translate="true">Custom CSS</a>
                         }
                     </div>
                     <span asp-validation-for="LogoFile" class="text-danger"></span>
@@ -164,7 +164,7 @@
                 <label asp-for="BOLT11Expiration" class="form-label"></label>
                 <div class="input-group">
                     <input inputmode="numeric" asp-for="BOLT11Expiration" class="form-control" style="max-width:12ch;"/>
-					<span class="input-group-text" text-translate="true" text-translate="true">days</span>
+					<span class="input-group-text" text-translate="true">days</span>
                 </div>
                 <span asp-validation-for="BOLT11Expiration" class="text-danger"></span>
             </div>

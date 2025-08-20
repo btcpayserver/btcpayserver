@@ -20,6 +20,18 @@ namespace BTCPayServer.Plugins
         private readonly IOptions<DataDirectories> _dataDirectories;
         private readonly PoliciesSettings _policiesSettings;
         private readonly PluginBuilderClient _pluginBuilderClient;
+        private static readonly HashSet<string> _builtInPluginIdentifiers = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "BTCPayServer",
+            "BTCPayServer.Plugins.Altcoins",
+            "BTCPayServer.Plugins.Bitcoin",
+            "BTCPayServer.Plugins.Crowdfund",
+            "BTCPayServer.Plugins.NFC",
+            "BTCPayServer.Plugins.PayButton",
+            "BTCPayServer.Plugins.PointOfSale",
+            "BTCPayServer.Plugins.Shopify"
+        };
+
         public PluginService(
             IEnumerable<IBTCPayServerPlugin> btcPayServerPlugins,
             PluginBuilderClient pluginBuilderClient,
@@ -54,7 +66,8 @@ namespace BTCPayServer.Plugins
             string btcpayVersion = Env.Version.TrimStart('v').Split('+')[0];
             var versions = await _pluginBuilderClient.GetPublishedVersions(
                 btcpayVersion, _policiesSettings.PluginPreReleases, searchPluginName);
-            return versions.Select(v =>
+
+            var plugins = versions.Select(v =>
             {
                 var p = v.ManifestInfo.ToObject<AvailablePlugin>();
                 p.Documentation = v.Documentation;
@@ -67,7 +80,81 @@ namespace BTCPayServer.Plugins
                 }
                 p.SystemPlugin = false;
                 return p;
-            }).ToArray();
+            }).ToList();
+
+            var unlistedUpdates = await GetUpdatesForUnlistedInstalledAsync(plugins, btcpayVersion);
+            plugins.AddRange(unlistedUpdates);
+
+            return plugins.ToArray();
+        }
+
+        private async Task<List<AvailablePlugin>> GetUpdatesForUnlistedInstalledAsync(
+            List<AvailablePlugin> publishedPlugins,
+            string btcpayVersion)
+        {
+            var updatables = new List<AvailablePlugin>();
+            var presentIdentifiers = new HashSet<string>(
+                publishedPlugins.Select(p => p.Identifier),
+                StringComparer.OrdinalIgnoreCase);
+
+            foreach (var (installedIdentifier, installedVersion) in Installed)
+            {
+                if (_builtInPluginIdentifiers.Contains(installedIdentifier))
+                    continue;
+
+                if (presentIdentifiers.Contains(installedIdentifier))
+                    continue;
+
+                var publishedVersions = await _pluginBuilderClient.GetPluginVersionsForDownload(
+                    installedIdentifier,
+                    btcpayVersion,
+                    _policiesSettings.PluginPreReleases,
+                    includeAllVersions: true);
+
+                if (publishedVersions == null || !publishedVersions.Any())
+                    continue;
+
+                var candidates = publishedVersions
+                    .Select(versionInfo => new
+                    {
+                        VersionInfo = versionInfo,
+                        Available = versionInfo.ManifestInfo?.ToObject<AvailablePlugin>()
+                    })
+                    .Where(candidate => candidate.Available != null &&
+                                        candidate.Available.Identifier.Equals(installedIdentifier, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                if (candidates.Count == 0)
+                    continue;
+
+                var latestCandidate = candidates
+                    .OrderByDescending(candidate => candidate.Available!.Version)
+                    .First();
+
+                var latestAvailable = latestCandidate.Available!;
+
+
+                if (latestAvailable.Version <= installedVersion)
+                    continue;
+
+                latestAvailable.Documentation = latestCandidate.VersionInfo.Documentation;
+
+                var githubRepository = latestCandidate.VersionInfo.BuildInfo.GetGithubRepository();
+                if (githubRepository != null)
+                {
+                    latestAvailable.Source = githubRepository.GetSourceUrl(
+                        latestCandidate.VersionInfo.BuildInfo.gitCommit,
+                        latestCandidate.VersionInfo.BuildInfo.pluginDir);
+                    latestAvailable.Author = githubRepository.Owner;
+                    latestAvailable.AuthorLink = $"https://github.com/{githubRepository.Owner}";
+                }
+
+                latestAvailable.SystemPlugin = false;
+
+                updatables.Add(latestAvailable);
+            }
+
+            return updatables;
         }
 
         public async Task<AvailablePlugin> DownloadRemotePlugin(string pluginIdentifier, string version, VersionCondition condition = null)

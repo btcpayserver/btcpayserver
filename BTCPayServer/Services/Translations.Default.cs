@@ -12,7 +12,6 @@ namespace BTCPayServer.Services
             var knownTranslations =
 """
 {
-  "": "",
   "... on every payment": "",
   "... only if the customer makes more than one payment for the invoice": "",
   "'{0}' already exists": "",
@@ -349,7 +348,6 @@ namespace BTCPayServer.Services
   "Confirm new password": "",
   "Confirm passphrase": "",
   "Confirm password": "",
-  "Confirm the action by typing <strong": "",
   "Confirmations": "",
   "confirmed": "",
   "Connect an existing wallet": "",
@@ -737,7 +735,6 @@ namespace BTCPayServer.Services
   "Generate another address": "",
   "Generate API Key": "",
   "Generate Key": "",
-  "Generate next available": "",
   "Generated Code": "",
   "Get Link": "",
   "Give other registered BTCPay Server users access to your store. See the {0} for granted permissions.": "",

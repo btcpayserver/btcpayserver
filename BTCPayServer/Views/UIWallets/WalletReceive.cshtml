@@ -32,7 +32,7 @@
     @if (string.IsNullOrEmpty(Model.Address))
     {
         <div class="payment-box mb-3">
-            <button id="generateButton" class="btn btn-primary w-100" type="submit" name="command" value="generate-new-address" text-translate="true">Generate next available @Model.CryptoCode address</button>
+            <button id="generateButton" class="btn btn-primary w-100" type="submit" name="command" value="generate-new-address">Generate next available @Model.CryptoCode address</button>
         </div>
     }
     else

@@ -25,7 +25,7 @@
                 <p text-translate="true">The LND seed backup is useful to recover on-chain funds of your LND wallet in case of a corruption of your server.</p>
                 <p>The recovering process is documented by LND on <a href="https://github.com/lightningnetwork/lnd/blob/master/docs/recovery.md" rel="noreferrer noopener">this page</a>.</p>
             </div>
-            <button class="btn btn-primary @(Model.Removed ? "collapse" : "")" id="details" type="button">See confidential seed information</button>
+            <button class="btn btn-primary @(Model.Removed ? "collapse" : "")" id="details" type="button" text-translate="true">See confidential seed information</button>
             
             @if (Model.Removed)
             {

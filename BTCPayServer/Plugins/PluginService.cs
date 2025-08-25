@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
@@ -9,6 +11,7 @@ using BTCPayServer.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -20,12 +23,27 @@ namespace BTCPayServer.Plugins
         private readonly IOptions<DataDirectories> _dataDirectories;
         private readonly PoliciesSettings _policiesSettings;
         private readonly PluginBuilderClient _pluginBuilderClient;
+        private readonly ILogger<PluginService> _logger;
+        private static readonly HashSet<string> _builtInPluginIdentifiers = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "BTCPayServer",
+            "BTCPayServer.Plugins.Altcoins",
+            "BTCPayServer.Plugins.Bitcoin",
+            "BTCPayServer.Plugins.Crowdfund",
+            "BTCPayServer.Plugins.NFC",
+            "BTCPayServer.Plugins.PayButton",
+            "BTCPayServer.Plugins.PointOfSale",
+            "BTCPayServer.Plugins.Shopify"
+        };
+
         public PluginService(
             IEnumerable<IBTCPayServerPlugin> btcPayServerPlugins,
             PluginBuilderClient pluginBuilderClient,
             IOptions<DataDirectories> dataDirectories,
             PoliciesSettings policiesSettings,
-            BTCPayServerEnvironment env)
+            BTCPayServerEnvironment env,
+            ILogger<PluginService> logger
+            )
         {
             LoadedPlugins = btcPayServerPlugins;
             Installed = btcPayServerPlugins.ToDictionary(p => p.Identifier, p => p.Version, StringComparer.OrdinalIgnoreCase);
@@ -33,6 +51,7 @@ namespace BTCPayServer.Plugins
             _dataDirectories = dataDirectories;
             _policiesSettings = policiesSettings;
             Env = env;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public Dictionary<string, Version> Installed { get; set; }
@@ -54,20 +73,114 @@ namespace BTCPayServer.Plugins
             string btcpayVersion = Env.Version.TrimStart('v').Split('+')[0];
             var versions = await _pluginBuilderClient.GetPublishedVersions(
                 btcpayVersion, _policiesSettings.PluginPreReleases, searchPluginName);
-            return versions.Select(v =>
+
+            var plugins = versions
+                .Select(MapToAvailablePlugin)
+                .Where(p => p is not null)
+                .ToList()!;
+
+            var unlistedUpdates = await GetUpdatesForUnlistedInstalledAsync(plugins, btcpayVersion);
+            plugins.AddRange(unlistedUpdates);
+
+            return plugins.ToArray();
+        }
+
+        private async Task<List<AvailablePlugin>> GetUpdatesForUnlistedInstalledAsync(
+            List<AvailablePlugin> listedPlugins,
+            string btcpayVersion,
+            CancellationToken ct = default)
+        {
+            var listedIdentifiers = new HashSet<string>(
+                listedPlugins.Select(p => p.Identifier),
+                StringComparer.OrdinalIgnoreCase);
+
+            var installedToCheck = Installed
+                .Where(installedPlugin => !_builtInPluginIdentifiers.Contains(installedPlugin.Key) &&
+                              !listedIdentifiers.Contains(installedPlugin.Key))
+                .ToList();
+
+            var results = new ConcurrentBag<AvailablePlugin>();
+
+            var parallelOpts = new ParallelOptions
             {
-                var p = v.ManifestInfo.ToObject<AvailablePlugin>();
-                p.Documentation = v.Documentation;
-                var github = v.BuildInfo.GetGithubRepository();
-                if (github != null)
+                MaxDegreeOfParallelism = Math.Min(6, Environment.ProcessorCount),
+                CancellationToken = ct
+            };
+
+            await Parallel.ForEachAsync(installedToCheck, parallelOpts, async (installedPlugin, ct2) =>
+            {
+                var (installedIdentifier, installedVersion) = installedPlugin;
+
+                try
                 {
-                    p.Source = github.GetSourceUrl(v.BuildInfo.gitCommit, v.BuildInfo.pluginDir);
-                    p.Author = github.Owner;
-                    p.AuthorLink = $"https://github.com/{github.Owner}";
+                    var publishedVersions = await _pluginBuilderClient.GetPluginVersionsForDownload(
+                        installedIdentifier,
+                        btcpayVersion,
+                        _policiesSettings.PluginPreReleases,
+                        includeAllVersions: true);
+
+                    if (publishedVersions == null || !publishedVersions.Any())
+                        return;
+
+                    var latestCandidate = publishedVersions
+                        .Select(publishedVersion => (VersionInfo: publishedVersion, Manifest: publishedVersion.ManifestInfo))
+                        .Where(versionTuple => versionTuple.Manifest != null)
+                        .Select(versionTuple =>
+                        {
+                            var identifier = versionTuple.Manifest!["Identifier"]?.ToString();
+                            var parsedVersion = Version.TryParse(versionTuple.Manifest!["Version"]?.ToString(), out var ver) ? ver : null;
+
+                            return new { versionTuple.VersionInfo, Identifier = identifier, Version = parsedVersion };
+                        })
+                        .Where(candidate => candidate.Identifier != null &&
+                                    candidate.Identifier.Equals(installedIdentifier, StringComparison.OrdinalIgnoreCase) &&
+                                    candidate.Version is not null)
+                        .OrderByDescending(candidate => candidate.Version)
+                        .FirstOrDefault();
+
+                    if (latestCandidate == null)
+                        return;
+
+                    var latestAvailable = MapToAvailablePlugin(latestCandidate.VersionInfo);
+
+                    if (latestAvailable is null)
+                        return;
+
+                    if (latestAvailable.Version <= installedVersion)
+                        return;
+
+                    results.Add(latestAvailable);
                 }
-                p.SystemPlugin = false;
-                return p;
-            }).ToArray();
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Error while checking for updates for installed plugin {InstalledPluginIdentifier}",
+                        installedIdentifier);
+                }
+            });
+
+            return results.ToList();
+        }
+
+        private AvailablePlugin MapToAvailablePlugin(PublishedVersion publishedVersion)
+        {
+            var availablePlugin = publishedVersion.ManifestInfo.ToObject<AvailablePlugin>();
+            if (availablePlugin is null)
+            {
+                _logger.LogWarning("ManifestInfo missing for published version {Version}", publishedVersion.ToString());
+                return null;
+            }
+
+            availablePlugin.Documentation = publishedVersion.Documentation;
+            var github = publishedVersion.BuildInfo?.GetGithubRepository();
+            if (github != null)
+            {
+                availablePlugin.Source = github.GetSourceUrl(publishedVersion.BuildInfo.gitCommit, publishedVersion.BuildInfo.pluginDir);
+                availablePlugin.Author = github.Owner;
+                availablePlugin.AuthorLink = $"https://github.com/{github.Owner}";
+            }
+            availablePlugin.SystemPlugin = false;
+            return availablePlugin;
         }
 
         public async Task<AvailablePlugin> DownloadRemotePlugin(string pluginIdentifier, string version, VersionCondition condition = null)

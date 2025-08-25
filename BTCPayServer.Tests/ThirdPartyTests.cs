@@ -294,6 +294,7 @@ namespace BTCPayServer.Tests
 
             var urlBlacklist = new string[]
             {
+                "https://zaphq.io", // Returns forbidden over test. Opening on tab, it redirects to strike
                 "https://www.btse.com", // not allowing to be hit from circleci
                 "https://www.bitpay.com", // not allowing to be hit from circleci
                 "https://support.bitpay.com",

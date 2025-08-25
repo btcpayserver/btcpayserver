@@ -7,86 +7,83 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace BTCPayServer.HostedServices
+namespace BTCPayServer.HostedServices;
+
+public class PeriodicTaskLauncherHostedService : IHostedService
 {
-    public class PeriodicTaskLauncherHostedService : IHostedService
+    public PeriodicTaskLauncherHostedService(IServiceProvider serviceProvider, ILoggerFactory loggerFactory)
     {
-        public PeriodicTaskLauncherHostedService(IServiceProvider serviceProvider, ILoggerFactory loggerFactory)
-        {
-            ServiceProvider = serviceProvider;
-            Logger = loggerFactory.CreateLogger("BTCPayServer.PeriodicTasks");
-        }
+        ServiceProvider = serviceProvider;
+        Logger = loggerFactory.CreateLogger("BTCPayServer.PeriodicTasks");
+    }
 
-        public IServiceProvider ServiceProvider { get; }
-        public ILogger Logger { get; }
+    public IServiceProvider ServiceProvider { get; }
+    public ILogger Logger { get; }
 
-        Channel<ScheduledTask> jobs = Channel.CreateBounded<ScheduledTask>(100);
-        CancellationTokenSource cts;
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
-            cts = new CancellationTokenSource();
-            foreach (var task in ServiceProvider.GetServices<ScheduledTask>())
-                jobs.Writer.TryWrite(task);
+    Channel<ScheduledTask> jobs = Channel.CreateBounded<ScheduledTask>(100);
+    CancellationTokenSource cts;
 
-            loop = Task.WhenAll(Enumerable.Range(0, 3).Select(_ => Loop(cts.Token)).ToArray());
-            return Task.CompletedTask;
-        }
-        Task loop;
-        private async Task Loop(CancellationToken token)
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        cts = new CancellationTokenSource();
+        foreach (var task in ServiceProvider.GetServices<ScheduledTask>())
+            jobs.Writer.TryWrite(task);
+
+        loop = Task.WhenAll(Enumerable.Range(0, 3).Select(_ => Loop(cts.Token)).ToArray());
+        return Task.CompletedTask;
+    }
+
+    Task loop;
+
+    private async Task Loop(CancellationToken token)
+    {
+        try
         {
-            try
+            await foreach (var job in jobs.Reader.ReadAllAsync(token))
             {
-                await foreach (var job in jobs.Reader.ReadAllAsync(token))
+                var t = (IPeriodicTask)ServiceProvider.GetService(job.PeriodicTaskType);
+                try
                 {
-                    if (job.NextScheduled <= DateTimeOffset.UtcNow)
-                    {
-                        var t = (IPeriodicTask)ServiceProvider.GetService(job.PeriodicTaskType);
-                        try
-                        {
-                            await t.Do(token);
-                        }
-                        catch when (token.IsCancellationRequested)
-                        {
-                            throw;
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.LogError(ex, $"Unhandled error in periodic task {job.PeriodicTaskType.Name}");
-                        }
-                        finally
-                        {
-                            job.NextScheduled = DateTimeOffset.UtcNow + job.Every;
-                        }
-                    }
-                    _ = Wait(job, token);
+                    await t.Do(token);
                 }
-            }
-            catch when (token.IsCancellationRequested)
-            {
+                catch when (token.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, $"Unhandled error in periodic task {job.PeriodicTaskType.Name}");
+                }
+
+                _ = Wait(job, token);
             }
         }
-
-        private async Task Wait(ScheduledTask job, CancellationToken token)
+        catch when (token.IsCancellationRequested)
         {
-            var timeToWait = job.NextScheduled - DateTimeOffset.UtcNow;
-            try
-            {
-                await Task.Delay(timeToWait, token);
-            }
-            catch { }
-            while (await jobs.Writer.WaitToWriteAsync())
+        }
+    }
+
+    private async Task Wait(ScheduledTask job, CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(job.Every, token);
+            while (await jobs.Writer.WaitToWriteAsync(token))
             {
                 if (jobs.Writer.TryWrite(job))
                     break;
             }
         }
-
-        public async Task StopAsync(CancellationToken cancellationToken)
+        catch when (token.IsCancellationRequested)
         {
-            cts?.Cancel();
-            jobs.Writer.TryComplete();
-            if (loop is not null)
-                await loop;
         }
+    }
+
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        cts?.Cancel();
+        jobs.Writer.TryComplete();
+        if (loop is not null)
+            await loop;
     }
 }

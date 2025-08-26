@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using static System.Net.WebRequestMethods;
@@ -46,13 +48,20 @@ namespace BTCPayServer.Plugins
         public JObject ManifestInfo { get; set; }
         public string Documentation { get; set; }
     }
+
+    public record InstalledPluginRequest(string Identifier, string Version);
+
     public class PluginBuilderClient
     {
+        #nullable enable
+
         HttpClient httpClient;
         public HttpClient HttpClient => httpClient;
-        public PluginBuilderClient(HttpClient httpClient)
+        private readonly ILogger<PluginBuilderClient> _logger;
+        public PluginBuilderClient(HttpClient httpClient, ILogger<PluginBuilderClient> logger)
         {
             this.httpClient = httpClient;
+            _logger = logger;
         }
         static JsonSerializerSettings serializerSettings = new() { ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver() };
         public async Task<PublishedVersion[]> GetPublishedVersions(string btcpayVersion, bool includePreRelease, string searchPluginName = null, bool? includeAllVersions = null)
@@ -88,6 +97,34 @@ namespace BTCPayServer.Plugins
             var result = await httpClient.GetStringAsync(url);
             return JsonConvert.DeserializeObject<PublishedVersion[]>(result, serializerSettings)
                    ?? throw new InvalidOperationException();
+        }
+
+        public async Task<PublishedVersion[]?> GetInstalledPluginsUpdates(
+            string btcpayVersion,
+            bool includePreRelease,
+            IEnumerable<InstalledPluginRequest> plugins)
+        {
+            var queryString = $"?includePreRelease={includePreRelease}";
+            if (!string.IsNullOrWhiteSpace(btcpayVersion))
+                queryString += $"&btcpayVersion={Uri.EscapeDataString(btcpayVersion)}";
+
+            var json = JsonConvert.SerializeObject(plugins, serializerSettings);
+            using var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            try
+            {
+                using var resp = await httpClient.PostAsync($"api/v1/plugins/updates{queryString}", content);
+                resp.EnsureSuccessStatusCode();
+
+                var body = await resp.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<PublishedVersion[]>(body, serializerSettings)
+                       ?? Array.Empty<PublishedVersion>();
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogWarning(ex, "Failed to check for plugins updates");
+                return null;
+            }
         }
     }
 }

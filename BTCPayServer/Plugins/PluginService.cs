@@ -100,7 +100,7 @@ namespace BTCPayServer.Plugins
         {
             if (publishedVersion.ManifestInfo is null)
             {
-                _logger.LogWarning("ManifestInfo missing for published version {Version}", publishedVersion.ToString());
+                _logger.LogWarning("Skipping published plugin with missing ManifestInfo (BuildId: {BuildId}, ProjectSlug: {ProjectSlug})", publishedVersion.BuildId, publishedVersion.ProjectSlug);
                 return null;
             }
 
@@ -112,13 +112,13 @@ namespace BTCPayServer.Plugins
             }
             catch (JsonException ex)
             {
-                _logger.LogWarning(ex, "Failed to parse manifest for published version {Version}", publishedVersion.ToString());
+                _logger.LogWarning(ex, "Failed to parse ManifestInfo (BuildId: {BuildId}, ProjectSlug: {ProjectSlug})", publishedVersion.BuildId, publishedVersion.ProjectSlug);
                 return null;
             }
 
             if (availablePlugin is null)
             {
-                _logger.LogWarning("ManifestInfo missing for published version {Version}", publishedVersion.ToString());
+                _logger.LogWarning("Failed to deserialize ManifestInfo to AvailablePlugin (BuildId: {BuildId}, ProjectSlug: {ProjectSlug})", publishedVersion.BuildId, publishedVersion.ProjectSlug);
                 return null;
             }
 

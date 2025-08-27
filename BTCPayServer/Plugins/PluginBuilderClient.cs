@@ -53,8 +53,6 @@ namespace BTCPayServer.Plugins
 
     public class PluginBuilderClient
     {
-        #nullable enable
-
         HttpClient httpClient;
         public HttpClient HttpClient => httpClient;
         private readonly ILogger<PluginBuilderClient> _logger;
@@ -99,7 +97,7 @@ namespace BTCPayServer.Plugins
                    ?? throw new InvalidOperationException();
         }
 
-        public async Task<PublishedVersion[]?> GetInstalledPluginsUpdates(
+        public async Task<PublishedVersion[]> GetInstalledPluginsUpdates(
             string btcpayVersion,
             bool includePreRelease,
             IEnumerable<InstalledPluginRequest> plugins)
@@ -123,12 +121,12 @@ namespace BTCPayServer.Plugins
             catch (HttpRequestException ex)
             {
                 _logger.LogWarning(ex, "Failed to check for plugins updates");
-                return null;
+                return Array.Empty<PublishedVersion>();
             }
             catch (JsonException ex)
             {
                 _logger.LogWarning(ex, "Failed to parse plugins updates response");
-                return null;
+                return Array.Empty<PublishedVersion>();
             }
         }
     }

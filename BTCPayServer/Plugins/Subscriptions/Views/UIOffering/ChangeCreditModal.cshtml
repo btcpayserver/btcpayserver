@@ -1,0 +1,139 @@
+﻿
+<div class="modal fade" id="updateCreditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title charge-mode" text-translate="true">Charge user</h4>
+                <h4 class="modal-title credit-mode" text-translate="true">Credit user</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                    <vc:icon symbol="close" />
+                </button>
+            </div>
+            <form method="post">
+                <div class="modal-body">
+                    <div html-translate="true" class="charge-mode">Would you like to charge <span class="subscriber-name fw-semibold"></span>?</div>
+                    <div html-translate="true" class="credit-mode">Would you like to credit <span class="subscriber-name fw-semibold"></span>?</div>
+                </div>
+                <div class="modal-body pt-0 pb-0">
+                    <input name="customerId" type="hidden" />
+
+                    <div class="d-flex justify-content-between credit-plan-price">
+                        <div class="text-muted">Current credit</div>
+                        <div class="current-credit"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center charge-applied">
+                        <div class="text-muted charge-mode">Charge applied</div>
+                        <div class="text-muted credit-mode">Credit applied</div>
+                        <div class="d-flex align-items-center justify-content-end">
+                            <span class="charge-mode">-</span>
+                            <span class="credit-mode">+</span>
+                            <input type="text"
+                                   class="form-control form-control-sm amount ms-2"
+                                   name="amount"
+                                   style="text-align: right;"
+                                   autocomplete="off" />
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-between fw-semibold credit-next-charge">
+                        <div class="charge-mode">After charge</div>
+                        <div class="credit-mode">After Credit</div>
+                        <div class="after-change"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger charge-mode" text-translate="true" name="command" value="charge">Charge</button>
+                    <button type="submit" class="btn btn-success credit-mode" text-translate="true" name="command" value="credit">Credit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        (function () {
+            const modalChargeEl = document.getElementById('updateCreditModal');
+            const idEl = modalChargeEl.querySelector('input[name="customerId"]');
+            const currentCredit = modalChargeEl.querySelector('.current-credit');
+            const afterChangeEl = modalChargeEl.querySelector('.after-change');
+            const amount = modalChargeEl.querySelector('.amount');
+            var creditMode = false;
+
+            var seq = 0;
+            var currency;
+            var currentCreditValue = 0;
+            amount.addEventListener('input', updateChargeAfter);
+
+            async function getFormattedValue(value, currency) {
+                const response = await fetch(`format-currency`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        amount: value,
+                        currency: currency
+                    })
+                });
+                return await response.text();
+            }
+
+            let debounceTimeout;
+
+            async function updateChargeAfter() {
+                const amountValue = Number(amount.value) || 0;
+                modalChargeEl.querySelectorAll('button[name="command"]').forEach(el => el.disabled = amountValue <= 0);
+
+                const remaining = creditMode ? currentCreditValue + amountValue : currentCreditValue - amountValue;
+
+                // Debounce the updates to avoid flooding the service
+                const DEBOUNCE_DELAY = 300; // 300ms delay
+
+                // Create a debounced update function
+                const debouncedUpdate = async () => {
+                    seq++;
+                    var thisSeq = seq;
+                    afterChangeEl.innerText = '---';
+                    if (thisSeq !== seq) return;
+                    afterChangeEl.innerText = await getFormattedValue(remaining, currency);
+                };
+
+                if (debounceTimeout) clearTimeout(debounceTimeout);
+                afterChangeEl.innerText = '...';
+                debounceTimeout = setTimeout(debouncedUpdate, DEBOUNCE_DELAY);
+            }
+
+            modalChargeEl.addEventListener('show.bs.modal', function (event) {
+                const trigger = event.relatedTarget;
+                if (!trigger) return;
+
+                const tr = trigger.closest('tr');
+                currency = tr.getAttribute('data-currency');
+                currentCreditValue = Number(tr.getAttribute('data-current-credit-value'));
+                if (idEl) idEl.value = tr.getAttribute('data-subscriber-id');
+
+                modalChargeEl.querySelectorAll('.subscriber-name').forEach(el => el.innerText = tr.getAttribute('data-subscriber-email'));
+
+                creditMode = trigger.getAttribute('data-action') === 'credit';
+                const chargeModeEls = modalChargeEl.querySelectorAll('.charge-mode');
+                const creditModeEls = modalChargeEl.querySelectorAll('.credit-mode');
+                if (creditMode) {
+                    chargeModeEls.forEach(el => el.style.display = 'none');
+                    creditModeEls.forEach(el => el.style.display = '');
+                    modalChargeEl.querySelectorAll('button[name="command"]').forEach(el => el.value = 'credit');
+                } else {
+                    chargeModeEls.forEach(el => el.style.display = '');
+                    creditModeEls.forEach(el => el.style.display = 'none');
+                    modalChargeEl.querySelectorAll('button[name="command"]').forEach(el => el.value = 'charge');
+                }
+
+                currentCredit.innerText = '---';
+                getFormattedValue(currentCreditValue, currency).then(value => currentCredit.innerText = value);
+                amount.value = '';
+                afterChangeEl.innerText = '';
+                updateChargeAfter();
+            });
+        })();
+    });
+</script>

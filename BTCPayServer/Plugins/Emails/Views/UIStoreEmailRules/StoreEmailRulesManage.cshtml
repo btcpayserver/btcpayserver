@@ -31,17 +31,38 @@
     </div>
     <partial name="_StatusMessage" />
 
+    <input type="hidden" asp-for="OfferingId"></input>
+    <input type="hidden" asp-for="RedirectUrl"></input>
     <div class="form-group">
         <label asp-for="Trigger" class="form-label" data-required></label>
-        <select asp-for="Trigger" asp-items="@Model.Triggers.Select(t => new SelectListItem(StringLocalizer[t.Description], t.Type))"
-                class="form-select email-rule-trigger" required></select>
-        <span asp-validation-for="Trigger" class="text-danger"></span>
-        <div class="form-text" text-translate="true">Choose what event sends the email.</div>
+        <input type="hidden" asp-for="CanChangeTrigger"></input>
+        @if (Model.CanChangeTrigger)
+        {
+            <select asp-for="Trigger"
+                    asp-items="@Model.Triggers.Select(t => new SelectListItem(StringLocalizer[t.Description], t.Trigger))"
+                    class="form-select email-rule-trigger" required></select>
+            <span asp-validation-for="Trigger" class="text-danger"></span>
+            <div class="form-text" text-translate="true">Choose what event sends the email.</div>
+        }
+        else
+        {
+            <input type="hidden" asp-for="Trigger"></input>
+            <input asp-for="Trigger" class="form-control email-rule-trigger-hidden" disabled></input>
+        }
     </div>
 
     <div class="form-group">
         <label asp-for="Condition" class="form-label"></label>
-        <input asp-for="Condition" class="form-control" placeholder="@StringLocalizer["A Postgres compatible JSON Path (eg. $?(@.Invoice.Metadata.buyerName == \"john\"))"]" />
+        <input type="hidden" asp-for="CanChangeCondition" ></input>
+        @if (Model.CanChangeCondition)
+        {
+            <input asp-for="Condition" class="form-control" placeholder="@StringLocalizer["A Postgres compatible JSON Path (eg. $.Offering.Id == \"john\")"]" />
+        }
+        else
+        {
+            <input type="hidden" asp-for="Condition"></input>
+            <input asp-for="Condition" class="form-control" disabled></input>
+        }
         <span asp-validation-for="Condition" class="text-danger"></span>
         <div class="form-text" text-translate="true">Only send email when the specified JSON Path exists</div>
     </div>
@@ -86,11 +107,12 @@
         var triggers = @Safe.Json(Model.Triggers);
         var triggersByType = {};
         for (var i = 0; i < triggers.length; i++) {
-            triggersByType[triggers[i].type] = triggers[i];
+            triggersByType[triggers[i].trigger] = triggers[i];
         }
+
         document.addEventListener('DOMContentLoaded', () => {
 
-            const triggerSelect = document.querySelector('.email-rule-trigger');
+            const triggerSelect = document.querySelector('.email-rule-trigger') ?? document.querySelector('.email-rule-trigger-hidden');
             const subjectInput = document.querySelector('.email-rule-subject');
             const bodyTextarea = document.querySelector('.email-rule-body');
             const placeholdersTd = document.querySelector('#placeholders');
@@ -103,6 +125,7 @@
 
             function applyTemplate() {
                 const selectedTrigger = triggerSelect.value;
+                console.log(selectedTrigger);
                 if (triggersByType[selectedTrigger]) {
                     if (isEmptyOrDefault(subjectInput.value, 'subjectExample')) {
                         subjectInput.value = triggersByType[selectedTrigger].subjectExample;

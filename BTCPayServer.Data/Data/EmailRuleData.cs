@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Data.Subscriptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Newtonsoft.Json.Linq;
@@ -16,6 +17,11 @@ public class EmailRuleData : BaseEntityData
     public static string GetWebhookTriggerName(string webhookType) => $"WH-{webhookType}";
     [Column("store_id")]
     public string? StoreId { get; set; }
+    [Column("offering_id")]
+    public string? OfferingId { get; set; }
+
+    [ForeignKey(nameof(OfferingId))]
+    public OfferingData? Offering { get; set; }
 
     [Key]
     public long Id { get; set; }
@@ -53,6 +59,7 @@ public class EmailRuleData : BaseEntityData
         var b = builder.Entity<EmailRuleData>();
         BaseEntityData.OnModelCreateBase(b, builder, databaseFacade);
         b.Property(o => o.Id).UseIdentityAlwaysColumn();
+        b.HasOne(o => o.Offering).WithMany().OnDelete(DeleteBehavior.Cascade);
         b.HasOne(o => o.Store).WithMany().OnDelete(DeleteBehavior.Cascade);
         b.HasIndex(o => o.StoreId);
     }

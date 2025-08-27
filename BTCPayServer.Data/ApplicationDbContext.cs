@@ -1,12 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace BTCPayServer.Data
 {
@@ -20,7 +15,7 @@ namespace BTCPayServer.Data
             return new ApplicationDbContext(builder.Options);
         }
     }
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    public partial class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -64,6 +59,7 @@ namespace BTCPayServer.Data
         public DbSet<PayoutProcessorData> PayoutProcessors { get; set; }
         public DbSet<FormData> Forms { get; set; }
         public DbSet<PendingTransaction> PendingTransactions { get; set; }
+        public DbSet<CustomerData> Customers { get; set; }
 
         public DbSet<EmailRuleData> EmailRules { get; set; }
 
@@ -72,6 +68,10 @@ namespace BTCPayServer.Data
             base.OnModelCreating(builder);
 
             // some of the data models don't have OnModelCreating for now, commenting them
+
+            OnSubscriptionsModelCreating(builder);
+            CustomerData.OnModelCreating(builder, Database);
+            CustomerIdentityData.OnModelCreating(builder, Database);
             EmailRuleData.OnModelCreating(builder, Database);
             ApplicationUser.OnModelCreating(builder, Database);
             AddressInvoiceData.OnModelCreating(builder);

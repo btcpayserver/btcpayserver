@@ -9,6 +9,15 @@ namespace BTCPayServer.Services.Apps
 {
     public abstract class AppBaseType
     {
+        public AppBaseType()
+        {
+
+        }
+
+        public AppBaseType(string typeName)
+        {
+            Type = typeName;
+        }
         public string Description { get; set; } = string.Empty;
         public string Type { get; set; } = string.Empty;
         public abstract Task<object?> GetInfo(AppData appData);

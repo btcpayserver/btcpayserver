@@ -15,6 +15,7 @@ using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Tests.PMO;
 using BTCPayServer.Views.Stores;
 using LNURL;
 using Microsoft.AspNetCore.Mvc;
@@ -720,12 +721,8 @@ goodies:
             await s.GoToInvoiceCheckout();
         }
 
-        private static async Task AssertInvoiceAmount(PlaywrightTester s, string expectedAmount)
-        {
-            var el = await s.Page.WaitForSelectorAsync("#AmountDue");
-            var content = await el!.TextContentAsync();
-            Assert.Equal(expectedAmount.NormalizeWhitespaces(), content.NormalizeWhitespaces());
-        }
+        private static Task AssertInvoiceAmount(PlaywrightTester s, string expectedAmount)
+            => new InvoiceCheckoutPMO(s).AssertContent(new() { AmountDue = expectedAmount });
 
         [Fact]
         [Trait("Playwright", "Playwright")]

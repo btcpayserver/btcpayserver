@@ -206,7 +206,7 @@ namespace BTCPayServer.Services.Apps
         {
             return invoice.GetInternalTags("APP#");
         }
-        
+
         public static string GetRandomOrderId(int length = 16)
         {
             return Encoders.Base58.EncodeData(RandomUtils.GetBytes(length));
@@ -447,7 +447,8 @@ retry:
                 goto retry;
         }
 
-        public async Task UpdateOrCreateApp(AppData app)
+        public Task UpdateOrCreateApp(AppData app) => UpdateOrCreateApp(app, true);
+        public async Task UpdateOrCreateApp(AppData app, bool sendEvents)
         {
             await using var ctx = _ContextFactory.CreateContext();
             var newApp = string.IsNullOrEmpty(app.Id);
@@ -465,10 +466,13 @@ retry:
                 ctx.Entry(app).Property(data => data.AppType).IsModified = false;
             }
             await ctx.SaveChangesAsync();
-            if (newApp)
-                _eventAggregator.Publish(new AppEvent.Created(app));
-            else
-                _eventAggregator.Publish(new AppEvent.Updated(app));
+            if (sendEvents)
+            {
+                if (newApp)
+                    _eventAggregator.Publish(new AppEvent.Created(app));
+                else
+                    _eventAggregator.Publish(new AppEvent.Updated(app));
+            }
         }
 
         private static bool TryParseJson(string json, [MaybeNullWhen(false)] out JObject result)
@@ -485,7 +489,7 @@ retry:
             }
         }
 #nullable enable
-        
+
         public static bool TryParsePosCartItems(JObject? posData, [MaybeNullWhen(false)] out List<AppCartItem> cartItems)
         {
             cartItems = null;

@@ -7,7 +7,7 @@ namespace BTCPayServer.Plugins.Emails.Views;
 /// </summary>
 public class EmailTriggerViewModel
 {
-    public string Type { get; set; }
+    public string Trigger { get; set; }
     public string Description { get; set; }
     public string SubjectExample { get; set; }
     public string BodyExample { get; set; }

@@ -17,7 +17,11 @@ public interface ITriggerOwner
     Task BeforeSending(EmailRuleMatchContext context);
 }
 
-public record TriggerEvent(string? StoreId, string Trigger, JObject Model, ITriggerOwner? Owner);
+public record TriggerEvent(string? StoreId, string Trigger, JObject Model, ITriggerOwner? Owner)
+{
+    public override string ToString()
+        => $"Trigger event '{Trigger}'";
+}
 
 public class EmailRuleMatchContext(
     TriggerEvent triggerEvent,

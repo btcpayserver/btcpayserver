@@ -58,6 +58,7 @@ dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggest
 
 # ReSharper properties
 resharper_apply_auto_detected_rules = false
+resharper_entity_framework_model_validation_unlimited_string_length_highlighting = none
 resharper_autodetect_indent_settings = true
 resharper_cpp_insert_final_newline = true
 resharper_csharp_insert_final_newline = true

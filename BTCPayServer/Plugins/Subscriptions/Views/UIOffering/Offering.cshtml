@@ -1,0 +1,459 @@
+﻿@using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Client
+@using BTCPayServer.Controllers
+@using BTCPayServer.Plugins.Emails
+@using BTCPayServer.Plugins.Subscriptions.Controllers
+@using BTCPayServer.Services
+@model SubscriptionsViewModel
+@inject DisplayFormatter DisplayFormatter
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
+
+@{
+    string storeId = (string)this.Context.GetRouteValue("storeId");
+    string offeringId = (string)this.Context.GetRouteValue("offeringId");
+    ViewData.SetActivePage(AppsNavPages.Update, StringLocalizer["Subscriptions"], offeringId);
+    Csp.UnsafeEval();
+}
+
+@section PageHeadContent {
+
+    <style>
+        .card h6 {
+            font-weight: var(--btcpay-font-weight-semibold);
+            color: var(--btcpay-body-text-muted);
+        }
+    </style>
+    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
+
+}
+
+<div class="sticky-header">
+    <h2>@ViewData["Title"]</h2>
+    <div>
+        <a class="btn btn-secondary" asp-action="ConfigureOffering" asp-route-storeId="@storeId" asp-route-offeringId="@offeringId" text-translate="true">Configure</a>
+    </div>
+</div>
+
+<partial name="_StatusMessage" />
+
+<div class="container-fluid px-4 py-4">
+    <!-- Metrics Cards -->
+    <div class="row">
+        <div class="col-md-2">
+            <div>
+                <h6 text-translate="true">Active Subscribers</h6>
+                <h4>@Model.TotalSubscribers</h4>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div>
+                <h6 text-translate="true">Monthly revenue</h6>
+                <h4 class="text-nowrap">@Model.TotalMonthlyRevenue</h4>
+            </div>
+        </div>
+        <div class="col-md-8"></div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul id="SectionNav" class="nav mb-4">
+        <a class="nav-link @(Model.Section == SubscriptionSection.Subscribers ? "active" : "")"
+           asp-action="Offering"
+           asp-route-storeId="@storeId"
+           asp-route-offeringId="@offeringId"
+           asp-route-section="@SubscriptionSection.Subscribers" text-translate="true">Subscribers</a>
+        <a class="nav-link @(Model.Section == SubscriptionSection.Plans ? "active" : "")"
+           asp-action="Offering"
+           asp-route-storeId="@storeId"
+           asp-route-offeringId="@offeringId"
+           asp-route-section="@SubscriptionSection.Plans" text-translate="true">Plans</a>
+        <a class="nav-link @(Model.Section == SubscriptionSection.Mails ? "active" : "")"
+           asp-action="Offering"
+           asp-route-storeId="@storeId"
+           asp-route-offeringId="@offeringId"
+           asp-route-section="@SubscriptionSection.Mails" text-translate="true">Mails</a>
+    </ul>
+
+    @if (Model.Section == SubscriptionSection.Plans)
+    {
+        <div class="d-flex justify-content-between align-items-center">
+            <h4>Plans</h4>
+            <a id="page-primary" permission="@Policies.CanModifyMembership" asp-route-storeId="@storeId" asp-route-offeringId="@offeringId" asp-action="AddPlan"
+               class="btn btn-primary"
+               role="button"
+               text-translate="true">Add Plan</a>
+        </div>
+
+        <!-- Subscription Plans Table -->
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th text-translate="true">Plan</th>
+                    <th text-translate="true">API ID</th>
+                    <th text-translate="true">Price</th>
+                    <th text-translate="true">Recurring</th>
+                    <th text-translate="true">Grace Period</th>
+                    <th text-translate="true">Trial Period</th>
+                    <th text-translate="true">Status</th>
+                    <th text-translate="true">Active Members</th>
+                    <th text-translate="true">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @if (Model.Plans.Count != 0)
+                {
+                    foreach (var p in Model.Plans)
+                    {
+                        <tr id="plan_@p.Data.Id" class="plan-row align-middle"
+                            data-plan-id="@p.Data.Id"
+                            data-plan-name="@p.Data.Name"
+                            data-allow-trial="@(p.Data.TrialDays > 0)">
+                            <td class="fw-semibold text-nowrap plan-name-col">
+                                <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    @p.Data.Name
+                                </span>
+                                <div class="dropdown-menu">
+                                    <a
+                                        href="#"
+                                        text-translate="true"
+                                        class="new-subscriber-link dropdown-item lh-base"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#newSubscriberModal">
+                                        Create a new subscriber
+                                    </a>
+                                </div>
+                            </td>
+                            <td>
+                                <vc:truncate-center
+                                    text="@p.Data.Id"
+                                    classes="truncate-center-id plan-row-id" />
+                            </td>
+                            <td class="text-nowrap">@DisplayFormatter.Currency(@p.Data.Price, @p.Data.Currency, DisplayFormatter.CurrencyFormat.CodeAndSymbol)</td>
+                            <td>@p.Data.RecurringType</td>
+                            <td>@p.Data.GracePeriodDays days</td>
+                            <td>@p.Data.TrialDays days</td>
+                            <td><span class="status-active">
+                                @{
+                                    var (badge, name) = p.Data.Status switch
+                                    {
+                                        PlanData.PlanStatus.Retired =>
+                                            p.Data.MemberCount != 0 ? ("warning", StringLocalizer["Retiring"]) : ("danger", StringLocalizer["Retired"]),
+                                        _ => ("success", StringLocalizer["Active"])
+                                    };
+                                }
+                                <span class="subscriber-status badge badge-translucent rounded-pill text-bg-@badge">@name</span>
+                            </span></td>
+                            <td>@p.Data.MemberCount Members</td>
+                            <td>
+                                <div class="d-inline-flex align-items-center gap-3">
+                                    <a class="edit-plan" asp-action="AddPlan"
+                                       asp-route-storeId="@storeId"
+                                       asp-route-offeringId="@offeringId"
+                                       asp-route-planId="@p.Data.Id">Edit</a>
+                                    <a
+                                        asp-action="DeletePlan"
+                                        asp-route-storeId="@storeId"
+                                        asp-route-offeringId="@offeringId"
+                                        asp-route-planId="@p.Data.Id"
+                                        data-bs-toggle="modal" data-bs-target="#ConfirmModal"
+                                        data-description="@ViewLocalizer["This action will remove the plan <b>{0}</b>.", Html.Encode(p.Data.Name)]"
+                                        data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Remove</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-secondary" text-translate="true">There are no subscription plans.</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Remove plan"], StringLocalizer["This action will remove this plan. Are you sure?"], StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />
+    }
+    else if (Model.Section == SubscriptionSection.Subscribers)
+    {
+        <div class="d-flex justify-content-between align-items-center">
+            <h4>Subscribers</h4>
+            @if (Model.SelectablePlans.Count != 0)
+            {
+                <a
+                    href="#"
+                    permission="@Policies.CanModifyMembership"
+                    text-translate="true"
+                    role="button"
+                    id="page-primary"
+                    class="new-subscriber btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#newSubscriberModal">
+                    Add subsriber
+                </a>
+            }
+        </div>
+        <form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8">
+            <input asp-for="SearchTerm" class="form-control" placeholder="@StringLocalizer["Search by email, external reference, name…"]" />
+        </form>
+        <!-- Subscription Plans Table -->
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th text-translate="true">User</th>
+                    <th text-translate="true">Credits</th>
+                    <th text-translate="true">Plan</th>
+                    <th text-translate="true">Phase</th>
+                    <th text-translate="true">Status</th>
+                    <th text-translate="true">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @if (Model.Subscribers.Count != 0)
+                {
+                    @foreach (var subscriber in Model.Subscribers)
+                    {
+                        <tr data-subscriber-email="@subscriber.Data.Customer.Email.Get()"
+                            data-subscriber-id="@subscriber.Data.CustomerId"
+                            data-currency="@subscriber.Data.Plan.Currency"
+                            data-current-credit-value="@subscriber.Data.GetCredit()">
+                            <td class="fw-semibold text-nowrap d-flex align-items-center">
+                                <form method="post" asp-antiforgery="true" class="me-2">
+                                    @if (subscriber.Data.TestAccount)
+                                    {
+                                        <span class="badge badge-translucent rounded-pill text-bg-info">Test</span>
+                                    }
+                                    <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        @subscriber.Data.Customer.Email.Get()
+                                    </span>
+                                    <div class="dropdown-menu">
+                                        <input type="hidden" name="customerId" value="@subscriber.Data.CustomerId" />
+                                        <button type="submit" name="command" class="dropdown-item lh-base" value="toggle-test">
+                                            @if (subscriber.Data.TestAccount)
+                                            {
+                                                <span text-translate="true">Unmark test account</span>
+                                            }
+                                            else
+                                            {
+                                                <span text-translate="true">Mark as a test account</span>
+                                            }
+                                        </button>
+                                    </div>
+                                </form>
+                            </td>
+                            <td class="fw-semibold text-nowrap subscriber-credit-col">
+                                <span>
+                                    <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <span>@DisplayFormatter.Currency(subscriber.Data.GetCredit(), subscriber.Data.Plan.Currency, DisplayFormatter.CurrencyFormat.CodeAndSymbol)</span>
+                                    </span>
+                                    <div class="dropdown-menu">
+                                        <a
+                                            href="#"
+                                            text-translate="true"
+                                            class="charge-subscriber-link dropdown-item lh-base"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#updateCreditModal"
+                                            data-action="credit">
+                                            Credit
+                                        </a>
+                                        <a
+                                            href="#"
+                                            text-translate="true"
+                                            class="charge-subscriber-link dropdown-item lh-base"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#updateCreditModal"
+                                            data-action="charge">
+                                            Charge
+                                        </a>
+                                    </div>
+                                </span>
+                            </td>
+                            <td class="text-nowrap">@subscriber.Data.Plan.Name</td>
+                            <td>
+                        <span class="subscriber-phase">
+                            @{
+                                var (style, name) = subscriber.Data.Phase switch
+                                {
+                                    SubscriberData.PhaseTypes.Normal => ("success", StringLocalizer["Normal"]),
+                                    SubscriberData.PhaseTypes.Expired => ("danger", StringLocalizer["Expired"]),
+                                    SubscriberData.PhaseTypes.Grace => ("warning", StringLocalizer["Grace"]),
+                                    SubscriberData.PhaseTypes.Trial => ("info", StringLocalizer["Trial"]),
+                                    _ => throw new NotSupportedException()
+                                };
+                            }
+                            <span class="badge badge-translucent rounded-pill text-bg-@style">@name</span>
+                        </span></td>
+                            <td>
+
+                        <span class="status-active">
+                            <vc:subscriber-status subscriber="@subscriber.Data" can-suspend="true" />
+                        </span>
+                            </td>
+                            <td>
+                                <div class="d-inline-flex align-items-center gap-3">
+                                    <a asp-action="CreatePortalSession" asp-route-storeId="@storeId" asp-route-offeringId="@subscriber.Data.OfferingId"
+                                       asp-route-customerId="@subscriber.Data.CustomerId" class="portal-link" target="_blank">View Portal</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+
+                    if (Model.TooMuchSubscribers)
+                    {
+                        <tr>
+                            <td colspan="8" class="text-secondary" text-translate="true">There are many subscribers, use search to look for them.</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <td colspan="8" class="text-secondary" text-translate="true">There are no subscribers.</td>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    else if (Model.Section == SubscriptionSection.Mails)
+    {
+        <form asp-antiforgery="true" method="post">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 text-translate="true">Mails</h4>
+                <div class="d-flex justify-content-start sticky-footer">
+                    <button id="page-primary" class="btn btn-success px-4" type="submit" text-translate="true">Save</button>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                @if (!Model.EmailConfigured)
+                {
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <h5 class="mb-0" text-translate="true">Email Configuration</h5>
+                                </div>
+
+                                <p class="text-muted mb-3" text-translate="true">No email address has been configured for the Server. Configure an email address
+                                    to
+                                    begin sending emails.</p>
+                                <a
+                                    asp-area="@EmailsPlugin.Area"
+                                    asp-action="StoreEmailSettings"
+                                    asp-controller="UIStoresEmail"
+                                    asp-route-storeId="@storeId"
+                                    target="_blank"
+                                    class="btn btn-warning" text-translate="true">Configure email</a>
+
+                            </div>
+                        </div>
+                    </div>
+                }
+                <!-- Notifications & Alerts -->
+                <div class="col-lg-@(Model.EmailConfigured ? "12" : "6")">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="mb-3" text-translate="true">Notifications & Alerts</h5>
+                            <div class="form-group mb-4">
+                                <label asp-for="PaymentRemindersDays" class="form-label" text-translate="true">Email Reminder Days Before Due</label>
+                                <div class="input-group">
+                                    <input inputmode="number" asp-for="PaymentRemindersDays" class="form-control" style="max-width:12ch;"
+                                           min="0" />
+                                    <span class="input-group-text" text-translate="true">days</span>
+                                </div>
+                                <span asp-validation-for="PaymentRemindersDays" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-4 mb-3">
+                        <h5 class="mb-0" text-translate="true">Email rules</h5>
+                        <span class="dropdown-toggle btn btn-outline-secondary" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Add email rule</span>
+                        <div class="dropdown-menu">
+                            @foreach (var availableRule in Model.AvailableTriggers)
+                            {
+                                <button
+                                    type="submit"
+                                    name="addEmailRule"
+                                    value="@availableRule.Trigger"
+                                    class="new-subscriber-link dropdown-item lh-base">@StringLocalizer[availableRule.Description]</button>
+                            }
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th class="text-nowrap w-25" text-translate="true">Trigger</th>
+                                <th class="w-75" text-translate="true">Subject</th>
+                                <th class="actions-col" permission="@Policies.CanModifyStoreSettings"></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @if (Model.EmailRules.Count == 0)
+                            {
+                                <td colspan="2" class="text-secondary" text-translate="true">There are no email rules for this offering.</td>
+                            }
+                            else
+                            {
+                                @foreach (var rule in Model.EmailRules)
+                                {
+                                    var thisPage = @Url.Action(nameof(UIOfferingController.Offering), new { storeId, offeringId, SubscriptionSection.Mails });
+                                    <tr>
+                                        <td>@rule.TriggerViewModel.Description</td>
+                                        <td>@rule.Data.Subject</td>
+                                        <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
+                                            <div class="d-inline-flex align-items-center gap-3">
+                                                <a asp-area="@EmailsPlugin.Area"
+                                                   asp-controller="UIStoreEmailRules"
+                                                   asp-action="StoreEmailRulesEdit" asp-route-storeId="@storeId"
+                                                   asp-route-redirectUrl="@thisPage"
+                                                   asp-route-ruleId="@rule.Data.Id">Edit</a>
+                                                <a asp-area="@EmailsPlugin.Area"
+                                                   asp-controller="UIStoreEmailRules"
+                                                   asp-action="StoreEmailRulesDelete" asp-route-storeId="@storeId"
+                                                   asp-route-redirectUrl="@thisPage"
+                                                   asp-route-ruleId="@rule.Data.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal"
+                                                   data-description="@ViewLocalizer["This action will remove the rule with the trigger <b>{0}</b>.", Html.Encode(rule.TriggerViewModel.Description)]"
+                                                   data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Remove</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Remove email rule"], StringLocalizer["This action will remove this rule. Are you sure?"], StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />
+    }
+    <partial name="SuspendSubscriberModal" />
+    <partial name="NewSubscriberModal" model="Model.SelectablePlans" />
+    <partial name="ChangeCreditModal" />
+</div>
+
+@section PageFootContent {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            $('.richtext2').summernote({
+                minHeight: 200,
+                tableClassName: 'table table-sm',
+                insertTableMaxSize: {
+                    col: 5,
+                    row: 10
+                },
+                codeviewFilter: true,
+                codeviewFilterRegex: new RegExp($.summernote.options.codeviewFilterRegex.source + '|<.*?( on\\w+?=.*?)>', 'gi'),
+                codeviewIframeWhitelistSrc: ['twitter.com', 'syndication.twitter.com']
+            });
+        });
+    </script>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
+}

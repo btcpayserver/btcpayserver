@@ -198,7 +198,7 @@ namespace BTCPayServer.Tests
         public async Task<T> WaitForEvent<T>(Func<Task> action, Func<T, bool> correctEvent = null)
         {
             var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var sub = PayTester.GetService<EventAggregator>().Subscribe<T>(evt =>
+            var sub = PayTester.GetService<EventAggregator>().SubscribeAny<T>(evt =>
             {
                 if (correctEvent is null)
                     tcs.TrySetResult(evt);

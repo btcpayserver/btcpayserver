@@ -1,0 +1,121 @@
+﻿@model List<SubscriptionsViewModel.SelectablePlan>
+<div class="modal fade" id="newSubscriberModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" text-translate="true">Create a new subscriber</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                    <vc:icon symbol="close" />
+                </button>
+            </div>
+
+            <form method="post"
+                  asp-antiforgery="true"
+                  action="new-subscriber">
+
+                <div class="modal-body">
+                    <div text-translate="true">Would you like to invite a new subscriber?</div>
+                </div>
+
+                <div class="modal-body pt-0">
+                    <div class="d-flex justify-content-between">
+                        <div class="form-group flex-fill me-4">
+                            <label for="newSubscriber-prefilledEmail" class="form-label" text-translate="true">Email</label>
+                            <input id="newSubscriber-prefilledEmail"
+                                   name="prefilledEmail"
+                                   type="email"
+                                   autocomplete="email"
+                                   inputmode="email"
+                                   placeholder="Leave empty to let the customer configure it"
+                                   class="form-control me-2" />
+                        </div>
+                        <div class="form-group">
+                            <label for="newSubscriber-linkExpiration" class="form-label" text-translate="true">Expires in</label>
+                            <select id="newSubscriber-linkExpiration" name="linkExpiration" class="form-select w-auto">
+                                <option value="1" text-translate="true">1 day</option>
+                                <option value="7" text-translate="true">7 days</option>
+                                <option value="30" text-translate="true">30 days</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newSubscriber-plan" class="form-label" text-translate="true">Plan</label>
+
+                        <!-- Vue-driven select -->
+                        <select id="newSubscriber-plan"
+                                name="planId"
+                                class="form-select"
+                                v-model="selectedPlanId"
+                                :disabled="!canEditPlan">
+                            <option :value="p.id" v-for="p in plans" :key="p.id">
+                                {{ p.name }}
+                            </option>
+                        </select>
+                        <input type="hidden" :value="selectedPlanId" name="planId" />
+                    </div>
+
+                    <!-- Trial checkbox only appears when plan supports trials -->
+                    <div class="form-group d-flex align-items-center" v-if="showTrial">
+                        <input id="newSubscriber-isTrial"
+                               name="isTrial"
+                               value="true"
+                               type="checkbox"
+                               class="btcpay-toggle me-3"
+                               v-model="isTrial">
+                        <label class="form-check-label" for="newSubscriber-isTrial" text-translate="true">Enable trial</label>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" name="command" value="new-subscriber" class="btn btn-success" text-translate="true">Create</button>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var selectablePlans = @Safe.Json(Model);
+        if (!selectablePlans.length) { return; }
+        var newSubscriberApp = new Vue({
+            el: '#newSubscriberModal',
+            data() {
+                return {
+                    plans: selectablePlans,
+                    selectedPlanId: selectablePlans[0].id,
+                    isTrial: false,
+                    canEditPlan: false
+                };
+            },
+            computed: {
+                selectedPlan() {
+                    return this.plans.find(p => p.id === this.selectedPlanId) || null;
+                },
+                showTrial() {
+                    return !!(this.selectedPlan && this.selectedPlan.hasTrial);
+                }
+            }
+        });
+
+        (function () {
+            const modalEl = document.getElementById('newSubscriberModal');
+            modalEl.addEventListener('show.bs.modal', function (event) {
+                const trigger = event.relatedTarget;
+                if (!trigger) return;
+                const tr = trigger.closest('tr');
+
+                Object.assign(newSubscriberApp.$data, newSubscriberApp.$options.data.call(this));
+
+
+                if (tr) {
+                    newSubscriberApp.selectedPlanId = tr.getAttribute('data-plan-id');
+                    newSubscriberApp.canEditPlan = false;
+                } else {
+                    newSubscriberApp.canEditPlan = true;
+                }
+            });
+        })();
+    });
+</script>

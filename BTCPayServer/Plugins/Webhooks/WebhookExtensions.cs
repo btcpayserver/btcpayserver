@@ -20,10 +20,10 @@ public static class WebhookExtensions
     {
         foreach(var trigger in viewModels)
         {
-            var webhookType = trigger.Type;
-            if (trigger.Type.StartsWith("WH-"))
+            var webhookType = trigger.Trigger;
+            if (trigger.Trigger.StartsWith("WH-"))
                 throw new ArgumentException("Webhook type cannot start with WH-");
-            trigger.Type = EmailRuleData.GetWebhookTriggerName(trigger.Type);
+            trigger.Trigger = EmailRuleData.GetWebhookTriggerName(trigger.Trigger);
             services.AddSingleton(new AvailableWebhookViewModel(webhookType, trigger.Description));
             services.AddSingleton(trigger);
         }

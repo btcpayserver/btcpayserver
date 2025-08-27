@@ -66,9 +66,9 @@ namespace BTCPayServer.Plugins
         {
             var queryString = $"?includePreRelease={includePreRelease}";
             if (btcpayVersion is not null)
-                queryString += $"&btcpayVersion={btcpayVersion}";
+                queryString += $"&btcpayVersion={Uri.EscapeDataString(btcpayVersion)}";
             if (searchPluginName is not null)
-                queryString += $"&searchPluginName={searchPluginName}";
+                queryString += $"&searchPluginName={Uri.EscapeDataString(searchPluginName)}";
             if (includeAllVersions is not null)
                 queryString += $"&includeAllVersions={includeAllVersions}";
             var result = await _httpClient.GetStringAsync($"api/v1/plugins{queryString}");
@@ -126,6 +126,11 @@ namespace BTCPayServer.Plugins
             catch (JsonException ex)
             {
                 _logger.LogWarning(ex, "Failed to parse plugins updates response");
+                return Array.Empty<PublishedVersion>();
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Timeout while checking plugins updates");
                 return Array.Empty<PublishedVersion>();
             }
         }

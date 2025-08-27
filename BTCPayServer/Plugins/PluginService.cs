@@ -64,7 +64,8 @@ namespace BTCPayServer.Plugins
             var plugins = versions
                 .Select(MapToAvailablePlugin)
                 .Where(p => p is not null)
-                .ToList()!;
+                .Select(p => p!)
+                .ToList();
 
             var listedIds = new HashSet<string>(
                 plugins.Select(p => p.Identifier),
@@ -83,14 +84,38 @@ namespace BTCPayServer.Plugins
                 loadedToCheck);
 
             if (updates is { Length: > 0 })
-                plugins.AddRange(updates.Select(MapToAvailablePlugin).Where(p => p is not null));
+            {
+                plugins.AddRange(
+                    updates.Select(MapToAvailablePlugin)
+                        .Where(p => p is not null)
+                        .Select(p => p!)
+                );
+            }
 
             return plugins.ToArray();
         }
 
-        private AvailablePlugin MapToAvailablePlugin(PublishedVersion publishedVersion)
+#nullable enable
+        private AvailablePlugin? MapToAvailablePlugin(PublishedVersion publishedVersion)
         {
-            var availablePlugin = publishedVersion.ManifestInfo.ToObject<AvailablePlugin>();
+            if (publishedVersion.ManifestInfo is null)
+            {
+                _logger.LogWarning("ManifestInfo missing for published version {Version}", publishedVersion.ToString());
+                return null;
+            }
+
+            AvailablePlugin? availablePlugin;
+
+            try
+            {
+                availablePlugin = publishedVersion.ManifestInfo.ToObject<AvailablePlugin>();
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse manifest for published version {Version}", publishedVersion.ToString());
+                return null;
+            }
+
             if (availablePlugin is null)
             {
                 _logger.LogWarning("ManifestInfo missing for published version {Version}", publishedVersion.ToString());
@@ -98,16 +123,18 @@ namespace BTCPayServer.Plugins
             }
 
             availablePlugin.Documentation = publishedVersion.Documentation;
-            var github = publishedVersion.BuildInfo?.GetGithubRepository();
-            if (github != null)
+            var buildInfo = publishedVersion.BuildInfo;
+            var github = buildInfo?.GetGithubRepository();
+            if (buildInfo is not null && github is not null)
             {
-                availablePlugin.Source = github.GetSourceUrl(publishedVersion.BuildInfo.gitCommit, publishedVersion.BuildInfo.pluginDir);
+                availablePlugin.Source = github.GetSourceUrl(buildInfo.gitCommit, buildInfo.pluginDir);
                 availablePlugin.Author = github.Owner;
                 availablePlugin.AuthorLink = $"https://github.com/{github.Owner}";
             }
             availablePlugin.SystemPlugin = false;
             return availablePlugin;
         }
+#nullable restore
 
         public async Task<AvailablePlugin> DownloadRemotePlugin(string pluginIdentifier, string version, VersionCondition condition = null)
         {

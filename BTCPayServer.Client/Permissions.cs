@@ -40,6 +40,10 @@ namespace BTCPayServer.Client
         public const string CanViewPayouts = "btcpay.store.canviewpayouts";
         public const string CanCreatePullPayments = "btcpay.store.cancreatepullpayments";
         public const string CanViewPullPayments = "btcpay.store.canviewpullpayments";
+        public const string CanModifyCustomers = "btcpay.store.canmodifycustomers";
+        public const string CanViewCustomers = "btcpay.store.canviewcustomers";
+        public const string CanViewMembership = "btcpay.store.canviewmembership";
+        public const string CanModifyMembership = "btcpay.store.canmodifymembership";
         public const string CanCreateNonApprovedPullPayments = "btcpay.store.cancreatenonapprovedpullpayments";
         public const string Unrestricted = "unrestricted";
         public static IEnumerable<string> AllPolicies
@@ -74,6 +78,10 @@ namespace BTCPayServer.Client
                 yield return CanArchivePullPayments;
                 yield return CanCreatePullPayments;
                 yield return CanViewPullPayments;
+                yield return CanViewCustomers;
+                yield return CanModifyCustomers;
+                yield return CanViewMembership;
+                yield return CanModifyMembership;
                 yield return CanCreateNonApprovedPullPayments;
                 yield return CanManageUsers;
                 yield return CanManagePayouts;
@@ -249,7 +257,7 @@ namespace BTCPayServer.Client
         }
 
         public static ReadOnlyDictionary<string, HashSet<string>> PolicyMap { get; private set; }
-    
+
 
         private static ReadOnlyDictionary<string, HashSet<string>> Init()
         {
@@ -261,6 +269,8 @@ namespace BTCPayServer.Client
                 Policies.CanModifyWebhooks,
                 Policies.CanModifyPaymentRequests,
                 Policies.CanManagePayouts,
+                Policies.CanModifyCustomers,
+                Policies.CanModifyMembership,
                 Policies.CanUseLightningNodeInStore);
 
             PolicyHasChild(policyMap,Policies.CanManageUsers, Policies.CanCreateUser);
@@ -269,6 +279,8 @@ namespace BTCPayServer.Client
             PolicyHasChild(policyMap, Policies.CanCreateNonApprovedPullPayments, Policies.CanViewPullPayments);
             PolicyHasChild(policyMap,Policies.CanModifyPaymentRequests, Policies.CanViewPaymentRequests);
             PolicyHasChild(policyMap,Policies.CanModifyProfile, Policies.CanViewProfile);
+            PolicyHasChild(policyMap,Policies.CanModifyCustomers, Policies.CanViewCustomers);
+            PolicyHasChild(policyMap,Policies.CanModifyMembership, Policies.CanViewMembership);
             PolicyHasChild(policyMap,Policies.CanUseLightningNodeInStore, Policies.CanViewLightningInvoiceInStore, Policies.CanCreateLightningInvoiceInStore);
             PolicyHasChild(policyMap,Policies.CanManageNotificationsForUser, Policies.CanViewNotificationsForUser);
             PolicyHasChild(policyMap,Policies.CanModifyServerSettings,

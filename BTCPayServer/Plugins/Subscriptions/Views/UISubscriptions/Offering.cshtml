@@ -1,0 +1,541 @@
+﻿@using BTCPayServer.Client
+@using BTCPayServer.Controllers
+@using BTCPayServer.Services
+@model SubscriptionsViewModel
+@inject DisplayFormatter DisplayFormatter
+
+@{
+    string storeId = (string)this.Context.GetRouteValue("storeId");
+    string offeringId = (string)this.Context.GetRouteValue("offeringId");
+    ViewData.SetActivePage(AppsNavPages.Update, StringLocalizer["Subscriptions"], offeringId);
+}
+
+@section PageHeadContent {
+
+    <style>
+        .card h6 {
+            font-weight: var(--btcpay-font-weight-semibold);
+            color: var(--btcpay-body-text-muted);
+        }
+    </style>
+
+}
+
+<div class="sticky-header">
+    <h2>@ViewData["Title"]</h2>
+    <div>
+        <a class="btn btn-secondary" asp-action="ConfigureOffering" asp-route-storeId="@storeId" asp-route-offeringId="@offeringId" text-translate="true">Configure</a>
+    </div>
+</div>
+
+<partial name="_StatusMessage" />
+
+<div class="container-fluid px-4 py-4">
+    <!-- Metrics Cards -->
+    <div class="row">
+        <div class="col-md-2">
+            <div>
+                <h6>Total Plans</h6>
+                <h4>@Model.TotalPlans</h4>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div>
+                <h6 class="text-nowrap">Total Subscribers</h6>
+                <h4>@Model.TotalSubscribers</h4>
+            </div>
+        </div>
+        <div class="col-md-8"></div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul id="SectionNav" class="nav mb-4">
+        <a class="nav-link @(Model.Section == SubscriptionSection.Subscribers ? "active" : "")"
+           asp-action="Offering"
+           asp-route-storeId="@storeId"
+           asp-route-offeringId="@offeringId"
+           asp-route-section="@SubscriptionSection.Subscribers">Subscribers</a>
+        <a class="nav-link @(Model.Section == SubscriptionSection.Plans ? "active" : "")"
+           asp-action="Offering"
+           asp-route-storeId="@storeId"
+           asp-route-offeringId="@offeringId"
+           asp-route-section="@SubscriptionSection.Plans">Subscription Plans</a>
+    </ul>
+
+    @if (Model.Section == SubscriptionSection.Plans)
+    {
+        <div class="d-flex justify-content-between align-items-center">
+            <h4>Subscription Plans</h4>
+            <a id="page-primary" permission="@Policies.CanModifyMembership" asp-route-storeId="@storeId" asp-route-offeringId="@offeringId" asp-action="AddPlan"
+               class="btn btn-primary"
+               role="button">
+                Add Plan
+            </a>
+        </div>
+
+        <!-- Subscription Plans Table -->
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th text-translate="true">Plan</th>
+                    <th text-translate="true">API ID</th>
+                    <th text-translate="true">Price</th>
+                    <th text-translate="true">Recurring</th>
+                    <th text-translate="true">Grace Period</th>
+                    <th text-translate="true">Trial Period</th>
+                    <th text-translate="true">Status</th>
+                    <th text-translate="true">Active Members</th>
+                    <th text-translate="true">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @if (Model.Plans.Count != 0)
+                {
+                    foreach (var p in Model.Plans)
+                    {
+                        <tr id="plan_@p.Data.Id" class="plan-row align-middle"
+                            data-plan-id="@p.Data.Id"
+                            data-plan-name="@p.Data.Name"
+                            data-allow-trial="@(p.Data.TrialDays > 0)">
+                            <td class="fw-semibold text-nowrap plan-name-col">
+                                    <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        @p.Data.Name
+                                    </span>
+                                <div class="dropdown-menu">
+                                    <a
+                                        href="#"
+                                        text-translate="true"
+                                        class="new-subscriber-link dropdown-item lh-base"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#newSubscriberModal">
+                                        Create a new subscriber
+                                    </a>
+                                </div>
+                            </td>
+                            <td>
+                                <vc:truncate-center
+                                    text="@p.Data.Id"
+                                    classes="truncate-center-id plan-row-id" />
+                            </td>
+                            <td class="text-nowrap">@DisplayFormatter.Currency(@p.Data.Price, @p.Data.Currency, DisplayFormatter.CurrencyFormat.CodeAndSymbol)</td>
+                            <td>@p.Data.RecurringType</td>
+                            <td>@p.Data.GracePeriodDays days</td>
+                            <td>@p.Data.TrialDays days</td>
+                            <td><span class="status-active">
+                                @{
+                                        var (badge, name) = p.Data.Status switch
+                                        {
+                                            PlanData.PlanStatus.Retired =>
+                                                p.Data.MemberCount != 0 ? ("warning", StringLocalizer["Retiring"]) : ("danger", StringLocalizer["Retired"]),
+                                            _ => ("success", StringLocalizer["Active"])
+                                        };
+                                    }
+                                    <span class="subscriber-status badge badge-translucent rounded-pill text-bg-@badge">@name</span>
+                            </span></td>
+                            <td>@p.Data.MemberCount Members</td>
+                            <td>
+                                <div class="d-inline-flex align-items-center gap-3">
+                                    <a class="edit-plan" asp-action="AddPlan"
+                                       asp-route-storeId="@storeId"
+                                       asp-route-offeringId="@offeringId"
+                                       asp-route-planId="@p.Data.Id">Edit</a>
+                                    <a class="delete-plan" asp-action="DeletePlan"
+                                       asp-route-storeId="@storeId"
+                                       asp-route-offeringId="@offeringId"
+                                       asp-route-planId="@p.Data.Id">Remove</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-secondary" text-translate="true">There are no subscription plans.</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    else if (Model.Section == SubscriptionSection.Subscribers)
+    {
+        <div class="d-flex justify-content-between align-items-center">
+            <h4>Subscribers</h4>
+        </div>
+
+        <!-- Subscription Plans Table -->
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th text-translate="true">User</th>
+                    <th text-translate="true">Credits</th>
+                    <th text-translate="true">Plan</th>
+                    <th text-translate="true">Phase</th>
+                    <th text-translate="true">Status</th>
+                    <th text-translate="true">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @if (Model.Subscribers.Count != 0)
+                {
+                    @foreach (var subscriber in Model.Subscribers)
+                    {
+                        <tr data-subscriber-email="@subscriber.Data.Customer.Email.Get()"
+                            data-subscriber-id="@subscriber.Data.CustomerId"
+                            data-currency="@subscriber.Data.Plan.Currency"
+                            data-current-credit-value="@subscriber.Data.GetCredit()">
+                            <td class="fw-semibold text-nowrap d-flex align-items-center">
+                                <form method="post" asp-antiforgery="true" class="me-2">
+                                    @if (subscriber.Data.TestAccount)
+                                    {
+                                        <span class="badge badge-translucent rounded-pill text-bg-info">Test</span>
+                                    }
+                                    <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        @subscriber.Data.Customer.Email.Get()
+                                    </span>
+                                    <div class="dropdown-menu">
+                                        <input type="hidden" name="customerId" value="@subscriber.Data.CustomerId" />
+                                        <button type="submit" name="command" class="dropdown-item lh-base" value="toggle-test">
+                                            @if (subscriber.Data.TestAccount)
+                                            {
+                                                <span text-translate="true">Unmark test account</span>
+                                            }
+                                            else
+                                            {
+                                                <span text-translate="true">Mark as a test account</span>
+                                            }
+                                        </button>
+                                    </div>
+                                </form>
+                            </td>
+                            <td class="fw-semibold text-nowrap subscriber-credit-col">
+                                <span>
+                                    <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <span>@DisplayFormatter.Currency(subscriber.Data.GetCredit(), subscriber.Data.Plan.Currency, DisplayFormatter.CurrencyFormat.CodeAndSymbol)</span>
+                                    </span>
+                                    <div class="dropdown-menu">
+                                        <a
+                                            href="#"
+                                            text-translate="true"
+                                            class="charge-subscriber-link dropdown-item lh-base"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#updateCreditModal"
+                                            data-action="credit">
+                                            Credit
+                                        </a>
+                                        <a
+                                            href="#"
+                                            text-translate="true"
+                                            class="charge-subscriber-link dropdown-item lh-base"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#updateCreditModal"
+                                            data-action="charge">
+                                            Charge
+                                        </a>
+                                    </div>
+                                </span>
+                            </td>
+                            <td class="text-nowrap">@subscriber.Data.Plan.Name</td>
+                            <td>
+                        <span class="subscriber-phase">
+                            @{
+                                var (style, name) = subscriber.Data.Phase switch
+                                {
+                                    SubscriberData.PhaseTypes.Normal => ("success", StringLocalizer["Normal"]),
+                                    SubscriberData.PhaseTypes.Expired => ("danger", StringLocalizer["Expired"]),
+                                    SubscriberData.PhaseTypes.Grace => ("warning", StringLocalizer["Grace"]),
+                                    SubscriberData.PhaseTypes.Trial => ("info", StringLocalizer["Trial"]),
+                                    _ => throw new NotSupportedException()
+                                };
+                            }
+                            <span class="badge badge-translucent rounded-pill text-bg-@style">@name</span>
+                        </span></td>
+                            <td>
+
+                        <span class="status-active">
+                            <vc:subscriber-status subscriber="@subscriber.Data" can-suspend="true" />
+                        </span>
+                            </td>
+                            <td>
+                                <div class="d-inline-flex align-items-center gap-3">
+                                    <a asp-action="CreatePortalSession" asp-route-storeId="@storeId" asp-route-offeringId="@subscriber.Data.OfferingId"
+                                       asp-route-customerId="@subscriber.Data.CustomerId" class="portal-link" target="_blank">View Portal</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <td colspan="8" class="text-secondary" text-translate="true">There are no subscribers.</td>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <div class="modal fade" id="newSubscriberModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" text-translate="true">Create a new subscriber</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                        <vc:icon symbol="close" />
+                    </button>
+                </div>
+                <form method="post"
+                      asp-action="Plans"
+                      asp-route-storeId="@storeId"
+                      asp-route-offeringId="@offeringId">
+                    <div class="modal-body">
+                        <div text-translate="true">Would you like to create a new subscriber?</div>
+                    </div>
+                    <div class="modal-body pt-0">
+                        <input name="planId" type="hidden" />
+                        <div class="form-group">
+                            <label for="newSubscriber-prefilledEmail" class="form-label" text-translate="true">Email</label>
+                            <input id="newSubscriber-prefilledEmail" name="prefilledEmail" type="text" placeholder="Leave empty to let the customer configure it" class="form-control" />
+                        </div>
+                        <div class="form-group d-flex align-items-center">
+                            <input id="newSubscriber-isTrial" name="isTrial" value="true" type="checkbox" class="btcpay-toggle me-3" >
+                            <label class="form-check-label" for="newSubscriber-isTrial" text-translate="true">Enable trial</label>
+                        </div>
+
+                        <div class="d-flex align-items-center my-3">
+                            <input id="newSubscriber-isTestAccount" name="isTestAccount" value="true"  type="checkbox" class="btcpay-toggle me-3" >
+                            <div>
+                                <label class="form-check-label" for="newSubscriber-isTestAccount" text-translate="true">Is test user</label>
+                                <div class="form-text" text-translate="true">For debugging purpose</div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="submit" name="command" value="new-subscriber" class="btn btn-success" text-translate="true">Create</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="suspendSubscriberModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" text-translate="true">Suspend Subscriber</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                        <vc:icon symbol="close" />
+                    </button>
+                </div>
+                <form method="post">
+                    <div class="modal-body">
+                        <div text-translate="true">Would you like to proceed with suspending the following user?</div>
+                    </div>
+                    <div class="modal-body pt-0">
+                        <input id="suspendSubscriberId" name="customerId" type="hidden" />
+                        <div class="form-group">
+                            <label class="form-label" text-translate="true">Subscriber</label>
+                            <input id="suspendSubscriberName" type="text" disabled="disabled" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="suspensionReason" class="form-label" text-translate="true">Suspension Reason</label>
+                            <input id="suspensionReason" name="suspensionReason" type="text" placeholder="Enter the reason (optional)" class="form-control" />
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="submit" name="command" value="suspend" class="btn btn-danger" text-translate="true">Suspend</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="updateCreditModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title charge-mode" text-translate="true">Charge user</h4>
+                    <h4 class="modal-title credit-mode" text-translate="true">Credit user</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                        <vc:icon symbol="close" />
+                    </button>
+                </div>
+                <form method="post">
+                    <div class="modal-body">
+                        <div html-translate="true" class="charge-mode">Would you like to charge <span class="subscriber-name fw-semibold"></span>?</div>
+                        <div html-translate="true" class="credit-mode">Would you like to credit <span class="subscriber-name fw-semibold"></span>?</div>
+                    </div>
+                    <div class="modal-body pt-0 pb-0">
+                        <input name="customerId" type="hidden" />
+
+                        <div class="d-flex justify-content-between credit-plan-price">
+                            <div class="text-muted">Current credit</div>
+                            <div class="current-credit"></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center charge-applied">
+                            <div class="text-muted charge-mode">Charge applied</div>
+                            <div class="text-muted credit-mode">Credit applied</div>
+                            <div class="d-flex align-items-center justify-content-end">
+                                <span class="charge-mode">-</span>
+                                <span class="credit-mode">+</span>
+                                <input type="text"
+                                       class="form-control form-control-sm amount ms-2"
+                                       name="amount"
+                                       style="text-align: right;"
+                                       autocomplete="off" />
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="d-flex justify-content-between fw-semibold credit-next-charge">
+                            <div class="charge-mode">After charge</div>
+                            <div class="credit-mode">After Credit</div>
+                            <div class="after-change"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-danger charge-mode" text-translate="true" name="command" value="charge">Charge</button>
+                        <button type="submit" class="btn btn-success credit-mode" text-translate="true" name="command" value="credit">Credit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Update credit modal
+            const modalEl = document.getElementById('suspendSubscriberModal');
+            if (!modalEl) return;
+            modalEl.addEventListener('show.bs.modal', function (event) {
+                const trigger = event.relatedTarget;
+                if (!trigger) return;
+                const email = trigger.getAttribute('data-subscriber-email');
+
+                const idEl = modalEl.querySelector('#suspendSubscriberId');
+                const nameEl = modalEl.querySelector('#suspendSubscriberName');
+                const reasonEl = modalEl.querySelector('#suspensionReason');
+
+                if (nameEl) nameEl.value = email || '';
+                if (reasonEl) reasonEl.value = '';
+                if (idEl) idEl.value = trigger.getAttribute('data-subscriber-id');
+            });
+
+            // Create subscriber
+            (function()
+            {
+                const modalEl = document.getElementById('newSubscriberModal');
+                modalEl.addEventListener('show.bs.modal', function (event) {
+                    const trigger = event.relatedTarget;
+                    if (!trigger) return;
+                    const tr = trigger.closest('tr');
+
+                    var canTrial = tr.getAttribute('data-allow-trial') === 'True';
+
+                    var trialInput = modalEl.querySelector("input[name='isTrial']");
+                    var trialDiv = trialInput.closest('.form-group');
+                    trialInput.checked = false;
+                    if (canTrial) {
+                        trialDiv.style.display = '';
+                    } else {
+                        trialDiv.style.cssText = 'display: none !important';
+                    }
+                    modalEl.querySelector("input[name='isTestAccount']").checked = false;
+                    modalEl.querySelector("input[name='planId']").value = tr.getAttribute('data-plan-id');
+                });
+            })();
+
+
+            // Update credit modal
+            (function () {
+                const modalChargeEl = document.getElementById('updateCreditModal');
+                const idEl = modalChargeEl.querySelector('input[name="customerId"]');
+                const currentCredit = modalChargeEl.querySelector('.current-credit');
+                const afterChangeEl = modalChargeEl.querySelector('.after-change');
+                const amount = modalChargeEl.querySelector('.amount');
+                var creditMode = false;
+
+                var seq = 0;
+                var currency;
+                var currentCreditValue = 0;
+                amount.addEventListener('input', updateChargeAfter);
+
+                async function getFormattedValue(value, currency) {
+                    const response = await fetch(`format-currency`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            amount: value,
+                            currency: currency
+                        })
+                    });
+                    return await response.text();
+                }
+
+                let debounceTimeout;
+
+                async function updateChargeAfter() {
+                    const amountValue = Number(amount.value) || 0;
+                    modalChargeEl.querySelectorAll('button[name="command"]').forEach(el => el.disabled = amountValue <= 0);
+
+                    const remaining = creditMode ? currentCreditValue + amountValue : currentCreditValue - amountValue;
+
+                    // Debounce the updates to avoid flooding the service
+                    const DEBOUNCE_DELAY = 300; // 300ms delay
+
+                    // Create a debounced update function
+                    const debouncedUpdate = async () => {
+                        seq++;
+                        var thisSeq = seq;
+                        afterChangeEl.innerText = '---';
+                        if (thisSeq !== seq) return;
+                        afterChangeEl.innerText = await getFormattedValue(remaining, currency);
+                    };
+
+                    if (debounceTimeout) clearTimeout(debounceTimeout);
+                    afterChangeEl.innerText = '...';
+                    debounceTimeout = setTimeout(debouncedUpdate, DEBOUNCE_DELAY);
+                }
+
+                modalChargeEl.addEventListener('show.bs.modal', function (event) {
+                    const trigger = event.relatedTarget;
+                    if (!trigger) return;
+
+                    const tr = trigger.closest('tr');
+                    currency = tr.getAttribute('data-currency');
+                    currentCreditValue = Number(tr.getAttribute('data-current-credit-value'));
+                    if (idEl) idEl.value = tr.getAttribute('data-subscriber-id');
+
+                    modalChargeEl.querySelectorAll('.subscriber-name').forEach(el => el.innerText = tr.getAttribute('data-subscriber-email'));
+
+                    creditMode = trigger.getAttribute('data-action') === 'credit';
+                    const chargeModeEls = modalChargeEl.querySelectorAll('.charge-mode');
+                    const creditModeEls = modalChargeEl.querySelectorAll('.credit-mode');
+                    if (creditMode) {
+                        chargeModeEls.forEach(el => el.style.display = 'none');
+                        creditModeEls.forEach(el => el.style.display = '');
+                        modalChargeEl.querySelectorAll('button[name="command"]').forEach(el => el.value = 'credit');
+                    } else {
+                        chargeModeEls.forEach(el => el.style.display = '');
+                        creditModeEls.forEach(el => el.style.display = 'none');
+                        modalChargeEl.querySelectorAll('button[name="command"]').forEach(el => el.value = 'charge');
+                    }
+
+                    currentCredit.innerText = '---';
+                    getFormattedValue(currentCreditValue, currency).then(value => currentCredit.innerText = value);
+                    amount.value = '';
+                    afterChangeEl.innerText = '';
+                    updateChargeAfter();
+                });
+            })();
+
+
+        });
+    </script>
+</div>

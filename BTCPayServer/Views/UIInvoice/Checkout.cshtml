@@ -255,7 +255,7 @@
             </div>
             <div v-if="orderAmount > 0 && srvModel.orderAmountFiat" id="PaymentDetails-TotalFiat" key="TotalFiat">
                 <dt v-t="'total_fiat'"></dt>
-                <dd class="clipboard-button clipboard-button-hover" :data-clipboard="asNumber(srvModel.orderAmountFiat)" data-clipboard-hover="start">{{srvModel.orderAmountFiat}}</dd>
+                <dd id="total_fiat" class="clipboard-button clipboard-button-hover" :data-clipboard="asNumber(srvModel.orderAmountFiat)" data-clipboard-hover="start">{{srvModel.orderAmountFiat}}</dd>
             </div>
              <div v-if="srvModel.taxIncluded.value > 0 && srvModel.taxIncluded.formatted" id="PaymentDetails-TaxIncluded" key="TaxIncluded">
                 <dt v-t="'tax_included'"></dt>

@@ -7,6 +7,17 @@ public static class WebhookEventType
     public const string InvoiceReceivedPayment = nameof(InvoiceReceivedPayment);
     public const string InvoicePaymentSettled = nameof(InvoicePaymentSettled);
     public const string InvoiceProcessing = nameof(InvoiceProcessing);
+
+    public const string NewSubscriber = nameof(NewSubscriber);
+    public const string SubscriberCredited = nameof(SubscriberCredited);
+    public const string SubscriberCharged = nameof(SubscriberCharged);
+    public const string SubscriberActivated = nameof(SubscriberActivated);
+    public const string SubscriberPhaseChanged = nameof(SubscriberPhaseChanged);
+    public const string SubscriberDisabled = nameof(SubscriberDisabled);
+    public const string PaymentReminder = nameof(PaymentReminder);
+    public const string PlanStarted = nameof(PlanStarted);
+
+
     public const string InvoiceExpired = nameof(InvoiceExpired);
     public const string InvoiceSettled = nameof(InvoiceSettled);
     public const string InvoiceInvalid = nameof(InvoiceInvalid);

@@ -125,6 +125,11 @@ namespace BTCPayServer.Plugins
                 _logger.LogWarning(ex, "Failed to check for plugins updates");
                 return null;
             }
+            catch (JsonException ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse plugins updates response");
+                return null;
+            }
         }
     }
 }

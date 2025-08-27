@@ -40,6 +40,8 @@ namespace BTCPayServer.Client
         public const string CanViewPayouts = "btcpay.store.canviewpayouts";
         public const string CanCreatePullPayments = "btcpay.store.cancreatepullpayments";
         public const string CanViewPullPayments = "btcpay.store.canviewpullpayments";
+        public const string CanModifySubscriptions = "btcpay.store.canmodifysubscriptions";
+        public const string CanViewSubscriptions = "btcpay.store.canviewsubscriptions";
         public const string CanCreateNonApprovedPullPayments = "btcpay.store.cancreatenonapprovedpullpayments";
         public const string Unrestricted = "unrestricted";
         public static IEnumerable<string> AllPolicies
@@ -74,6 +76,7 @@ namespace BTCPayServer.Client
                 yield return CanArchivePullPayments;
                 yield return CanCreatePullPayments;
                 yield return CanViewPullPayments;
+                yield return CanViewSubscriptions;
                 yield return CanCreateNonApprovedPullPayments;
                 yield return CanManageUsers;
                 yield return CanManagePayouts;
@@ -249,7 +252,7 @@ namespace BTCPayServer.Client
         }
 
         public static ReadOnlyDictionary<string, HashSet<string>> PolicyMap { get; private set; }
-    
+
 
         private static ReadOnlyDictionary<string, HashSet<string>> Init()
         {
@@ -261,6 +264,7 @@ namespace BTCPayServer.Client
                 Policies.CanModifyWebhooks,
                 Policies.CanModifyPaymentRequests,
                 Policies.CanManagePayouts,
+                Policies.CanModifySubscriptions,
                 Policies.CanUseLightningNodeInStore);
 
             PolicyHasChild(policyMap,Policies.CanManageUsers, Policies.CanCreateUser);
@@ -269,6 +273,7 @@ namespace BTCPayServer.Client
             PolicyHasChild(policyMap, Policies.CanCreateNonApprovedPullPayments, Policies.CanViewPullPayments);
             PolicyHasChild(policyMap,Policies.CanModifyPaymentRequests, Policies.CanViewPaymentRequests);
             PolicyHasChild(policyMap,Policies.CanModifyProfile, Policies.CanViewProfile);
+            PolicyHasChild(policyMap,Policies.CanModifySubscriptions, Policies.CanViewSubscriptions);
             PolicyHasChild(policyMap,Policies.CanUseLightningNodeInStore, Policies.CanViewLightningInvoiceInStore, Policies.CanCreateLightningInvoiceInStore);
             PolicyHasChild(policyMap,Policies.CanManageNotificationsForUser, Policies.CanViewNotificationsForUser);
             PolicyHasChild(policyMap,Policies.CanModifyServerSettings,

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Newtonsoft.Json.Linq;
@@ -36,6 +37,11 @@ namespace BTCPayServer.Data
         [Timestamp]
         // With this, update of InvoiceData will fail if the row was modified by another process
         public uint XMin { get; set; }
+
+        public const string Processing = nameof(Processing);
+        public const string Settled = nameof(Settled);
+        public const string Invalid = nameof(Invalid);
+
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
             builder.Entity<InvoiceData>()

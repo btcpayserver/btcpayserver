@@ -17,6 +17,7 @@ public class StoreEmailRuleViewModel
         if (data is not null)
         {
             Data = data;
+            OfferingId = data.OfferingId;
             AdditionalData = data.GetBTCPayAdditionalData() ?? new();
             Trigger = data.Trigger;
             Subject = data.Subject;
@@ -46,6 +47,11 @@ public class StoreEmailRuleViewModel
     public string To { get; set; }
 
     public List<EmailTriggerViewModel> Triggers { get; set; }
+    public string RedirectUrl { get; set; }
+    public bool CanChangeTrigger { get; set; } = true;
+    public bool CanChangeCondition { get; set; } = true;
+    public string OfferingId { get; set; }
+
     public string[] ToAsArray()
     => (To ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Select(t => t.Trim())

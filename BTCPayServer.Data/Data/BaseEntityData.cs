@@ -3,6 +3,9 @@
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.IO;
+using System.Threading.Tasks;
+using BTCPayServer.Abstractions;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

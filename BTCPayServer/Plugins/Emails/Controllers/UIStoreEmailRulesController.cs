@@ -7,6 +7,7 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Emails.Views;
+using BTCPayServer.Plugins.Subscriptions.Controllers;
 using BTCPayServer.Services.Mails;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
@@ -53,9 +54,24 @@ public class UIStoreEmailRulesController(
 
     [HttpGet("create")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public IActionResult StoreEmailRulesCreate(string storeId)
+    public IActionResult StoreEmailRulesCreate(
+        string storeId,
+        string offeringId = null,
+        string trigger = null,
+        string condition = null,
+        string to = null,
+        string redirectUrl = null)
     {
-        return View("StoreEmailRulesManage", new StoreEmailRuleViewModel(null, triggers));
+        return View("StoreEmailRulesManage", new StoreEmailRuleViewModel(null, triggers)
+        {
+            CanChangeTrigger = trigger is null,
+            CanChangeCondition = offeringId is null,
+            Condition = condition,
+            Trigger = trigger,
+            OfferingId = offeringId,
+            RedirectUrl = redirectUrl,
+            To = to
+        });
     }
 
     [HttpPost("create")]
@@ -64,7 +80,9 @@ public class UIStoreEmailRulesController(
     {
         await ValidateCondition(model);
         if (!ModelState.IsValid)
-            return StoreEmailRulesCreate(storeId);
+            return StoreEmailRulesCreate(storeId,
+                model.OfferingId,
+                model.CanChangeTrigger ? null : model.Trigger);
 
         await using var ctx = dbContextFactory.CreateContext();
         var c = new EmailRuleData()
@@ -74,6 +92,7 @@ public class UIStoreEmailRulesController(
             Body = model.Body,
             Subject = model.Subject,
             Condition = string.IsNullOrWhiteSpace(model.Condition) ? null : model.Condition,
+            OfferingId = model.OfferingId,
             To = model.ToAsArray()
         };
         c.SetBTCPayAdditionalData(model.AdditionalData);
@@ -81,18 +100,32 @@ public class UIStoreEmailRulesController(
         await ctx.SaveChangesAsync();
 
         this.TempData.SetStatusSuccess(StringLocalizer["Email rule successfully created"]);
+        return GoToStoreEmailRulesList(storeId, model);
+    }
+
+    private IActionResult GoToStoreEmailRulesList(string storeId, StoreEmailRuleViewModel model)
+        => GoToStoreEmailRulesList(storeId, model.RedirectUrl);
+    private IActionResult GoToStoreEmailRulesList(string storeId, string redirectUrl)
+    {
+        if (redirectUrl != null)
+            return LocalRedirect(redirectUrl);
         return RedirectToAction(nameof(StoreEmailRulesList), new { storeId });
     }
 
     [HttpGet("{ruleId}/edit")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public async Task<IActionResult> StoreEmailRulesEdit(string storeId, long ruleId)
+    public async Task<IActionResult> StoreEmailRulesEdit(string storeId, long ruleId, string redirectUrl = null)
     {
         await using var ctx = dbContextFactory.CreateContext();
         var r = await ctx.EmailRules.GetRule(storeId, ruleId);
         if (r is null)
             return NotFound();
-        return View("StoreEmailRulesManage", new StoreEmailRuleViewModel(r, triggers));
+        return View("StoreEmailRulesManage", new StoreEmailRuleViewModel(r, triggers)
+        {
+            CanChangeTrigger = r.OfferingId is null,
+            CanChangeCondition = r.OfferingId is null,
+            RedirectUrl = redirectUrl
+        });
     }
 
     [HttpPost("{ruleId}/edit")]
@@ -116,7 +149,7 @@ public class UIStoreEmailRulesController(
         await ctx.SaveChangesAsync();
 
         this.TempData.SetStatusSuccess(StringLocalizer["Email rule successfully updated"]);
-        return RedirectToAction(nameof(StoreEmailRulesList), new { storeId });
+        return GoToStoreEmailRulesList(storeId, model);
     }
 
     private async Task ValidateCondition(StoreEmailRuleViewModel model)
@@ -142,7 +175,7 @@ public class UIStoreEmailRulesController(
 
     [HttpPost("{ruleId}/delete")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public async Task<IActionResult> StoreEmailRulesDelete(string storeId, long ruleId)
+    public async Task<IActionResult> StoreEmailRulesDelete(string storeId, long ruleId, string redirectUrl = null)
     {
         await using var ctx = dbContextFactory.CreateContext();
         var r = await ctx.EmailRules.GetRule(storeId, ruleId);
@@ -152,6 +185,7 @@ public class UIStoreEmailRulesController(
             await ctx.SaveChangesAsync();
             this.TempData.SetStatusSuccess(StringLocalizer["Email rule successfully deleted"]);
         }
-        return RedirectToAction(nameof(StoreEmailRulesList), new { storeId });
+
+        return GoToStoreEmailRulesList(storeId, redirectUrl);
     }
 }

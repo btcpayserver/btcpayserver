@@ -55,9 +55,11 @@ namespace BTCPayServer.Plugins
             return pluginManifest.Version;
         }
 
+        private string GetShortBtcpayVersion() => Env.Version.TrimStart('v').Split('+')[0];
+
         public async Task<AvailablePlugin[]> GetRemotePlugins(string searchPluginName)
         {
-            string btcpayVersion = Env.Version.TrimStart('v').Split('+')[0];
+            string btcpayVersion = GetShortBtcpayVersion();
             var versions = await _pluginBuilderClient.GetPublishedVersions(
                 btcpayVersion, _policiesSettings.PluginPreReleases, searchPluginName);
 
@@ -140,7 +142,7 @@ namespace BTCPayServer.Plugins
         {
             if (version is null)
             {
-                string btcpayVersion = Env.Version.TrimStart('v').Split('+')[0];
+                string btcpayVersion = GetShortBtcpayVersion();
                 var versions = await _pluginBuilderClient.GetPluginVersionsForDownload(pluginIdentifier,
                     btcpayVersion, _policiesSettings.PluginPreReleases, includeAllVersions: true);
                 var potentialVersions = versions

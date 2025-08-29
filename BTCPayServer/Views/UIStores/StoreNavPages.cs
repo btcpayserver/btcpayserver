@@ -20,7 +20,6 @@ namespace BTCPayServer.Views.Stores
         Plugins,
         Webhooks,
         PullPayments,
-        Subscriptions,
         Customers,
         Reporting,
         Payouts,

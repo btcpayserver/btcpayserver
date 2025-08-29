@@ -201,12 +201,6 @@
                                             <span text-translate="true">Payouts</span>
                                         </a>
                                     </li>
-                                    <li class="nav-item" permission="@Policies.CanViewSubscriptions">
-                                        <a asp-area="" asp-controller="UIStoreSubscriptions" asp-action="Index" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Subscriptions)" id="StoreNav-Subscriptions">
-                                            <vc:icon symbol="nav-reporting" />
-                                            <span text-translate="true">Subscriptions</span>
-                                        </a>
-                                    </li>
                                     <li class="nav-item" permission="@Policies.CanViewCustomers">
                                         <a asp-area="" asp-controller="UIStoreCustomers" asp-action="ListCustomers" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Customers)" id="StoreNav-Customers">
                                             <vc:icon symbol="nav-reporting" />

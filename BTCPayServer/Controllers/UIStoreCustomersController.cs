@@ -27,7 +27,9 @@ public class UIStoreCustomersController(
         await using var ctx = dbContextFactory.CreateContext();
         var users = ctx.Customers.Where(c => c.StoreId == storeId);
         if (!string.IsNullOrEmpty(searchTerm))
-            users = users.Where(u => u.Email.Contains(searchTerm) || u.Name.Contains(searchTerm) || u.ExternalRef.Contains(searchTerm));
+            users = users.Where(u => (u.Email != null && u.Email.Contains(searchTerm)) ||
+                                      u.Name.Contains(searchTerm) ||
+                                      (u.ExternalRef != null && u.ExternalRef.Contains(searchTerm)));
         vm.Data = await users.ToListAsync();
         return View(vm);
     }

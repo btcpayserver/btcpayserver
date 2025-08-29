@@ -28,7 +28,7 @@ namespace BTCPayServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_customers", x => new { x.store_id, x.id });
+                    table.PrimaryKey("PK_customers", x => new { x.id });
                     table.ForeignKey(
                         name: "FK_customers_Stores_store_id",
                         column: x => x.store_id,

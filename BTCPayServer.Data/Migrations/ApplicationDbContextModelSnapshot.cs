@@ -196,10 +196,6 @@ namespace BTCPayServer.Migrations
 
             modelBuilder.Entity("BTCPayServer.Data.CustomerData", b =>
                 {
-                    b.Property<string>("StoreId")
-                        .HasColumnType("text")
-                        .HasColumnName("store_id");
-
                     b.Property<string>("Id")
                         .HasColumnType("text")
                         .HasColumnName("id");
@@ -230,7 +226,12 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("text")
                         .HasColumnName("name");
 
-                    b.HasKey("StoreId", "Id");
+                    b.Property<string>("StoreId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("store_id");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("StoreId", "Email")
                         .IsUnique();

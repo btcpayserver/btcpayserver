@@ -49,7 +49,7 @@ public class CustomerData
         b.Property(x => x.Metadata).HasColumnName("metadata").HasColumnType("jsonb")
             .HasDefaultValueSql("'{}'::jsonb");
 
-        b.HasKey(x => new { x.StoreId, x.Id });
+        b.HasKey(x => new { x.Id });
         b.HasIndex(x => new { x.StoreId, x.Email }).IsUnique();
         b.HasIndex(x => new { x.StoreId, x.ExternalRef }).IsUnique();
     }

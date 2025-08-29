@@ -208,7 +208,7 @@
                                         </a>
                                     </li>
                                     <li class="nav-item" permission="@Policies.CanViewCustomers">
-                                        <a asp-area="" asp-controller="UIStoreCustomers" asp-action="Index" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Customers)" id="StoreNav-Customers">
+                                        <a asp-area="" asp-controller="UIStoreCustomers" asp-action="ListCustomers" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Customers)" id="StoreNav-Customers">
                                             <vc:icon symbol="nav-reporting" />
                                             <span text-translate="true">Customers</span>
                                         </a>

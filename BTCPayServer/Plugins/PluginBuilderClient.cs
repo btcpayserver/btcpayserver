@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using static System.Net.WebRequestMethods;
@@ -55,11 +54,9 @@ namespace BTCPayServer.Plugins
     {
         private readonly HttpClient _httpClient;
         public HttpClient HttpClient => _httpClient;
-        private readonly ILogger<PluginBuilderClient> _logger;
-        public PluginBuilderClient(HttpClient httpClient, ILogger<PluginBuilderClient> logger)
+        public PluginBuilderClient(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _logger = logger;
         }
         static JsonSerializerSettings serializerSettings = new() { ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver() };
         public async Task<PublishedVersion[]> GetPublishedVersions(string btcpayVersion, bool includePreRelease, string searchPluginName = null, bool? includeAllVersions = null)
@@ -109,30 +106,16 @@ namespace BTCPayServer.Plugins
             var json = JsonConvert.SerializeObject(plugins, serializerSettings);
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            try
-            {
-                using var resp = await _httpClient.PostAsync($"api/v1/plugins/updates{queryString}", content);
-                resp.EnsureSuccessStatusCode();
+            using var resp = await _httpClient.PostAsync($"api/v1/plugins/updates{queryString}", content);
+            resp.EnsureSuccessStatusCode();
 
-                var body = await resp.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<PublishedVersion[]>(body, serializerSettings)
-                       ?? Array.Empty<PublishedVersion>();
-            }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogWarning(ex, "Failed to check for plugins updates");
-                return Array.Empty<PublishedVersion>();
-            }
-            catch (JsonException ex)
-            {
-                _logger.LogWarning(ex, "Failed to parse plugins updates response");
-                return Array.Empty<PublishedVersion>();
-            }
-            catch (TaskCanceledException ex)
-            {
-                _logger.LogWarning(ex, "Timeout while checking plugins updates");
-                return Array.Empty<PublishedVersion>();
-            }
+            var body = await resp.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<PublishedVersion[]>(body, serializerSettings);
+
+            if (result is null)
+                throw new JsonException("Plugin updates response deserialized to null.");
+
+            return result;
         }
     }
 }

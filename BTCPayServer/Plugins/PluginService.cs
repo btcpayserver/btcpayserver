@@ -9,7 +9,6 @@ using BTCPayServer.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -21,15 +20,13 @@ namespace BTCPayServer.Plugins
         private readonly IOptions<DataDirectories> _dataDirectories;
         private readonly PoliciesSettings _policiesSettings;
         private readonly PluginBuilderClient _pluginBuilderClient;
-        private readonly ILogger<PluginService> _logger;
 
         public PluginService(
             IEnumerable<IBTCPayServerPlugin> btcPayServerPlugins,
             PluginBuilderClient pluginBuilderClient,
             IOptions<DataDirectories> dataDirectories,
             PoliciesSettings policiesSettings,
-            BTCPayServerEnvironment env,
-            ILogger<PluginService> logger
+            BTCPayServerEnvironment env
             )
         {
             LoadedPlugins = btcPayServerPlugins;
@@ -38,7 +35,6 @@ namespace BTCPayServer.Plugins
             _dataDirectories = dataDirectories;
             _policiesSettings = policiesSettings;
             Env = env;
-            _logger = logger;
         }
 
         public Dictionary<string, Version> Installed { get; set; }
@@ -101,28 +97,11 @@ namespace BTCPayServer.Plugins
         private AvailablePlugin? MapToAvailablePlugin(PublishedVersion publishedVersion)
         {
             if (publishedVersion.ManifestInfo is null)
-            {
-                _logger.LogWarning("Skipping published plugin with missing ManifestInfo (BuildId: {BuildId}, ProjectSlug: {ProjectSlug})", publishedVersion.BuildId, publishedVersion.ProjectSlug);
                 return null;
-            }
 
-            AvailablePlugin? availablePlugin;
-
-            try
-            {
-                availablePlugin = publishedVersion.ManifestInfo.ToObject<AvailablePlugin>();
-            }
-            catch (JsonException ex)
-            {
-                _logger.LogWarning(ex, "Failed to parse ManifestInfo (BuildId: {BuildId}, ProjectSlug: {ProjectSlug})", publishedVersion.BuildId, publishedVersion.ProjectSlug);
-                return null;
-            }
-
+            var availablePlugin = publishedVersion.ManifestInfo.ToObject<AvailablePlugin>();
             if (availablePlugin is null)
-            {
-                _logger.LogWarning("Failed to deserialize ManifestInfo to AvailablePlugin (BuildId: {BuildId}, ProjectSlug: {ProjectSlug})", publishedVersion.BuildId, publishedVersion.ProjectSlug);
-                return null;
-            }
+                throw new InvalidDataException($"Manifest deserialized to null BuildId: {publishedVersion.BuildId} PluginSlug: {publishedVersion.ProjectSlug}");
 
             availablePlugin.Documentation = publishedVersion.Documentation;
             var buildInfo = publishedVersion.BuildInfo;

@@ -181,7 +181,9 @@
         "BTCPAY_CHEATMODE": "true",
         "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer",
         "BTCPAY_XMR_DAEMON_URI": "http://127.0.0.1:18081",
-        "BTCPAY_XMR_WALLET_DAEMON_URI": "http://127.0.0.1:18082"
+        "BTCPAY_XMR_WALLET_DAEMON_URI": "http://127.0.0.1:18082",
+        "BTCPAY_ZANO_DAEMON_URI": "http://127.0.0.1:17787",
+        "BTCPAY_ZANO_WALLET_DAEMON_URI": "http://127.0.0.1:17788"
       },
       "applicationUrl": "https://localhost:14142/"
     },
@@ -210,7 +212,7 @@
         "BTCPAY_ALLOW-ADMIN-REGISTRATION": "true",
         "BTCPAY_DISABLE-REGISTRATION": "false",
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "BTCPAY_CHAINS": "btc,ltc,lbtc,xmr",
+        "BTCPAY_CHAINS": "btc,ltc,lbtc,xmr,zano",
         "BTCPAY_POSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=btcpayserver",
         "BTCPAY_SSHCONNECTION": "root@127.0.0.1:21622",
         "BTCPAY_SSHPASSWORD": "opD3i2282D",
@@ -220,7 +222,9 @@
         "BTCPAY_DOCKERDEPLOYMENT": "true",
         "BTCPAY_RECOMMENDED-PLUGINS": "",
         "BTCPAY_CHEATMODE": "true",
-        "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer"
+        "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer",
+        "ZANO_DAEMON_URI": "http://127.0.0.1:17787",
+        "ZANO_WALLET_DAEMON_URI": "http://127.0.0.1:11211"
       },
       "applicationUrl": "https://localhost:14142/"
     }

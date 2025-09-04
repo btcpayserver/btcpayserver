@@ -18,7 +18,7 @@ namespace BTCPayServer.Controllers;
 [AutoValidateAntiforgeryToken]
 public class UIStoreCustomersController(
     ApplicationDbContextFactory dbContextFactory,
-    IStringLocalizer StringLocalizer) : Controller
+    IStringLocalizer stringLocalizer) : Controller
 {
     [HttpGet("stores/{storeId}/customers")]
     public async Task<IActionResult> ListCustomers(string storeId, string? searchTerm)
@@ -61,14 +61,14 @@ public class UIStoreCustomersController(
                                           } pg)
         {
             var message = pg.ConstraintName switch {
-                "IX_customers_store_id_email" => ("Email", StringLocalizer["This email is already used by another customer"]),
-                "IX_customers_store_id_external_ref" => ("Data.ExternalRef", StringLocalizer["This external reference is already used by another customer"]),
+                "IX_customers_store_id_email" => ("Email", stringLocalizer["This email is already used by another customer"]),
+                "IX_customers_store_id_external_ref" => ("Data.ExternalRef", stringLocalizer["This external reference is already used by another customer"]),
                 _ => throw e
             };
             ModelState.AddModelError(message.Item1, message.Item2);
             return AddEditCustomerView();
         }
-        TempData.SetStatusSuccess(StringLocalizer["Customer added successfully"]);
+        TempData.SetStatusSuccess(stringLocalizer["Customer added successfully"]);
 
         return RedirectToAction(nameof(ListCustomers), new { storeId });
     }

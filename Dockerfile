@@ -21,7 +21,7 @@ ARG CONFIGURATION_NAME=Release
 ARG GIT_COMMIT
 RUN cd BTCPayServer && dotnet publish -p:GitCommit=${GIT_COMMIT} --output /app/ --configuration ${CONFIGURATION_NAME}
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0.11-bookworm-slim
+FROM mcr.microsoft.com/dotnet/aspnet:8.0.18-bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends iproute2 openssh-client ca-certificates \
     && rm -rf /var/lib/apt/lists/*

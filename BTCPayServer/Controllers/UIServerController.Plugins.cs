@@ -28,12 +28,10 @@ namespace BTCPayServer.Controllers
             }
             catch (Exception ex)
             {
-                var errorDetail = ex.GetBaseException().Message;
-
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = StringLocalizer["Remote plugins lookup failed. Try again later. Error: {0}", errorDetail].Value
+                    Message = StringLocalizer["Remote plugins lookup failed. Try again later. Error: {0}", ex.Message].Value
                 });
                 availablePlugins = Array.Empty<PluginService.AvailablePlugin>();
             }

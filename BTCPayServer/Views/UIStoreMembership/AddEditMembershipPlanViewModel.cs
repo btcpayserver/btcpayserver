@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Views.UIStoreMembership
 {
@@ -7,11 +9,11 @@ namespace BTCPayServer.Views.UIStoreMembership
         [Required]
         [Display(Name = "Plan Name")]
         [StringLength(100)]
-        public string PlanName { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
 
         [Required]
         [Display(Name = "Status")]
-        public PlanStatus Status { get; set; } = PlanStatus.Active;
+        public SubscriptionPlanData.PlanStatus Status { get; set; } = SubscriptionPlanData.PlanStatus.Active;
 
         [Required]
         [Display(Name = "Price")]
@@ -24,7 +26,7 @@ namespace BTCPayServer.Views.UIStoreMembership
 
         [Required]
         [Display(Name = "Recurring Type")]
-        public RecurringInterval RecurringType { get; set; } = RecurringInterval.Monthly;
+        public SubscriptionPlanData.RecurringInterval RecurringType { get; set; } = SubscriptionPlanData.RecurringInterval.Monthly;
 
         [Required]
         [Display(Name = "Grace Period (days)")]
@@ -33,23 +35,35 @@ namespace BTCPayServer.Views.UIStoreMembership
 
         [Display(Name = "Description")]
         [StringLength(1000)]
-        public string? Description { get; set; }
+        public string Description { get; set; }
 
         [Display(Name = "Allow upgrades from other plans")]
         public bool AllowUpgrade { get; set; }
 
-        public enum PlanStatus
-        {
-            Active = 0,
-            Inactive = 1,
-            Draft = 2
-        }
+        [Display(Name = "Plan Items")]
+        public List<PlanItemInput> Items { get; set; } = new();
 
-        public enum RecurringInterval
+        public string Anchor { get; set; }
+
+        public class PlanItemInput
         {
-            Monthly = 0,
-            Quarterly = 1,
-            Yearly = 2
+            [Required]
+            [Display(Name = "Name")]
+            [StringLength(200)]
+            public string Name { get; set; } = string.Empty;
+
+            [Display(Name = "ID")]
+            [StringLength(100)]
+            public string Id { get; set; } = string.Empty;
+
+            [Required]
+            [Range(0, int.MaxValue)]
+            [Display(Name = "Quantity")]
+            public int Quantity { get; set; }
+
+            [Display(Name = "Short description")]
+            [StringLength(500)]
+            public string ShortDescription { get; set; }
         }
     }
 }

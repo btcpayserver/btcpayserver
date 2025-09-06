@@ -16,19 +16,19 @@
             </ol>
             <h2>@ViewData["Title"]</h2>
         </nav>
-        <input id="page-primary" type="submit" value="Create" class="btn btn-primary" />
+        <input id="page-primary" type="submit" name="command" value="Create" class="btn btn-primary" />
     </div>
     <partial name="_StatusMessage" />
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
             <div class="form-group">
-                <label asp-for="PlanName" class="form-label" data-required></label>
-                <input asp-for="PlanName" class="form-control" placeholder="e.g., Premium" />
-                <span asp-validation-for="PlanName" class="text-danger"></span>
+                <label asp-for="Name" class="form-label" data-required></label>
+                <input asp-for="Name" class="form-control" placeholder="e.g., Premium" />
+                <span asp-validation-for="Name" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Status" class="form-label"></label>
-                <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<AddEditMembershipPlanViewModel.PlanStatus>()"></select>
+                <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<SubscriptionPlanData.PlanStatus>()"></select>
                 <span asp-validation-for="Status" class="text-danger"></span>
             </div>
 
@@ -46,7 +46,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="RecurringType" class="form-label"></label>
-                <select asp-for="RecurringType" class="form-select" asp-items="Html.GetEnumSelectList<AddEditMembershipPlanViewModel.RecurringInterval>()"></select>
+                <select asp-for="RecurringType" class="form-select" asp-items="Html.GetEnumSelectList<SubscriptionPlanData.RecurringInterval>()"></select>
                 <span asp-validation-for="RecurringType" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -70,6 +70,62 @@
                     <label class="form-check-label" asp-for="AllowUpgrade"></label>
                 </div>
             </div>
+            <section id="plan-items" class="mt-4">
+                <h4 class="mb-4">Plan items</h4>
+                <div id="PlanItemsContainer" class="list-group list-group-flush">
+                    @for (var i = 0; i < (Model.Items?.Count ?? 0); i++)
+                    {
+                        <div class="plan-item list-group-item d-block px-0 pt-0 pb-3 mb-3 p-3">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label asp-for="Items[i].Name" class="form-label"></label>
+                                        <input asp-for="Items[i].Name" class="form-control" />
+                                        <span asp-validation-for="Items[i].Name" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <label asp-for="Items[i].Id" class="form-label"></label>
+                                            <button type="submit" name="removeIndex" value="@i" class="d-inline-block ms-2 btn text-danger btn-link p-0 mb-2">
+                                                <vc:icon symbol="cross" />
+                                                <span text-translate="true">Remove item</span>
+                                            </button>
+                                        </div>
+                                        <input asp-for="Items[i].Id" class="form-control" />
+                                        <span asp-validation-for="Items[i].Id" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label asp-for="Items[i].Quantity" class="form-label"></label>
+                                        <input asp-for="Items[i].Quantity" class="form-control" />
+                                        <span asp-validation-for="Items[i].Quantity" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-sm-8">
+                                    <div class="form-group">
+                                        <label asp-for="Items[i].ShortDescription" class="form-label"></label>
+                                        <input asp-for="Items[i].ShortDescription" class="form-control" />
+                                        <span asp-validation-for="Items[i].ShortDescription" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <button type="submit" name="command" value="AddItem" class="btn btn-outline-secondary" id="AddPlanItem">Add item</button>
+            </section>
         </div>
     </div>
 </form>
+
+@section PageFootContent {
+    @if (Model.Anchor != null)
+    {
+        <script>
+            document.getElementById(@Safe.Json(Model.Anchor)).scrollIntoView();
+        </script>
+    }
+}

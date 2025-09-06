@@ -10,7 +10,7 @@ using NBitcoin.DataEncoders;
 namespace BTCPayServer.Data;
 
 [Table("customers")]
-public class CustomerData
+public class CustomerData : BaseEntityData
 {
     [Key]
     [Column("id")]
@@ -33,13 +33,6 @@ public class CustomerData
     [Column("name")]
     public string Name { get; set; } = string.Empty;
 
-    // Operational
-    [Column("created_at", TypeName = "timestamptz")]
-    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-
-    [Column("metadata", TypeName = "jsonb")]
-    public string Metadata { get; set; } = "{}";
-
 
     public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
     {
@@ -53,6 +46,4 @@ public class CustomerData
         b.HasIndex(x => new { x.StoreId, x.Email }).IsUnique();
         b.HasIndex(x => new { x.StoreId, x.ExternalRef }).IsUnique();
     }
-
-    public static string GenerateId() => Encoders.Base58.EncodeData(RandomUtils.GetBytes(13));
 }

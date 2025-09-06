@@ -1,5 +1,7 @@
 ﻿@using BTCPayServer.Client
+@using BTCPayServer.Services
 @model MembershipViewModel
+@inject DisplayFormatter DisplayFormatter
 
 @{
     ViewData.SetActivePage(StoreNavPages.Membership, StringLocalizer["Membership"]);
@@ -15,11 +17,13 @@
             color: #212529;
             margin: 0.5rem 0;
         }
+
         .metric-label {
             color: #6c757d;
             font-size: 0.9rem;
             font-weight: 500;
         }
+
         .card h6 {
             font-weight: var(--btcpay-font-weight-semibold);
             color: var(--btcpay-body-text-muted);
@@ -31,6 +35,8 @@
 <div class="sticky-header">
     <h2>@ViewData["Title"]</h2>
 </div>
+
+<partial name="_StatusMessage" />
 
 <div class="container-fluid px-4 py-4">
     <!-- Metrics Cards -->
@@ -49,7 +55,7 @@
         <div class="col-md-3">
             <div class="card">
                 <div class="card-body">
-                    <h6>Active Users</h6>
+                    <h6>Active Members</h6>
                     <h4>21</h4>
                 </div>
             </div>
@@ -74,16 +80,20 @@
 
     <!-- Navigation Tabs -->
     <ul id="SectionNav" class="nav mb-4">
-        <a class="nav-link @(Model.Section == MembershipSection.Members ? "active" : "")" asp-action="Membership" asp-route-section="@MembershipSection.Members">Members & Payments</a>
-        <a class="nav-link @(Model.Section == MembershipSection.Plans ? "active" : "")" asp-action="Membership" asp-route-section="@MembershipSection.Plans">Subscription Plans</a>
-        <a class="nav-link @(Model.Section == MembershipSection.Emails ? "active" : "")" asp-action="Membership" asp-route-section="@MembershipSection.Emails">Notifications & Alerts</a>
+        <a class="nav-link @(Model.Section == MembershipSection.Members ? "active" : "")" asp-action="Membership"
+           asp-route-section="@MembershipSection.Members">Members & Payments</a>
+        <a class="nav-link @(Model.Section == MembershipSection.Plans ? "active" : "")" asp-action="Membership" asp-route-section="@MembershipSection.Plans">Subscription
+            Plans</a>
+        <a class="nav-link @(Model.Section == MembershipSection.Emails ? "active" : "")" asp-action="Membership" asp-route-section="@MembershipSection.Emails">Notifications
+            & Alerts</a>
     </ul>
 
     @if (Model.Section == MembershipSection.Plans)
     {
         <div class="d-flex justify-content-between align-items-center">
             <h4>Subscription Plans</h4>
-            <a id="page-primary" permission="@Policies.CanModifyMembership" asp-route-storeId="@storeId" asp-action="AddMembershipPlan" class="btn btn-primary" role="button">
+            <a id="page-primary" permission="@Policies.CanModifyMembership" asp-route-storeId="@storeId" asp-action="AddMembershipPlan" class="btn btn-primary"
+               role="button">
                 Add Plan
             </a>
         </div>
@@ -99,37 +109,38 @@
                     <th text-translate="true">Recurring</th>
                     <th text-translate="true">Grace Period</th>
                     <th text-translate="true">Status</th>
-                    <th text-translate="true">Users</th>
+                    <th text-translate="true">Active Members</th>
                     <th text-translate="true">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr>
-                    <td class="fw-semibold">Basic</td>
-                    <td><vc:truncate-center text="6pUm6u84RbikpYHRH"  link="#" classes="truncate-center-id" /></td>
-                    <td>₿ 0.00025000 ($10)</td>
-                    <td>Monthly</td>
-                    <td>15 days</td>
-                    <td><span class="status-active">Active</span></td>
-                    <td>12 users</td>
-                    <td>
-                        <button class="btn btn-outline-success btn-sm action-btn">Edit</button>
-                        <button class="btn btn-outline-danger btn-sm action-btn">Remove</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="fw-semibold">Pro</td>
-                    <td><vc:truncate-center text="6pUm6u84RbikpYHRH" link="#" classes="truncate-center-id" /></td>
-                    <td>₿ 0.00155000 ($50)</td>
-                    <td>One-time</td>
-                    <td>15 days</td>
-                    <td><span class="status-active">Active</span></td>
-                    <td>2 users</td>
-                    <td>
-                        <button class="btn btn-outline-success btn-sm action-btn">Edit</button>
-                        <button class="btn btn-outline-danger btn-sm action-btn">Remove</button>
-                    </td>
-                </tr>
+                @if (Model.Plans.Count != 0)
+                {
+                    foreach (var p in Model.Plans)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@p.Data.Name</td>
+                            <td>
+                                <vc:truncate-center text="@p.Data.Id" link="#" classes="truncate-center-id" />
+                            </td>
+                            <td>@DisplayFormatter.Currency(@p.Data.Price, @p.Data.Currency, DisplayFormatter.CurrencyFormat.CodeAndSymbol)</td>
+                            <td>@p.Data.RecurringType</td>
+                            <td>@p.Data.GracePeriodDays days</td>
+                            <td><span class="status-active">@p.Data.Status</span></td>
+                            <td>@p.UserCount Members</td>
+                            <td>
+                                <button class="btn btn-outline-success btn-sm action-btn">Edit</button>
+                                <button class="btn btn-outline-danger btn-sm action-btn">Remove</button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-secondary" text-translate="true">There are no subscription plans.</td>
+                    </tr>
+                }
                 </tbody>
             </table>
         </div>

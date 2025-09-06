@@ -38,6 +38,7 @@ namespace BTCPayServer.Data
         public DbSet<PairedSINData> PairedSINData { get; set; }
         public DbSet<PairingCodeData> PairingCodes { get; set; }
         public DbSet<PayjoinLock> PayjoinLocks { get; set; }
+        public DbSet<SubscriptionPlanData> SubscriptionPlans { get; set; }
         public DbSet<PaymentRequestData> PaymentRequests { get; set; }
         public DbSet<PaymentData> Payments { get; set; }
         public DbSet<PayoutData> Payouts { get; set; }
@@ -65,6 +66,7 @@ namespace BTCPayServer.Data
         public DbSet<FormData> Forms { get; set; }
         public DbSet<PendingTransaction> PendingTransactions { get; set; }
         public DbSet<CustomerData> Customers { get; set; }
+        public DbSet<SubscriptionMemberData> Members { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -72,6 +74,8 @@ namespace BTCPayServer.Data
 
             // some of the data models don't have OnModelCreating for now, commenting them
 
+            SubscriptionPlanData.OnModelCreating(builder, Database);
+            SubscriptionMemberData.OnModelCreating(builder, Database);
             CustomerData.OnModelCreating(builder, Database);
             ApplicationUser.OnModelCreating(builder, Database);
             AddressInvoiceData.OnModelCreating(builder);

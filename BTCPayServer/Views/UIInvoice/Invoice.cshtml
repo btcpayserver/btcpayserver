@@ -473,7 +473,7 @@
                                     <th>ID</th>
                                     <th>Type</th>
                                     <th>Url</th>
-                                    <th>Date</th>
+                                    <th class="text-start">Date</th>
                                     <th class="text-end">Action</th>
                                 </tr>
                             </thead>
@@ -522,7 +522,7 @@
                                                 <span style="max-width: 250px;">@delivery.PayloadUrl</span>
                                             </span>
                                         </td>
-                                        <td>
+                                        <td class="text-start">
                                             <span>
                                                     @delivery.Time.ToBrowserDate()
                                             </span>
@@ -556,7 +556,7 @@
                                 <tr>
                                     <th>Pull Payment</th>
                                     <th>Amount</th>
-                                    <th>Date</th>
+                                    <th class="text-start">Date</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -577,7 +577,7 @@
                                         <td>
 											<span>@refund.PullPaymentData.Limit @refund.PullPaymentData.Currency</span>
                                         </td>
-                                        <td>
+                                        <td class="text-start">
                                             <span>@refund.PullPaymentData.StartDate.ToBrowserDate()</span>
                                         </td>
                                     </tr>
@@ -595,7 +595,7 @@
                     <table class="table table-hover mt-3 mb-4">
                         <thead>
                             <tr>
-                                <th>Date</th>
+                                <th class="text-start">Date</th>
                                 <th>Message</th>
                             </tr>
                         </thead>
@@ -604,7 +604,7 @@
                             {
                                 var cssClass = string.IsNullOrEmpty(evt.GetCssClass()) ? null : $"text-{evt.GetCssClass()}";
                                 <tr>
-                                    <td class="@cssClass">@evt.Timestamp.ToBrowserDate("o", "short", "medium")</td>
+                                    <td class="text-start @cssClass">@evt.Timestamp.ToBrowserDate("o", "short", "medium")</td>
                                     <td class="@cssClass">@evt.Message</td>
                                 </tr>
                             }

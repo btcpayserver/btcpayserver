@@ -168,7 +168,7 @@ public partial class UIStoresController
         {
             await _storeRepo.UpdateStore(CurrentStore);
 
-            TempData[WellKnownTempData.SuccessMessage] = "Store successfully updated";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Store successfully updated"].Value;
         }
 
         return RedirectToAction(nameof(GeneralSettings), new
@@ -206,7 +206,7 @@ public partial class UIStoresController
     public async Task<IActionResult> DeleteStorePost(string storeId)
     {
         await _storeRepo.DeleteStore(CurrentStore.Id);
-        TempData[WellKnownTempData.SuccessMessage] = "Store successfully deleted.";
+        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Store successfully deleted."].Value;
         return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
     }
 
@@ -390,7 +390,7 @@ public partial class UIStoresController
         if (needUpdate)
         {
             await _storeRepo.UpdateStore(CurrentStore);
-            TempData[WellKnownTempData.SuccessMessage] = "Store successfully updated";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Store successfully updated"].Value;
         }
 
         return RedirectToAction(nameof(CheckoutAppearance), new

@@ -147,7 +147,7 @@ public partial class UIStoresController
         if (CurrentStore.SetStoreBlob(storeBlob))
         {
             await _storeRepo.UpdateStore(CurrentStore);
-            TempData[WellKnownTempData.SuccessMessage] = "Rate settings updated";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Rate settings updated"].Value;
         }
         return RedirectToAction(nameof(Rates), new
         {

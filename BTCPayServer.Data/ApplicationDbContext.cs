@@ -38,6 +38,7 @@ namespace BTCPayServer.Data
         public DbSet<PairedSINData> PairedSINData { get; set; }
         public DbSet<PairingCodeData> PairingCodes { get; set; }
         public DbSet<PayjoinLock> PayjoinLocks { get; set; }
+        public DbSet<SubscriptionStatsData> SubscriptionStats { get; set; }
         public DbSet<SubscriptionPlanData> SubscriptionPlans { get; set; }
         public DbSet<PaymentRequestData> PaymentRequests { get; set; }
         public DbSet<PaymentData> Payments { get; set; }

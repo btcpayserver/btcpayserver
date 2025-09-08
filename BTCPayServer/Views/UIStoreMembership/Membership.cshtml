@@ -1,4 +1,5 @@
 ﻿@using BTCPayServer.Client
+@using BTCPayServer.Controllers
 @using BTCPayServer.Services
 @model MembershipViewModel
 @inject DisplayFormatter DisplayFormatter
@@ -46,8 +47,8 @@
                 <div class="card-body">
                     <h6>Total Revenue</h6>
                     <div class="balance d-flex align-items-baseline gap-1">
-                        <h4 class="d-inline-block me-1" data-balance="0" data-sensitive="">1.23456789</h4>
-                        <span class="text-secondary fw-semibold currency">BTC</span>
+                        <h4 class="d-inline-block me-1" data-balance="0" data-sensitive="">@DisplayFormatter.Currency(Model.Stats.TotalRevenue, Model.Currency, DisplayFormatter.CurrencyFormat.None)</h4>
+                        <span class="text-secondary fw-semibold currency">@Model.Currency</span>
                     </div>
                 </div>
             </div>
@@ -56,7 +57,7 @@
             <div class="card">
                 <div class="card-body">
                     <h6>Active Members</h6>
-                    <h4>21</h4>
+                    <h4>@Model.Stats.ActiveMembersCount</h4>
                 </div>
             </div>
         </div>
@@ -64,7 +65,7 @@
             <div class="card">
                 <div class="card-body">
                     <h6>Active Subscriptions</h6>
-                    <h4>7</h4>
+                    <h4>@Model.Stats.ActiveSubscriptionsCount</h4>
                 </div>
             </div>
         </div>
@@ -121,13 +122,13 @@
                         <tr>
                             <td class="fw-semibold">@p.Data.Name</td>
                             <td>
-                                <vc:truncate-center text="@p.Data.Id" link="#" classes="truncate-center-id" />
+                                <vc:truncate-center text="@p.Data.Id" link="@Url.Action(nameof(UIStoreMembershipController.PlanCheckout), new{ planId = p.Data.Id })" classes="truncate-center-id" />
                             </td>
                             <td>@DisplayFormatter.Currency(@p.Data.Price, @p.Data.Currency, DisplayFormatter.CurrencyFormat.CodeAndSymbol)</td>
                             <td>@p.Data.RecurringType</td>
                             <td>@p.Data.GracePeriodDays days</td>
                             <td><span class="status-active">@p.Data.Status</span></td>
-                            <td>@p.UserCount Members</td>
+                            <td>@p.Data.MemberCount Members</td>
                             <td>
                                 <button class="btn btn-outline-success btn-sm action-btn">Edit</button>
                                 <button class="btn btn-outline-danger btn-sm action-btn">Remove</button>

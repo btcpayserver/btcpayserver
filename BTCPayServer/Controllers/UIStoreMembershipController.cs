@@ -7,6 +7,9 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Models;
+using BTCPayServer.Services;
+using BTCPayServer.Services.Stores;
 using BTCPayServer.Views.UIStoreMembership;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
@@ -20,14 +23,45 @@ namespace BTCPayServer.Controllers;
 [AutoValidateAntiforgeryToken]
 public class UIStoreMembershipController(
     ApplicationDbContextFactory dbContextFactory,
-    IStringLocalizer StringLocalizer
+    IStringLocalizer StringLocalizer,
+    UriResolver uriResolver
     ) : Controller
 {
+    [HttpGet("plan-checkout/{planId}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> PlanCheckout(string planId)
+    {
+        await using var ctx = dbContextFactory.CreateContext();
+        var plan = await ctx.SubscriptionPlans
+            .Include(o => o.Store)
+            .Where(p => p.Id == planId)
+            .FirstOrDefaultAsync();
+        if (plan is null)
+            return NotFound();
+
+        var vm = new PlanCheckoutViewModel()
+        {
+            Id = planId,
+            StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, plan.Store.GetStoreBlob()),
+            Title = plan.Name,
+            Data = plan
+        };
+        return View(vm);
+    }
+
     [HttpGet("stores/{storeId}/membership/{section=Plans}")]
     public async Task<IActionResult> Membership(string storeId, MembershipSection section = MembershipSection.Plans)
     {
         await using var ctx = dbContextFactory.CreateContext();
+
         var vm = new MembershipViewModel() { Section = section };
+        vm.Stats = await ctx.SubscriptionStats
+            .Where(s => s.StoreId == storeId)
+            .FirstOrDefaultAsync() ?? new();
+
+        // TODO: This shouldn't be a property of the store, but one of the membership
+        vm.Currency = this.HttpContext.GetStoreData().GetStoreBlob().DefaultCurrency;
+
         var plans = await ctx.SubscriptionPlans
             .Where(p => p.StoreId == storeId)
             .ToListAsync();
@@ -42,13 +76,10 @@ public class UIStoreMembershipController(
             .ThenByDescending(o => o.CreatedAt)
             .ToList();
 
-        // TODO: Look at the AdditionalData of the plan for cached value of number of users
-
         vm.Plans = plans.Select(p =>
             new MembershipViewModel.PlanViewModel()
             {
-                Data = p,
-                UserCount = 0
+                Data = p
             }).ToList();
         return View(vm);
     }

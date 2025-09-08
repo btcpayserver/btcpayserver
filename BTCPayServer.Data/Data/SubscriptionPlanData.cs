@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using NBitcoin;
@@ -57,6 +58,10 @@ public class SubscriptionPlanData : BaseEntityData
 
     [Column("allow_upgrade")]
     public bool AllowUpgrade { get; set; }
+
+    [Column("members_count")]
+    public int MemberCount { get; set; }
+
 
     public class BTCPayAdditionalData
     {

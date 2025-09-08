@@ -43,6 +43,7 @@ public class UIStoreMembershipController(
         {
             Id = planId,
             StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, plan.Store.GetStoreBlob()),
+            StoreName = plan.Store.StoreName,
             Title = plan.Name,
             Data = plan
         };

@@ -151,6 +151,7 @@ services:
         zmqpubrawtx=tcp://0.0.0.0:28333
         deprecatedrpc=signrawtransaction
         fallbackfee=0.0002
+        minrelaytxfee=0.00001000
     ports:
       - "43782:43782"
       - "39388:39388"

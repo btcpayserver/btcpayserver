@@ -438,6 +438,7 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             services.AddSingleton<IHostedService, OnChainRateTrackerHostedService>();
             services.AddSingleton<IHostedService, UserEventHostedService>();
             services.AddSingleton<IHostedService, DynamicDnsHostedService>();
+            services.AddSingleton<IHostedService, MembershipHostedService>();
             services.AddSingleton<PaymentRequestStreamer>();
             services.AddSingleton<IHostedService>(s => s.GetRequiredService<PaymentRequestStreamer>());
             services.AddSingleton<IBackgroundJobClient, BackgroundJobClient>();

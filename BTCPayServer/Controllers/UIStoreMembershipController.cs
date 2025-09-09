@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Views.UIStoreMembership;
 using Dapper;
@@ -24,7 +26,9 @@ namespace BTCPayServer.Controllers;
 public class UIStoreMembershipController(
     ApplicationDbContextFactory dbContextFactory,
     IStringLocalizer StringLocalizer,
-    UriResolver uriResolver
+    UriResolver uriResolver,
+    UIInvoiceController invoiceController,
+    CallbackGenerator callbackGenerator
     ) : Controller
 {
     [HttpGet("plan-checkout/{planId}")]
@@ -32,10 +36,7 @@ public class UIStoreMembershipController(
     public async Task<IActionResult> PlanCheckout(string planId)
     {
         await using var ctx = dbContextFactory.CreateContext();
-        var plan = await ctx.SubscriptionPlans
-            .Include(o => o.Store)
-            .Where(p => p.Id == planId)
-            .FirstOrDefaultAsync();
+        var plan = await GetPlanFromId(planId, ctx);
         if (plan is null)
             return NotFound();
 
@@ -49,6 +50,48 @@ public class UIStoreMembershipController(
         };
         return View(vm);
     }
+
+    private static async Task<SubscriptionPlanData?> GetPlanFromId(string planId, ApplicationDbContext ctx)
+    {
+        var plan = await ctx.SubscriptionPlans
+            .Include(o => o.Store)
+            .Where(p => p.Id == planId)
+            .FirstOrDefaultAsync();
+        return plan;
+    }
+
+    [HttpPost("plan-checkout/{planId}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> PlanCheckout(string planId, PlanCheckoutViewModel vm)
+    {
+        if (!vm.Email.IsValidEmail())
+            ModelState.AddModelError(nameof(vm.Email), "Invalid email format");
+        if (!ModelState.IsValid)
+            return await PlanCheckout(planId);
+        await using var ctx = dbContextFactory.CreateContext();
+        var plan = await GetPlanFromId(planId, ctx);
+        if (plan is null)
+            return NotFound();
+
+        var metadata = new InvoiceMetadata()
+        {
+            BuyerEmail = vm.Email,
+        }.ToJObject();
+        metadata.Add("planId", plan.Id);
+        var request = await invoiceController.CreateInvoiceCoreRaw(new ()
+        {
+            Currency = plan.Currency,
+            Amount = plan.Price,
+            Metadata = metadata
+        }, plan.Store, Request.GetAbsoluteRoot(),
+            [ GetPlanInvoiceTag(plan.Id) ]);
+
+        var link = callbackGenerator.InvoiceCheckoutLink(request.Id, Request);
+        return Redirect(link);
+    }
+
+    public static string GetPlanInvoiceTag(string planId) => $"SUBS#{planId}";
+    public static string? GetPlanIdFromInvoice(InvoiceEntity invoiceEntiy) => invoiceEntiy.GetInternalTags("SUBS#").FirstOrDefault();
 
     [HttpGet("stores/{storeId}/membership/{section=Plans}")]
     public async Task<IActionResult> Membership(string storeId, MembershipSection section = MembershipSection.Plans)

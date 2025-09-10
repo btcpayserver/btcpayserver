@@ -78,6 +78,16 @@
                             "nullable": true,
                             "type": "number"
                         }
+                    },
+                    {
+                        "name": "includePaymentMethods",
+                        "in": "query",
+                        "required": false,
+                        "description": "Includes payment methods available to the response",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
                     }
                 ],
                 "description": "View information about the existing invoices",
@@ -721,7 +731,22 @@
             "InvoiceDataList": {
                 "type": "array",
                 "items": {
-                    "$ref": "#/components/schemas/InvoiceData"
+                    "allOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "paymentMethods": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/InvoicePaymentMethodDataModel"
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "$ref": "#/components/schemas/InvoiceData"
+                        }
+                    ]
                 }
             },
             "MarkInvoiceStatusRequest": {

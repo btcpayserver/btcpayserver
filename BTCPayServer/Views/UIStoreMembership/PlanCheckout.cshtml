@@ -8,7 +8,7 @@
     ViewData["StoreBranding"] = Model.StoreBranding;
     Layout = null;
     ViewData.SetBlazorAllowed(false);
-    var items = Model.Data.GetAdditionalData<SubscriptionPlanData.BTCPayAdditionalData>().PlanItems ?? new();
+    var items = Model.Data.GetBlob()?.PlanItems ?? new();
 }
 
 <!DOCTYPE html>
@@ -218,6 +218,7 @@
                                 id="emailInput"
                                 placeholder="Enter your email address"
                                 required
+                                disabled="@Model.IsPrefilled"
                             >
                             <div class="form-text">
                                 <i class="fas fa fa-info-circle me-1"></i>
@@ -245,7 +246,6 @@
 </div>
 
 <script>
-    // Email validation and button state management
     const emailInput = document.getElementById('emailInput');
     const proceedBtn = document.getElementById('proceedBtn');
     const checkoutForm = document.getElementById('checkoutForm');
@@ -257,9 +257,11 @@
 
     checkoutForm.addEventListener('submit', function (e) {
         const email = emailInput.value;
-
         if (!email || !emailInput.checkValidity()) {
             e.preventDefault();
+        }
+        else {
+            proceedBtn.disabled = true;
         }
     });
 </script>

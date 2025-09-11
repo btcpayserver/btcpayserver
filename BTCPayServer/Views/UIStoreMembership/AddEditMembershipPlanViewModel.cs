@@ -40,6 +40,9 @@ namespace BTCPayServer.Views.UIStoreMembership
         [Display(Name = "Allow upgrades from other plans")]
         public bool AllowUpgrade { get; set; }
 
+        [Display(Name = "Optimistic activation")]
+        public bool OptimisticActivation { get; set; } = true;
+
         [Display(Name = "Plan Items")]
         public List<PlanItemInput> Items { get; set; } = new();
 

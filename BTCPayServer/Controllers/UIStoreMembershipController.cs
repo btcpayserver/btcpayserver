@@ -33,7 +33,7 @@ public class UIStoreMembershipController(
 {
     [HttpGet("plan-checkout/{planId}")]
     [AllowAnonymous]
-    public async Task<IActionResult> PlanCheckout(string planId)
+    public async Task<IActionResult> PlanCheckout(string planId, string? prefilledEmail = null)
     {
         await using var ctx = dbContextFactory.CreateContext();
         var plan = await GetPlanFromId(planId, ctx);
@@ -46,7 +46,9 @@ public class UIStoreMembershipController(
             StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, plan.Store.GetStoreBlob()),
             StoreName = plan.Store.StoreName,
             Title = plan.Name,
-            Data = plan
+            Data = plan,
+            Email = prefilledEmail,
+            IsPrefilled = prefilledEmail?.IsValidEmail() is true,
         };
         return View(vm);
     }
@@ -62,12 +64,12 @@ public class UIStoreMembershipController(
 
     [HttpPost("plan-checkout/{planId}")]
     [AllowAnonymous]
-    public async Task<IActionResult> PlanCheckout(string planId, PlanCheckoutViewModel vm)
+    public async Task<IActionResult> PlanCheckout(string planId, PlanCheckoutViewModel vm, string? prefilledEmail = null)
     {
         if (!vm.Email.IsValidEmail())
             ModelState.AddModelError(nameof(vm.Email), "Invalid email format");
         if (!ModelState.IsValid)
-            return await PlanCheckout(planId);
+            return await PlanCheckout(planId, prefilledEmail);
         await using var ctx = dbContextFactory.CreateContext();
         var plan = await GetPlanFromId(planId, ctx);
         if (plan is null)
@@ -106,25 +108,42 @@ public class UIStoreMembershipController(
         // TODO: This shouldn't be a property of the store, but one of the membership
         vm.Currency = this.HttpContext.GetStoreData().GetStoreBlob().DefaultCurrency;
 
-        var plans = await ctx.SubscriptionPlans
-            .Where(p => p.StoreId == storeId)
-            .ToListAsync();
+        if (section == MembershipSection.Plans)
+        {
+            var plans = await ctx.SubscriptionPlans
+                .Where(p => p.StoreId == storeId)
+                .ToListAsync();
 
-        plans = plans
-            .OrderBy(p => p.Status switch
-            {
-                SubscriptionPlanData.PlanStatus.Active => 0,
-                SubscriptionPlanData.PlanStatus.Draft => 1,
-                _ => 2,
-            })
-            .ThenByDescending(o => o.CreatedAt)
-            .ToList();
+            plans = plans
+                .OrderBy(p => p.Status switch
+                {
+                    SubscriptionPlanData.PlanStatus.Active => 0,
+                    SubscriptionPlanData.PlanStatus.Draft => 1,
+                    _ => 2,
+                })
+                .ThenByDescending(o => o.CreatedAt)
+                .ToList();
 
-        vm.Plans = plans.Select(p =>
-            new MembershipViewModel.PlanViewModel()
-            {
-                Data = p
-            }).ToList();
+            vm.Plans = plans.Select(p =>
+                new MembershipViewModel.PlanViewModel()
+                {
+                    Data = p
+                }).ToList();
+        }
+        else if (section == MembershipSection.Members)
+        {
+            var members = ctx.Members
+                .Include(m => m.Plan)
+                .Include(m => m.Customer)
+                .Where(m => m.Customer.StoreId == storeId)
+                .ToList();
+            vm.Members = members
+                .Select(v => new MembershipViewModel.MemberViewModel()
+                {
+                    Data = v
+                }).ToList();
+        }
+
         return View(vm);
     }
 
@@ -171,6 +190,7 @@ public class UIStoreMembershipController(
             Currency = vm.Currency,
             GracePeriodDays = vm.GracePeriodDays,
             AllowUpgrade = vm.AllowUpgrade,
+            OptimisticActivation = vm.OptimisticActivation,
             CreatedAt = DateTimeOffset.UtcNow,
             Id = SubscriptionPlanData.GenerateId(),
             RecurringType = vm.RecurringType,
@@ -179,7 +199,7 @@ public class UIStoreMembershipController(
         };
         if (vm.Items?.Count is > 0)
         {
-            var data = plan.GetAdditionalData<SubscriptionPlanData.BTCPayAdditionalData>();
+            var data = plan.GetBlob() ?? new();
             data.PlanItems = vm.Items
                 .Select(o =>
                 new SubscriptionPlanData.SubscriptionPlanItem()
@@ -191,7 +211,7 @@ public class UIStoreMembershipController(
                 }).ToList();
             if (data.HasDuplicateIds(ModelState, "Items[{0}].Id", StringLocalizer["Duplicate ID"]))
                 return View(vm);
-            plan.SetAdditionalData(data);
+            plan.SetAdditionalData(SubscriptionPlanData.BTCPayAdditionalData.Key, data);
         }
         ctx.SubscriptionPlans.Add(plan);
         await ctx.SaveChangesAsync();

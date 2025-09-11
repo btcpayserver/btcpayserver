@@ -11,4 +11,5 @@ public class PlanCheckoutViewModel
     public string Email { get; set; }
     public string Id { get; set; }
     public SubscriptionPlanData Data { get; set; }
+    public bool IsPrefilled { get; set; }
 }

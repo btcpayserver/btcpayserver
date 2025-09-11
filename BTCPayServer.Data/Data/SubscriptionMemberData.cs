@@ -1,6 +1,8 @@
 ﻿#nullable enable
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
@@ -10,33 +12,71 @@ namespace BTCPayServer.Data;
 public class SubscriptionMemberData : BaseEntityData
 {
     [Required]
+    [Key]
     [Column("customer_id")]
     public string CustomerId { get; set; } = null!;
 
-    [ForeignKey("id")]
+    [ForeignKey(nameof(CustomerId))]
     public CustomerData Customer { get; set; } = null!;
 
     [Required]
     [Column("plan_id")]
     public string PlanId { get; set; } = null!;
 
-    [ForeignKey("id")]
+    [ForeignKey(nameof(PlanId))]
     public SubscriptionPlanData Plan { get; set; } = null!;
 
     [Required]
-    [Column("status")]
-    public MemberStatus Status { get; set; } = MemberStatus.Inactive;
+    [Column("phase")]
+    public PhaseTypes Phase { get; set; } = PhaseTypes.Expired;
+
+    [Column("period_end")]
+    public DateTimeOffset? PeriodEnd { get; set; }
+    [Column("trial_end")]
+    public DateTimeOffset? TrialEnd { get; set; }
+
+    [Column("grace_period_end")]
+    public DateTimeOffset? GracePeriodEnd { get; set; }
+
+    [Column("canceled_at")]
+    public DateTimeOffset? CanceledAt { get; set; }
+
+    [Required]
+    [Column("active")]
+    public bool IsActive { get; set; } = false;
+
+    [Required]
+    [Column("force_disabled")]
+    public bool ForceDisabled { get; set; } = false;
 
 
-    public enum MemberStatus
+    public PhaseTypes CalculateExpectedPhase(DateTimeOffset now)
+    => this switch
     {
-        Active,
-        Inactive
+        { TrialEnd: { } te } when now < te => PhaseTypes.Trial,
+        { PeriodEnd: { } pe } when now < pe => PhaseTypes.Normal,
+        { GracePeriodEnd: { } gpe } when now < gpe => PhaseTypes.Grace,
+        _ => PhaseTypes.Expired
+    };
+
+    public enum PhaseTypes
+    {
+        Trial,
+        Normal,
+        Grace,
+        Expired
     }
 
     public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
     {
         var b = builder.Entity<SubscriptionMemberData>();
-        b.Property(x => x.Status).HasConversion<string>();
+        OnModelCreateBase(b, builder, databaseFacade);
+        b.Property(x => x.Phase)
+            .HasSentinel(PhaseTypes.Expired)
+            .HasDefaultValueSql("'Expired'::TEXT").HasConversion<string>();
+        b.Property(x => x.IsActive).HasDefaultValue(false);
+        b.Property(x => x.ForceDisabled).HasDefaultValue(false);
+        b.HasIndex(c => new { c.CustomerId })
+            .IsUnique();
     }
 }

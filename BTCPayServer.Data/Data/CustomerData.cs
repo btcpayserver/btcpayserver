@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
@@ -37,10 +38,9 @@ public class CustomerData : BaseEntityData
     public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
     {
         var b = builder.Entity<CustomerData>();
-        b.Property(x => x.CreatedAt).HasColumnName("created_at").HasColumnType("timestamptz")
-            .HasDefaultValueSql("now()");
-        b.Property(x => x.Metadata).HasColumnName("metadata").HasColumnType("jsonb")
-            .HasDefaultValueSql("'{}'::jsonb");
+        OnModelCreateBase(b, builder, databaseFacade);
+        b.Property(x => x.Name).HasColumnName("name").HasColumnType("TEXT")
+            .HasDefaultValueSql("''::TEXT");
 
         b.HasKey(x => new { x.Id });
         b.HasIndex(x => new { x.StoreId, x.Email }).IsUnique();

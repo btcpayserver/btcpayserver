@@ -1,6 +1,7 @@
 ﻿@using BTCPayServer.Client
 @using BTCPayServer.Controllers
 @using BTCPayServer.Services
+@using BTCPayServer.Abstractions
 @model MembershipViewModel
 @inject DisplayFormatter DisplayFormatter
 
@@ -155,26 +156,24 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr>
-                    <td class="fw-semibold">user1@example.com</td>
-                    <td>Basic</td>
-                    <td>2/14/2024</td>
-                    <td><span class="status-active">Active</span></td>
-                    <td>
-                        <button class="btn btn-outline-success btn-sm action-btn">Edit</button>
-                        <button class="btn btn-outline-danger btn-sm action-btn">Remove</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="fw-semibold">user1@example.com</td>
-                    <td>Basic</td>
-                    <td>2/14/2024</td>
-                    <td><span class="status-active">Active</span></td>
-                    <td>
-                        <button class="btn btn-outline-success btn-sm action-btn">Edit</button>
-                        <button class="btn btn-outline-danger btn-sm action-btn">Remove</button>
-                    </td>
-                </tr>
+                @foreach(var member in Model.Members)
+                {
+                    <tr>
+                        <td class="fw-semibold">@member.Data.Customer.Email</td>
+                        <td>@member.Data.Plan.Name</td>
+                        <td class="date-col">
+                        @if (member.Data.PeriodEnd is { } pe)
+                        {
+                            <span>@pe.ToBrowserDate()</span>
+                        }
+                        </td>
+                        <td><span class="status-active">@member.Data.Phase</span></td>
+                        <td>
+                            <button class="btn btn-outline-success btn-sm action-btn">Edit</button>
+                            <button class="btn btn-outline-danger btn-sm action-btn">Remove</button>
+                        </td>
+                    </tr>
+                }
                 </tbody>
             </table>
         </div>

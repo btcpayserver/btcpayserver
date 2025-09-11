@@ -62,12 +62,17 @@ public class SubscriptionPlanData : BaseEntityData
     [Column("members_count")]
     public int MemberCount { get; set; }
 
+    [Column("renewable")]
+    public bool Renewable { get; set; } = true;
+
+    [Column("optimistic_activation")]
+    public bool OptimisticActivation { get; set; } = true;
 
     public class BTCPayAdditionalData
     {
+        public const string Key = "btcpay";
+
         public List<SubscriptionPlanItem>? PlanItems { get; set; }
-        [JsonExtensionData]
-        public Dictionary<string, JToken>? AdditionalData { get; set; }
 
         public bool HasDuplicateIds(ModelStateDictionary modelState, string property, string errorMessage)
         {
@@ -88,10 +93,16 @@ public class SubscriptionPlanData : BaseEntityData
         }
     }
 
+    public BTCPayAdditionalData? GetBlob()
+    => GetAdditionalData<BTCPayAdditionalData>(BTCPayAdditionalData.Key);
+
     public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
     {
         var b = builder.Entity<SubscriptionPlanData>();
+        OnModelCreateBase(b, builder, databaseFacade);
         b.Property(x => x.Status).HasConversion<string>();
+        b.Property(x => x.Renewable).HasDefaultValue(true);
+        b.Property(x => x.OptimisticActivation).HasDefaultValue(true);
         b.Property(x => x.RecurringType).HasConversion<string>();
     }
 
@@ -114,7 +125,20 @@ public class SubscriptionPlanData : BaseEntityData
     {
         Monthly,
         Quarterly,
-        Yearly,
-        OneTime
+        Yearly
+    }
+
+    public (DateTimeOffset PeriodEnd, DateTimeOffset PeriodGraceEnd) GetNextPeriodEnd(DateTimeOffset from)
+    {
+        // TODO: If it is a new plan, lastPeriodEnd can be null. If that is the case, take current date.
+        // Later, we probably want to start beginning of the month for new plans.
+        var to = from.AddMonths(this.RecurringType switch
+            {
+                RecurringInterval.Monthly => 1,
+                RecurringInterval.Quarterly => 3,
+                RecurringInterval.Yearly => 12,
+                _ => throw new NotSupportedException(RecurringType.ToString())
+            });
+        return (to, to.AddDays(GracePeriodDays));
     }
 }

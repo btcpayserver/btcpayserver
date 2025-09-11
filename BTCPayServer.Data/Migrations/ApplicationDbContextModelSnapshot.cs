@@ -202,8 +202,10 @@ namespace BTCPayServer.Migrations
 
                     b.Property<string>("AdditionalData")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("jsonb")
-                        .HasColumnName("additional_data");
+                        .HasColumnName("additional_data")
+                        .HasDefaultValueSql("'{}'::jsonb");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -228,8 +230,10 @@ namespace BTCPayServer.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name")
+                        .HasDefaultValueSql("''::TEXT");
 
                     b.Property<string>("StoreId")
                         .IsRequired()
@@ -940,39 +944,76 @@ namespace BTCPayServer.Migrations
 
             modelBuilder.Entity("BTCPayServer.Data.SubscriptionMemberData", b =>
                 {
-                    b.Property<string>("id")
-                        .HasColumnType("text");
-
-                    b.Property<string>("AdditionalData")
-                        .IsRequired()
-                        .HasColumnType("jsonb")
-                        .HasColumnName("additional_data");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamptz")
-                        .HasColumnName("created_at");
-
                     b.Property<string>("CustomerId")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("customer_id");
 
+                    b.Property<string>("AdditionalData")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("additional_data")
+                        .HasDefaultValueSql("'{}'::jsonb");
+
+                    b.Property<DateTimeOffset?>("CanceledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("canceled_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<bool>("ForceDisabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("force_disabled");
+
+                    b.Property<DateTimeOffset?>("GracePeriodEnd")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("grace_period_end");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("active");
+
                     b.Property<string>("Metadata")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("jsonb")
-                        .HasColumnName("metadata");
+                        .HasColumnName("metadata")
+                        .HasDefaultValueSql("'{}'::jsonb");
+
+                    b.Property<DateTimeOffset?>("PeriodEnd")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("period_end");
 
                     b.Property<string>("PlanId")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("plan_id");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("status");
+                    b.Property<DateTimeOffset?>("TrialEnd")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("trial_end");
 
-                    b.HasKey("id");
+                    b.Property<string>("Zone")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("phase")
+                        .HasDefaultValueSql("'Expired'::TEXT");
+
+                    b.HasKey("CustomerId");
+
+                    b.HasIndex("CustomerId")
+                        .IsUnique();
+
+                    b.HasIndex("PlanId");
 
                     b.ToTable("subscription_members");
                 });
@@ -985,16 +1026,20 @@ namespace BTCPayServer.Migrations
 
                     b.Property<string>("AdditionalData")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("jsonb")
-                        .HasColumnName("additional_data");
+                        .HasColumnName("additional_data")
+                        .HasDefaultValueSql("'{}'::jsonb");
 
                     b.Property<bool>("AllowUpgrade")
                         .HasColumnType("boolean")
                         .HasColumnName("allow_upgrade");
 
                     b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamptz")
-                        .HasColumnName("created_at");
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<string>("Currency")
                         .IsRequired()
@@ -1015,13 +1060,21 @@ namespace BTCPayServer.Migrations
 
                     b.Property<string>("Metadata")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("jsonb")
-                        .HasColumnName("metadata");
+                        .HasColumnName("metadata")
+                        .HasDefaultValueSql("'{}'::jsonb");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name");
+
+                    b.Property<bool>("OptimisticActivation")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("optimistic_activation");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric")
@@ -1031,6 +1084,12 @@ namespace BTCPayServer.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("recurring_type");
+
+                    b.Property<bool>("Renewable")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("renewable");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1668,13 +1727,13 @@ namespace BTCPayServer.Migrations
                 {
                     b.HasOne("BTCPayServer.Data.CustomerData", "Customer")
                         .WithMany()
-                        .HasForeignKey("id")
+                        .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("BTCPayServer.Data.SubscriptionPlanData", "Plan")
                         .WithMany()
-                        .HasForeignKey("id")
+                        .HasForeignKey("PlanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

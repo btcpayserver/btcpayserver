@@ -10,8 +10,14 @@ public class MembershipViewModel
         public SubscriptionPlanData Data { get; set; }
     }
 
+    public class MemberViewModel
+    {
+        public SubscriptionMemberData Data { get; set; }
+    }
+
     public MembershipSection Section { get; set; }
     public List<PlanViewModel> Plans { get; set; } = new();
+    public List<MemberViewModel> Members { get; set; } = new();
     public SubscriptionStatsData Stats { get; set; }
     public string Currency { get; set; }
 }

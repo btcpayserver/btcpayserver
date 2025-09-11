@@ -42,7 +42,28 @@ namespace BTCPayServer.HostedServices
                 {
                     try
                     {
-                        await ProcessEvent(evt, cancellationToken);
+                        if (evt is ExecutingEvent e)
+                        {
+                            try
+                            {
+                                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, e.CancellationToken);
+                                await ProcessEvent(e, linkedCts.Token);
+                                e.Tcs.TrySetResult();
+                            }
+                            catch when (e.CancellationToken.IsCancellationRequested)
+                            {
+                                e.Tcs.TrySetCanceled();
+                            }
+                            catch (Exception ex)
+                            {
+                                e.Tcs.TrySetException(ex);
+                                throw;
+                            }
+                        }
+                        else
+                        {
+                            await ProcessEvent(evt, cancellationToken);
+                        }
                     }
                     catch when (cancellationToken.IsCancellationRequested)
                     {
@@ -75,6 +96,14 @@ namespace BTCPayServer.HostedServices
         protected void PushEvent(object obj)
         {
             _Events.Writer.TryWrite(obj);
+        }
+
+        record ExecutingEvent(object Event, TaskCompletionSource Tcs, CancellationToken CancellationToken);
+        protected Task RunEvent(object obj, CancellationToken cancellationToken = default)
+        {
+            var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _Events.Writer.TryWrite(new ExecutingEvent(obj, tcs, cancellationToken));
+            return tcs.Task;
         }
 
         public virtual Task StartAsync(CancellationToken cancellationToken)

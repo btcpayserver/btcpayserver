@@ -20,7 +20,7 @@ namespace BTCPayServer.Data
             return new ApplicationDbContext(builder.Options);
         }
     }
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    public partial class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -75,8 +75,7 @@ namespace BTCPayServer.Data
 
             // some of the data models don't have OnModelCreating for now, commenting them
 
-            SubscriptionPlanData.OnModelCreating(builder, Database);
-            SubscriptionMemberData.OnModelCreating(builder, Database);
+            OnSubscriptionsModelCreating(builder);
             CustomerData.OnModelCreating(builder, Database);
             ApplicationUser.OnModelCreating(builder, Database);
             AddressInvoiceData.OnModelCreating(builder);

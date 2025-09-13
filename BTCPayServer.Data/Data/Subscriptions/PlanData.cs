@@ -17,7 +17,8 @@ public class PlanData : BaseEntityData
     [Column("id")]
     public string Id { get; set; } = null!;
 
-    public List<SubscriptionData> Subscriptions { get; set; } = null!;
+    public List<SubscriberData> Subscriptions { get; set; } = null!;
+    public List<PlanEntitlementData> PlanEntitlements { get; set; } = null!;
 
     [Required]
     [Column("offering_id")]
@@ -65,53 +66,19 @@ public class PlanData : BaseEntityData
     [Column("optimistic_activation")]
     public bool OptimisticActivation { get; set; } = true;
 
-    public class BTCPayAdditionalData
-    {
-        public const string Key = "btcpay";
-
-        public List<SubscriptionPlanItem>? PlanItems { get; set; }
-
-        public bool HasDuplicateIds(ModelStateDictionary modelState, string property, string errorMessage)
-        {
-            if (PlanItems is null)
-                return false;
-            HashSet<string> ids = new();
-            bool dups = false;
-            for (int i = 0; i < PlanItems.Count; i++)
-            {
-                if (!ids.Add(PlanItems[i].Id))
-                {
-                    modelState.AddModelError(string.Format(property, i), errorMessage);
-                    dups = true;
-                }
-            }
-
-            return dups;
-        }
-    }
-
-    public BTCPayAdditionalData? GetBlob()
-    => GetAdditionalData<BTCPayAdditionalData>(BTCPayAdditionalData.Key);
-
     public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
     {
         var b = builder.Entity<PlanData>();
         OnModelCreateBase(b, builder, databaseFacade);
+        b.Property(x => x.Id)
+            .ValueGeneratedOnAdd()
+            .HasValueGenerator(ValueGenerators.WithPrefix("plan"));
         b.Property(x => x.Status).HasConversion<string>();
         b.Property(x => x.Renewable).HasDefaultValue(true);
         b.Property(x => x.OptimisticActivation).HasDefaultValue(true);
         b.Property(x => x.RecurringType).HasConversion<string>();
         b.HasOne(x => x.Offering).WithMany(x => x.Plans).HasForeignKey(x => x.OfferingId).OnDelete(DeleteBehavior.Cascade);
     }
-
-    public class SubscriptionPlanItem
-    {
-        public string Name { get; set; } = string.Empty;
-        public string Id { get; set; } = string.Empty;
-        public int Quantity { get; set; }
-        public string? ShortDescription { get; set; }
-    }
-
     public enum PlanStatus
     {
         Active,

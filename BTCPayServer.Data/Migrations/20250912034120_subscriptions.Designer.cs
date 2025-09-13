@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250912034120_subscriptions")]
+    partial class subscriptions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -979,7 +982,6 @@ namespace BTCPayServer.Migrations
             modelBuilder.Entity("BTCPayServer.Data.Subscriptions.OfferingData", b =>
                 {
                     b.Property<string>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("text");
 
                     b.Property<string>("AdditionalData")
@@ -988,11 +990,6 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("additional_data")
                         .HasDefaultValueSql("'{}'::jsonb");
-
-                    b.Property<string>("AppId")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("app_id");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -1007,9 +1004,14 @@ namespace BTCPayServer.Migrations
                         .HasColumnName("metadata")
                         .HasDefaultValueSql("'{}'::jsonb");
 
+                    b.Property<string>("StoreId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("store_id");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("AppId");
+                    b.HasIndex("StoreId");
 
                     b.ToTable("subscriptions_offerings");
                 });
@@ -1821,13 +1823,13 @@ namespace BTCPayServer.Migrations
 
             modelBuilder.Entity("BTCPayServer.Data.Subscriptions.OfferingData", b =>
                 {
-                    b.HasOne("BTCPayServer.Data.AppData", "App")
+                    b.HasOne("BTCPayServer.Data.StoreData", "Store")
                         .WithMany()
-                        .HasForeignKey("AppId")
+                        .HasForeignKey("StoreId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("App");
+                    b.Navigation("Store");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.Subscriptions.PlanData", b =>

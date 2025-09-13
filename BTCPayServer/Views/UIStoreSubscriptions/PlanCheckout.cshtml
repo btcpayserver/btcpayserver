@@ -8,7 +8,6 @@
     ViewData["StoreBranding"] = Model.StoreBranding;
     Layout = null;
     ViewData.SetBlazorAllowed(false);
-    var items = Model.Data.GetBlob()?.PlanItems ?? new();
 }
 
 <!DOCTYPE html>
@@ -184,15 +183,15 @@
                         <div class="price-period">per month</div>
                     </div>
 
-                    @if (items.Count(i => !string.IsNullOrWhiteSpace(i.ShortDescription)) != 0)
+                    @if (Model.Data.PlanEntitlements.Count(i => !string.IsNullOrWhiteSpace(i.Plan.Description)) != 0)
                     {
                         <h5 class="mb-3">What's included:</h5>
                         <ul class="feature-list">
-                            @foreach (var item in items.Where(i => !string.IsNullOrWhiteSpace(i.ShortDescription)))
+                            @foreach (var item in Model.Data.PlanEntitlements.Where(i => !string.IsNullOrWhiteSpace(i.Plan.Description)))
                             {
                                 <li class="feature-item">
                                     <i class="fas fa fa-check feature-icon"></i>
-                                    <span>@item.ShortDescription</span>
+                                    <span>@item.Plan.Description</span>
                                 </li>
                             }
                         </ul>

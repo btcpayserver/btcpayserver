@@ -1,12 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace BTCPayServer.Data
 {
@@ -38,8 +33,6 @@ namespace BTCPayServer.Data
         public DbSet<PairedSINData> PairedSINData { get; set; }
         public DbSet<PairingCodeData> PairingCodes { get; set; }
         public DbSet<PayjoinLock> PayjoinLocks { get; set; }
-        public DbSet<SubscriptionStatsData> SubscriptionStats { get; set; }
-        public DbSet<SubscriptionPlanData> SubscriptionPlans { get; set; }
         public DbSet<PaymentRequestData> PaymentRequests { get; set; }
         public DbSet<PaymentData> Payments { get; set; }
         public DbSet<PayoutData> Payouts { get; set; }
@@ -67,7 +60,6 @@ namespace BTCPayServer.Data
         public DbSet<FormData> Forms { get; set; }
         public DbSet<PendingTransaction> PendingTransactions { get; set; }
         public DbSet<CustomerData> Customers { get; set; }
-        public DbSet<SubscriptionMemberData> Members { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

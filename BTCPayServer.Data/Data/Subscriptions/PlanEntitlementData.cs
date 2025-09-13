@@ -6,15 +6,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace BTCPayServer.Data.Subscriptions;
 
-[Table("subscriptions_subs_entitlements")]
-public class SubscriptionEntitlementData
+[Table("subscriptions_plans_entitlements")]
+public class PlanEntitlementData
 {
     [Required]
-    [Column("subs_id")]
-    public long SubscriptionId { get; set; }
+    [Column("plan_id")]
+    public string PlanId { get; set; }
 
-    [ForeignKey(nameof(SubscriptionId))]
-    public SubscriptionData Subscription { get; set; } = null!;
+    [ForeignKey(nameof(PlanId))]
+    public PlanData Plan { get; set; } = null!;
 
     [Required]
     [Column("entitlement_id")]
@@ -28,9 +28,9 @@ public class SubscriptionEntitlementData
 
     public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
     {
-        var b = builder.Entity<SubscriptionEntitlementData>();
-        b.HasKey(o => new { o.SubscriptionId, o.EntitlementId });
-        b.HasOne(x => x.Subscription).WithMany(x => x.MembershipEntitlements).HasForeignKey(x => x.SubscriptionId).OnDelete(DeleteBehavior.Cascade);
+        var b = builder.Entity<PlanEntitlementData>();
+        b.HasKey(o => new { o.PlanId, o.EntitlementId });
+        b.HasOne(x => x.Plan).WithMany(x => x.PlanEntitlements).HasForeignKey(x => x.PlanId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne(x => x.Entitlement).WithMany().HasForeignKey(x => x.EntitlementId).OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using BTCPayServer.Data;
+using BTCPayServer.Data.Subscriptions;
 
 namespace BTCPayServer.Events;
 
@@ -7,29 +8,25 @@ public class SubscriptionEvent
 {
     public class MemberEvent : SubscriptionEvent
     {
-        public MemberEvent(SubscriptionMemberData member)
+        public MemberEvent(SubscriberData member)
         {
             Member = member;
-            PlanAdditionalData = Member.Plan.GetBlob();
         }
-
-        public SubscriptionPlanData.BTCPayAdditionalData? PlanAdditionalData { get; }
-
-        public SubscriptionMemberData Member { get; }
+        public SubscriberData Member { get; }
     }
 
-    public class MemberActivated(SubscriptionMemberData member) : MemberEvent(member)
+    public class MemberActivated(SubscriberData member) : MemberEvent(member)
     {
         public override string ToString() => $"Member {Member.CustomerId} activated";
     }
 
-    public class MemberPhaseChanged(SubscriptionMemberData member, SubscriptionMemberData.PhaseTypes previousPhase) : MemberEvent(member)
+    public class MemberPhaseChanged(SubscriberData member, SubscriberData.PhaseTypes previousPhase) : MemberEvent(member)
     {
-        public SubscriptionMemberData.PhaseTypes PreviousPhase { get; set; } = previousPhase;
+        public SubscriberData.PhaseTypes PreviousPhase { get; set; } = previousPhase;
         public override string ToString() => $"Member {Member.CustomerId} changed phase from {PreviousPhase} to {Member.Phase}";
     }
 
-    public class MemberDisabled(SubscriptionMemberData member) : MemberEvent(member)
+    public class MemberDisabled(SubscriberData member) : MemberEvent(member)
     {
         public override string ToString() => $"Member {Member.CustomerId} disabled";
     }

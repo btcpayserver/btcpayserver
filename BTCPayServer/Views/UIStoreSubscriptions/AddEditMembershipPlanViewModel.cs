@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Data;
+using BTCPayServer.Data.Subscriptions;
 
 namespace BTCPayServer.Views.UIStoreMembership
 {
     public class AddEditMembershipPlanViewModel
     {
+        public string OfferingId { get; set; }
         [Required]
         [Display(Name = "Plan Name")]
         [StringLength(100)]
@@ -13,7 +15,7 @@ namespace BTCPayServer.Views.UIStoreMembership
 
         [Required]
         [Display(Name = "Status")]
-        public SubscriptionPlanData.PlanStatus Status { get; set; } = SubscriptionPlanData.PlanStatus.Active;
+        public PlanData.PlanStatus Status { get; set; } = PlanData.PlanStatus.Active;
 
         [Required]
         [Display(Name = "Price")]
@@ -26,7 +28,7 @@ namespace BTCPayServer.Views.UIStoreMembership
 
         [Required]
         [Display(Name = "Recurring Type")]
-        public SubscriptionPlanData.RecurringInterval RecurringType { get; set; } = SubscriptionPlanData.RecurringInterval.Monthly;
+        public PlanData.RecurringInterval RecurringType { get; set; } = PlanData.RecurringInterval.Monthly;
 
         [Required]
         [Display(Name = "Grace Period (days)")]
@@ -43,29 +45,21 @@ namespace BTCPayServer.Views.UIStoreMembership
         [Display(Name = "Optimistic activation")]
         public bool OptimisticActivation { get; set; } = true;
 
-        [Display(Name = "Plan Items")]
-        public List<PlanItemInput> Items { get; set; } = new();
+        [Display(Name = "Entitlements")]
+        public List<Entitlement> Entitlements { get; set; } = new();
 
         public string Anchor { get; set; }
 
-        public class PlanItemInput
+        public class Entitlement
         {
-            [Required]
-            [Display(Name = "Name")]
-            [StringLength(200)]
             public string Name { get; set; } = string.Empty;
-
-            [Display(Name = "ID")]
-            [StringLength(100)]
-            public string Id { get; set; } = string.Empty;
+            public string CustomId { get; set; } = string.Empty;
 
             [Required]
-            [Range(0, int.MaxValue)]
             [Display(Name = "Quantity")]
-            public int Quantity { get; set; }
+            public decimal Quantity { get; set; }
 
             [Display(Name = "Short description")]
-            [StringLength(500)]
             public string ShortDescription { get; set; }
         }
     }

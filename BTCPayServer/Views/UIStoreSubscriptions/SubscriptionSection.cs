@@ -1,8 +1,8 @@
 ﻿namespace BTCPayServer.Views.UIStoreMembership;
 
-public enum MembershipSection
+public enum SubscriptionSection
 {
-    Members,
+    Subscribers,
     Plans,
     Emails
 }

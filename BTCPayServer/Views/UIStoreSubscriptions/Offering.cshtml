@@ -2,12 +2,13 @@
 @using BTCPayServer.Controllers
 @using BTCPayServer.Services
 @using BTCPayServer.Abstractions
-@model MembershipViewModel
+@model SubscriptionsViewModel
 @inject DisplayFormatter DisplayFormatter
 
 @{
-    ViewData.SetActivePage(StoreNavPages.Membership, StringLocalizer["Membership"]);
+    ViewData.SetActivePage(StoreNavPages.Subscriptions, StringLocalizer["Subscriptions"]);
     string storeId = (string)this.Context.GetRouteValue("storeId");
+    string offeringId = (string)this.Context.GetRouteValue("offeringId");
 }
 
 @section PageHeadContent {
@@ -35,7 +36,7 @@
                 <div class="card-body">
                     <h6>Total Revenue</h6>
                     <div class="balance d-flex align-items-baseline gap-1">
-                        <h4 class="d-inline-block me-1" data-balance="0" data-sensitive="">@DisplayFormatter.Currency(Model.Stats.TotalRevenue, Model.Currency, DisplayFormatter.CurrencyFormat.None)</h4>
+                        <h4 class="d-inline-block me-1" data-balance="0" data-sensitive=""></h4>
                         <span class="text-secondary fw-semibold currency">@Model.Currency</span>
                     </div>
                 </div>
@@ -45,7 +46,7 @@
             <div class="card">
                 <div class="card-body">
                     <h6>Active Members</h6>
-                    <h4>@Model.Stats.ActiveMembersCount</h4>
+                    <h4>0</h4>
                 </div>
             </div>
         </div>
@@ -53,7 +54,7 @@
             <div class="card">
                 <div class="card-body">
                     <h6>Active Subscriptions</h6>
-                    <h4>@Model.Stats.ActiveSubscriptionsCount</h4>
+                    <h4>0</h4>
                 </div>
             </div>
         </div>
@@ -69,19 +70,19 @@
 
     <!-- Navigation Tabs -->
     <ul id="SectionNav" class="nav mb-4">
-        <a class="nav-link @(Model.Section == MembershipSection.Members ? "active" : "")" asp-action="Membership"
-           asp-route-section="@MembershipSection.Members">Members & Payments</a>
-        <a class="nav-link @(Model.Section == MembershipSection.Plans ? "active" : "")" asp-action="Membership" asp-route-section="@MembershipSection.Plans">Subscription
+        <a class="nav-link @(Model.Section == SubscriptionSection.Subscribers ? "active" : "")" asp-action="Membership"
+           asp-route-section="@SubscriptionSection.Subscribers">Members & Payments</a>
+        <a class="nav-link @(Model.Section == SubscriptionSection.Plans ? "active" : "")" asp-action="Membership" asp-route-section="@SubscriptionSection.Plans">Subscription
             Plans</a>
-        <a class="nav-link @(Model.Section == MembershipSection.Emails ? "active" : "")" asp-action="Membership" asp-route-section="@MembershipSection.Emails">Notifications
+        <a class="nav-link @(Model.Section == SubscriptionSection.Emails ? "active" : "")" asp-action="Membership" asp-route-section="@SubscriptionSection.Emails">Notifications
             & Alerts</a>
     </ul>
 
-    @if (Model.Section == MembershipSection.Plans)
+    @if (Model.Section == SubscriptionSection.Plans)
     {
         <div class="d-flex justify-content-between align-items-center">
             <h4>Subscription Plans</h4>
-            <a id="page-primary" permission="@Policies.CanModifyMembership" asp-route-storeId="@storeId" asp-action="AddMembershipPlan" class="btn btn-primary"
+            <a id="page-primary" permission="@Policies.CanModifyMembership" asp-route-storeId="@storeId" asp-route-offeringId="@offeringId" asp-action="AddPlan" class="btn btn-primary"
                role="button">
                 Add Plan
             </a>
@@ -110,7 +111,7 @@
                         <tr>
                             <td class="fw-semibold">@p.Data.Name</td>
                             <td>
-                                <vc:truncate-center text="@p.Data.Id" link="@Url.Action(nameof(UIStoreMembershipController.PlanCheckout), new{ planId = p.Data.Id })" classes="truncate-center-id" />
+                                <vc:truncate-center text="@p.Data.Id" link="@Url.Action(nameof(UIStoreSubscriptionsController.PlanCheckout), new{ planId = p.Data.Id })" classes="truncate-center-id" />
                             </td>
                             <td>@DisplayFormatter.Currency(@p.Data.Price, @p.Data.Currency, DisplayFormatter.CurrencyFormat.CodeAndSymbol)</td>
                             <td>@p.Data.RecurringType</td>
@@ -134,12 +135,12 @@
             </table>
         </div>
     }
-    else if (Model.Section == MembershipSection.Members)
+    else if (Model.Section == SubscriptionSection.Subscribers)
     {
         <div class="d-flex justify-content-between align-items-center">
-            <h4>Members</h4>
+            <h4>Subscribers</h4>
             <a id="page-primary" asp-route-storeId="@storeId" asp-action="AddCustomer" class="btn btn-primary" role="button">
-                Add Member
+                Add subscriber
             </a>
         </div>
 
@@ -156,18 +157,18 @@
                 </tr>
                 </thead>
                 <tbody>
-                @foreach(var member in Model.Members)
+                @foreach(var subscriber in Model.Subscribers)
                 {
                     <tr>
-                        <td class="fw-semibold">@member.Data.Customer.Email</td>
-                        <td>@member.Data.Plan.Name</td>
+                        <td class="fw-semibold">@subscriber.Data.Customer.Email</td>
+                        <td>@subscriber.Data.Plan.Name</td>
                         <td class="date-col">
-                        @if (member.Data.PeriodEnd is { } pe)
+                        @if (subscriber.Data.PeriodEnd is { } pe)
                         {
                             <span>@pe.ToBrowserDate()</span>
                         }
                         </td>
-                        <td><span class="status-active">@member.Data.Phase</span></td>
+                        <td><span class="status-active">@subscriber.Data.Phase</span></td>
                         <td>
                             <button class="btn btn-outline-success btn-sm action-btn">Edit</button>
                             <button class="btn btn-outline-danger btn-sm action-btn">Remove</button>

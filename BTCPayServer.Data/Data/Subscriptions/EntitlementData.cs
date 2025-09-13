@@ -13,10 +13,19 @@ public class EntitlementData
     [Required]
     [Column("name")]
     public string Name { get; set; } = null!;
+
+    /// <summary>
+    /// The internal ID of the entitlement, we only really use it in
+    /// SQL queries. This should not be exposed.
+    /// </summary>
     [Required]
     [Column("id")]
     [Key]
     public long Id { get; set; }
+
+    /// <summary>
+    /// The ID selected by the user, scoped at the offering level.
+    /// </summary>
     [Required]
     public string CustomId { get; set; } = null!;
     [Required]

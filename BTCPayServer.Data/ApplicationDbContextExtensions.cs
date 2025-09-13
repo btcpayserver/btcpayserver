@@ -3,6 +3,7 @@ using System;
 using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Data.Subscriptions;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -21,7 +22,7 @@ public static partial class ApplicationDbContextExtensions
     public static DbConnection GetDbConnection<T>(this DbSet<T> dbSet) where T : class
     => dbSet.GetDbContext().Database.GetDbConnection();
 
-    public static async Task<SubscriptionMemberData?> GetOrCreateMemberByCustomerId(this DbSet<SubscriptionMemberData> subs, string custId, string planId)
+    public static async Task<SubscriberData?> GetOrCreateByCustomerId(this DbSet<SubscriberData> subs, string custId, string planId)
     {
         var member = await subs.GetByCustomerId(custId);
         if (member != null)
@@ -34,18 +35,13 @@ public static partial class ApplicationDbContextExtensions
         return await subs.GetByCustomerId(custId, planId);
     }
 
-    private static Task<SubscriptionMemberData?> GetByCustomerId(this DbSet<SubscriptionMemberData> dbSet, string custId)
-        => dbSet.Include(p => p.Plan).Where(c => c.CustomerId == custId).FirstOrDefaultAsync();
-
-    private static Task<SubscriptionMemberData?> GetByCustomerId(this DbSet<SubscriptionMemberData> dbSet, string custId, string? planId = null)
+    private static Task<SubscriberData?> GetByCustomerId(this DbSet<SubscriberData> dbSet, string custId, string? planId = null)
         => planId switch
         {
             {} => dbSet.Include(p => p.Plan)
                         .Where(c => c.CustomerId == custId && c.PlanId == planId)
                         .FirstOrDefaultAsync(),
-            _ => dbSet.Include(p => p.Plan)
-                        .Where(c => c.CustomerId == custId)
-                        .FirstOrDefaultAsync(),
+            _ => dbSet.Include(p => p.Plan).Where(c => c.CustomerId == custId).FirstOrDefaultAsync()
         };
 
     public static async Task<CustomerData> GetOrUpdate(this DbSet<CustomerData> dbSet, string storeId, string email)

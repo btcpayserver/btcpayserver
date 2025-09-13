@@ -1,4 +1,5 @@
 ﻿using BTCPayServer.Data;
+using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Models;
 
 namespace BTCPayServer.Views.UIStoreMembership;
@@ -10,6 +11,6 @@ public class PlanCheckoutViewModel
     public string StoreName { get; set; }
     public string Email { get; set; }
     public string Id { get; set; }
-    public SubscriptionPlanData Data { get; set; }
+    public PlanData Data { get; set; }
     public bool IsPrefilled { get; set; }
 }

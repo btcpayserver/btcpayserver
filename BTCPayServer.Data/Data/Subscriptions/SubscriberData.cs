@@ -1,18 +1,28 @@
 ﻿#nullable enable
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
-namespace BTCPayServer.Data;
+namespace BTCPayServer.Data.Subscriptions;
 
-[Table("subscription_members")]
-public class SubscriptionMemberData : BaseEntityData
+[Table("subscriptions_subscribers")]
+public class SubscriberData : BaseEntityData
 {
-    [Required]
     [Key]
+    [Required]
+    [Column("id")]
+    public long Id { get; set; }
+
+    [Required]
+    [Column("offering_id")]
+    public string OfferingId { get; set; } = null!;
+    [ForeignKey(nameof(OfferingId))]
+    public OfferingData Offering { get; set; } = null!;
+
+    [Required]
     [Column("customer_id")]
     public string CustomerId { get; set; } = null!;
 
@@ -24,7 +34,7 @@ public class SubscriptionMemberData : BaseEntityData
     public string PlanId { get; set; } = null!;
 
     [ForeignKey(nameof(PlanId))]
-    public SubscriptionPlanData Plan { get; set; } = null!;
+    public PlanData Plan { get; set; } = null!;
 
     [Required]
     [Column("phase")]
@@ -49,15 +59,14 @@ public class SubscriptionMemberData : BaseEntityData
     [Column("force_disabled")]
     public bool ForceDisabled { get; set; } = false;
 
-
     public PhaseTypes CalculateExpectedPhase(DateTimeOffset now)
-    => this switch
-    {
-        { TrialEnd: { } te } when now < te => PhaseTypes.Trial,
-        { PeriodEnd: { } pe } when now < pe => PhaseTypes.Normal,
-        { GracePeriodEnd: { } gpe } when now < gpe => PhaseTypes.Grace,
-        _ => PhaseTypes.Expired
-    };
+        => this switch
+        {
+            { TrialEnd: { } te } when now < te => PhaseTypes.Trial,
+            { PeriodEnd: { } pe } when now < pe => PhaseTypes.Normal,
+            { GracePeriodEnd: { } gpe } when now < gpe => PhaseTypes.Grace,
+            _ => PhaseTypes.Expired
+        };
 
     public enum PhaseTypes
     {
@@ -69,14 +78,17 @@ public class SubscriptionMemberData : BaseEntityData
 
     public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
     {
-        var b = builder.Entity<SubscriptionMemberData>();
+        var b = builder.Entity<SubscriberData>();
         OnModelCreateBase(b, builder, databaseFacade);
+        b.Property(x => x.Id).UseIdentityAlwaysColumn();
         b.Property(x => x.Phase)
             .HasSentinel(PhaseTypes.Expired)
             .HasDefaultValueSql("'Expired'::TEXT").HasConversion<string>();
         b.Property(x => x.IsActive).HasDefaultValue(false);
         b.Property(x => x.ForceDisabled).HasDefaultValue(false);
-        b.HasIndex(c => new { c.CustomerId })
+        b.HasIndex(c => new { c.OfferingId, c.CustomerId })
             .IsUnique();
+        b.HasOne(x => x.Plan).WithMany(x => x.Subscriptions).HasForeignKey(x => x.PlanId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne(x => x.Offering).WithMany(x => x.Subscribers).HasForeignKey(x => x.OfferingId).OnDelete(DeleteBehavior.Cascade);
     }
 }

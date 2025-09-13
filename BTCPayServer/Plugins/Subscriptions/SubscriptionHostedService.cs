@@ -7,7 +7,9 @@ using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
+using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Events;
+using BTCPayServer.HostedServices;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Logging;
 using BTCPayServer.Services;
@@ -16,14 +18,14 @@ using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using static BTCPayServer.Data.SubscriptionMemberData;
+using static BTCPayServer.Data.Subscriptions.SubscriberData;
 
-namespace BTCPayServer.HostedServices;
+namespace BTCPayServer.Plugins.Subscriptions;
 
-public class MembershipHostedService(
+public class SubscriptionHostedService(
     EventAggregator eventAggregator,
     ApplicationDbContextFactory applicationDbContextFactory,
-    SettingsRepository SettingsRepository,
+    SettingsRepository settingsRepository,
     Logs logger) : EventHostedServiceBase(eventAggregator, logger), IPeriodicTask
 {
     record Poll;
@@ -48,16 +50,16 @@ public class MembershipHostedService(
                     Status: InvoiceStatus.Settled or InvoiceStatus.Invalid or InvoiceStatus.Processing
                 } settledInvoice
             } &&
-            UIStoreMembershipController.GetPlanIdFromInvoice(settledInvoice) is string planId)
+            UIStoreSubscriptionsController.GetPlanIdFromInvoice(settledInvoice) is string planId)
         {
             await ProcessSubscriptionPayment(settledInvoice, planId, cancellationToken);
         }
         else if (evt is Poll)
         {
-            var from = (await SettingsRepository.GetSettingAsync<MembershipServerSettings>("MembershipHostedService"))?.LastUpdate;
+            var from = (await settingsRepository.GetSettingAsync<MembershipServerSettings>("MembershipHostedService"))?.LastUpdate;
             var to = DateTimeOffset.UtcNow;
             await UpdateSubscriptionStates(new MemberSelector.PassedDate(from, to), cancellationToken);
-            await SettingsRepository.UpdateSetting(new MembershipServerSettings(to), "MembershipHostedService");
+            await settingsRepository.UpdateSetting(new MembershipServerSettings(to), "MembershipHostedService");
         }
     }
 
@@ -77,20 +79,20 @@ public class MembershipHostedService(
     {
         public record Single(string CustomerId) : MemberSelector
         {
-            public override IQueryable<SubscriptionMemberData> Where(IQueryable<SubscriptionMemberData> query)
+            public override IQueryable<SubscriberData> Where(IQueryable<SubscriberData> query)
                 => query.Where(m => m.CustomerId == CustomerId);
         }
 
         public record PassedDate(DateTimeOffset? From, DateTimeOffset To) : MemberSelector
         {
-            public override IQueryable<SubscriptionMemberData> Where(IQueryable<SubscriptionMemberData> query)
+            public override IQueryable<SubscriberData> Where(IQueryable<SubscriberData> query)
                 => From is null ?
                     query.Where(q => (q.PeriodEnd < To || q.GracePeriodEnd < To || q.TrialEnd < To)) :
                     query.Where(q => (q.PeriodEnd >= From && q.PeriodEnd < To) || (q.GracePeriodEnd >= From && q.GracePeriodEnd < To) || (q.TrialEnd >= From && q.TrialEnd < To));
 
         }
 
-        public abstract IQueryable<SubscriptionMemberData> Where(IQueryable<SubscriptionMemberData> query);
+        public abstract IQueryable<SubscriberData> Where(IQueryable<SubscriberData> query);
 
     }
 
@@ -98,7 +100,7 @@ public class MembershipHostedService(
     {
         List<SubscriptionEvent> events = new();
         await using var ctx = applicationDbContextFactory.CreateContext();
-        var query = ctx.Members.Include(m => m.Plan).Include(m => m.Customer);
+        var query = ctx.Subscribers.Include(m => m.Plan).Include(m => m.Customer);
         var members = await selector.Where(query).ToListAsync(cancellationToken);
         foreach (var m in members)
         {
@@ -151,19 +153,19 @@ public class MembershipHostedService(
         bool needUpdate = false;
         await using (var ctx = applicationDbContextFactory.CreateContext())
         {
-            var plan = await ctx.SubscriptionPlans.FindAsync([planId], cancellationToken);
+            var plan = await ctx.Plans.FindAsync([planId], cancellationToken);
             if (plan is null ||
                 (invoice.Status == InvoiceStatus.Processing && !plan.OptimisticActivation))
                 return;
 
             var cust = await ctx.Customers.GetOrUpdate(invoice.StoreId, invoice.Metadata.BuyerEmail);
             customerId = cust.Id;
-            var member = await ctx.Members.GetOrCreateMemberByCustomerId(cust.Id, planId);
-            if (member is null)
+            var sub = await ctx.Subscribers.GetOrCreateByCustomerId(cust.Id, planId);
+            if (sub is null)
                 return;
             if (invoice.Status is InvoiceStatus.Settled or InvoiceStatus.Processing)
             {
-                if (member.Plan.Renewable)
+                if (sub.Plan.Renewable)
                 {
                     if (invoice.Status == InvoiceStatus.Processing)
                     {
@@ -171,13 +173,13 @@ public class MembershipHostedService(
                         // in case the invoice fails to confirm later, we can use this to roll back the activation to the previous state.
                         await SaveRollbackData(new OptimisticActivationData()
                         {
-                            PeriodEnd = member.PeriodEnd,
-                            TrialEnd = member.TrialEnd,
-                            GracePeriodEnd = member.GracePeriodEnd
-                        }, ctx, member);
+                            PeriodEnd = sub.PeriodEnd,
+                            TrialEnd = sub.TrialEnd,
+                            GracePeriodEnd = sub.GracePeriodEnd
+                        }, ctx, sub);
                     }
 
-                    var p = member.Plan.GetNextPeriodEnd(member switch
+                    var p = sub.Plan.GetNextPeriodEnd(sub switch
                         {
                             { Phase: PhaseTypes.Trial, TrialEnd: {} te } => te,
                             { Phase: PhaseTypes.Grace, PeriodEnd: {} pe } => pe,
@@ -185,13 +187,13 @@ public class MembershipHostedService(
                             { Phase: PhaseTypes.Expired } => DateTimeOffset.UtcNow,
                             _ => DateTimeOffset.UtcNow
                         });
-                    member.PeriodEnd = p.PeriodEnd;
-                    member.TrialEnd = null;
-                    member.GracePeriodEnd = p.PeriodGraceEnd;
+                    sub.PeriodEnd = p.PeriodEnd;
+                    sub.TrialEnd = null;
+                    sub.GracePeriodEnd = p.PeriodGraceEnd;
 
                     if (invoice.Status == InvoiceStatus.Settled)
                     {
-                        await RemoveRollbackData(ctx, member);
+                        await RemoveRollbackData(ctx, sub);
                     }
 
                     needUpdate = true;
@@ -200,13 +202,13 @@ public class MembershipHostedService(
             }
             else if (invoice.Status == InvoiceStatus.Invalid)
             {
-                var rollbackData = OptimisticActivationData.GetAdditionalData(member);
+                var rollbackData = OptimisticActivationData.GetAdditionalData(sub);
                 if (rollbackData is null)
                     return;
-                member.PeriodEnd = rollbackData.PeriodEnd;
-                member.TrialEnd = rollbackData.TrialEnd;
-                member.GracePeriodEnd = rollbackData.GracePeriodEnd;
-                await RemoveRollbackData(ctx, member);
+                sub.PeriodEnd = rollbackData.PeriodEnd;
+                sub.TrialEnd = rollbackData.TrialEnd;
+                sub.GracePeriodEnd = rollbackData.GracePeriodEnd;
+                await RemoveRollbackData(ctx, sub);
                 needUpdate = true;
                 await ctx.SaveChangesAsync(cancellationToken);
             }
@@ -216,28 +218,28 @@ public class MembershipHostedService(
             await UpdateSubscriptionStates(new MemberSelector.Single(customerId), cancellationToken);
     }
 
-    private static async Task RemoveRollbackData(ApplicationDbContext ctx, SubscriptionMemberData member)
+    private static async Task RemoveRollbackData(ApplicationDbContext ctx, SubscriberData subscriber)
     {
         await ctx.Database.GetDbConnection()
             .ExecuteAsync("""
-                          UPDATE subscription_members
+                          UPDATE subscriptions_subs
                           SET additional_data = additional_data - @key
                           WHERE customer_id = @memberId
-                          """, new { key = OptimisticActivationData.Key, memberId = member.CustomerId });
+                          """, new { key = OptimisticActivationData.Key, memberId = subscriber.CustomerId });
     }
 
     private static async Task SaveRollbackData(OptimisticActivationData rollbackData, ApplicationDbContext ctx,
-        SubscriptionMemberData member)
+        SubscriberData subscriber)
     {
         var data = JsonConvert.SerializeObject(rollbackData, BaseEntityData.Settings);
         await ctx.Database.GetDbConnection()
             .ExecuteAsync("""
-                          UPDATE subscription_members
+                          UPDATE subscriptions_subs
                           SET additional_data = additional_data || jsonb_build_object(@key, @value::JSONB)
                           WHERE customer_id = @memberId
                           """, new {
                 key = OptimisticActivationData.Key,
                 value = data,
-                memberId = member.CustomerId });
+                memberId = subscriber.CustomerId });
     }
 }

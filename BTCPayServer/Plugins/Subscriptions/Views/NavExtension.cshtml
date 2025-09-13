@@ -1,0 +1,49 @@
+﻿@using BTCPayServer.Client
+@using BTCPayServer.Components.MainNav
+@using BTCPayServer.Plugins.PointOfSale
+@using BTCPayServer.Plugins.Subscriptions
+@using BTCPayServer.Services.Apps
+@using BTCPayServer.Views.Apps
+@using Microsoft.AspNetCore.Mvc.Razor
+@model BTCPayServer.Components.MainNav.MainNavViewModel
+
+@functions {
+    private string GetOffering(StoreApp app) => app.Data.GetSettings<SubscriptionsAppType.AppConfig>().OfferingId ?? "";
+}
+@{
+    var store = Context.GetStoreData();
+}
+
+@if (store != null)
+{
+    var appType = SubscriptionsAppType.AppType;
+    var apps = Model.Apps.Where(app => app.AppType == appType).ToList();
+    <li class="nav-item" permission="@Policies.CanModifyMembership">
+        <a asp-area="" asp-controller="UIStoreSubscriptions" asp-action="CreateOffering" asp-route-storeId="@store.Id" class="nav-link @ViewData.ActivePageClass(AppsNavPages.Create, appType)" id="@($"StoreNav-Create{appType}")">
+            <vc:icon symbol="nav-reporting" />
+            <span text-translate="true">Subscriptions</span>
+        </a>
+    </li>
+    @if (apps.Any())
+    {
+        <li class="nav-item" not-permission="@Policies.CanModifyMembership" permission="@Policies.CanViewStoreSettings">
+            <span class="nav-link">
+                <vc:icon symbol="nav-reporting" />
+                <span text-translate="true">Subscriptions</span>
+            </span>
+        </li>
+    }
+    @foreach (var app in apps)
+    {
+        <li class="nav-item nav-item-sub" permission="@Policies.CanViewMembership">
+            <a asp-area="" asp-controller="UIStoreSubscriptions" asp-action="Offering" asp-route-storeId="@Model.Store.Id" asp-route-offeringId="@GetOffering(app)" class="nav-link @ViewData.ActivePageClass(AppsNavPages.Update, app.Id)" id="@($"StoreNav-App-{app.Id}")">
+                <span>@app.AppName</span>
+            </a>
+        </li>
+        <li class="nav-item nav-item-sub" not-permission="@Policies.CanViewMembership">
+            <a asp-area="" asp-controller="UIStoreSubscriptions" asp-action="Offering" asp-route-storeId="@Model.Store.Id" asp-route-offeringId="@GetOffering(app)" class="nav-link">
+                <span>@app.AppName</span>
+            </a>
+        </li>
+    }
+}

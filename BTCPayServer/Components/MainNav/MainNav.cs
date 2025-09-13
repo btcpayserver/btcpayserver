@@ -104,7 +104,7 @@ namespace BTCPayServer.Components.MainNav
 						catch when (cts.IsCancellationRequested) { }
                     }
                 }
-                
+
                 vm.DerivationSchemes = derivationSchemes;
                 vm.LightningNodes = lightningNodes;
 
@@ -116,12 +116,13 @@ namespace BTCPayServer.Components.MainNav
                     {
                         Id = a.Id,
                         AppName = a.AppName,
-                        AppType = a.AppType
+                        AppType = a.AppType,
+                        Data = a.App
                     }).ToList();
 
                 vm.ArchivedAppsCount = apps.Count(a => a.Archived);
             }
-            
+
             var user = await _userManager.GetUserAsync(HttpContext.User);
             if (user != null)
             {

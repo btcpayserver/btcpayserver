@@ -22,26 +22,26 @@ public static partial class ApplicationDbContextExtensions
     public static DbConnection GetDbConnection<T>(this DbSet<T> dbSet) where T : class
     => dbSet.GetDbContext().Database.GetDbConnection();
 
-    public static async Task<SubscriberData?> GetOrCreateByCustomerId(this DbSet<SubscriberData> subs, string custId, string planId)
+    public static async Task<SubscriberData?> GetOrCreateByCustomerId(this DbSet<SubscriberData> subs, string custId, string offeringId, string planId)
     {
-        var member = await subs.GetByCustomerId(custId);
+        var member = await subs.GetByCustomerId(custId, offeringId);
         if (member != null)
             return member.PlanId == planId ? member : null;
         await subs.GetDbConnection().ExecuteScalarAsync<int>
         ("""
-         INSERT INTO subscription_members (customer_id, plan_id) VALUES (@custId, @planId)
+         INSERT INTO subscriptions_subscribers (customer_id, offering_id, plan_id) VALUES (@custId, @offeringId, @planId)
          ON CONFLICT DO NOTHING
-         """, new { custId, planId });
-        return await subs.GetByCustomerId(custId, planId);
+         """, new { custId, planId, offeringId });
+        return await subs.GetByCustomerId(custId, offeringId, planId);
     }
 
-    private static Task<SubscriberData?> GetByCustomerId(this DbSet<SubscriberData> dbSet, string custId, string? planId = null)
+    public static Task<SubscriberData?> GetByCustomerId(this DbSet<SubscriberData> dbSet, string custId, string offeringId, string? planId = null)
         => planId switch
         {
-            {} => dbSet.Include(p => p.Plan)
-                        .Where(c => c.CustomerId == custId && c.PlanId == planId)
+            not null => dbSet.Include(p => p.Plan)
+                        .Where(c => c.CustomerId == custId && c.OfferingId == offeringId && c.PlanId == planId)
                         .FirstOrDefaultAsync(),
-            _ => dbSet.Include(p => p.Plan).Where(c => c.CustomerId == custId).FirstOrDefaultAsync()
+            _ => dbSet.Include(p => p.Plan).Where(c => c.CustomerId == custId && c.OfferingId == offeringId).FirstOrDefaultAsync()
         };
 
     public static async Task<CustomerData> GetOrUpdate(this DbSet<CustomerData> dbSet, string storeId, string email)

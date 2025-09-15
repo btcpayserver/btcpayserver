@@ -7,9 +7,6 @@
 @using Microsoft.AspNetCore.Mvc.Razor
 @model BTCPayServer.Components.MainNav.MainNavViewModel
 
-@functions {
-    private string GetOffering(StoreApp app) => app.Data.GetSettings<SubscriptionsAppType.AppConfig>().OfferingId ?? "";
-}
 @{
     var store = Context.GetStoreData();
 }
@@ -35,13 +32,15 @@
     }
     @foreach (var app in apps)
     {
+        var offeringId = app.Data.GetSettings<SubscriptionsAppType.AppConfig>().OfferingId ?? "";
+
         <li class="nav-item nav-item-sub" permission="@Policies.CanViewMembership">
-            <a asp-area="" asp-controller="UIStoreSubscriptions" asp-action="Offering" asp-route-storeId="@Model.Store.Id" asp-route-offeringId="@GetOffering(app)" class="nav-link @ViewData.ActivePageClass(AppsNavPages.Update, app.Id)" id="@($"StoreNav-App-{app.Id}")">
+            <a asp-area="" asp-controller="UIStoreSubscriptions" asp-action="Offering" asp-route-storeId="@Model.Store.Id" asp-route-offeringId="@offeringId" class="nav-link @ViewData.ActivePageClass(AppsNavPages.Update, @offeringId)" id="@($"StoreNav-Offering-{offeringId}")">
                 <span>@app.AppName</span>
             </a>
         </li>
         <li class="nav-item nav-item-sub" not-permission="@Policies.CanViewMembership">
-            <a asp-area="" asp-controller="UIStoreSubscriptions" asp-action="Offering" asp-route-storeId="@Model.Store.Id" asp-route-offeringId="@GetOffering(app)" class="nav-link">
+            <a asp-area="" asp-controller="UIStoreSubscriptions" asp-action="Offering" asp-route-storeId="@Model.Store.Id" asp-route-offeringId="@offeringId" class="nav-link">
                 <span>@app.AppName</span>
             </a>
         </li>

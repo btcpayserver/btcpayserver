@@ -217,18 +217,27 @@
                                 id="emailInput"
                                 placeholder="Enter your email address"
                                 required
-                                disabled="@Model.IsPrefilled"
+                                readonly="@Model.IsPrefilled"
                             >
                             <div class="form-text">
                                 <i class="fas fa fa-info-circle me-1"></i>
                                 We'll send your receipt and account details here
                             </div>
                         </div>
-
-                        <button type="submit" class="btn btn-primary btn-checkout btn-lg" id="proceedBtn">
-                            <i class="fas fa fa-lock me-2"></i>
-                            Proceed to Secure Payment
-                        </button>
+                        @if (Model.IsTrial)
+                        {
+                            <button type="submit" name="command" value="start-trial" class="btn btn-primary btn-checkout btn-lg" id="proceedBtn">
+                                <i class="fas fa fa-lock me-2"></i>
+                                Proceed to free trial
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="submit" name="command" value="pay" class="btn btn-primary btn-checkout btn-lg" id="proceedBtn">
+                                <i class="fas fa fa-lock me-2"></i>
+                                Proceed to Secure Payment
+                            </button>
+                        }
                     </form>
                     <!-- Security Badges -->
                     <div class="security-badges">
@@ -258,9 +267,6 @@
         const email = emailInput.value;
         if (!email || !emailInput.checkValidity()) {
             e.preventDefault();
-        }
-        else {
-            proceedBtn.disabled = true;
         }
     });
 </script>

@@ -5,13 +5,15 @@ using BTCPayServer.Data.Subscriptions;
 
 namespace BTCPayServer.Views.UIStoreMembership
 {
-    public class AddEditMembershipPlanViewModel
+    public class AddEditPlanViewModel
     {
         public string OfferingId { get; set; }
         [Required]
         [Display(Name = "Plan Name")]
         [StringLength(100)]
         public string Name { get; set; } = string.Empty;
+
+        public string OfferingName { get; set; }
 
         [Required]
         [Display(Name = "Status")]
@@ -34,6 +36,12 @@ namespace BTCPayServer.Views.UIStoreMembership
         [Display(Name = "Grace Period (days)")]
         [Range(0, 3650)]
         public int GracePeriodDays { get; set; }
+
+
+        [Required]
+        [Display(Name = "Trial Period (days)")]
+        [Range(0, 3650)]
+        public int TrialDays { get; set; }
 
         [Display(Name = "Description")]
         [StringLength(1000)]

@@ -13,4 +13,5 @@ public class PlanCheckoutViewModel
     public string Id { get; set; }
     public PlanData Data { get; set; }
     public bool IsPrefilled { get; set; }
+    public bool IsTrial { get; set; }
 }

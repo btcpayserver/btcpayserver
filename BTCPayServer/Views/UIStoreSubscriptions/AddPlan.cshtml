@@ -1,8 +1,9 @@
-﻿@model AddEditMembershipPlanViewModel
+﻿@model AddEditPlanViewModel
 
 @{
-    ViewData.SetActivePage(StoreNavPages.Subscriptions, StringLocalizer["Add plan"]);
     string storeId = (string)this.Context.GetRouteValue("storeId");
+    string offeringId = (string)this.Context.GetRouteValue("offeringId");
+    ViewData.SetActivePage(AppsNavPages.Update, StringLocalizer["Add plan"], offeringId);
 }
 
 <form method="post">
@@ -14,7 +15,7 @@
                        asp-route-storeId="@storeId"
                        asp-route-offeringId="@Model.OfferingId"
                        asp-route-section="Plans"
-                       text-translate="true">Offering</a>
+                       >@StringLocalizer["Offering ({0})", Model.OfferingName]</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>
@@ -54,6 +55,14 @@
                 <span asp-validation-for="RecurringType" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="TrialDays" class="form-label"></label>
+                <div class="input-group">
+                    <input asp-for="TrialDays" class="form-control" min="0" placeholder="7" />
+                    <span class="input-group-text">days</span>
+                </div>
+                <span asp-validation-for="TrialDays" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <label asp-for="GracePeriodDays" class="form-label"></label>
                 <div class="input-group">
                     <input asp-for="GracePeriodDays" class="form-control" min="0" placeholder="15" />
@@ -87,6 +96,7 @@
                     @for (int i = 0; i < Model.Entitlements.Count; i++)
                     {
                         <div class="form-group">
+                            <input type="hidden" asp-for="Entitlements[i].CustomId" class="form-control" />
                             <label asp-for="Entitlements[i].Quantity" class="form-label" data-required>@Model.Entitlements[i].Name</label>
                             <input inputmode="decimal" asp-for="Entitlements[i].Quantity" class="form-control" />
                             <span asp-validation-for="Entitlements[i].Quantity" class="text-danger"></span>
@@ -102,11 +112,3 @@
     </div>
 </form>
 
-@section PageFootContent {
-    @if (Model.Anchor != null)
-    {
-        <script>
-            document.getElementById(@Safe.Json(Model.Anchor)).scrollIntoView();
-        </script>
-    }
-}

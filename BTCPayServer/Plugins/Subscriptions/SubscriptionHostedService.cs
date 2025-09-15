@@ -30,12 +30,16 @@ public class SubscriptionHostedService(
 {
     record Poll;
 
+    public record StartTrial(string StoreId, string PlanId, string Email);
     public Task Do(CancellationToken cancellationToken)
         => base.RunEvent(new Poll(), cancellationToken);
     protected override void SubscribeToEvents()
     {
         this.Subscribe<Events.InvoiceEvent>();
     }
+
+    public Task ExecuteStartTrial(StartTrial startTrial, CancellationToken cancellationToken)
+    => this.RunEvent(startTrial, cancellationToken);
 
     protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
     {
@@ -61,7 +65,13 @@ public class SubscriptionHostedService(
             await UpdateSubscriptionStates(new MemberSelector.PassedDate(from, to), cancellationToken);
             await settingsRepository.UpdateSetting(new MembershipServerSettings(to), "MembershipHostedService");
         }
+        else if (evt is StartTrial trial)
+        {
+            await ProcessStartTrial(trial, cancellationToken);
+        }
     }
+
+
 
     class MembershipServerSettings
     {
@@ -147,8 +157,34 @@ public class SubscriptionHostedService(
         public DateTimeOffset? GracePeriodEnd { get; set; }
     }
 
+    private async Task ProcessStartTrial(StartTrial trial, CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        string customerId;
+        await using (var ctx = applicationDbContextFactory.CreateContext())
+        {
+            var plan = await ctx.Plans.FindAsync([trial.PlanId], cancellationToken);
+            if (plan is null)
+                return;
+            var cust = await ctx.Customers.GetOrUpdate(trial.StoreId, trial.Email);
+            customerId = cust.Id;
+            var sub = await ctx.Subscribers.GetOrCreateByCustomerId(cust.Id, plan.OfferingId, trial.PlanId) ??
+                      await ctx.Subscribers.GetByCustomerId(cust.Id, plan.OfferingId); // it may be on a different plan
+            if (sub is null)
+                return;
+
+            sub.PlanId = trial.PlanId;
+            sub.GracePeriodEnd = null;
+            sub.PeriodEnd = null;
+            sub.TrialEnd = now.AddDays(plan.TrialDays);
+            await ctx.SaveChangesAsync(cancellationToken);
+        }
+        await UpdateSubscriptionStates(new MemberSelector.Single(customerId), cancellationToken);
+    }
+
     private async Task ProcessSubscriptionPayment(InvoiceEntity invoice, string planId, CancellationToken cancellationToken = default)
     {
+        var now = DateTimeOffset.UtcNow;
         string customerId;
         bool needUpdate = false;
         await using (var ctx = applicationDbContextFactory.CreateContext())
@@ -160,45 +196,42 @@ public class SubscriptionHostedService(
 
             var cust = await ctx.Customers.GetOrUpdate(invoice.StoreId, invoice.Metadata.BuyerEmail);
             customerId = cust.Id;
-            var sub = await ctx.Subscribers.GetOrCreateByCustomerId(cust.Id, planId);
+            var sub = await ctx.Subscribers.GetOrCreateByCustomerId(cust.Id, plan.OfferingId, planId);
             if (sub is null)
                 return;
             if (invoice.Status is InvoiceStatus.Settled or InvoiceStatus.Processing)
             {
-                if (sub.Plan.Renewable)
+                if (invoice.Status == InvoiceStatus.Processing)
                 {
-                    if (invoice.Status == InvoiceStatus.Processing)
+                    // We need to store the data ahead of the optimistic activation.
+                    // in case the invoice fails to confirm later, we can use this to roll back the activation to the previous state.
+                    await SaveRollbackData(new OptimisticActivationData()
                     {
-                        // We need to store the data ahead of the optimistic activation.
-                        // in case the invoice fails to confirm later, we can use this to roll back the activation to the previous state.
-                        await SaveRollbackData(new OptimisticActivationData()
-                        {
-                            PeriodEnd = sub.PeriodEnd,
-                            TrialEnd = sub.TrialEnd,
-                            GracePeriodEnd = sub.GracePeriodEnd
-                        }, ctx, sub);
-                    }
-
-                    var p = sub.Plan.GetNextPeriodEnd(sub switch
-                        {
-                            { Phase: PhaseTypes.Trial, TrialEnd: {} te } => te,
-                            { Phase: PhaseTypes.Grace, PeriodEnd: {} pe } => pe,
-                            { Phase: PhaseTypes.Normal, PeriodEnd: {} pe } => pe,
-                            { Phase: PhaseTypes.Expired } => DateTimeOffset.UtcNow,
-                            _ => DateTimeOffset.UtcNow
-                        });
-                    sub.PeriodEnd = p.PeriodEnd;
-                    sub.TrialEnd = null;
-                    sub.GracePeriodEnd = p.PeriodGraceEnd;
-
-                    if (invoice.Status == InvoiceStatus.Settled)
-                    {
-                        await RemoveRollbackData(ctx, sub);
-                    }
-
-                    needUpdate = true;
-                    await ctx.SaveChangesAsync(cancellationToken);
+                        PeriodEnd = sub.PeriodEnd,
+                        TrialEnd = sub.TrialEnd,
+                        GracePeriodEnd = sub.GracePeriodEnd
+                    }, ctx, sub);
                 }
+
+                var p = sub.Plan.GetNextPeriodEnd(sub switch
+                {
+                    { Phase: PhaseTypes.Trial, TrialEnd: {} te } => te,
+                    { Phase: PhaseTypes.Grace, PeriodEnd: {} pe } => pe,
+                    { Phase: PhaseTypes.Normal, PeriodEnd: {} pe } => pe,
+                    { Phase: PhaseTypes.Expired } => now,
+                    _ => now
+                });
+                sub.PeriodEnd = p.PeriodEnd;
+                sub.TrialEnd = null;
+                sub.GracePeriodEnd = p.PeriodGraceEnd;
+
+                if (invoice.Status == InvoiceStatus.Settled)
+                {
+                    await RemoveRollbackData(ctx, sub);
+                }
+
+                needUpdate = true;
+                await ctx.SaveChangesAsync(cancellationToken);
             }
             else if (invoice.Status == InvoiceStatus.Invalid)
             {
@@ -222,10 +255,10 @@ public class SubscriptionHostedService(
     {
         await ctx.Database.GetDbConnection()
             .ExecuteAsync("""
-                          UPDATE subscriptions_subs
+                          UPDATE subscriptions_subscribers
                           SET additional_data = additional_data - @key
-                          WHERE customer_id = @memberId
-                          """, new { key = OptimisticActivationData.Key, memberId = subscriber.CustomerId });
+                          WHERE id = @id
+                          """, new { key = OptimisticActivationData.Key, memberId = subscriber.Id });
     }
 
     private static async Task SaveRollbackData(OptimisticActivationData rollbackData, ApplicationDbContext ctx,
@@ -234,12 +267,12 @@ public class SubscriptionHostedService(
         var data = JsonConvert.SerializeObject(rollbackData, BaseEntityData.Settings);
         await ctx.Database.GetDbConnection()
             .ExecuteAsync("""
-                          UPDATE subscriptions_subs
+                          UPDATE subscriptions_subscribers
                           SET additional_data = additional_data || jsonb_build_object(@key, @value::JSONB)
-                          WHERE customer_id = @memberId
+                          WHERE id = @id
                           """, new {
                 key = OptimisticActivationData.Key,
                 value = data,
-                memberId = subscriber.CustomerId });
+                id = subscriber.Id });
     }
 }

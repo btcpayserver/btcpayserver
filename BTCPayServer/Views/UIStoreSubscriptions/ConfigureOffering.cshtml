@@ -1,12 +1,27 @@
-﻿@model ConfigureOfferingViewModel
+﻿
+@model ConfigureOfferingViewModel
 
 @{
-    ViewData.SetActivePage(StoreNavPages.Subscriptions, StringLocalizer["Configure offering"]);
+    string offeringId = (string)this.Context.GetRouteValue("offeringId");
+    ViewData.SetActivePage(AppsNavPages.Update, StringLocalizer["Configure offering"], offeringId);
+    string storeId = (string)this.Context.GetRouteValue("storeId");
 }
 
 <form method="post">
+    <input type="hidden" asp-for="OriginalName"/>
     <div class="sticky-header">
-        <h2>@ViewData["Title"]</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Offering"
+                       asp-route-storeId="@storeId"
+                       asp-route-offeringId="@offeringId"
+                       asp-route-section="Plans">@StringLocalizer["Offering ({0})", Model.Name]</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>@ViewData["Title"]</h2>
+        </nav>
         <input id="page-primary" type="submit" value="Save" class="btn btn-primary" />
     </div>
     <partial name="_StatusMessage" />
@@ -23,4 +38,54 @@
             </div>
         </div>
     </div>
+
+    <section id="entitlements" class="mt-4">
+        <h4 class="mb-4">Entitlements</h4>
+        <div id="EntitlementsContainer" class="list-group list-group-flush">
+            @for (var i = 0; i < (Model.Entitlements?.Count ?? 0); i++)
+            {
+                <div class="plan-item list-group-item d-block px-0 pt-0 pb-3 mb-3 p-3">
+                    <div class="row">
+
+
+                        <div class="col-xl-8 col-xxl-constrain">
+                            <div class="form-group">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <label asp-for="Entitlements[i].Name" class="form-label" data-required></label>
+                                    <button type="submit" name="removeIndex" value="@i" class="d-inline-block ms-2 btn text-danger btn-link p-0 mb-2">
+                                        <vc:icon symbol="cross" />
+                                        <span text-translate="true">Remove item</span>
+                                    </button>
+                                </div>
+                                <input asp-for="Entitlements[i].Name" class="form-control" />
+                                <span asp-validation-for="Entitlements[i].Name" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+
+                                <label asp-for="Entitlements[i].Id" class="form-label"></label>
+                                <input asp-for="Entitlements[i].Id" class="form-control" />
+                                <span asp-validation-for="Entitlements[i].Id" class="text-danger"></span>
+                                <div class="form-text" v-else text-translate="true">Leave blank to generate ID from entitlement's name.</div>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Entitlements[i].ShortDescription" class="form-label"></label>
+                                <input asp-for="Entitlements[i].ShortDescription" class="form-control" />
+                                <span asp-validation-for="Entitlements[i].ShortDescription" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <button type="submit" name="command" value="AddItem" class="btn btn-outline-secondary" id="AddPlanItem">Add item</button>
+    </section>
 </form>
+
+@section PageFootContent {
+    @if (Model.Anchor != null)
+    {
+        <script>
+            document.getElementById(@Safe.Json(Model.Anchor)).scrollIntoView();
+        </script>
+    }
+}

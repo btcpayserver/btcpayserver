@@ -47,7 +47,7 @@ namespace BTCPayServer.HostedServices
                             try
                             {
                                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, e.CancellationToken);
-                                await ProcessEvent(e, linkedCts.Token);
+                                await ProcessEvent(e.Event, linkedCts.Token);
                                 e.Tcs.TrySetResult();
                             }
                             catch when (e.CancellationToken.IsCancellationRequested)

@@ -1,14 +1,13 @@
 ﻿@using BTCPayServer.Client
 @using BTCPayServer.Controllers
 @using BTCPayServer.Services
-@using BTCPayServer.Abstractions
 @model SubscriptionsViewModel
 @inject DisplayFormatter DisplayFormatter
 
 @{
-    ViewData.SetActivePage(StoreNavPages.Subscriptions, StringLocalizer["Subscriptions"]);
     string storeId = (string)this.Context.GetRouteValue("storeId");
     string offeringId = (string)this.Context.GetRouteValue("offeringId");
+    ViewData.SetActivePage(AppsNavPages.Update, StringLocalizer["Subscriptions"], offeringId);
 }
 
 @section PageHeadContent {
@@ -24,65 +23,53 @@
 
 <div class="sticky-header">
     <h2>@ViewData["Title"]</h2>
+    <div>
+        <a class="btn btn-secondary" asp-action="ConfigureOffering" asp-route-storeId="@storeId" asp-route-offeringId="@offeringId" text-translate="true">Configure</a>
+    </div>
 </div>
 
 <partial name="_StatusMessage" />
 
 <div class="container-fluid px-4 py-4">
     <!-- Metrics Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <h6>Total Revenue</h6>
-                    <div class="balance d-flex align-items-baseline gap-1">
-                        <h4 class="d-inline-block me-1" data-balance="0" data-sensitive=""></h4>
-                        <span class="text-secondary fw-semibold currency">@Model.Currency</span>
-                    </div>
-                </div>
+    <div class="row">
+        <div class="col-md-2">
+            <div>
+                <h6>Total Plans</h6>
+                <h4>@Model.TotalPlans</h4>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <h6>Active Members</h6>
-                    <h4>0</h4>
-                </div>
+        <div class="col-md-2">
+            <div>
+                <h6>Total Subscribers</h6>
+                <h4>@Model.TotalSubscribers</h4>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <h6>Active Subscriptions</h6>
-                    <h4>0</h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <h6>Pending Payments</h6>
-                    <h4>2</h4>
-                </div>
-            </div>
-        </div>
+        <div class="col-md-8"></div>
     </div>
 
     <!-- Navigation Tabs -->
     <ul id="SectionNav" class="nav mb-4">
-        <a class="nav-link @(Model.Section == SubscriptionSection.Subscribers ? "active" : "")" asp-action="Membership"
+        <a class="nav-link @(Model.Section == SubscriptionSection.Subscribers ? "active" : "")" asp-action="Offering"
            asp-route-section="@SubscriptionSection.Subscribers">Members & Payments</a>
-        <a class="nav-link @(Model.Section == SubscriptionSection.Plans ? "active" : "")" asp-action="Membership" asp-route-section="@SubscriptionSection.Plans">Subscription
-            Plans</a>
-        <a class="nav-link @(Model.Section == SubscriptionSection.Emails ? "active" : "")" asp-action="Membership" asp-route-section="@SubscriptionSection.Emails">Notifications
-            & Alerts</a>
+        <a class="nav-link @(Model.Section == SubscriptionSection.Plans ? "active" : "")"
+           asp-action="Offering"
+           asp-route-storeId="@storeId"
+           asp-route-offeringId="@offeringId"
+           asp-route-section="@SubscriptionSection.Plans">Subscription Plans</a>
+        <a class="nav-link @(Model.Section == SubscriptionSection.Emails ? "active" : "")"
+           asp-action="Offering"
+           asp-route-storeId="@storeId"
+           asp-route-offeringId="@offeringId"
+           asp-route-section="@SubscriptionSection.Emails">Notifications & Alerts</a>
     </ul>
 
     @if (Model.Section == SubscriptionSection.Plans)
     {
         <div class="d-flex justify-content-between align-items-center">
             <h4>Subscription Plans</h4>
-            <a id="page-primary" permission="@Policies.CanModifyMembership" asp-route-storeId="@storeId" asp-route-offeringId="@offeringId" asp-action="AddPlan" class="btn btn-primary"
+            <a id="page-primary" permission="@Policies.CanModifyMembership" asp-route-storeId="@storeId" asp-route-offeringId="@offeringId" asp-action="AddPlan"
+               class="btn btn-primary"
                role="button">
                 Add Plan
             </a>
@@ -111,7 +98,9 @@
                         <tr>
                             <td class="fw-semibold">@p.Data.Name</td>
                             <td>
-                                <vc:truncate-center text="@p.Data.Id" link="@Url.Action(nameof(UIStoreSubscriptionsController.PlanCheckout), new{ planId = p.Data.Id })" classes="truncate-center-id" />
+                                <vc:truncate-center text="@p.Data.Id"
+                                                    link="@Url.Action(nameof(UIStoreSubscriptionsController.PlanCheckout), new { planId = p.Data.Id })"
+                                                    classes="truncate-center-id" />
                             </td>
                             <td>@DisplayFormatter.Currency(@p.Data.Price, @p.Data.Currency, DisplayFormatter.CurrencyFormat.CodeAndSymbol)</td>
                             <td>@p.Data.RecurringType</td>
@@ -152,26 +141,44 @@
                     <th text-translate="true">User</th>
                     <th text-translate="true">Plan</th>
                     <th text-translate="true">Next Due</th>
+                    <th text-translate="true">Phase</th>
                     <th text-translate="true">Status</th>
                     <th text-translate="true">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
-                @foreach(var subscriber in Model.Subscribers)
+                @foreach (var subscriber in Model.Subscribers)
                 {
                     <tr>
                         <td class="fw-semibold">@subscriber.Data.Customer.Email</td>
                         <td>@subscriber.Data.Plan.Name</td>
                         <td class="date-col">
-                        @if (subscriber.Data.PeriodEnd is { } pe)
-                        {
-                            <span>@pe.ToBrowserDate()</span>
-                        }
+                            @if (subscriber.Data.PeriodEnd is { } pe)
+                            {
+                                <span>@pe.ToBrowserDate()</span>
+                            }
                         </td>
-                        <td><span class="status-active">@subscriber.Data.Phase</span></td>
+                        <td><span>
+                            @{
+                                var (style, name) = subscriber.Data.Phase switch
+                                {
+                                    SubscriberData.PhaseTypes.Normal => ("success", StringLocalizer["Normal"]),
+                                    SubscriberData.PhaseTypes.Expired => ("danger", StringLocalizer["Expired"]),
+                                    SubscriberData.PhaseTypes.Grace => ("warning", StringLocalizer["Grace"]),
+                                    SubscriberData.PhaseTypes.Trial => ("warning", StringLocalizer["Trial"]),
+                                    _ => throw new NotSupportedException()
+                                };
+                            }
+                            <span class="badge badge-translucent rounded-pill text-bg-@style">@name</span>
+                        </span></td>
+                        <td><span class="status-active">
+                            @if (subscriber.Data.IsActive)
+                            {
+                                <span class="badge badge-translucent rounded-pill text-bg-success">Active</span>
+                            }
+                        </span></td>
                         <td>
-                            <button class="btn btn-outline-success btn-sm action-btn">Edit</button>
-                            <button class="btn btn-outline-danger btn-sm action-btn">Remove</button>
+                            
                         </td>
                     </tr>
                 }

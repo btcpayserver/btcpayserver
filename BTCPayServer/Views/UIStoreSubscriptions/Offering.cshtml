@@ -99,7 +99,7 @@
                             <td class="fw-semibold">@p.Data.Name</td>
                             <td>
                                 <vc:truncate-center text="@p.Data.Id"
-                                                    link="@Url.Action(nameof(UIStoreSubscriptionsController.PlanCheckout), new { planId = p.Data.Id })"
+                                                    link="@Url.Action(nameof(UIStoreSubscriptionsController.NewPlanCheckout), new { planId = p.Data.Id })"
                                                     classes="truncate-center-id" />
                             </td>
                             <td>@DisplayFormatter.Currency(@p.Data.Price, @p.Data.Currency, DisplayFormatter.CurrencyFormat.CodeAndSymbol)</td>
@@ -178,7 +178,7 @@
                             }
                         </span></td>
                         <td>
-                            
+
                         </td>
                     </tr>
                 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250915015002_sub3eoewq")]
+    partial class sub3eoewq
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1034,23 +1037,11 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("timestamptz")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("InvoiceId")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("invoice_id");
-
                     b.Property<string>("InvoiceMetadata")
-                        .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasColumnType("jsonb")
                         .HasColumnName("invoice_metadata")
                         .HasDefaultValueSql("'{}'::jsonb");
-
-                    b.Property<bool>("IsTrial")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false)
-                        .HasColumnName("is_trial");
 
                     b.Property<string>("Metadata")
                         .IsRequired()
@@ -1058,7 +1049,6 @@ namespace BTCPayServer.Migrations
                         .HasColumnName("metadata");
 
                     b.Property<string>("NewSubscriberMetadata")
-                        .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("new_subscriber_metadata");
 
@@ -1067,21 +1057,9 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("text")
                         .HasColumnName("plan_id");
 
-                    b.Property<long?>("SubscriberId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("subscriber_id");
-
-                    b.Property<string>("SuccessRedirectUrl")
-                        .HasColumnType("text")
-                        .HasColumnName("success_redirect_url");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("InvoiceId");
-
                     b.HasIndex("PlanId");
-
-                    b.HasIndex("SubscriberId");
 
                     b.ToTable("subscriptions_plan_checkouts");
                 });
@@ -1903,28 +1881,13 @@ namespace BTCPayServer.Migrations
 
             modelBuilder.Entity("BTCPayServer.Data.Subscriptions.PlanCheckoutData", b =>
                 {
-                    b.HasOne("BTCPayServer.Data.InvoiceData", "Invoice")
-                        .WithMany()
-                        .HasForeignKey("InvoiceId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired();
-
                     b.HasOne("BTCPayServer.Data.Subscriptions.PlanData", "Plan")
                         .WithMany()
                         .HasForeignKey("PlanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BTCPayServer.Data.Subscriptions.SubscriberData", "Subscriber")
-                        .WithMany()
-                        .HasForeignKey("SubscriberId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Invoice");
-
                     b.Navigation("Plan");
-
-                    b.Navigation("Subscriber");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.Subscriptions.PlanData", b =>

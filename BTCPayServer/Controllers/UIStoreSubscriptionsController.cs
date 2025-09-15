@@ -25,6 +25,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers;
 
@@ -34,25 +35,25 @@ public class UIStoreSubscriptionsController(
     ApplicationDbContextFactory dbContextFactory,
     IStringLocalizer StringLocalizer,
     UriResolver uriResolver,
-    UIInvoiceController invoiceController,
     CallbackGenerator callbackGenerator,
     EventAggregator eventAggregator,
     SubscriptionHostedService subsService,
     AppService appService
     ) : Controller
 {
-    [HttpGet("plan-checkout/{planId}")]
+    [HttpGet("plan-checkout/{checkoutId}")]
     [AllowAnonymous]
-    public async Task<IActionResult> PlanCheckout(string planId, string? prefilledEmail = null)
+    public async Task<IActionResult> PlanCheckout(string checkoutId)
     {
         await using var ctx = dbContextFactory.CreateContext();
-        var plan = await GetPlanFromId(planId, ctx);
-        if (plan is null)
+        var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
+        var plan = checkout?.Plan;
+        if (plan is null || checkout is null)
             return NotFound();
-
+        var prefilledEmail = GetInvoiceMetadata(checkout).BuyerEmail;
         var vm = new PlanCheckoutViewModel()
         {
-            Id = planId,
+            Id = plan.Id,
             StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, plan.Offering.App.StoreData.GetStoreBlob()),
             StoreName = plan.Offering.App.StoreData.StoreName,
             Title = plan.Name,
@@ -64,55 +65,77 @@ public class UIStoreSubscriptionsController(
         return View(vm);
     }
 
-    private static async Task<PlanData?> GetPlanFromId(string planId, ApplicationDbContext ctx)
+    private static InvoiceMetadata GetInvoiceMetadata(PlanCheckoutData checkout)
     {
-        var plan = await ctx.Plans
-            .Include(o => o.Offering).ThenInclude(o => o.App).ThenInclude(o => o.StoreData)
-            .Include(o => o.PlanEntitlements).ThenInclude(o => o.Entitlement)
-            .Where(p => p.Id == planId)
-            .FirstOrDefaultAsync();
-        return plan;
+        return InvoiceMetadata.FromJObject(JObject.Parse(checkout.InvoiceMetadata));
     }
 
-    [HttpPost("plan-checkout/{planId}")]
+    [HttpGet("plan-checkout/default-redirect")]
     [AllowAnonymous]
-    public async Task<IActionResult> PlanCheckout(string planId, PlanCheckoutViewModel vm, string? prefilledEmail = null, string? command = null, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> PlanCheckoutDefaultRedirect(string? checkoutId = null)
+    {
+        if (checkoutId is null)
+            return NotFound();
+        await using var ctx = dbContextFactory.CreateContext();
+        var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
+        if (checkout is null)
+            return NotFound();
+
+        return View(new PlanCheckoutDefaultRedirectViewModel(checkout));
+    }
+
+    [HttpPost("plan-checkout/{checkoutId}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> NewPlanCheckout(string checkoutId, PlanCheckoutViewModel vm, string? command = null, CancellationToken cancellationToken = default)
     {
         if (!vm.Email.IsValidEmail())
             ModelState.AddModelError(nameof(vm.Email), "Invalid email format");
         if (!ModelState.IsValid)
-            return await PlanCheckout(planId, prefilledEmail);
-        await using var ctx = dbContextFactory.CreateContext();
-        var plan = await GetPlanFromId(planId, ctx);
-        if (plan is null)
-            return NotFound();
-        if (command is "pay")
-        {
-            var metadata = new InvoiceMetadata()
-            {
-                BuyerEmail = vm.Email,
-            }.ToJObject();
-            metadata.Add("planId", plan.Id);
-            var request = await invoiceController.CreateInvoiceCoreRaw(new()
-                {
-                    Currency = plan.Currency,
-                    Amount = plan.Price,
-                    Metadata = metadata
-                }, plan.Offering.App.StoreData, Request.GetAbsoluteRoot(),
-                [GetPlanInvoiceTag(plan.Id)]);
+            return await NewPlanCheckout(checkoutId);
 
-            var link = callbackGenerator.InvoiceCheckoutLink(request.Id, Request);
-            return Redirect(link);
-        }
-        else // if (command is "start-trial")
+        await using var ctx = dbContextFactory.CreateContext();
+        var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
+        if (checkout is null)
+            return NotFound();
+
+        await subsService.ProceedToSubscribe(checkout.Id, Request.GetRequestBaseUrl(), vm.Email, cancellationToken);
+        checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId) ?? throw new InvalidOperationException("Checkout not found");
+        if (checkout.InvoiceId != null)
         {
-            await subsService.ExecuteStartTrial(new(plan.Offering.App.StoreDataId, plan.Id, vm.Email), cancellationToken);
+            return Redirect(callbackGenerator.InvoiceCheckoutLink(checkout.InvoiceId, Request));
+        }
+        else if (checkout.IsTrial && checkout.GetRedirectUrl() is string url)
+        {
+            return Redirect(url);
+        }
+        else
+        {
             return NotFound();
         }
     }
 
-    public static string GetPlanInvoiceTag(string planId) => $"SUBS#{planId}";
-    public static string? GetPlanIdFromInvoice(InvoiceEntity invoiceEntiy) => invoiceEntiy.GetInternalTags("SUBS#").FirstOrDefault();
+
+    [HttpGet("new-plan-checkout/{planId}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> NewPlanCheckout(string planId, string? prefilledEmail = null)
+    {
+        await using var ctx = dbContextFactory.CreateContext();
+        var plan = await ctx.Plans.GetPlanFromId(planId);
+        if (plan is null)
+            return NotFound();
+
+        var checkoutData = new PlanCheckoutData()
+        {
+            PlanId = planId
+        };
+
+        if (prefilledEmail != null)
+            checkoutData.InvoiceMetadata = new InvoiceMetadata() { BuyerEmail = prefilledEmail }.ToJObject().ToString();
+
+        ctx.PlanCheckouts.Add(checkoutData);
+        await ctx.SaveChangesAsync();
+        return RedirectToAction(nameof(PlanCheckout), new { checkoutId = checkoutData.Id });
+    }
 
     [HttpGet("stores/{storeId}/offerings")]
     public IActionResult CreateOffering(string storeId)
@@ -160,7 +183,7 @@ public class UIStoreSubscriptionsController(
     public async Task<IActionResult> Offering(string storeId, string offeringId, SubscriptionSection section = SubscriptionSection.Plans)
     {
         await using var ctx = dbContextFactory.CreateContext();
-        var offering = await GetOfferingData(ctx, storeId, offeringId);
+        var offering = await ctx.Offerings.GetOfferingData(offeringId, storeId);
         if (offering is null)
             return NotFound();
         var plans = await ctx.Plans
@@ -211,7 +234,7 @@ public class UIStoreSubscriptionsController(
     public async Task<IActionResult> ConfigureOffering(string storeId, string offeringId)
     {
         await using var ctx = dbContextFactory.CreateContext();
-        var offering = await GetOfferingData(ctx, storeId, offeringId);
+        var offering = await ctx.Offerings.GetOfferingData(offeringId, storeId);
         if (offering is null)
             return NotFound();
         return View(new ConfigureOfferingViewModel(offering));
@@ -247,10 +270,12 @@ public class UIStoreSubscriptionsController(
             return View(vm);
 
         await using var ctx = dbContextFactory.CreateContext();
-        var offering = await GetOfferingData(ctx, storeId, offeringId);
+        var offering = await ctx.Offerings.GetOfferingData(offeringId, storeId);
         if (offering is null)
             return NotFound();
 
+        offering.SuccessRedirectUrl = vm.SuccessRedirectUrl;
+        offering.App.Name = vm.Name;
         foreach (var entitlement in vm.Entitlements)
         {
             if (!string.IsNullOrWhiteSpace(entitlement.Name) && string.IsNullOrWhiteSpace(entitlement.Id))
@@ -284,7 +309,6 @@ public class UIStoreSubscriptionsController(
 
         ctx.Entitlements.RemoveRange(toRemove);
 
-        // Update or add entitlements
         foreach (var (id, vmEnt) in incomingById)
         {
             if (!existingById.TryGetValue(id, out var entity))
@@ -305,11 +329,13 @@ public class UIStoreSubscriptionsController(
     public async Task<IActionResult> AddPlan(string storeId, string offeringId)
     {
         await using var ctx = dbContextFactory.CreateContext();
-        var offering = await GetOfferingData(ctx, storeId, offeringId);
+        var offering = await ctx.Offerings.GetOfferingData(offeringId, storeId);
+        if (offering is null)
+            return NotFound();
         return View(new AddEditPlanViewModel()
         {
             OfferingId = offeringId,
-            OfferingName = offering?.App.Name ?? "",
+            OfferingName = offering.App.Name,
             Currency = this.HttpContext.GetStoreData().GetStoreBlob().DefaultCurrency,
             Entitlements = offering.Entitlements.Select(e => new AddEditPlanViewModel.Entitlement()
             {
@@ -327,7 +353,7 @@ public class UIStoreSubscriptionsController(
         if (!ModelState.IsValid)
             return await AddPlan(storeId, offeringId);
         await using var ctx = dbContextFactory.CreateContext();
-        var offering = await GetOfferingData(ctx, storeId, offeringId);
+        var offering = await ctx.Offerings.GetOfferingData(offeringId, storeId);
         // Check if the offering is part of the store
         if (offering is null)
             return NotFound();
@@ -364,17 +390,6 @@ public class UIStoreSubscriptionsController(
         await ctx.SaveChangesAsync();
         this.TempData.SetStatusSuccess(StringLocalizer["New plan created"]);
         return RedirectToAction(nameof(Offering), new { storeId = plan.Offering.App.StoreDataId, offeringId = plan.OfferingId });
-    }
-
-    private static async Task<OfferingData?> GetOfferingData(ApplicationDbContext ctx, string storeId, string offeringId)
-    {
-        var offering = await ctx.Offerings
-            .Include(o => o.Entitlements)
-            .Include(o => o.App)
-            .ThenInclude(o => o.StoreData)
-            .Where(o => o.App.StoreDataId == storeId && o.Id == offeringId)
-            .FirstOrDefaultAsync();
-        return offering;
     }
     private static string GenerateEntitlementId(ConfigureOfferingViewModel.EntitlementViewModel o) => Regex.Replace(o.Name.ToLowerInvariant().Trim(), @"\s", "-");
 }

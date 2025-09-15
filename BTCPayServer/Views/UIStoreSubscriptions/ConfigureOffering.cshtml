@@ -36,6 +36,11 @@
                 <input asp-for="Name" class="form-control" required />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
+            <div class="form-group">
+                <label asp-for="SuccessRedirectUrl" class="form-label"></label>
+                <input asp-for="SuccessRedirectUrl" class="form-control" placeholder="https://example.com/success" />
+                <span asp-validation-for="SuccessRedirectUrl" class="text-danger"></span>
+            </div>
         </div>
     </div>
 

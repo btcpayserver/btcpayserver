@@ -19,8 +19,45 @@ public static partial class ApplicationDbContextExtensions
         var currentDbContext = (ICurrentDbContext)serviceProvider.GetService(typeof(ICurrentDbContext))!;
         return currentDbContext.Context;
     }
+
     public static DbConnection GetDbConnection<T>(this DbSet<T> dbSet) where T : class
-    => dbSet.GetDbContext().Database.GetDbConnection();
+        => dbSet.GetDbContext().Database.GetDbConnection();
+
+    public static async Task<PlanData?> GetPlanFromId(this DbSet<PlanData> plans, string planId)
+    {
+        var plan = await plans
+            .Include(o => o.Offering).ThenInclude(o => o.App).ThenInclude(o => o.StoreData)
+            .Include(o => o.PlanEntitlements).ThenInclude(o => o.Entitlement)
+            .Where(p => p.Id == planId)
+            .FirstOrDefaultAsync();
+        return plan;
+    }
+
+    public static async Task<OfferingData?> GetOfferingData(this DbSet<OfferingData> offerings, string offeringId, string? storeId = null)
+    {
+        var offering = offerings
+            .Include(o => o.Entitlements)
+            .Include(o => o.App)
+            .ThenInclude(o => o.StoreData);
+
+        if (storeId != null)
+            return await offering
+                .Where(o => o.Id == offeringId && o.App.StoreDataId == storeId)
+                .FirstOrDefaultAsync();
+        else
+            return await offering
+                .Where(o => o.Id == offeringId)
+                .FirstOrDefaultAsync();
+    }
+
+    public static async Task<PlanCheckoutData?> GetCheckout(this DbSet<PlanCheckoutData> checkouts, string checkoutId)
+    {
+        return await checkouts
+            .Include(x => x.Plan).ThenInclude(x => x.Offering).ThenInclude(x => x.App).ThenInclude(x => x.StoreData)
+            .Include(x => x.Subscriber).ThenInclude(x => x!.Customer)
+            .Where(c => c.Id == checkoutId)
+            .FirstOrDefaultAsync();
+    }
 
     public static async Task<SubscriberData?> GetOrCreateByCustomerId(this DbSet<SubscriberData> subs, string custId, string offeringId, string planId)
     {
@@ -39,8 +76,8 @@ public static partial class ApplicationDbContextExtensions
         => planId switch
         {
             not null => dbSet.Include(p => p.Plan)
-                        .Where(c => c.CustomerId == custId && c.OfferingId == offeringId && c.PlanId == planId)
-                        .FirstOrDefaultAsync(),
+                .Where(c => c.CustomerId == custId && c.OfferingId == offeringId && c.PlanId == planId)
+                .FirstOrDefaultAsync(),
             _ => dbSet.Include(p => p.Plan).Where(c => c.CustomerId == custId && c.OfferingId == offeringId).FirstOrDefaultAsync()
         };
 
@@ -60,7 +97,8 @@ public static partial class ApplicationDbContextExtensions
     }
 
     private static Task<CustomerData?> GetById(DbSet<CustomerData> dbSet, string storeId, string custId)
-    => dbSet.Where(c => c.StoreId == storeId && c.Id == custId).FirstOrDefaultAsync();
+        => dbSet.Where(c => c.StoreId == storeId && c.Id == custId).FirstOrDefaultAsync();
+
     private static Task<CustomerData?> GetByEmail(DbSet<CustomerData> dbSet, string storeId, string email)
         => dbSet.Where(c => c.StoreId == storeId && c.Email == email).FirstOrDefaultAsync();
 }

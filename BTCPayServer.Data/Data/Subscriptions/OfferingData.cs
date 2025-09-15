@@ -26,6 +26,9 @@ public class OfferingData : BaseEntityData
     public List<PlanData> Plans { get; set; } = null!;
     public List<SubscriberData> Subscribers { get; set; } = null!;
 
+    [Column("success_redirect_url")]
+    public string? SuccessRedirectUrl { get; set; }
+
     public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
     {
         var b = builder.Entity<OfferingData>();

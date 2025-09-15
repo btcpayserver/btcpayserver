@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Data.Subscriptions;
+using BTCPayServer.Validation;
 
 namespace BTCPayServer.Views.UIStoreMembership;
 
@@ -15,6 +16,7 @@ public class ConfigureOfferingViewModel
     {
         Name = offeringData.App.Name;
         OriginalName = Name;
+        SuccessRedirectUrl = offeringData.SuccessRedirectUrl;
         foreach (var entitlement in offeringData.Entitlements)
         {
             Entitlements.Add(new EntitlementViewModel()
@@ -41,6 +43,10 @@ public class ConfigureOfferingViewModel
     [StringLength(50)]
     public string Name { get; set; } = null!;
 
+    [Uri]
+    [StringLength(500)]
+    [Display(Name = "Success redirect url")]
+    public string SuccessRedirectUrl { get; set; }
 
     public List<EntitlementViewModel> Entitlements { get; set; } = new();
     public string Anchor { get; set; }

@@ -34,7 +34,7 @@ public class SubscriptionHostedService(
 {
     record Poll;
 
-    public record SubscribeRequest(string CheckoutId, RequestBaseUrl RequestBaseUrl, string Email);
+    public record SubscribeRequest(string CheckoutId, RequestBaseUrl RequestBaseUrl, CustomerSelector CustomerSelector);
 
     public Task Do(CancellationToken cancellationToken)
         => base.RunEvent(new Poll(), cancellationToken);
@@ -95,7 +95,7 @@ public class SubscriptionHostedService(
             }
 
             if (checkout.IsTrial)
-                await ProcessStartTrial(ctx, checkout, CustomerSelector.ByEmail(subscribeRequest.Email), cancellationToken);
+                await ProcessStartTrial(ctx, checkout, subscribeRequest.CustomerSelector, cancellationToken);
             else
                 await CreateInvoiceForCheckout(ctx, checkout, subscribeRequest, cancellationToken);
         }
@@ -109,7 +109,11 @@ public class SubscriptionHostedService(
         var invoiceMetadata = JObject.Parse(checkout.InvoiceMetadata);
         invoiceMetadata["checkoutId"] = checkout.Id;
         invoiceMetadata["planId"] = checkout.PlanId;
-        invoiceMetadata["buyerEmail"] = subscribeRequest.Email;
+
+        var mergedInvoiceMetadata = JObject.Parse(checkout.InvoiceMetadata);
+        mergedInvoiceMetadata.Merge(invoiceMetadata);
+        invoiceMetadata = mergedInvoiceMetadata;
+
         var plan = checkout.Plan;
         var request = await invoiceController.CreateInvoiceCoreRaw(new()
             {
@@ -118,7 +122,7 @@ public class SubscriptionHostedService(
                 Checkout = new()
                 {
                     RedirectAutomatically = true,
-                    RedirectURL = checkout.SuccessRedirectUrl
+                    RedirectURL = checkout.GetRedirectUrl()
                 },
                 Metadata = invoiceMetadata
             }, plan.Offering.App.StoreData, subscribeRequest.RequestBaseUrl.ToString(),
@@ -217,9 +221,9 @@ public class SubscriptionHostedService(
         public DateTimeOffset? GracePeriodEnd { get; set; }
     }
 
-    public async Task ProceedToSubscribe(string checkoutId, RequestBaseUrl requestBaseUrl, string email, CancellationToken cancellationToken)
+    public async Task ProceedToSubscribe(string checkoutId, RequestBaseUrl requestBaseUrl, CustomerSelector selector, CancellationToken cancellationToken)
     {
-        await RunEvent(new SubscribeRequest(checkoutId, requestBaseUrl, email), cancellationToken);
+        await RunEvent(new SubscribeRequest(checkoutId, requestBaseUrl, selector), cancellationToken);
     }
 
     private async Task ProcessStartTrial(ApplicationDbContext ctx, PlanCheckoutData checkout, CustomerSelector customerSelector, CancellationToken cancellationToken)
@@ -229,7 +233,8 @@ public class SubscriptionHostedService(
         var sub = await GetOrCreateSubscriberAndCustomer(ctx, checkout, customerSelector, cancellationToken);
         if (sub is null)
             return;
-
+        if (sub.TrialEnd is not null)
+            return;
         sub.PlanId = checkout.PlanId;
         sub.GracePeriodEnd = null;
         sub.PeriodEnd = null;
@@ -252,12 +257,23 @@ public class SubscriptionHostedService(
             checkout.Plan.Offering.App.StoreDataId != invoice.StoreId)
             return;
 
-        var sub = await GetOrCreateSubscriberAndCustomer(ctx, checkout, CustomerSelector.ByEmail(invoice.Metadata.BuyerEmail), cancellationToken);
-        if (sub is null)
-            return;
+        // If subscrberId isn't set, then it should be a new subscriber.
+        if (checkout.Subscriber is null && !checkout.NewSubscriber)
+            throw new InvalidOperationException("Bug: Subscriber is null and not a new subscriber");
+
+        var sub = checkout.Subscriber;
 
         if (invoice.Status is InvoiceStatus.Settled or InvoiceStatus.Processing)
         {
+            // We only create a new subscriber lazily when a payment has been received
+            if (sub is null)
+            {
+                var cust = await ctx.Customers.GetOrUpdate(checkout.Plan.Offering.App.StoreDataId, CustomerSelector.ByEmail(invoice.Metadata.BuyerEmail));
+                (sub, var created) = await ctx.Subscribers.GetOrCreateByCustomerId(cust.Id, plan.OfferingId, plan.Id, JObject.Parse(checkout.NewSubscriberMetadata));
+                if (!created || sub is null)
+                    return;
+            }
+
             if (invoice.Status == InvoiceStatus.Processing)
             {
                 // We need to store the data ahead of the optimistic activation.
@@ -318,7 +334,7 @@ public class SubscriptionHostedService(
         {
             var plan = checkout.Plan;
             var cust = await ctx.Customers.GetOrUpdate(checkout.Plan.Offering.App.StoreDataId, customerSelector);
-            sub = await ctx.Subscribers.GetOrCreateByCustomerId(cust.Id, plan.OfferingId, plan.Id);
+            (sub, _) = await ctx.Subscribers.GetOrCreateByCustomerId(cust.Id, plan.OfferingId, plan.Id, JObject.Parse(checkout.NewSubscriberMetadata));
             if (sub is not null)
             {
                 checkout.SubscriberId = sub.Id;

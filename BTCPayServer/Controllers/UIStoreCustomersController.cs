@@ -28,7 +28,7 @@ public class UIStoreCustomersController(
 
         var users = ctx.Customers.Where(c => c.StoreId == storeId);
         if (!string.IsNullOrEmpty(searchTerm))
-            users = users.Where(u => (u.Contacts.Any(c => c.Value == searchTerm)) ||
+            users = users.Where(u => (u.CustomerIdentities.Any(c => c.Value == searchTerm)) ||
                                       u.Name.Contains(searchTerm) ||
                                       (u.ExternalRef != null && u.ExternalRef.Contains(searchTerm)));
         vm.Data = await users.ToListAsync();

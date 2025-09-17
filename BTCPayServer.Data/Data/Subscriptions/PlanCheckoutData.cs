@@ -34,6 +34,12 @@ public class PlanCheckoutData : BaseEntityData
     [ForeignKey(nameof(PlanId))]
     public PlanData Plan { get; set; } = null!;
 
+    [Column("new_subscriber")]
+    public bool NewSubscriber { get; set; }
+
+    /// <summary>
+    /// Internal ID of the subscriber, do not expose outside, only use for querying.
+    /// </summary>
     [Column("subscriber_id")]
     public long? SubscriberId { get; set; }
 
@@ -50,13 +56,12 @@ public class PlanCheckoutData : BaseEntityData
     {
         if (SuccessRedirectUrl is null)
             return null;
-        // Add ?checkoutId=...&planId=... to the redirect URL
+        // Add ?checkoutId=... to the redirect URL
         try
         {
             var uriBuilder = new UriBuilder(SuccessRedirectUrl);
             var query = HttpUtility.ParseQueryString(uriBuilder.Query);
             query["checkoutId"] = Id;
-            query["planId"] = PlanId;
             uriBuilder.Query = query.ToString();
             return uriBuilder.ToString();
         }

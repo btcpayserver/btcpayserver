@@ -39,7 +39,7 @@ public class UIStoreSubscriptionsController(
     EventAggregator eventAggregator,
     SubscriptionHostedService subsService,
     AppService appService
-    ) : Controller
+) : Controller
 {
     [HttpGet("plan-checkout/{checkoutId}")]
     [AllowAnonymous]
@@ -90,23 +90,68 @@ public class UIStoreSubscriptionsController(
 
     [HttpPost("plan-checkout/{checkoutId}")]
     [AllowAnonymous]
-    public async Task<IActionResult> NewPlanCheckout(string checkoutId, PlanCheckoutViewModel vm, string? command = null, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> PlanCheckout(string checkoutId, PlanCheckoutViewModel vm, string? command = null,
+        CancellationToken cancellationToken = default)
     {
-        if (!vm.Email.IsValidEmail())
-            ModelState.AddModelError(nameof(vm.Email), "Invalid email format");
-        if (!ModelState.IsValid)
-            return await NewPlanCheckout(checkoutId);
-
         await using var ctx = dbContextFactory.CreateContext();
         var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
         if (checkout is null)
             return NotFound();
+        var checkoutInvoice = checkout.InvoiceId is null ? null : await ctx.Invoices.FindAsync([checkout.InvoiceId], cancellationToken);
+        if (checkoutInvoice is not null)
+        {
+            var status = checkoutInvoice.GetInvoiceState().Status;
 
-        await subsService.ProceedToSubscribe(checkout.Id, Request.GetRequestBaseUrl(), vm.Email, cancellationToken);
+            if (status is InvoiceStatus.Settled && checkout.GetRedirectUrl() is string url)
+                return Redirect(url);
+            if (status is not (InvoiceStatus.Expired or InvoiceStatus.Invalid))
+                return RedirectToInvoiceCheckout(checkoutInvoice.Id);
+        }
+
+        var invoiceMetadata = GetInvoiceMetadata(checkout);
+        if (invoiceMetadata.BuyerEmail is not null)
+            vm.Email = invoiceMetadata.BuyerEmail;
+        var customerSelector = CustomerSelector.ByEmail(vm.Email);
+        if (!vm.Email.IsValidEmail())
+            ModelState.AddModelError(nameof(vm.Email), "Invalid email format");
+        if (!ModelState.IsValid)
+            return await PlanCheckout(checkoutId);
+        if (checkout.NewSubscriber)
+        {
+            var sub = await ctx.Subscribers.GetBySelector(checkout.Plan.OfferingId, customerSelector);
+            if (sub is not null)
+            {
+                ModelState.AddModelError(nameof(vm.Email), "This email already has a subscription to this offering");
+                return await PlanCheckout(checkoutId);
+            }
+        }
+
+        if (invoiceMetadata.BuyerEmail is null)
+        {
+            invoiceMetadata.BuyerEmail = vm.Email;
+            checkout.InvoiceMetadata = invoiceMetadata.ToJObject().ToString();
+            await ctx.SaveChangesAsync(cancellationToken);
+        }
+
+        try
+        {
+            await subsService.ProceedToSubscribe(checkout.Id, Request.GetRequestBaseUrl(), customerSelector, cancellationToken);
+        }
+        catch (BitpayHttpException ex)
+        {
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Html = ex.Message.Replace("\n", "<br />", StringComparison.OrdinalIgnoreCase),
+                Severity = StatusMessageModel.StatusSeverity.Error,
+                AllowDismiss = true
+            });
+            return await PlanCheckout(checkoutId);
+        }
+
         await ctx.Entry(checkout).ReloadAsync(cancellationToken);
         if (checkout.InvoiceId != null)
         {
-            return Redirect(callbackGenerator.InvoiceCheckoutLink(checkout.InvoiceId, Request));
+            return RedirectToInvoiceCheckout(checkout.InvoiceId);
         }
         else if (checkout.IsTrial && checkout.GetRedirectUrl() is string url)
         {
@@ -117,6 +162,8 @@ public class UIStoreSubscriptionsController(
             return NotFound();
         }
     }
+
+    private RedirectResult RedirectToInvoiceCheckout(string invoiceId) => Redirect(callbackGenerator.InvoiceCheckoutLink(invoiceId, Request));
 
 
     [HttpGet("new-plan-checkout/{planId}")]
@@ -131,7 +178,8 @@ public class UIStoreSubscriptionsController(
         var checkoutData = new PlanCheckoutData()
         {
             PlanId = planId,
-            IsTrial = plan.TrialDays > 0
+            IsTrial = plan.TrialDays > 0,
+            NewSubscriber = true
         };
 
         if (prefilledEmail != null)
@@ -178,10 +226,11 @@ public class UIStoreSubscriptionsController(
         eventAggregator.Publish(new AppEvent.Created(app));
         this.TempData.SetStatusMessageModel(new()
         {
-            Html = StringLocalizer["New offering created. You can now <a href='{0}' class='alert-link'>configure it.</a>", Url.Action(nameof(ConfigureOffering), new { storeId, offeringId = o.Id })!],
+            Html = StringLocalizer["New offering created. You can now <a href='{0}' class='alert-link'>configure it.</a>",
+                Url.Action(nameof(ConfigureOffering), new { storeId, offeringId = o.Id })!],
             Severity = StatusMessageModel.StatusSeverity.Success
         });
-        return RedirectToAction(nameof(Offering), new{ storeId, offeringId = o.Id });
+        return RedirectToAction(nameof(Offering), new { storeId, offeringId = o.Id });
     }
 
     [HttpGet("stores/{storeId}/offerings/{offeringId}/{section=Plans}")]
@@ -221,7 +270,7 @@ public class UIStoreSubscriptionsController(
         {
             var members = ctx.Subscribers
                 .Include(m => m.Plan)
-                .Include(m => m.Customer).ThenInclude(c => c.Contacts)
+                .Include(m => m.Customer).ThenInclude(c => c.CustomerIdentities)
                 .Where(m => m.OfferingId == offeringId)
                 .ToList();
             vm.Subscribers = members
@@ -265,6 +314,7 @@ public class UIStoreSubscriptionsController(
             vm.Entitlements.RemoveAt(i);
             itemsUpdated = true;
         }
+
         if (itemsUpdated)
         {
             this.ModelState.Clear();
@@ -288,6 +338,7 @@ public class UIStoreSubscriptionsController(
                 entitlement.Id = GenerateEntitlementId(entitlement);
             }
         }
+
         UpdateEntitlements(ctx, offering, vm);
 
         await ctx.SaveChangesAsync();
@@ -298,7 +349,7 @@ public class UIStoreSubscriptionsController(
     private static void UpdateEntitlements(ApplicationDbContext ctx, OfferingData offering, ConfigureOfferingViewModel vm)
     {
         var incomingById = vm.Entitlements
-            .GroupBy(e => e.Id)                           // guard against dupes
+            .GroupBy(e => e.Id) // guard against dupes
             .ToDictionary(g => g.Key, g => g.First());
 
         var existingById = offering.Entitlements
@@ -351,6 +402,7 @@ public class UIStoreSubscriptionsController(
             }).ToList()
         });
     }
+
     [HttpPost("stores/{storeId}/offerings/{offeringId}/add-plan")]
     [Authorize(Policy = Policies.CanModifyMembership, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> AddPlan(string storeId, string offeringId, AddEditPlanViewModel vm, string? command = null, int? removeIndex = null)
@@ -391,10 +443,13 @@ public class UIStoreSubscriptionsController(
             ctx.PlanEntitlements.Add(pe);
             plan.PlanEntitlements.Add(pe);
         }
+
         ctx.Plans.Add(plan);
         await ctx.SaveChangesAsync();
         this.TempData.SetStatusSuccess(StringLocalizer["New plan created"]);
         return RedirectToAction(nameof(Offering), new { storeId = plan.Offering.App.StoreDataId, offeringId = plan.OfferingId });
     }
-    private static string GenerateEntitlementId(ConfigureOfferingViewModel.EntitlementViewModel o) => Regex.Replace(o.Name.ToLowerInvariant().Trim(), @"\s", "-");
+
+    private static string GenerateEntitlementId(ConfigureOfferingViewModel.EntitlementViewModel o) =>
+        Regex.Replace(o.Name.ToLowerInvariant().Trim(), @"\s", "-");
 }

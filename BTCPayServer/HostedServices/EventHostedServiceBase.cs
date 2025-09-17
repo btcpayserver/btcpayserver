@@ -57,7 +57,6 @@ namespace BTCPayServer.HostedServices
                             catch (Exception ex)
                             {
                                 e.Tcs.TrySetException(ex);
-                                throw;
                             }
                         }
                         else

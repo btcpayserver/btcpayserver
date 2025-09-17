@@ -1,6 +1,4 @@
 ﻿using System;
-using BTCPayServer.Data;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -8,8 +6,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace BTCPayServer.Migrations
 {
-    [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250915101951_subs")]
+    /// <inheritdoc />
     public partial class subs : Migration
     {
         /// <inheritdoc />
@@ -22,7 +19,6 @@ namespace BTCPayServer.Migrations
                     id = table.Column<string>(type: "text", nullable: false),
                     store_id = table.Column<string>(type: "text", nullable: false),
                     external_ref = table.Column<string>(type: "text", nullable: true),
-                    email = table.Column<string>(type: "text", nullable: true),
                     name = table.Column<string>(type: "TEXT", nullable: false, defaultValueSql: "''::TEXT"),
                     metadata = table.Column<string>(type: "jsonb", nullable: false, defaultValueSql: "'{}'::jsonb"),
                     additional_data = table.Column<string>(type: "jsonb", nullable: false, defaultValueSql: "'{}'::jsonb"),
@@ -58,6 +54,25 @@ namespace BTCPayServer.Migrations
                         column: x => x.app_id,
                         principalTable: "Apps",
                         principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "customers_identities",
+                columns: table => new
+                {
+                    customer_id = table.Column<string>(type: "text", nullable: false),
+                    type = table.Column<string>(type: "text", nullable: false),
+                    value = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_customers_identities", x => new { x.customer_id, x.type });
+                    table.ForeignKey(
+                        name: "FK_customers_identities_customers_customer_id",
+                        column: x => x.customer_id,
+                        principalTable: "customers",
+                        principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -188,10 +203,11 @@ namespace BTCPayServer.Migrations
                 columns: table => new
                 {
                     id = table.Column<string>(type: "text", nullable: false),
-                    invoice_id = table.Column<string>(type: "text", nullable: false),
+                    invoice_id = table.Column<string>(type: "text", nullable: true),
                     success_redirect_url = table.Column<string>(type: "text", nullable: true),
                     is_trial = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
                     plan_id = table.Column<string>(type: "text", nullable: false),
+                    new_subscriber = table.Column<bool>(type: "boolean", nullable: false),
                     subscriber_id = table.Column<long>(type: "bigint", nullable: true),
                     invoice_metadata = table.Column<string>(type: "jsonb", nullable: false, defaultValueSql: "'{}'::jsonb"),
                     new_subscriber_metadata = table.Column<string>(type: "jsonb", nullable: false, defaultValueSql: "'{}'::jsonb"),
@@ -221,12 +237,6 @@ namespace BTCPayServer.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.SetNull);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_customers_store_id_email",
-                table: "customers",
-                columns: new[] { "store_id", "email" },
-                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_customers_store_id_external_ref",
@@ -290,6 +300,9 @@ namespace BTCPayServer.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "customers_identities");
+
             migrationBuilder.DropTable(
                 name: "subscriptions_plan_checkouts");
 

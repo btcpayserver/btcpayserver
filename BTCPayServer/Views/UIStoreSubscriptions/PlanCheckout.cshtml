@@ -150,6 +150,7 @@
 <body>
 <div class="checkout-container">
     <div class="container">
+        <partial name="_StatusMessage" />
         <div class="row">
             <!-- Left Column - Subscription Details -->
             <div class="col-lg-7 col-md-6">
@@ -217,8 +218,8 @@
                                 id="emailInput"
                                 placeholder="Enter your email address"
                                 required
-                                readonly="@Model.IsPrefilled"
-                            >
+                                disabled="@Model.IsPrefilled">
+                            <span asp-validation-for="Email" class="text-danger"></span>
                             <div class="form-text">
                                 <i class="fas fa fa-info-circle me-1"></i>
                                 We'll send your receipt and account details here

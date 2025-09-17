@@ -34,7 +34,7 @@ public class CustomerData : BaseEntityData
     [Column("name")]
     public string Name { get; set; } = string.Empty;
 
-    public List<CustomerContactData> Contacts { get; set; } = null!;
+    public List<CustomerIdentityData> CustomerIdentities { get; set; } = null!;
 
     public new static string GenerateId() => ValueGenerators.WithPrefix("cust")(null, null).Next(null!) as string ?? throw new InvalidOperationException("Bug, shouldn't happen");
 
@@ -53,7 +53,7 @@ public class CustomerData : BaseEntityData
     }
 
     public string? GetContact(string type)
-        => (Contacts ?? throw ContactDataNotIncludedInEntity()).FirstOrDefault(c => c.Type == type)?.Value;
+        => (CustomerIdentities ?? throw ContactDataNotIncludedInEntity()).FirstOrDefault(c => c.Type == type)?.Value;
 
     private static InvalidOperationException ContactDataNotIncludedInEntity()
         => new InvalidOperationException("Bug: Contact data not included in entity. Use .Include(x => x.Contacts) to include it.");
@@ -70,22 +70,22 @@ public class CustomerData : BaseEntityData
 
     public void SetContact(string type, string? value)
     {
-        if (Contacts is null)
+        if (CustomerIdentities is null)
             throw ContactDataNotIncludedInEntity();
         if (value is null)
         {
-            Contacts.RemoveAll(c => c.Type == type);
+            CustomerIdentities.RemoveAll(c => c.Type == type);
             return;
         }
 
-        var existing = Contacts.FirstOrDefault(c => c.Type == type);
+        var existing = CustomerIdentities.FirstOrDefault(c => c.Type == type);
         if (existing != null)
         {
             existing.Value = value;
         }
         else
         {
-            Contacts.Add(new() { CustomerId = Id, Type = type, Value = value });
+            CustomerIdentities.Add(new() { CustomerId = Id, Type = type, Value = value });
         }
     }
 }

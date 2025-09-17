@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250917021539_subs4")]
-    partial class subs4
+    [Migration("20250917070729_subs")]
+    partial class subs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -197,26 +197,6 @@ namespace BTCPayServer.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.CustomerContactData", b =>
-                {
-                    b.Property<string>("CustomerId")
-                        .HasColumnType("text")
-                        .HasColumnName("customer_id");
-
-                    b.Property<string>("Type")
-                        .HasColumnType("text")
-                        .HasColumnName("type");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("value");
-
-                    b.HasKey("CustomerId", "Type");
-
-                    b.ToTable("customers_contacts");
-                });
-
             modelBuilder.Entity("BTCPayServer.Data.CustomerData", b =>
                 {
                     b.Property<string>("Id")
@@ -266,6 +246,26 @@ namespace BTCPayServer.Migrations
                         .IsUnique();
 
                     b.ToTable("customers");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.CustomerIdentityData", b =>
+                {
+                    b.Property<string>("CustomerId")
+                        .HasColumnType("text")
+                        .HasColumnName("customer_id");
+
+                    b.Property<string>("Type")
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("value");
+
+                    b.HasKey("CustomerId", "Type");
+
+                    b.ToTable("customers_identities");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.Fido2Credential", b =>
@@ -1073,6 +1073,10 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("metadata");
 
+                    b.Property<bool>("NewSubscriber")
+                        .HasColumnType("boolean")
+                        .HasColumnName("new_subscriber");
+
                     b.Property<string>("NewSubscriberMetadata")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -1660,17 +1664,6 @@ namespace BTCPayServer.Migrations
                     b.Navigation("StoreData");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.CustomerContactData", b =>
-                {
-                    b.HasOne("BTCPayServer.Data.CustomerData", "Customer")
-                        .WithMany("Contacts")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-                });
-
             modelBuilder.Entity("BTCPayServer.Data.CustomerData", b =>
                 {
                     b.HasOne("BTCPayServer.Data.StoreData", "Store")
@@ -1680,6 +1673,17 @@ namespace BTCPayServer.Migrations
                         .IsRequired();
 
                     b.Navigation("Store");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.CustomerIdentityData", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.CustomerData", "Customer")
+                        .WithMany("CustomerIdentities")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.Fido2Credential", b =>
@@ -2158,7 +2162,7 @@ namespace BTCPayServer.Migrations
 
             modelBuilder.Entity("BTCPayServer.Data.CustomerData", b =>
                 {
-                    b.Navigation("Contacts");
+                    b.Navigation("CustomerIdentities");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.InvoiceData", b =>

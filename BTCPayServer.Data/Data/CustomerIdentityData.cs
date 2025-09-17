@@ -6,8 +6,8 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace BTCPayServer.Data;
 
-[Table("customers_contacts")]
-public class CustomerContactData
+[Table("customers_identities")]
+public class CustomerIdentityData
 {
     [Column("customer_id")]
     public string CustomerId { get; set; }
@@ -24,8 +24,8 @@ public class CustomerContactData
 
     public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
     {
-        var b = builder.Entity<CustomerContactData>();
+        var b = builder.Entity<CustomerIdentityData>();
         b.HasKey(x=> new { x.CustomerId, x.Type });
-        b.HasOne(x => x.Customer).WithMany(x => x.Contacts).HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne(x => x.Customer).WithMany(x => x.CustomerIdentities).HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Cascade);
     }
 }

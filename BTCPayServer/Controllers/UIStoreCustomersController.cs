@@ -25,9 +25,10 @@ public class UIStoreCustomersController(
     {
         var vm = new ListCustomersViewModel();
         await using var ctx = dbContextFactory.CreateContext();
+
         var users = ctx.Customers.Where(c => c.StoreId == storeId);
         if (!string.IsNullOrEmpty(searchTerm))
-            users = users.Where(u => (u.Email != null && u.Email.Contains(searchTerm)) ||
+            users = users.Where(u => (u.Contacts.Any(c => c.Value == searchTerm)) ||
                                       u.Name.Contains(searchTerm) ||
                                       (u.ExternalRef != null && u.ExternalRef.Contains(searchTerm)));
         vm.Data = await users.ToListAsync();
@@ -49,7 +50,6 @@ public class UIStoreCustomersController(
             return AddEditCustomerView();
         vm.FillData();
         await using var ctx = dbContextFactory.CreateContext();
-        vm.Data.Id = CustomerData.GenerateId();
         ctx.Customers.Add(vm.Data);
         try
         {

@@ -1,7 +1,10 @@
 ﻿#nullable  enable
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -28,12 +31,12 @@ public class CustomerData : BaseEntityData
     [Column("external_ref")]
     public string? ExternalRef { get; set; }
 
-    [Column("email")]
-    public string? Email { get; set; }
-
     [Column("name")]
     public string Name { get; set; } = string.Empty;
 
+    public List<CustomerContactData> Contacts { get; set; } = null!;
+
+    public new static string GenerateId() => ValueGenerators.WithPrefix("cust")(null, null).Next(null!) as string ?? throw new InvalidOperationException("Bug, shouldn't happen");
 
     public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
     {
@@ -43,7 +46,46 @@ public class CustomerData : BaseEntityData
             .HasDefaultValueSql("''::TEXT");
 
         b.HasKey(x => new { x.Id });
-        b.HasIndex(x => new { x.StoreId, x.Email }).IsUnique();
         b.HasIndex(x => new { x.StoreId, x.ExternalRef }).IsUnique();
+        b.Property(x => x.Id)
+            .ValueGeneratedOnAdd()
+            .HasValueGenerator(ValueGenerators.WithPrefix("cust"));
+    }
+
+    public string? GetContact(string type)
+        => (Contacts ?? throw ContactDataNotIncludedInEntity()).FirstOrDefault(c => c.Type == type)?.Value;
+
+    private static InvalidOperationException ContactDataNotIncludedInEntity()
+        => new InvalidOperationException("Bug: Contact data not included in entity. Use .Include(x => x.Contacts) to include it.");
+
+    public class ContactSetter(CustomerData customer, string type)
+    {
+        public void Set(string? value) => customer.SetContact(type, value);
+        public string? Get() => customer.GetContact(type);
+        public override string ToString() => $"{Get()} ({type})";
+    }
+
+    [NotMapped]
+    public ContactSetter Email => new ContactSetter(this, "Email");
+
+    public void SetContact(string type, string? value)
+    {
+        if (Contacts is null)
+            throw ContactDataNotIncludedInEntity();
+        if (value is null)
+        {
+            Contacts.RemoveAll(c => c.Type == type);
+            return;
+        }
+
+        var existing = Contacts.FirstOrDefault(c => c.Type == type);
+        if (existing != null)
+        {
+            existing.Value = value;
+        }
+        else
+        {
+            Contacts.Add(new() { CustomerId = Id, Type = type, Value = value });
+        }
     }
 }

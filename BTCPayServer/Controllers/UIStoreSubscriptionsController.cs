@@ -81,7 +81,11 @@ public class UIStoreSubscriptionsController(
         if (checkout is null)
             return NotFound();
 
-        return View(new PlanCheckoutDefaultRedirectViewModel(checkout));
+        return View(new PlanCheckoutDefaultRedirectViewModel(checkout)
+        {
+            StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, checkout.Plan.Offering.App.StoreData.GetStoreBlob()),
+            StoreName = checkout.Plan.Offering.App.StoreData.StoreName,
+        });
     }
 
     [HttpPost("plan-checkout/{checkoutId}")]
@@ -99,7 +103,7 @@ public class UIStoreSubscriptionsController(
             return NotFound();
 
         await subsService.ProceedToSubscribe(checkout.Id, Request.GetRequestBaseUrl(), vm.Email, cancellationToken);
-        checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId) ?? throw new InvalidOperationException("Checkout not found");
+        await ctx.Entry(checkout).ReloadAsync(cancellationToken);
         if (checkout.InvoiceId != null)
         {
             return Redirect(callbackGenerator.InvoiceCheckoutLink(checkout.InvoiceId, Request));
@@ -126,7 +130,8 @@ public class UIStoreSubscriptionsController(
 
         var checkoutData = new PlanCheckoutData()
         {
-            PlanId = planId
+            PlanId = planId,
+            IsTrial = plan.TrialDays > 0
         };
 
         if (prefilledEmail != null)
@@ -216,7 +221,7 @@ public class UIStoreSubscriptionsController(
         {
             var members = ctx.Subscribers
                 .Include(m => m.Plan)
-                .Include(m => m.Customer)
+                .Include(m => m.Customer).ThenInclude(c => c.Contacts)
                 .Where(m => m.OfferingId == offeringId)
                 .ToList();
             vm.Subscribers = members

@@ -194,9 +194,30 @@ namespace BTCPayServer.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.CustomerContactData", b =>
+                {
+                    b.Property<string>("CustomerId")
+                        .HasColumnType("text")
+                        .HasColumnName("customer_id");
+
+                    b.Property<string>("Type")
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("value");
+
+                    b.HasKey("CustomerId", "Type");
+
+                    b.ToTable("customers_contacts");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.CustomerData", b =>
                 {
                     b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("text")
                         .HasColumnName("id");
 
@@ -212,10 +233,6 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("timestamptz")
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("now()");
-
-                    b.Property<string>("Email")
-                        .HasColumnType("text")
-                        .HasColumnName("email");
 
                     b.Property<string>("ExternalRef")
                         .HasColumnType("text")
@@ -241,9 +258,6 @@ namespace BTCPayServer.Migrations
                         .HasColumnName("store_id");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("StoreId", "Email")
-                        .IsUnique();
 
                     b.HasIndex("StoreId", "ExternalRef")
                         .IsUnique();
@@ -1035,7 +1049,6 @@ namespace BTCPayServer.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("InvoiceId")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("invoice_id");
 
@@ -1059,8 +1072,10 @@ namespace BTCPayServer.Migrations
 
                     b.Property<string>("NewSubscriberMetadata")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("jsonb")
-                        .HasColumnName("new_subscriber_metadata");
+                        .HasColumnName("new_subscriber_metadata")
+                        .HasDefaultValueSql("'{}'::jsonb");
 
                     b.Property<string>("PlanId")
                         .IsRequired()
@@ -1642,6 +1657,17 @@ namespace BTCPayServer.Migrations
                     b.Navigation("StoreData");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.CustomerContactData", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.CustomerData", "Customer")
+                        .WithMany("Contacts")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.CustomerData", b =>
                 {
                     b.HasOne("BTCPayServer.Data.StoreData", "Store")
@@ -1906,8 +1932,7 @@ namespace BTCPayServer.Migrations
                     b.HasOne("BTCPayServer.Data.InvoiceData", "Invoice")
                         .WithMany()
                         .HasForeignKey("InvoiceId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("BTCPayServer.Data.Subscriptions.PlanData", "Plan")
                         .WithMany()
@@ -2126,6 +2151,11 @@ namespace BTCPayServer.Migrations
                     b.Navigation("UserRoles");
 
                     b.Navigation("UserStores");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.CustomerData", b =>
+                {
+                    b.Navigation("Contacts");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.InvoiceData", b =>

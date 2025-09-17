@@ -15,7 +15,6 @@ public class PlanCheckoutData : BaseEntityData
     [Column("id")]
     public string Id { get; set; } = null!;
 
-    [Required]
     [Column("invoice_id")]
     public string? InvoiceId { get; set; }
 
@@ -73,7 +72,7 @@ public class PlanCheckoutData : BaseEntityData
 
         b.Property(x => x.InvoiceMetadata).HasColumnName("invoice_metadata").HasColumnType("jsonb")
             .HasDefaultValueSql("'{}'::jsonb");
-        b.Property(x => x.InvoiceMetadata).HasColumnName("new_subscriber_metadata").HasColumnType("jsonb")
+        b.Property(x => x.NewSubscriberMetadata).HasColumnName("new_subscriber_metadata").HasColumnType("jsonb")
             .HasDefaultValueSql("'{}'::jsonb");
 
         b.Property(x => x.IsTrial).HasDefaultValue(false);

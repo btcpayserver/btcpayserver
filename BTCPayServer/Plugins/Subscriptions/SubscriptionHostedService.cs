@@ -95,16 +95,16 @@ public class SubscriptionHostedService(
             }
 
             if (checkout.IsTrial)
-                await ProcessStartTrial(ctx, checkout, subscribeRequest.Email, cancellationToken);
+                await ProcessStartTrial(ctx, checkout, CustomerSelector.ByEmail(subscribeRequest.Email), cancellationToken);
             else
-                await CreateInvoiceForCheckout(checkout, subscribeRequest, cancellationToken);
+                await CreateInvoiceForCheckout(ctx, checkout, subscribeRequest, cancellationToken);
         }
     }
 
     public static string GetCheckoutPlanTag(string checkoutId) => $"SUBS#{checkoutId}";
     public static string? GetCheckoutPlanIdFromInvoice(InvoiceEntity invoiceEntiy) => invoiceEntiy.GetInternalTags("SUBS#").FirstOrDefault();
 
-    private async Task CreateInvoiceForCheckout(PlanCheckoutData checkout, SubscribeRequest subscribeRequest, CancellationToken cancellationToken)
+    private async Task CreateInvoiceForCheckout(ApplicationDbContext ctx, PlanCheckoutData checkout, SubscribeRequest subscribeRequest, CancellationToken cancellationToken)
     {
         var invoiceMetadata = JObject.Parse(checkout.InvoiceMetadata);
         invoiceMetadata["checkoutId"] = checkout.Id;
@@ -124,6 +124,7 @@ public class SubscriptionHostedService(
             }, plan.Offering.App.StoreData, subscribeRequest.RequestBaseUrl.ToString(),
             [GetCheckoutPlanTag(checkout.Id)], cancellationToken);
         checkout.InvoiceId = request.Id;
+        await ctx.SaveChangesAsync(cancellationToken);
     }
 
 
@@ -221,15 +222,15 @@ public class SubscriptionHostedService(
         await RunEvent(new SubscribeRequest(checkoutId, requestBaseUrl, email), cancellationToken);
     }
 
-    private async Task ProcessStartTrial(ApplicationDbContext ctx, PlanCheckoutData checkout, string email, CancellationToken cancellationToken)
+    private async Task ProcessStartTrial(ApplicationDbContext ctx, PlanCheckoutData checkout, CustomerSelector customerSelector, CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
 
-        var sub = await GetOrCreateSubscriberAndCustomer(ctx, checkout, email, cancellationToken);
+        var sub = await GetOrCreateSubscriberAndCustomer(ctx, checkout, customerSelector, cancellationToken);
         if (sub is null)
             return;
 
-        sub.PlanId = checkout.Id;
+        sub.PlanId = checkout.PlanId;
         sub.GracePeriodEnd = null;
         sub.PeriodEnd = null;
         sub.TrialEnd = now.AddDays(sub.Plan.TrialDays);
@@ -251,7 +252,7 @@ public class SubscriptionHostedService(
             checkout.Plan.Offering.App.StoreDataId != invoice.StoreId)
             return;
 
-        var sub = await GetOrCreateSubscriberAndCustomer(ctx, checkout, invoice.Metadata.BuyerEmail, cancellationToken);
+        var sub = await GetOrCreateSubscriberAndCustomer(ctx, checkout, CustomerSelector.ByEmail(invoice.Metadata.BuyerEmail), cancellationToken);
         if (sub is null)
             return;
 
@@ -306,7 +307,7 @@ public class SubscriptionHostedService(
             await UpdateSubscriptionStates(ctx, new MemberSelector.Single(sub.Id), cancellationToken);
     }
 
-    private static async Task<SubscriberData?> GetOrCreateSubscriberAndCustomer(ApplicationDbContext ctx, PlanCheckoutData checkout, string email, CancellationToken cancellationToken)
+    private static async Task<SubscriberData?> GetOrCreateSubscriberAndCustomer(ApplicationDbContext ctx, PlanCheckoutData checkout, CustomerSelector customerSelector, CancellationToken cancellationToken)
     {
         SubscriberData? sub;
         if (checkout.SubscriberId is { } id)
@@ -316,7 +317,7 @@ public class SubscriptionHostedService(
         else
         {
             var plan = checkout.Plan;
-            var cust = await ctx.Customers.GetOrUpdate(checkout.Plan.Offering.App.StoreDataId, email);
+            var cust = await ctx.Customers.GetOrUpdate(checkout.Plan.Offering.App.StoreDataId, customerSelector);
             sub = await ctx.Subscribers.GetOrCreateByCustomerId(cust.Id, plan.OfferingId, plan.Id);
             if (sub is not null)
             {

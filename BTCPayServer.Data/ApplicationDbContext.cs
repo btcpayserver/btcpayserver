@@ -69,6 +69,7 @@ namespace BTCPayServer.Data
 
             OnSubscriptionsModelCreating(builder);
             CustomerData.OnModelCreating(builder, Database);
+            CustomerContactData.OnModelCreating(builder, Database);
             ApplicationUser.OnModelCreating(builder, Database);
             AddressInvoiceData.OnModelCreating(builder);
             APIKeyData.OnModelCreating(builder, Database);

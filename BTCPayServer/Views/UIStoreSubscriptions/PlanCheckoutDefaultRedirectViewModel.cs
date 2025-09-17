@@ -16,6 +16,7 @@ public class PlanCheckoutDefaultRedirectViewModel
         Id = data.Id;
     }
     public string Title { get; set; }
+    public string StoreName { get; set; }
     public StoreBrandingViewModel StoreBranding { get; set; }
     public string Id { get; set; }
     public PlanCheckoutData Data { get; set; }

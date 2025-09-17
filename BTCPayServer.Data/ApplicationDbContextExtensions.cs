@@ -54,6 +54,7 @@ public static partial class ApplicationDbContextExtensions
     {
         return await checkouts
             .Include(x => x.Plan).ThenInclude(x => x.Offering).ThenInclude(x => x.App).ThenInclude(x => x.StoreData)
+            .Include(x => x.Plan).ThenInclude(x => x.PlanEntitlements).ThenInclude(x => x.Entitlement)
             .Include(x => x.Subscriber).ThenInclude(x => x!.Customer)
             .Where(c => c.Id == checkoutId)
             .FirstOrDefaultAsync();
@@ -81,24 +82,63 @@ public static partial class ApplicationDbContextExtensions
             _ => dbSet.Include(p => p.Plan).Where(c => c.CustomerId == custId && c.OfferingId == offeringId).FirstOrDefaultAsync()
         };
 
-    public static async Task<CustomerData> GetOrUpdate(this DbSet<CustomerData> dbSet, string storeId, string email)
+    public static async Task<CustomerData> GetOrUpdate(this DbSet<CustomerData> dbSet, string storeId, CustomerSelector selector)
     {
-        var cust = await GetByEmail(dbSet, storeId, email);
+        var cust = await GetBySelector(dbSet, storeId, selector);
         if (cust != null)
             return cust;
-        var custId = await dbSet.GetDbConnection()
-            .ExecuteScalarAsync<string>
-            ("""
-             INSERT INTO customers (id, store_id, email) VALUES (@id, @storeId, @email)
-             ON CONFLICT (store_id, email) DO NOTHING
-             RETURNING id
-             """, new { id = CustomerData.GenerateId(), storeId, email }) ?? string.Empty;
-        return await GetById(dbSet, storeId, custId) ?? throw new InvalidOperationException("Customer not found");
+        string? custId;
+        if (selector is CustomerSelector.Id { CustomerId: {} id })
+        {
+            custId = await dbSet.GetDbConnection()
+                .ExecuteScalarAsync<string>
+                ("""
+                 INSERT INTO customers (id, store_id) VALUES (@id, @storeId)
+                 ON CONFLICT DO NOTHING
+                 RETURNING id
+                 """, new { id, storeId });
+        }
+        else if (selector is CustomerSelector.ExternalRef { ExtenalRef: {} externalRef })
+        {
+            custId = await dbSet.GetDbConnection()
+                .ExecuteScalarAsync<string>
+                ("""
+                 INSERT INTO customers (id, external_ref, store_id) VALUES (@id, @externalRef, @storeId)
+                 ON CONFLICT (store_id, external_ref) DO NOTHING
+                 RETURNING id
+                 """, new { id = CustomerData.GenerateId(), externalRef, storeId });
+        }
+        else if (selector is CustomerSelector.Contact { Type: { } type, Value: { } value })
+        {
+            custId = await dbSet.GetDbConnection()
+                .ExecuteScalarAsync<string>
+                ("""
+                 WITH ins_cust AS (
+                 INSERT INTO customers (id, store_id) VALUES (@id, @storeId)
+                 RETURNING id),
+                 ins_contact AS (
+                 INSERT INTO customers_contacts (customer_id, type, value)
+                 SELECT id, @type, @value
+                 FROM ins_cust
+                 RETURNING customer_id
+                 )
+                 SELECT customer_id FROM ins_contact;
+                 """, new { id = CustomerData.GenerateId(), storeId, type, value });
+        }
+        else
+        {
+            throw new NotSupportedException(selector.ToString());
+        }
+
+        return
+            (custId is null ?
+                await GetBySelector(dbSet, storeId, selector) :
+                await GetById(dbSet, storeId, custId)) ?? throw new InvalidOperationException("Customer not found");
     }
 
     private static Task<CustomerData?> GetById(DbSet<CustomerData> dbSet, string storeId, string custId)
         => dbSet.Where(c => c.StoreId == storeId && c.Id == custId).FirstOrDefaultAsync();
 
-    private static Task<CustomerData?> GetByEmail(DbSet<CustomerData> dbSet, string storeId, string email)
-        => dbSet.Where(c => c.StoreId == storeId && c.Email == email).FirstOrDefaultAsync();
+    private static Task<CustomerData?> GetBySelector(this IQueryable<CustomerData> query, string storeId, CustomerSelector selector)
+    => selector.Where(query).Where(c => c.StoreId == storeId).FirstOrDefaultAsync();
 }

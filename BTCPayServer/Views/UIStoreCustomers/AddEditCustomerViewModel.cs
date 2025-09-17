@@ -13,12 +13,12 @@ public class AddEditCustomerViewModel
 
     public AddEditCustomerViewModel(CustomerData data)
     {
-        Email = data.Email;
+        Email = data.Email.Get();
         Data = data;
     }
     public void FillData()
     {
-        Data.Email = Email;
+        Data.Email.Set(Email);
     }
     [Required]
     [EmailAddress]

@@ -183,15 +183,15 @@
                         <div class="price-period">per month</div>
                     </div>
 
-                    @if (Model.Data.PlanEntitlements.Count(i => !string.IsNullOrWhiteSpace(i.Plan.Description)) != 0)
+                    @if (Model.Data.PlanEntitlements.Count(i => !string.IsNullOrWhiteSpace(i.Entitlement.Description)) != 0)
                     {
                         <h5 class="mb-3">What's included:</h5>
                         <ul class="feature-list">
-                            @foreach (var item in Model.Data.PlanEntitlements.Where(i => !string.IsNullOrWhiteSpace(i.Plan.Description)))
+                            @foreach (var item in Model.Data.PlanEntitlements.Where(i => !string.IsNullOrWhiteSpace(i.Entitlement.Description)))
                             {
                                 <li class="feature-item">
                                     <i class="fas fa fa-check feature-icon"></i>
-                                    <span>@item.Plan.Description</span>
+                                    <span>@item.Entitlement.Description</span>
                                 </li>
                             }
                         </ul>

@@ -150,7 +150,7 @@
                 @foreach (var subscriber in Model.Subscribers)
                 {
                     <tr>
-                        <td class="fw-semibold">@subscriber.Data.Customer.Email</td>
+                        <td class="fw-semibold">@subscriber.Data.Customer.Email.Get()</td>
                         <td>@subscriber.Data.Plan.Name</td>
                         <td class="date-col">
                             @if (subscriber.Data.PeriodEnd is { } pe)

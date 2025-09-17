@@ -230,9 +230,17 @@ public class SubscriptionHostedService(
     {
         var now = DateTimeOffset.UtcNow;
 
-        var sub = await GetOrCreateSubscriberAndCustomer(ctx, checkout, customerSelector, cancellationToken);
+        var sub = checkout.Subscriber;
+        if (sub is null && !checkout.NewSubscriber)
+            throw new InvalidOperationException("Bug: Subscriber is null and not a new subscriber");
+
         if (sub is null)
-            return;
+        {
+            sub = await CreateSubscription(ctx, checkout, customerSelector);
+            if (sub is null)
+                return;
+        }
+
         if (sub.TrialEnd is not null)
             return;
         sub.PlanId = checkout.PlanId;
@@ -268,9 +276,8 @@ public class SubscriptionHostedService(
             // We only create a new subscriber lazily when a payment has been received
             if (sub is null)
             {
-                var cust = await ctx.Customers.GetOrUpdate(checkout.Plan.Offering.App.StoreDataId, CustomerSelector.ByEmail(invoice.Metadata.BuyerEmail));
-                (sub, var created) = await ctx.Subscribers.GetOrCreateByCustomerId(cust.Id, plan.OfferingId, plan.Id, JObject.Parse(checkout.NewSubscriberMetadata));
-                if (!created || sub is null)
+                sub = await CreateSubscription(ctx, checkout, CustomerSelector.ByEmail(invoice.Metadata.BuyerEmail));
+                if (sub is null)
                     return;
             }
 
@@ -306,7 +313,7 @@ public class SubscriptionHostedService(
             needUpdate = true;
             await ctx.SaveChangesAsync(cancellationToken);
         }
-        else if (invoice.Status == InvoiceStatus.Invalid)
+        else if (invoice.Status == InvoiceStatus.Invalid && sub is not null)
         {
             var rollbackData = OptimisticActivationData.GetAdditionalData(sub);
             if (rollbackData is null)
@@ -319,28 +326,17 @@ public class SubscriptionHostedService(
             await ctx.SaveChangesAsync(cancellationToken);
         }
 
-        if (needUpdate)
+        if (needUpdate && sub is not null)
             await UpdateSubscriptionStates(ctx, new MemberSelector.Single(sub.Id), cancellationToken);
     }
 
-    private static async Task<SubscriberData?> GetOrCreateSubscriberAndCustomer(ApplicationDbContext ctx, PlanCheckoutData checkout, CustomerSelector customerSelector, CancellationToken cancellationToken)
+    private async Task<SubscriberData?> CreateSubscription(ApplicationDbContext ctx, PlanCheckoutData checkout, CustomerSelector customerSelector)
     {
-        SubscriberData? sub;
-        if (checkout.SubscriberId is { } id)
-        {
-            sub = await ctx.Subscribers.Include(s => s.Plan).Where(c => c.Id == id).FirstOrDefaultAsync(cancellationToken);
-        }
-        else
-        {
-            var plan = checkout.Plan;
-            var cust = await ctx.Customers.GetOrUpdate(checkout.Plan.Offering.App.StoreDataId, customerSelector);
-            (sub, _) = await ctx.Subscribers.GetOrCreateByCustomerId(cust.Id, plan.OfferingId, plan.Id, JObject.Parse(checkout.NewSubscriberMetadata));
-            if (sub is not null)
-            {
-                checkout.SubscriberId = sub.Id;
-                await ctx.SaveChangesAsync(cancellationToken);
-            }
-        }
+        var plan = checkout.Plan;
+        var cust = await ctx.Customers.GetOrUpdate(checkout.Plan.Offering.App.StoreDataId, customerSelector);
+        (var sub, var created) = await ctx.Subscribers.GetOrCreateByCustomerId(cust.Id, plan.OfferingId, plan.Id, JObject.Parse(checkout.NewSubscriberMetadata));
+        if (!created || sub is null)
+            return null;
         return sub;
     }
 

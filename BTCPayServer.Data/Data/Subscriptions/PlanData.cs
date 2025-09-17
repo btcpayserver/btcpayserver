@@ -57,9 +57,6 @@ public class PlanData : BaseEntityData
     [Column("description")]
     public string? Description { get; set; }
 
-    [Column("allow_upgrade")]
-    public bool AllowUpgrade { get; set; }
-
     [Column("members_count")]
     public int MemberCount { get; set; }
 

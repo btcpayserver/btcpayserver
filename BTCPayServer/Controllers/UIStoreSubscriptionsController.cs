@@ -422,7 +422,6 @@ public class UIStoreSubscriptionsController(
             Currency = vm.Currency,
             GracePeriodDays = vm.GracePeriodDays,
             TrialDays = vm.TrialDays,
-            AllowUpgrade = vm.AllowUpgrade,
             OptimisticActivation = vm.OptimisticActivation,
             CreatedAt = DateTimeOffset.UtcNow,
             RecurringType = vm.RecurringType,

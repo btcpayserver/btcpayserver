@@ -1290,6 +1290,9 @@ namespace BTCPayServer.Controllers
                 ChangeAddress = psbtResponse.ChangeAddress?.ToString(),
                 PSBT = psbt.ToHex()
             };
+
+            if (!psbt.IsReadyToSign() && command == "sign")
+                command = "analyze-psbt";
             switch (command)
             {
                 case "createpending":

@@ -1,0 +1,398 @@
+﻿@using BTCPayServer.Services
+@model SubscriberPortalViewModel
+@inject DisplayFormatter DisplayFormatter
+
+@functions
+{
+    int CountDays(DateTimeOffset date)
+    {
+        var days = (int)double.Ceiling((date - DateTimeOffset.UtcNow).TotalDays);
+        return days < 0 ? 0 : days;
+    }
+
+    string FormatDays(int days)
+    => days is 1 or 0 ? StringLocalizer["{0} day", days] : StringLocalizer["{0} days", days];
+}
+
+@{
+    Layout = null;
+    var daysRemaining = Model.Data.Subscriber.PeriodEnd is null ? 0 : CountDays(Model.Data.Subscriber.PeriodEnd.Value);
+    var graceRemaining = Model.Data.Subscriber.GracePeriodEnd is null ? 0 : CountDays(Model.Data.Subscriber.GracePeriodEnd.Value);
+    var date = Model.Data.Subscriber.PeriodEnd is null ? "" : Model.Data.Subscriber.PeriodEnd.Value.ToString("D");
+    var graceDate = Model.Data.Subscriber.PeriodEnd is null ? 0 : CountDays(Model.Data.Subscriber.PeriodEnd.Value);
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <partial name="LayoutHead" />
+    <link href="~/vendor/font-awesome/css/font-awesome.min.css" asp-append-version="true" rel="stylesheet" />
+    <link href="~/main/site.css" asp-append-version="true" rel="stylesheet" />
+    <style>
+        :root {
+            --warning-bg: #fef3c7;
+            --warning-text: #92400e;
+        }
+
+        .company-logo {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .company-logo img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+
+        .navbar {
+            border-bottom: 1px solid var(--btcpay-body-border-light);
+            padding: 1rem 0;
+        }
+
+        .main-content {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            border-radius: 8px;
+            box-shadow: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            font-weight: 600;
+            padding: 1rem 1.5rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+
+        .payment-due-alert {
+            background: var(--warning-bg);
+            border: 1px solid var(--btcpay-warning-border);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .payment-due-content {
+            display: flex;
+            align-items: center;
+        }
+
+        .payment-due-icon {
+            color: var(--btcpay-warning-border);
+            margin-right: 0.75rem;
+            font-size: 1.125rem;
+        }
+
+        .payment-due-text {
+            color: var(--warning-text);
+        }
+
+        .payment-due-title {
+            font-weight: 600;
+            margin-bottom: 0.125rem;
+        }
+
+        .payment-due-subtitle {
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table th {
+            border-top: none;
+            font-weight: 600;
+        }
+
+        .table td {
+            vertical-align: middle;
+        }
+
+        .plan-comparison {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .current-plan {
+            border-left: 3px solid #0066cc;
+            padding-left: 1rem;
+        }
+
+        .text-muted {
+            color: #6c757d !important;
+        }
+
+        .invoice-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .invoice-paid {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .invoice-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar btcpay-header">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center">
+                <div class="company-logo me-3">
+                    @if (Model.StoreBranding.LogoUrl is null)
+                    {
+                        <img src="~/img/btcpay-logo.svg" alt="@Model.StoreName" />
+                    }
+                    else
+                    {
+                        <img src="@Model.StoreBranding.LogoUrl" alt="@Model.StoreName" />
+                    }
+                </div>
+                <span class="navbar-brand mb-0 h1">@Model.StoreName</span>
+            </div>
+            <div class="d-flex align-items-center">
+                <span class="me-3 text-muted">@Model.Data.Subscriber.Customer.GetPrimaryIdentity()</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Subscription Management</h2>
+            @if (@Model.Data.Subscriber.Customer.ExternalRef is not null)
+            {
+                <span class="text-muted">Customer Reference: @Model.Data.Subscriber.Customer.ExternalRef</span>
+            }
+        </div>
+
+        <!-- Current Subscription -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fa fa-address-book me-2"></i>Current Subscription
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5 class="mb-2">@Model.Data.Subscriber.Plan.Name</h5>
+                        @if (Model.Data.Subscriber.Plan.Description is not null)
+                        {
+                            <p class="text-muted mb-3">@Model.Data.Subscriber.Plan.Description</p>
+                        }
+                        <div class="d-flex align-items-center mb-2">
+                            @if (@Model.Data.Subscriber.IsActive)
+                            {
+                                <span class="badge badge-translucent rounded-pill text-bg-success me-3">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-translucent rounded-pill text-bg-success me-3">Inactive</span>
+                            }
+                            <span class="text-muted">Next billing: @date</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <h4 class="mb-1">@DisplayFormatter.Currency(Model.Data.Subscriber.Plan.Price, Model.Data.Subscriber.Plan.Currency, DisplayFormatter.CurrencyFormat.Symbol)</h4>
+                        <p class="text-muted mb-0">per month</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.Data.Subscriber.PeriodEnd is not null)
+        {
+            <div class="payment-due-alert">
+                <div class="payment-due-content">
+                    <i class="fas fa-clock payment-due-icon"></i>
+                    <div class="payment-due-text">
+                        @if (daysRemaining != 0)
+                        {
+                            <div class="payment-due-title">Payment due in <span>@FormatDays(daysRemaining)</span></div>
+                        }
+                        else
+                        {
+                            <div class="payment-due-title">Payment due</div>
+                        }
+
+                        @if (daysRemaining != 0)
+                        {
+                            <p class="payment-due-subtitle">Next billing date: @date • @DisplayFormatter.Currency(Model.Data.Subscriber.Plan.Price, Model.Data.Subscriber.Plan.Currency, DisplayFormatter.CurrencyFormat.Symbol)</p>
+                        }
+                    </div>
+                </div>
+                <button class="btn btn-warning">Pay Now</button>
+            </div>
+        }
+        <!-- Billing Information -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fa fa-credit-card me-2"></i>Billing Information
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="mb-2">Payment Method</h6>
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fa fa-cc-visa me-2 text-primary"></i>
+                            <span>•••• •••• •••• 4242</span>
+                            <span class="text-muted ms-2">Expires 12/26</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="mb-2">Billing Address</h6>
+                        <p class="text-muted mb-0">
+                            123 Business St<br>
+                            San Francisco, CA 94105<br>
+                            United States
+                        </p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-outline-primary btn-sm me-2">Update Payment Method</button>
+                    <button class="btn btn-outline-primary btn-sm">Update Billing Address</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plan Management -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fa fa-arrow-up me-2"></i>Plan Management
+            </div>
+            <div class="card-body">
+                <div class="plan-comparison">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="current-plan">
+                                <h6 class="mb-1">Professional Plan</h6>
+                                <p class="text-muted mb-2">$49/month</p>
+                                <span class="badge bg-primary">Current</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="mb-1">Enterprise Plan</h6>
+                            <p class="text-muted mb-2">$99/month</p>
+                            <button class="btn btn-outline-primary btn-sm">Upgrade</button>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="mb-1">Basic Plan</h6>
+                            <p class="text-muted mb-2">$19/month</p>
+                            <button class="btn btn-outline-secondary btn-sm">Downgrade</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-outline-danger btn-sm">Cancel Subscription</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fa fa-bolt me-2"></i>Quick Actions
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-primary w-100">
+                            <i class="fa fa-credit-card me-2"></i>Pay Now
+                        </button>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-outline-primary w-100">
+                            <i class="fa fa-download me-2"></i>Download Invoice
+                        </button>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-outline-primary w-100">
+                            <i class="fa fa-envelope me-2"></i>Contact Support
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice History -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fa fa-file-invoice me-2"></i>Invoice History
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>#INV-2024-001</td>
+                                <td>Dec 15, 2024</td>
+                                <td>$49.00</td>
+                                <td><span class="badge badge-translucent rounded-pill text-bg-success">Paid</span></td>
+                                <td>
+                                    <button class="btn btn-outline-primary btn-sm">
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#INV-2024-002</td>
+                                <td>Jan 15, 2025</td>
+                                <td>$49.00</td>
+                                <td><span class="badge badge-translucent rounded-pill text-bg-warning">Pending</span></td>
+                                <td>
+                                    <button class="btn btn-outline-primary btn-sm">
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#INV-2023-012</td>
+                                <td>Nov 15, 2024</td>
+                                <td>$49.00</td>
+                                <td><span class="invoice-status invoice-paid">Paid</span></td>
+                                <td>
+                                    <button class="btn btn-outline-primary btn-sm">
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

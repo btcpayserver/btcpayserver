@@ -64,14 +64,26 @@ public static partial class ApplicationDbContextExtensions
         return member?.PlanId == planId ? (member, true) : (null, false);
     }
 
-    public static Task<SubscriberData?> GetByCustomerId(this DbSet<SubscriberData> dbSet, string custId, string offeringId, string? planId = null)
-        => planId switch
-        {
-            not null => dbSet.Include(p => p.Plan)
-                .Where(c => c.CustomerId == custId && c.OfferingId == offeringId && c.PlanId == planId)
-                .FirstOrDefaultAsync(),
-            _ => dbSet.Include(p => p.Plan).Where(c => c.CustomerId == custId && c.OfferingId == offeringId).FirstOrDefaultAsync()
-        };
+    public static Task<PortalSessionData?> GetActiveById(this IQueryable<PortalSessionData> sessions, string sessionId)
+        => sessions
+            .Include(s => s.Subscriber).ThenInclude(s => s.Customer).ThenInclude(s => s.CustomerIdentities)
+            .Include(s => s.Subscriber).ThenInclude(s => s.Plan).ThenInclude(s => s.Offering).ThenInclude(s => s.Plans)
+            .Include(s => s.Subscriber).ThenInclude(s => s.Plan).ThenInclude(s => s.Offering).ThenInclude(s => s.App).ThenInclude(s => s.StoreData)
+            .Where(s => s.Id == sessionId && DateTimeOffset.UtcNow < s.Expiration).FirstOrDefaultAsync();
+
+    public static async Task<SubscriberData?> GetByCustomerId(this DbSet<SubscriberData> dbSet, string custId, string? offeringId = null, string? planId = null,
+        string? storeId = null)
+    {
+        var result = await dbSet.Include(p => p.Plan).ThenInclude(p => p.Offering).ThenInclude(p => p.App)
+                        .Where(c => c.CustomerId == custId).FirstOrDefaultAsync();
+
+        if ((result is null) ||
+            (offeringId != null && result.OfferingId != offeringId) ||
+            (storeId != null && result.Plan?.Offering?.App?.StoreDataId != storeId) ||
+            (planId != null && result.PlanId != planId))
+            return null;
+        return result;
+    }
 
     public static async Task<CustomerData> GetOrUpdate(this DbSet<CustomerData> dbSet, string storeId, CustomerSelector selector)
     {

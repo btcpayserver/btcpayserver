@@ -12,8 +12,11 @@ public partial class ApplicationDbContext
     public DbSet<PlanData> Plans { get; set; }
     public DbSet<PlanCheckoutData> PlanCheckouts { get; set; }
 
+    public DbSet<PortalSessionData> PortalSessions { get; set; }
+
     void OnSubscriptionsModelCreating(ModelBuilder builder)
     {
+        PortalSessionData.OnModelCreating(builder, Database);
         PlanCheckoutData.OnModelCreating(builder, Database);
         EntitlementData.OnModelCreating(builder, Database);
         PlanEntitlementData.OnModelCreating(builder, Database);

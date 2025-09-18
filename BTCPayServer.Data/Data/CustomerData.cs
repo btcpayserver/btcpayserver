@@ -88,4 +88,6 @@ public class CustomerData : BaseEntityData
             CustomerIdentities.Add(new() { CustomerId = Id, Type = type, Value = value });
         }
     }
+
+    public string? GetPrimaryIdentity() => Email.Get();
 }

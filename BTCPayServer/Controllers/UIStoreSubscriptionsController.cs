@@ -449,6 +449,41 @@ public class UIStoreSubscriptionsController(
         return RedirectToAction(nameof(Offering), new { storeId = plan.Offering.App.StoreDataId, offeringId = plan.OfferingId });
     }
 
+    [HttpGet("stores/{storeId}/offerings/{offeringId}/subscribers/{customerId}/create-portal")]
+    [Authorize(Policy = Policies.CanModifyMembership, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    public async Task<IActionResult> CreatePortalSession(string storeId, string offeringId, string customerId)
+    {
+        await using var ctx = dbContextFactory.CreateContext();
+        var sub = await ctx.Subscribers.GetByCustomerId(customerId, offeringId: offeringId, storeId: storeId);
+        if (sub is null)
+            return NotFound();
+        var portal = new PortalSessionData()
+        {
+            SubscriberId = sub.Id,
+            Expiration = DateTimeOffset.UtcNow + TimeSpan.FromHours(1.0)
+        };
+        ctx.PortalSessions.Add(portal);
+        await ctx.SaveChangesAsync();
+        return RedirectToAction(nameof(SubscriberPortal), new { portalSessionId = portal.Id });
+    }
+
+    [HttpGet("subscriber-portal/{portalSessionId}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SubscriberPortal(string portalSessionId)
+    {
+        await using var ctx = dbContextFactory.CreateContext();
+        var session = await ctx.PortalSessions.GetActiveById(portalSessionId);
+        var store = session?.GetStoreData();
+        if (session is null || store is null)
+            return NotFound();
+
+        return View(new SubscriberPortalViewModel(session)
+        {
+            StoreName = store.StoreName,
+            StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, store.GetStoreBlob())
+        });
+    }
+
     private static string GenerateEntitlementId(ConfigureOfferingViewModel.EntitlementViewModel o) =>
         Regex.Replace(o.Name.ToLowerInvariant().Trim(), @"\s", "-");
 }

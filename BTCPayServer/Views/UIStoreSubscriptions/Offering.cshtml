@@ -176,9 +176,13 @@
                             {
                                 <span class="badge badge-translucent rounded-pill text-bg-success">Active</span>
                             }
+                            else
+                            {
+                                <span class="badge badge-translucent rounded-pill text-bg-success">Inactive</span>
+                            }
                         </span></td>
                         <td>
-
+                            <a asp-action="CreatePortalSession" asp-route-storeId="@storeId" asp-route-offeringId="@subscriber.Data.OfferingId" asp-route-customerId="@subscriber.Data.CustomerId" target="_blank">View Portal</a>
                         </td>
                     </tr>
                 }

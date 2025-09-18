@@ -1,4 +1,6 @@
 ﻿using System;
+using BTCPayServer.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -6,12 +8,19 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace BTCPayServer.Migrations
 {
-    /// <inheritdoc />
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20250918093826_subs")]
     public partial class subs : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AddColumn<string>(
+                name: "CustomerId",
+                table: "Invoices",
+                type: "text",
+                nullable: true);
+
             migrationBuilder.CreateTable(
                 name: "customers",
                 columns: table => new
@@ -112,7 +121,6 @@ namespace BTCPayServer.Migrations
                     grace_period_days = table.Column<int>(type: "integer", nullable: false),
                     trial_days = table.Column<int>(type: "integer", nullable: false),
                     description = table.Column<string>(type: "text", nullable: true),
-                    allow_upgrade = table.Column<bool>(type: "boolean", nullable: false),
                     members_count = table.Column<int>(type: "integer", nullable: false),
                     optimistic_activation = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
                     metadata = table.Column<string>(type: "jsonb", nullable: false, defaultValueSql: "'{}'::jsonb"),
@@ -136,7 +144,8 @@ namespace BTCPayServer.Migrations
                 {
                     plan_id = table.Column<string>(type: "text", nullable: false),
                     entitlement_id = table.Column<long>(type: "bigint", nullable: false),
-                    quantity = table.Column<decimal>(type: "numeric", nullable: false)
+                    quantity = table.Column<decimal>(type: "numeric", nullable: false),
+                    description = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -238,6 +247,31 @@ namespace BTCPayServer.Migrations
                         onDelete: ReferentialAction.SetNull);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "subscriptions_portal_sessions",
+                columns: table => new
+                {
+                    id = table.Column<string>(type: "text", nullable: false),
+                    subscriber_id = table.Column<long>(type: "bigint", nullable: false),
+                    expiration = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_subscriptions_portal_sessions", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_subscriptions_portal_sessions_subscriptions_subscribers_sub~",
+                        column: x => x.subscriber_id,
+                        principalTable: "subscriptions_subscribers",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Invoices_CustomerId",
+                table: "Invoices",
+                column: "CustomerId",
+                filter: "\"CustomerId\" IS NOT NULL");
+
             migrationBuilder.CreateIndex(
                 name: "IX_customers_store_id_external_ref",
                 table: "customers",
@@ -281,6 +315,11 @@ namespace BTCPayServer.Migrations
                 column: "entitlement_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_subscriptions_portal_sessions_subscriber_id",
+                table: "subscriptions_portal_sessions",
+                column: "subscriber_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_subscriptions_subscribers_customer_id",
                 table: "subscriptions_subscribers",
                 column: "customer_id");
@@ -295,11 +334,23 @@ namespace BTCPayServer.Migrations
                 name: "IX_subscriptions_subscribers_plan_id",
                 table: "subscriptions_subscribers",
                 column: "plan_id");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Invoices_customers_CustomerId",
+                table: "Invoices",
+                column: "CustomerId",
+                principalTable: "customers",
+                principalColumn: "id",
+                onDelete: ReferentialAction.SetNull);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Invoices_customers_CustomerId",
+                table: "Invoices");
+
             migrationBuilder.DropTable(
                 name: "customers_identities");
 
@@ -310,10 +361,13 @@ namespace BTCPayServer.Migrations
                 name: "subscriptions_plans_entitlements");
 
             migrationBuilder.DropTable(
-                name: "subscriptions_subscribers");
+                name: "subscriptions_portal_sessions");
 
             migrationBuilder.DropTable(
                 name: "subscriptions_entitlements");
+
+            migrationBuilder.DropTable(
+                name: "subscriptions_subscribers");
 
             migrationBuilder.DropTable(
                 name: "customers");
@@ -323,6 +377,14 @@ namespace BTCPayServer.Migrations
 
             migrationBuilder.DropTable(
                 name: "subscriptions_offerings");
+
+            migrationBuilder.DropIndex(
+                name: "IX_Invoices_CustomerId",
+                table: "Invoices");
+
+            migrationBuilder.DropColumn(
+                name: "CustomerId",
+                table: "Invoices");
         }
     }
 }

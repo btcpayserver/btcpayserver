@@ -95,7 +95,7 @@
                 {
                     foreach (var p in Model.Plans)
                     {
-                        <tr>
+                        <tr id="plan_@p.Data.Id">
                             <td class="fw-semibold">@p.Data.Name</td>
                             <td>
                                 <vc:truncate-center text="@p.Data.Id"
@@ -108,8 +108,10 @@
                             <td><span class="status-active">@p.Data.Status</span></td>
                             <td>@p.Data.MemberCount Members</td>
                             <td>
-                                <button class="btn btn-outline-success btn-sm action-btn">Edit</button>
-                                <button class="btn btn-outline-danger btn-sm action-btn">Remove</button>
+                                <div class="d-inline-flex align-items-center gap-3">
+                                    <a class="edit-plan" href="/server/users/06c9edb6-30cb-4bf9-bdf0-52eaab8fc6ff">Edit</a>
+                                    <a class="delete-plan" asp-action="DeletePlan" asp-route-storeId="@storeId"  asp-route-offeringId="@offeringId" asp-route-planId="@p.Data.Id">Remove</a>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -178,7 +180,7 @@
                             }
                             else
                             {
-                                <span class="badge badge-translucent rounded-pill text-bg-success">Inactive</span>
+                                <span class="badge badge-translucent rounded-pill text-bg-danger">Inactive</span>
                             }
                         </span></td>
                         <td>

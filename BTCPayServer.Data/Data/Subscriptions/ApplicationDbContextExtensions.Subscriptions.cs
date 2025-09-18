@@ -11,13 +11,17 @@ namespace BTCPayServer.Data;
 
 public static partial class ApplicationDbContextExtensions
 {
-    public static async Task<PlanData?> GetPlanFromId(this DbSet<PlanData> plans, string planId)
+    public static async Task<PlanData?> GetPlanFromId(this DbSet<PlanData> plans, string planId, string? offeringId = null, string? storeId = null)
     {
         var plan = await plans
             .Include(o => o.Offering).ThenInclude(o => o.App).ThenInclude(o => o.StoreData)
             .Include(o => o.PlanEntitlements).ThenInclude(o => o.Entitlement)
             .Where(p => p.Id == planId)
             .FirstOrDefaultAsync();
+        if (offeringId is not null && plan?.OfferingId != offeringId)
+            return null;
+        if (storeId is not null && plan?.Offering.App.StoreDataId != storeId)
+            return null;
         return plan;
     }
 
@@ -71,14 +75,13 @@ public static partial class ApplicationDbContextExtensions
             .Include(s => s.Subscriber).ThenInclude(s => s.Plan).ThenInclude(s => s.Offering).ThenInclude(s => s.App).ThenInclude(s => s.StoreData)
             .Where(s => s.Id == sessionId && DateTimeOffset.UtcNow < s.Expiration).FirstOrDefaultAsync();
 
-    public static async Task<SubscriberData?> GetByCustomerId(this DbSet<SubscriberData> dbSet, string custId, string? offeringId = null, string? planId = null,
+    public static async Task<SubscriberData?> GetByCustomerId(this DbSet<SubscriberData> dbSet, string custId, string offeringId, string? planId = null,
         string? storeId = null)
     {
         var result = await dbSet.Include(p => p.Plan).ThenInclude(p => p.Offering).ThenInclude(p => p.App)
-                        .Where(c => c.CustomerId == custId).FirstOrDefaultAsync();
+                        .Where(c => c.CustomerId == custId && c.OfferingId == offeringId).FirstOrDefaultAsync();
 
         if ((result is null) ||
-            (offeringId != null && result.OfferingId != offeringId) ||
             (storeId != null && result.Plan?.Offering?.App?.StoreDataId != storeId) ||
             (planId != null && result.PlanId != planId))
             return null;

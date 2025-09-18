@@ -23,6 +23,7 @@ using BTCPayServer.Views.UIStoreMembership;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using Newtonsoft.Json.Linq;
@@ -38,7 +39,9 @@ public class UIStoreSubscriptionsController(
     CallbackGenerator callbackGenerator,
     EventAggregator eventAggregator,
     SubscriptionHostedService subsService,
-    AppService appService
+    AppService appService,
+    BTCPayServerEnvironment env,
+    IHtmlHelper htmlHelper
 ) : Controller
 {
     [HttpGet("plan-checkout/{checkoutId}")]
@@ -196,9 +199,137 @@ public class UIStoreSubscriptionsController(
         return View();
     }
 
-    [HttpPost("stores/{storeId}/offerings")]
-    public async Task<IActionResult> CreateOffering(string storeId, CreateOfferingViewModel vm)
+    private async Task<IActionResult> CreateFakeOffering(string storeId, CreateOfferingViewModel vm)
     {
+        ModelState.Clear();
+        var redirect = (RedirectToActionResult)await CreateOffering(storeId, vm);
+        var offeringId = (string)redirect.RouteValues!["offeringId"]!;
+        await using var ctx = dbContextFactory.CreateContext();
+        var offering = await ctx.Offerings
+            .Include(o => o.Plans)
+            .Include(o => o.App)
+            .Where(o => o.Id == offeringId)
+            .FirstAsync();
+        offering.App.Name = "PayFlow Pro";
+        foreach (var e in new[]
+                 {
+                     ("Up to X transactions/month", "Transaction Limit", "transaction-limit"),
+                     ("Basic payment processing", "Payment Processing", "payment-processing"),
+                     ("Email support", "Support", "email-support"),
+                     ("Standard security features", "Security", "security-features"),
+                     ("Basic analytics dashboard", "Analytics", "analytics-dashboard")
+                 })
+        {
+            ctx.Entitlements.Add(new()
+            {
+                OfferingId = offering.Id,
+                Description = e.Item1,
+                Name = e.Item2,
+                CustomId = e.Item3
+            });
+        }
+
+        await ctx.SaveChangesAsync();
+        var plans = new List<PlanData>();
+        var entitlements = await ctx.Entitlements.Where(c => c.OfferingId == offeringId).ToDictionaryAsync(x => x.CustomId);
+
+        var p = ctx.Plans.Add(new()
+        {
+            Name = "Basic Plan",
+            Description = "Perfect for small businesses getting started",
+            Price = 29.0m,
+            Currency = "USD",
+            TrialDays = 7,
+            OfferingId = offering.Id,
+            Status = PlanData.PlanStatus.Active
+        });
+
+        foreach (var e in new[]
+                 {
+                     ("transaction-limit", "Up to 10,000 transactions/month", 10000m),
+                     ("payment-processing", null, 1),
+                     ("email-support", null, 1),
+                     ("security-features", null, 1),
+                     ("analytics-dashboard", null, 1)
+                 })
+        {
+            ctx.PlanEntitlements.Add(new()
+            {
+                PlanId = p.Entity.Id,
+                Description = e.Item2,
+                Quantity = e.Item3,
+                EntitlementId = entitlements[e.Item1].Id
+            });
+        }
+
+        p = ctx.Plans.Add(new()
+        {
+            Name = "Pro Plan",
+            Description = "Great for growing businesses",
+            Price = 99.0m,
+            Currency = "USD",
+            TrialDays = 14,
+            OfferingId = offering.Id
+        });
+
+        foreach (var e in new[]
+                 {
+                     ("transaction-limit", "Up to 50,000 transactions/month", 50000m),
+                     ("payment-processing", "Advanced payment processing", 1),
+                     ("email-support", "Priority email support", 2),
+                     ("security-features", "Enhanced security features", 2),
+                     ("analytics-dashboard", "Advanced analytics", 1)
+                 })
+        {
+            ctx.PlanEntitlements.Add(new()
+            {
+                PlanId = p.Entity.Id,
+                Description = e.Item2,
+                Quantity = e.Item3,
+                EntitlementId = entitlements[e.Item1].Id
+            });
+        }
+
+        p = ctx.Plans.Add(new()
+        {
+            Name = "Enterprise Plan",
+            Description = "For large scale operations",
+            Price = 299.0m,
+            Currency = "USD",
+            TrialDays = 30,
+            OfferingId = offering.Id
+        });
+
+        foreach (var e in new[]
+                 {
+                     ("transaction-limit", "Unlimited transactions", 1000000m),
+                     ("payment-processing", "Enterprise payment processing", 1),
+                     ("email-support", "24/7 dedicated support", 3),
+                     ("security-features", "Enterprise security suite", 3),
+                     ("analytics-dashboard", "Custom analytics & reporting", 1)
+                 })
+        {
+            ctx.PlanEntitlements.Add(new()
+            {
+                PlanId = p.Entity.Id,
+                Description = e.Item2,
+                Quantity = e.Item3,
+                EntitlementId = entitlements[e.Item1].Id
+            });
+        }
+        await ctx.SaveChangesAsync();
+
+        return redirect;
+    }
+
+    [HttpPost("stores/{storeId}/offerings")]
+    public async Task<IActionResult> CreateOffering(string storeId, CreateOfferingViewModel vm, string? command = null)
+    {
+        if (env.CheatMode && command == "create-fake")
+        {
+            return await CreateFakeOffering(storeId, vm);
+        }
+
         if (!ModelState.IsValid)
             return View();
 
@@ -246,8 +377,7 @@ public class UIStoreSubscriptionsController(
 
         var vm = new SubscriptionsViewModel(offering) { Section = section };
         vm.TotalPlans = plans.Count;
-        // TODO: This is wasteful, we should pre-calculate this, if too much subscribers this page will start hanging...
-        vm.TotalSubscribers = await ctx.Subscribers.Where(s => s.OfferingId == offeringId && s.IsActive).CountAsync();
+        vm.TotalSubscribers = plans.Select(p => p.MemberCount).Sum();
         if (section == SubscriptionSection.Plans)
         {
             plans = plans
@@ -380,6 +510,44 @@ public class UIStoreSubscriptionsController(
         }
     }
 
+    [HttpGet("stores/{storeId}/offerings/{offeringId}/plans/{planId}/delete-plan")]
+    [Authorize(Policy = Policies.CanModifyMembership, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    public async Task<IActionResult> DeletePlan(string storeId, string offeringId, string planId)
+    {
+        await using var ctx = dbContextFactory.CreateContext();
+        var plan = await ctx.Plans.GetPlanFromId(planId, offeringId, storeId);
+        if (plan is null)
+            return NotFound();
+
+        return View("Confirm", new ConfirmModel(StringLocalizer["Delete plan"],
+            $"The plan <strong>{htmlHelper.Encode(plan.Name)}</strong> will be permanently deleted. Are you sure?", "Delete"));
+    }
+    [HttpPost("stores/{storeId}/offerings/{offeringId}/plans/{planId}/delete-plan")]
+    [Authorize(Policy = Policies.CanModifyMembership, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    public async Task<IActionResult> DeletePlanPost(string storeId, string offeringId, string planId)
+    {
+        await using var ctx = dbContextFactory.CreateContext();
+        var plan = await ctx.Plans.GetPlanFromId(planId, offeringId, storeId);
+        if (plan is null)
+            return NotFound();
+        var canDelete = !await ctx.Subscribers.Where(s => s.PlanId == planId).AnyAsync();
+        if (!canDelete)
+        {
+            TempData.SetStatusMessageModel(new()
+            {
+                Severity = StatusMessageModel.StatusSeverity.Error,
+                Html = StringLocalizer["Cannot delete plan. It is currently in use by subscribers."]
+            });
+        }
+        else
+        {
+            ctx.Plans.Remove(plan);
+            await ctx.SaveChangesAsync();
+            this.TempData.SetStatusSuccess(StringLocalizer["Plan deleted"]);
+        }
+        return RedirectToAction(nameof(Offering), new { storeId, offeringId });
+    }
+
     [HttpGet("stores/{storeId}/offerings/{offeringId}/add-plan")]
     [Authorize(Policy = Policies.CanModifyMembership, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> AddPlan(string storeId, string offeringId)
@@ -388,6 +556,7 @@ public class UIStoreSubscriptionsController(
         var offering = await ctx.Offerings.GetOfferingData(offeringId, storeId);
         if (offering is null)
             return NotFound();
+
         return View(new AddEditPlanViewModel()
         {
             OfferingId = offeringId,
@@ -398,7 +567,7 @@ public class UIStoreSubscriptionsController(
                 CustomId = e.CustomId,
                 Name = e.Name,
                 Quantity = 0,
-                ShortDescription = e.Description
+                DefaultDescription = e.Description
             }).ToList()
         });
     }
@@ -469,7 +638,7 @@ public class UIStoreSubscriptionsController(
 
     [HttpGet("subscriber-portal/{portalSessionId}")]
     [AllowAnonymous]
-    public async Task<IActionResult> SubscriberPortal(string portalSessionId)
+    public async Task<IActionResult> SubscriberPortal(string portalSessionId, CancellationToken cancellationToken = default)
     {
         await using var ctx = dbContextFactory.CreateContext();
         var session = await ctx.PortalSessions.GetActiveById(portalSessionId);
@@ -477,6 +646,17 @@ public class UIStoreSubscriptionsController(
         if (session is null || store is null)
             return NotFound();
 
+        var custId = session.Subscriber.CustomerId;
+        var invoices = await ctx.Invoices
+            .Where(c => c.CustomerId == custId)
+            .OrderByDescending(c => c.Created)
+            .ToListAsync(cancellationToken);
+
+        invoices = invoices
+            .Where(i => i.GetInvoiceState().Status is InvoiceStatus.Settled or InvoiceStatus.Invalid or InvoiceStatus.Processing)
+            .Where(i => i.GetBlob().SubscriberId == session.SubscriberId)
+            .ToList();
+        session.Subscriber.Customer.Invoices = invoices;
         return View(new SubscriberPortalViewModel(session)
         {
             StoreName = store.StoreName,

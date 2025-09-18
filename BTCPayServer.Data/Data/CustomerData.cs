@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using BTCPayServer.Data.Subscriptions;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -67,6 +68,8 @@ public class CustomerData : BaseEntityData
 
     [NotMapped]
     public ContactSetter Email => new ContactSetter(this, "Email");
+
+    public List<InvoiceData> Invoices { get; set; } = null!;
 
     public void SetContact(string type, string? value)
     {

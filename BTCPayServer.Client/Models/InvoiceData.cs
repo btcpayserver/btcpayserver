@@ -21,7 +21,6 @@ namespace BTCPayServer.Client.Models
         public JObject Metadata { get; set; }
         public CheckoutOptions Checkout { get; set; } = new CheckoutOptions();
         public ReceiptOptions Receipt { get; set; } = new ReceiptOptions();
-
         public class ReceiptOptions
         {
             public bool? Enabled { get; set; }

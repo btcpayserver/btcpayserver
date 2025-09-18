@@ -107,8 +107,8 @@ public class SubscriptionHostedService(
     private async Task CreateInvoiceForCheckout(ApplicationDbContext ctx, PlanCheckoutData checkout, SubscribeRequest subscribeRequest, CancellationToken cancellationToken)
     {
         var invoiceMetadata = JObject.Parse(checkout.InvoiceMetadata);
-        invoiceMetadata["checkoutId"] = checkout.Id;
         invoiceMetadata["planId"] = checkout.PlanId;
+        invoiceMetadata["offeringId"] = checkout.Plan.OfferingId;
 
         var mergedInvoiceMetadata = JObject.Parse(checkout.InvoiceMetadata);
         mergedInvoiceMetadata.Merge(invoiceMetadata);
@@ -126,7 +126,12 @@ public class SubscriptionHostedService(
                 },
                 Metadata = invoiceMetadata
             }, plan.Offering.App.StoreData, subscribeRequest.RequestBaseUrl.ToString(),
-            [GetCheckoutPlanTag(checkout.Id)], cancellationToken);
+            [GetCheckoutPlanTag(checkout.Id)], cancellationToken,
+            entity =>
+            {
+                entity.SubscriberId = checkout.SubscriberId;
+                entity.CustomerId = checkout.Subscriber?.CustomerId;
+            });
         checkout.InvoiceId = request.Id;
         await ctx.SaveChangesAsync(cancellationToken);
     }
@@ -279,6 +284,11 @@ public class SubscriptionHostedService(
                 sub = await CreateSubscription(ctx, checkout, CustomerSelector.ByEmail(invoice.Metadata.BuyerEmail));
                 if (sub is null)
                     return;
+                invoice.SubscriberId = sub.Id;
+                invoice.CustomerId = sub.CustomerId;
+                var inv = await ctx.Invoices.FindAsync([invoice.Id], cancellationToken) ?? throw new InvalidOperationException("Invoice not found");
+                inv.SetBlob(invoice);
+                await ctx.SaveChangesAsync(cancellationToken);
             }
 
             if (invoice.Status == InvoiceStatus.Processing)
@@ -337,6 +347,7 @@ public class SubscriptionHostedService(
         (var sub, var created) = await ctx.Subscribers.GetOrCreateByCustomerId(cust.Id, plan.OfferingId, plan.Id, JObject.Parse(checkout.NewSubscriberMetadata));
         if (!created || sub is null)
             return null;
+        await UpdatePlanMemberCount(ctx, plan.Id);
         return sub;
     }
 
@@ -364,6 +375,18 @@ public class SubscriptionHostedService(
                 key = OptimisticActivationData.Key,
                 value = data,
                 id = subscriber.Id
+            });
+    }
+    private static async Task UpdatePlanMemberCount(ApplicationDbContext ctx, string planId)
+    {
+        await ctx.Database.GetDbConnection()
+            .ExecuteAsync("""
+                          UPDATE subscriptions_plans
+                          SET members_count = (SELECT COUNT(*) FROM subscriptions_subscribers WHERE plan_id = @id AND active)
+                          WHERE id = @id
+                          """, new
+            {
+                id = planId
             });
     }
 }

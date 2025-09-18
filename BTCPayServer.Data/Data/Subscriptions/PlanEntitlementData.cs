@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿#nullable enable
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +12,7 @@ public class PlanEntitlementData
 {
     [Required]
     [Column("plan_id")]
-    public string PlanId { get; set; }
+    public string PlanId { get; set; } = null!;
 
     [ForeignKey(nameof(PlanId))]
     public PlanData Plan { get; set; } = null!;
@@ -25,6 +26,11 @@ public class PlanEntitlementData
 
     [Column("quantity")]
     public decimal Quantity { get; set; }
+
+    [Column("description")]
+    public string? Description { get; set; } = null!;
+
+    public string? GetDescription() => Description ?? Entitlement.Description;
 
     public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
     {

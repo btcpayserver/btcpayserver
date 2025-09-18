@@ -26,7 +26,7 @@ public class UIStoreCustomersController(
         var vm = new ListCustomersViewModel();
         await using var ctx = dbContextFactory.CreateContext();
 
-        var users = ctx.Customers.Where(c => c.StoreId == storeId);
+        var users = ctx.Customers.Include(x => x.CustomerIdentities).Where(c => c.StoreId == storeId);
         if (!string.IsNullOrEmpty(searchTerm))
             users = users.Where(u => (u.CustomerIdentities.Any(c => c.Value == searchTerm)) ||
                                       u.Name.Contains(searchTerm) ||

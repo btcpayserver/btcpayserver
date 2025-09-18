@@ -1,4 +1,6 @@
-﻿@using BTCPayServer.Services
+﻿@using BTCPayServer.Client.Models
+@using BTCPayServer.Services
+@using BTCPayServer.Services.Invoices
 @model SubscriberPortalViewModel
 @inject DisplayFormatter DisplayFormatter
 
@@ -337,15 +339,17 @@
             </div>
         </div>
 
-        <!-- Invoice History -->
-        <div class="card">
-            <div class="card-header">
-                <i class="fa fa-file-invoice me-2"></i>Invoice History
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
+        @if (Model.Data.Subscriber.Customer.Invoices.Count > 0)
+        {
+            <!-- Invoice History -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fa fa-file-invoice me-2"></i>Invoice History
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
                             <tr>
                                 <th>Invoice</th>
                                 <th>Date</th>
@@ -353,46 +357,28 @@
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>#INV-2024-001</td>
-                                <td>Dec 15, 2024</td>
-                                <td>$49.00</td>
-                                <td><span class="badge badge-translucent rounded-pill text-bg-success">Paid</span></td>
-                                <td>
-                                    <button class="btn btn-outline-primary btn-sm">
-                                        <i class="fa fa-download"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#INV-2024-002</td>
-                                <td>Jan 15, 2025</td>
-                                <td>$49.00</td>
-                                <td><span class="badge badge-translucent rounded-pill text-bg-warning">Pending</span></td>
-                                <td>
-                                    <button class="btn btn-outline-primary btn-sm">
-                                        <i class="fa fa-download"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#INV-2023-012</td>
-                                <td>Nov 15, 2024</td>
-                                <td>$49.00</td>
-                                <td><span class="invoice-status invoice-paid">Paid</span></td>
-                                <td>
-                                    <button class="btn btn-outline-primary btn-sm">
-                                        <i class="fa fa-download"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                            @foreach (var invoice in Model.Data.Subscriber.Customer.Invoices)
+                            {
+                                <tr>
+                                    <td>@invoice.Id</td>
+                                    <td>@invoice.Created.ToString("D")</td>
+                                    <td>@DisplayFormatter.Currency(invoice.Amount ?? 0, invoice.Currency, DisplayFormatter.CurrencyFormat.Symbol)</td>
+                                    <td><vc:invoice-status state="new InvoiceState(invoice.GetInvoiceState().Status, InvoiceExceptionStatus.None)" /></td>
+                                    <td>
+                                        <button class="btn btn-outline-primary btn-sm">
+                                            <i class="fa fa-download"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
+        }
     </div>
 </body>
 </html>

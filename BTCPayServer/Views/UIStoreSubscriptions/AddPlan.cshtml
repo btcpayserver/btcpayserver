@@ -15,7 +15,7 @@
                        asp-route-storeId="@storeId"
                        asp-route-offeringId="@Model.OfferingId"
                        asp-route-section="Plans"
-                       >@StringLocalizer["Offering ({0})", Model.OfferingName]</a>
+                    >@StringLocalizer["Offering ({0})", Model.OfferingName]</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>
@@ -87,19 +87,33 @@
             {
                 <section id="plan-items" class="mt-4">
                     <h4 class="mb-4">Entitlements</h4>
-                    @for (int i = 0; i < Model.Entitlements.Count; i++)
-                    {
-                        <div class="form-group">
-                            <input type="hidden" asp-for="Entitlements[i].CustomId" class="form-control" />
-                            <label asp-for="Entitlements[i].Quantity" class="form-label" data-required>@Model.Entitlements[i].Name</label>
-                            <input inputmode="decimal" asp-for="Entitlements[i].Quantity" class="form-control" />
-                            <span asp-validation-for="Entitlements[i].Quantity" class="text-danger"></span>
-                            @if (!string.IsNullOrWhiteSpace(Model.Entitlements[i].ShortDescription))
-                            {
-                                <div class="text-muted" text-translate="true">@Model.Entitlements[i].ShortDescription</div>
-                            }
-                        </div>
-                    }
+                    <div id="EntitlementsContainer" class="list-group list-group-flush">
+                        @for (var i = 0; i < (Model.Entitlements?.Count ?? 0); i++)
+                        {
+                            <div class="plan-item list-group-item d-block px-0 pt-0 pb-3 mb-3 p-3">
+                                <div class="row">
+                                    <div class="col-xl-8 col-xxl-constrain">
+                                        <div class="form-group">
+                                            <label asp-for="Entitlements[i].CustomId" class="form-label"></label>
+                                            <input asp-for="Entitlements[i].CustomId" class="form-control" disabled />
+                                            <input type="hidden" asp-for="Entitlements[i].CustomId" class="form-control" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label asp-for="Entitlements[i].Quantity" class="form-label" data-required>@Model.Entitlements[i].Name</label>
+                                            <input inputmode="decimal" asp-for="Entitlements[i].Quantity" class="form-control" />
+                                            <span asp-validation-for="Entitlements[i].Quantity" class="text-danger"></span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label asp-for="Entitlements[i].ShortDescription" class="form-label"></label>
+                                            <input asp-for="Entitlements[i].ShortDescription" placeholder="@Model.Entitlements[i].DefaultDescription" class="form-control" />
+                                            <span asp-validation-for="Entitlements[i].ShortDescription" class="text-danger"></span>
+                                            <div class="form-text" v-else text-translate="true">Leave blank to keep the default.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
                 </section>
             }
         </div>

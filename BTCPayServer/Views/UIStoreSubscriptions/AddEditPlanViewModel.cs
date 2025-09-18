@@ -66,6 +66,8 @@ namespace BTCPayServer.Views.UIStoreMembership
 
             [Display(Name = "Short description")]
             public string ShortDescription { get; set; }
+
+            public string DefaultDescription { get; set; }
         }
     }
 }

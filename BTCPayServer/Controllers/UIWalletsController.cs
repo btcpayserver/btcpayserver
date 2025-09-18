@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net.Mime;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -1512,9 +1513,9 @@ namespace BTCPayServer.Controllers
 
             var psbt = PSBT.Parse(viewModel.SigningContext.PSBT, network.NBitcoinNetwork);
 
-            if (!psbt.IsReadyToSign())
+            if (!psbt.IsReadyToSign(out var errors))
             {
-                ModelState.AddModelError(nameof(viewModel.SigningContext.PSBT), "PSBT is not ready to be signed");
+                ModelState.AddModelError(nameof(viewModel.SigningContext.PSBT), BuildErrorMessage(errors));
             }
 
             if (!ModelState.IsValid)
@@ -1578,6 +1579,27 @@ namespace BTCPayServer.Controllers
                 ReturnUrl = viewModel.ReturnUrl,
                 BackUrl = viewModel.BackUrl
             });
+        }
+
+        private static string BuildErrorMessage(PSBTError[] errors)
+        {
+            StringBuilder errorMessage = new();
+            errorMessage.Append("PSBT is not ready to be signed.");
+            if (errors.Length == 1)
+            {
+                errorMessage.Append($" ({errors[0]})");
+            }
+            else
+            {
+                errorMessage.AppendLine();
+                foreach (var error in errors.Take(5))
+                {
+                    errorMessage.AppendLine(error.ToString());
+                }
+            }
+            if (errors.Length > 5)
+                errorMessage.Append($"{errors.Length - 5} more errors...");
+            return errorMessage.ToString();
         }
 
         private WalletPSBTReadyViewModel.StringAmounts ValueToString(Money v, BTCPayNetworkBase network,

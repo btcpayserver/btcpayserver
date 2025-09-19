@@ -1,8 +1,6 @@
 ﻿@using BTCPayServer.Services
 @model CreateOfferingViewModel
 
-@inject BTCPayServerEnvironment env
-
 @{
     ViewData.SetActivePage(StoreNavPages.Subscriptions, StringLocalizer["New offering"]);
 }
@@ -11,12 +9,9 @@
     <div class="sticky-header">
         <h2>@ViewData["Title"]</h2>
         <div>
-            @if (env.CheatMode)
-            {
-                <button type="submit" name="command" value="create-fake" class="btn btn-outline-info" id="fake-offering-button">
-                    Create fake offering
-                </button>
-            }
+            <button cheat-mode="true" type="submit" name="command" value="create-fake" class="btn btn-outline-info" id="fake-offering-button">
+                Create fake offering
+            </button>
             <a><input id="page-primary" type="submit" value="Create" class="btn btn-primary" /></a>
         </div>
     </div>

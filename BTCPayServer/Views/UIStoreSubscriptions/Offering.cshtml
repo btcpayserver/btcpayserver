@@ -50,7 +50,10 @@
 
     <!-- Navigation Tabs -->
     <ul id="SectionNav" class="nav mb-4">
-        <a class="nav-link @(Model.Section == SubscriptionSection.Subscribers ? "active" : "")" asp-action="Offering"
+        <a class="nav-link @(Model.Section == SubscriptionSection.Subscribers ? "active" : "")"
+           asp-action="Offering"
+           asp-route-storeId="@storeId"
+           asp-route-offeringId="@offeringId"
            asp-route-section="@SubscriptionSection.Subscribers">Members & Payments</a>
         <a class="nav-link @(Model.Section == SubscriptionSection.Plans ? "active" : "")"
            asp-action="Offering"
@@ -110,7 +113,8 @@
                             <td>
                                 <div class="d-inline-flex align-items-center gap-3">
                                     <a class="edit-plan" href="/server/users/06c9edb6-30cb-4bf9-bdf0-52eaab8fc6ff">Edit</a>
-                                    <a class="delete-plan" asp-action="DeletePlan" asp-route-storeId="@storeId"  asp-route-offeringId="@offeringId" asp-route-planId="@p.Data.Id">Remove</a>
+                                    <a class="delete-plan" asp-action="DeletePlan" asp-route-storeId="@storeId" asp-route-offeringId="@offeringId"
+                                       asp-route-planId="@p.Data.Id">Remove</a>
                                 </div>
                             </td>
                         </tr>
@@ -155,36 +159,33 @@
                         <td class="fw-semibold">@subscriber.Data.Customer.Email.Get()</td>
                         <td>@subscriber.Data.Plan.Name</td>
                         <td class="date-col">
-                            @if (subscriber.Data.PeriodEnd is { } pe)
+                            @if (subscriber.Data.NextPaymentDue is { } pe)
                             {
                                 <span>@pe.ToBrowserDate()</span>
                             }
                         </td>
                         <td><span>
                             @{
-                                var (style, name) = subscriber.Data.Phase switch
-                                {
-                                    SubscriberData.PhaseTypes.Normal => ("success", StringLocalizer["Normal"]),
-                                    SubscriberData.PhaseTypes.Expired => ("danger", StringLocalizer["Expired"]),
-                                    SubscriberData.PhaseTypes.Grace => ("warning", StringLocalizer["Grace"]),
-                                    SubscriberData.PhaseTypes.Trial => ("warning", StringLocalizer["Trial"]),
-                                    _ => throw new NotSupportedException()
-                                };
-                            }
-                            <span class="badge badge-translucent rounded-pill text-bg-@style">@name</span>
-                        </span></td>
-                        <td><span class="status-active">
-                            @if (subscriber.Data.IsActive)
-                            {
-                                <span class="badge badge-translucent rounded-pill text-bg-success">Active</span>
-                            }
-                            else
-                            {
-                                <span class="badge badge-translucent rounded-pill text-bg-danger">Inactive</span>
-                            }
+                                    var (style, name) = subscriber.Data.Phase switch
+                                    {
+                                        SubscriberData.PhaseTypes.Normal => ("success", StringLocalizer["Normal"]),
+                                        SubscriberData.PhaseTypes.Expired => ("danger", StringLocalizer["Expired"]),
+                                        SubscriberData.PhaseTypes.Grace => ("warning", StringLocalizer["Grace"]),
+                                        SubscriberData.PhaseTypes.Trial => ("info", StringLocalizer["Trial"]),
+                                        _ => throw new NotSupportedException()
+                                    };
+                                }
+                                <span class="badge badge-translucent rounded-pill text-bg-@style">@name</span>
                         </span></td>
                         <td>
-                            <a asp-action="CreatePortalSession" asp-route-storeId="@storeId" asp-route-offeringId="@subscriber.Data.OfferingId" asp-route-customerId="@subscriber.Data.CustomerId" target="_blank">View Portal</a>
+
+                            <span class="status-active">
+                                <vc:subscriber-status subscriber="@subscriber.Data" can-suspend="true" />
+                            </span>
+                        </td>
+                        <td>
+                            <a asp-action="CreatePortalSession" asp-route-storeId="@storeId" asp-route-offeringId="@subscriber.Data.OfferingId"
+                               asp-route-customerId="@subscriber.Data.CustomerId" target="_blank">View Portal</a>
                         </td>
                     </tr>
                 }

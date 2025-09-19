@@ -18,9 +18,10 @@
 
 @{
     Layout = null;
-    var daysRemaining = Model.Data.Subscriber.PeriodEnd is null ? 0 : CountDays(Model.Data.Subscriber.PeriodEnd.Value);
+    var daysRemaining = Model.Data.Subscriber.NextPaymentDue is null ? 0 : CountDays(Model.Data.Subscriber.NextPaymentDue.Value);
+    var date = Model.Data.Subscriber.NextPaymentDue is null ? "" : Model.Data.Subscriber.NextPaymentDue.Value.ToString("D");
+
     var graceRemaining = Model.Data.Subscriber.GracePeriodEnd is null ? 0 : CountDays(Model.Data.Subscriber.GracePeriodEnd.Value);
-    var date = Model.Data.Subscriber.PeriodEnd is null ? "" : Model.Data.Subscriber.PeriodEnd.Value.ToString("D");
     var graceDate = Model.Data.Subscriber.PeriodEnd is null ? 0 : CountDays(Model.Data.Subscriber.PeriodEnd.Value);
 }
 
@@ -200,20 +201,19 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-8">
-                        <h5 class="mb-2">@Model.Data.Subscriber.Plan.Name</h5>
+                        <h5 class="d-flex align-items-center gap-3 mb-2">
+                            <span>@Model.Data.Subscriber.Plan.Name</span>
+                            @if (Model.Data.Subscriber.Phase == SubscriberData.PhaseTypes.Trial)
+                            {
+                                <span class="badge badge-translucent rounded-pill text-bg-info">Trial</span>
+                            }
+                        </h5>
                         @if (Model.Data.Subscriber.Plan.Description is not null)
                         {
                             <p class="text-muted mb-3">@Model.Data.Subscriber.Plan.Description</p>
                         }
                         <div class="d-flex align-items-center mb-2">
-                            @if (@Model.Data.Subscriber.IsActive)
-                            {
-                                <span class="badge badge-translucent rounded-pill text-bg-success me-3">Active</span>
-                            }
-                            else
-                            {
-                                <span class="badge badge-translucent rounded-pill text-bg-success me-3">Inactive</span>
-                            }
+                            <span class="me-3"><vc:subscriber-status subscriber="@Model.Data.Subscriber" /></span>
                             <span class="text-muted">Next billing: @date</span>
                         </div>
                     </div>

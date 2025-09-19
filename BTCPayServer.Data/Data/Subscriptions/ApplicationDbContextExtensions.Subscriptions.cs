@@ -78,7 +78,9 @@ public static partial class ApplicationDbContextExtensions
     public static async Task<SubscriberData?> GetByCustomerId(this DbSet<SubscriberData> dbSet, string custId, string offeringId, string? planId = null,
         string? storeId = null)
     {
-        var result = await dbSet.Include(p => p.Plan).ThenInclude(p => p.Offering).ThenInclude(p => p.App)
+        var result = await dbSet
+                        .Include(p => p.Plan).ThenInclude(p => p.Offering).ThenInclude(p => p.App)
+                        .Include(m => m.Customer).ThenInclude(c => c.CustomerIdentities)
                         .Where(c => c.CustomerId == custId && c.OfferingId == offeringId).FirstOrDefaultAsync();
 
         if ((result is null) ||

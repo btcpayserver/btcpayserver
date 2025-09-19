@@ -99,12 +99,23 @@ public class SubscriptionHostedService(
             else
                 await CreateInvoiceForCheckout(ctx, checkout, subscribeRequest, cancellationToken);
         }
+        else if (evt is ToggleSuspendRequest suspendRequest)
+        {
+            await using var ctx = applicationDbContextFactory.CreateContext();
+            var sub = await ctx.Subscribers.FindAsync([suspendRequest.SubId], cancellationToken);
+            if (sub is null)
+                throw new InvalidOperationException("Subscriber not found");
+            sub.IsSuspended = !sub.IsSuspended;
+            await ctx.SaveChangesAsync(cancellationToken);
+            await UpdateSubscriptionStates(ctx, new MemberSelector.Single(suspendRequest.SubId), cancellationToken);
+        }
     }
 
     public static string GetCheckoutPlanTag(string checkoutId) => $"SUBS#{checkoutId}";
     public static string? GetCheckoutPlanIdFromInvoice(InvoiceEntity invoiceEntiy) => invoiceEntiy.GetInternalTags("SUBS#").FirstOrDefault();
 
-    private async Task CreateInvoiceForCheckout(ApplicationDbContext ctx, PlanCheckoutData checkout, SubscribeRequest subscribeRequest, CancellationToken cancellationToken)
+    private async Task CreateInvoiceForCheckout(ApplicationDbContext ctx, PlanCheckoutData checkout, SubscribeRequest subscribeRequest,
+        CancellationToken cancellationToken)
     {
         var invoiceMetadata = JObject.Parse(checkout.InvoiceMetadata);
         invoiceMetadata["planId"] = checkout.PlanId;
@@ -188,7 +199,7 @@ public class SubscriptionHostedService(
                 events.Add(new SubscriptionEvent.MemberPhaseChanged(m, prevPhase));
             }
 
-            var newActive = !m.ForceDisabled && newPhase != PhaseTypes.Expired;
+            var newActive = !m.IsSuspended && newPhase != PhaseTypes.Expired;
             if (prevActive != newActive)
             {
                 m.IsActive = newActive;
@@ -200,6 +211,12 @@ public class SubscriptionHostedService(
         }
 
         await ctx.SaveChangesAsync(cancellationToken);
+
+        foreach (var plan in events.OfType<SubscriptionEvent.MemberEvent>().Select(x => x.Member.PlanId).Distinct())
+        {
+            await UpdatePlanMemberCount(ctx, plan);
+        }
+
         foreach (var e in events)
         {
             EventAggregator.Publish(e);
@@ -231,7 +248,8 @@ public class SubscriptionHostedService(
         await RunEvent(new SubscribeRequest(checkoutId, requestBaseUrl, selector), cancellationToken);
     }
 
-    private async Task ProcessStartTrial(ApplicationDbContext ctx, PlanCheckoutData checkout, CustomerSelector customerSelector, CancellationToken cancellationToken)
+    private async Task ProcessStartTrial(ApplicationDbContext ctx, PlanCheckoutData checkout, CustomerSelector customerSelector,
+        CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
 
@@ -344,10 +362,10 @@ public class SubscriptionHostedService(
     {
         var plan = checkout.Plan;
         var cust = await ctx.Customers.GetOrUpdate(checkout.Plan.Offering.App.StoreDataId, customerSelector);
-        (var sub, var created) = await ctx.Subscribers.GetOrCreateByCustomerId(cust.Id, plan.OfferingId, plan.Id, JObject.Parse(checkout.NewSubscriberMetadata));
+        (var sub, var created) =
+            await ctx.Subscribers.GetOrCreateByCustomerId(cust.Id, plan.OfferingId, plan.Id, JObject.Parse(checkout.NewSubscriberMetadata));
         if (!created || sub is null)
             return null;
-        await UpdatePlanMemberCount(ctx, plan.Id);
         return sub;
     }
 
@@ -377,6 +395,7 @@ public class SubscriptionHostedService(
                 id = subscriber.Id
             });
     }
+
     private static async Task UpdatePlanMemberCount(ApplicationDbContext ctx, string planId)
     {
         await ctx.Database.GetDbConnection()
@@ -389,4 +408,9 @@ public class SubscriptionHostedService(
                 id = planId
             });
     }
+
+    record ToggleSuspendRequest(long SubId);
+
+    public Task ToggleSuspend(long subId)
+        => RunEvent(new ToggleSuspendRequest(subId));
 }

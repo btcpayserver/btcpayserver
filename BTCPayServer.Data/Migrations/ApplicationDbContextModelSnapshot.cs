@@ -1274,12 +1274,6 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("text")
                         .HasColumnName("customer_id");
 
-                    b.Property<bool>("ForceDisabled")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false)
-                        .HasColumnName("force_disabled");
-
                     b.Property<DateTimeOffset?>("GracePeriodEnd")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("grace_period_end");
@@ -1289,6 +1283,12 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false)
                         .HasColumnName("active");
+
+                    b.Property<bool>("IsSuspended")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("suspended");
 
                     b.Property<string>("Metadata")
                         .IsRequired()

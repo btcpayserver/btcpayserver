@@ -44,6 +44,9 @@ public class SubscriberData : BaseEntityData
     [Column("trial_end")]
     public DateTimeOffset? TrialEnd { get; set; }
 
+    [NotMapped]
+    public DateTimeOffset? NextPaymentDue => PeriodEnd ?? TrialEnd;
+
     [Column("grace_period_end")]
     public DateTimeOffset? GracePeriodEnd { get; set; }
 
@@ -55,8 +58,8 @@ public class SubscriberData : BaseEntityData
     public bool IsActive { get; set; } = false;
 
     [Required]
-    [Column("force_disabled")]
-    public bool ForceDisabled { get; set; } = false;
+    [Column("suspended")]
+    public bool IsSuspended { get; set; } = false;
 
     public PhaseTypes CalculateExpectedPhase(DateTimeOffset now)
         => this switch
@@ -84,7 +87,7 @@ public class SubscriberData : BaseEntityData
             .HasSentinel(PhaseTypes.Expired)
             .HasDefaultValueSql("'Expired'::TEXT").HasConversion<string>();
         b.Property(x => x.IsActive).HasDefaultValue(false);
-        b.Property(x => x.ForceDisabled).HasDefaultValue(false);
+        b.Property(x => x.IsSuspended).HasDefaultValue(false);
         b.HasIndex(c => new { c.OfferingId, c.CustomerId })
             .IsUnique();
         b.HasOne(x => x.Plan).WithMany(x => x.Subscriptions).HasForeignKey(x => x.PlanId).OnDelete(DeleteBehavior.Cascade);

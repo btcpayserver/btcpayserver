@@ -1,0 +1,56 @@
+﻿@using BTCPayServer.Views.Stores
+@model BTCPayServer.Views.UIStoreCustomers.ListCustomersViewModel
+
+@{
+    ViewData.SetActivePage(StoreNavPages.Customers, StringLocalizer["Customers"]);
+    string storeId = (string)this.Context.GetRouteValue("storeId");
+}
+
+<div class="sticky-header">
+    <h2>@ViewData["Title"]</h2>
+    <a id="page-primary" asp-route-storeId="@storeId" asp-action="AddCustomer" class="btn btn-primary" role="button">
+        Add Customer
+    </a>
+</div>
+
+<partial name="_StatusMessage" />
+
+<form style="max-width:640px" method="get">
+    <input name="searchTerm" class="form-control" placeholder="@StringLocalizer["Search by email, External Ref, Name..."]" />
+</form>
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th text-translate="true">ID</th>
+                <th text-translate="true">Email</th>
+                <th text-translate="true">Name</th>
+                <th text-translate="true">External Ref</th>
+                <th text-translate="true">Created</th>
+            </tr>
+        </thead>
+        <tbody>
+        @if (Model.Data.Count != 0)
+        {
+            foreach (var customer in Model.Data)
+            {
+                <tr>
+                    <td>@customer.Id</td>
+                    <td>@customer.Email</td>
+                    <td>@customer.Name</td>
+                    <td>@customer.ExternalRef</td>
+                    <td>@customer.CreatedAt.ToBrowserDate()</td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="6" class="text-secondary" text-translate="true">There are no customer matching your criteria.</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+

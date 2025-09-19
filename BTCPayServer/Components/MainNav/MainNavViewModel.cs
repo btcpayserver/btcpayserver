@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Components.MainNav
 {
@@ -21,5 +22,6 @@ namespace BTCPayServer.Components.MainNav
         public string Id { get; set; }
         public string AppName { get; set; }
         public string AppType { get; set; }
+        public AppData Data { get; set; }
     }
 }

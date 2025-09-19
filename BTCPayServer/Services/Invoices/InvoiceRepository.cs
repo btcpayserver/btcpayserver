@@ -240,6 +240,7 @@ retry:
                     StoreDataId = invoice.StoreId,
                     Id = invoice.Id,
                     Status = invoice.Status.ToString(),
+                    CustomerId = invoice.CustomerId,
                     Archived = false
                 };
                 invoiceData.SetBlob(invoice);

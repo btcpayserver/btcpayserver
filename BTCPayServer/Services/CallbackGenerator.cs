@@ -128,5 +128,16 @@ namespace BTCPayServer.Services
                 pathBase: request.PathBase
             ) ?? throw Bug();
         }
+        public string InvoiceCheckoutLink(string invoiceId, HttpRequest request)
+        {
+            return LinkGenerator.GetUriByAction(
+                action: nameof(UIInvoiceController.Checkout),
+                controller: "UIInvoice",
+                values: new { invoiceId },
+                scheme: request.Scheme,
+                host: request.Host,
+                pathBase: request.PathBase
+            ) ?? throw Bug();
+        }
     }
 }

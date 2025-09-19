@@ -39,6 +39,9 @@ public static class WebhookExtensions
         services.AddSingleton<IWebhookProvider>(o => o.GetRequiredService<PendingTransactionWebhookProvider>());
         services.AddHostedService(o => o.GetRequiredService<PendingTransactionWebhookProvider>());
 
+        services.AddSingleton<SubscriptionWebhookProvider>();
+        services.AddSingleton<IWebhookProvider>(o => o.GetRequiredService<SubscriptionWebhookProvider>());
+
         services.AddSingleton<WebhookSender>();
         services.AddSingleton<IHostedService, WebhookSender>(o => o.GetRequiredService<WebhookSender>());
         services.AddScheduledTask<CleanupWebhookDeliveriesTask>(TimeSpan.FromHours(6.0));

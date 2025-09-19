@@ -1,0 +1,196 @@
+﻿@using BTCPayServer.Client
+@using BTCPayServer.Controllers
+@using BTCPayServer.Services
+@model SubscriptionsViewModel
+@inject DisplayFormatter DisplayFormatter
+
+@{
+    string storeId = (string)this.Context.GetRouteValue("storeId");
+    string offeringId = (string)this.Context.GetRouteValue("offeringId");
+    ViewData.SetActivePage(AppsNavPages.Update, StringLocalizer["Subscriptions"], offeringId);
+}
+
+@section PageHeadContent {
+
+    <style>
+        .card h6 {
+            font-weight: var(--btcpay-font-weight-semibold);
+            color: var(--btcpay-body-text-muted);
+        }
+    </style>
+
+}
+
+<div class="sticky-header">
+    <h2>@ViewData["Title"]</h2>
+    <div>
+        <a class="btn btn-secondary" asp-action="ConfigureOffering" asp-route-storeId="@storeId" asp-route-offeringId="@offeringId" text-translate="true">Configure</a>
+    </div>
+</div>
+
+<partial name="_StatusMessage" />
+
+<div class="container-fluid px-4 py-4">
+    <!-- Metrics Cards -->
+    <div class="row">
+        <div class="col-md-2">
+            <div>
+                <h6>Total Plans</h6>
+                <h4>@Model.TotalPlans</h4>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div>
+                <h6>Total Subscribers</h6>
+                <h4>@Model.TotalSubscribers</h4>
+            </div>
+        </div>
+        <div class="col-md-8"></div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul id="SectionNav" class="nav mb-4">
+        <a class="nav-link @(Model.Section == SubscriptionSection.Subscribers ? "active" : "")"
+           asp-action="Offering"
+           asp-route-storeId="@storeId"
+           asp-route-offeringId="@offeringId"
+           asp-route-section="@SubscriptionSection.Subscribers">Members & Payments</a>
+        <a class="nav-link @(Model.Section == SubscriptionSection.Plans ? "active" : "")"
+           asp-action="Offering"
+           asp-route-storeId="@storeId"
+           asp-route-offeringId="@offeringId"
+           asp-route-section="@SubscriptionSection.Plans">Subscription Plans</a>
+        <a class="nav-link @(Model.Section == SubscriptionSection.Emails ? "active" : "")"
+           asp-action="Offering"
+           asp-route-storeId="@storeId"
+           asp-route-offeringId="@offeringId"
+           asp-route-section="@SubscriptionSection.Emails">Notifications & Alerts</a>
+    </ul>
+
+    @if (Model.Section == SubscriptionSection.Plans)
+    {
+        <div class="d-flex justify-content-between align-items-center">
+            <h4>Subscription Plans</h4>
+            <a id="page-primary" permission="@Policies.CanModifyMembership" asp-route-storeId="@storeId" asp-route-offeringId="@offeringId" asp-action="AddPlan"
+               class="btn btn-primary"
+               role="button">
+                Add Plan
+            </a>
+        </div>
+
+        <!-- Subscription Plans Table -->
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th text-translate="true">Plan</th>
+                    <th text-translate="true">API ID</th>
+                    <th text-translate="true">Price</th>
+                    <th text-translate="true">Recurring</th>
+                    <th text-translate="true">Grace Period</th>
+                    <th text-translate="true">Status</th>
+                    <th text-translate="true">Active Members</th>
+                    <th text-translate="true">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @if (Model.Plans.Count != 0)
+                {
+                    foreach (var p in Model.Plans)
+                    {
+                        <tr id="plan_@p.Data.Id">
+                            <td class="fw-semibold">@p.Data.Name</td>
+                            <td>
+                                <vc:truncate-center text="@p.Data.Id"
+                                                    link="@Url.Action(nameof(UIStoreSubscriptionsController.NewPlanCheckout), new { planId = p.Data.Id })"
+                                                    classes="truncate-center-id" />
+                            </td>
+                            <td>@DisplayFormatter.Currency(@p.Data.Price, @p.Data.Currency, DisplayFormatter.CurrencyFormat.CodeAndSymbol)</td>
+                            <td>@p.Data.RecurringType</td>
+                            <td>@p.Data.GracePeriodDays days</td>
+                            <td><span class="status-active">@p.Data.Status</span></td>
+                            <td>@p.Data.MemberCount Members</td>
+                            <td>
+                                <div class="d-inline-flex align-items-center gap-3">
+                                    <a class="edit-plan" href="/server/users/06c9edb6-30cb-4bf9-bdf0-52eaab8fc6ff">Edit</a>
+                                    <a class="delete-plan" asp-action="DeletePlan" asp-route-storeId="@storeId" asp-route-offeringId="@offeringId"
+                                       asp-route-planId="@p.Data.Id">Remove</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-secondary" text-translate="true">There are no subscription plans.</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    else if (Model.Section == SubscriptionSection.Subscribers)
+    {
+        <div class="d-flex justify-content-between align-items-center">
+            <h4>Subscribers</h4>
+            <a id="page-primary" asp-route-storeId="@storeId" asp-action="AddCustomer" class="btn btn-primary" role="button">
+                Add subscriber
+            </a>
+        </div>
+
+        <!-- Subscription Plans Table -->
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th text-translate="true">User</th>
+                    <th text-translate="true">Plan</th>
+                    <th text-translate="true">Next Due</th>
+                    <th text-translate="true">Phase</th>
+                    <th text-translate="true">Status</th>
+                    <th text-translate="true">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var subscriber in Model.Subscribers)
+                {
+                    <tr>
+                        <td class="fw-semibold">@subscriber.Data.Customer.Email.Get()</td>
+                        <td>@subscriber.Data.Plan.Name</td>
+                        <td class="date-col">
+                            @if (subscriber.Data.NextPaymentDue is { } pe)
+                            {
+                                <span>@pe.ToBrowserDate()</span>
+                            }
+                        </td>
+                        <td><span>
+                            @{
+                                    var (style, name) = subscriber.Data.Phase switch
+                                    {
+                                        SubscriberData.PhaseTypes.Normal => ("success", StringLocalizer["Normal"]),
+                                        SubscriberData.PhaseTypes.Expired => ("danger", StringLocalizer["Expired"]),
+                                        SubscriberData.PhaseTypes.Grace => ("warning", StringLocalizer["Grace"]),
+                                        SubscriberData.PhaseTypes.Trial => ("info", StringLocalizer["Trial"]),
+                                        _ => throw new NotSupportedException()
+                                    };
+                                }
+                                <span class="badge badge-translucent rounded-pill text-bg-@style">@name</span>
+                        </span></td>
+                        <td>
+
+                            <span class="status-active">
+                                <vc:subscriber-status subscriber="@subscriber.Data" can-suspend="true" />
+                            </span>
+                        </td>
+                        <td>
+                            <a asp-action="CreatePortalSession" asp-route-storeId="@storeId" asp-route-offeringId="@subscriber.Data.OfferingId"
+                               asp-route-customerId="@subscriber.Data.CustomerId" target="_blank">View Portal</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

@@ -26,6 +26,7 @@ namespace BTCPayServer.Data
                 blob.Metadata = new InvoiceMetadata();
             invoiceData.Created = blob.InvoiceTime;
             invoiceData.Currency = blob.Currency;
+            invoiceData.CustomerId = blob.CustomerId;
             invoiceData.Amount = blob.Price;
             invoiceData.HasTypedBlob<InvoiceEntity>().SetBlob(blob, DefaultSerializer);
         }

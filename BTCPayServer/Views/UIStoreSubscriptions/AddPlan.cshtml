@@ -1,0 +1,122 @@
+﻿@model AddEditPlanViewModel
+
+@{
+    string storeId = (string)this.Context.GetRouteValue("storeId");
+    string offeringId = (string)this.Context.GetRouteValue("offeringId");
+    ViewData.SetActivePage(AppsNavPages.Update, StringLocalizer["Add plan"], offeringId);
+}
+
+<form method="post">
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Offering"
+                       asp-route-storeId="@storeId"
+                       asp-route-offeringId="@Model.OfferingId"
+                       asp-route-section="Plans"
+                    >@StringLocalizer["Offering ({0})", Model.OfferingName]</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>@ViewData["Title"]</h2>
+        </nav>
+        <input id="page-primary" type="submit" name="command" value="Create" class="btn btn-primary" />
+    </div>
+    <partial name="_StatusMessage" />
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
+            <div class="form-group">
+                <label asp-for="Name" class="form-label" data-required></label>
+                <input asp-for="Name" class="form-control" placeholder="e.g., Premium" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Status" class="form-label"></label>
+                <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<PlanData.PlanStatus>()"></select>
+                <span asp-validation-for="Status" class="text-danger"></span>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <div class="form-group flex-fill me-4">
+                    <label asp-for="Price" class="form-label" data-required></label>
+                    <input inputmode="decimal" asp-for="Price" class="form-control" />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Currency" class="form-label" data-required></label>
+                    <input asp-for="Currency" class="form-control w-auto" currency-selection />
+                    <span asp-validation-for="Currency" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="RecurringType" class="form-label"></label>
+                <select asp-for="RecurringType" class="form-select" asp-items="Html.GetEnumSelectList<PlanData.RecurringInterval>()"></select>
+                <span asp-validation-for="RecurringType" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="TrialDays" class="form-label"></label>
+                <div class="input-group">
+                    <input asp-for="TrialDays" class="form-control" min="0" placeholder="7" />
+                    <span class="input-group-text">days</span>
+                </div>
+                <span asp-validation-for="TrialDays" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="GracePeriodDays" class="form-label"></label>
+                <div class="input-group">
+                    <input asp-for="GracePeriodDays" class="form-control" min="0" placeholder="15" />
+                    <span class="input-group-text">days</span>
+                </div>
+                <span asp-validation-for="GracePeriodDays" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="3" placeholder="Brief description of the plan features..."></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" asp-for="OptimisticActivation" />
+                    <label class="form-check-label" asp-for="OptimisticActivation"></label>
+                </div>
+            </div>
+            @if (Model.Entitlements.Count > 0)
+            {
+                <section id="plan-items" class="mt-4">
+                    <h4 class="mb-4">Entitlements</h4>
+                    <div id="EntitlementsContainer" class="list-group list-group-flush">
+                        @for (var i = 0; i < (Model.Entitlements?.Count ?? 0); i++)
+                        {
+                            <div class="plan-item list-group-item d-block px-0 pt-0 pb-3 mb-3 p-3">
+                                <div class="row">
+                                    <div class="col-xl-8 col-xxl-constrain">
+                                        <div class="form-group">
+                                            <label asp-for="Entitlements[i].CustomId" class="form-label"></label>
+                                            <input asp-for="Entitlements[i].CustomId" class="form-control" disabled />
+                                            <input type="hidden" asp-for="Entitlements[i].CustomId" class="form-control" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label asp-for="Entitlements[i].Quantity" class="form-label" data-required>@Model.Entitlements[i].Name</label>
+                                            <input inputmode="decimal" asp-for="Entitlements[i].Quantity" class="form-control" />
+                                            <span asp-validation-for="Entitlements[i].Quantity" class="text-danger"></span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label asp-for="Entitlements[i].ShortDescription" class="form-label"></label>
+                                            <input asp-for="Entitlements[i].ShortDescription" placeholder="@Model.Entitlements[i].DefaultDescription" class="form-control" />
+                                            <span asp-validation-for="Entitlements[i].ShortDescription" class="text-danger"></span>
+                                            <div class="form-text" v-else text-translate="true">Leave blank to keep the default.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
+        </div>
+    </div>
+</form>
+

@@ -19,7 +19,7 @@
         <h2>@ViewData["Title"]</h2>
     </nav>
     <a id="CreateEmailRule" permission="@Policies.CanModifyStoreSettings" asp-action="StoreEmailRulesCreate" asp-route-storeId="@storeId" 
-       class="btn btn-primary" role="button">
+       class="btn btn-primary" role="button" text-translate="true">
         Create Email Rule
     </a>
 </div>
@@ -35,10 +35,10 @@
         <table class="table table-hover">
             <thead>
             <tr>
-                <th>Trigger</th>
-                <th>Customer Email</th>
-                <th>To</th>
-                <th>Subject</th>
+                <th text-translate="true">Trigger</th>
+                <th text-translate="true">Customer Email</th>
+                <th text-translate="true">To</th>
+                <th text-translate="true">Subject</th>
                 <th class="actions-col" permission="@Policies.CanModifyStoreSettings"></th>
             </tr>
             </thead>
@@ -52,7 +52,7 @@
                     <td>@rule.value.Subject</td>
                     <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
                         <div class="d-inline-flex align-items-center gap-3">
-                            <a asp-action="StoreEmailRulesEdit" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index">Edit</a>
+                            <a asp-action="StoreEmailRulesEdit" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index" text-translate="true">Edit</a>
                             <a asp-action="StoreEmailRulesDelete" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@ViewLocalizer["This action will remove the rule with the trigger <b>{0}</b>.", Html.Encode(rule.value.Trigger)]" data-confirm-input="@StringLocalizer["REMOVE"]" text-translate="true">Remove</a>
                         </div>
                     </td>

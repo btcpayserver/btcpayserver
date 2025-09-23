@@ -328,6 +328,7 @@ namespace BTCPayServer.Tests
             if (await Page.Locator("#Nav-Account").CountAsync() > 0 && await Page.Locator("#Nav-Account").IsVisibleAsync())
             {
                 await Page.Locator("#Nav-Account").ClickAsync();
+                await Page.Locator("#Nav-Logout").WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
                 await Page.Locator("#Nav-Logout").ClickAsync();
             }
             else if (await Page.Locator("#Nav-Logout").CountAsync() > 0 && await Page.Locator("#Nav-Logout").IsVisibleAsync())
@@ -829,7 +830,8 @@ namespace BTCPayServer.Tests
             {
                 Assert.DoesNotContain("- Denied", content);
                 // check associated link is active if present
-                var sidebarLink = Page.Locator($"#mainNav a[href=\"{url}\"]");
+                var hrefToMatch = new Uri(Link(url), UriKind.Absolute).AbsolutePath;
+                var sidebarLink = Page.Locator($"#mainNav a[href=\"{hrefToMatch}\"]");
                 if (await sidebarLink.CountAsync() > 0)
                 {
                     var classAttr = await sidebarLink.First.GetAttributeAsync("class");

@@ -2300,6 +2300,7 @@ namespace BTCPayServer.Tests
             {   // should have manage access to settings, hence should see submit buttons or create links
                 s.TestLogs.LogInformation($"Checking access to store page {path} as owner");
                 await s.AssertPageAccess(true, $"/stores/{storeId}/{path}");
+                await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
                 if (path != "payout-processors")
                 {
                     var saveButton = s.Page.GetByRole(AriaRole.Button, new() { Name = "Save" });
@@ -2332,6 +2333,7 @@ namespace BTCPayServer.Tests
             {   // should have view access to settings, but no submit buttons or create links
                 s.TestLogs.LogInformation($"Checking access to store page {path} as manager");
                 await s.AssertPageAccess(true, $"/stores/{storeId}/{path}");
+                await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
                 Assert.False(await s.Page.GetByRole(AriaRole.Button, new() { Name = "Save" }).IsVisibleAsync());
             }
             await s.Logout();

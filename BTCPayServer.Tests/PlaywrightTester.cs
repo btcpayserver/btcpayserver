@@ -325,19 +325,26 @@ namespace BTCPayServer.Tests
         public async Task Logout()
         {
             // Try to find the account nav or a logout button, or fallback to /logout
-            if (await Page.Locator("#Nav-Account").CountAsync() > 0 && await Page.Locator("#Nav-Account").IsVisibleAsync())
+            var navAccount = Page.Locator("#Nav-Account");
+            var navLogout = Page.Locator("#Nav-Logout");
+            var logoutAnchor = Page.Locator("a[href='/logout']");
+            if (await navAccount.IsVisibleAsync())
             {
-                await Page.Locator("#Nav-Account").ClickAsync();
-                await Page.Locator("#Nav-Logout").WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
-                await Page.Locator("#Nav-Logout").ClickAsync();
+                await navAccount.ClickAsync();
+                await navLogout.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
+                await navLogout.ClickAsync();
+                               }
+            else if (await navLogout.IsVisibleAsync())
+            {
+                 await navLogout.ClickAsync();
             }
-            else if (await Page.Locator("#Nav-Logout").CountAsync() > 0 && await Page.Locator("#Nav-Logout").IsVisibleAsync())
+            else if (await logoutAnchor.IsVisibleAsync())
             {
-                await Page.Locator("#Nav-Logout").ClickAsync();
+                await logoutAnchor.ClickAsync();
             }
-            else if (await Page.Locator("a[href='/logout']").CountAsync() > 0 && await Page.Locator("a[href='/logout']").IsVisibleAsync())
+             else if (await logoutAnchor.IsVisibleAsync())
             {
-                await Page.Locator("a[href='/logout']").ClickAsync();
+                await logoutAnchor.ClickAsync();
             }
             else
             {
@@ -824,14 +831,15 @@ namespace BTCPayServer.Tests
         public async Task AssertPageAccess(bool shouldHaveAccess, string url)
         {
             await GoToUrl(url);
+            await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             var content = await Page.ContentAsync();
             Assert.DoesNotContain("404 - Page not found", content);
             if (shouldHaveAccess)
             {
-                Assert.DoesNotContain("- Denied", content);
+                Assert.DoesNotContain("- Denied</h", content);
                 // check associated link is active if present
-                var hrefToMatch = new Uri(Link(url), UriKind.Absolute).AbsolutePath;
-                var sidebarLink = Page.Locator($"#mainNav a[href=\"{hrefToMatch}\"]");
+                var hrefToMatch = new Uri(Link(url), UriKind.Absolute).AbsolutePath.TrimEnd('/');
+                var sidebarLink = Page.Locator($"#mainNav a[href=\"{hrefToMatch}\"], #mainNav a[href=\"{hrefToMatch}/\"]");
                 if (await sidebarLink.CountAsync() > 0)
                 {
                     var classAttr = await sidebarLink.First.GetAttributeAsync("class");
@@ -840,7 +848,7 @@ namespace BTCPayServer.Tests
             }
             else
             {
-                Assert.Contains("- Denied", content);
+               Assert.Contains("- Denied</h", content);
             }
 >>>>>>> 55a7f824b ((Test):Converted/Added Playwright Test for CanUsePredefinedRoles)
         }

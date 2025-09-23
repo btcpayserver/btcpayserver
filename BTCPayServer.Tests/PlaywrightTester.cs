@@ -333,16 +333,12 @@ namespace BTCPayServer.Tests
                 await navAccount.ClickAsync();
                 await navLogout.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
                 await navLogout.ClickAsync();
-                               }
+            }
             else if (await navLogout.IsVisibleAsync())
             {
                  await navLogout.ClickAsync();
             }
             else if (await logoutAnchor.IsVisibleAsync())
-            {
-                await logoutAnchor.ClickAsync();
-            }
-             else if (await logoutAnchor.IsVisibleAsync())
             {
                 await logoutAnchor.ClickAsync();
             }

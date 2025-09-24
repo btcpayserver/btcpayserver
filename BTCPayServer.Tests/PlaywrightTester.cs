@@ -324,31 +324,15 @@ namespace BTCPayServer.Tests
         }
         public async Task Logout()
         {
-            // Try to find the account nav or a logout button, or fallback to /logout
-            var navAccount = Page.Locator("#Nav-Account");
-            var navLogout = Page.Locator("#Nav-Logout");
-            var logoutAnchor = Page.Locator("a[href='/logout']");
-            if (await navAccount.IsVisibleAsync())
+            // go to the logout URL 
+            await GoToUrl("/logout");
+            // Wait for the page to load after logout
+            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            // If ended up on store creation page (user has no stores), go to login page
+            if (Page.Url.Contains("/stores/create"))
             {
-                await navAccount.ClickAsync();
-                await navLogout.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
-                await navLogout.ClickAsync();
+                await GoToUrl("/login");
             }
-            else if (await navLogout.IsVisibleAsync())
-            {
-                 await navLogout.ClickAsync();
-            }
-            else if (await logoutAnchor.IsVisibleAsync())
-            {
-                await logoutAnchor.ClickAsync();
-            }
-            else
-            {
-                await GoToUrl("/logout");
-            }
-            // Wait for login form or login page URL as a sign of successful logout
-            await Page.WaitForURLAsync("**/login");
-            await Page.Locator("#LoginButton").WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 15000 });
         }
 
         public async Task GoToHome()

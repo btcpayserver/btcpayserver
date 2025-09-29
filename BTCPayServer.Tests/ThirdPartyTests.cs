@@ -134,7 +134,7 @@ namespace BTCPayServer.Tests
         public async Task CanQueryDirectProviders()
         {
             // TODO: Check once in a while whether or not they are working again
-            string[] brokenShitcoinCasinos = { "bitnob", "binance", "coinbasepro" };
+            string[] brokenShitcoinCasinos = { "bitnob", "binance", "coinbasepro", "zano" };
             var skipped = 0;
             var factory = FastTests.CreateBTCPayRateFactory();
             var directlySupported = factory.AvailableRateProviders.Where(s => s.Source == RateSource.Direct)
@@ -234,6 +234,12 @@ namespace BTCPayServer.Tests
                         e => e.CurrencyPair == new CurrencyPair("BTC", "CZK") &&
                              e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 CZK
                 }
+                else if (name == "zano") 
+                {
+
+                    Assert.Contains(exchangeRates.ByExchange[name], e => e.CurrencyPair == new CurrencyPair("ZANO", "USD") &&
+                    e.BidAsk.Bid > 0.01m);
+                }
                 else
                 {
                     if (name == "kraken")
@@ -251,6 +257,8 @@ namespace BTCPayServer.Tests
                                 && e.BidAsk.Bid > 1.0m // 1BTC will always be more than 1USD
                     );
                 }
+                
+                
                 // We are not showing a directly implemented exchange as directly implemented in the UI
                 // we need to modify the AvailableRateProvider
 

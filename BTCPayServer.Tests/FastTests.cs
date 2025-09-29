@@ -249,7 +249,7 @@ namespace BTCPayServer.Tests
             id = PaymentMethodId.Parse("XMR");
             id1 = PaymentMethodId.Parse("XMR-MoneroLike");
             Assert.Equal(id, id1);
-            Assert.Equal("XMR-CHAIN", id.ToString());
+            Assert.Equal("XMR-MoneroLike", id.ToString());
         }
 
         [Fact]

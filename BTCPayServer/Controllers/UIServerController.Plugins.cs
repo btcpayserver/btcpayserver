@@ -93,7 +93,7 @@ namespace BTCPayServer.Controllers
             pluginService.EnablePlugin(plugin);
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
-                Message = StringLocalizer["Plugin scheduled to be enable."].Value,
+                Message = StringLocalizer["Plugin scheduled to be enabled."].Value,
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
 

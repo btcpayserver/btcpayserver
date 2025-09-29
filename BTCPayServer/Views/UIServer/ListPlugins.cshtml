@@ -303,18 +303,18 @@
                             }
                             
                             @if (DependentOn(plugin.Identifier))  
-+                            {  
-+                                <button type="button" class="btn btn-outline-warning d-flex align-items-center gap-3" data-bs-toggle="tooltip" title="This plugin cannot be disabled as it is depended on by other plugins." disabled>  
-+                                    <span text-translate="true">Disable</span>  
-+                                    <vc:icon symbol="warning" />  
-+                                </button>  
-+                            }  
-+                            else  
-+                            {  
-+                                <form asp-action="DisablePlugin" asp-route-plugin="@plugin.Identifier">  
-+                                    <button type="submit" class="btn btn-outline-warning" text-translate="true">Disable</button>  
-+                                </form>  
-+                            }
+                            {
+                                <button type="button" class="btn btn-outline-warning d-flex align-items-center gap-3" data-bs-toggle="tooltip" title="This plugin cannot be disabled as it is depended on by other plugins." disabled>
+                                    <span text-translate="true">Disable</span>
+                                    <vc:icon symbol="warning" />
+                                </button>
+                            }
+                            else
+                            {
+                                <form asp-action="DisablePlugin" asp-route-plugin="@plugin.Identifier">  
+                                     <button type="submit" class="btn btn-outline-warning" text-translate="true">Disable</button>  
+                                 </form>  
+                            }
                             
                             
                             @if (DependentOn(plugin.Identifier))

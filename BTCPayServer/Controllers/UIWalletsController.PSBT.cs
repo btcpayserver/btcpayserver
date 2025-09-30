@@ -86,6 +86,7 @@ namespace BTCPayServer.Controllers
                     BackUrl = vm.BackUrl
                 });
             }
+
             switch (command)
             {
                 case "vault":
@@ -170,6 +171,7 @@ namespace BTCPayServer.Controllers
             {
                 return View("WalletPSBT", vm);
             }
+
             switch (command)
             {
                 case "createpending":
@@ -373,14 +375,25 @@ namespace BTCPayServer.Controllers
                 vm.FeeRate = feeRate.ToString();
             }
 
-            var sanityErrors = psbtObject.CheckSanity();
-            if (sanityErrors.Count != 0)
+            if (!psbtObject.IsAllFinalized())
             {
-                vm.SetErrors(sanityErrors);
-            }
-            else if (!psbtObject.IsAllFinalized() && !psbtObject.TryFinalize(out var errors))
-            {
-                vm.SetErrors(errors);
+                var sanityErrors = new List<PSBTError>();
+                foreach (var input in psbtObject.Inputs)
+                {
+                    if (input.IsFinalized())
+                        continue;
+
+                    if (input.GetSignableCoin(out var missingCoin) is null)
+                    {
+                        sanityErrors.Add(new PSBTError(input.Index, missingCoin));
+                    }
+                    else if (!input.TryFinalizeInput(out var err))
+                    {
+                        sanityErrors.Add(err[0]);
+                    }
+                }
+                if (sanityErrors.Count > 0)
+                    vm.SetErrors(sanityErrors);
             }
 
             var combinedTypeIds = inputToObjects.Values.SelectMany(ids => ids).Concat(outputToObjects.Values)

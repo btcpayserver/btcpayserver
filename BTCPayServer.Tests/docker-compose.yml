@@ -69,7 +69,7 @@ services:
         - "sshd_datadir:/root/.ssh"
 
   devlnd:
-    image: btcpayserver/bitcoin:28.1
+    image: btcpayserver/bitcoin:29.1
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_WALLETDIR: "/data/wallets"
@@ -120,7 +120,7 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:28.1
+    image: btcpayserver/bitcoin:29.1
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_WALLETDIR: "/data/wallets"
@@ -136,6 +136,7 @@ services:
         zmqpubrawtx=tcp://0.0.0.0:28333
         deprecatedrpc=signrawtransaction
         fallbackfee=0.0002
+        minrelaytxfee=0.00001000
     ports:
       - "43782:43782"
       - "39388:39388"
@@ -215,7 +216,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.19.1-beta
+    image: btcpayserver/lnd:v0.19.3-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -253,7 +254,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.19.1-beta
+    image: btcpayserver/lnd:v0.19.3-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"

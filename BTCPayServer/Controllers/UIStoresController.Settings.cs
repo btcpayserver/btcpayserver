@@ -158,6 +158,8 @@ public partial class UIStoresController
             blob.CssUrl = null;
             needUpdate = true;
         }
+        if (!ModelState.IsValid)
+            return View(model);
 
         if (CurrentStore.SetStoreBlob(blob))
         {

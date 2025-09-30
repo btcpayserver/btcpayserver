@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.2.1
+
+### Bug fixes
+
+* Fix: Updating store settings would silently fail where there was a validation issue @NicolasDorier
+* Fix: Ensure unlisted installed plugins appear as updatable (#6896 #6893) @thgO-O
+* Fix: Icon spacing issues in multiple UI components (#6886 #6880) @bc1cindy
+* Fix: In Wallet Send page, coin selection would unexpectedly also clear labels (#6885 #6883 #6676) @thgO-O
+* Fix: Periodic tasks would sometimes stop firing (#6898) @NicolasDorier
+* Fix: Date column header isn't aligned properly (#6914) @NicolasDorier
+
 ## 2.2.0
 
 We recommend updating NBXplorer to version `2.5.28` to take full advantage of the features in this release.

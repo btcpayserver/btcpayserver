@@ -1180,7 +1180,7 @@ namespace BTCPayServer.Services
   "Registration": "",
   "Remember me": "",
   "Remember this machine": "",
-  "Remote plugins lookup failed. Try again later.": "",
+  "Remote plugins lookup failed. Try again later. Error: {0}": "",
   "Remove": "",
   "REMOVE": "",
   "Remove {0} wallet": "",

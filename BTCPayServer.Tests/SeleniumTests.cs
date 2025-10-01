@@ -246,22 +246,8 @@ namespace BTCPayServer.Tests
 
             // Check if we can enable the payment button
             s.GoToStore(StoreNavPages.PayButton);
-            s.Driver.FindElement(By.Id("enable-pay-button")).Click();
-            var wait = new WebDriverWait(s.Driver, TimeSpan.FromSeconds(10));
-            var button = wait.Until(d =>
-            {
-                try
-                {
-                    var el = d.FindElement(By.Id("disable-pay-button"));
-                    return (el.Displayed && el.Enabled) ? el : null;
-                }
-                catch (StaleElementReferenceException)
-                {
-                    return null;
-                }
-            });
-            button.Click();
-            //s.Driver.FindElement(By.Id("disable-pay-button")).Click();
+            s.Driver.FindElement(By.Id("enable-pay-button")).Click(); 
+            s.Driver.ForceClick(By.Id("disable-pay-button"));
             s.FindAlertMessage();
             s.GoToStore();
             Assert.False(s.Driver.FindElement(By.Id("AnyoneCanCreateInvoice")).Selected);
@@ -551,7 +537,7 @@ namespace BTCPayServer.Tests
             s.Driver.Navigate().GoToUrl(cfUrl);
             Assert.Contains("Page not found", s.Driver.Title, StringComparison.OrdinalIgnoreCase);
             s.Driver.Navigate().Back();
-            s.Driver.FindElement(By.Id("Nav-ArchivedApps")).Click();
+            s.Driver.ForceClick(By.Id("Nav-ArchivedApps"));
 
             // Unarchive
             s.Driver.FindElement(By.Id($"App-{appId}")).Click();
@@ -583,7 +569,7 @@ namespace BTCPayServer.Tests
             // Crowdfund with perk
             s.GoToUrl(editUrl);
             s.Driver.ScrollTo(By.Id("btAddItem"));
-            s.Driver.FindElement(By.Id("btAddItem")).Click();
+            s.Driver.ForceClick(By.Id("btAddItem"));
             s.Driver.WaitUntilAvailable(By.Id("EditorTitle"));
             s.Driver.FindElement(By.Id("EditorTitle")).SendKeys("Perk 1");
             s.Driver.FindElement(By.Id("EditorAmount")).SendKeys("20");
@@ -594,7 +580,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.CssSelector(".offcanvas-header button")).Click();
             s.Driver.WaitUntilAvailable(By.Id("CodeTabButton"));
             s.Driver.ScrollTo(By.Id("CodeTabButton"));
-            s.Driver.FindElement(By.Id("CodeTabButton")).Click();
+            s.Driver.ForceClick(By.Id("CodeTabButton"));
             var template = s.Driver.FindElement(By.Id("TemplateConfig")).GetAttribute("value");
             Assert.Contains("\"title\": \"Perk 1\"", template);
             Assert.Contains("\"id\": \"Perk-1\"", template);
@@ -626,14 +612,14 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             s.RegisterNewUser();
             s.CreateNewStore();
-            s.Driver.FindElement(By.Id("StoreNav-PaymentRequests")).Click();
+            s.Driver.ForceClick(By.Id("StoreNav-PaymentRequests"));
 
             // Should give us an error message if we try to create a payment request before adding a wallet
             s.ClickPagePrimary();
             Assert.Contains("To create a payment request, you need to", s.Driver.PageSource);
 
             s.AddDerivationScheme();
-            s.Driver.FindElement(By.Id("StoreNav-PaymentRequests")).Click();
+            s.Driver.ForceClick(By.Id("StoreNav-PaymentRequests"));
             s.ClickPagePrimary();
             s.Driver.FindElement(By.Id("Title")).SendKeys("Pay123");
             s.Driver.FindElement(By.Id("Amount")).Clear();

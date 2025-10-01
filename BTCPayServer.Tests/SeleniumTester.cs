@@ -222,7 +222,7 @@ retry:
             Assert.Equal("Recommendation (Kraken)", rateSource.SelectedOption.Text);
             rateSource.SelectByText("CoinGecko");
             Driver.WaitForElement(By.Id("Create")).Click();
-            Driver.FindElement(By.Id("StoreNav-General")).Click();
+            Driver.ForceClick(By.Id("StoreNav-General"));
             var storeId = Driver.WaitForElement(By.Id("Id")).GetAttribute("value");
             if (keepId)
                 StoreId = storeId;
@@ -415,8 +415,8 @@ retry:
         {
             if (!Driver.PageSource.Contains("id=\"Nav-Logout\""))
                 GoToUrl("/account");
-            Driver.FindElement(By.Id("Nav-Account")).Click();
-            Driver.FindElement(By.Id("Nav-Logout")).Click();
+            Driver.ForceClick(By.Id("Nav-Account"));
+            Driver.ForceClick(By.Id("Nav-Logout"));
         }
 
         public void LogIn()
@@ -447,14 +447,14 @@ retry:
 
             if (storeNavPage != StoreNavPages.General)
             {
-                Driver.FindElement(By.Id($"StoreNav-{StoreNavPages.General}")).Click();
+                Driver.ForceClick(By.Id($"StoreNav-{StoreNavPages.General}"));
             }
-            Driver.FindElement(By.Id($"StoreNav-{storeNavPage}")).Click();
+            Driver.ForceClick(By.Id($"StoreNav-{storeNavPage}"));
         }
 
         public void GoToWalletSettings(string cryptoCode = "BTC")
         {
-            Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
+            Driver.ForceClick(By.Id($"StoreNav-Wallet{cryptoCode}"));
             if (Driver.PageSource.Contains("id=\"WalletNav-Settings\""))
             {
                 Driver.FindElement(By.Id("WalletNav-Settings")).Click();
@@ -463,7 +463,7 @@ retry:
 
         public void GoToLightningSettings(string cryptoCode = "BTC")
         {
-            Driver.FindElement(By.Id($"StoreNav-Lightning{cryptoCode}")).Click();
+            Driver.ForceClick(By.Id($"StoreNav-Lightning{cryptoCode}"));
             // if Lightning is already set up we need to navigate to the settings
             if (Driver.PageSource.Contains("id=\"StoreNav-LightningSettings\""))
             {
@@ -480,7 +480,7 @@ retry:
         public void GoToInvoiceCheckout(string invoiceId = null)
         {
             invoiceId ??= InvoiceId;
-            Driver.FindElement(By.Id("StoreNav-Invoices")).Click();
+            Driver.ForceClick(By.Id("StoreNav-Invoices"));
             Driver.FindElement(By.Id($"invoice-checkout-{invoiceId}")).Click();
             CheckForJSErrors();
             Driver.WaitUntilAvailable(By.Id("Checkout"));
@@ -495,7 +495,7 @@ retry:
         {
             if (storeId is null)
             {
-                Driver.FindElement(By.Id("StoreNav-Invoices")).Click();
+                Driver.ForceClick(By.Id("StoreNav-Invoices"));
             }
             else
             {
@@ -506,11 +506,11 @@ retry:
 
         public void GoToProfile(ManageNavPages navPages = ManageNavPages.Index)
         {
-            Driver.WaitForAndClick(By.Id("Nav-Account"));
-            Driver.WaitForAndClick(By.Id("Nav-ManageAccount"));
+            Driver.ForceClick(By.Id("Nav-Account"));
+            Driver.ForceClick(By.Id("Nav-ManageAccount"));
             if (navPages != ManageNavPages.Index)
             {
-                Driver.WaitForAndClick(By.Id($"SectionNav-{navPages.ToString()}"));
+                Driver.ForceClick(By.Id($"SectionNav-{navPages.ToString()}"));
             }
         }
 
@@ -619,7 +619,7 @@ retry:
             }
             else if (navPages != WalletsNavPages.Transactions)
             {
-                Driver.FindElement(By.Id($"WalletNav-{navPages}")).Click();
+                Driver.ForceClick(By.Id($"WalletNav-{navPages}"));
             }
         }
 
@@ -630,10 +630,10 @@ retry:
 
         public void GoToServer(ServerNavPages navPages = ServerNavPages.Policies)
         {
-            Driver.FindElement(By.Id("Nav-ServerSettings")).Click();
+            Driver.ForceClick(By.Id("Nav-ServerSettings"));
             if (navPages != ServerNavPages.Policies)
             {
-                Driver.FindElement(By.Id($"SectionNav-{navPages}")).Click();
+                Driver.ForceClick(By.Id($"SectionNav-{navPages}"));
             }
         }
 
@@ -671,7 +671,7 @@ retry:
         {
             if (string.IsNullOrEmpty(name))
                 name = $"{type}-{Guid.NewGuid().ToString()[..14]}";
-            Driver.FindElement(By.Id($"StoreNav-Create{type}")).Click();
+            Driver.ForceClick(By.Id($"StoreNav-Create{type}"));
             Driver.FindElement(By.Name("AppName")).SendKeys(name);
             ClickPagePrimary();
             Assert.Contains("App successfully created", FindAlertMessage().Text);

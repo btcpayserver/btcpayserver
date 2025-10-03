@@ -247,21 +247,7 @@ namespace BTCPayServer.Tests
             // Check if we can enable the payment button
             s.GoToStore(StoreNavPages.PayButton);
             s.Driver.FindElement(By.Id("enable-pay-button")).Click();
-            var wait = new WebDriverWait(s.Driver, TimeSpan.FromSeconds(10));
-            var button = wait.Until(d =>
-            {
-                try
-                {
-                    var el = d.FindElement(By.Id("disable-pay-button"));
-                    return (el.Displayed && el.Enabled) ? el : null;
-                }
-                catch (StaleElementReferenceException)
-                {
-                    return null;
-                }
-            });
-            button.Click();
-            //s.Driver.FindElement(By.Id("disable-pay-button")).Click();
+            s.Driver.FindElement(By.Id("disable-pay-button")).Click();
             s.FindAlertMessage();
             s.GoToStore();
             Assert.False(s.Driver.FindElement(By.Id("AnyoneCanCreateInvoice")).Selected);

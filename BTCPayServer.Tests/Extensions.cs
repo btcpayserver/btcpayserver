@@ -234,22 +234,7 @@ retry:
             driver.WaitUntilAvailable(selector);
             driver.FindElement(selector).Click();
         }
-        public static IWebElement WaitUntilPresent(this IWebDriver driver, By locator, int timeoutSeconds = 10)
-        {
-            var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(timeoutSeconds));
-            return wait.Until(d =>
-            {
-                try
-                { return d.FindElement(locator); }
-                catch (NoSuchElementException) { return null; }
-                catch (StaleElementReferenceException) { return null; }
-            });
-        }
-        public static void ForceClick(this IWebDriver driver, By locator, int timeoutSeconds = 10)
-        {
-            var element = driver.WaitUntilPresent(locator, timeoutSeconds);
-            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", element);
-        }
+
         public static bool ElementDoesNotExist(this IWebDriver driver, By selector)
         {
             Assert.Throws<NoSuchElementException>(

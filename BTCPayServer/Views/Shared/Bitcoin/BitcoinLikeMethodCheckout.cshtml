@@ -7,12 +7,36 @@
 <template id="@BitcoinCheckoutModelExtension.CheckoutBodyComponentName">
     @await Component.InvokeAsync("UiExtensionPoint", new {location = "checkout-bitcoin-pre-content", model = Model})
     <div class="payment-box">
-        <div v-if="model.invoiceBitcoinUrlQR" class="qr-container clipboard-button" :data-qr-value="model.invoiceBitcoinUrlQR" :data-clipboard="model.invoiceBitcoinUrl" data-clipboard-confirm-element="#Address_@Model.PaymentMethodId [data-clipboard]">
-            <div>
-                <qrcode :value="model.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
+        <div v-if="model.invoiceBitcoinUrlQR" class="qr-container">
+
+            <!-- Tab Switcher -->
+            <div class="tabs mb-2">
+                <button
+                    :class="{ active: selectedTab === 'address' }"
+                    v-on:click="selectedTab = 'address'">
+                    With Payment Address Only
+                </button>
+
+                <button
+                    :class="{ active: selectedTab === 'bip' }"
+                    v-on:click="selectedTab = 'bip'">
+                    With Amount (If your wallet supports it)
+                </button>
             </div>
-            <img class="qr-icon" :src="model.cryptoImage" :alt="model.paymentMethodName"/>
+
+            <!-- QR Code Display -->
+            <div class="clipboard-button"
+                :data-qr-value="qrValue"
+                :data-clipboard="clipboardValue"
+                data-clipboard-confirm-element="#Address_@Model.PaymentMethodId [data-clipboard]">
+
+                <div>
+                    <qrcode :value="qrValue" tag="div" :options="qrOptions" />
+                </div>
+                <img class="qr-icon" :src="model.cryptoImage" :alt="model.paymentMethodName"/>
+            </div>
         </div>
+
         <div v-if="model.address" class="input-group mt-3">
             <div class="form-floating" id="Address_@Model.PaymentMethodId">
                 <vc:truncate-center text="model.address" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />
@@ -40,7 +64,7 @@
         },
         data () {
             // currentTab is needed for backwards-compatibility with old plugin versions
-            return { currentTab: undefined };
+            return { currentTab: undefined, selectedTab: 'address' };
         },
         computed: {
             hasPayjoin () {
@@ -49,6 +73,25 @@
             lightning () {
                 const match = this.model.invoiceBitcoinUrl.match(/[&?]lightning=(.*)&?/i);
                 return match ? match[1].toLowerCase() : null;
+            }
+            parsedInvoice () {
+                // Parse: bitcoin:address?amount=...
+                const match = this.model.invoiceBitcoinUrlQR.match(/^bitcoin:([^?]+)(?:\?amount=([\d.]+))?$/);
+                return {
+                    address: match ? match[1] : '',
+                    amount: match && match[2] ? match[2] : null
+                };
+            },
+            qrValue () {
+                return this.selectedTab === 'address'
+                    ? this.parsedInvoice.address
+                    : this.model.invoiceBitcoinUrlQR;
+            },
+            clipboardValue () {
+                // copy correct thing depending on tab
+                return this.selectedTab === 'address'
+                    ? this.parsedInvoice.address
+                    : this.model.invoiceBitcoinUrl;
             }
         }
     });

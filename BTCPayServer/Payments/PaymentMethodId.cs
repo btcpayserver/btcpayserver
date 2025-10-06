@@ -165,7 +165,7 @@ namespace BTCPayServer.Payments
             return paymentType.ToLowerInvariant() switch
             {
                 "lightninglike" or "lightningnetwork" or "offchain" or "off-chain" => PaymentTypes.LN,
-                "bitcoinlike" or "onchain" or "btclike" or "on-chain" or "zanolike" or "zcashlike" => PaymentTypes.CHAIN,
+                "bitcoinlike" or "onchain" or "btclike" or "on-chain" or "monerolike" or "zcashlike" => PaymentTypes.CHAIN,
                 "lnurlpay" => PaymentTypes.LNURL,
                 _ => null
             };

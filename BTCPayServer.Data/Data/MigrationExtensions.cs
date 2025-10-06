@@ -138,7 +138,7 @@ namespace BTCPayServer.Data
             {
                 return paymentType switch
                 {
-                    "BTCLike" or "MoneroLike" or "ZanoLike" or "ZcashLike" => $"{cryptoCode}-CHAIN",
+                    "BTCLike" or "MoneroLike" or "ZcashLike" => $"{cryptoCode}-CHAIN",
                     "LightningLike" or "LightningNetwork" => $"{cryptoCode}-LN",
                     "LNURLPAY" => $"{cryptoCode}-LNURL",
                     "EthereumLike" => $"{cryptoCode}-LEGACY",
@@ -157,7 +157,7 @@ namespace BTCPayServer.Data
             {
                 return paymentType switch
                 {
-                    "BTCLike" or "MoneroLike" or "ZanoLike" or "ZcashLike" => $"{cryptoCode}-CHAIN",
+                    "BTCLike" or "MoneroLike" or "ZcashLike" => $"{cryptoCode}-CHAIN",
                     "LightningLike" or "LightningNetwork" => $"{cryptoCode}-LN",
                     "LNURLPAY" => $"{cryptoCode}-LNURL",
                     "EthereumLike" => $"{cryptoCode}-LEGACY",

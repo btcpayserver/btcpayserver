@@ -77,11 +77,6 @@ namespace BTCPayServer.Payments.Lightning
 
         public async Task ConfigurePrompt(PaymentMethodContext context)
         {
-            if (context.InvoiceEntity.Type == InvoiceType.TopUp)
-            {
-                throw new PaymentMethodUnavailableException("Lightning Network payment method is not available for top-up invoices");
-            }
-
             var paymentPrompt = context.Prompt;
 
             var preferOnion = Uri.TryCreate(context.InvoiceEntity.ServerUrl, UriKind.Absolute, out var u) && u.IsOnion();
@@ -109,7 +104,10 @@ namespace BTCPayServer.Payments.Lightning
             {
                 try
                 {
-                    var request = new CreateInvoiceParams(new LightMoney(due, LightMoneyUnit.BTC), description, expiry);
+                    var request = new CreateInvoiceParams(
+                        context.InvoiceEntity.Type == InvoiceType.TopUp ? LightMoney.Zero : new LightMoney(due, LightMoneyUnit.BTC), 
+                        description, 
+                        expiry);
                     request.PrivateRouteHints = storeBlob.LightningPrivateRouteHints;
                     lightningInvoice = await client.CreateInvoice(request, cts.Token);
                     var diff = request.Amount - lightningInvoice.Amount;

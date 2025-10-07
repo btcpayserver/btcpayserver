@@ -95,7 +95,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("invoices/{invoiceId}")]
-        [HttpGet("/stores/{storeId}/invoices/${invoiceId}")]
+        [HttpGet("/stores/{storeId}/invoices/{invoiceId}")]
         [Authorize(Policy = Policies.CanViewInvoices, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> Invoice(string invoiceId)
         {
@@ -837,13 +837,7 @@ namespace BTCPayServer.Controllers
             lang ??= storeBlob.DefaultLang;
 
             var receiptEnabled = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, invoice.ReceiptOptions).Enabled is true;
-            var receiptUrl = receiptEnabled ? _linkGenerator.GetUriByAction(
-                nameof(InvoiceReceipt),
-                "UIInvoice",
-                new { invoiceId },
-                Request.Scheme,
-                Request.Host,
-                Request.PathBase) : null;
+            var receiptUrl = receiptEnabled ? _linkGenerator.ReceiptLink(invoiceId, Request.GetRequestBaseUrl()) : null;
 
             var orderId = invoice.Metadata.OrderId;
             var supportUrl = !string.IsNullOrEmpty(storeBlob.StoreSupportUrl)

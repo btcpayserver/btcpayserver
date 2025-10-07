@@ -31,6 +31,7 @@
             const action = $target.dataset.action || ($target.nodeName === 'A'
                 ? $target.getAttribute('href')
                 : $target.form.getAttribute('action'))
+
             if ($form && !$form.hasAttribute('action')) $form.setAttribute('action', action)
             if (title) $title.textContent = title
             if (description) $description.innerHTML = description

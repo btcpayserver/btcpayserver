@@ -120,6 +120,9 @@ namespace BTCPayServer.Services.Rates
                 return ni;
             return null;
         }
+        public NumberFormatInfo GetNumberFormatInfoOrDefault(string currency)
+        => GetNumberFormatInfo(currency) ?? GetNumberFormatInfo("USD")!;
+
 
         public IFormatProvider GetCurrencyProvider(string currency)
         {

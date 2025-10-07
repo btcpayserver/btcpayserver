@@ -6,13 +6,13 @@ namespace BTCPayServer.Components.InvoiceStatus
 {
     public class InvoiceStatus : ViewComponent
     {
-        public IViewComponentResult Invoke(InvoiceState state, List<PaymentEntity> payments, string invoiceId, bool isArchived = false, bool hasRefund = false)
+        public IViewComponentResult Invoke(InvoiceState state, List<PaymentEntity> payments = null, string invoiceId = null, bool isArchived = false, bool hasRefund = false)
         {
             var vm = new InvoiceStatusViewModel
             {
                 State = state,
-                Payments = payments,
-                InvoiceId = invoiceId,
+                Payments = payments ?? new(),
+                InvoiceId = invoiceId ?? string.Empty,
                 IsArchived = isArchived,
                 HasRefund = hasRefund
             };

@@ -28,7 +28,7 @@ public class PlanEntitlementData
     {
         var b = builder.Entity<PlanEntitlementData>();
         b.HasKey(o => new { o.PlanId, o.EntitlementId });
-        b.HasOne(x => x.Plan).WithMany(x => x.PlanEntitlements).HasForeignKey(x => x.PlanId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne(x => x.Plan).WithMany().HasForeignKey(x => x.PlanId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne(x => x.Entitlement).WithMany().HasForeignKey(x => x.EntitlementId).OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -22,6 +22,7 @@ public class EntitlementData
     /// The ID selected by the user, scoped at the offering level.
     /// </summary>
     [Required]
+    [Column("custom_id")]
     public string CustomId { get; set; } = null!;
     [Required]
     [Column("offering_id")]

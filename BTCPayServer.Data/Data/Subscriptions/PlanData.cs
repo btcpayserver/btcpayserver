@@ -20,7 +20,6 @@ public class PlanData : BaseEntityData
     public string Id { get; set; } = null!;
 
     public List<SubscriberData> Subscriptions { get; set; } = null!;
-    public List<PlanEntitlementData> PlanEntitlements { get; set; } = null!;
 
     [Required]
     [Column("offering_id")]
@@ -108,6 +107,10 @@ public class PlanData : BaseEntityData
             });
         return (to, GracePeriodDays is 0 ? null : to.AddDays(GracePeriodDays));
     }
+
+    [NotMapped]
+    // Avoid cartesian explosion if there is lot's of entitlements
+    public List<PlanEntitlementData> PlanEntitlements { get; set; } = null!;
 
     public PlanEntitlementData? GetEntitlement(long entitmentId)
         => PlanEntitlements.FirstOrDefault(p => p.EntitlementId == entitmentId);

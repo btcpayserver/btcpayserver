@@ -16,6 +16,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Views.UIStoreMembership;
+using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -482,31 +483,25 @@ public partial class UISubscriptionsController(
             };
         }
 
-        foreach (var entitlement in offering.Entitlements)
-        {
-            var selected = vm.Entitlements.Any(e => e.Selected && e.CustomId == entitlement.CustomId);
-            var pe = plan.GetEntitlement(entitlement.Id);
-            if (selected && pe is null)
-            {
-                pe = new PlanEntitlementData();
-                pe.PlanId = plan.Id;
-                pe.EntitlementId = entitlement.Id;
-                ctx.PlanEntitlements.Add(pe);
-                plan.PlanEntitlements.Add(pe);
-            }
-            else if (!selected && pe is not null)
-            {
-                plan.PlanEntitlements.Remove(pe);
-                ctx.PlanEntitlements.Remove(pe);
-            }
-        }
-
         if (planId is null)
         {
             ctx.Plans.Add(plan);
         }
 
         await ctx.SaveChangesAsync();
+
+
+        var customIdsToIds = offering.Entitlements.ToDictionary(x => x.CustomId, x => x.Id);
+        var enabled = vm.Entitlements.Where(e => e.Selected).Select(e => customIdsToIds[e.CustomId]).ToArray();
+        await ctx.Database.GetDbConnection()
+            .ExecuteAsync("""
+                          DELETE FROM subscriptions_plans_entitlements
+                          WHERE plan_id = @planId AND NOT (entitlement_id = ANY(@enabled));
+                          INSERT INTO subscriptions_plans_entitlements(plan_id, entitlement_id)
+                          SELECT @planId, e FROM unnest(@enabled) e
+                          ON CONFLICT DO NOTHING;
+                          """, new { planId = plan.Id, enabled });
+
         if (planId is null)
             this.TempData.SetStatusSuccess(StringLocalizer["New plan created"]);
         else

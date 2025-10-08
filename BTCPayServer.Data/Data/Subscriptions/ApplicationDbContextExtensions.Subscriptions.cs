@@ -17,7 +17,6 @@ public static partial class ApplicationDbContextExtensions
     {
         var plan = await plans
             .Include(o => o.Offering).ThenInclude(o => o.App).ThenInclude(o => o.StoreData)
-            .Include(o => o.PlanEntitlements).ThenInclude(o => o.Entitlement)
             .Include(o => o.PlanChanges).ThenInclude(o => o.PlanChange)
             .Where(p => p.Id == planId)
             .FirstOrDefaultAsync();
@@ -25,8 +24,63 @@ public static partial class ApplicationDbContextExtensions
             return null;
         if (storeId is not null && plan?.Offering.App.StoreDataId != storeId)
             return null;
+        if (plan is not null)
+            await FetchPlanEntitlementsAsync(plans, plan);
         return plan;
     }
+
+    public static async Task FetchPlanEntitlementsAsync<T>(this DbSet<T> ctx, IEnumerable<PlanData> plans) where T : class
+    {
+        var planIds = plans.Select(p => p.Id).Distinct().ToArray();
+        var result = await ctx.GetDbConnection()
+            .QueryAsync<(
+                string Id,
+                long[] EIds,
+                string[] ECIds,
+                string[] EDesc,
+                string[] EName)>
+                (
+                """
+                    SELECT pId,
+                           array_agg(spe.entitlement_id),
+                           array_agg(se.custom_id),
+                           array_agg(se.description)
+                    FROM unnest(@planIds) pId
+                    JOIN subscriptions_plans_entitlements spe ON spe.plan_id = pId
+                    JOIN subscriptions_entitlements se ON se.id = spe.entitlement_id
+                    GROUP BY 1
+                """, new { planIds }
+                );
+        var res = result.ToDictionary(x => x.Id, x => x);
+        foreach (var plan in plans)
+        {
+            if (plan.PlanEntitlements is not null)
+                continue;
+            plan.PlanEntitlements = new();
+            if (res.TryGetValue(plan.Id, out var r))
+            {
+                for (int i = 0; i < r.ECIds.Length; i++)
+                {
+                    var pe = new PlanEntitlementData();
+                    pe.Plan = plan;
+                    pe.PlanId = plan.Id;
+                    pe.EntitlementId = r.EIds[i];
+                    pe.Entitlement = new()
+                    {
+                        Id = r.EIds[i],
+                        CustomId = r.ECIds[i],
+                        Description = r.EDesc[i],
+                    };
+                    plan.PlanEntitlements.Add(pe);
+                }
+            }
+        }
+    }
+
+
+    public static Task FetchPlanEntitlementsAsync<T>(this DbSet<T> ctx, PlanData plan) where T : class
+        => FetchPlanEntitlementsAsync(ctx, new[] { plan });
+
 
     public static async Task<OfferingData?> GetOfferingData(this DbSet<OfferingData> offerings, string offeringId, string? storeId = null)
     {
@@ -46,15 +100,17 @@ public static partial class ApplicationDbContextExtensions
 
     public static async Task<PlanCheckoutData?> GetCheckout(this DbSet<PlanCheckoutData> checkouts, string checkoutId)
     {
-        return await checkouts
+        var checkout = await checkouts
             .Include(x => x.Plan).ThenInclude(x => x.Offering).ThenInclude(x => x.App).ThenInclude(x => x.StoreData)
-            .Include(x => x.Plan).ThenInclude(x => x.PlanEntitlements).ThenInclude(x => x.Entitlement)
             .Include(x => x.Invoice)
             .Include(x => x.Subscriber).ThenInclude(x => x!.Customer).ThenInclude(x => x.CustomerIdentities)
             .Include(x => x.Subscriber).ThenInclude(x => x!.Credits)
             .Include(x => x.Subscriber).ThenInclude(x => x!.Plan)
             .Where(c => c.Id == checkoutId)
             .FirstOrDefaultAsync();
+        if (checkout is not null)
+            await FetchPlanEntitlementsAsync(checkouts, checkout.Plan);
+        return checkout;
     }
 
     public static async Task<(SubscriberData?, bool Created)> GetOrCreateByCustomerId(this DbSet<SubscriberData> subs, string custId, string offeringId, string planId, bool? optimisticActivation, bool testAccount, JObject? newMemberMetadata = null)
@@ -85,7 +141,6 @@ public static partial class ApplicationDbContextExtensions
         .Include(s => s.Subscriber).ThenInclude(s => s.Customer).ThenInclude(s => s.CustomerIdentities)
         .Include(s => s.Subscriber).ThenInclude(s => s.Credits)
         .Include(s => s.Subscriber).ThenInclude(s => s.Plan).ThenInclude(s => s.PlanChanges).ThenInclude(s => s.PlanChange)
-        .Include(s => s.Subscriber).ThenInclude(s => s.Plan).ThenInclude(s => s.PlanEntitlements).ThenInclude(s => s.Entitlement)
         .Include(s => s.Subscriber).ThenInclude(s => s.Plan).ThenInclude(s => s.Offering).ThenInclude(s => s.App).ThenInclude(s => s.StoreData);
 
     public static async Task<SubscriberData?> GetByCustomerId(this DbSet<SubscriberData> dbSet, string custId, string offeringId, string? planId = null,
@@ -98,6 +153,7 @@ public static partial class ApplicationDbContextExtensions
             (storeId != null && result.Plan?.Offering?.App?.StoreDataId != storeId) ||
             (planId != null && result.PlanId != planId))
             return null;
+        await FetchPlanEntitlementsAsync(dbSet, result.Plan);
         return result;
     }
 
@@ -105,12 +161,16 @@ public static partial class ApplicationDbContextExtensions
     => subscribers
             .Include(p => p.NewPlan)
             .Include(p => p.Plan).ThenInclude(p => p.Offering).ThenInclude(p => p.App)
-            .Include(p => p.Plan).ThenInclude(p => p.PlanEntitlements).ThenInclude(p => p.Entitlement)
             .Include(m => m.Customer).ThenInclude(c => c.CustomerIdentities)
             .Include(s => s.Credits);
 
-    public static Task<SubscriberData?> GetById(this IQueryable<SubscriberData> subscribers, long id)
-        => subscribers.IncludeAll().Where(s => s.Id == id).FirstOrDefaultAsync();
+    public static async Task<SubscriberData?> GetById(this DbSet<SubscriberData> subscribers, long id)
+    {
+        var sub = await subscribers.IncludeAll().Where(s => s.Id == id).FirstOrDefaultAsync();
+        if (sub != null)
+            await FetchPlanEntitlementsAsync(subscribers, sub.Plan);
+        return sub;
+    }
 
     public static async Task<CustomerData> GetOrUpdate(this DbSet<CustomerData> dbSet, string storeId, CustomerSelector selector)
     {

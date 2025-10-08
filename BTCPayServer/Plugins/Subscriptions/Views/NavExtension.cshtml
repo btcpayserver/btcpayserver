@@ -35,12 +35,12 @@
         var offeringId = app.Data.GetSettings<SubscriptionsAppType.AppConfig>().OfferingId ?? "";
 
         <li class="nav-item nav-item-sub" permission="@Policies.CanViewMembership">
-            <a asp-area="Subscriptions" asp-controller="UISubscriptions" asp-action="Offering" asp-route-storeId="@Model.Store.Id" asp-route-offeringId="@offeringId" class="nav-link @ViewData.ActivePageClass(AppsNavPages.Update, @offeringId)" id="@($"StoreNav-Offering-{offeringId}")">
+            <a asp-area="Subscriptions" asp-controller="UISubscriptions" asp-action="Offering" asp-route-storeId="@Model.Store.Id" asp-route-offeringId="@offeringId" asp-route-section="Plans" class="nav-link @ViewData.ActivePageClass(AppsNavPages.Update, @offeringId)" id="@($"StoreNav-Offering-{offeringId}")">
                 <span>@app.AppName</span>
             </a>
         </li>
         <li class="nav-item nav-item-sub" not-permission="@Policies.CanViewMembership">
-            <a asp-area="Subscriptions" asp-controller="UISubscriptions" asp-action="Offering" asp-route-storeId="@Model.Store.Id" asp-route-offeringId="@offeringId" class="nav-link">
+            <a asp-area="Subscriptions" asp-controller="UISubscriptions" asp-action="Offering" asp-route-storeId="@Model.Store.Id" asp-route-offeringId="@offeringId" asp-route-section="Plans" class="nav-link">
                 <span>@app.AppName</span>
             </a>
         </li>

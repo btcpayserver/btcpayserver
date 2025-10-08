@@ -63,7 +63,7 @@ public partial class UISubscriptionsController(
             IsTrial = plan.TrialDays > 0 && isTrial,
             NewSubscriber = true,
             TestAccount = isTestAccount,
-            SuccessRedirectUrl = LinkGenerator.OfferingLink(storeId, offeringId, Request.GetRequestBaseUrl()),
+            SuccessRedirectUrl = LinkGenerator.OfferingLink(storeId, offeringId, SubscriptionSection.Subscribers, Request.GetRequestBaseUrl()),
             BaseUrl = Request.GetRequestBaseUrl(),
         };
 
@@ -132,8 +132,11 @@ public partial class UISubscriptionsController(
             TempData.SetStatusSuccess(message);
         }
 
-        return RedirectToAction(nameof(Offering), new { storeId, offeringId, section = SubscriptionSection.Subscribers });
+        return GoToOffering(storeId, offeringId, SubscriptionSection.Subscribers);
     }
+
+    private RedirectToActionResult GoToOffering(string storeId, string offeringId, SubscriptionSection section = SubscriptionSection.Plans)
+    => RedirectToAction(nameof(Offering), new { storeId, offeringId, section = section });
 
     [HttpPost("stores/{storeId}/offerings")]
     public async Task<IActionResult> CreateOffering(string storeId, CreateOfferingViewModel vm, string? command = null)
@@ -174,10 +177,10 @@ public partial class UISubscriptionsController(
                 Url.Action(nameof(ConfigureOffering), new { storeId, offeringId = o.Id })!],
             Severity = StatusMessageModel.StatusSeverity.Success
         });
-        return RedirectToAction(nameof(Offering), new { storeId, offeringId = o.Id });
+        return GoToOffering(storeId, o.Id, SubscriptionSection.Plans);
     }
 
-    [HttpGet("stores/{storeId}/offerings/{offeringId}/{section=Plans}")]
+    [HttpGet("stores/{storeId}/offerings/{offeringId}/{section}")]
     public async Task<IActionResult> Offering(string storeId, string offeringId, SubscriptionSection section = SubscriptionSection.Plans, string? checkoutPlanId = null)
     {
         await using var ctx = DbContextFactory.CreateContext();
@@ -289,7 +292,7 @@ public partial class UISubscriptionsController(
 
         await ctx.SaveChangesAsync();
         this.TempData.SetStatusSuccess(StringLocalizer["Offering configuration updated"]);
-        return RedirectToAction(nameof(Offering), new { storeId, offeringId });
+        return GoToOffering(storeId, offeringId);
     }
 
     private static void UpdateEntitlements(ApplicationDbContext ctx, OfferingData offering, ConfigureOfferingViewModel vm)
@@ -362,7 +365,7 @@ public partial class UISubscriptionsController(
             this.TempData.SetStatusSuccess(StringLocalizer["Plan deleted"]);
         }
 
-        return RedirectToAction(nameof(Offering), new { storeId, offeringId });
+        return GoToOffering(storeId, offeringId);
     }
 
     [HttpGet("stores/{storeId}/offerings/{offeringId}/add-plan")]
@@ -507,7 +510,7 @@ public partial class UISubscriptionsController(
             this.TempData.SetStatusSuccess(StringLocalizer["New plan created"]);
         else
             this.TempData.SetStatusSuccess(StringLocalizer["Plan edited"]);
-        return RedirectToAction(nameof(Offering), new { storeId = plan.Offering.App.StoreDataId, offeringId = plan.OfferingId });
+        return GoToOffering(plan.Offering.App.StoreDataId, plan.OfferingId);
     }
 
     [HttpGet("stores/{storeId}/offerings/{offeringId}/subscribers/{customerId}/create-portal")]

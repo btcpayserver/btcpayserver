@@ -271,12 +271,13 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         await offering.NewSubscriber("Enterprise Plan", "enterprise@example.com", true);
 
         // basic@example.com is a basic plan subscriber (without optimistic activation), so he needs to wait confirmation
+        offering.GoToPlans();
         var edit = await offering.Edit("Basic Plan");
         edit.OptimisticActivation = false;
         await edit.Save();
 
         await offering.NewSubscriber("Basic Plan", "basic@example.com", false);
-
+        offering.GoToPlans();
         edit = await offering.Edit("Basic Plan");
         edit.OptimisticActivation = true;
         await edit.Save();
@@ -284,7 +285,6 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         // basic2@example.com is a basic plan subscriber (optimistic activation), so he is imediatly activated
         await offering.NewSubscriber("Basic Plan", "basic2@example.com", false);
 
-        await offering.GoToSubscribers();
         await offering.AssertHasSubscriber("enterprise@example.com", new()
         {
             Phase = SubscriberData.PhaseTypes.Trial,
@@ -439,8 +439,10 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             return new(s);
         }
 
-        public async Task GoToSubscribers()
-            => await s.Page.GetByRole(AriaRole.Link, new() { Name = "Subscribers" }).ClickAsync();
+        public Task GoToSubscribers()
+            => s.Page.GetByRole(AriaRole.Link, new() { Name = "Subscribers" }).ClickAsync();
+        public void GoToPlans()
+            => s.Page.GetByRole(AriaRole.Link, new() { Name = "Plans" }).ClickAsync();
 
         public enum ActiveState
         {

@@ -7,6 +7,7 @@ using BTCPayServer.Data;
 using BTCPayServer.HostedServices.Webhooks;
 using BTCPayServer.Plugins.Subscriptions.Controllers;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Views.UIStoreMembership;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -54,14 +55,14 @@ public class SubscriptionsAppType(
     {
         var config = app.GetSettings<AppConfig>();
         return Task.FromResult(linkGenerator.GetPathByAction(nameof(UISubscriptionsController.Offering),
-            "UISubscriptions", new { storeId = app.Id, offeringId = config?.OfferingId }, btcPayServerOptions.Value.RootPath)!);
+            "UISubscriptions", new { storeId = app.Id, offeringId = config?.OfferingId, section = SubscriptionSection.Plans }, btcPayServerOptions.Value.RootPath)!);
     }
 
     public override Task<string> ViewLink(AppData app)
     {
         var config = app.GetSettings<AppConfig>();
         return Task.FromResult(linkGenerator.GetPathByAction(nameof(UISubscriptionsController.Offering),
-            "UISubscriptions", new { storeId = app.Id, offeringId = config?.OfferingId }, btcPayServerOptions.Value.RootPath)!);
+            "UISubscriptions", new { storeId = app.Id, offeringId = config?.OfferingId, section = SubscriptionSection.Plans }, btcPayServerOptions.Value.RootPath)!);
     }
 
     public override Task SetDefaultSettings(AppData appData, string defaultCurrency)

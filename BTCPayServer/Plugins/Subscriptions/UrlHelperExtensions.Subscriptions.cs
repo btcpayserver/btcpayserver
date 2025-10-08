@@ -2,6 +2,7 @@
 using BTCPayServer.Abstractions;
 using BTCPayServer.Controllers;
 using BTCPayServer.Plugins.Subscriptions.Controllers;
+using BTCPayServer.Views.UIStoreMembership;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 
@@ -16,10 +17,10 @@ public static class UrlHelperExtensions
             controller: "UISubscriberPortal",
             requestBaseUrl: requestBaseUrl);
 
-    public static string OfferingLink(this LinkGenerator urlHelper, string storeId, string offeringId, RequestBaseUrl requestBaseUrl)
+    public static string OfferingLink(this LinkGenerator urlHelper, string storeId, string offeringId, SubscriptionSection section, RequestBaseUrl requestBaseUrl)
    =>  urlHelper.GetUriByAction(
        action: nameof(UISubscriptionsController.Offering),
-       values: new { area = SubscriptionsPlugin.Area, storeId, offeringId },
+       values: new { area = SubscriptionsPlugin.Area, storeId, offeringId, section },
        controller: "UISubscriptions",
        requestBaseUrl: requestBaseUrl);
 

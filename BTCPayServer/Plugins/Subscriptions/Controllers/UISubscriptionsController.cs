@@ -198,6 +198,11 @@ public partial class UISubscriptionsController(
         var vm = new SubscriptionsViewModel(offering) { Section = section };
         vm.TotalPlans = plans.Count;
         vm.TotalSubscribers = plans.Select(p => p.MemberCount).Sum();
+        vm.SelectablePlans = plans
+            .Where(p => p.Status == PlanData.PlanStatus.Active)
+            .OrderBy(p => p.Name)
+            .Select((p, i) => new SelectListItem(p.Name, p.Id))
+            .ToList();
         if (section == SubscriptionSection.Plans)
         {
             plans = plans

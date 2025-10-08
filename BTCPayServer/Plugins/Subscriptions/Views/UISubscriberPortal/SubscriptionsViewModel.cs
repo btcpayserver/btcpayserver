@@ -4,6 +4,7 @@ using System.Globalization;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using Microsoft.AspNetCore.Mvc.Razor;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Views.UIStoreMembership;
 
@@ -36,4 +37,5 @@ public class SubscriptionsViewModel
     public int TotalPlans { get; set; }
 
     public int TotalSubscribers { get; set; }
+    public List<SelectListItem> SelectablePlans { get; set; }
 }

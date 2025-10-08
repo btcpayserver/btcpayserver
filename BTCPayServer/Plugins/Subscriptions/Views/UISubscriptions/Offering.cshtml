@@ -163,6 +163,18 @@
     {
         <div class="d-flex justify-content-between align-items-center">
             <h4>Subscribers</h4>
+            <a
+                href="#"
+                permission="@Policies.CanModifyMembership"
+                text-translate="true"
+                role="button"
+                id="page-primary"
+                class="new-subscriber btn btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#newSubscriberModal">
+                Add subsriber
+            </a>
+
         </div>
 
         <!-- Subscription Plans Table -->
@@ -294,11 +306,17 @@
                         <div text-translate="true">Would you like to create a new subscriber?</div>
                     </div>
                     <div class="modal-body pt-0">
-                        <input name="planId" type="hidden" />
                         <div class="form-group">
                             <label for="newSubscriber-prefilledEmail" class="form-label" text-translate="true">Email</label>
                             <input id="newSubscriber-prefilledEmail" name="prefilledEmail" type="text" placeholder="Leave empty to let the customer configure it" class="form-control" />
                         </div>
+
+                        <div class="form-group">
+                            <label for="newSubscriber-plan" class="form-label" text-translate="true">Plan</label>
+                            <select id="newSubscriber-plan" name="planId" class="form-select" asp-items="Model.SelectablePlans"></select>
+                        </div>
+                        <input name="planId" type="hidden" />
+
                         <div class="form-group d-flex align-items-center">
                             <input id="newSubscriber-isTrial" name="isTrial" value="true" type="checkbox" class="btcpay-toggle me-3" >
                             <label class="form-check-label" for="newSubscriber-isTrial" text-translate="true">Enable trial</label>
@@ -429,23 +447,36 @@
             (function()
             {
                 const modalEl = document.getElementById('newSubscriberModal');
+                var selectPlan = modalEl.querySelector("select[name='planId']");
+                var trialInput = modalEl.querySelector("input[name='isTrial']");
+                var trialDiv = trialInput.closest('.form-group');
+
                 modalEl.addEventListener('show.bs.modal', function (event) {
                     const trigger = event.relatedTarget;
                     if (!trigger) return;
                     const tr = trigger.closest('tr');
+                    if (tr) {
+                        var planId = tr.getAttribute('data-plan-id');
+                        var canTrial = tr.getAttribute('data-allow-trial') === 'True';
+                        trialInput.checked = false;
+                        if (canTrial) {
+                            trialDiv.style.display = '';
+                        } else {
+                            trialDiv.style.cssText = 'display: none !important';
+                        }
+                        modalEl.querySelector("input[name='isTestAccount']").checked = false;
+                        modalEl.querySelector("input[name='planId']").value = planId;
 
-                    var canTrial = tr.getAttribute('data-allow-trial') === 'True';
-
-                    var trialInput = modalEl.querySelector("input[name='isTrial']");
-                    var trialDiv = trialInput.closest('.form-group');
-                    trialInput.checked = false;
-                    if (canTrial) {
-                        trialDiv.style.display = '';
-                    } else {
-                        trialDiv.style.cssText = 'display: none !important';
+                        selectPlan.value = planId;
+                        selectPlan.disabled = true;
                     }
-                    modalEl.querySelector("input[name='isTestAccount']").checked = false;
-                    modalEl.querySelector("input[name='planId']").value = tr.getAttribute('data-plan-id');
+                    else
+                    {
+                        trialDiv.style.display = '';
+                        trialInput.checked = false;
+                        selectPlan.value = planId;
+                        selectPlan.disabled = false;
+                    }
                 });
             })();
 
@@ -534,8 +565,6 @@
                     updateChargeAfter();
                 });
             })();
-
-
         });
     </script>
 </div>

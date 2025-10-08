@@ -24,11 +24,49 @@
         </span>
     </div>
     <input type="text" v-model="filter" class="form-control my-3" placeholder="@StringLocalizer["Filter by transaction id, amount, label, comment"]"/>
-    <div class="d-flex gap-3 my-2 align-items-center">
-        <span text-translate="true">Sort by</span>
-        <div class="btn-group gap-3" role="group">
-          <button type="button" class="btn btn-link p-0" :class="{active: sortOrder.startsWith('amount')}" v-on:click="sortBy('amount')" text-translate="true">Amount</button>
-          <button type="button" class="btn btn-link p-0" :class="{active: sortOrder.startsWith('confs')}" v-on:click="sortBy('confs')" text-translate="true">Confirmations</button>
+    <details class="text-muted small mt-2">
+        <summary text-translate="true">Available Filters (click to expand)</summary>
+        <ul class="mb-0">
+            <li class="mb-2"><b text-translate="true">General text search:</b> <span text-translate="true">txid, amount, comment, label</span></li>
+            <li class="mb-2">
+                <b text-translate="true">Minimum amount:</b>
+                <code class="clipboard-button clipboard-button-hover" :data-clipboard="'amountmin:'">amountmin:0.001</code>
+            </li>
+            <li class="mb-2">
+                <b text-translate="true">Maximum amount:</b>
+                <code class="clipboard-button clipboard-button-hover" :data-clipboard="'amountmax:'">amountmax:0.01</code>
+            </li>
+            <li class="mb-2">
+                <b text-translate="true">Created before date:</b>
+                <code class="clipboard-button clipboard-button-hover" :data-clipboard="'before:'">before:2024-01-01</code>
+            </li>
+            <li class="mb-2">
+                <b text-translate="true">Created after date:</b>
+                <code class="clipboard-button clipboard-button-hover" :data-clipboard="'after:'">after:2023-01-01</code>
+            </li>
+            <li class="mb-2"><b text-translate="true">Combine filters:</b> <code>tag1 amountmin:0.0005 before:2024-01-01</code></li>
+        </ul>
+    </details>
+    <div class="d-flex justify-content-between align-items-center my-2">
+        <div class="d-flex gap-2 align-items-center">
+            <input class="form-check-input flex-shrink-0"
+                   id="select-all-checkbox"
+                   type="checkbox"
+                   :checked="isSelectAllChecked"
+                   v-on:change="toggleSelectAllItems" />
+            <span text-translate="true">Select All</span>
+        </div>
+
+        <div class="d-flex gap-2 align-items-center">
+            <span text-translate="true">Sort by</span>
+            <div class="btn-group gap-3" role="group">
+                <button type="button" class="btn btn-link p-0"
+                        :class="{active: sortOrder.startsWith('amount')}"
+                        v-on:click="sortBy('amount')" text-translate="true">Amount</button>
+                <button type="button" class="btn btn-link p-0"
+                        :class="{active: sortOrder.startsWith('confs')}"
+                        v-on:click="sortBy('confs')" text-translate="true">Confirmations</button>
+            </div>
         </div>
     </div>
     <ul class="list-group list-group-flush mb-3" v-show="filteredItems.length">
@@ -57,17 +95,17 @@
                 <span v-if="item.comment" data-bs-toggle="tooltip" v-tooltip="item.comment" class="badge bg-info rounded-pill" style="min-width:2em">
                     <vc:icon symbol="info" />
                 </span>
-                <span class="text-muted text-nowrap flex-shrink-0 ms-2">{{item.amount}} @Model.CryptoCode</span>
                 <span :class="{'bg-secondary' : item.confirmations > 0, 'bg-warning' : item.confirmations <= 0}"
                       class="badge d-inline-flex align-items-center gap-1 py-1"
                       data-bs-toggle="tooltip"
                       v-tooltip="`${item.confirmations} confirmation${item.confirmations === 1 ? '' : 's'}`">
                     {{item.confirmations}} <vc:icon symbol="block" />
                 </span>
+                <span class="text-nowrap flex-shrink-0 ms-2" style="font-family: 'Courier';">{{item.amount.toFixed(@Model.CryptoDivisibility)}} @Model.CryptoCode</span>
             </div>
         </li>
     </ul>
-    
+
     <div class="d-grid d-sm-flex flex-wrap gap-3 justify-content-between">
         <ul class="pagination">
             <li class="page-item" :class="{'disabled' : pageStart == 0}">
@@ -92,15 +130,17 @@
         </div>
         <div class="d-flex gap-2 align-items-center">
             <span class="text-muted" text-translate="true">Page Size:</span>
-            <div class="btn-group gap-3" role="group">
-              <button type="button" class="btn btn-link p-0" :class="{active: pageSize === 10}" v-on:click="pageSize = 10; page = 0">10</button>
-              <button type="button" class="btn btn-link p-0" :class="{active: pageSize === 25}" v-on:click="pageSize = 25; page = 0">25</button>
-              <button type="button" class="btn btn-link p-0" :class="{active: pageSize === 50}" v-on:click="pageSize = 50; page = 0">50</button>
+            <div class="btn-group gap-2" role="group">
+                <button type="button" class="btn btn-link p-0" :class="{active: pageSize === 10}" v-on:click="pageSize = 10; page = 0">10</button>
+                <button type="button" class="btn btn-link p-0" :class="{active: pageSize === 25}" v-on:click="pageSize = 25; page = 0">25</button>
+                <button type="button" class="btn btn-link p-0" :class="{active: pageSize === 50}" v-on:click="pageSize = 50; page = 0">50</button>
+                <button type="button" class="btn btn-link p-0" :class="{active: pageSize === 100}" v-on:click="pageSize = 100; page = 0">100</button>
+                <button type="button" class="btn btn-link p-0" :class="{active: pageSize === 250}" v-on:click="pageSize = 250; page = 0">250</button>
+                <button type="button" class="btn btn-link p-0" :class="{active: pageSize === 500}" v-on:click="pageSize = 500; page = 0">500</button>
             </div>
         </div>
     </div>
 </div>
-
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     Vue.directive('tooltip', function(el, binding) {
@@ -161,31 +201,56 @@ document.addEventListener("DOMContentLoaded", function () {
             hasUnconfirmed: function() {
                 return this.items.filter(i => !i.confirmations).length > 0;
             },
-            filteredItems: function() {
-                var result = [];
-                if (!this.filter && !this.showUnconfirmedOnly) {
-                    var self = this;
-                    result = this.currentItems.map(function(currentItem) {
-                        return {...currentItem, selected: self.selectedInputs.indexOf(currentItem.outpoint) != -1
-                        }
-                    });
-                } else {
-                    var f = this.filter.toLowerCase();
-                    for (var i = 0; i < this.currentItems.length; i++) {
-                        var currentItem = this.currentItems[i];
-                        if 
-                            (currentItem.outpoint.indexOf(f) != -1 ||
-                                                         currentItem.amount.toString().indexOf(f) != -1 ||
-                                                         (currentItem.comment && currentItem.comment.toLowerCase().indexOf(f) != -1) ||
-                                                         (currentItem.labels && currentItem.labels.filter(function(l) {
-                                                             return l.text.toLowerCase().indexOf(f) != -1 || l.tooltip.toLowerCase().indexOf(f) != -1
-                                                         }).length > 0)) {
-                            result.push({...currentItem, selected: this.selectedInputs.indexOf(currentItem.outpoint) != -1
-                            });
+            filteredItems: function () {
+                const searchInput = this.filter.trim();
+                const parsedFilters = {};
+                const filteredResults = [];
+
+                if (searchInput) {
+                    for (const part of searchInput.split(" ")) {
+                        const [key, value] = part.split(":");
+                        if (value !== undefined) {
+                            parsedFilters[key.toLowerCase()] = value;
+                        } else {
+                            parsedFilters.text = parsedFilters.text ? parsedFilters.text + " " + key : key;
                         }
                     }
                 }
-                return result.slice(this.pageStart, this.pageEnd);
+
+                const amountMin = parsedFilters.amountmin ? parseFloat(parsedFilters.amountmin) : null;
+                const amountMax = parsedFilters.amountmax ? parseFloat(parsedFilters.amountmax) : null;
+                const beforeDate = parsedFilters.before ? new Date(parsedFilters.before).getTime() : null;
+                const afterDate = parsedFilters.after ? new Date(parsedFilters.after).getTime()  : null;
+                const searchTerm = parsedFilters.text?.toLowerCase();
+
+                for (const utxo of this.currentItems) {
+                    const matchesText = !searchTerm || (
+                        utxo.outpoint.toLowerCase().includes(searchTerm) ||
+                        utxo.amount.toString().includes(searchTerm) ||
+                        (utxo.comment?.toLowerCase().includes(searchTerm)) ||
+                        (utxo.labels?.some(l => l.text.toLowerCase().includes(searchTerm) || l.tooltip.toLowerCase().includes(searchTerm)))
+                    );
+
+                    if (!matchesText) continue;
+                    if (amountMin !== null && utxo.amount < amountMin) continue;
+                    if (amountMax !== null && utxo.amount > amountMax) continue;
+
+                    if (beforeDate !== null && utxo.timestamp) {
+                        const utxoTime = new Date(utxo.timestamp).getTime();
+                        if (utxoTime >= beforeDate) continue;
+                    }
+
+                    if (afterDate !== null && utxo.timestamp) {
+                        const utxoTime = new Date(utxo.timestamp).getTime();
+                        if (utxoTime <= afterDate) continue;
+                    }
+
+                    filteredResults.push({
+                        ...utxo,
+                        selected: this.selectedInputs.includes(utxo.outpoint)
+                    });
+                }
+                return filteredResults.slice(this.pageStart, this.pageEnd);
             },
             selectedItems: function() {
                 var result = [];
@@ -204,6 +269,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     result += this.selectedItems[i].amount;
                 }
                 return roundNumber(result, 12);
+            },
+            isSelectAllChecked: function () {
+                const visibleOutpoints = this.filteredItems.map(i => i.outpoint);
+                return visibleOutpoints.length > 0 && visibleOutpoints.every(outpoint => this.selectedInputs.includes(outpoint));
             }
         },
         mounted: function() {
@@ -230,7 +299,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 this.page = 0;
             },
             handle: function() {
-                if (this.selectedInputs.length == 0) {
+                if (this.selectedInputs.length === 0) {
                     this.showSelectedOnly = false;
                 }
                 if (this.currentItems.length < this.pageEnd) {
@@ -238,18 +307,42 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             },
             toggleItem: function(evt, item, toggle) {
-                if (evt.target.tagName == "A") {
+                if (evt.target.tagName === "A") {
                     return;
                 }
-                var res = $("#SelectedInputs").val();
+
+                let res = $("#SelectedInputs").val() || [];
+
                 if (toggle) {
                     res.push(item.outpoint);
-
                 } else {
-                    res.splice(this.selectedInputs.indexOf(item.outpoint), 1);
+                    res = res.filter(i => i !== item.outpoint);
                 }
 
-                $("select option").each(function() {
+                // Do NOT use $("select option") or you'll break other selects like output labels
+                $("select[name='SelectedInputs'] option").each(function () {
+                    var selected = res.indexOf($(this).attr("value")) !== -1;
+                    $(this).attr("selected", selected ? "selected" : null);
+                });
+
+                this.selectedInputs = res;
+                $(".crypto-balance-link").text(this.selectedAmount);
+            },
+            toggleSelectAllItems: function () {
+                const filteredOutpoints = this.filteredItems.map(item => item.outpoint);
+                let res = $("#SelectedInputs").val() || [];
+
+                const allSelected = filteredOutpoints.every(outpoint => res.includes(outpoint));
+
+                if (allSelected) {
+                    res = res.filter(outpoint => !filteredOutpoints.includes(outpoint));
+                } else {
+                    const set = new Set(res);
+                    filteredOutpoints.forEach(outpoint => set.add(outpoint));
+                    res = Array.from(set);
+                }
+
+                $("#SelectedInputs").find("option").each(function () {
                     var selected = res.indexOf($(this).attr("value")) !== -1;
                     $(this).attr("selected", selected ? "selected" : null);
                 });
@@ -276,3 +369,5 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 </script>
+
+<script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>

@@ -207,7 +207,7 @@ namespace BTCPayServer.Tests
                     Assert.Equal("paid", invoice.Status);
                 });
                 var wallet = tester.PayTester.GetController<UIWalletsController>();
-                var psbt = await wallet.CreatePSBT(btcNetwork, onchainBTC,
+                var psbt = await wallet.CreatePSBT(storeId, btcNetwork, onchainBTC,
                     new WalletSendModel()
                     {
                         Outputs = new List<WalletSendModel.TransactionOutput>
@@ -307,7 +307,6 @@ namespace BTCPayServer.Tests
                 var cashCow = tester.LTCExplorerNode;
                 var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
                 var firstPayment = Money.Coins(0.1m);
-                var firstDue = invoice.CryptoInfo[0].Due;
                 cashCow.SendToAddress(invoiceAddress, firstPayment);
                 TestUtils.Eventually(() =>
                 {
@@ -346,37 +345,35 @@ namespace BTCPayServer.Tests
 
 
         [Fact]
-        [Trait("Selenium", "Selenium")]
+        [Trait("Playwright", "Playwright")]
         [Trait("Altcoins", "Altcoins")]
         public async Task CanCreateRefunds()
         {
-            using (var s = CreateSeleniumTester())
-            {
-                s.Server.ActivateLTC();
-                await s.StartAsync();
-                var user = s.Server.NewAccount();
-                await user.GrantAccessAsync();
-                s.GoToLogin();
-                s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
-                user.RegisterDerivationScheme("BTC");
-                await s.Server.ExplorerNode.GenerateAsync(1);
+            await using var s = CreatePlaywrightTester();
+            s.Server.ActivateLTC();
+            await s.StartAsync();
+            var user = s.Server.NewAccount();
+            await user.GrantAccessAsync();
+            await s.GoToLogin();
+            await s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
+            await user.RegisterDerivationSchemeAsync("BTC");
+            await s.Server.ExplorerNode.GenerateAsync(1);
 
-                foreach (var multiCurrency in new[] { false, true })
+            foreach (var multiCurrency in new[] { false, true })
+            {
+                if (multiCurrency)
+                    await user.RegisterDerivationSchemeAsync("LTC");
+                foreach (var rateSelection in new[] { "FiatOption", "CurrentRateOption", "RateThenOption", "CustomOption" })
                 {
-                    if (multiCurrency)
-                        user.RegisterDerivationScheme("LTC");
-                    foreach (var rateSelection in new[] { "FiatOption", "CurrentRateOption", "RateThenOption", "CustomOption" })
-                    {
-                        TestLogs.LogInformation((multiCurrency, rateSelection).ToString());
-                        await CanCreateRefundsCore(s, user, multiCurrency, rateSelection);
-                    }
+                    TestLogs.LogInformation((multiCurrency, rateSelection).ToString());
+                    await CanCreateRefundsCore(s, user, multiCurrency, rateSelection);
                 }
             }
         }
 
-        private static async Task CanCreateRefundsCore(SeleniumTester s, TestAccount user, bool multiCurrency, string rateSelection)
+        private static async Task CanCreateRefundsCore(PlaywrightTester s, TestAccount user, bool multiCurrency, string rateSelection)
         {
-            s.GoToHome();
+            await s.GoToHome();
             s.Server.PayTester.ChangeRate("BTC_USD", new Rating.BidAsk(5000.0m, 5100.0m));
             var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice
             {
@@ -396,41 +393,43 @@ namespace BTCPayServer.Tests
 
             // BTC crash by 50%
             s.Server.PayTester.ChangeRate("BTC_USD", new Rating.BidAsk(5000.0m / 2.0m, 5100.0m / 2.0m));
-            s.GoToStore();
-            s.Driver.FindElement(By.Id("BOLT11Expiration")).Clear();
-            s.Driver.FindElement(By.Id("BOLT11Expiration")).SendKeys("5" + Keys.Enter);
-            s.GoToInvoice(invoice.Id);
-            s.Driver.FindElement(By.Id("IssueRefund")).Click();
+            await s.GoToStore();
+            await s.Page.FillAsync("#BOLT11Expiration", "5");
+
+            await s.Page.FillAsync("#BOLT11Expiration", "5");
+            await s.Page.PressAsync("#BOLT11Expiration", "Enter");
+            await s.GoToInvoice(invoice.Id);
+            await s.Page.ClickAsync("#IssueRefund");
 
             if (multiCurrency)
             {
-                s.Driver.WaitUntilAvailable(By.Id("RefundForm"), TimeSpan.FromSeconds(1));
-                s.Driver.WaitUntilAvailable(By.Id("SelectedPayoutMethod"), TimeSpan.FromSeconds(1));
-                s.Driver.FindElement(By.Id("SelectedPayoutMethod")).SendKeys("BTC" + Keys.Enter);
-                s.Driver.FindElement(By.Id("ok")).Click();
+                await s.Page.SelectOptionAsync("#SelectedPayoutMethod", "BTC-CHAIN");
+                await s.Page.ClickAsync("#ok");
             }
-            s.Driver.WaitUntilAvailable(By.Id("RefundForm"), TimeSpan.FromSeconds(1));
-            Assert.Contains("5,500.00 USD", s.Driver.PageSource); // Should propose reimburse in fiat
-            Assert.Contains("1.10000000 BTC", s.Driver.PageSource); // Should propose reimburse in BTC at the rate of before
-            Assert.Contains("2.20000000 BTC", s.Driver.PageSource); // Should propose reimburse in BTC at the current rate
-            s.Driver.WaitForAndClick(By.Id(rateSelection));
-            s.Driver.FindElement(By.Id("ok")).Click();
+            await s.Page.WaitForSelectorAsync("#RefundForm");
 
-            s.Driver.WaitUntilAvailable(By.Id("Destination"), TimeSpan.FromSeconds(1));
-            Assert.Contains("pull-payments", s.Driver.Url);
+            Assert.Equal("5,500.00 USD", await s.Page.TextContentAsync("label[for='FiatOption']"));
+            Assert.Equal("1.10000000 BTC", await s.Page.TextContentAsync("label[for='RateThenOption']"));
+            Assert.Equal("2.20000000 BTC", await s.Page.TextContentAsync("label[for='CurrentRateOption']"));
+
+            await s.Page.ClickAsync("#" + rateSelection);
+            await s.Page.ClickAsync("#ok");
+
+            var limit = await s.Page.Locator("#claimLimit").TextContentAsync();
+            Assert.Contains("pull-payments", s.Page.Url);
             if (rateSelection == "FiatOption")
-                Assert.Contains("5,500.00 USD", s.Driver.PageSource);
+                Assert.Equal("5,500.00 USD", limit);
             if (rateSelection == "CurrentOption")
-                Assert.Contains("2.20000000 BTC", s.Driver.PageSource);
+                Assert.Equal("2.20000000 BTC", limit);
             if (rateSelection == "RateThenOption")
-                Assert.Contains("1.10000000 BTC", s.Driver.PageSource);
+                Assert.Equal("1.10000000 BTC", limit);
 
-            s.GoToInvoice(invoice.Id);
-            s.Driver.FindElement(By.Id("IssueRefund")).Click();
-            s.Driver.WaitUntilAvailable(By.Id("Destination"), TimeSpan.FromSeconds(1));
-            Assert.Contains("pull-payments", s.Driver.Url);
+            await s.GoToInvoice(invoice.Id);
+            await s.Page.ClickAsync("#IssueRefund");
+            await s.Page.WaitForSelectorAsync("#Destination");
+            Assert.Contains("pull-payments", s.Page.Url);
             var client = await user.CreateClient();
-            var ppid = s.Driver.Url.Split('/').Last();
+            var ppid = s.Page.Url.Split('/').Last();
             var pps = await client.GetPullPayments(user.StoreId);
             var pp = Assert.Single(pps, p => p.Id == ppid);
             Assert.Equal(TimeSpan.FromDays(5.0), pp.BOLT11Expiration);
@@ -442,7 +441,7 @@ namespace BTCPayServer.Tests
         public async Task CanPayWithTwoCurrencies()
         {
             using var tester = CreateServerTester();
-            
+
             tester.ActivateLTC();
             await tester.StartAsync();
             var user = tester.NewAccount();
@@ -801,67 +800,10 @@ g:
                 var topupInvoice = invoices.Single(invoice => invoice.ItemCode == "g");
                 Assert.Equal(0, topupInvoice.Price);
                 Assert.Equal("new", topupInvoice.Status);
+                var client = await user.CreateClient();
+                var inv = await client.GetInvoice(user.StoreId, topupInvoice.Id);
+                Assert.Equal(InvoiceType.TopUp, inv.Type);
             }
-        }
-        
-        
-        [Fact]
-        [Trait("Integration", "Integration")]
-        public async Task CanUsePoSAppJsonEndpoint()
-        {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            await user.GrantAccessAsync();
-            user.RegisterDerivationScheme("BTC");
-            var apps = user.GetController<UIAppsController>();
-            var pos = user.GetController<UIPointOfSaleController>();
-            var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp(user.StoreId)).Model);
-            var appType = PointOfSaleAppType.AppType;
-            vm.AppName = "test";
-            vm.SelectedAppType = appType;
-            var redirect = Assert.IsType<RedirectResult>(apps.CreateApp(user.StoreId, vm).Result);
-            Assert.EndsWith("/settings/pos", redirect.Url);
-            var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
-            var app = appList.Apps[0];
-            var appData = new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = appType };
-            apps.HttpContext.SetAppData(appData);
-            pos.HttpContext.SetAppData(appData);
-            var vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
-            vmpos.Title = "App POS";
-            vmpos.Currency = "EUR";
-            Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
-
-            // Failing requests
-            var (invoiceId1, error1) = await PosJsonRequest(tester, app.Id, "amount=-21&discount=10&tip=2");
-            Assert.Null(invoiceId1);
-            Assert.Equal("Negative amount is not allowed", error1);
-            var (invoiceId2, error2) = await PosJsonRequest(tester, app.Id, "amount=21&discount=-10&tip=-2");
-            Assert.Null(invoiceId2);
-            Assert.Equal("Negative tip or discount is not allowed", error2);
-
-            // Successful request
-            var (invoiceId3, error3) = await PosJsonRequest(tester, app.Id, "amount=21");
-            Assert.NotNull(invoiceId3);
-            Assert.Null(error3);
-            
-            // Check generated invoice
-            var invoices = await user.BitPay.GetInvoicesAsync();
-            var invoice = invoices.First();
-            Assert.Equal(invoiceId3, invoice.Id);
-            Assert.Equal(21.00m, invoice.Price);
-            Assert.Equal("EUR", invoice.Currency);
-        }
-
-        private async Task<(string invoiceId, string error)> PosJsonRequest(ServerTester tester, string appId, string query)
-        {
-            var uriBuilder = new UriBuilder(tester.PayTester.ServerUri) { Path = $"/apps/{appId}/pos/light", Query = query };
-            var request = new HttpRequestMessage(HttpMethod.Post, uriBuilder.Uri);
-            request.Headers.Add("Accept", "application/json");
-            var response = await tester.PayTester.HttpClient.SendAsync(request);
-            var content = await response.Content.ReadAsStringAsync();
-            var json = JObject.Parse(content);
-            return (json["invoiceId"]?.Value<string>(), json["error"]?.Value<string>());
         }
     }
 }

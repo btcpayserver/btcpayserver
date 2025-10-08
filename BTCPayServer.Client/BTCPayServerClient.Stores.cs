@@ -30,6 +30,12 @@ public partial class BTCPayServerClient
         return await SendHttpRequest<StoreData>("api/v1/stores", request, HttpMethod.Post, token);
     }
 
+    public async Task<StoreData> UpdateStore(string storeId, StoreData request, CancellationToken token = default)
+    {
+        if (request is null)
+            throw new ArgumentNullException(nameof(request));
+        return await UpdateStore(storeId, Newtonsoft.Json.JsonConvert.DeserializeObject<UpdateStoreRequest>(Newtonsoft.Json.JsonConvert.SerializeObject(request)), token);
+    }
     public virtual async Task<StoreData> UpdateStore(string storeId, UpdateStoreRequest request, CancellationToken token = default)
     {
         if (request == null) throw new ArgumentNullException(nameof(request));

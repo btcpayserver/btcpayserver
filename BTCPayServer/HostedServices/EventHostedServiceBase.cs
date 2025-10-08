@@ -36,13 +36,35 @@ namespace BTCPayServer.HostedServices
         readonly Channel<object> _Events = Channel.CreateUnbounded<object>();
         public async Task ProcessEvents(CancellationToken cancellationToken)
         {
-            while (await _Events.Reader.WaitToReadAsync(cancellationToken))
+            // We want current job to finish before exiting
+            // ReSharper disable once MethodSupportsCancellation
+            while (await _Events.Reader.WaitToReadAsync())
             {
-                if (_Events.Reader.TryRead(out var evt))
+                while (_Events.Reader.TryRead(out var evt))
                 {
                     try
                     {
-                        await ProcessEvent(evt, cancellationToken);
+                        if (evt is ExecutingEvent e)
+                        {
+                            try
+                            {
+                                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, e.CancellationToken);
+                                await ProcessEvent(e.Event, linkedCts.Token);
+                                e.Tcs.TrySetResult();
+                            }
+                            catch (OperationCanceledException pce) when (e.CancellationToken.IsCancellationRequested || cancellationToken.IsCancellationRequested)
+                            {
+                                e.Tcs.TrySetCanceled(pce.CancellationToken);
+                            }
+                            catch (Exception ex)
+                            {
+                                e.Tcs.TrySetException(ex);
+                            }
+                        }
+                        else
+                        {
+                            await ProcessEvent(evt, cancellationToken);
+                        }
                     }
                     catch when (cancellationToken.IsCancellationRequested)
                     {
@@ -71,10 +93,22 @@ namespace BTCPayServer.HostedServices
         {
             _Subscriptions.Add(_EventAggregator.Subscribe<T>(e => _Events.Writer.TryWrite(e!)));
         }
+        protected void SubscribeAny<T>()
+        {
+            _Subscriptions.Add(_EventAggregator.SubscribeAny<T>(e => _Events.Writer.TryWrite(e!)));
+        }
 
         protected void PushEvent(object obj)
         {
             _Events.Writer.TryWrite(obj);
+        }
+
+        record ExecutingEvent(object Event, TaskCompletionSource Tcs, CancellationToken CancellationToken);
+        protected Task RunEvent(object obj, CancellationToken cancellationToken = default)
+        {
+            var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _Events.Writer.TryWrite(new ExecutingEvent(obj, tcs, cancellationToken));
+            return tcs.Task;
         }
 
         public virtual Task StartAsync(CancellationToken cancellationToken)
@@ -87,6 +121,7 @@ namespace BTCPayServer.HostedServices
 
         public virtual async Task StopAsync(CancellationToken cancellationToken)
         {
+            _Events.Writer.TryComplete();
             _Subscriptions.ForEach(subscription => subscription.Dispose());
             _Cts.Cancel();
             try

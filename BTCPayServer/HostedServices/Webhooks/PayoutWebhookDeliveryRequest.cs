@@ -8,9 +8,13 @@ using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.HostedServices.Webhooks;
 
-public class PayoutWebhookDeliveryRequest(PayoutEvent evt, string? webhookId, WebhookEvent webhookEvent,
-        WebhookDeliveryData? delivery, WebhookBlob? webhookBlob,
-        BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings)
+public class PayoutWebhookDeliveryRequest(
+    PayoutEvent evt,
+    string? webhookId,
+    WebhookEvent webhookEvent,
+    WebhookDeliveryData? delivery,
+    WebhookBlob? webhookBlob,
+    BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings)
     : WebhookSender.WebhookDeliveryRequest(webhookId!, webhookEvent, delivery!, webhookBlob!)
 {
     public override Task<SendEmailRequest?> Interpolate(SendEmailRequest req,

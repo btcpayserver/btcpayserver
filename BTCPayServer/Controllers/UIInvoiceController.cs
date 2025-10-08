@@ -145,7 +145,7 @@ namespace BTCPayServer.Controllers
                 amount = amountDue;
             var redirectUrl = _linkGenerator.PaymentRequestLink(id, request.Scheme, request.Host, request.PathBase);
 
-            JObject invoiceMetadata = prData.GetBlob()?.FormResponse ?? new JObject();
+            JObject invoiceMetadata = prBlob.FormResponse ?? new JObject();
             invoiceMetadata.Merge(new InvoiceMetadata
             {
                 OrderId = PaymentRequestRepository.GetOrderIdForPaymentRequest(id),
@@ -158,12 +158,13 @@ namespace BTCPayServer.Controllers
                 new CreateInvoiceRequest
                 {
                     Metadata = invoiceMetadata,
-                    Currency = prBlob.Currency,
+                    Currency = prData.Currency,
                     Amount = amount,
                     Checkout = { RedirectURL = redirectUrl },
                     Receipt = new InvoiceDataBase.ReceiptOptions { Enabled = false }
                 };
-
+            if (prData.ReferenceId is not null or "")
+                invoiceRequest.AdditionalSearchTerms = [prData.ReferenceId];
             var additionalTags = new List<string> { PaymentRequestRepository.GetInternalTag(id) };
             return await CreateInvoiceCoreRaw(invoiceRequest, storeData, request.GetAbsoluteRoot(), additionalTags, cancellationToken);
         }
@@ -262,18 +263,18 @@ namespace BTCPayServer.Controllers
                                               .ToList();
                 if (contexts.Count == 0)
                 {
-                    StringBuilder errors = new StringBuilder();
+                    var message = new StringBuilder();
                     if (!store.GetPaymentMethodConfigs(_handlers).Any())
-                        errors.AppendLine(
-                            "Warning: No wallet has been linked to your BTCPay Store. See the following link for more information on how to connect your store and wallet. (https://docs.btcpayserver.org/WalletSetup/)");
+                        message.AppendLine(
+                            "No wallet has been linked to your BTCPay Store. See the following link for more information on how to connect your store and wallet. (https://docs.btcpayserver.org/WalletSetup/)");
                     else
-                        errors.AppendLine("Warning: You have payment methods configured but none of them match any of the requested payment methods or the rate is not available. See logs below:");
-                    foreach (var error in logs.ToList())
                     {
-                        errors.AppendLine(error.ToString());
+                        message.AppendLine("Error retrieving a matching payment method or rate.");
+                        foreach (var error in logs.ToList())
+                            message.AppendLine(error.ToString());
                     }
 
-                    throw new BitpayHttpException(400, errors.ToString());
+                    throw new BitpayHttpException(400, message.ToString());
                 }
                 entity.SetPaymentPrompts(new PaymentPromptDictionary(contexts.Select(c => c.Prompt)));
             }

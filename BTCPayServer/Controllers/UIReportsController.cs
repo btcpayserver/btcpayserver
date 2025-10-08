@@ -71,7 +71,7 @@ public partial class UIReportsController : Controller
         {
             InvoiceTemplateUrl = Url.Action(nameof(UIInvoiceController.Invoice), "UIInvoice", new { invoiceId = "INVOICE_ID" }),
             ExplorerTemplateUrls = TransactionLinkProviders.ToDictionary(p => p.Key, p => p.Value.BlockExplorerLink?.Replace("{0}", "TX_ID")),
-            Request = new StoreReportRequest { ViewName = viewName ?? "Payments" },
+            Request = new StoreReportRequest { ViewName = viewName ?? GreenfieldReportsController.DefaultReport },
             AvailableViews = ReportService.ReportProviders
                 .Values
                 .Where(r => r.IsAvailable())

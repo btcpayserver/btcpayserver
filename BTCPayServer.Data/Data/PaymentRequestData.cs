@@ -1,4 +1,7 @@
 using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using BTCPayServer.Client.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
@@ -8,12 +11,23 @@ namespace BTCPayServer.Data
     {
         public string Id { get; set; }
         public DateTimeOffset Created { get; set; }
+        public DateTimeOffset? Expiry { get; set; }
         public string StoreDataId { get; set; }
         public bool Archived { get; set; }
+        public string Currency { get; set; }
+        public decimal Amount { get; set; }
+
+        /// <summary>
+        /// Linking to invoices outside BTCPay Server using & user defined ids
+        /// </summary>
+        public string ReferenceId { get; set; }
 
         public StoreData StoreData { get; set; }
 
-        public Client.Models.PaymentRequestData.PaymentRequestStatus Status { get; set; }
+        public Client.Models.PaymentRequestStatus Status { get; set; }
+
+        [NotMapped]
+        public bool Expirable => Status is PaymentRequestStatus.Pending or PaymentRequestStatus.Processing && Expiry is not null;
 
         [Obsolete("Use Blob2 instead")]
         public byte[] Blob { get; set; }
@@ -35,6 +49,9 @@ namespace BTCPayServer.Data
             builder.Entity<PaymentRequestData>()
                 .Property(o => o.Blob2)
                 .HasColumnType("JSONB");
+            builder.Entity<PaymentRequestData>()
+                .Property(p => p.Status)
+                .HasConversion<string>();
         }
     }
 }

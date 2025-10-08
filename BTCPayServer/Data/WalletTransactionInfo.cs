@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Labels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -19,7 +20,7 @@ namespace BTCPayServer.Data
         }
         [JsonIgnore]
         public WalletId WalletId { get; }
-        public string Comment { get; set; } = string.Empty;
+        public string? Comment { get; set; } = string.Empty;
         [JsonIgnore]
         public List<Attachment> Attachments { get; set; } = new List<Attachment>();
 
@@ -81,6 +82,8 @@ namespace BTCPayServer.Data
                 return _LegacyLabels;
             }
         }
+
+        public RateBook? Rates { get; set; }
 
         public WalletTransactionInfo Merge(WalletTransactionInfo? value)
         {

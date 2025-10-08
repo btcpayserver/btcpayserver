@@ -245,7 +245,7 @@ function initApp() {
                 await this.setupNFC();
             }
             updateLanguageSelect();
-            
+
             window.parent.postMessage('loaded', '*');
         },
         beforeDestroy () {
@@ -329,7 +329,7 @@ function initApp() {
             },
             async fetchData () {
                 if (this.isPluginPaymentMethod) return;
-                
+
                 const url = `${statusUrl}&paymentMethodId=${this.pmId}`;
                 const response = await fetch(url);
                 if (response.ok) {
@@ -346,7 +346,7 @@ function initApp() {
                 const newEnd = new Date();
                 newEnd.setSeconds(newEnd.getSeconds() + data.expirationSeconds);
                 this.endDate = newEnd;
-    
+
                 // updating ui
                 this.srvModel = data;
             },

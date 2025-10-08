@@ -87,7 +87,7 @@
             <thead>
             <tr>
                 <th scope="col" class="date-col">
-                    <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex align-items-center gap-3">
                         <a asp-action="PullPayments"
                            asp-route-sortOrder="@(nextStartDateSortOrder ?? "asc")"
                            asp-route-pullPaymentState="@Model.ActiveState"
@@ -113,7 +113,7 @@
                 <tr class="mass-action-row">
                     <td class="date-col">@pp.StartDate.ToBrowserDate()</td>
                     <td>
-                        <a 
+                        <a
                             permission="@Policies.CanManagePullPayments"
                             asp-action="EditPullPayment"
                             asp-controller="UIPullPayment"

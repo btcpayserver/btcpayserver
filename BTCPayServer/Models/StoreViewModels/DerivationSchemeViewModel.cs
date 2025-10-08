@@ -11,11 +11,10 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Derivation scheme")]
         public string DerivationScheme { get; set; }
 
-        public List<(string KeyPath, string Address, RootedKeyPath RootedKeyPath)> AddressSamples
+        public List<(string KeyPath, string Address)> AddressSamples
         {
             get; set;
-        } = new List<(string KeyPath, string Address, RootedKeyPath RootedKeyPath)>();
-
+        }
         public string CryptoCode { get; set; }
         public string KeyPath { get; set; }
         [Display(Name = "Root fingerprint")]
@@ -28,8 +27,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public string WalletFileContent { get; set; }
         public string Config { get; set; }
         public string Source { get; set; }
-        [Display(Name = "Derivation scheme format")]
-        public string DerivationSchemeFormat { get; set; }
         [Display(Name = "Account key")]
         public string AccountKey { get; set; }
         public BTCPayNetwork Network { get; set; }

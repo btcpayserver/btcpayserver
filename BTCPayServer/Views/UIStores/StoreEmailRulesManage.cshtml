@@ -1,0 +1,257 @@
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Client.Models
+@using BTCPayServer.HostedServices.Webhooks
+@using BTCPayServer.Services
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model BTCPayServer.Controllers.UIStoresController.StoreEmailRule
+@inject WebhookSender WebhookSender
+@inject CallbackGenerator CallbackGenerator
+
+@{
+    var storeId = Context.GetStoreData().Id;
+    bool isEdit = Model.Trigger != null;
+    ViewData.SetActivePage(StoreNavPages.Emails, StringLocalizer[isEdit ? "Edit Email Rule" : "Create Email Rule"], storeId);
+}
+
+@section PageHeadContent {
+    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
+}
+
+<form asp-action="@(isEdit ? "StoreEmailRulesEdit" : "StoreEmailRulesCreate")" asp-route-storeId="@storeId" method="post">
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="StoreEmailSettings" asp-route-storeId="@storeId" text-translate="true">Emails</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-action="StoreEmailRulesList" asp-route-storeId="@storeId" text-translate="true">Email Rules</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>@ViewData["Title"]</h2>
+        </nav>
+        <div>
+            <button id="SaveEmailRules" type="submit" class="btn btn-primary">Save</button>
+            <a asp-action="StoreEmailRulesList" asp-route-storeId="@storeId" class="btn btn-secondary">Cancel</a>
+        </div>
+    </div>
+    <partial name="_StatusMessage" />
+
+    <div class="form-group">
+        <label asp-for="Trigger" class="form-label" data-required></label>
+        <select asp-for="Trigger" asp-items="@WebhookSender.GetSupportedWebhookTypes()
+                .OrderBy(a=>a.Value).Select(s => new SelectListItem(s.Value, s.Key))"
+                class="form-select email-rule-trigger" required></select>
+        <span asp-validation-for="Trigger" class="text-danger"></span>
+        <div class="form-text" text-translate="true">Choose what event sends the email.</div>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="To" class="form-label">Recipients</label>
+        <input type="text" asp-for="To" class="form-control email-rule-to" />
+        <span asp-validation-for="To" class="text-danger"></span>
+        <div class="form-text" text-translate="true">Who to send the email to. For multiple emails, separate with a comma.</div>
+    </div>
+
+    <div class="form-check mb-4 customer-email-container">
+        <input asp-for="CustomerEmail" type="checkbox" class="form-check-input email-rule-customer-email customer-email-checkbox" />
+        <label asp-for="CustomerEmail" class="form-check-label" text-translate="true">Send the email to the buyer, if email was provided to the invoice</label>
+        <span asp-validation-for="CustomerEmail" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Subject" class="form-label" data-required></label>
+        <input type="text" asp-for="Subject" class="form-control email-rule-subject" />
+        <span asp-validation-for="Subject" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Body" class="form-label" data-required></label>
+        <textarea asp-for="Body" class="form-control richtext email-rule-body" rows="4"></textarea>
+        <span asp-validation-for="Body" class="text-danger"></span>
+        <div class="form-text rounded bg-light p-2">
+            <table class="table table-sm caption-top m-0">
+                <caption class="text-muted p-0" text-translate="true">Placeholders</caption>
+                <tr>
+                    <th text-translate="true">Invoice</th>
+                    <td>
+                        <code>{Invoice.Id}</code>,
+                        <code>{Invoice.StoreId}</code>,
+                        <code>{Invoice.Price}</code>,
+                        <code>{Invoice.Currency}</code>,
+                        <code>{Invoice.Status}</code>,
+                        <code>{Invoice.AdditionalStatus}</code>,
+                        <code>{Invoice.OrderId}</code>
+                        <code>{Invoice.Metadata}*</code>
+                    </td>
+                </tr>
+                <tr>
+                    <th text-translate="true">Request</th>
+                    <td>
+                        <code>{PaymentRequest.Id}</code>,
+                        <code>{PaymentRequest.TrimmedId}</code>,
+                        <code>{PaymentRequest.Amount}</code>,
+                        <code>{PaymentRequest.Currency}</code>,
+                        <code>{PaymentRequest.Title}</code>,
+                        <code>{PaymentRequest.Description}</code>,
+                        <code>{PaymentRequest.ReferenceId}</code>,
+                        <code>{PaymentRequest.Status}</code>
+                        <code>{PaymentRequest.FormResponse}*</code>
+                    </td>
+                </tr>
+                <tr>
+                    <th text-translate="true">Payout</th>
+                    <td>
+                        <code>{Payout.Id}</code>,
+                        <code>{Payout.PullPaymentId}</code>,
+                        <code>{Payout.Destination}</code>,
+                        <code>{Payout.State}</code>
+                        <code>{Payout.Metadata}*</code>
+                    </td>
+                </tr>
+                <tr>
+                    <th text-translate="true">Pending Transaction</th>
+                    <td>
+                        <code>{PendingTransaction.Id}</code>,
+                        <code>{PendingTransaction.TrimmedId}</code>,
+                        <code>{PendingTransaction.StoreId}</code>,
+                        <code>{PendingTransaction.SignaturesCollected}</code>,
+                        <code>{PendingTransaction.SignaturesNeeded}</code>,
+                        <code>{PendingTransaction.SignaturesTotal}</code>
+                    </td>
+                </tr>
+                <tr><td colspan="2">* These fields are JSON objects. You can access properties within them using <a href="https://www.newtonsoft.com/json/help/html/SelectToken.htm#SelectTokenJSONPath" rel="noreferrer noopener" target="_blank">this syntax</a>. One example is <code>{Invoice.Metadata.itemCode}</code></td></tr>
+            </table>
+        </div>
+    </div>
+
+</form>
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const templates = {
+                @WebhookEventType.InvoiceCreated: {
+                    subject: 'Invoice {Invoice.Id} created',
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) created.'
+                },
+                @WebhookEventType.InvoiceReceivedPayment: {
+                    subject: 'Invoice {Invoice.Id} received payment',
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) received payment.'
+                },
+                @WebhookEventType.InvoiceProcessing: {
+                    subject: 'Invoice {Invoice.Id} processing',
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) is processing.'
+                },
+                @WebhookEventType.InvoiceExpired: {
+                    subject: 'Invoice {Invoice.Id} expired',
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) expired.'
+                },
+                @WebhookEventType.InvoiceSettled: {
+                    subject: 'Invoice {Invoice.Id} settled',
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) is settled.'
+                },
+                @WebhookEventType.InvoiceInvalid: {
+                    subject: 'Invoice {Invoice.Id} invalid',
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) invalid.'
+                },
+                @WebhookEventType.InvoicePaymentSettled: {
+                    subject: 'Invoice {Invoice.Id} payment settled',
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) payment settled.'
+                },
+                @{ var invoiceLink = CallbackGenerator.InvoiceLink("INVOICE_ID", this.Context.Request).Replace("INVOICE_ID", ""); }
+                @WebhookEventType.InvoiceExpiredPaidPartial: {
+                    subject: 'Invoice {Invoice.Id} Expired Paid Partial',
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) has expired partially paid. '+
+                        '\nPlease review and take appropriate action: ' + @Safe.Json(invoiceLink) + '{Invoice.Id}'
+                },
+                @WebhookEventType.InvoicePaidAfterExpiration: {
+                    subject: 'Invoice {Invoice.Id} Expired Paid Late',
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) has been paid after expiration. '+
+                        '\nPlease review and take appropriate action: ' + @Safe.Json(invoiceLink) + '{Invoice.Id}'
+                },
+                @{ var paymentRequestsLink = CallbackGenerator.PaymentRequestListLink(storeId, this.Context.Request); }
+                @WebhookEventType.PaymentRequestCompleted: {
+                    subject: 'Payment Request {PaymentRequest.Title} {PaymentRequest.ReferenceId} Completed',
+                    body: 'The total of {PaymentRequest.Amount} {PaymentRequest.Currency} has been received and Payment Request {PaymentRequest.Id} is completed. ' +
+                    '\nReview the payment requests: ' + @Safe.Json(paymentRequestsLink)
+                },
+                @{ var bitcoinWalletTransactions = CallbackGenerator.WalletTransactionsLink(new (storeId, "BTC"), this.Context.Request); }
+                @PendingTransactionWebhookProvider.PendingTransactionCreated : {
+                    subject: 'Pending Transaction {PendingTransaction.TrimmedId} Created',
+					body: 'Review the transaction {PendingTransaction.Id} and sign it on: ' + @Safe.Json(bitcoinWalletTransactions)
+                },
+                @PendingTransactionWebhookProvider.PendingTransactionSignatureCollected : {
+                    subject: 'Signature Collected for Pending Transaction {PendingTransaction.TrimmedId}',
+                    body: 'So far {PendingTransaction.SignaturesCollected} signatures collected out of {PendingTransaction.SignaturesNeeded} signatures needed. ' +
+						'Review the transaction and sign it on: ' + @Safe.Json(bitcoinWalletTransactions)
+                },
+                @PendingTransactionWebhookProvider.PendingTransactionBroadcast : {
+                    subject: 'Transaction {PendingTransaction.TrimmedId} has been Broadcast',
+                    body: 'Transaction is visible in mempool on: https://mempool.space/tx/{PendingTransaction.Id}. ' +
+						'Review the transaction: ' + @Safe.Json(bitcoinWalletTransactions)
+                },
+                @PendingTransactionWebhookProvider.PendingTransactionCancelled : {
+                    subject: 'Pending Transaction {PendingTransaction.TrimmedId} Cancelled',
+                    body: 'Transaction {PendingTransaction.Id} is cancelled and signatures are no longer being collected. ' +
+						'Review the wallet: ' + @Safe.Json(bitcoinWalletTransactions)
+                },
+            };
+
+            const triggerSelect = document.querySelector('.email-rule-trigger');
+            const subjectInput = document.querySelector('.email-rule-subject');
+            const bodyTextarea = document.querySelector('.email-rule-body');
+
+            const isEmptyOrDefault = (value, type) => {
+                const val = value.replace(/<.*?>/gi, '').trim();
+                if (!val) return true;
+                return Object.values(templates).some(t => t[type] === val);
+            };
+
+            function applyTemplate() {
+                const selectedTrigger = triggerSelect.value;
+                if (templates[selectedTrigger]) {
+                    if (isEmptyOrDefault(subjectInput.value, 'subject')) {
+                        subjectInput.value = templates[selectedTrigger].subject;
+                    }
+                    if (isEmptyOrDefault(bodyTextarea.value, 'body')) {
+                        if ($(bodyTextarea).summernote) {
+                            $(bodyTextarea).summernote('reset');
+                            $(bodyTextarea).summernote('insertText', templates[selectedTrigger].body);
+                        } else {
+                            bodyTextarea.value = templates[selectedTrigger].body;
+                        }
+                    }
+                }
+            }
+
+            function toggleCustomerEmailVisibility() {
+                const customerEmailContainer = document.querySelector('.customer-email-container');
+                const customerEmailCheckbox = document.querySelector('.customer-email-checkbox');
+                const selectedTrigger = triggerSelect.value;
+                const supportsCustomerEmailDict = @Safe.Json(WebhookSender.GetWebhookTypesSupportedByCustomerEmail());
+
+                if (supportsCustomerEmailDict[selectedTrigger]) {
+                    customerEmailContainer.style.display = 'block';
+                } else {
+                    customerEmailContainer.style.display = 'none';
+                    customerEmailCheckbox.checked = false;
+                }
+            }
+
+            triggerSelect.addEventListener('change', applyTemplate);
+            triggerSelect.addEventListener('change', toggleCustomerEmailVisibility);
+
+            // Apply template on page load if a trigger is selected
+            if (triggerSelect.value) {
+                applyTemplate();
+                toggleCustomerEmailVisibility();
+            }
+        });
+    </script>
+
+}

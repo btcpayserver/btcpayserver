@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client.Models
 {
@@ -51,11 +53,19 @@ namespace BTCPayServer.Client.Models
         public string[] Roles { get; set; }
 
         /// <summary>
+        /// the invitation url of the user
+        /// </summary>
+        public string InvitationUrl { get; set; }
+
+        /// <summary>
         /// the date the user was created. Null if created before v1.0.5.6.
         /// </summary>
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset? Created { get; set; }
 
         public bool Disabled { get; set; }
+
+        [JsonExtensionData]
+        public IDictionary<string, JToken> AdditionalData { get; set; } = new Dictionary<string, JToken>();
     }
 }

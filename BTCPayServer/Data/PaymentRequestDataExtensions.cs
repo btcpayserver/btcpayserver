@@ -1,20 +1,27 @@
 using System;
 using BTCPayServer.Client.Models;
 using NBXplorer;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
 {
     public static class PaymentRequestDataExtensions
     {
-        public static PaymentRequestBaseData GetBlob(this PaymentRequestData paymentRequestData)
+        public static readonly JsonSerializerSettings DefaultSerializerSettings;
+        public static readonly JsonSerializer DefaultSerializer;
+        static PaymentRequestDataExtensions()
         {
-            return paymentRequestData.HasTypedBlob<PaymentRequestBaseData>().GetBlob() ?? new PaymentRequestBaseData();
+            (DefaultSerializerSettings, DefaultSerializer) = BlobSerializer.CreateSerializer(null as NBitcoin.Network);
+        }
+        public static PaymentRequestBlob GetBlob(this PaymentRequestData paymentRequestData)
+        {
+            return paymentRequestData.HasTypedBlob<PaymentRequestBlob>().GetBlob(DefaultSerializerSettings) ?? new PaymentRequestBlob();
         }
 
-        public static void SetBlob(this PaymentRequestData paymentRequestData, PaymentRequestBaseData blob)
+        public static void SetBlob(this PaymentRequestData paymentRequestData, PaymentRequestBlob blob)
         {
-            paymentRequestData.HasTypedBlob<PaymentRequestBaseData>().SetBlob(blob);
+            paymentRequestData.HasTypedBlob<PaymentRequestBlob>().SetBlob(blob, DefaultSerializer);
         }
     }
 }

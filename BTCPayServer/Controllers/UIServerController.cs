@@ -178,7 +178,7 @@ namespace BTCPayServer.Controllers
             }
             if (!ModelState.IsValid)
                 return View(vm);
-            
+
             if (command == "changedomain")
             {
                 if (string.IsNullOrWhiteSpace(vm.DNSDomain))
@@ -351,6 +351,34 @@ namespace BTCPayServer.Controllers
         {
             await UpdateViewBag();
 
+            if (command == "ResetTemplate")
+            {
+                ModelState.Clear();
+                await _StoreRepository.SetDefaultStoreTemplate(null);
+                this.TempData.SetStatusSuccess(StringLocalizer["Store template successfully unset"]);
+                return RedirectToAction(nameof(Policies));
+            }
+
+            if (command == "SetTemplate")
+            {
+                ModelState.Clear();
+                var storeId = this.HttpContext.GetStoreData()?.Id;
+                if (storeId is null)
+                {
+                    this.TempData.SetStatusMessageModel(new()
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Error,
+                        Message = StringLocalizer["You need to select a store first"]
+                    });
+                }
+                else
+                {
+                    await _StoreRepository.SetDefaultStoreTemplate(storeId, GetUserId());
+                    this.TempData.SetStatusSuccess(StringLocalizer["Store template created from store '{0}'. New stores will inherit these settings.", HttpContext.GetStoreData().StoreName]);
+                }
+                return RedirectToAction(nameof(Policies));
+            }
+
             if (command == "add-domain")
             {
                 ModelState.Clear();
@@ -398,7 +426,7 @@ namespace BTCPayServer.Controllers
                     domainToAppMappingItem.AppType = apps[domainToAppMappingItem.AppId];
                 }
             }
-            
+
 
             await _SettingsRepository.UpdateSetting(settings);
             _ = _transactionLinkProviders.RefreshTransactionLinkTemplates();
@@ -1044,7 +1072,7 @@ namespace BTCPayServer.Controllers
         {
             var server = await _SettingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
             var theme = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
-            
+
             var vm = new BrandingViewModel
             {
                 ServerName = server.ServerName,
@@ -1073,13 +1101,13 @@ namespace BTCPayServer.Controllers
 
             vm.LogoUrl = await _uriResolver.Resolve(this.Request.GetAbsoluteRootUri(), theme.LogoUrl);
             vm.CustomThemeCssUrl = await _uriResolver.Resolve(this.Request.GetAbsoluteRootUri(), theme.CustomThemeCssUrl);
-            
+
             if (server.ServerName != vm.ServerName)
             {
                 server.ServerName = vm.ServerName;
                 settingsChanged = true;
             }
-            
+
             if (server.ContactUrl != vm.ContactUrl)
             {
                 server.ContactUrl = !string.IsNullOrWhiteSpace(vm.ContactUrl)
@@ -1087,7 +1115,7 @@ namespace BTCPayServer.Controllers
                     : null;
                 settingsChanged = true;
             }
-            
+
             if (settingsChanged)
             {
                 await _SettingsRepository.UpdateSetting(server);
@@ -1255,7 +1283,7 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email server password reset"].Value;
                 return RedirectToAction(nameof(Emails));
             }
-            
+
             // save if user provided valid email; this will also clear settings if no model.Settings.From
             if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
             {
@@ -1265,7 +1293,7 @@ namespace BTCPayServer.Controllers
             var oldSettings = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
             if (!string.IsNullOrEmpty(oldSettings.Password))
                 model.Settings.Password = oldSettings.Password;
-            
+
             await _SettingsRepository.UpdateSetting(model.Settings);
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email settings saved"].Value;
             return RedirectToAction(nameof(Emails));

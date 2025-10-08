@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
@@ -26,6 +27,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer;
@@ -259,8 +261,8 @@ namespace BTCPayServer.Tests
 
         private async Task WaitIsFullySynched(CancellationToken cancellationToken)
         {
-            var dashBoard = GetService<NBXplorerDashboard>();
-            while (!dashBoard.IsFullySynched())
+            var o = GetService<IEnumerable<ISyncSummaryProvider>>().ToArray();
+            while (!o.All(d => d.AllAvailable()))
             {
                 await Task.Delay(10, cancellationToken).ConfigureAwait(false);
             }

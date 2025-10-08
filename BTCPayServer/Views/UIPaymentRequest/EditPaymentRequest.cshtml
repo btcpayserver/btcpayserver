@@ -1,6 +1,7 @@
 @using BTCPayServer.Services.PaymentRequests
 @using System.Globalization
 @using BTCPayServer.Client
+@using BTCPayServer.Controllers
 @using BTCPayServer.Forms
 @using BTCPayServer.TagHelpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
@@ -83,6 +84,11 @@
                 <span asp-validation-for="AllowCustomPaymentAmounts" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="ReferenceId" class="form-label"></label>
+                <input asp-for="ReferenceId" class="form-control" />
+                <span asp-validation-for="ReferenceId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <label asp-for="ExpiryDate" class="form-label"></label>
                 <div class="input-group ">
                     <input asp-for="ExpiryDate"
@@ -99,7 +105,8 @@
                 <input type="email" asp-for="Email" placeholder="@StringLocalizer["Firstname Lastname <email@example.com>"]" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
                 <div id="PaymentRequestEmailHelpBlock" class="form-text">
-                    @ViewLocalizer["This will send notification mails to the recipient, as configured by the {0}.", Html.ActionLink(StringLocalizer["email rules"], "StoreEmails", "UIStores", new { storeId = Model.StoreId })]
+                    @ViewLocalizer["This will send notification mails to the recipient, as configured by the {0}.", 
+                        Html.ActionLink(StringLocalizer["email rules"], nameof(UIStoresController.StoreEmailRulesList), "UIStores", new { storeId = Model.StoreId })]
                     @if (Model.HasEmailRules is not true)
                     {
                         <div class="info-note mt-1 text-warning" role="alert">

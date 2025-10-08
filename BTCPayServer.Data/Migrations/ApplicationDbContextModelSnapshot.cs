@@ -18,7 +18,7 @@ namespace BTCPayServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.7")
+                .HasAnnotation("ProductVersion", "8.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -521,6 +521,9 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric");
+
                     b.Property<bool>("Archived")
                         .HasColumnType("boolean");
 
@@ -535,8 +538,18 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValue(new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)));
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                    b.Property<string>("Currency")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("Expiry")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReferenceId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("StoreDataId")
                         .HasColumnType("text");
@@ -639,14 +652,14 @@ namespace BTCPayServer.Migrations
 
             modelBuilder.Entity("BTCPayServer.Data.PendingTransaction", b =>
                 {
-                    b.Property<string>("CryptoCode")
-                        .HasColumnType("text");
-
-                    b.Property<string>("TransactionId")
+                    b.Property<string>("Id")
                         .HasColumnType("text");
 
                     b.Property<string>("Blob2")
                         .HasColumnType("JSONB");
+
+                    b.Property<string>("CryptoCode")
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset?>("Expiry")
                         .HasColumnType("timestamp with time zone");
@@ -660,9 +673,14 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("StoreId")
                         .HasColumnType("text");
 
-                    b.HasKey("CryptoCode", "TransactionId");
+                    b.Property<string>("TransactionId")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("StoreId");
+
+                    b.HasIndex("TransactionId");
 
                     b.ToTable("PendingTransactions");
                 });
@@ -947,6 +965,12 @@ namespace BTCPayServer.Migrations
 
                     b.Property<string>("Data")
                         .HasColumnType("JSONB");
+
+                    b.Property<uint>("XMin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("WalletId", "Type", "Id");
 

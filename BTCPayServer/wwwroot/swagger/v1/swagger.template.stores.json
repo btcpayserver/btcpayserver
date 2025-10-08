@@ -45,7 +45,7 @@
                     "Stores"
                 ],
                 "summary": "Create a new store",
-                "description": "Create a new store",
+                "description": "Create a new store (default values can be different if the server settings use a default store template)",
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -143,7 +143,7 @@
                         "$ref": "#/components/parameters/StoreId"
                     }
                 ],
-                "description": "Update the specified store",
+                "description": "Update the specified store (default values can be different if the server settings use a default store template)",
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -507,6 +507,15 @@
                         "default": "USD",
                         "example": "USD"
                     },
+                    "additionalTrackedRates": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "Additional rates to track.\nThe rates of those currencies, in addition to the default currency, will be recorded when a new invoice is created. The rates will then be accessible through reports.",
+                        "default": [],
+                        "example": ["JPY", "EUR"]
+                    },
                     "invoiceExpiration": {
                         "default": 900,
                         "minimum": 60,
@@ -515,6 +524,17 @@
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/TimeSpanSeconds"
+                            }
+                        ]
+                    },
+                    "refundBOLT11Expiration": {
+                        "default": 30,
+                        "minimum": 0,
+                        "maximum": 3650,
+                        "description": "The minimum expiry of BOLT11 invoices accepted for refunds by default. (in days)",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanDays"
                             }
                         ]
                     },
@@ -530,7 +550,7 @@
                         ]
                     },
                     "monitoringExpiration": {
-                        "default": 3600,
+                        "default": 86400,
                         "minimum": 600,
                         "maximum": 2073600,
                         "description": "The time after which an invoice which has been paid but not confirmed will be considered invalid. The value will be rounded down to a minute.",

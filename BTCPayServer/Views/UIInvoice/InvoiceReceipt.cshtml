@@ -70,6 +70,13 @@
                                     <dd class="text-muted mb-0 fw-semibold">Amount Paid</dd>
                                     <dt class="fs-2 mb-0 text-nowrap fw-semibold">@DisplayFormatter.Currency(Model.Amount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</dt>
                                 </div>
+                                @if (Model.TaxIncluded != 0.0m)
+                                {
+                                    <div class="d-flex flex-column">
+                                        <dd class="text-muted mb-0 fw-semibold">Total Taxes</dd>
+                                        <dt class="fs-5 mb-0 text-nowrap fw-semibold">@DisplayFormatter.Currency(Model.TaxIncluded, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</dt>
+                                    </div>
+                                }
                                 <div class="d-flex flex-column">
                                     <dd class="text-muted mb-0 fw-semibold">Date</dd>
                                     <dt class="fs-5 mb-0 text-nowrap fw-semibold">@Model.Timestamp.ToBrowserDate()</dt>
@@ -86,7 +93,7 @@
                         </div>
                     }
                 </div>
-                
+
                 @if (isProcessing)
                 {
                     <small class="d-block text-muted text-center px-4">This page will refresh periodically until the invoice is settled.</small>

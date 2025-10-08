@@ -126,6 +126,15 @@
                 "format": "seconds",
                 "description": "A span of times in seconds"
             },
+            "TimeSpanDays": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/TimeSpan"
+                    }
+                ],
+                "format": "days",
+                "description": "A span of times in days"
+            },
             "TimeSpanMinutes": {
                 "allOf": [
                     {

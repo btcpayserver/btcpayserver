@@ -1,11 +1,22 @@
 using System.Collections.Generic;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer
 {
     public static class UtilitiesExtensions
     {
+        public static bool TryAdd(this JObject obj, string key, JToken value)
+        {
+            if (obj.TryGetValue(key, out var existing))
+            {
+                return false;
+            }
+            obj.Add(key, value);
+            return true;
+        }
+
         public static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)
         {
             foreach (var item in items)
@@ -16,6 +27,8 @@ namespace BTCPayServer
 
         public static ScriptPubKeyType ScriptPubKeyType(this DerivationStrategyBase derivationStrategyBase)
         {
+            if (derivationStrategyBase is TaprootDerivationStrategy)
+                return NBitcoin.ScriptPubKeyType.TaprootBIP86;
             if (IsSegwitCore(derivationStrategyBase))
             {
                 return NBitcoin.ScriptPubKeyType.Segwit;

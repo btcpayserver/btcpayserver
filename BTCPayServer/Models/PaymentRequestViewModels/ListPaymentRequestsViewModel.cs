@@ -43,11 +43,12 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             var blob = data.GetBlob();
             FormId = blob.FormId;
             Title = blob.Title;
-            Amount = blob.Amount;
-            Currency = blob.Currency;
+            Amount = data.Amount;
+            Currency = data.Currency;
             Description = blob.Description;
-            ExpiryDate = blob.ExpiryDate?.UtcDateTime;
+            ExpiryDate = data.Expiry?.UtcDateTime;
             Email = blob.Email;
+            ReferenceId = data.ReferenceId;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
             FormResponse = blob.FormResponse is null
                 ? null
@@ -84,6 +85,9 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         [MailboxAddress]
         public string Email { get; set; }
         
+        [Display(Name = "Reference Id")]
+        public string ReferenceId { get; set; }
+
         [Display(Name = "Allow payee to create invoices with custom amounts")]
         public bool AllowCustomPaymentAmounts { get; set; }
 
@@ -101,25 +105,26 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             var blob = data.GetBlob();
             Archived = data.Archived;
             Title = blob.Title;
-            Amount = blob.Amount;
-            Currency = blob.Currency;
+            Amount = data.Amount;
+            Currency = data.Currency;
             Description = blob.Description;
-            ExpiryDate = blob.ExpiryDate?.UtcDateTime;
+            ExpiryDate = data.Expiry?.UtcDateTime;
             Email = blob.Email;
+            ReferenceId = data.ReferenceId;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
             switch (data.Status)
             {
-                case Client.Models.PaymentRequestData.PaymentRequestStatus.Pending:
+                case Client.Models.PaymentRequestStatus.Pending:
                     Status = "Pending";
                     IsPending = true;
                     break;
-                case Client.Models.PaymentRequestData.PaymentRequestStatus.Processing:
+                case Client.Models.PaymentRequestStatus.Processing:
                     Status = "Processing";
                     break;
-                case Client.Models.PaymentRequestData.PaymentRequestStatus.Completed:
+                case Client.Models.PaymentRequestStatus.Completed:
                     Status = "Settled";
                     break;
-                case Client.Models.PaymentRequestData.PaymentRequestStatus.Expired:
+                case Client.Models.PaymentRequestStatus.Expired:
                     Status = "Expired";
                     break;
                 default:
@@ -127,6 +132,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             }
         }
         public StoreBrandingViewModel StoreBranding { get; set; }
+        public string ReferenceId { get; set; }
         public bool AllowCustomPaymentAmounts { get; set; }
         public string Email { get; set; }
         public string Status { get; set; }
@@ -147,11 +153,11 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 #nullable enable
         public class InvoiceList : List<PaymentRequestInvoice>
         {
-            static HashSet<InvoiceState> stateAllowedToDisplay = new HashSet<InvoiceState>
-                {
-                    new InvoiceState(InvoiceStatus.New, InvoiceExceptionStatus.None),
-                    new InvoiceState(InvoiceStatus.New, InvoiceExceptionStatus.PaidPartial),
-                };
+            private static HashSet<InvoiceState> stateAllowedToDisplay =
+            [
+                new(InvoiceStatus.New, InvoiceExceptionStatus.None),
+                new(InvoiceStatus.New, InvoiceExceptionStatus.PaidPartial)
+            ];
             public InvoiceList()
             {
 
@@ -195,7 +201,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         public class PaymentRequestInvoicePayment
         {
-            public static List<ViewPaymentRequestViewModel.PaymentRequestInvoicePayment>
+            public static List<PaymentRequestInvoicePayment>
                 GetViewModels(
                 InvoiceEntity invoice,
                 DisplayFormatter displayFormatter,
@@ -215,11 +221,11 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
                     string link = paymentMethodId is null ? null : txLinkProvider.GetTransactionLink(paymentMethodId, txId);
 
-                    return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment
+                    return new PaymentRequestInvoicePayment
                     {
                         Amount = paymentEntity.PaidAmount.Gross,
                         Paid = paymentEntity.InvoicePaidAmount.Net,
-                        ReceivedDate = paymentEntity.ReceivedTime.DateTime,
+                        ReceivedDate = paymentEntity.ReceivedTime,
                         AmountFormatted = displayFormatter.Currency(paymentEntity.PaidAmount.Gross, paymentEntity.PaidAmount.Currency),
                         PaidFormatted = displayFormatter.Currency(paymentEntity.InvoicePaidAmount.Net, invoice.Currency, DisplayFormatter.CurrencyFormat.Symbol),
                         RateFormatted = displayFormatter.Currency(paymentEntity.Rate, invoice.Currency, DisplayFormatter.CurrencyFormat.Symbol),
@@ -238,7 +244,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             public string RateFormatted { get; set; }
             public decimal Paid { get; set; }
             public string PaidFormatted { get; set; }
-            public DateTime ReceivedDate { get; set; }
+            public DateTimeOffset ReceivedDate { get; set; }
             public string Link { get; set; }
             public string Id { get; set; }
             public string Destination { get; set; }

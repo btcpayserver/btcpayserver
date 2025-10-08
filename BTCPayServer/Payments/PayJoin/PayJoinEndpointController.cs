@@ -197,7 +197,8 @@ namespace BTCPayServer.Payments.PayJoin
                 psbtFormat = false;
                 if (!Transaction.TryParse(rawBody, network.NBitcoinNetwork, out var tx))
                     return BadRequest(CreatePayjoinError("original-psbt-rejected", "invalid transaction or psbt"));
-                ctx.OriginalTransaction = tx;
+                ctx.OriginalTransaction = tx.Clone();
+                tx.RemoveSignatures();
                 psbt = PSBT.FromTransaction(tx, network.NBitcoinNetwork);
                 psbt = (await explorer.UpdatePSBTAsync(new UpdatePSBTRequest() { PSBT = psbt })).PSBT;
                 for (int i = 0; i < tx.Inputs.Count; i++)
@@ -254,7 +255,7 @@ namespace BTCPayServer.Payments.PayJoin
             Dictionary<OutPoint, UTXO> selectedUTXOs = new Dictionary<OutPoint, UTXO>();
             PSBTOutput? originalPaymentOutput = null;
             BitcoinAddress? paymentAddress = null;
-            KeyPath? paymentAddressIndex = null;
+            (KeyPath KeyPath, int KeyIndex)? paymentAddressIndex = null;
             InvoiceEntity? invoice = null;
             DerivationStrategyBase? accountDerivation = null;
             WalletId? walletId = null;
@@ -311,7 +312,7 @@ namespace BTCPayServer.Payments.PayJoin
                     }
 
                     paymentAddress = BitcoinAddress.Create(paymentMethod.Destination, network.NBitcoinNetwork);
-                    paymentAddressIndex = paymentDetails.KeyPath;
+                    paymentAddressIndex = (paymentDetails.KeyPath, paymentDetails.KeyIndex);
 
                     if (invoice.GetAllBitcoinPaymentData(handler, false).Any())
                     {
@@ -324,7 +325,8 @@ namespace BTCPayServer.Payments.PayJoin
                 {
                     due = Money.Zero;
                     paymentAddress = walletReceiveMatch.Item2.Address;
-                    paymentAddressIndex = walletReceiveMatch.Item2.KeyPath;
+                    // Old versions of NBX doesn't have the Index property, we can remove ?? (int)walletReceiveMatch.Item2.KeyPath.Indexes.Last() later.
+                    paymentAddressIndex = (walletReceiveMatch.Item2.KeyPath, walletReceiveMatch.Item2.Index ?? (int)walletReceiveMatch.Item2.KeyPath.Indexes.Last());
                 }
 
 
@@ -474,6 +476,7 @@ namespace BTCPayServer.Payments.PayJoin
             }
 
             var accountKey = ExtKey.Parse(extKeyStr, network.NBitcoinNetwork);
+            newTx.RemoveSignatures();
             var newPsbt = PSBT.FromTransaction(newTx, network.NBitcoinNetwork);
             foreach (var selectedUtxo in selectedUTXOs.Select(o => o.Value))
             {
@@ -498,7 +501,7 @@ namespace BTCPayServer.Payments.PayJoin
             // broadcast the payjoin.
 
             var outpoint = new OutPoint(ctx.OriginalTransaction.GetHash(), originalPaymentOutput.Index);
-            var details = new BitcoinLikePaymentData(outpoint, ctx.OriginalTransaction.RBF, paymentAddressIndex)
+            var details = new BitcoinLikePaymentData(outpoint, ctx.OriginalTransaction.RBF, paymentAddressIndex.Value.KeyPath, paymentAddressIndex.Value.KeyIndex)
             {
                 ConfirmationCount = -1,
                 PayjoinInformation = new PayjoinInformation()

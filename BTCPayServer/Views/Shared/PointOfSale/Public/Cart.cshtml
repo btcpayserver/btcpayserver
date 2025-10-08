@@ -77,7 +77,7 @@
                             : item.BuyButtonText;
                         buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
                         var categories = new JArray(item.Categories ?? new object[] { });
-                        <div class="col posItem posItem--displayed" :class="{ 'posItem--inStock': inStock(@index) }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)" data-categories='@Safe.Json(categories)'>
+                        <div id="card_@item.Id" class="col posItem posItem--displayed" :class="{ 'posItem--inStock': inStock(@index) }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)" data-categories='@Safe.Json(categories)'>
                             <div class="tile card" v-on:click="addToCart(@index, 1)">
                                 @if (!string.IsNullOrWhiteSpace(item.Image))
                                 {
@@ -96,10 +96,10 @@
                                         }
                                         @if (item.Inventory.HasValue)
                                         {
-                                            <span class="badge text-bg-warning inventory" v-text="inventoryText(@index)">
+                                            <span class="badge text-bg-warning inventory">
                                                 @if (item.Inventory > 0)
                                                 {
-                                                    <span>@ViewLocalizer["{0} left", item.Inventory.ToString()]</span>
+                                                    <span>@StringLocalizer["{0} left", item.Inventory.ToString()]</span>
                                                 }
                                                 else
                                                 {
@@ -120,7 +120,7 @@
                                         {
                                             <div class="input-group mb-2">
                                                 <span class="input-group-text">@Model.CurrencySymbol</span>
-                                                <input class="form-control" type="number" min="@(item.Price ?? 0)" step="@Model.Step" name="amount" placeholder="@StringLocalizer["Amount"]" value="@item.Price" required v-on:click.stop>
+                                                <input class="form-control" type="number" inputmode="decimal" min="@(item.Price ?? 0)" step="@Model.Step" name="amount" placeholder="@StringLocalizer["Amount"]" value="@item.Price" required v-on:click.stop>
                                             </div>
                                         }
                                         <button type="button" class="btn btn-primary w-100" :disabled="!inStock(@index)">
@@ -150,7 +150,7 @@
                 </button>
                 <button id="CartClose" type="button" class="cart-toggle-btn" v-on:click="toggleCart" aria-controls="cart" aria-label="@StringLocalizer["Close"]">
                     <vc:icon symbol="cross" />
-                </button>   
+                </button>
             </header>
             <div class="offcanvas-body py-0">
                 <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" v-on:submit="handleFormSubmit" v-if="cartCount !== 0">
@@ -174,7 +174,7 @@
                                         <button type="button" v-on:click="updateQuantity(item.id, -1)" class="btn btn-minus">
                                             <span><vc:icon symbol="minus" /></span>
                                         </button>
-                                        <input class="form-control hide-number-spin w-50px text-center" type="number" placeholder="@StringLocalizer["Qty"]" min="1" step="1" :max="item.inventory" v-model.number="item.count">
+                                        <input class="form-control hide-number-spin w-50px text-center" type="number" inputmode="decimal" placeholder="@StringLocalizer["Qty"]" min="1" step="1" :max="item.inventory" v-model.number="item.count">
                                         <button type="button" v-on:click="updateQuantity(item.id, +1)" class="btn btn-plus">
                                             <span><vc:icon symbol="plus" /></span>
                                         </button>
@@ -191,9 +191,11 @@
                         <tr v-if="showDiscount">
                             <th class="align-middle" text-translate="true">Discount</th>
                             <th class="align-middle" colspan="3">
-                                <div class="input-group input-group-sm w-100px pull-right">
-                                    <input class="form-control hide-number-spin" type="number" min="0" step="1" max="100" id="Discount" v-model.number="discountPercent">
-                                    <span class="input-group-text">%</span>
+                                <div class="d-flex justify-content-end">
+                                    <div class="input-group input-group-sm w-100px">
+                                        <input class="form-control hide-number-spin" type="number" inputmode="decimal" min="0" step="1" max="100" id="Discount" v-model.number="discountPercent">
+                                        <span class="input-group-text">%</span>
+                                    </div>
                                 </div>
                             </th>
                         </tr>
@@ -207,6 +209,7 @@
                                             class="form-control hide-number-spin shadow-none text-reset d-block bg-transparent border-0 p-0 me-1 fw-semibold"
                                             style="height:1.5em;min-height:auto;width:4ch"
                                             type="number"
+                                            inputmode="decimal"
                                             min="0"
                                             step="@Model.Step" />
                                         <span>@(Model.CurrencyInfo.CurrencySymbol ?? Model.CurrencyCode)</span>
@@ -225,22 +228,30 @@
                         </tr>
                     </table>
                     <table class="table table-borderless mt-4 mb-0">
-                        <tr>
-                            <td class="align-middle" text-translate="true">Subtotal</td>
-                            <td class="align-middle text-end" id="CartAmount">{{ formatCurrency(amountNumeric, true) }}</td>
+                        <tr v-if="itemsTotalNumeric">
+                            <td class="align-middle h6 border-0" text-translate="true">Items total</td>
+                            <td class="align-middle h6 border-0 text-end" id="CartItemsTotal">{{ formatCurrency(itemsTotalNumeric, true) }}</td>
                         </tr>
                         <tr v-if="discountNumeric">
                             <td class="align-middle" text-translate="true">Discount</td>
                             <td class="align-middle text-end" id="CartDiscount">
-                                <span v-if="discountPercent">{{discountPercent}}% =</span>
-                                {{ formatCurrency(discountNumeric, true) }}
+                                <span>{{ formatCurrency(discountNumeric, true) }}</span> <span v-if="discountPercent">({{discountPercent}}%)</span>
                             </td>
+                        </tr>
+                        <tr v-if="subtotalNumeric">
+                            <td class="align-middle h6 border-0" text-translate="true">Subtotal</td>
+                            <td class="align-middle h6 border-0 text-end" id="CartAmount">{{ formatCurrency(subtotalNumeric, true) }}</td>
                         </tr>
                         <tr v-if="tipNumeric">
                             <td class="align-middle" text-translate="true">Tip</td>
                             <td class="align-middle text-end" id="CartTip">
-                                <span v-if="tipPercent">{{tipPercent}}% =</span>
-                                {{ formatCurrency(tipNumeric, true) }}
+                                <span>{{ formatCurrency(tipNumeric, true) }}</span> <span v-if="tipPercent">({{tipPercent}}%)</span>
+                            </td>
+                        </tr>
+                        <tr v-if="taxNumeric">
+                            <td class="align-middle" text-translate="true">Taxes</td>
+                            <td class="align-middle text-end" id="CartTax">
+                                <span>{{ formatCurrency(taxNumeric, true) }}</span> <span v-if="taxPercent">({{taxPercent}}%)</span>
                             </td>
                         </tr>
                         <tr>

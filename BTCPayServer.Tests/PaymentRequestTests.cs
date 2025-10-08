@@ -6,6 +6,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitpayClient;
 using Xunit;
@@ -42,11 +43,19 @@ namespace BTCPayServer.Tests
                 Currency = "BTC",
                 Amount = 1,
                 StoreId = user.StoreId,
-                Description = "description"
+                Description = "description",
+                ReferenceId = "custom-id-1"
             };
             var id = Assert
                 .IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(null, request))
                 .RouteValues.Values.Last().ToString();
+
+            // Assert initial Title and ReferenceId
+            var repo = tester.PayTester.GetService<PaymentRequestRepository>();
+            var prData = await repo.FindPaymentRequest(id, user.UserId);
+            Assert.NotNull(prData);
+            Assert.Equal("original juice", prData.GetBlob().Title);
+            Assert.Equal("custom-id-1", prData.ReferenceId);
 
             paymentRequestController.HttpContext.SetPaymentRequestData(new PaymentRequestData { Id = id, StoreDataId = request.StoreId });
 
@@ -55,7 +64,14 @@ namespace BTCPayServer.Tests
                 .IsType<NotFoundResult>(await guestpaymentRequestController.EditPaymentRequest(user.StoreId, id));
 
             request.Title = "update";
+            request.ReferenceId = "custom-id-2";
             Assert.IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(id, request));
+
+            // Assert updated Title and ReferenceId
+            prData = await repo.FindPaymentRequest(id, user.UserId);
+            Assert.NotNull(prData);
+            Assert.Equal("update", prData.GetBlob().Title);
+            Assert.Equal("custom-id-2", prData.ReferenceId);
 
             Assert.Equal(request.Title,
                 Assert.IsType<ViewPaymentRequestViewModel>(Assert
@@ -101,7 +117,7 @@ namespace BTCPayServer.Tests
             user.RegisterDerivationScheme("BTC");
 
             var paymentRequestController = user.GetController<UIPaymentRequestController>();
-
+            var repo = tester.PayTester.GetService<PaymentRequestRepository>();
             Assert.IsType<NotFoundResult>(
                 await paymentRequestController.PayPaymentRequest(Guid.NewGuid().ToString()));
 
@@ -112,20 +128,21 @@ namespace BTCPayServer.Tests
                 Currency = "BTC",
                 Amount = 1,
                 StoreId = user.StoreId,
-                Description = "description"
+                Description = "description",
+                ExpiryDate = (DateTimeOffset.UtcNow + TimeSpan.FromDays(1.0)).UtcDateTime
             };
-            var response = Assert
+            var prId = Assert
                 .IsType<RedirectToActionResult>(paymentRequestController.EditPaymentRequest(null, request).Result)
-                .RouteValues.Last();
+                .RouteValues.Last().Value.ToString();
 
             var invoiceId = Assert
                 .IsType<OkObjectResult>(
-                    await paymentRequestController.PayPaymentRequest(response.Value.ToString(), false)).Value
+                    await paymentRequestController.PayPaymentRequest(prId, false)).Value
                 .ToString();
 
             var actionResult = Assert
                 .IsType<RedirectToActionResult>(
-                    await paymentRequestController.PayPaymentRequest(response.Value.ToString()));
+                    await paymentRequestController.PayPaymentRequest(prId));
 
             Assert.Equal("Checkout", actionResult.ActionName);
             Assert.Equal("UIInvoice", actionResult.ControllerName);
@@ -135,6 +152,14 @@ namespace BTCPayServer.Tests
             var invoice = user.BitPay.GetInvoice(invoiceId, Facade.Merchant);
             Assert.Equal(1, invoice.Price);
 
+            // Check if we can modify a PaymentRequest after an invoice has been made
+            request.ExpiryDate = null;
+            var paymentRequest = await repo.FindPaymentRequest(prId, null);
+            paymentRequestController.HttpContext.SetPaymentRequestData(paymentRequest);
+            Assert
+                .IsType<RedirectToActionResult>(paymentRequestController.EditPaymentRequest(prId, request).Result)
+                .RouteValues.Last().Value.ToString();
+            paymentRequestController.HttpContext.SetPaymentRequestData(null);
             request = new UpdatePaymentRequestViewModel()
             {
                 Title = "original juice with expiry",
@@ -145,13 +170,13 @@ namespace BTCPayServer.Tests
                 Description = "description"
             };
 
-            response = Assert
+            prId = Assert
                 .IsType<RedirectToActionResult>(paymentRequestController.EditPaymentRequest(null, request).Result)
-                .RouteValues.Last();
+                .RouteValues.Last().Value.ToString();
 
             Assert
                 .IsType<BadRequestObjectResult>(
-                    await paymentRequestController.PayPaymentRequest(response.Value.ToString(), false));
+                    await paymentRequestController.PayPaymentRequest(prId, false));
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]

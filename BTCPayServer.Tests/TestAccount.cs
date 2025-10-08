@@ -178,7 +178,7 @@ namespace BTCPayServer.Tests
                 await RegisterAsync();
             }
             var store = GetController<UIUserStoresController>();
-            await store.CreateStore(new CreateStoreViewModel { Name = "Test Store", PreferredExchange = "coingecko" });
+            await store.CreateStore(new CreateStoreViewModel { Name = "Test Store", PreferredExchange = "coingecko", CanEditPreferredExchange = true});
             StoreId = store.CreatedStoreId;
             parent.Stores.Add(StoreId);
         }
@@ -238,7 +238,7 @@ namespace BTCPayServer.Tests
             await account.Register(RegisterDetails);
 
             //this addresses an obscure issue where LockSubscription is unintentionally set to "true",
-            //resulting in a large number of tests failing.  
+            //resulting in a large number of tests failing.
             if (account.RegisteredUserId == null)
             {
                 var settings = parent.PayTester.GetService<SettingsRepository>();
@@ -689,7 +689,7 @@ retry:
                         {
                             var xpub = (BitcoinExtPubKey)Network.Main.Parse(matched.Value);
                             var xpubTestnet = xpub.ExtPubKey.GetWif(Network.RegTest).ToString();
-                            blob1 = blob1.Replace(xpub.ToString(), xpubTestnet.ToString());
+                            blob1 = blob1.Replace(xpub.ToString(), xpubTestnet);
                             fields[1] = $"\\x{Encoders.Hex.EncodeData(ZipUtils.Zip(blob1))}";
                             localInvoice = string.Join(',', fields);
                         }

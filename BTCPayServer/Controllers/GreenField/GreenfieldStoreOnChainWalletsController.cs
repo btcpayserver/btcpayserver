@@ -119,7 +119,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/histogram")]
         public async Task<IActionResult> GetOnChainWalletHistogram(string storeId, string paymentMethodId, [FromQuery] string? type = null)
         {
-            if (IsInvalidWalletRequest(paymentMethodId, out var network, out var derivationScheme, out var actionResult))
+            if (IsInvalidWalletRequest(paymentMethodId, out var network, out _, out var actionResult))
                 return actionResult;
 
             var walletId = new WalletId(storeId, network.CryptoCode);
@@ -135,7 +135,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Labels = data.Labels
             });
         }
-        
+
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/feerate")]
         public async Task<IActionResult> GetOnChainFeeRate(string storeId, string paymentMethodId, int? blockTarget = null)
@@ -360,9 +360,7 @@ namespace BTCPayServer.Controllers.Greenfield
                         Timestamp = coin.Timestamp,
                         KeyPath = coin.KeyPath,
                         Confirmations = coin.Confirmations,
-                        Address = network.NBXplorerNetwork
-                            .CreateAddress(derivationScheme.AccountDerivation, coin.KeyPath, coin.ScriptPubKey)
-                            .ToString()
+                        Address = coin.Address.ToString()
                     };
                 }).ToList()
             );
@@ -535,12 +533,12 @@ namespace BTCPayServer.Controllers.Greenfield
             CreatePSBTResponse psbt;
             try
             {
-                psbt = await _walletsController.CreatePSBT(network, derivationScheme,
+                psbt = await _walletsController.CreatePSBT(storeId, network, derivationScheme,
                     new WalletSendModel()
                     {
                         SelectedInputs = request.SelectedInputs?.Select(point => point.ToString()),
                         Outputs = outputs,
-                        AlwaysIncludeNonWitnessUTXO = true,
+                        AlwaysIncludeNonWitnessUTXO = derivationScheme.DefaultIncludeNonWitnessUtxo,
                         InputSelection = request.SelectedInputs?.Any() is true,
                         FeeSatoshiPerByte = request.FeeRate?.SatoshiPerByte,
                         NoChange = request.NoChange
@@ -573,7 +571,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     WellknownMetadataKeys.MasterHDKey);
             if (!derivationScheme.IsHotWallet || signingKeyStr is null)
             {
-                var reason = !derivationScheme.IsHotWallet ? 
+                var reason = !derivationScheme.IsHotWallet ?
                     "You cannot send from a cold wallet" :
                     "NBXplorer doesn't have the seed of the wallet";
 
@@ -582,9 +580,13 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var signingKey = ExtKey.Parse(signingKeyStr, network.NBitcoinNetwork);
 
-            var signingKeySettings = derivationScheme.GetSigningAccountKeySettings();
-            signingKeySettings.RootFingerprint ??= signingKey.GetPublicKey().GetHDFingerPrint();
-            RootedKeyPath rootedKeyPath = signingKeySettings.GetRootedKeyPath();
+            var signingKeySettings = derivationScheme.GetAccountKeySettingsFromRoot(signingKey);
+            var rootedKeyPath = signingKeySettings?.GetRootedKeyPath();
+            if (rootedKeyPath is null || signingKeySettings is null)
+            {
+                return this.CreateAPIError(503, "not-available",
+                    "The private key saved for this wallet doesn't match the derivation scheme");
+            }
             psbt.PSBT.RebaseKeyPaths(signingKeySettings.AccountKey, rootedKeyPath);
             var accountKey = signingKey.Derive(rootedKeyPath.KeyPath);
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -28,6 +29,11 @@ namespace BTCPayServer.Data
         public string Blob2 { get; set; }
 
         public List<IdentityUserRole<string>> UserRoles { get; set; }
+
+        [NotMapped]
+        public bool IsDisabled =>
+            this is { LockoutEnabled: true, LockoutEnd: { } lockoutEnd } &&
+            DateTimeOffset.UtcNow < lockoutEnd.UtcDateTime;
 
         public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {

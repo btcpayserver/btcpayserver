@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using BTCPayServer.Plugins.PointOfSale;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -7,6 +9,29 @@ namespace BTCPayServer.Services.Invoices;
 
 public class PosAppData
 {
+    public static PosAppData TryParse(string posData)
+    {
+        try
+        {
+            return JObject.Parse(posData).ToObject<PosAppData>();
+        }
+        catch
+        {
+        }
+        return null;
+    }
+    public static PosAppData TryParse(JObject posData)
+    {
+        try
+        {
+            return posData.ToObject<PosAppData>();
+        }
+        catch
+        {
+        }
+        return null;
+    }
+
     [JsonProperty(PropertyName = "cart")]
     public PosAppCartItem[] Cart { get; set; }
 
@@ -19,20 +44,31 @@ public class PosAppData
     [JsonProperty(PropertyName = "discountPercentage")]
     public decimal DiscountPercentage { get; set; }
 
-    [JsonProperty(PropertyName = "discountAmount")]
-    public decimal DiscountAmount { get; set; }
-
     [JsonProperty(PropertyName = "tipPercentage")]
     public decimal TipPercentage { get; set; }
 
-    [JsonProperty(PropertyName = "tip")]
-    public decimal Tip { get; set; }
-
+    [JsonProperty(PropertyName = "itemsTotal")]
+    public decimal ItemsTotal { get; set; }
+    [JsonProperty(PropertyName = "discountAmount")]
+    public decimal DiscountAmount { get; set; }
     [JsonProperty(PropertyName = "subTotal")]
     public decimal Subtotal { get; set; }
-
+    [JsonProperty(PropertyName = "tax")]
+    public decimal Tax { get; set; }
+    [JsonProperty(PropertyName = "tip")]
+    public decimal Tip { get; set; }
     [JsonProperty(PropertyName = "total")]
     public decimal Total { get; set; }
+
+    internal void UpdateFrom(PoSOrder.OrderSummary summary)
+    {
+        ItemsTotal = summary.ItemsTotal;
+        DiscountAmount = summary.Discount;
+        Subtotal = summary.PriceTaxExcluded;
+        Tax = summary.Tax;
+        Tip = summary.Tip;
+        Total = summary.PriceTaxIncludedWithTips;
+    }
 }
 
 public class PosAppCartItem

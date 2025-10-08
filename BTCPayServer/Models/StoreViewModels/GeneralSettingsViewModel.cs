@@ -27,7 +27,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Apply the brand color to the store's backend as well")]
         public bool ApplyBrandColorToBackend { get; set; }
-        
+
         [Display(Name = "Logo")]
         public IFormFile LogoFile { get; set; }
         public string LogoUrl { get; set; }
@@ -55,6 +55,10 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Default currency")]
         [MaxLength(10)]
         public string DefaultCurrency { get; set; }
+
+        [Display(Name = "Additional rates to track")]
+        [MaxLength(30)]
+        public string AdditionalTrackedRates { get; set; }
 
         [Display(Name = "Minimum acceptable expiration time for BOLT11 for refunds")]
         [Range(0, 365 * 10)]

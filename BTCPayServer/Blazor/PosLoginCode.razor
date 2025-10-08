@@ -1,12 +1,8 @@
-@using Microsoft.AspNetCore.Http
-
-@inject IHttpContextAccessor HttpContextAccessor
-
 @if (Users?.Any() is true)
 {
     <div @attributes="Attrs" class="@CssClass">
         <label for="SignedInUser" class="form-label" text-translate="true">Signed in user</label>
-        <select id="SignedInUser" class="form-select" value="@_userId" @onchange="@(e => _userId = e.Value?.ToString())">
+        <select id="SignedInUser" class="form-select" value="@_userId" @onchange="@OnUserChanged">
             <option value="" text-translate="true">None, just open the URL</option>
             @foreach (var u in Users)
             {
@@ -22,21 +18,56 @@
 }
 else
 {
-    <UserLoginCode UserId="@_userId" RedirectUrl="@PosPath" />
+    @if (IsSelectedUserOwner() && !_ownerConfirmed)
+    {
+        <div>
+            <p><strong>This user is Store Owner</strong></p>
+            <p>Please confirm you want this QR code to be displayed.</p>
+
+            <button type="button" class="btn btn-danger" @onclick="ConfirmOwnerDisplay">Yes, show QR code</button>
+        </div>
+    }
+    else
+    {
+        <UserLoginCode UserId="@_userId" RedirectUrl="@PosPath" />
+    }
 }
 
 @code {
-    [Parameter, EditorRequired]
-    public string PosPath { get; set; }
+    [Parameter, EditorRequired] public string PosPath { get; set; }
 
-    [Parameter]
-    public Dictionary<string,string> Users { get; set; }
+    [Parameter] public Dictionary<string, string> Users { get; set; }
+    [Parameter] public string PosUrl { get; set; }
 
     [Parameter(CaptureUnmatchedValues = true)]
     public Dictionary<string, object> Attrs { get; set; }
 
     private string _userId;
-    private string PosUrl => Request.GetAbsoluteRoot() + PosPath;
-    private HttpRequest Request => HttpContextAccessor.HttpContext?.Request;
+    private bool _ownerConfirmed = false;
     private string CssClass => $"form-group {(Attrs?.ContainsKey("class") is true ? Attrs["class"] : "")}".Trim();
+
+    private void OnUserChanged(ChangeEventArgs e)
+    {
+        _userId = e.Value?.ToString();
+        _ownerConfirmed = false; // Reset confirmation when user changes
+    }
+
+    private bool IsSelectedUserOwner()
+    {
+        if (string.IsNullOrEmpty(_userId) || Users == null)
+            return false;
+
+        if (Users.TryGetValue(_userId, out var userInfo))
+        {
+            return userInfo.Contains("Owner", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return false;
+    }
+
+    private void ConfirmOwnerDisplay()
+    {
+        _ownerConfirmed = true;
+    }
+
 }

@@ -1,5 +1,191 @@
 # Changelog
 
+## 2.2.1
+
+### Bug fixes
+
+* Fix: Updating store settings would silently fail where there was a validation issue @NicolasDorier
+* Fix: Ensure unlisted installed plugins appear as updatable (#6896 #6893) @thgO-O
+* Fix: Icon spacing issues in multiple UI components (#6886 #6880) @bc1cindy
+* Fix: In Wallet Send page, coin selection would unexpectedly also clear labels (#6885 #6883 #6676) @thgO-O
+* Fix: Periodic tasks would sometimes stop firing (#6898) @NicolasDorier
+* Fix: Date column header isn't aligned properly (#6914) @NicolasDorier
+
+## 2.2.0
+
+We recommend updating NBXplorer to version `2.5.28` to take full advantage of the features in this release.
+
+**Breaking change:** This release renames and reorders the columns of the `Legacy Invoice Export`, now called `Invoice Export`. While we encourage you to utilize the updated report, we recognize this may disrupt workflows that rely on the old format.
+
+If you need to restore the `Legacy Invoice Export`, install the `Legacy Invoice Export` plugin.
+
+As a server administrator, go to `Manage Plugins`, search for `[LegacyInvoiceExport]`, install it, and restart your server.
+
+### Features
+
+* Renamed and reordered columns in the Invoice report (#6835) @NicolasDorier
+* Export all invoice metadata in the Invoice report (#6835) @NicolasDorier
+* Added wallet policy/miniscript support (#6765) @NicolasDorier
+* Added transaction fee and fee rate information in the wallet transaction list and the wallet report (#6857) @NicolasDorier
+* Added Tracking of exchange rate when a new transaction is detected in the wallet (#6841) @NicolasDorier
+* Included rate information in the wallet transaction list, wallet report, and invoice report (#6841) @NicolasDorier
+* Added ability to track additional rates via `Additional rates to track` in store settings (#6841) @NicolasDorier
+* Fix crowdfund number formatting for non-English locales (#6865) @bc1cindy
+* API: Added endpoint to retrieve invoice refund trigger data (#6818) @IzyPro
+* API: Enabled fallback exchange rate via API (#6839) @Abhijay007
+* Asking for confirmation to display QR code if user is store owner (#6878) @rockstardev
+* Automatic installation of plugin dependencies (#6858 #6873) @NicolasDorier @thgO-O
+
+### Bug Fixes
+
+* Fixed line break rendering in dropdowns using html-translate (#6820) @bhola-dev58
+* Fixed timezone mismatch in receipts (#6832 #6756) @thgO-O
+* Fix: A plugin could not use types provided by another plugin. (#6851) @NicolasDorier
+* Fix time icon spacing in wallet transactions header (#6877) @bc1cindy
+
+### Improvements
+
+* Improved responsiveness and UX of the Reporting page (#6846) @NicolasDorier
+* Added a "Reporting" button for easier access to reports from the invoice and wallet transactions lists (#6841 #6835) @NicolasDorier
+
+## 2.1.6
+
+### Features
+
+* Wallet: Ability to browse the addresses generated through the Receive tab (#6796) @thgO-O
+* Allowed updating payment requests as settled (#6825 #6792) @Abhijay007
+
+### Bug fixes
+
+* Fix: After connection string replacement, lightning payment would not be detected for 1 min (#6822) @NicolasDorier
+* Fix: In Email Rules show "Send the email to the buyer" checkbox only if trigger supports it (#6653 #6815) @AdamWroblewski
+* Fix: Failure to sign with Vault when a PSBT size exceeds 32KB (#6809) @NicolasDorier
+* Do not prevent the processing of other pending payouts if a store's lightning server is unresponsive @NicolasDorier
+
+## 2.1.5
+
+### Features
+
+* Wallet: Enhance manual Coin Selection with advanced filters and improved UX (#6755 #6685) @thgO-O
+* Added "Clear All" filter to Invoices (#6776 #5156) @Abhijay007
+
+### Bug fixes
+
+* Fix connection failure with phoenixd on mainnet (https://github.com/btcpayserver/BTCPayServer.Lightning/pull/170) @armelinw
+* PoS: Attempting to pay via Custom Amount in Product List mode would returns error 404. (#6786) @NicolasDorier
+* PoS: When using the Keypad (with cart), the button to proceed to checkout wasn't enabled if all selected items in the cart were free. (#6785) @NicolasDorier
+* PoS: When paying an item via Print View, the tax were not applied and receipt wasn't showing the item purchased. (#6788) @NicolasDorier
+* PoS: When paying an item via Print View, the custom amount option wasn't working. (#6788) @NicolasDorier
+
+## 2.1.4
+
+### Bug fixes
+
+* Fix keypad crash introduced by 2.1.3
+
+## 2.1.3
+
+### Bug fixes
+
+* Free items in the PoS were generating top-up invoices rather than settled invoices (#6780) @NicolasDorier
+* When a POS has a form, the amount adjusts incorrectly (#6782) @Kukks
+
+## 2.1.2
+
+### New features
+
+* POS: Apply tax rates to items, show in checkout/receipts (#6724 #6712) @NicolasDorier
+* POS: Improved total breakdown in receipts and cart (#6739) @NicolasDorier
+* POS Report: Add tip and subtotal (#6749) @NicolasDorier
+* New webhooks: InvoiceExpiredPaidPartial, InvoicePaidAfterExpiration (#5936 #6723) @rockstardev
+* Added Coinmate rate provider, recommended for CZK (#6707 #6725) @d4rp4t
+* Can RBF sweeping transactions (#6748) @NicolasDorier
+* Admin can change default store templates (#6704) @NicolasDorier
+* Store owners can configure fallback rate source (#6705) @NicolasDorier
+* Greenfield: Include `amountPaid` on greenfield invoices (#6747 #2525) @TChukwuleta
+* Phoenixd support (https://github.com/btcpayserver/BTCPayServer.Lightning/pull/169 https://github.com/btcpayserver/btcpayserver-docker/pull/987) @pm47 @armelinw
+
+### Bug fixes
+
+* Yadio rate lookup failure (#6743 #6729) @Abhijay007
+* RBF label inconsistency on replacement txs (#6748) @NicolasDorier
+* Crash when fee rate below minimum during RBF (#6748) @NicolasDorier
+
+### Improvements
+
+* Switched to textarea for full lightning connection string (#6706) @rockstardev
+* POS Keypad: shows amount being input rather than total (#6739 #6768) @NicolasDorier
+
+## 2.1.1
+
+Note: If you installed the XPub Extractor plugin, you will need to update it.
+
+### New features
+
+* Add support for a subset of wallet policy output descriptors (BIP388, BIP389) @NicolasDorier
+* Add support for hardware wallet taproot signing (BIP86) (#6678) @NicolasDorier
+* Enables linking payment requests to external invoices (e.g., QuickBooks, Xero) via a `Reference Id`. (#6642) @rockstardev
+* Allows searching Payment Requests `Reference Id`. (#6642) @rockstardev
+* Introduces a webhook triggered when a Payment Request is fully paid, useful for automating emails or other actions. (#6642) @rockstardev
+
+### Bug fixes
+
+* In the Send dialog, scanning a QR code leaves the 'bitcoin:' prefix in the destination field. (#6693 #6665) @dennisreimann @sapakus
+* In the Send dialog, the camera doesn't stop scanning after reading a QR code. (#6693) @dennisreimann
+* In the Multisig Server setup, choosing the PSBT signing option unexpectedly returns to the transaction list. (#6668 #6690) @NicolasDorier
+* Recreating an aborted TX in MultiSig on Server setup crashes (#6682 #6669) @NicolasDorier
+* Managers could not manage payouts in the UI (#6679) @NicolasDorier
+* Signing with seed with multisig wallet would not always recognize the seed (#6674 #6670) @NicolasDorier
+* Remove potential 'Invalid chains' error at startup. @NicolasDorier
+* Payment requests were uneditable after an invoice is received. (#6664) @NicolasDorier
+* `{PaymentRequest.Amount}` in email template would not be properly replaced by its value. (#6666) @rockstardev
+* In the Multisig Server setup, two simultaneous pending transaction could end up invalidating one another by spending the same UTXO. (#6699) @NicolasDorier
+
+### Improvements
+
+* Allow translation of the UI text in the hardware wallet pairing page (#6678) @NicolasDorier
+* Remove the Confirm Addresses page during hardware wallet import, but force verification on device during the pairing process (#6678) @NicolasDorier
+* After hardware wallet import, set the Label to the name of the model of the wallet. (#6678) @NicolasDorier
+* Attempt to automatically detect if the hardware needs `Default Include NonWitness Utxo`. (#6678) @NicolasDorier
+* When using multisig, include xpubs in the PSBT so wallets like Coldcard works without requiring prior xpub registration. (#6696) @NicolasDorier
+* Do not ask passphrase to Trezor One if passphrase protection isn't enabled on it. (#6678) @NicolasDorier
+* Add a confirmation prompt for the deletion of an Email Rule (#6675 #6662) @wbalbo
+* Adds a convenient button to copy the public URL of a Payment Request. (#6642) @rockstardev
+* Mobile devices now display a numeric keypad for number input on the Point of Sale page. (#6673) @iBobik
+
+## 2.1.0
+
+Breaking change: If you are using Monero or ZCash, you will need to install [their respective plugins](https://blog.btcpayserver.org./btcpay-server-2-1-0/#pluginizing-zcash-and-monero) after this update.
+Note that if you aren't using the docker deployment, you will need to remove `--chains xmr` or `--chains zec` (or corresponding `BTCPAY_CHAINS`) from BTCPay Server configuration.
+
+Please read [our blog post](https://blog.btcpayserver.org./btcpay-server-2-1-0/) for more details.
+
+### New features
+
+* Add better MultiSig flow when all users are using BTCPay Server @rockstardev
+* Remove ZCash and Monero from core code (#6535) @NicolasDorier
+* Disable cold wallet creation by default (#6626) @NicolasDorier
+* Adding support for RBF and improve UX for CPFP (#6581) @NicolasDorier
+* Greenfield: added `refundBOLT11Expiration` to Get/Update store endpoint (#6644) @NicolasDorier
+* Greenfield: Added `invitationLink` and `disabled` properties to user APIs (#6649) @dennisreimann
+
+### Bug fixes
+
+* Translatable text with accents were improperly rendered (#6622 #6623) @dennisreimann
+* Fix: Refunds through API were ignoring BOLT11 expiration at store level (#6644) @NicolasDorier
+* Fix: PaymentRequests created via API never expires (#6657) @NicolasDorier
+
+### Improvements
+
+* Improve UX for store email rules triggers (#6629) @rockstardev
+* Store users: Ensure the last owner cannot be downgraded (#6654) @dennisreimann
+
+## 2.0.8
+
+### Bug fixes
+
+* Fix potential migration crash when upgrading from pre 2.0 @NicolasDorier
+
 ## 2.0.7
 
 ### New features

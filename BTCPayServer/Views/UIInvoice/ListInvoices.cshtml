@@ -15,13 +15,13 @@
 {
     private int CountArrayFilter(string type) =>
         Model.Search.ContainsFilter(type) ? Model.Search.GetFilterArray(type).Length : 0;
-    
+
     private bool HasArrayFilter(string type, string key = null) =>
         Model.Search.ContainsFilter(type) && (key is null || Model.Search.GetFilterArray(type).Contains(key));
 
     private bool HasBooleanFilter(string key) =>
         Model.Search.ContainsFilter(key) && Model.Search.GetFilterBool(key) is true;
-    
+
     private bool HasCustomDateFilter() =>
         Model.Search.ContainsFilter("startdate") && Model.Search.ContainsFilter("enddate");
 }
@@ -32,13 +32,18 @@
         .invoiceId-col {
             min-width: 8rem;
         }
-        .invoice-details-row > td  {
+        .invoice-details-row > td {
             padding: 1.5rem 1rem 0 2.65rem;
         }
         .dropdown > .btn {
             min-width: 7rem;
             padding-left: 1rem;
             text-align: left;
+        }
+        #SearchText {
+            flex-shrink: 0;
+            min-width: 200px;
+            max-width: 300px;
         }
         @@media (max-width: 568px) {
             #SearchText {
@@ -107,15 +112,28 @@
             <vc:icon symbol="info" />
         </a>
     </h2>
-	<a id="page-primary"
-       permission="@Policies.CanCreateInvoice"
-       asp-action="CreateInvoice" 
-       asp-route-storeId="@Model.StoreId" 
-       asp-route-searchTerm="@Model.SearchTerm" 
-       class="btn btn-primary mt-3 mt-sm-0"
-       text-translate="true">
-        Create Invoice
-    </a>
+    <div>
+        <a
+            id="view-report"
+            permission="@Policies.CanViewReports"
+            asp-controller="UIReports"
+            asp-action="StoreReports"
+            asp-route-storeId="@Model.StoreId"
+            asp-route-viewName="Invoices"
+            class="btn btn-secondary">
+            <vc:icon symbol="nav-reporting" />
+            <span text-translate="true">Reporting</span>
+        </a>
+        <a id="page-primary"
+           permission="@Policies.CanCreateInvoice"
+           asp-action="CreateInvoice"
+           asp-route-storeId="@Model.StoreId"
+           asp-route-searchTerm="@Model.SearchTerm"
+           class="btn btn-primary"
+           text-translate="true">
+            Create Invoice
+        </a>
+    </div>
 </div>
 
 <div id="descriptor" class="collapse">
@@ -232,7 +250,7 @@
                     <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("appid", app.Id)" class="dropdown-item @(HasArrayFilter("appid", app.Id) ? "custom-active" : "")">@app.AppName</a>
                 }
             </div>
-        </div> 
+        </div>
     }
     <div class="dropdown">
         <button id="DateOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -267,7 +285,34 @@
             <button type="button" class="dropdown-item @(HasCustomDateFilter() ? "custom-active" : "")" data-bs-toggle="modal" data-bs-target="#customRangeModal" text-translate="true">Custom Range</button>
         </div>
     </div>
+    @if (statusFilterCount > 0 || appFilterCount > 0 || hasDateFilter || !string.IsNullOrEmpty(Model.SearchText))
+    {
+        <button id="clearAllFiltersBtn" type="button" class="btn btn-secondary" style="min-width: 7rem;" title="@StringLocalizer["Clear all filters"]">
+            <span class="align-middle" text-translate="true">Clear All</span>
+        </button>
+    }
 </form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const clearBtn = document.getElementById('clearAllFiltersBtn');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function () {
+                const form = clearBtn.closest('form');
+                if (!form) return;
+                // Reset search text
+                const searchText = form.querySelector('[name="SearchText"]');
+                if (searchText) searchText.value = '';
+                // Reset SearchTerm (filters)
+                const searchTerm = form.querySelector('[name="SearchTerm"]');
+                if (searchTerm) searchTerm.value = '';
+                // Optionally reset other hidden fields if needed
+                // Submit the form
+                form.submit();
+            });
+        }
+    });
+</script>
 
 @if (Model.Invoices.Any())
 {
@@ -281,7 +326,7 @@
                             <input type="checkbox" class="form-check-input mass-action-select-all" />
                         </th>
                         <th class="date-col">
-                            <div class="d-flex align-items-center gap-1">
+                            <div class="d-flex align-items-center gap-3">
                                 <span text-translate="true">Date</span>
                                 <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="@StringLocalizer["Switch date format"]">
                                     <vc:icon symbol="time" />
@@ -377,7 +422,6 @@
         </div>
 
         <vc:pager view-model="Model" />
-    
     </form>
 }
 else

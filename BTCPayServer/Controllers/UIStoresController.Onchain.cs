@@ -9,6 +9,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
+using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Models.StoreViewModels;
@@ -152,7 +153,7 @@ public partial class UIStoresController
         {
             try
             {
-                strategy = handler.ParsePaymentMethodConfig(JToken.Parse(UnprotectString(vm.Config)));
+                strategy = handler.ParsePaymentMethodConfig(JToken.Parse(_dataProtector.UnprotectString(vm.Config)));
             }
             catch
             {
@@ -167,7 +168,7 @@ public partial class UIStoresController
             return View(vm.ViewName, vm);
         }
 
-        vm.Config = ProtectString(JToken.FromObject(strategy, handler.Serializer).ToString());
+        vm.Config = _dataProtector.ProtectString(JToken.FromObject(strategy, handler.Serializer).ToString());
         ModelState.Remove(nameof(vm.Config));
 
         var storeBlob = store.GetStoreBlob();
@@ -183,7 +184,7 @@ public partial class UIStoresController
             }
             catch
             {
-                ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer["Invalid derivation scheme"]);
+                ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer["NBXplorer is unable to track this derivation scheme. You may need to update it."]);
                 return View(vm.ViewName, vm);
             }
             await _storeRepo.UpdateStore(store);
@@ -194,16 +195,7 @@ public partial class UIStoresController
             // This is success case when derivation scheme is added to the store
             return RedirectToAction(nameof(WalletSettings), new { storeId = vm.StoreId, cryptoCode = vm.CryptoCode });
         }
-        return ConfirmAddresses(vm, strategy, network.NBXplorerNetwork);
-    }
-
-    private string ProtectString(string str)
-    {
-        return Convert.ToBase64String(_dataProtector.Protect(Encoding.UTF8.GetBytes(str)));
-    }
-    private string UnprotectString(string str)
-    {
-        return Encoding.UTF8.GetString(_dataProtector.Unprotect(Convert.FromBase64String(str)));
+        return ConfirmAddresses(vm, strategy, network);
     }
 
     [HttpGet("{storeId}/onchain/{cryptoCode}/generate/{method?}")]
@@ -259,7 +251,7 @@ public partial class UIStoresController
         }
 
         var perm = await CanUseHotWallet();
-        if ((!perm.CanCreateHotWallet && request.SavePrivateKeys) || 
+        if ((!perm.CanCreateHotWallet && request.SavePrivateKeys) ||
             (!perm.CanRPCImport && request.ImportKeysToRPC) ||
             (!perm.CanCreateColdWallet && !request.SavePrivateKeys))
         {
@@ -278,7 +270,6 @@ public partial class UIStoresController
             Network = network,
             Source = isImport ? "SeedImported" : "NBXplorerGenerated",
             IsHotWallet = isImport ? request.SavePrivateKeys : method == WalletSetupMethod.HotWallet,
-            DerivationSchemeFormat = "BTCPay",
             SupportTaproot = network.NBitcoinNetwork.Consensus.SupportTaproot,
             SupportSegwit = network.NBitcoinNetwork.Consensus.SupportSegwit
         };
@@ -320,7 +311,7 @@ public partial class UIStoresController
             derivationSchemeSettings.IsHotWallet = method == WalletSetupMethod.HotWallet;
         }
 
-        var accountSettings = derivationSchemeSettings.GetSigningAccountKeySettings();
+        var accountSettings = derivationSchemeSettings.AccountKeySettings[0];
         accountSettings.AccountKeyPath = response.AccountKeyPath.KeyPath;
         accountSettings.RootFingerprint = response.AccountKeyPath.MasterFingerprint;
         derivationSchemeSettings.AccountOriginal = response.DerivationScheme.ToString();
@@ -329,7 +320,7 @@ public partial class UIStoresController
         vm.RootFingerprint = response.AccountKeyPath.MasterFingerprint.ToString();
         vm.AccountKey = response.AccountHDKey.Neuter().ToWif();
         vm.KeyPath = response.AccountKeyPath.KeyPath.ToString();
-        vm.Config = ProtectString(JToken.FromObject(derivationSchemeSettings, handler.Serializer).ToString());
+        vm.Config = _dataProtector.ProtectString(JToken.FromObject(derivationSchemeSettings, handler.Serializer).ToString());
 
         var result = await UpdateWallet(vm);
 
@@ -416,13 +407,12 @@ public partial class UIStoresController
             Network = network,
             IsHotWallet = derivation.IsHotWallet,
             Source = derivation.Source,
-            RootFingerprint = derivation.GetSigningAccountKeySettingsOrDefault()?.RootFingerprint.ToString(),
+            RootFingerprint = derivation.GetFirstAccountKeySettings().RootFingerprint.ToString(),
             DerivationScheme = derivation.AccountDerivation?.ToString(),
             DerivationSchemeInput = derivation.AccountOriginal,
-            KeyPath = derivation.GetSigningAccountKeySettingsOrDefault()?.AccountKeyPath?.ToString(),
+            KeyPath = derivation.GetFirstAccountKeySettings().AccountKeyPath?.ToString(),
             UriScheme = network.NBitcoinNetwork.UriScheme,
             Label = derivation.Label,
-            SelectedSigningKey = derivation.SigningKey?.ToString(),
             NBXSeedAvailable = derivation.IsHotWallet &&
                                perm.CanCreateHotWallet &&
                                !string.IsNullOrEmpty(await client.GetMetadataAsync<string>(derivation.AccountDerivation,
@@ -434,7 +424,7 @@ public partial class UIStoresController
                     MasterFingerprint = e.RootFingerprint is { } fp ? fp.ToString() : null,
                     AccountKeyPath = e.AccountKeyPath == null ? "" : $"m/{e.AccountKeyPath}"
                 }).ToList(),
-            Config = ProtectString(JToken.FromObject(derivation, handler.Serializer).ToString()),
+            Config = _dataProtector.ProtectString(JToken.FromObject(derivation, handler.Serializer).ToString()),
             PayJoinEnabled = storeBlob.PayJoinEnabled,
             CanUsePayJoin = perm.CanCreateHotWallet && network.SupportPayJoin && derivation.IsHotWallet,
             CanUseHotWallet = perm.CanCreateHotWallet,
@@ -489,15 +479,6 @@ public partial class UIStoresController
             derivation.DefaultIncludeNonWitnessUtxo = vm.DefaultIncludeNonWitnessUtxo;
         }
 
-        var signingKey = string.IsNullOrEmpty(vm.SelectedSigningKey)
-            ? null
-            : new BitcoinExtPubKey(vm.SelectedSigningKey, network.NBitcoinNetwork);
-        if (derivation.SigningKey != signingKey && signingKey != null)
-        {
-            needUpdate = true;
-            derivation.SigningKey = signingKey;
-        }
-
         for (int i = 0; i < derivation.AccountKeySettings.Length; i++)
         {
             try
@@ -550,7 +531,7 @@ public partial class UIStoresController
                     _eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
                     successMessage += $" {vm.CryptoCode} on-chain payments are now {(vm.Enabled ? "enabled" : "disabled")} for this store.";
                 }
-                
+
                 if (payjoinChanged && storeBlob.PayJoinEnabled && network.SupportPayJoin)
                 {
                     var config = store.GetPaymentMethodConfig<DerivationSchemeSettings>(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode), _handlers);
@@ -701,30 +682,20 @@ public partial class UIStoresController
         return RedirectToAction(nameof(GeneralSettings), new { storeId });
     }
 
-    private IActionResult ConfirmAddresses(WalletSetupViewModel vm, DerivationSchemeSettings strategy, NBXplorerNetwork network)
+    private IActionResult ConfirmAddresses(WalletSetupViewModel vm, DerivationSchemeSettings strategy, BTCPayNetwork network)
     {
         vm.DerivationScheme = strategy.AccountDerivation.ToString();
-        var deposit = new KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
-
+        vm.AddressSamples = new();
         if (!string.IsNullOrEmpty(vm.DerivationScheme))
         {
-            var line = strategy.AccountDerivation.GetLineFor(deposit);
-
-            for (uint i = 0; i < 10; i++)
+            var result = GreenfieldStoreOnChainPaymentMethodsController.GetPreviewResultData(0, 10, network, strategy.AccountDerivation);
+            foreach (var r in result.Addresses)
             {
-                var keyPath = deposit.GetKeyPath(i);
-                var rootedKeyPath = vm.GetAccountKeypath()?.Derive(keyPath);
-                var derivation = line.Derive(i);
-                var address = network.CreateAddress(strategy.AccountDerivation,
-                    line.KeyPathTemplate.GetKeyPath(i),
-                    derivation.ScriptPubKey).ToString();
-                vm.AddressSamples.Add((keyPath.ToString(), address, rootedKeyPath));
+                vm.AddressSamples.Add((r.KeyPath, r.Address));
             }
         }
-
         vm.Confirmation = true;
         ModelState.Remove(nameof(vm.Config)); // Remove the cached value
-
         return View("ImportWallet/ConfirmAddresses", vm);
     }
 
@@ -732,7 +703,6 @@ public partial class UIStoresController
     {
         store = HttpContext.GetStoreData();
         network = cryptoCode == null ? null : _explorerProvider.GetNetwork(cryptoCode);
-
         return store == null || network == null ? NotFound() : null;
     }
 
@@ -783,24 +753,14 @@ public partial class UIStoresController
         return WalletWarning(isHotWallet,
             $"The store won't be able to receive {cryptoCode} onchain payments until a new wallet is set up.");
     }
-    
+
     internal static DerivationSchemeSettings ParseDerivationStrategy(string derivationScheme, BTCPayNetwork network)
     {
         var parser = new DerivationSchemeParser(network);
         var isOD = Regex.Match(derivationScheme, @"\(.*?\)");
         if (isOD.Success)
         {
-            var derivationSchemeSettings = new DerivationSchemeSettings();
-            var result = parser.ParseOutputDescriptor(derivationScheme);
-            derivationSchemeSettings.AccountOriginal = derivationScheme.Trim();
-            derivationSchemeSettings.AccountDerivation = result.Item1;
-            derivationSchemeSettings.AccountKeySettings = result.Item2?.Select((path, i) => new AccountKeySettings()
-            {
-                RootFingerprint = path?.MasterFingerprint,
-                AccountKeyPath = path?.KeyPath,
-                AccountKey = result.Item1.GetExtPubKeys().ElementAt(i).GetWif(parser.Network)
-            }).ToArray() ?? new AccountKeySettings[result.Item1.GetExtPubKeys().Count()];
-            return derivationSchemeSettings;
+            return parser.ParseOD(derivationScheme);
         }
 
         var strategy = parser.Parse(derivationScheme);

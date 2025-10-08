@@ -69,7 +69,7 @@ services:
         - "sshd_datadir:/root/.ssh"
 
   devlnd:
-    image: btcpayserver/bitcoin:28.1
+    image: btcpayserver/bitcoin:29.1
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_WALLETDIR: "/data/wallets"
@@ -95,7 +95,7 @@ services:
       custom:
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.5.22
+    image: nicolasdorier/nbxplorer:2.5.29
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -120,7 +120,7 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:28.1
+    image: btcpayserver/bitcoin:29.1
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_WALLETDIR: "/data/wallets"
@@ -136,6 +136,7 @@ services:
         zmqpubrawtx=tcp://0.0.0.0:28333
         deprecatedrpc=signrawtransaction
         fallbackfee=0.0002
+        minrelaytxfee=0.00001000
     ports:
       - "43782:43782"
       - "39388:39388"
@@ -148,7 +149,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v24.08.2
+    image: btcpayserver/lightning:v25.05
     stop_signal: SIGKILL
     restart: unless-stopped
     environment:
@@ -177,7 +178,7 @@ services:
       - bitcoind
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v24.08.2
+    image: btcpayserver/lightning:v25.05
     stop_signal: SIGKILL
     restart: unless-stopped
     environment:
@@ -215,7 +216,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.18.5-beta
+    image: btcpayserver/lnd:v0.19.3-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -253,7 +254,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.18.5-beta
+    image: btcpayserver/lnd:v0.19.3-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"

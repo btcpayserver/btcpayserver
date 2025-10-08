@@ -45,8 +45,6 @@ namespace BTCPayServer.Data
         {
             storeData.DefaultCrypto = defaultPaymentId?.ToString();
         }
-#pragma warning restore CS0618
-
 
         public static StoreBlob GetStoreBlob(this StoreData storeData)
         {
@@ -57,7 +55,7 @@ namespace BTCPayServer.Data
             result.PaymentMethodCriteria.RemoveAll(criteria => criteria?.PaymentMethod is null);
             return result;
         }
-
+#pragma warning restore CS0618
         public static bool AnyPaymentMethodAvailable(this StoreData storeData, PaymentMethodHandlerDictionary handlers)
         {
             return storeData.GetPaymentMethodConfigs(handlers, true).Any();

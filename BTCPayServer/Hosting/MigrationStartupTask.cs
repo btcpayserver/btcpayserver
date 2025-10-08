@@ -964,23 +964,6 @@ retry:
             }
         }
 
-        void MigrateDerivationSettings(DerivationSchemeSettings s, BTCPayNetwork network)
-        {
-            if (network == null || s.AccountKeySettings is not (null or { Length: 1 }))
-                return;
-            s.AccountKeySettings = s.AccountDerivation.GetExtPubKeys().Select(e => new AccountKeySettings()
-            {
-                AccountKey = e.GetWif(network.NBitcoinNetwork),
-            }).ToArray();
-#pragma warning disable CS0618 // Type or member is obsolete
-            s.AccountKeySettings[0].AccountKeyPath = s.AccountKeyPath;
-            s.AccountKeySettings[0].RootFingerprint = s.RootFingerprint;
-            s.ExplicitAccountKey = null;
-            s.AccountKeyPath = null;
-            s.RootFingerprint = null;
-#pragma warning restore CS0618 // Type or member is obsolete
-        }
-
         private async Task MigratePaymentMethodCriteria()
         {
             using var ctx = _DBContextFactory.CreateContext();

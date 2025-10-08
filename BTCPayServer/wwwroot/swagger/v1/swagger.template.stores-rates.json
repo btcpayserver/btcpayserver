@@ -69,12 +69,259 @@
                     }
                 ]
             }
+        },
+        "/api/v1/stores/{storeId}/rates/configuration/{rateSource}": {
+            "get": {
+                "tags": [
+                    "Stores (Rates)"
+                ],
+                "summary": "Get store rate settings for the specified rate source",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/RateSource"
+                    }
+                ],
+                "description": "View rate settings for the specified store and rate source (`primary` or `fallback`).",
+                "operationId": "Stores_GetStoreRateConfiguration",
+                "responses": {
+                    "200": {
+                        "description": "specified store rate settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StoreRateConfiguration"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The specified store or rate source was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Stores (Rates)"
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/RateSource"
+                    }
+                ],
+                "summary": "Get store rate settings for the specified rate source",
+                "description": "Update rate settings for the specified store and rate source (`primary` or `fallback`).",
+                "operationId": "Stores_UpdateStoreRateConfiguration",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreRateConfiguration"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "The settings were updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StoreRateConfiguration"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to modify the store"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/rates/configuration/preview": {
+            "post": {
+                "tags": [
+                    "Stores (Rates)"
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "name": "currencyPair",
+                        "description": "The currency pairs to preview",
+                        "in": "query",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "nullable": true,
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "x-position": 1
+                    }
+                ],
+                "summary": "Preview rate configuration results",
+                "description": "Preview rate configuration results before you set it on the store",
+                "operationId": "Stores_PreviewStoreRateConfiguration",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreRateConfiguration"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "The settings were executed and a preview was returned",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/StoreRateResult"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when previewing the settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to modify the store"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "parameters": {
+            "RateSource": {
+                "name": "rateSource",
+                "in": "path",
+                "required": true,
+                "description": "The rate source to configure (`primary` or `fallback`)",
+                "schema": {
+                    "type": "string",
+                    "default": "primary",
+                    "example": "primary"
+                }
+            }
+        },
+        "schemas": {
+            "StoreRateConfiguration": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "spread": {
+                        "type": "string",
+                        "description": "A spread applies to the rate fetched in `%`. Must be `>= 0` or `<= 100`"
+                    },
+                    "preferredSource": {
+                        "type": "string",
+                        "description": "When `isCustomScript` is `false`, uses this source in the default `effectiveScript`. When `isCustomScript` is `true`, this field is ignored (set to `null`). See `/misc/rate-sources` for available sources."
+                    },
+                    "isCustomScript": {
+                        "type": "boolean",
+                        "description": "Whether to use `preferredSource` with default script or a custom `effectiveScript`."
+                    },
+                    "effectiveScript": {
+                        "type": "string",
+                        "description": "When `isCustomScript` is `true`, this represent the custom script used to calculate a currency pair's exchange rate. Else, it represent the script generated by the default rules and `preferredSource`."
+                    }
+                }
+            },
+            "StoreRateResult": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "currencyPair": {
+                        "type": "string",
+                        "example": "BTC_USD",
+                        "description": "Currency pair in the format of `BTC_USD`"
+                    },
+                    "errors": {
+                        "type": "array",
+                        "nullable": true,
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "Errors relating to this currency pair fetching based on your config"
+                    },
+                    "rate": {
+                        "type": "string",
+                        "format": "decimal",
+                        "example": "64392.23",
+                        "description": "the rate fetched based on the currency pair"
+                    }
+                }
+            }
         }
     },
     "tags": [
         {
             "name": "Stores (Rates)",
-            "description": "Store Rates operations"
+            "description": "Stores rate information and configuration"
         }
     ]
 }

@@ -3,6 +3,7 @@ using System.Linq;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BTCPayServer.Filters
@@ -23,8 +24,10 @@ namespace BTCPayServer.Filters
 
         public bool Accept(ActionConstraintContext context)
         {
-            var req = context.RouteContext.HttpContext.Request;
-            var policies = context.RouteContext.HttpContext.RequestServices.GetService<PoliciesSettings>();
+            var routeContext = context.RouteContext;
+            var httpContext = routeContext.HttpContext;
+            var req = httpContext.Request;
+            var policies = httpContext.RequestServices.GetService<PoliciesSettings>();
             var mapping = policies?.DomainToAppMapping?.ToList() ?? [];
             if (policies is { RootAppId: { } rootAppId, RootAppType: { } rootAppType })
             {
@@ -37,7 +40,7 @@ namespace BTCPayServer.Filters
             }
 
             // If we have an appId, we can redirect to the canonical domain
-            if ((string)context.RouteContext.RouteData.Values["appId"] is { } appId)
+            if ((string)routeContext.RouteData.Values["appId"] is { } appId)
             {
                 var redirectDomain = mapping.FirstOrDefault(item => item.AppId == appId)?.Domain;
                 // App is accessed via path, redirect to canonical domain
@@ -48,7 +51,13 @@ namespace BTCPayServer.Filters
                         uri.Port = req.Host.Port.Value;
                     if (req.QueryString.HasValue)
                         uri.Query = req.QueryString.Value!;
-                    context.RouteContext.HttpContext.Response.Redirect(uri.ToString());
+                    
+                    // keep status messages
+                    var tempDataFactory = httpContext.RequestServices.GetRequiredService<ITempDataDictionaryFactory>();
+                    var tempData = tempDataFactory.GetTempData(httpContext);
+                    tempData.Keep();
+                    
+                    httpContext.Response.Redirect(uri.ToString());
                 }
                 return true;
             }
@@ -59,7 +68,7 @@ namespace BTCPayServer.Filters
             {
                 if (AppType is null || AppType != matchedDomainMapping.AppType)
                     return false;
-                context.RouteContext.RouteData.Values.Add("appId", matchedDomainMapping.AppId);
+                routeContext.RouteData.Values.Add("appId", matchedDomainMapping.AppId);
                 return true;
             }
 

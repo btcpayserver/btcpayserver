@@ -34,6 +34,7 @@ namespace BTCPayServer.Tests
         internal ILog TestLogs;
         public ServerTester(string scope, bool newDb, ILog testLogs, ILoggerProvider loggerProvider, BTCPayNetworkProvider networkProvider)
         {
+            Scope = scope;
             LoggerProvider = loggerProvider;
             this.TestLogs = testLogs;
             _Directory = scope;
@@ -72,6 +73,8 @@ namespace BTCPayServer.Tests
             PayTester.SSHConnection = GetEnvironment("TESTS_SSHCONNECTION", "root@127.0.0.1:21622");
             PayTester.SocksEndpoint = GetEnvironment("TESTS_SOCKSENDPOINT", "localhost:9050");
         }
+
+        public string Scope { get; set; }
 
         public void ActivateLangs()
         {
@@ -136,7 +139,7 @@ namespace BTCPayServer.Tests
                     throw new NotSupportedException();
             }
             else
-                throw new NotSupportedException(connectionType.ToString());
+                throw new NotSupportedException(connectionType);
             return connectionString;
         }
 
@@ -272,5 +275,16 @@ namespace BTCPayServer.Tests
                 PayTester.Dispose();
             TestLogs.LogInformation("BTCPayTester disposed");
         }
+
+        public RPCClient GetExplorerNode(string cryptoCode) =>
+            cryptoCode == "BTC" ? ExplorerNode :
+            cryptoCode == "LTC" ? LTCExplorerNode :
+            throw new NotSupportedException();
+
+        public BTCPayNetwork GetNetwork(string cryptoCode)
+            => cryptoCode == "BTC" ? NetworkProvider.GetNetwork<BTCPayNetwork>("BTC") :
+                cryptoCode == "LTC" ? NetworkProvider.GetNetwork<BTCPayNetwork>("LTC") :
+                cryptoCode == "LBTC" ? NetworkProvider.GetNetwork<BTCPayNetwork>("LBTC") :
+                throw new NotSupportedException();
     }
 }

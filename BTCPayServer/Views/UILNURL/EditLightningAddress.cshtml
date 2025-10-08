@@ -124,7 +124,7 @@
                 var address = $"{Model.Items[index].Username}@{Context.Request.Host.ToUriComponent()}";
                 <tr>
                     <td>
-                        <div class="input-group" data-clipboard="@address">
+                        <div class="input-group clipboard-button" data-clipboard="@address">
                             <input type="text" class="form-control copy-cursor lightning-address-value" readonly="readonly" value="@address"/>
                             <button type="button" class="btn btn-outline-secondary px-3">
                                 <vc:icon symbol="actions-copy" />

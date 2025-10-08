@@ -1,5 +1,112 @@
 const POS_ITEM_ADDED_CLASS = 'posItem--added';
 
+class PoSOrder {
+    constructor(decimals) {
+        this._decimals = decimals;
+        this._discount = 0;
+        this._tip = 0;
+        this._tipPercent = 0;
+        this.itemLines = [];
+    }
+
+    static ItemLine = class {
+        constructor(itemId, count, unitPrice, taxRate = null) {
+            this.itemId = itemId;
+            this.count = count;
+            this.unitPrice = unitPrice;
+            this.taxRate = taxRate;
+        }
+    }
+
+    addLine(line) {
+        this.itemLines.push(line);
+    }
+
+    setTip(tip) {
+        this._tip = this._round(tip);
+        this._tipPercent = 0;
+    }
+    setTipPercent(tip) {
+        this._tipPercent = tip;
+        this._tip = 0;
+    }
+
+    addDiscountRate(discount) {
+        this._discount = discount;
+    }
+
+    setCart(cart, amounts, defaultTaxRate) {
+        this.itemLines = [];
+        for (const item of cart) {
+            this.addLine(new PoSOrder.ItemLine(item.id, item.count, item.price, item.taxRate ?? defaultTaxRate));
+        }
+        if (amounts) {
+            var i = 1;
+            for (const item of amounts) {
+                if (!item) continue;
+                this.addLine(new PoSOrder.ItemLine("Custom Amount " + i, 1, item, defaultTaxRate));
+                i++;
+            }
+        }
+    }
+
+    // Returns the tax rate of the items in the cart.
+    // If the tax rates are not all the same, returns null.
+    // If the cart is empty, returns null.
+    // Else, returns the tax rate shared by all items
+    getTaxRate() {
+        if (this.itemLines.length === 0) return null;
+        var rate = this.itemLines[0].taxRate ?? 0;
+        for (const line of this.itemLines.slice(1)) {
+            if (rate !== line.taxRate)
+            {
+                return null;
+            }
+        }
+        return rate;
+    }
+    calculate() {
+        const ctx = {
+            discount: 0,
+            tax: 0,
+            itemsTotal: 0,
+            priceTaxExcluded: 0,
+            tip: 0,
+            priceTaxIncluded: 0,
+            priceTaxIncludedWithTips: 0
+        };
+
+        for (const item of this.itemLines) {
+            let linePrice = item.unitPrice * item.count;
+            let discount = linePrice * this._discount / 100;
+            discount = this._round(discount);
+            ctx.discount += discount;
+            linePrice -= discount;
+
+            let taxRate = item.taxRate ?? 0;
+            let tax = linePrice * taxRate / 100;
+            tax = this._round(tax);
+            ctx.tax += tax;
+            ctx.priceTaxExcluded += linePrice;
+        }
+
+        ctx.priceTaxExcluded = this._round(ctx.priceTaxExcluded);
+        ctx.tip = this._round(this._tip);
+        ctx.tip += this._round(ctx.priceTaxExcluded * this._tipPercent / 100);
+        ctx.priceTaxIncluded = ctx.priceTaxExcluded + ctx.tax;
+        ctx.priceTaxIncludedWithTips = ctx.priceTaxIncluded + ctx.tip;
+        ctx.priceTaxIncludedWithTips = this._round(ctx.priceTaxIncludedWithTips);
+        ctx.itemsTotal = ctx.priceTaxExcluded + ctx.discount;
+
+        return ctx;
+    }
+
+    _round(value) {
+        const factor = Math.pow(10, this._decimals);
+        return Math.round(value * factor + Number.EPSILON) / factor;
+    }
+}
+
 function storageKey(name) {
     return `${srvModel.appId}-${srvModel.currencyCode}-${name}`;
 }
@@ -39,7 +146,7 @@ const posCommon = {
     data () {
         return {
             ...srvModel,
-            amount: null,
+            posOrder: new PoSOrder(srvModel.currencyInfo.divisibility),
             tip: null,
             tipPercent: null,
             discount: null,
@@ -56,20 +163,33 @@ const posCommon = {
         }
     },
     computed: {
-        amountNumeric () {
-            const { divisibility } = this.currencyInfo
-            const cart = this.cart.reduce((res, item) => res + (item.price || 0) * item.count, 0).toFixed(divisibility)
-            const value = parseFloat(this.amount || 0) + parseFloat(cart)
-            return isNaN(value) ? 0.0 : parseFloat(value.toFixed(divisibility))
+        summary() {
+            return this.posOrder.calculate();
+        },
+        itemsTotalNumeric() {
+            // We don't want to show the items total if there is no discount or tip
+            if (this.summary.itemsTotal === this.summary.priceTaxExcluded) return 0;
+            return this.summary.itemsTotal;
+        },
+        taxNumeric() {
+            return this.summary.tax;
+        },
+        taxPercent() {
+            return this.posOrder.getTaxRate();
+        },
+        subtotalNumeric () {
+            // We don't want to show the subtotal if there is no tax or tips
+            if (this.summary.priceTaxExcluded === this.summary.priceTaxIncludedWithTips) return 0;
+            return this.summary.priceTaxExcluded;
         },
         posdata () {
-            const data = { subTotal: this.amountNumeric, total: this.totalNumeric }
+            const data = { subTotal: this.summary.priceTaxExcluded, total: this.summary.priceTaxIncludedWithTips }
             const amounts = this.amounts.filter(e => e) // clear empty or zero values
             if (amounts) data.amounts = amounts.map(parseFloat)
             if (this.cart) data.cart = this.cart
-            if (this.discountNumeric > 0) data.discountAmount = this.discountNumeric
+            if (this.summary.discount > 0) data.discountAmount = this.summary.discount
             if (this.discountPercentNumeric > 0) data.discountPercentage = this.discountPercentNumeric
-            if (this.tipNumeric > 0) data.tip = this.tipNumeric
+            if (this.summary.tip > 0) data.tip = this.summary.tip
             if (this.tipPercent > 0) data.tipPercentage = this.tipPercent
             return JSON.stringify(data)
         },
@@ -78,29 +198,16 @@ const posCommon = {
             return isNaN(value) ? 0.0 : parseFloat(value.toFixed(this.currencyInfo.divisibility))
         },
         discountNumeric () {
-            return this.amountNumeric && this.discountPercentNumeric
-                ? parseFloat((this.amountNumeric * (this.discountPercentNumeric / 100)).toFixed(this.currencyInfo.divisibility))
-                : 0.0;
-        },
-        amountMinusDiscountNumeric () {
-            return parseFloat((this.amountNumeric - this.discountNumeric).toFixed(this.currencyInfo.divisibility))
+            return this.summary.discount;
         },
         tipNumeric () {
-            if (this.tipPercent) {
-                return parseFloat((this.amountMinusDiscountNumeric * (this.tipPercent / 100)).toFixed(this.currencyInfo.divisibility))
-            } else {
-                if (this.tip < 0) {
-                    this.tip = 0
-                }
-                const value = parseFloat(this.tip)
-                return isNaN(value) ? 0.0 : parseFloat(value.toFixed(this.currencyInfo.divisibility))
-            }
+            return this.summary.tip;
         },
-        total () {
-            return this.amountNumeric - this.discountNumeric + this.tipNumeric
+        lastAmount() {
+          return this.amounts[this.amounts.length - 1] = this.amounts[this.amounts.length - 1] || 0;
         },
         totalNumeric () {
-            return parseFloat(parseFloat(this.total).toFixed(this.currencyInfo.divisibility))
+            return this.summary.priceTaxIncludedWithTips;
         },
         cartCount() {
             return this.cart.reduce((res, item) => res + (parseInt(item.count) || 0), 0)
@@ -119,9 +226,11 @@ const posCommon = {
             else if (value < 0) this.discountPercent = '0'
             else if (value > 100) this.discountPercent = '100'
             else this.discountPercent = value.toString()
+            this.posOrder.addDiscountRate(isNaN(value) ? null : value)
         },
         tip(val) {
             this.tipPercent = null
+            this.posOrder.setTip(val)
         },
         cart: {
             handler(newCart) {
@@ -132,11 +241,12 @@ const posCommon = {
                 if (this.persistState) {
                     saveState('cart', newCart)
                 }
+                this.posOrder.setCart(newCart, this.amounts, this.defaultTaxRate)
             },
             deep: true
         },
         amounts (values) {
-            this.amount = values.reduce((total, current) => total + parseFloat(current || '0'), 0);
+            this.posOrder.setCart(this.cart, values, this.defaultTaxRate)
         }
     },
     methods: {
@@ -155,6 +265,7 @@ const posCommon = {
             this.tipPercent = this.tipPercent !== percentage
                 ? percentage
                 : null;
+            this.posOrder.setTipPercent(this.tipPercent)
         },
         formatCrypto(value, withSymbol) {
             const symbol = withSymbol ? ` ${this.currencySymbol || this.currencyCode}` : ''
@@ -180,14 +291,6 @@ const posCommon = {
 
             return item.inventory == null || item.inventory > (itemInCart ? itemInCart.count : 0)
         },
-        inventoryText(index) {
-            const item = this.items[index]
-            if (item.inventory == null) return null
-
-            const itemInCart = this.cart.find(lineItem => lineItem.id === item.id)
-            const left = item.inventory - (itemInCart ? itemInCart.count : 0)
-            return left > 0 ? `${item.inventory} left` : 'Sold out'
-        },
         addToCart(index, count) {
             if (!this.inStock(index)) return null;
 
@@ -207,10 +310,7 @@ const posCommon = {
             // Add new item because it doesn't exist yet
             if (!itemInCart) {
                 itemInCart = {
-                    id: item.id,
-                    title: item.title,
-                    price: item.price,
-                    inventory: item.inventory,
+                    ...item,
                     count
                 }
                 this.cart.push(itemInCart);
@@ -221,11 +321,13 @@ const posCommon = {
             // Animate
             if (!$posItem.classList.contains(POS_ITEM_ADDED_CLASS)) $posItem.classList.add(POS_ITEM_ADDED_CLASS);
 
+            this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate);
             return itemInCart;
         },
         removeFromCart(id) {
             const index = this.cart.findIndex(lineItem => lineItem.id === id);
             this.cart.splice(index, 1);
+            this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate);
         },
         getQuantity(id) {
             const itemInCart = this.cart.find(lineItem => lineItem.id === id);
@@ -245,6 +347,7 @@ const posCommon = {
             if (itemInCart && itemInCart.count <= 0 && addOrRemove) {
                 this.removeFromCart(itemInCart.id);
             }
+            this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate);
         },
         clear() {
             this.cart = [];
@@ -305,6 +408,7 @@ const posCommon = {
         if (this.persistState) {
             this.cart = loadState('cart');
         }
+        this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate);
     },
     mounted () {
         if (this.$refs.categories) {
@@ -328,7 +432,7 @@ const posCommon = {
             });
             adjustCategories();
         }
-        
+
         this.forEachItem(item => {
             item.addEventListener('transitionend', () => {
                 if (item.classList.contains(POS_ITEM_ADDED_CLASS)) {
@@ -336,7 +440,7 @@ const posCommon = {
                 }
             });
         })
-        
+
         if (this.$refs.RecentTransactions) {
             this.$refs.RecentTransactions.addEventListener('show.bs.modal', this.loadRecentTransactions);
         }
@@ -347,7 +451,7 @@ const posCommon = {
                 localStorage.removeItem(storageKey('cart'));
             }
         })
-        
+
         this.updateDisplay()
     }
 }

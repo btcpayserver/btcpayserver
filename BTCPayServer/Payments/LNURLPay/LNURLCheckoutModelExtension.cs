@@ -22,7 +22,6 @@ namespace BTCPayServer.Payments.LNURLPay
             _displayFormatter = displayFormatter;
             paymentLinkExtension = paymentLinkExtensions.Single(p => p.PaymentMethodId == PaymentMethodId);
             handler = (LNURLPayPaymentHandler)handlers[PaymentMethodId];
-            var isBTC = PaymentTypes.LNURL.GetPaymentMethodId("BTC") == paymentMethodId;
         }
         public PaymentMethodId PaymentMethodId { get; }
 

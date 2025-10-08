@@ -4,20 +4,33 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model StoreReportsViewModel
 @{
-	ViewData.SetActivePage(StoreNavPages.Reporting, StringLocalizer["Reporting"]);
-	Csp.UnsafeEval();
+    ViewData.SetActivePage(StoreNavPages.Reporting, StringLocalizer["Reporting"]);
+    Csp.UnsafeEval();
 }
+
 @section PageHeadContent
 {
     @* Set a height for the responsive table container to make it work with the fixed table headers.
        Details described here: thttps://uxdesign.cc/position-stuck-96c9f55d9526 *@
     <style>
-        #app .table-responsive { max-height: 80vh; }
-        #app #charts { gap: var(--btcpay-space-l) var(--btcpay-space-xxl); }
-        #app #charts article { flex: 1 1 450px; }
-        main .dropdown-menu.show { z-index: 99999; }
+        #app .table-responsive {
+            max-height: 80vh;
+        }
+
+        #app #charts {
+            gap: var(--btcpay-space-l) var(--btcpay-space-xxl);
+        }
+
+        #app #charts article {
+            flex: 1 1 450px;
+        }
+
+        main .dropdown-menu.show {
+            z-index: 99999;
+        }
     </style>
 }
+
 
 <div class="sticky-header">
     <h2>
@@ -27,40 +40,50 @@
         </a>
     </h2>
     <div>
-        <a cheat-mode="true" class="btn btn-outline-info text-nowrap" asp-action="StoreReports" asp-route-fakeData="true" asp-route-viewName="@Model.Request?.ViewName">Create fake data</a>
-		<button id="page-primary" class="btn btn-primary text-nowrap" type="button" data-action="exportCSV">Export</button>
+        <a cheat-mode="true" class="btn btn-outline-info text-nowrap" asp-action="StoreReports" asp-route-fakeData="true"
+           asp-route-viewName="@Model.Request?.ViewName">Create fake data</a>
+        <button id="page-primary" class="btn btn-primary text-nowrap" type="button" data-action="exportCSV">Export</button>
     </div>
 </div>
-<div class="d-flex flex-column flex-sm-row align-items-center gap-3 mb-l">
-	<div class="dropdown" v-pre>
-		<button id="ViewNameToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">@Model.Request.ViewName</button>
-		<div class="dropdown-menu" aria-labelledby="ViewNameToggle">
-			@foreach (var v in Model.AvailableViews)
-			{
-				<a href="#" data-view="@v" class="available-view dropdown-item @(Model.Request.ViewName == v ? "custom-active" : "")">@v</a>
-			}
-		</div>
-	</div>
-	<div class="input-group">
-		<input id="fromDate" class="form-control flatdtpicker" type="datetime-local"
-			   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-			   placeholder="Start Date" />
-		<button type="button" class="btn btn-primary input-group-clear" title="@StringLocalizer["Clear"]">
-            <vc:icon symbol="close" />
-		</button>
-	</div>
-	<div class="input-group">
-		<input id="toDate" class="form-control flatdtpicker" type="datetime-local"
-			   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-			   placeholder="End Date" />
-		<button type="button" class="btn btn-primary input-group-clear" title="@StringLocalizer["Clear"]">
-            <vc:icon symbol="close" />
-		</button>
+<div class="row">
+    <div class="col-xl-8 col-xxl-constrain">
+        <nav id="SectionNav">
+            <div class="nav">
+                @foreach (var v in Model.AvailableViews)
+                {
+                    <a href="#" data-view="@v" class="available-view nav-link @(Model.Request.ViewName == v ? "active" : "")" role="tab">@v</a>
+                }
+            </div>
+        </nav>
+
+        <div class="d-flex gap-3">
+            <div class="form-group">
+                <label for="fromDate" class="form-label">@StringLocalizer["Start Date"]</label>
+                <input id="fromDate" name="fromDate"
+                       data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
+                       class="form-control flatdtpicker" placeholder="@StringLocalizer["Start Date"]" />
+            </div>
+
+            <div class="form-group">
+                <label for="toDate" class="form-label">@StringLocalizer["End Date"]</label>
+                <input id="toDate" name="toDate" class="form-control flatdtpicker"
+                       data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
+                       placeholder="@StringLocalizer["End Date"]" />
+            </div>
+            <div id="searchGroup" v-cloak class="form-group d-flex align-items-end">
+                <button id="searchBtn" class="btn btn-primary" :disabled="loading" type="button">
+                    <span v-if="loading" class="spinner-border spinner-border-sm me-1" role="status" style="margin-left: -6px;"></span>
+                    <span v-else class="me-1"><vc:icon symbol="actions-search" /></span>
+                    <span text-translate="true">Search</span>
+                </button>
+                <span class="text-danger invalid-feedback field-validation-error" v-if="error">{{ error }}</span>
+            </div>
+        </div>
     </div>
 </div>
 
-<div id="app" v-cloak class="w-100-fixed">
-    <div v-if="srv.charts && srv.charts.some(hasChartData)" id="charts"  class="d-flex flex-wrap mb-5">
+<div id="app" v-if="!loading" v-cloak class="w-100-fixed">
+    <div v-if="srv.charts && srv.charts.some(hasChartData)" id="charts" class="d-flex flex-wrap mb-3">
         <article v-for="chart in srv.charts" v-if="hasChartData(chart)">
             <h3>{{ chart.name }}</h3>
             <div class="table-responsive">
@@ -74,8 +97,12 @@
                     <tbody>
                     <tr v-for="(row, rowIndex) in chart.rows">
                         <td v-for="(group, groupIndex) in row.groups" :rowspan="group.rowCount">
-                            <template v-if="group.name === true"><vc:icon symbol="checkmark" css-class="text-success" /></template>
-                            <template v-else-if="group.name === false"><vc:icon symbol="cross" css-class="text-danger" /></template>
+                            <template v-if="group.name === true">
+                                <vc:icon symbol="checkmark" css-class="text-success" />
+                            </template>
+                            <template v-else-if="group.name === false">
+                                <vc:icon symbol="cross" css-class="text-danger" />
+                            </template>
                             <template v-else-if="['Settled', 'Processing', 'Invalid', 'Expired', 'New', 'Pending'].includes(group.name)">
                                 <span class="badge" :class="`badge-${group.name.toLowerCase()}`">{{ displayValue(group.name) }}</span>
                             </template>
@@ -83,8 +110,11 @@
                         </td>
                         <td v-if="row.isTotal" :colspan="row.rLevel">Total</td>
                         <td v-for="(value, columnIndex) in row.values" class="text-end">
-                            <template v-if="chart.aggregates[columnIndex] === 'BalanceChange' && (value >= 0 || typeof value === 'object' && value.d >= 0)"><span class="text-success">{{ displayValue(value) }}</span></template>
-                            <template v-else-if="chart.aggregates[columnIndex] === 'BalanceChange' && (value < 0 || typeof value === 'object' && value.d < 0)"><span class="text-danger">{{ displayValue(value) }}</span></template>
+                            <template v-if="chart.aggregates[columnIndex] === 'BalanceChange' && (value >= 0 || typeof value === 'object' && value.d >= 0)">
+                                <span class="text-success">{{ displayValue(value) }}</span></template>
+                            <template
+                                v-else-if="chart.aggregates[columnIndex] === 'BalanceChange' && (value < 0 || typeof value === 'object' && value.d < 0)">
+                                <span class="text-danger">{{ displayValue(value) }}</span></template>
                             <template v-else>{{ displayValue(value) }}</template>
                         </td>
                     </tr>
@@ -99,7 +129,7 @@
     </div>
     <article v-if="srv.result.data">
         <h3 id="raw-data">Raw data</h3>
-        <div class="table-responsive" v-if="srv.result.data.length">
+        <div id="raw-data-table" class="table-responsive" v-if="srv.result.data.length">
             <table class="table table-hover">
                 <thead class="sticky-top bg-body">
                 <tr>
@@ -127,17 +157,32 @@
                            target="_blank"
                            v-if="srv.result.fields[columnIndex].type === 'invoice_id'">{{ displayValue(value) }}</a>
                         <template v-else-if="srv.result.fields[columnIndex].type === 'tx_id'">
-                            <vc:truncate-center text="value" is-vue="true" padding="15" classes="truncate-center-id" link="getExplorerUrl(value, row[columnIndex-1])" />
+                            <vc:truncate-center text="value" is-vue="true" padding="15" classes="truncate-center-id"
+                                                link="getExplorerUrl(value, row[columnIndex-1])" />
                         </template>
-                        <template v-else-if="value && ['Address'].includes(srv.result.fields[columnIndex].name)" >
+                        <template
+                            v-else-if="value && srv.result.fields[columnIndex].name.toLowerCase().endsWith('url')">
+                            <template v-if="value.startsWith('http')">
+                                <a :href="value" target="_blank">Link</a>
+                            </template>
+                            <template v-else>{{ displayValue(value) }}</template>
+                        </template>
+                        <template v-else-if="value && ['Address'].includes(srv.result.fields[columnIndex].name)">
                             <vc:truncate-center text="value" is-vue="true" padding="15" classes="truncate-center-id" />
                         </template>
                         <template v-else-if="srv.result.fields[columnIndex].type === 'datetime'">{{ displayDate(value) }}</template>
-                        <span v-else-if="srv.result.fields[columnIndex].type === 'boolean' && value === true"><vc:icon symbol="checkmark" css-class="text-success" /></span>
-                        <span v-else-if="srv.result.fields[columnIndex].type === 'boolean' && value === false"><vc:icon symbol="cross" css-class="text-danger"/></span>
-                        <span v-else-if="['BalanceChange'].includes(srv.result.fields[columnIndex].name) && (value >= 0 || typeof value === 'object' && value.d >= 0)" class="text-success">{{ displayValue(value) }}</span>
-                        <span v-else-if="['BalanceChange'].includes(srv.result.fields[columnIndex].name) && (value < 0 || typeof value === 'object' && value.d < 0)" class="text-danger">{{ displayValue(value) }}</span>
-                        <span v-else-if="['State'].includes(srv.result.fields[columnIndex].name)" class="badge" :class="`badge-${value.toLowerCase()}`">{{ displayValue(value) }}</span>
+                        <span v-else-if="srv.result.fields[columnIndex].type === 'boolean' && value === true"><vc:icon symbol="checkmark"
+                                                                                                                       css-class="text-success" /></span>
+                        <span v-else-if="srv.result.fields[columnIndex].type === 'boolean' && value === false"><vc:icon symbol="cross"
+                                                                                                                        css-class="text-danger" /></span>
+                        <span
+                            v-else-if="['BalanceChange'].includes(srv.result.fields[columnIndex].name) && (value >= 0 || typeof value === 'object' && value.d >= 0)"
+                            class="text-success">{{ displayValue(value) }}</span>
+                        <span
+                            v-else-if="['BalanceChange'].includes(srv.result.fields[columnIndex].name) && (value < 0 || typeof value === 'object' && value.d < 0)"
+                            class="text-danger">{{ displayValue(value) }}</span>
+                        <span v-else-if="['State'].includes(srv.result.fields[columnIndex].name)" class="badge"
+                              :class="`badge-${value.toLowerCase()}`">{{ displayValue(value) }}</span>
                         <template v-else>{{ displayValue(value) }}</template>
                     </td>
                 </tr>
@@ -148,12 +193,13 @@
     </article>
 </div>
 
+
 @section PageFootContent {
-	<script src="~/vendor/decimal.js/decimal.min.js" asp-append-version="true"></script>
-	<script src="~/vendor/FileSaver/FileSaver.min.js" asp-append-version="true"></script>
-	<script src="~/vendor/papaparse/papaparse.min.js" asp-append-version="true"></script>
-	<script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
-	<script>const srv = @Safe.Json(Model);</script>
-	<script src="~/js/datatable.js" asp-append-version="true"></script>
-	<script src="~/js/store-reports.js" asp-append-version="true"></script>
+    <script src="~/vendor/decimal.js/decimal.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/FileSaver/FileSaver.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/papaparse/papaparse.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script>const srv = @Safe.Json(Model);</script>
+    <script src="~/js/datatable.js" asp-append-version="true"></script>
+    <script src="~/js/store-reports.js" asp-append-version="true"></script>
 }

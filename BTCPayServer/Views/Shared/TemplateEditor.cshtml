@@ -51,6 +51,18 @@
                 <div class="text-danger" v-if="errors.price">{{errors.price}}</div>
             </div>
             <div class="form-group">
+                <label for="EditorTaxRate" class="form-label" text-translate="true">Tax rate</label>
+                <div class="input-group">
+                    <input inputmode="decimal" v-model="editingItem && editingItem.taxRate"
+                           pattern="\d*"
+                           step="any"
+                           min="0"
+                           type="number"
+                           class="form-control" />
+                    <span class="input-group-text">%</span>
+                </div>
+            </div>
+            <div class="form-group">
                 <label for="EditorImageUrl" class="form-label" text-translate="true">Image Url</label>
                 <input id="EditorImageUrl" class="form-control mb-2" v-model="editingItem && editingItem.image" ref="txtImage" />
                 <item-editor-upload upload-url=@Safe.Json(Url.Action("FileUpload", "UIApps", new { appId = Context.GetRouteValue("appId") })) v-on:uploaded="url => editingItem.image = url" />

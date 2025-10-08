@@ -190,6 +190,7 @@ namespace BTCPayServer.Payments.Bitcoin
             paymentMethod.Destination = reserved.Address.ToString();
             paymentContext.TrackedDestinations.Add(Network.GetTrackedDestination(reserved.Address.ScriptPubKey));
             onchainMethod.KeyPath = reserved.KeyPath;
+            onchainMethod.KeyIndex = reserved.Index ?? (int)reserved.KeyPath.Indexes.Last();
             onchainMethod.AccountDerivation = accountDerivation;
             onchainMethod.PayjoinEnabled = blob.PayJoinEnabled &&
                                            accountDerivation.ScriptPubKeyType() != ScriptPubKeyType.Legacy &&
@@ -261,7 +262,7 @@ namespace BTCPayServer.Payments.Bitcoin
         public Task ValidatePaymentMethodConfig(PaymentMethodConfigValidationContext validationContext)
         {
             var parser = Network.GetDerivationSchemeParser();
-            DerivationSchemeSettings settings = new DerivationSchemeSettings();
+            var settings = new DerivationSchemeSettings();
             if (validationContext.Config is JValue { Type: JTokenType.String, Value: string config }
                 && parser.TryParseXpub(config, ref settings))
             {
@@ -287,17 +288,15 @@ namespace BTCPayServer.Payments.Bitcoin
             {
                 validationContext.ModelState.AddModelError(nameof(res.AccountDerivation), "Invalid account derivation");
             }
-            if (res.AccountKeySettings is null)
+            if (res.AccountKeySettings is null || res.AccountKeySettings.Length == 0)
             {
                 validationContext.ModelState.AddModelError(nameof(res.AccountKeySettings), "Invalid AccountKeySettings");
             }
-            if (res.SigningKey is null)
+
+            foreach (var acc in  res.AccountKeySettings ?? [])
             {
-                validationContext.ModelState.AddModelError(nameof(res.SigningKey), "Invalid SigningKey");
-            }
-            if (res.GetSigningAccountKeySettingsOrDefault() is null)
-            {
-                validationContext.ModelState.AddModelError(nameof(res.AccountKeySettings), "AccountKeySettings doesn't include the SigningKey");
+                if (acc.AccountKey is null)
+                    validationContext.ModelState.AddModelError(nameof(res.AccountKeySettings), "Missing AccountKey");
             }
             return Task.CompletedTask;
         }

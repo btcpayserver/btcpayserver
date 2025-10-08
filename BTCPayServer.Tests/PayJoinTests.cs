@@ -471,7 +471,7 @@ namespace BTCPayServer.Tests
             }
 
             var derivationSchemeSettings = alice.GetController<UIWalletsController>().GetDerivationSchemeSettings(new WalletId(alice.StoreId, "BTC"));
-            var signingAccount = derivationSchemeSettings.GetSigningAccountKeySettings();
+            var signingAccount = derivationSchemeSettings.GetFirstAccountKeySettings();
             psbt.SignAll(derivationSchemeSettings.AccountDerivation, alice.GenerateWalletResponseV.AccountHDKey, signingAccount.GetRootedKeyPath());
             using var fakeServer = new FakeServer();
             await fakeServer.Start();
@@ -940,7 +940,7 @@ retry:
                 });
 
 
-                var signingKeySettings = derivationSchemeSettings.GetSigningAccountKeySettings();
+                var signingKeySettings = derivationSchemeSettings.GetFirstAccountKeySettings();
                 signingKeySettings.RootFingerprint =
                     senderUser.GenerateWalletResponseV.MasterHDKey.GetPublicKey().GetHDFingerPrint();
 
@@ -981,8 +981,8 @@ retry:
                     .BuildTransaction(true);
 
 
-                //Attempt 2: Create two transactions using different inputs and send them to the same invoice. 
-                //Result: Second Tx should be rejected. 
+                //Attempt 2: Create two transactions using different inputs and send them to the same invoice.
+                //Result: Second Tx should be rejected.
                 var Invoice1Coin1ResponseTx = await senderUser.SubmitPayjoin(invoice, Invoice1Coin1, btcPayNetwork);
 
                 await senderUser.SubmitPayjoin(invoice, Invoice1Coin1, btcPayNetwork, "already-paid");

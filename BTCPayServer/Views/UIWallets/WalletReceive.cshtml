@@ -55,7 +55,7 @@
         <div class="only-for-js col-sm-10 col-xxl-8 mx-auto" id="app">
             <div class="tab-content text-center">
                 <div class="tab-pane payment-box" id="link-tab" role="tabpanel">
-                    <div class="qr-container" data-clipboard="@Model.PaymentLink">
+                    <div class="qr-container clipboard-button" data-clipboard="@Model.PaymentLink">
                         <vc:qr-code data="@Model.PaymentLink"/>
 						@if (Model.CryptoImage is not null)
 						{
@@ -70,7 +70,7 @@
                     </div>
                 </div>
                 <div class="tab-pane payment-box show active" id="address-tab" role="tabpanel">
-                    <div class="qr-container" data-clipboard="@Model.Address">
+                    <div class="qr-container clipboard-button" data-clipboard="@Model.Address">
                         <vc:qr-code data="@Model.Address"/>
 						@if (Model.CryptoImage is not null)
 						{
@@ -98,6 +98,15 @@
             <div class="mt-4">
                 <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100" text-translate="true">Generate another address</button>
             </div>
+            <div class="payment-box mt-3">
+                <a class="btn btn-outline-info w-100"
+                   id="reserved-addresses-button"
+                   asp-controller="UIWallets" asp-action="ReservedAddresses" asp-route-walletId="@walletId">
+                    Reserved Addresses
+                </a>
+            </div>
+
+
         </div>
     }
     @if (env.CheatMode)

@@ -34,51 +34,101 @@ namespace BTCPayServer.Services.Rates
 
         public RateProviderFactory RateProviderFactory => _rateProviderFactory;
 
-        public async Task<RateResult> FetchRate(CurrencyPair pair, RateRules rules, IRateContext? context, CancellationToken cancellationToken)
+        public Task<RateResult> FetchRate(CurrencyPair pair, RateRules rules, IRateContext? context, CancellationToken cancellationToken)
+        => FetchRate(pair, new RateRulesCollection(rules, null), context, cancellationToken);
+        public async Task<RateResult> FetchRate(CurrencyPair pair, RateRulesCollection rules, IRateContext? context, CancellationToken cancellationToken)
         {
             return await FetchRates(new HashSet<CurrencyPair>(new[] { pair }), rules, context, cancellationToken).First().Value;
         }
 
         public Dictionary<CurrencyPair, Task<RateResult>> FetchRates(HashSet<CurrencyPair> pairs, RateRules rules, IRateContext? context, CancellationToken cancellationToken)
+        => FetchRates(pairs, new RateRulesCollection(rules, null), context, cancellationToken);
+
+        record FetchContext(
+            Dictionary<CurrencyPair, RateRule> Query,
+            Dictionary<CurrencyPair, Task<RateResult>> FetchingRates,
+            Dictionary<string, Task<QueryRateResult>> FetchingExchanges,
+            IRateContext? RateContext,
+            CancellationToken CancellationToken)
         {
-            ArgumentNullException.ThrowIfNull(rules);
+            public FetchContext(IRateContext? context, CancellationToken cancellationToken)
+            :this(new(), new(), new(), context, cancellationToken)
+            {
 
-            var fetchingRates = new Dictionary<CurrencyPair, Task<RateResult>>();
-            var fetchingExchanges = new Dictionary<string, Task<QueryRateResult>>();
-            var consolidatedRates = new ExchangeRates();
+            }
+        }
 
-            foreach (var i in pairs.Select(p => (Pair: p, RateRule: rules.GetRuleFor(p))))
+        public Dictionary<CurrencyPair, Task<RateResult>> FetchRates(HashSet<CurrencyPair> pairs, RateRulesCollection rules, IRateContext? context,
+            CancellationToken cancellationToken)
+        {
+            var ctx = new FetchContext(context, cancellationToken);
+            void SetQuery(RateRules rateRules)
+            {
+                ctx.Query.Clear();
+                foreach (var p in pairs.Select(p => (Pair: p, RateRule: rateRules.GetRuleFor(p))))
+                    ctx.Query.Add(p.Pair, p.RateRule);
+            }
+            SetQuery(rules.Primary);
+            FetchRates(ctx);
+            if (rules.Fallback is not null)
+            {
+                SetQuery(rules.Fallback);
+                FetchRates(ctx);
+            }
+            return ctx.FetchingRates;
+        }
+        private void FetchRates(FetchContext ctx)
+        {
+            foreach (var i in ctx.Query)
             {
                 var dependentQueries = new List<Task<QueryRateResult>>();
-                foreach (var requiredExchange in i.RateRule.ExchangeRates)
+                foreach (var requiredExchange in i.Value.ExchangeRates)
                 {
-                    if (!fetchingExchanges.TryGetValue(requiredExchange.Exchange, out var fetching))
+                    if (!ctx.FetchingExchanges.TryGetValue(requiredExchange.Exchange, out var fetching))
                     {
-                        fetching = _rateProviderFactory.QueryRates(requiredExchange.Exchange, context, cancellationToken);
-                        fetchingExchanges.Add(requiredExchange.Exchange, fetching);
+                        fetching = _rateProviderFactory.QueryRates(requiredExchange.Exchange, ctx.RateContext, ctx.CancellationToken);
+                        ctx.FetchingExchanges.Add(requiredExchange.Exchange, fetching);
                     }
                     dependentQueries.Add(fetching);
                 }
-                fetchingRates.Add(i.Pair, GetRuleValue(dependentQueries, i.RateRule));
+
+                if (ctx.FetchingRates.TryGetValue(i.Key, out var primaryFetch))
+                {
+                    ctx.FetchingRates[i.Key] = FallbackGetRuleValue(dependentQueries, i.Value, primaryFetch);
+                }
+                else
+                    ctx.FetchingRates.Add(i.Key, GetRuleValue(dependentQueries, i.Value));
             }
-            return fetchingRates;
+        }
+
+        private async Task<RateResult> FallbackGetRuleValue(List<Task<QueryRateResult>> dependentQueries, RateRule fallbackRateRule, Task<RateResult> primaryFetch)
+        {
+            var primaryResult = await primaryFetch;
+            if (primaryResult.BidAsk != null)
+                return primaryResult;
+            return await GetRuleValue(dependentQueries, fallbackRateRule);
         }
 
         public Task<RateResult> FetchRate(RateRule rateRule, IRateContext? context, CancellationToken cancellationToken)
+            => FetchRate(new RateRuleCollection(rateRule, null), context, cancellationToken);
+
+        public Task<RateResult> FetchRate(RateRuleCollection rateRule, IRateContext? context, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(rateRule);
-            var fetchingExchanges = new Dictionary<string, Task<QueryRateResult>>();
-            var dependentQueries = new List<Task<QueryRateResult>>();
-            foreach (var requiredExchange in rateRule.ExchangeRates)
+            var ctx = new FetchContext(context, cancellationToken);
+            void SetQuery(RateRule r)
             {
-                if (!fetchingExchanges.TryGetValue(requiredExchange.Exchange, out var fetching))
-                {
-                    fetching = _rateProviderFactory.QueryRates(requiredExchange.Exchange, context, cancellationToken);
-                    fetchingExchanges.Add(requiredExchange.Exchange, fetching);
-                }
-                dependentQueries.Add(fetching);
+                ctx.Query.Clear();
+                ctx.Query.Add(new("AAA","AAA"), r);
             }
-            return GetRuleValue(dependentQueries, rateRule);
+            SetQuery(rateRule.Primary);
+            FetchRates(ctx);
+            if (rateRule.Fallback is not null)
+            {
+                SetQuery(rateRule.Fallback);
+                FetchRates(ctx);
+            }
+            return ctx.FetchingRates.First().Value;
         }
 
         private async Task<RateResult> GetRuleValue(List<Task<QueryRateResult>> dependentQueries, RateRule rateRule)

@@ -1,18 +1,13 @@
+@using BTCPayServer.Services.Invoices
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model (Dictionary<string, object> Items, int Level)
 
 @if (Model.Items.Any())
 {
-    @* Use titlecase and lowercase versions for backwards-compatibility *@
-    string[] cartKeys = ["cart", "subtotal", "discount", "tip", "total"];
     <table class="table my-0" v-pre>
-        @if (Model.Items.Keys.Any(key => cartKeys.Contains(key.ToLowerInvariant())))
+        @if (Model.Items.Keys.Any(WellKnownPosData.IsWellKnown))
         {
             _ = Model.Items.TryGetValue("cart", out var cart) || Model.Items.TryGetValue("Cart", out cart);
-            var hasTotal = Model.Items.TryGetValue("total", out var total) || Model.Items.TryGetValue("Total", out total);
-            var hasSubtotal = Model.Items.TryGetValue("subtotal", out var subtotal) || Model.Items.TryGetValue("subTotal", out subtotal) || Model.Items.TryGetValue("Subtotal", out subtotal);
-            var hasDiscount = Model.Items.TryGetValue("discount", out var discount) || Model.Items.TryGetValue("Discount", out discount);
-            var hasTip = Model.Items.TryGetValue("tip", out var tip) || Model.Items.TryGetValue("Tip", out tip);
             if (cart is Dictionary<string, object> { Keys.Count: > 0 } cartDict)
             {
                 <tbody>
@@ -35,33 +30,48 @@
                 }
                 </tbody>
             }
+            var posData = WellKnownPosData.TryParse(Model.Items) ?? new();
             <tfoot style="border-top-width:0">
-            @if (hasSubtotal && (hasDiscount || hasTip))
-            {
-                <tr style="border-top-width:3px">
-                    <th>Subtotal</th>
-                    <td class="text-end">@subtotal</td>
-                </tr>
-            }
-            @if (hasDiscount)
+            @if (posData.ItemsTotal != null)
             {
                 <tr>
-                    <th>Discount</th>
-                    <td class="text-end">@discount</td>
+                    <th text-translate="true">Items total</th>
+                    <td class="text-end">@posData.ItemsTotal</td>
                 </tr>
             }
-            @if (hasTip)
+            @if (posData.Discount != null)
             {
                 <tr>
-                    <th>Tip</th>
-                    <td class="text-end">@tip</td>
+                    <th text-translate="true">Discount</th>
+                    <td class="text-end">@posData.Discount</td>
                 </tr>
             }
-            @if (hasTotal)
+            @if (posData.Subtotal != null)
+            {
+                <tr>
+                    <th text-translate="true">Subtotal</th>
+                    <td class="text-end">@posData.Subtotal</td>
+                </tr>
+            }
+            @if (posData.Tax != null)
+            {
+                <tr>
+                    <th text-translate="true">Tax</th>
+                    <td class="text-end">@posData.Tax</td>
+                </tr>
+            }
+            @if (posData.Tip != null)
+            {
+                <tr>
+                        <th text-translate="true">Tip</th>
+                        <td class="text-end">@posData.Tip</td>
+                </tr>
+            }
+            @if (posData.Total != null)
             {
                 <tr style="border-top-width:3px">
-                    <th>Total</th>
-                    <td class="text-end">@total</td>
+                    <th text-translate="true">Total</th>
+                    <td class="text-end">@posData.Total</td>
                 </tr>
             }
             </tfoot>

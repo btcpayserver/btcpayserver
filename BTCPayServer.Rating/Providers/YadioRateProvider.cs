@@ -30,10 +30,10 @@ namespace BTCPayServer.Services.Rates
             var list = new List<PairRate>();
             foreach (var item in results)
             {
-
                 string name = ((JProperty)item).Name;
-                var value = results[name].Value<decimal>();
-                list.Add(new PairRate(new CurrencyPair("BTC", name), new BidAsk(value)));
+                var value = results[name].Value<decimal?>();
+                if (value.HasValue)
+                    list.Add(new PairRate(new CurrencyPair("BTC", name), new BidAsk(value.Value)));
             }
 
             return list.ToArray();

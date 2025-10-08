@@ -1198,6 +1198,10 @@
         {
             "name": "Pull payments payout (Public)",
             "description": "Pull payments payout (Public) operations"
+        },
+        {
+            "name": "Stores (Payouts)",
+            "description": "Store pull payment payout operations"
         }
     ]
 }

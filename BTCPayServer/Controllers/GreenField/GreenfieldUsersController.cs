@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -84,7 +85,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var user = await _userManager.FindByIdOrEmail(idOrEmail);
             if (user != null)
             {
-                return Ok(await FromModel(user));
+                return Ok(await ForAPI(user));
             }
             return this.UserNotFound();
         }
@@ -128,7 +129,13 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/users/")]
         public async Task<ActionResult<ApplicationUserData[]>> GetUsers()
         {
-            return Ok(await _userService.GetUsersWithRoles());
+            var usersWithRoles = await _userService.GetUsersWithRoles();
+            List<ApplicationUserData> users = [];
+            foreach (var user in usersWithRoles)
+            {
+                users.Add(await UserService.ForAPI<ApplicationUserData>(user.User, user.Roles, _callbackGenerator, _uriResolver, Request));
+            }
+            return Ok(users);
         }
 
         [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -136,7 +143,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<ActionResult<ApplicationUserData>> GetCurrentUser()
         {
             var user = await _userManager.GetUserAsync(User);
-            return await FromModel(user!);
+            return await ForAPI(user!);
         }
 
         [Authorize(Policy = Policies.CanModifyProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -232,7 +239,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
-            var model = await FromModel(user);
+            var model = await ForAPI(user);
             return Ok(model);
         }
 
@@ -242,7 +249,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var user = await _userManager.GetUserAsync(User);
             if (user is null) return this.UserNotFound();
-            
+
             UploadImageResultModel? upload = null;
             if (file is null)
                 ModelState.AddModelError(nameof(file), "Invalid file");
@@ -264,7 +271,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 user.SetBlob(blob);
                 await _userManager.UpdateAsync(user);
                 _eventAggregator.Publish(new UserEvent.Updated(user));
-                var model = await FromModel(user);
+                var model = await ForAPI(user);
                 return Ok(model);
             }
             catch (Exception e)
@@ -279,7 +286,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var user = await _userManager.GetUserAsync(User);
             if (user is null) return this.UserNotFound();
-            
+
             var blob = user.GetBlob() ?? new UserBlob();
             if (!string.IsNullOrEmpty(blob.ImageUrl))
             {
@@ -308,10 +315,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.Email), "Email is missing");
             if (!MailboxAddressValidator.IsMailboxAddress(request.Email))
                 ModelState.AddModelError(nameof(request.Email), "Invalid email");
-            
+
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            
+
             if (User.Identity is null)
                 throw new JsonHttpException(this.StatusCode(401));
             var anyAdmin = (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();
@@ -351,6 +358,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Created = DateTimeOffset.UtcNow,
                 Approved = isAdmin // auto-approve first admin and users created by an admin
             };
+
             var blob = user.GetBlob() ?? new();
             blob.Name = request.Name;
             blob.ImageUrl = request.ImageUrl;
@@ -402,19 +410,18 @@ namespace BTCPayServer.Controllers.Greenfield
                         settings.FirstRun = false;
                         await _settingsRepository.UpdateSetting(settings);
                     }
-
                     await _settingsRepository.FirstAdminRegistered(policies, _options.UpdateUrl != null, _options.DisableRegistration, Logs);
                 }
             }
             var currentUser = await _userManager.GetUserAsync(User);
             var userEvent = currentUser switch
             {
-                { } invitedBy => await UserEvent.Invited.Create(user, invitedBy, _callbackGenerator, Request, true),
+                { } invitedBy => await UserEvent.Invited.Create(user, invitedBy, _callbackGenerator, Request, request.SendInvitationEmail is not false),
                 _ => await UserEvent.Registered.Create(user, _callbackGenerator, Request)
             };
             _eventAggregator.Publish(userEvent);
 
-            var model = await FromModel(user);
+            var model = await ForAPI(user);
             return CreatedAtAction(string.Empty, model);
         }
 
@@ -449,14 +456,10 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok();
         }
 
-        private async Task<ApplicationUserData> FromModel(ApplicationUser data)
+        private async Task<ApplicationUserData> ForAPI(ApplicationUser data)
         {
             var roles = (await _userManager.GetRolesAsync(data)).ToArray();
-            var model = UserService.FromModel(data, roles);
-            model.ImageUrl = string.IsNullOrEmpty(model.ImageUrl)
-                ? null
-                : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(model.ImageUrl));
-            return model;
+            return await UserService.ForAPI<ApplicationUserData>(data, roles, _callbackGenerator, _uriResolver, Request);
         }
     }
 }

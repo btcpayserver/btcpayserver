@@ -6,7 +6,9 @@ namespace BTCPayServer.HostedServices.Webhooks;
 
 public interface IWebhookProvider
 {
-    public Dictionary<string,string> GetSupportedWebhookTypes();
-    
-    public WebhookEvent CreateTestEvent(string type, params  object[] args);
+    public bool SupportsCustomerEmail { get; }
+
+    public Dictionary<string, string> GetSupportedWebhookTypes();
+
+    public WebhookEvent CreateTestEvent(string type, params object[] args);
 }

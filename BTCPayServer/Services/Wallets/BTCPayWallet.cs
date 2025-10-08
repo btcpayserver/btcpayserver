@@ -33,6 +33,7 @@ namespace BTCPayServer.Services.Wallets
         public Coin Coin { get; set; }
         public long Confirmations { get; set; }
         public BitcoinAddress Address { get; set; }
+        public int KeyIndex { get; set; }
     }
     public class NetworkCoins
     {
@@ -117,12 +118,21 @@ namespace BTCPayServer.Services.Wallets
                 await _Client.TrackAsync(derivationStrategy).ConfigureAwait(false);
                 pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
             }
-            if (storeId != null)
+
+            if (storeId == null) return pathInfo;
+
+            var metadata = new JObject
             {
-                await WalletRepository.EnsureWalletObject(
-                    new WalletObjectId(new WalletId(storeId, Network.CryptoCode), WalletObjectData.Types.Address, pathInfo.Address.ToString()),
-                    new JObject() { ["generatedBy"] = generatedBy });
+                ["generatedBy"] = generatedBy
+            };
+
+            if (generatedBy == "receive")
+            {
+                metadata["reservedAt"] = DateTimeOffset.UtcNow;
             }
+
+            await WalletRepository.EnsureWalletObject(
+                new WalletObjectId(new WalletId(storeId, Network.CryptoCode), WalletObjectData.Types.Address, pathInfo.Address.ToString()), metadata);
             return pathInfo;
         }
 
@@ -193,8 +203,8 @@ namespace BTCPayServer.Services.Wallets
 
         public void InvalidateCache(DerivationStrategyBase strategy)
         {
-            _MemoryCache.Remove("CACHEDCOINS_" + strategy.ToString());
-            _MemoryCache.Remove("CACHEDBALANCE_" + strategy.ToString());
+            _MemoryCache.Remove("CACHEDCOINS_" + strategy);
+            _MemoryCache.Remove("CACHEDBALANCE_" + strategy);
             _FetchingUTXOs.TryRemove(strategy.ToString(), out var unused);
         }
 
@@ -208,7 +218,7 @@ namespace BTCPayServer.Services.Wallets
                 return await completionSource.Task;
             try
             {
-                var utxos = await _MemoryCache.GetOrCreateAsync("CACHEDCOINS_" + strategy.ToString(), async entry =>
+                var utxos = await _MemoryCache.GetOrCreateAsync("CACHEDCOINS_" + strategy, async entry =>
                 {
                     var now = DateTimeOffset.UtcNow;
                     UTXOChanges result = null;
@@ -242,6 +252,7 @@ namespace BTCPayServer.Services.Wallets
             }
             return await completionSource.Task;
         }
+        public bool ForceInefficientPath { get; set; }
         List<TransactionInformation> dummy = new List<TransactionInformation>();
         public async Task<IList<TransactionHistoryLine>> FetchTransactionHistory(DerivationStrategyBase derivationStrategyBase, int? skip = null, int? count = null, TimeSpan? interval = null, CancellationToken cancellationToken = default)
         {
@@ -249,7 +260,7 @@ namespace BTCPayServer.Services.Wallets
             // * Sometimes we can ask the DB to do the filtering of rows: If that's the case, we should try to filter at the DB level directly as it is the most efficient.
             // * Sometimes we can't query the DB or the given network need to do additional filtering. In such case, we can't really filter at the DB level, and we need to fetch all transactions in memory.
             var needAdditionalFiltering = _Network.FilterValidTransactions(dummy) != dummy;
-            if (!NbxplorerConnectionFactory.Available || needAdditionalFiltering)
+            if (ForceInefficientPath || !NbxplorerConnectionFactory.Available || needAdditionalFiltering)
             {
                 var txs = await FetchTransactions(derivationStrategyBase);
                 var txinfos = txs.UnconfirmedTransactions.Transactions.Concat(txs.ConfirmedTransactions.Transactions)
@@ -272,7 +283,7 @@ namespace BTCPayServer.Services.Wallets
             {
                 await using var ctx = await NbxplorerConnectionFactory.OpenConnection();
                 var cmd = new CommandDefinition(
-                    commandText: "SELECT r.tx_id, r.seen_at, t.blk_id, t.blk_height, r.balance_change, r.asset_id, COALESCE((SELECT height FROM get_tip('BTC')) - t.blk_height + 1, 0) AS confs " +
+                    commandText: $"SELECT r.tx_id, r.seen_at, t.blk_id, t.blk_height, r.balance_change, r.asset_id, COALESCE((SELECT height FROM get_tip('BTC')) - t.blk_height + 1, 0) AS confs, {SelectFeeColumns()} " +
                     "FROM get_wallets_recent(@wallet_id, @code, @interval, @count, @skip) r " +
                     "JOIN txs t USING (code, tx_id) " +
                     "ORDER BY r.seen_at DESC",
@@ -285,7 +296,7 @@ namespace BTCPayServer.Services.Wallets
                         interval = interval is TimeSpan t ? t : TimeSpan.FromDays(365 * 1000)
                     },
                     cancellationToken: cancellationToken);
-                var rows = await ctx.QueryAsync<(string tx_id, DateTimeOffset seen_at, string blk_id, long? blk_height, long balance_change, string asset_id, long confs)>(cmd);
+                var rows = await ctx.QueryAsync<(string tx_id, DateTimeOffset seen_at, string blk_id, long? blk_height, long balance_change, string asset_id, long confs, long? fee, decimal? feerate)>(cmd);
                 rows.TryGetNonEnumeratedCount(out int c);
                 var lines = new List<TransactionHistoryLine>(c);
                 foreach (var row in rows)
@@ -297,12 +308,22 @@ namespace BTCPayServer.Services.Wallets
                         SeenAt = row.seen_at,
                         TransactionId = uint256.Parse(row.tx_id),
                         Confirmations = row.confs,
-                        BlockHash = string.IsNullOrEmpty(row.blk_id) ? null : uint256.Parse(row.blk_id)
+                        BlockHash = string.IsNullOrEmpty(row.blk_id) ? null : uint256.Parse(row.blk_id),
+                        Fee = row.fee is null ? null : Money.Satoshis(row.fee.Value),
+                        FeeRate = row.feerate is null ? null : new FeeRate(row.feerate.Value)
                     });
                 }
                 return lines;
             }
         }
+
+        internal string SelectFeeColumns()
+        => HasFeeInformation() ? "(metadata->'fees')::BIGINT AS fee, (metadata->'feeRate')::NUMERIC AS feerate"  : "NULL AS fee, NULL AS feerate";
+
+        public bool? ForceHasFeeInformation { get; set; }
+        internal bool HasFeeInformation()
+        => ForceHasFeeInformation ?? AsVersion(this.Dashboard.Get(Network.CryptoCode)?.Status?.Version ?? "") >= new Version("2.5.18");
+
         public async Task<BumpableTransactions> GetBumpableTransactions(DerivationStrategyBase derivationStrategyBase, CancellationToken cancellationToken)
         {
             var result = new BumpableTransactions();
@@ -325,7 +346,7 @@ namespace BTCPayServer.Services.Wallets
                     	FROM txs
                     	WHERE code=@code AND raw IS NOT NULL AND mempool IS TRUE AND replaced_by IS NULL AND blk_id IS NULL),
                     tracked_txs AS (
-                    SELECT code, tx_id, 
+                    SELECT code, tx_id,
                             COUNT(*) FILTER (WHERE is_out IS FALSE) input_count,
                             COUNT(*) FILTER (WHERE is_out IS TRUE AND feature = 'Change') change_count
                         FROM nbxv1_tracked_txs
@@ -338,9 +359,9 @@ namespace BTCPayServer.Services.Wallets
                         WHERE code = @code AND wallet_id=@walletId AND mempool IS TRUE AND replaced_by IS NULL AND blk_id IS NULL
                         GROUP BY code, tx_id
                     )
-                    SELECT tt.tx_id, u.raw, tt.input_count, tt.change_count, uu.unspent_count FROM unconfs u
+                    SELECT tt.tx_id, u.raw, tt.input_count, tt.change_count, COALESCE(uu.unspent_count, 0) FROM unconfs u
                     JOIN tracked_txs tt USING (code, tx_id)
-                    JOIN unspent_utxos uu USING (code, tx_id);
+                    LEFT JOIN unspent_utxos uu USING (code, tx_id);
                     """,
                     parameters: new
                     {
@@ -367,8 +388,11 @@ namespace BTCPayServer.Services.Wallets
                 {
                     continue;
                 }
-                if ((state.MempoolInfo?.FullRBF is true || tx.RBF) && tx.Inputs.Count == r.input_count &&
-                    r.change_count > 0)
+
+                var rbf = state.MempoolInfo?.FullRBF is true || Network.IsBTC || tx.RBF;
+                rbf &= tx.Inputs.Count == r.input_count;
+                rbf &= r.change_count > 0 || tx.Outputs.Count == 1;
+                if (rbf)
                 {
                     canRBF.Add(uint256.Parse(r.tx_id));
                 }
@@ -377,7 +401,7 @@ namespace BTCPayServer.Services.Wallets
                     canCPFP.Add(uint256.Parse(r.tx_id));
                 }
             }
-            
+
             // Then only transactions that doesn't have any descendant (outside itself)
             var entries = await _Client.RPCClient.FetchMempoolEntries(canRBF.Concat(canCPFP).ToHashSet(), cancellationToken);
             foreach (var entry in entries)
@@ -427,7 +451,9 @@ namespace BTCPayServer.Services.Wallets
                 Confirmations = t.Confirmations,
                 Height = t.Height,
                 SeenAt = t.Timestamp,
-                TransactionId = t.TransactionId
+                TransactionId = t.TransactionId,
+                Fee = t.Metadata?.Fees,
+                FeeRate = t.Metadata?.FeeRate
             };
         }
 
@@ -488,6 +514,7 @@ namespace BTCPayServer.Services.Wallets
                           .Select(c => new ReceivedCoin()
                           {
                               KeyPath = c.KeyPath,
+                              KeyIndex = c.KeyIndex,
                               Value = c.Value,
                               Timestamp = c.Timestamp,
                               OutPoint = c.Outpoint,
@@ -501,7 +528,7 @@ namespace BTCPayServer.Services.Wallets
 
         public Task<GetBalanceResponse> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
         {
-            return _MemoryCache.GetOrCreateAsync("CACHEDBALANCE_" + derivationStrategy.ToString(), async (entry) =>
+            return _MemoryCache.GetOrCreateAsync("CACHEDBALANCE_" + derivationStrategy, async (entry) =>
             {
                 var result = await _Client.GetBalanceAsync(derivationStrategy, cancellation);
                 entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
@@ -514,7 +541,6 @@ namespace BTCPayServer.Services.Wallets
         public record BumpResult(Money NewTxFee, Money BumpTxFee, FeeRate NewTxFeeRate, FeeRate NewEffectiveFeeRate);
         public BumpResult CalculateBumpResult(FeeRate newEffectiveFeeRate)
         {
-            var packageFeeRate = GetEffectiveFeeRate();
             var newTotalFee = GetFeeRoundUp(newEffectiveFeeRate, GetPackageVirtualSize());
             var oldTotalFee = GetPackageFee();
             var bump = newTotalFee - oldTotalFee;
@@ -557,5 +583,7 @@ namespace BTCPayServer.Services.Wallets
         public uint256 TransactionId { get; set; }
         public uint256 BlockHash { get; set; }
         public IMoney BalanceChange { get; set; }
+        public FeeRate FeeRate { get; set; }
+        public Money Fee { get; set; }
     }
 }

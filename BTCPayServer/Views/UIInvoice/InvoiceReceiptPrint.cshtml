@@ -116,10 +116,7 @@
 					@if (hasCart)
                     {
                         _ = Model.CartData.TryGetValue("cart", out var cart) || Model.CartData.TryGetValue("Cart", out cart);
-                        var hasTotal = Model.CartData.TryGetValue("total", out var total) || Model.CartData.TryGetValue("Total", out total);
-                        var hasSubtotal = Model.CartData.TryGetValue("subtotal", out var subtotal) || Model.CartData.TryGetValue("subTotal", out subtotal) || Model.CartData.TryGetValue("Subtotal", out subtotal);
-                        var hasDiscount = Model.CartData.TryGetValue("discount", out var discount) || Model.CartData.TryGetValue("Discount", out discount);
-                        var hasTip = Model.CartData.TryGetValue("tip", out var tip) || Model.CartData.TryGetValue("Tip", out tip);
+                        var posData = WellKnownPosData.TryParse(Model.CartData) ?? new();
                         if (cart is Dictionary<string, object> { Keys.Count: > 0 } cartDict)
                         {
                             @foreach (var (key, value) in cartDict)
@@ -130,8 +127,8 @@
                                 </tr>
                             }
                         }
-                        else if (cart is ICollection<object> { Count: > 0 } cartCollection) 
-                        { 
+                        else if (cart is ICollection<object> { Count: > 0 } cartCollection)
+                        {
                             @foreach (var value in cartCollection)
                             {
                                 <tr>
@@ -139,38 +136,50 @@
                                 </tr>
                             }
                         }
-                        if (hasSubtotal && (hasDiscount || hasTip))
+
+                        @if (posData.ItemsTotal != null)
                         {
-                            <tr>
-                                <td colspan="2"><hr class="w-100 my-0"/></td>
-                            </tr>
                             <tr class="sums-data">
-                                <td class="key text-secondary">Subtotal</td>
-                                <td class="val text-end">@subtotal</td>
+                                <td class="key text-secondary">Items total</td>
+                                <td class="val text-end">@posData.ItemsTotal</td>
                             </tr>
                         }
-                        if (hasDiscount)
+                        @if (posData.Discount != null)
                         {
                             <tr class="sums-data">
                                 <td class="key text-secondary">Discount</td>
-                                <td class="val text-end">@discount</td>
+                                <td class="val text-end">@posData.Discount</td>
                             </tr>
                         }
-                        if (hasTip)
+                        @if (posData.Subtotal != null)
+                        {
+                            <tr class="sums-data">
+                                <td class="key text-secondary">Subtotal</td>
+                                <td class="val text-end">@posData.Subtotal</td>
+                            </tr>
+                        }
+                        @if (posData.Tax != null)
+                        {
+                            <tr class="sums-data">
+                                <td class="key text-secondary">Tax</td>
+                                <td class="val text-end">@posData.Tax</td>
+                            </tr>
+                        }
+                        @if (posData.Tip != null)
                         {
                             <tr class="sums-data">
                                 <td class="key text-secondary">Tip</td>
-                                <td class="val text-end">@tip</td>
+                                <td class="val text-end">@posData.Tip</td>
                             </tr>
                         }
-                        if (hasTotal)
+                        @if (posData.Total != null)
                         {
                             <tr>
                                 <td colspan="2"><hr class="w-100 my-0"/></td>
                             </tr>
                             <tr class="sums-data">
                                 <td class="key text-secondary">Total</td>
-                                <td class="val text-end fw-semibold">@total</td>
+                                <td class="val text-end fw-semibold">@posData.Total</td>
                             </tr>
                         }
                     }

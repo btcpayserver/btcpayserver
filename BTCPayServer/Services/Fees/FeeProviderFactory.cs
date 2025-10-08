@@ -15,10 +15,11 @@ namespace BTCPayServer.Services.Fees;
 public class FeeProviderFactory : IFeeProviderFactory, IPeriodicTask
 {
     public FeeProviderFactory(
-    BTCPayServerEnvironment Environment,
-    ExplorerClientProvider ExplorerClients,
-    IHttpClientFactory HttpClientFactory,
-    IMemoryCache MemoryCache)
+        BTCPayServerEnvironment Environment,
+        ExplorerClientProvider ExplorerClients,
+        IHttpClientFactory HttpClientFactory,
+        NBXplorerDashboard Dashboard,
+        IMemoryCache MemoryCache)
     {
         _FeeProviders = new();
 
@@ -41,9 +42,26 @@ public class FeeProviderFactory : IFeeProviderFactory, IPeriodicTask
             providers.Add(new NBXplorerFeeProvider(client));
             providers.Add(new StaticFeeProvider(new FeeRate(100L, 1)));
             var fallback = new FallbackFeeProvider(providers.ToArray());
-            _FeeProviders.Add(network, fallback);
+
+            _FeeProviders.Add(network, new ClampFeeProvider(fallback, Dashboard, network.CryptoCode));
         }
     }
+
+    class ClampFeeProvider(IFeeProvider inner, NBXplorerDashboard dashboard, string cryptoCode) : IFeeProvider
+    {
+        public async Task<FeeRate> GetFeeRateAsync(int blockTarget = 20)
+        {
+            var rate = await inner.GetFeeRateAsync(blockTarget);
+            var d = dashboard.Get(cryptoCode);
+            var min = d?.MempoolInfo?.MempoolMinfeeRate;
+            min ??= d?.Status?.BitcoinStatus?.MinRelayTxFee;
+            if (min is not null && rate < min)
+                rate = min;
+            rate = FeeRate.Min(rate, new FeeRate(2000m));
+            return rate;
+        }
+    }
+
     private readonly Dictionary<BTCPayNetworkBase, IFeeProvider> _FeeProviders;
     public IFeeProvider CreateFeeProvider(BTCPayNetworkBase network)
     {

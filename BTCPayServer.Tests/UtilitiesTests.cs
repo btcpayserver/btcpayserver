@@ -140,136 +140,9 @@ namespace BTCPayServer.Tests
         //    return name.Replace("_", "").ToLowerInvariant();
         //}
 
-        /// <summary>
-        /// This utility will use selenium to pilot your browser to
-        /// automatically translate a language.
-        /// 
-        /// Step 1: Close all Chrome instances
-        /// Step2: Edit "v1" variable if want to translate checkout v1 or v2
-        ///   - Windows: "chrome.exe --remote-debugging-port=9222 https://chat.openai.com/"
-        ///   - Linux: "google-chrome --remote-debugging-port=9222 https://chat.openai.com/"
-        /// Step 3: Run this.
-        /// </summary>
-        /// <returns></returns>
-        [Trait("Utilities", "Utilities")]
-        [FactWithSecret("TransifexAPIToken")]
-        public async Task AutoTranslateChatGPT()
-        {
-            var file = TranslationFolder.CheckoutV2;
-
-            using var driver = new ChromeDriver(new ChromeOptions()
-            {
-                DebuggerAddress = "127.0.0.1:9222"
-            });
-
-            var englishTranslations = JsonTranslation.GetTranslation(file, "en");
-
-            TransifexClient client = GetTransifexClient();
-            var langs = await client.GetLangs(englishTranslations.TransifexProject, englishTranslations.TransifexResource);
-            foreach (var lang in langs)
-            {
-                if (lang == "en")
-                    continue;
-                var jsonLangCode = GetLangCodeTransifexToJson(lang);
-                var v1LangFile = JsonTranslation.GetTranslation(TranslationFolder.CheckoutV1, jsonLangCode);
-
-                if (!v1LangFile.Exists())
-                    continue;
-                var languageCurrent = v1LangFile.Words["currentLanguage"];
-                if (v1LangFile.ShouldSkip())
-                {
-                    Logs.WriteLine("Skipped " + jsonLangCode);
-                    continue;
-                }
-
-                var langFile = JsonTranslation.GetTranslation(file, jsonLangCode);
-                bool askedPrompt = false;
-                foreach (var translation in langFile.Words)
-                {
-                    if (translation.Key == "NOTICE_WARN" ||
-                        translation.Key == "currentLanguage" ||
-                        translation.Key == "code")
-                        continue;
-
-                    var english = englishTranslations.Words[translation.Key];
-                    if (translation.Value != null)
-                        continue; // Already translated
-
-                    //TODO: A better way to avoid rate limits is to use this format:
-                    //I am translating a checkout crypto payment page, and I want you to translate it from English (en-US) to French (fr-FR).
-                    //##
-                    //English: This invoice will expire in
-                    //French:
-                    //##
-                    //English: Scan the QR code, or tap to copy the address.
-                    //French:
-                    //##
-                    //English: Your payment has been received and is now processing.
-                    //French:
-
-                    if (!askedPrompt)
-                    {
-                        driver.FindElements(By.XPath("//button[contains(@class,'text-token-text-primary')]")).Where(e => e.Displayed).First().Click();
-                        Thread.Sleep(200);
-                        var input = driver.FindElement(By.XPath("//textarea[@data-id]"));
-                        input.SendKeys($"I am translating a checkout crypto payment page, and I want you to translate it from English (en-US) to {languageCurrent} ({jsonLangCode}).");
-                        input.SendKeys(Keys.LeftShift + Keys.Enter);
-                        input.SendKeys("Reply only with the translation of the sentences I will give you and nothing more, and do not translate what is inside `{{` and `}}`." + Keys.Enter);
-                        WaitCanWritePrompt(driver);
-                        askedPrompt = true;
-                    }
-                    english = english.Replace('\n', ' ');
-
-                    driver.FindElement(By.XPath("//textarea[@data-id]")).SendKeys(english + Keys.Enter);
-                    WaitCanWritePrompt(driver);
-                    string result = GetLastResponse(driver);
-                    langFile.Words[translation.Key] = result;
-                }
-                langFile.Save();
-            }
-        }
-
-        private static string GetLastResponse(ChromeDriver driver)
-        {
-            var elements = driver.FindElements(By.XPath("//div[contains(@class,'markdown') and contains(@class,'prose')]//p"));
-            var result = elements.LastOrDefault()?.Text;
-            return result;
-        }
-
         private static TransifexClient GetTransifexClient()
         {
             return new TransifexClient(FactWithSecretAttribute.GetFromSecrets("TransifexAPIToken"));
-        }
-
-        private void WaitCanWritePrompt(IWebDriver driver)
-        {
-            bool stopGenerating = false;
-retry:
-            Thread.Sleep(200);
-            try
-            {
-                var el = driver.FindElement(By.XPath("//button[contains(@aria-label, 'Stop generating')]"));
-                if (!el.Enabled)
-                    goto retry;
-                stopGenerating = true;
-                goto retry;
-            }
-            catch
-            {
-                if (!stopGenerating)
-                    goto retry;
-            }
-            try
-            {
-                var el = driver.FindElement(By.XPath("//button[contains(@data-testid, 'send-button')]"));
-                if (!el.Displayed)
-                    goto retry;
-            }
-            catch
-            {
-                goto retry;
-            }
-            Thread.Sleep(200);
         }
 
         class TranslatedKeyNodeWalker : IntermediateNodeWalker
@@ -473,14 +346,7 @@ retry:
         {
             // 1. Generate an API Token on https://www.transifex.com/user/settings/api/
             // 2. Run "dotnet user-secrets set TransifexAPIToken <youapitoken>"
-            await PullTransifexTranslationsCore(TranslationFolder.CheckoutV1);
-            await PullTransifexTranslationsCore(TranslationFolder.CheckoutV2);
-
-        }
-
-        private async Task PullTransifexTranslationsCore(TranslationFolder folder)
-        {
-            var enTranslation = JsonTranslation.GetTranslation(folder, "en");
+            var enTranslation = JsonTranslation.GetTranslation("en");
             var client = GetTransifexClient();
             var langs = await client.GetLangs(enTranslation.TransifexProject, enTranslation.TransifexResource);
             var resourceStrings = await client.GetResourceStrings(enTranslation.TransifexResource);
@@ -493,12 +359,12 @@ retry:
             {
                 if (l == "en")
                     return;
-retry:
+                retry:
                 try
                 {
                     var langCode = GetLangCodeTransifexToJson(l);
                     var langTranslations = await client.GetTranslations(resourceStrings, l);
-                    var translation = JsonTranslation.GetTranslation(folder, langCode);
+                    var translation = JsonTranslation.GetTranslation(langCode);
                     if (translation.ShouldSkip())
                     {
                         Logs.WriteLine("Skipping " + langCode);
@@ -682,33 +548,28 @@ retry:
         }
     }
 
-    public enum TranslationFolder
-    {
-        CheckoutV1,
-        CheckoutV2
-    }
     public class JsonTranslation
     {
 
-        public static Dictionary<string, JsonTranslation> GetTranslations(TranslationFolder folder)
+        public static Dictionary<string, JsonTranslation> GetTranslations()
         {
             var res = new Dictionary<string, JsonTranslation>();
-            var source = GetTranslation(null, folder, "en");
-            foreach (var f in Directory.GetFiles(GetFolder(folder)))
+            var source = GetTranslation(null, "en");
+            foreach (var f in Directory.GetFiles(GetFolder()))
             {
                 var lang = Path.GetFileNameWithoutExtension(f);
-                res.Add(lang, GetTranslation(source, folder, lang));
+                res.Add(lang, GetTranslation(source, lang));
             }
             return res;
         }
-        public static JsonTranslation GetTranslation(TranslationFolder folder, string lang)
+        public static JsonTranslation GetTranslation(string lang)
         {
-            var source = GetTranslation(null, folder, "en");
-            return GetTranslation(source, folder, lang);
+            var source = GetTranslation(null, "en");
+            return GetTranslation(source, lang);
         }
-        private static JsonTranslation GetTranslation(JsonTranslation sourceTranslation, TranslationFolder folder, string lang)
+        private static JsonTranslation GetTranslation(JsonTranslation sourceTranslation, string lang)
         {
-            var fullPath = Path.Combine(GetFolder(folder), $"{lang}.json");
+            var fullPath = Path.Combine(GetFolder(), $"{lang}.json");
             var proj = "o:btcpayserver:p:btcpayserver";
             var resource = $"{proj}:r:checkout-v2";
             var words = new Dictionary<string, string>();
@@ -736,13 +597,8 @@ retry:
             };
         }
 
-        private static string GetFolder(TranslationFolder file)
-        {
-            if (file == TranslationFolder.CheckoutV1)
-                return Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer", "wwwroot", "locales");
-            else
-                return Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer", "wwwroot", "locales", "checkout");
-        }
+        private static string GetFolder()
+        => Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer", "wwwroot", "locales", "checkout");
 
         public string Lang { get; set; }
         public Dictionary<string, string> Words { get; set; }

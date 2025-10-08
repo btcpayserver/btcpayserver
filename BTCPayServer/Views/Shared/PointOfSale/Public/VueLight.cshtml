@@ -22,7 +22,8 @@
     <input type="hidden" name="posdata" :value="posdata">
     <div ref="display" class="d-flex flex-column align-items-center px-4 mb-auto">
         <div class="fw-semibold text-muted" id="Currency">{{currencyCode}}</div>
-        <div class="fw-bold lh-sm" ref="amount" v-bind:style="{ fontSize: `${fontSize}px` }" id="Amount">{{ formatCurrency(total, false) }}</div>
+        <div class="fw-bold lh-sm" ref="amount" v-bind:style="{ fontSize: `${fontSize}px` }" id="Amount">{{ formatCurrency(lastAmount, false) }}</div>
+        <div class="fw-bold lh-sm" ref="total" v-if="totalNumeric !== parseFloat(lastAmount)" v-bind:style="{ fontSize: `${fontSize/3}px` }" id="Total">Total: {{ formatCurrency(totalNumeric, true) }}</div>
         <div class="text-muted text-center mt-2" id="Calculation">{{ calculation }}</div>
     </div>
     <div id="ModeTabs" class="tab-content mb-n2" v-if="showDiscount || enableTips">
@@ -61,7 +62,7 @@
     </div>
     <div id="ModeTablist" class="nav btcpay-pills align-items-center justify-content-center mb-n2 pb-1" role="tablist" v-if="modes.length > 1">
         <template v-for="m in modes" :key="m.value">
-            <input :id="`ModeTablist-${m.type}`" name="mode" :value="m.type" type="radio" role="tab" data-bs-toggle="pill" :data-bs-target="`#Mode-${m.type}`" :disabled="m.type != 'amounts' && amountNumeric == 0" :aria-controls="`Mode-${m.type}`" :aria-selected="mode === m.type" :checked="mode === m.type" v-on:click="mode = m.type">
+            <input :id="`ModeTablist-${m.type}`" name="mode" :value="m.type" type="radio" role="tab" data-bs-toggle="pill" :data-bs-target="`#Mode-${m.type}`" :disabled="m.type != 'amounts' && summary.priceTaxExcluded == 0" :aria-controls="`Mode-${m.type}`" :aria-selected="mode === m.type" :checked="mode === m.type" v-on:click="mode = m.type">
             <label :for="`ModeTablist-${m.type}`">{{ m.title }}</label>
         </template>
     </div>
@@ -72,7 +73,7 @@
             <template v-else>{{ k }}</template>
         </button>
     </div>
-    <button class="btn btn-lg btn-primary mx-3" type="submit" :disabled="payButtonLoading || totalNumeric <= 0" id="pay-button">
+    <button class="btn btn-lg btn-primary mx-3" type="submit" :disabled="payButtonLoading || (totalNumeric <= 0 && posOrder.itemLines.length === 0)" id="pay-button">
         <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
             <span class="visually-hidden" text-translate="true">Loading...</span>
         </div>
@@ -139,7 +140,7 @@
                                     }
                                     @if (item.Inventory.HasValue)
                                     {
-                                        <span class="badge text-bg-warning inventory" v-text="inventoryText(@index)">
+                                        <span class="badge text-bg-warning inventory">
                                             @if (item.Inventory > 0)
                                             {
                                                 <span>@ViewLocalizer["{0} left", item.Inventory.ToString()]</span>

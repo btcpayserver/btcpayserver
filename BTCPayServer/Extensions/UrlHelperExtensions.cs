@@ -1,6 +1,6 @@
-
 using System;
 using BTCPayServer;
+using BTCPayServer.Abstractions;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
@@ -83,7 +83,32 @@ namespace Microsoft.AspNetCore.Mvc
                 values: new { invoiceId },
                 scheme, host, pathbase);
         }
+#nullable enable
+        public static string ReceiptLink(this LinkGenerator urlHelper, string invoiceId, RequestBaseUrl baseUrl)
+            => urlHelper.GetUriByAction(
+                action: nameof(UIInvoiceController.InvoiceReceipt),
+                controller: "UIInvoice",
+                values: new { invoiceId },
+                baseUrl);
 
+
+        public static string InvoiceCheckoutLink(this LinkGenerator urlHelper, string invoiceId, RequestBaseUrl baseUrl)
+            => urlHelper.GetUriByAction(
+                    action: nameof(UIInvoiceController.Checkout),
+                    controller: "UIInvoice",
+                    values: new { invoiceId },
+                    baseUrl
+                );
+
+        public static string GetUriByAction(
+            this LinkGenerator generator,
+            string action,
+            string controller,
+            object? values,
+            RequestBaseUrl requestBaseUrl,
+            FragmentString fragment = default,
+            LinkOptions? options = null) => generator.GetUriByAction(action, controller, values, requestBaseUrl.Scheme, requestBaseUrl.Host, requestBaseUrl.PathBase, fragment, options) ?? throw new InvalidOperationException($"Bug, unable to generate link for {controller}.{action}");
+#nullable restore
         public static string PayoutLink(this LinkGenerator urlHelper, string walletIdOrStoreId, string pullPaymentId, PayoutState payoutState, string scheme, HostString host, string pathbase)
         {
             WalletId.TryParse(walletIdOrStoreId, out var wallet);

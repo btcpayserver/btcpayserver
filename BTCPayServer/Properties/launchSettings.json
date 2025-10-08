@@ -171,7 +171,7 @@
         "BTCPAY_ALLOW-ADMIN-REGISTRATION": "true",
         "BTCPAY_DISABLE-REGISTRATION": "false",
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "BTCPAY_CHAINS": "btc,ltc,lbtc,xmr",
+        "BTCPAY_CHAINS": "btc,ltc,lbtc",
         "BTCPAY_POSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=btcpayserver",
         "BTCPAY_DEBUGLOG": "debug.log",
         "BTCPAY_TORRCFILE": "../BTCPayServer.Tests/TestData/Tor/torrc",

@@ -33,7 +33,7 @@
             </a>
             @if (!string.IsNullOrEmpty(_env.OnionUrl) && !Context.Request.IsOnion())
             {
-                <button type="button" class="d-flex align-items-center btn btn-link" data-clipboard="@_env.OnionUrl" data-clipboard-hover>
+                <button type="button" class="d-flex align-items-center btn btn-link clipboard-button clipboard-button-hover" data-clipboard="@_env.OnionUrl" data-clipboard-hover>
                     <vc:icon symbol="logo-tor"/>
                     <span text-translate="true">Copy Tor URL</span>
                 </button>

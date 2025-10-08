@@ -126,22 +126,25 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             var supported = _payoutHandlers.GetSupportedPayoutMethods(HttpContext.GetStoreData());
-            request.PayoutMethods ??= supported.Select(s => s.ToString()).ToArray();
-            for (int i = 0; i < request.PayoutMethods.Length; i++)
+            if (request.PayoutMethods is not null)
             {
-                var pmi = request.PayoutMethods[i] is string pm ? PayoutMethodId.TryParse(pm) : null;
-                if (pmi is null || !supported.Contains(pmi))
+                for (int i = 0; i < request.PayoutMethods.Length; i++)
                 {
-                    request.AddModelError(paymentRequest => paymentRequest.PayoutMethods[i], "Invalid or unsupported payment method", this);
+                    var pmi = request.PayoutMethods[i] is string pm ? PayoutMethodId.TryParse(pm) : null;
+                    if (pmi is null || !supported.Contains(pmi))
+                    {
+                        request.AddModelError(paymentRequest => paymentRequest.PayoutMethods[i], "Invalid or unsupported payment method", this);
+                    }
                 }
-            }
-            if (request.PayoutMethods.Length is 0)
-            {
-                ModelState.AddModelError(nameof(request.PayoutMethods), "At least one payout method is required");
+                if (request.PayoutMethods.Length is 0)
+                {
+                    ModelState.AddModelError(nameof(request.PayoutMethods), "At least one payout method is required");
+                }
             }
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            var ppId = await _pullPaymentService.CreatePullPayment(storeId, request);
+
+            var ppId = await _pullPaymentService.CreatePullPayment(HttpContext.GetStoreData(), request);
             var pp = await _pullPaymentService.GetPullPayment(ppId, false);
             return this.Ok(CreatePullPaymentData(pp));
         }

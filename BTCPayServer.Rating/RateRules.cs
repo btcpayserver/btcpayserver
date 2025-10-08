@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -25,6 +26,14 @@ namespace BTCPayServer.Rating
         RateUnavailable,
         InvalidExchangeName,
     }
+
+    public record RateRulesCollection(RateRules Primary, RateRules? Fallback)
+    {
+        public RateRuleCollection GetRuleFor(CurrencyPair currencyPair)
+        => new(Primary.GetRuleFor(currencyPair), Fallback?.GetRuleFor(currencyPair));
+    }
+    public record RateRuleCollection(RateRule Primary, RateRule? Fallback);
+
     public class RateRules
     {
         class NormalizeCurrencyPairsRewritter : CSharpSyntaxRewriter
@@ -246,7 +255,7 @@ namespace BTCPayServer.Rating
                     if (rate == null)
                     {
                         Errors.Add(RateRulesErrors.RateUnavailable);
-                        return RateRules.CreateExpression($"ERR_RATE_UNAVAILABLE({exchangeName}, {pair.ToString()})");
+                        return RateRules.CreateExpression($"ERR_RATE_UNAVAILABLE({exchangeName}, {pair})");
                     }
                     else
                     {

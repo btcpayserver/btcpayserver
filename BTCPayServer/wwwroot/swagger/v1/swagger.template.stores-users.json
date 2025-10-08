@@ -235,30 +235,25 @@
                         "properties": {
                             "userId": {
                                 "type": "string",
-                                "description": "The id of the user",
-                                "nullable": false
+                                "description": "The id of the user (Deprecated, use `id` instead)",
+                                "nullable": false,
+                                "deprecated": true
                             },
                             "role": {
                                 "type": "string",
+                                "description": "The role of the user. Default roles are `Owner`, `Manager`, `Employee` and `Guest` (Deprecated, use `storeRole` instead)",
+                                "nullable": false,
+                                "deprecated": true
+                            },
+                            "storeRole": {
+                                "type": "string",
                                 "description": "The role of the user. Default roles are `Owner`, `Manager`, `Employee` and `Guest`",
                                 "nullable": false
-                            },
-                            "email": {
-                                "type": "string",
-                                "description": "The email of the user",
-                                "nullable": true
-                            },
-                            "name": {
-                                "type": "string",
-                                "description": "The name of the user",
-                                "nullable": true
-                            },
-                            "imageUrl": {
-                                "type": "string",
-                                "description": "The profile picture URL of the user",
-                                "nullable": true
                             }
                         }
+                    },
+                    {
+                        "$ref": "#/components/schemas/ApplicationUserData"
                     }
                 ]
             }

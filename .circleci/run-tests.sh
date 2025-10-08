@@ -10,7 +10,7 @@ n=0
 until [ "$n" -ge 10 ]
 do
    docker-compose -f "docker-compose.altcoins.yml" pull && break
-   n=$((n+1)) 
+   n=$((n+1))
    sleep 5
 done
 

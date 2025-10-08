@@ -147,14 +147,13 @@ namespace BTCPayServer.Controllers
                 return View(model);
             model.AutoApproveClaims = model.AutoApproveClaims &&  (await
                 _authorizationService.AuthorizeAsync(User, storeId, Policies.CanCreatePullPayments)).Succeeded;
-            await _pullPaymentService.CreatePullPayment(new CreatePullPayment
+            await _pullPaymentService.CreatePullPayment(CurrentStore, new CreatePullPaymentRequest
             {
                 Name = model.Name,
                 Description = model.Description,
                 Amount = model.Amount,
                 Currency = model.Currency,
-                StoreId = storeId,
-                PayoutMethods = selectedPaymentMethodIds,
+                PayoutMethods = selectedPaymentMethodIds.Select(p => p.ToString()).ToArray(),
                 BOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration),
                 AutoApproveClaims = model.AutoApproveClaims
             });

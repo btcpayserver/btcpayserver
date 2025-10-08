@@ -15,7 +15,7 @@
             }
             else
             {
-                <span class="truncate-center-start" v-text="@(Model.Text).slice(0, @(Model.Padding)) + @(Model.Text).length > 2 * @(Model.Padding) ? '…' : ''"></span>
+                <span class="truncate-center-start" v-text="@(Model.Text).length > 2 * @(Model.Padding) ? @(Model.Text).slice(0, @(Model.Padding)) + '…' : ''"></span>
             }
             <span class="truncate-center-end" v-text="@(Model.Text).slice(-@(Model.Padding))" v-if="@(Model.Text).length > 2 * @(Model.Padding)"></span>
         </span>
@@ -31,7 +31,7 @@
     }
     @if (Model.Copy)
     {
-        <button type="button" class="btn btn-link p-0" @(prefix)data-clipboard="@Model.Text">
+        <button type="button" class="btn btn-link p-0 clipboard-button" @(prefix)data-clipboard="@Model.Text">
             <vc:icon symbol="actions-copy" />
         </button>
     }

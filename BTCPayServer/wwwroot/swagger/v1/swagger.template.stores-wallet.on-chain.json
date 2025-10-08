@@ -953,7 +953,7 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "feerate": {
+                    "feeRate": {
                         "type": "number",
                         "format": "decimal",
                         "description": "The fee rate (sats per byte) based on the wallet's configured recommended block confirmation target"

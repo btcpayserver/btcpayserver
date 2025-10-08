@@ -68,7 +68,7 @@ namespace BTCPayServer.Payouts
                 return false;
             var payoutId = result.ToString();
             // -LNURL should just be -LN
-            var lnUrlSuffix = $"-{Payments.PaymentTypes.LNURL.ToString()}";
+            var lnUrlSuffix = $"-{Payments.PaymentTypes.LNURL}";
             if (payoutId.EndsWith(lnUrlSuffix, StringComparison.Ordinal))
                 payoutId = payoutId.Substring(payoutId.Length - lnUrlSuffix.Length) + $"-{Payments.PaymentTypes.LN}";
 

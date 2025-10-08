@@ -22,9 +22,20 @@ namespace BTCPayServer.Abstractions.Contracts
         {
             public string Identifier { get; set; }
             public string Condition { get; set; }
+
+            public VersionCondition ParseCondition()
+            {
+                VersionCondition.TryParse(Condition ?? "", out var condition);
+                return condition ?? new VersionCondition.Yes();
+            }
+
             public override string ToString()
             {
-                return $"{Identifier}: {Condition}";
+                // Format it
+                var cond = Condition ?? "";
+                if (VersionCondition.TryParse(cond, out var condition))
+                    cond = condition.ToString();
+                return $"{Identifier}: {cond}";
             }
         }
     }

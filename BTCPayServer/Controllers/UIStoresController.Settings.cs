@@ -40,6 +40,7 @@ public partial class UIStoresController
             PaymentTolerance = storeBlob.PaymentTolerance,
             InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes,
             DefaultCurrency = storeBlob.DefaultCurrency,
+            AdditionalTrackedRates = string.Join(',', storeBlob.AdditionalTrackedRates?.ToArray() ?? []),
             BOLT11Expiration = (long)storeBlob.RefundBOLT11Expiration.TotalDays,
             Archived = store.Archived,
             MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes,
@@ -81,7 +82,8 @@ public partial class UIStoresController
         blob.AnyoneCanInvoice = model.AnyoneCanCreateInvoice;
         blob.NetworkFeeMode = model.NetworkFeeMode;
         blob.PaymentTolerance = model.PaymentTolerance;
-        blob.DefaultCurrency = model.DefaultCurrency;
+        blob.DefaultCurrency = model.DefaultCurrency.ToUpperInvariant().Trim();
+        blob.AdditionalTrackedRates = model.AdditionalTrackedRates?.Split(',', StringSplitOptions.RemoveEmptyEntries);
         blob.ShowRecommendedFee = model.ShowRecommendedFee;
         blob.RecommendedFeeBlockTarget = model.RecommendedFeeBlockTarget;
         blob.InvoiceExpiration = TimeSpan.FromMinutes(model.InvoiceExpiration);
@@ -156,6 +158,8 @@ public partial class UIStoresController
             blob.CssUrl = null;
             needUpdate = true;
         }
+        if (!ModelState.IsValid)
+            return View(model);
 
         if (CurrentStore.SetStoreBlob(blob))
         {
@@ -174,7 +178,7 @@ public partial class UIStoresController
             storeId = CurrentStore.Id
         });
     }
-        
+
     [HttpPost("{storeId}/archive")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> ToggleArchive(string storeId)
@@ -207,7 +211,7 @@ public partial class UIStoresController
         TempData[WellKnownTempData.SuccessMessage] = "Store successfully deleted.";
         return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
     }
-        
+
     [HttpGet("{storeId}/checkout")]
     public async Task<IActionResult> CheckoutAppearance()
     {
@@ -281,7 +285,7 @@ public partial class UIStoresController
                 }
             }
         }
-            
+
         var userId = GetUserId();
         if (userId is null)
             return NotFound();

@@ -271,6 +271,12 @@
                                         "description": "Make this user administrator (only if you have the `unrestricted` permission of a server administrator)",
                                         "nullable": true,
                                         "default": false
+                                    },
+                                    "sendInvitationEmail": {
+                                        "type": "boolean",
+                                        "description": "Flag to specify if an email invitation should be sent to the user",
+                                        "nullable": true,
+                                        "default": true
                                     }
                                 }
                             }
@@ -520,6 +526,11 @@
                         "description": "The profile picture URL of the user",
                         "nullable": true
                     },
+                    "invitationUrl": {
+                        "type": "string",
+                        "description": "The pending invitation URL of the user",
+                        "nullable": true
+                    },
                     "emailConfirmed": {
                         "type": "boolean",
                         "description": "True if the email has been confirmed by the user"
@@ -545,6 +556,10 @@
                                 "$ref": "#/components/schemas/UnixTimestamp"
                             }
                         ]
+                    },
+                    "disabled": {
+                        "type": "boolean",
+                        "description": "True if an admin has disabled the user"
                     },
                     "roles": {
                         "type": "array",

@@ -73,7 +73,7 @@ public class InvoiceBlobMigratorHostedService : BlobMigratorHostedService<Invoic
                 }
                 pay.SetBlob(paymentEntity);
 
-                if (pay.PaymentMethodId != pay.MigratedPaymentMethodId)
+                if (pay.MigratedPaymentMethodId is not null && pay.PaymentMethodId != pay.MigratedPaymentMethodId)
                 {
                     ctx.Add(pay);
                     ctx.Payments.Remove(new PaymentData() { Id = pay.Id, PaymentMethodId = pay.MigratedPaymentMethodId });

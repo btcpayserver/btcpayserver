@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Tests.Logging;
 using Dapper;
@@ -19,7 +20,7 @@ namespace BTCPayServer.Tests
     public class DatabaseTester
     {
         private readonly ILoggerFactory _loggerFactory;
-        private readonly string dbname;
+        public readonly string dbname;
         private string[] notAppliedMigrations;
 
         public DatabaseTester(ILog log, ILoggerFactory loggerFactory)
@@ -49,6 +50,7 @@ namespace BTCPayServer.Tests
             logs.Configure(_loggerFactory);
             return new InvoiceRepository(CreateContextFactory(), new EventAggregator(logs));
         }
+        public WalletRepository GetWalletRepository() => new (CreateContextFactory());
 
         public ApplicationDbContext CreateContext() => CreateContextFactory().CreateContext();
 

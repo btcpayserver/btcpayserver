@@ -6,6 +6,7 @@
     <UserSecretsId>AB0AC1DD-9D26-485B-9416-56A33F268117</UserSecretsId>
     <!--https://devblogs.microsoft.com/aspnet/testing-asp-net-core-mvc-web-apps-in-memory/-->
     <PreserveCompilationContext>true</PreserveCompilationContext>
+    <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
   </PropertyGroup>
 
   <ItemGroup>
@@ -40,6 +41,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.52.0" />
     <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.16" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.11" />
     <PackageReference Include="Selenium.Support" Version="4.1.1" />

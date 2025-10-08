@@ -8,6 +8,20 @@ jobs:
       - run:
           command: |
             cd .circleci && ./run-tests.sh "Fast=Fast|ThirdParty=ThirdParty" && ./can-build.sh
+  playwright_tests:
+    machine:
+      image: ubuntu-2004:2024.11.1
+    steps:
+      - checkout
+      - run:
+          command: |
+            cd .circleci && ./run-tests.sh "Playwright=Playwright"
+      - run:
+          when: always
+          command: |
+            docker run --rm -v btcpayservertests_tests_datadir:/data -v /tmp/Artifacts:/host alpine sh -c "cp -r /data/. /host/"
+      - store_artifacts:
+          path: /tmp/Artifacts
   selenium_tests:
     machine:
       image: ubuntu-2004:2024.11.1
@@ -52,6 +66,7 @@ workflows:
   build_and_test:
     jobs:
       - fast_tests
+      - playwright_tests 
       - selenium_tests
       - integration_tests
   publish:

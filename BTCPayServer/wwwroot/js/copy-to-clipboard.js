@@ -1,4 +1,5 @@
 function confirmCopy(el, message) {
+    if (el.dataset.clipboardConfirming) return;
     const hasIcon = !!el.innerHTML.match('icon-actions-copy')
     const confirmHTML = `<span class="text-success">${message}</span>`;
     if (hasIcon) {
@@ -10,7 +11,7 @@ function confirmCopy(el, message) {
         el.style.minHeight = height + 'px';
         el.innerHTML = confirmHTML;
     }
-    el.dataset.clipboardConfirming = true;
+    el.dataset.clipboardConfirming = 'true';
     if (el.dataset.clipboardHandler) {
         clearTimeout(parseInt(el.dataset.clipboardHandler));
     }

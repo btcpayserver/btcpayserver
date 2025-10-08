@@ -37,7 +37,7 @@
                 <td class="text-end">
                     <a class="btn btn-link p-0 me-3"
                        href="@Url.Action("ReservedAddresses", "UIWallets", new { walletId = Model.WalletId.ToString(), filter = label.Label })"
-                       title="View Reserved Addresses with this label">
+                       title="View Reserved Addresses with this label" text-translate="true">
                         Addresses
                     </a>
                     <form method="post" asp-action="RemoveWalletLabel" asp-route-walletId="@Model.WalletId" asp-route-id="@label.Label" class="d-inline">

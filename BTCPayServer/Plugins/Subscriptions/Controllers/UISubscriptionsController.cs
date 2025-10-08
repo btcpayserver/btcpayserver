@@ -201,7 +201,7 @@ public partial class UISubscriptionsController(
         vm.SelectablePlans = plans
             .Where(p => p.Status == PlanData.PlanStatus.Active)
             .OrderBy(p => p.Name)
-            .Select((p, i) => new SelectListItem(p.Name, p.Id))
+            .Select((p, i) => new SubscriptionsViewModel.SelectablePlan(p.Name, p.Id, p.TrialDays > 0))
             .ToList();
         if (section == SubscriptionSection.Plans)
         {

@@ -35,6 +35,7 @@ public class UISubscriptionsControllerBase(
         {
             await SubsService.ProceedToSubscribe(checkoutId, customerSelector, cancellationToken);
         }
+        catch (InvalidOperationException) { }
         catch (BitpayHttpException ex)
         {
             TempData.SetStatusMessageModel(new StatusMessageModel

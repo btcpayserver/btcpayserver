@@ -87,6 +87,10 @@ public class PlanCheckoutData : BaseEntityData
     [Column("base_url", TypeName = "text")]
     public RequestBaseUrl BaseUrl { get; set; } = null!;
 
+    [Required]
+    [Column("expiration")]
+    public DateTimeOffset Expiration { get; set; }
+
     public enum OnPayBehavior
     {
         /// <summary>
@@ -134,10 +138,14 @@ public class PlanCheckoutData : BaseEntityData
                 x => RequestBaseUrl.FromUrl(x)
             );
 
+        b.Property(x => x.Expiration).HasDefaultValueSql("now() + interval '1 day'");
         b.Property(x => x.OnPay).HasDefaultValue(OnPayBehavior.SoftMigration).HasConversion<string>();
         b.Property(x => x.IsTrial).HasDefaultValue(false);
         b.HasOne(x => x.Plan).WithMany().OnDelete(DeleteBehavior.Cascade);
         b.HasOne(x => x.Subscriber).WithMany().OnDelete(DeleteBehavior.SetNull);
         b.HasOne(x => x.Invoice).WithMany().OnDelete(DeleteBehavior.SetNull);
     }
+
+    [NotMapped]
+    public bool IsExpired => DateTimeOffset.UtcNow > Expiration;
 }

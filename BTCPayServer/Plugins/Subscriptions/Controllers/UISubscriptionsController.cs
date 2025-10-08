@@ -50,6 +50,7 @@ public partial class UISubscriptionsController(
         string planId,
         bool isTrial,
         bool isTestAccount,
+        int linkExpiration,
         string? prefilledEmail = null)
     {
         await using var ctx = DbContextFactory.CreateContext();
@@ -65,6 +66,7 @@ public partial class UISubscriptionsController(
             TestAccount = isTestAccount,
             SuccessRedirectUrl = LinkGenerator.OfferingLink(storeId, offeringId, SubscriptionSection.Subscribers, Request.GetRequestBaseUrl()),
             BaseUrl = Request.GetRequestBaseUrl(),
+            Expiration = DateTimeOffset.UtcNow.AddDays(linkExpiration),
         };
 
         if (prefilledEmail != null && prefilledEmail.IsValidEmail())
@@ -91,8 +93,8 @@ public partial class UISubscriptionsController(
 
     [HttpPost("stores/{storeId}/offerings/{offeringId}/format-currency")]
     [IgnoreAntiforgeryToken]
-    public string FormatCurrency(string storeId, string offeringId, [FromBody] FormatCurrencyRequest req)
-        => displayFormatter.Currency(req.Amount, req.Currency ?? "USD", DisplayFormatter.CurrencyFormat.CodeAndSymbol);
+    public string FormatCurrency(string storeId, string offeringId, [FromBody] FormatCurrencyRequest? req)
+        => displayFormatter.Currency(req?.Amount ?? 0m, req?.Currency ?? "USD", DisplayFormatter.CurrencyFormat.CodeAndSymbol);
 
     [HttpPost("stores/{storeId}/offerings/{offeringId}/Subscribers")]
     [Authorize(Policy = Policies.CanModifyMembership, AuthenticationSchemes = AuthenticationSchemes.Cookie)]

@@ -14,17 +14,27 @@
                   action="Plans">
 
                 <div class="modal-body">
-                    <div text-translate="true">Would you like to create a new subscriber?</div>
+                    <div text-translate="true">Would you like to invite a new subscriber?</div>
                 </div>
 
                 <div class="modal-body pt-0">
-                    <div class="form-group">
-                        <label for="newSubscriber-prefilledEmail" class="form-label" text-translate="true">Email</label>
-                        <input id="newSubscriber-prefilledEmail"
-                               name="prefilledEmail"
-                               type="text"
-                               placeholder="Leave empty to let the customer configure it"
-                               class="form-control" />
+                    <div class="d-flex justify-content-between">
+                        <div class="form-group flex-fill me-4">
+                            <label for="newSubscriber-prefilledEmail" class="form-label" text-translate="true">Email</label>
+                            <input id="newSubscriber-prefilledEmail"
+                                   name="prefilledEmail"
+                                   type="text"
+                                   placeholder="Leave empty to let the customer configure it"
+                                   class="form-control me-2" />
+                        </div>
+                        <div class="form-group">
+                            <label for="newSubscriber-linkExpiration" class="form-label" text-translate="true">Expires in</label>
+                            <select id="newSubscriber-linkExpiration" name="linkExpiration" class="form-select w-auto">
+                                <option value="1" text-translate="true">1 day</option>
+                                <option value="7" text-translate="true">7 days</option>
+                                <option value="30" text-translate="true">30 days</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -54,7 +64,7 @@
                         <label class="form-check-label" for="newSubscriber-isTrial" text-translate="true">Enable trial</label>
                     </div>
 
-                    <div class="d-flex align-items-center my-3">
+                    <div class="form-group d-flex align-items-center my-3">
                         <input id="newSubscriber-isTestAccount" name="isTestAccount" value="true" type="checkbox" class="btcpay-toggle me-3"
                                v-model="isTestAccount">
                         <div>

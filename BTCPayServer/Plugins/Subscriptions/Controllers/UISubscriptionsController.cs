@@ -43,9 +43,9 @@ public partial class UISubscriptionsController(
     IHtmlHelper htmlHelper
 ) : UISubscriptionsControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
 {
-    [HttpPost("stores/{storeId}/offerings/{offeringId}/Plans")]
+    [HttpPost("stores/{storeId}/offerings/{offeringId}/new-subscriber")]
     [Authorize(Policy = Policies.CanModifyMembership, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public async Task<IActionResult> Plans(
+    public async Task<IActionResult> NewSubscriber(
         string storeId, string offeringId,
         string planId,
         bool isTrial,

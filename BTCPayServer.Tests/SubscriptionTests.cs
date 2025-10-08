@@ -423,7 +423,6 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
                 await s.Page.CheckAsync("input[name='isTrial']");
             else
                 Assert.False(await s.Page.Locator("input[name='isTrial']").IsVisibleAsync());
-            await s.Page.CheckAsync("input[name='isTestAccount']");
             await s.Page.ClickAsync("#newSubscriberModal button[name='command']");
             await s.Page.FillAsync("#emailInput", email);
             await s.Page.ClickAsync("button[name='command']");

@@ -49,7 +49,6 @@ public partial class UISubscriptionsController(
         string storeId, string offeringId,
         string planId,
         bool isTrial,
-        bool isTestAccount,
         int linkExpiration,
         string? prefilledEmail = null)
     {
@@ -63,7 +62,7 @@ public partial class UISubscriptionsController(
             PlanId = planId,
             IsTrial = plan.TrialDays > 0 && isTrial,
             NewSubscriber = true,
-            TestAccount = isTestAccount,
+            TestAccount = env.CheatMode,
             SuccessRedirectUrl = LinkGenerator.OfferingLink(storeId, offeringId, SubscriptionSection.Subscribers, Request.GetRequestBaseUrl()),
             BaseUrl = Request.GetRequestBaseUrl(),
             Expiration = DateTimeOffset.UtcNow.AddDays(linkExpiration),

@@ -226,10 +226,7 @@ public class SubscriptionHostedService(
     private async Task UpdateSubscriptionStates(SubscriptionContext subCtx, MemberSelector selector)
     {
         var (now, ctx, cancellationToken) = (subCtx.Now, subCtx.Context, subCtx.CancellationToken);
-        var query = ctx.Subscribers
-            .Include(p => p.Plan).ThenInclude(p => p.Offering).ThenInclude(p => p.App)
-            .Include(m => m.Customer).ThenInclude(c => c.CustomerIdentities)
-            .Include(s => s.Credits);
+        var query = ctx.Subscribers.IncludeAll();
         var members = await selector.Where(query).ToListAsync(cancellationToken);
         foreach (var m in members)
         {

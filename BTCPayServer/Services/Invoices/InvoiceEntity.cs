@@ -295,6 +295,8 @@ namespace BTCPayServer.Services.Invoices
         public string Currency { get; set; }
         [JsonConverter(typeof(PaymentMethodIdJsonConverter))]
         public PaymentMethodId DefaultPaymentMethod { get; set; }
+
+        public long? SubscriberId { get; set; }
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; }
 
@@ -756,11 +758,11 @@ namespace BTCPayServer.Services.Invoices
         public decimal NetSettled { get; private set; }
         [JsonIgnore]
         public bool DisableAccounting { get; set; }
+
+        [JsonIgnore]
+        public string CustomerId { get; set; }
     }
 
-    public enum InvoiceStatusLegacy
-    {
-    }
     public static class InvoiceStatusLegacyExtensions
     {
         public static string ToLegacyStatusString(this InvoiceStatus status) =>

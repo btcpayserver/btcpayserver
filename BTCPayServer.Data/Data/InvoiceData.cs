@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Newtonsoft.Json.Linq;
@@ -24,6 +25,9 @@ namespace BTCPayServer.Data
         public string Blob2 { get; set; }
         public string Status { get; set; }
         public string ExceptionStatus { get; set; }
+        public string CustomerId { get; set; }
+        [ForeignKey(nameof(CustomerId))]
+        public CustomerData Customer { get; set; }
         public List<AddressInvoiceData> AddressInvoices { get; set; }
         public bool Archived { get; set; }
         public List<InvoiceSearchData> InvoiceSearchData { get; set; }
@@ -36,6 +40,11 @@ namespace BTCPayServer.Data
         [Timestamp]
         // With this, update of InvoiceData will fail if the row was modified by another process
         public uint XMin { get; set; }
+
+        public const string Processing = nameof(Processing);
+        public const string Settled = nameof(Settled);
+        public const string Invalid = nameof(Invalid);
+
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
             builder.Entity<InvoiceData>()
@@ -49,6 +58,9 @@ namespace BTCPayServer.Data
             builder.Entity<InvoiceData>()
                     .Property(o => o.Amount)
                     .HasColumnType("NUMERIC");
+            builder.Entity<InvoiceData>()
+                .HasOne(o => o.Customer).WithMany(x => x.Invoices).OnDelete(DeleteBehavior.SetNull);
+            builder.Entity<InvoiceData>().HasIndex(x => x.CustomerId).HasFilter("\"CustomerId\" IS NOT NULL");
 			builder.HasDbFunction(typeof(InvoiceData).GetMethod(nameof(GetOrderId), new[] { typeof(string) }), b => b.HasName("get_orderid"));
 			builder.HasDbFunction(typeof(InvoiceData).GetMethod(nameof(GetItemCode), new[] { typeof(string) }), b => b.HasName("get_itemcode"));
             builder.HasDbFunction(typeof(InvoiceData).GetMethod(nameof(IsPending), new[] { typeof(string) }), b => b.HasName("is_pending"));

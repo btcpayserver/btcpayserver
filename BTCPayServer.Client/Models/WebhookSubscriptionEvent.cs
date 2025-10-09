@@ -7,6 +7,14 @@ namespace BTCPayServer.Client.Models;
 
 public class WebhookSubscriptionEvent : StoreWebhookEvent
 {
+    public const string NewSubscriber = nameof(NewSubscriber);
+    public const string SubscriberCredited = nameof(SubscriberCredited);
+    public const string SubscriberCharged = nameof(SubscriberCharged);
+    public const string SubscriberActivated = nameof(SubscriberActivated);
+    public const string SubscriberPhaseChanged = nameof(SubscriberPhaseChanged);
+    public const string SubscriberDisabled = nameof(SubscriberDisabled);
+    public const string PaymentReminder = nameof(PaymentReminder);
+    public const string PlanStarted = nameof(PlanStarted);
     public class SubscriberEvent : WebhookSubscriptionEvent
     {
         public SubscriberEvent()
@@ -36,7 +44,7 @@ public class WebhookSubscriptionEvent : StoreWebhookEvent
         {
         }
 
-        public NewSubscriberEvent(string storeId) : base(WebhookEventType.NewSubscriber, storeId)
+        public NewSubscriberEvent(string storeId) : base(NewSubscriber, storeId)
         {
         }
     }
@@ -47,7 +55,7 @@ public class WebhookSubscriptionEvent : StoreWebhookEvent
         {
         }
 
-        public SubscriberCreditedEvent(string storeId) : base(WebhookEventType.SubscriberCredited, storeId)
+        public SubscriberCreditedEvent(string storeId) : base(SubscriberCredited, storeId)
         {
         }
 
@@ -63,7 +71,7 @@ public class WebhookSubscriptionEvent : StoreWebhookEvent
         {
         }
 
-        public SubscriberChargedEvent(string storeId) : base(WebhookEventType.SubscriberCharged, storeId)
+        public SubscriberChargedEvent(string storeId) : base(SubscriberCharged, storeId)
         {
         }
 
@@ -79,7 +87,7 @@ public class WebhookSubscriptionEvent : StoreWebhookEvent
         {
         }
 
-        public SubscriberActivatedEvent(string storeId) : base(WebhookEventType.SubscriberActivated, storeId)
+        public SubscriberActivatedEvent(string storeId) : base(SubscriberActivated, storeId)
         {
         }
     }
@@ -91,7 +99,7 @@ public class WebhookSubscriptionEvent : StoreWebhookEvent
         {
         }
 
-        public SubscriberPhaseChangedEvent(string storeId) : base(WebhookEventType.SubscriberPhaseChanged, storeId)
+        public SubscriberPhaseChangedEvent(string storeId) : base(SubscriberPhaseChanged, storeId)
         {
         }
 
@@ -105,7 +113,7 @@ public class WebhookSubscriptionEvent : StoreWebhookEvent
         {
         }
 
-        public SubscriberDisabledEvent(string storeId) : base(WebhookEventType.SubscriberDisabled, storeId)
+        public SubscriberDisabledEvent(string storeId) : base(SubscriberDisabled, storeId)
         {
         }
     }
@@ -116,7 +124,7 @@ public class WebhookSubscriptionEvent : StoreWebhookEvent
         {
         }
 
-        public PaymentReminderEvent(string storeId) : base(WebhookEventType.PaymentReminder, storeId)
+        public PaymentReminderEvent(string storeId) : base(PaymentReminder, storeId)
         {
         }
     }
@@ -127,7 +135,7 @@ public class WebhookSubscriptionEvent : StoreWebhookEvent
         {
         }
 
-        public PlanStartedEvent(string storeId) : base(WebhookEventType.PlanStarted, storeId)
+        public PlanStartedEvent(string storeId) : base(PlanStarted, storeId)
         {
         }
 

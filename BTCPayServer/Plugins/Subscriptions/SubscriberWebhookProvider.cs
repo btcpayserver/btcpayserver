@@ -8,27 +8,30 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Events;
+using BTCPayServer.HostedServices.Webhooks;
 using Microsoft.Extensions.Logging;
 using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
-namespace BTCPayServer.HostedServices.Webhooks;
+
+namespace BTCPayServer.Plugins.Subscriptions;
 
 public class SubscriberWebhookProvider(EventAggregator eventAggregator, ILogger<SubscriberWebhookProvider> logger, WebhookSender webhookSender) : WebhookProvider<SubscriptionEvent.SubscriberEvent>(eventAggregator, logger, webhookSender)
 {
+
     public override bool SupportsCustomerEmail { get; } = true;
 
     public override Dictionary<string, string> GetSupportedWebhookTypes()
     {
         return new Dictionary<string, string>
         {
-            { WebhookEventType.NewSubscriber, "Subscription - New subscriber" },
-            { WebhookEventType.SubscriberCredited, "Subscription - Subscriber credited" },
-            { WebhookEventType.SubscriberCharged, "Subscription - Subscriber charged" },
-            { WebhookEventType.SubscriberActivated, "Subscription - Subscriber activated" },
-            { WebhookEventType.SubscriberPhaseChanged, "Subscription - Subscriber phase changed" },
-            { WebhookEventType.SubscriberDisabled, "Subscription - Subscriber disabled" },
-            { WebhookEventType.PaymentReminder, "Subscription - Payment reminder" },
-            { WebhookEventType.PlanStarted, "Subscription - Plan started" }
+            { WebhookSubscriptionEvent.NewSubscriber, "Subscription - New subscriber" },
+            { WebhookSubscriptionEvent.SubscriberCredited, "Subscription - Subscriber credited" },
+            { WebhookSubscriptionEvent.SubscriberCharged, "Subscription - Subscriber charged" },
+            { WebhookSubscriptionEvent.SubscriberActivated, "Subscription - Subscriber activated" },
+            { WebhookSubscriptionEvent.SubscriberPhaseChanged, "Subscription - Subscriber phase changed" },
+            { WebhookSubscriptionEvent.SubscriberDisabled, "Subscription - Subscriber disabled" },
+            { WebhookSubscriptionEvent.PaymentReminder, "Subscription - Payment reminder" },
+            { WebhookSubscriptionEvent.PlanStarted, "Subscription - Plan started" }
         };
     }
 
@@ -37,14 +40,14 @@ public class SubscriberWebhookProvider(EventAggregator eventAggregator, ILogger<
         var storeId = "def";
         var member = CreateTestMember();
 
-        if (type == WebhookEventType.NewSubscriber)
+        if (type == WebhookSubscriptionEvent.NewSubscriber)
         {
             return new WebhookSubscriptionEvent.NewSubscriberEvent(storeId)
             {
                 Subscriber = member
             };
         }
-        if (type == WebhookEventType.SubscriberCredited)
+        if (type == WebhookSubscriptionEvent.SubscriberCredited)
         {
             return new WebhookSubscriptionEvent.SubscriberCreditedEvent(storeId)
             {
@@ -54,7 +57,7 @@ public class SubscriberWebhookProvider(EventAggregator eventAggregator, ILogger<
                 Currency = "USD"
             };
         }
-        if (type == WebhookEventType.SubscriberCharged)
+        if (type == WebhookSubscriptionEvent.SubscriberCharged)
         {
             return new WebhookSubscriptionEvent.SubscriberChargedEvent(storeId)
             {
@@ -64,14 +67,14 @@ public class SubscriberWebhookProvider(EventAggregator eventAggregator, ILogger<
                 Currency = "USD"
             };
         }
-        if (type == WebhookEventType.SubscriberActivated)
+        if (type == WebhookSubscriptionEvent.SubscriberActivated)
         {
             return new WebhookSubscriptionEvent.SubscriberActivatedEvent(storeId)
             {
                 Subscriber = member
             };
         }
-        if (type == WebhookEventType.SubscriberPhaseChanged)
+        if (type == WebhookSubscriptionEvent.SubscriberPhaseChanged)
         {
             return new WebhookSubscriptionEvent.SubscriberPhaseChangedEvent(storeId)
             {
@@ -80,21 +83,21 @@ public class SubscriberWebhookProvider(EventAggregator eventAggregator, ILogger<
                 CurrentPhase = WebhookSubscriptionEvent.SubscriptionPhase.Normal
             };
         }
-        if (type == WebhookEventType.SubscriberDisabled)
+        if (type == WebhookSubscriptionEvent.SubscriberDisabled)
         {
             return new WebhookSubscriptionEvent.SubscriberDisabledEvent(storeId)
             {
                 Subscriber = member
             };
         }
-        if (type == WebhookEventType.PaymentReminder)
+        if (type == WebhookSubscriptionEvent.PaymentReminder)
         {
             return new WebhookSubscriptionEvent.PaymentReminderEvent(storeId)
             {
                 Subscriber = member
             };
         }
-        if (type == WebhookEventType.PlanStarted)
+        if (type == WebhookSubscriptionEvent.PlanStarted)
         {
             return new WebhookSubscriptionEvent.PlanStartedEvent(storeId)
             {
@@ -112,7 +115,7 @@ public class SubscriberWebhookProvider(EventAggregator eventAggregator, ILogger<
 
     protected override void SubscribeToEvents()
     {
-        SubscribeAny<SubscriptionEvent.SubscriberEvent>();
+        SubscribeAny<WebhookSubscriptionEvent.SubscriberEvent>();
     }
 
     class SubscriberWebhookDeliveryRequest(SubscriptionEvent.SubscriberEvent evt, string webhookId, WebhookEvent webhookEvent, WebhookDeliveryData delivery, WebhookBlob webhookBlob) : WebhookSender.WebhookDeliveryRequest(webhookId, webhookEvent, delivery, webhookBlob)

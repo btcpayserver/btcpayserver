@@ -1,5 +1,7 @@
 ﻿@inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @inject DisplayFormatter DisplayFormatter
+@inject LinkGenerator LinkGenerator
+@using BTCPayServer.Plugins.Subscriptions
 @using BTCPayServer.Services
 @model PlanCheckoutViewModel
 
@@ -175,7 +177,15 @@
                         </div>
                     }
 
-                    <h3 class="subscription-title">@Model.Title</h3>
+                    <h3 class="subscription-title d-inline-flex align-items-center gap-2">
+                        <span>@Model.Title</span>
+                        <a type="button" class="btn-link"
+                                href="#"
+                                data-bs-toggle="modal"
+                                data-bs-target="#OpenQrModal">
+                            <vc:icon symbol="qr-code" />
+                        </a>
+                    </h3>
                     <p class="subscription-description">@Model.Data.Description</p>
 
                     <div class="price-display">
@@ -244,7 +254,8 @@
                     <div class="security-badges">
                         <div class="security-badge store-footer">
                             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
-                                Powered by <partial name="_StoreFooterLogo" />
+                                Powered by
+                                <partial name="_StoreFooterLogo" />
                             </a>
                         </div>
                     </div>
@@ -254,6 +265,26 @@
     </div>
 </div>
 
+<div class="modal fade" id="OpenQrModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" text-translate="true">Scan the QR code to open this page on a mobile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                    <vc:icon symbol="close" />
+                </button>
+            </div>
+            <div class="modal-body pt-0 text-center">
+                <component type="typeof(BTCPayServer.Blazor.QrCode)"
+                           param-Data="@LinkGenerator.PlanCheckout(Model.Id, Context.Request.GetRequestBaseUrl())"
+                           render-mode="Static"
+                />
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/vendor/bootstrap/bootstrap.bundle.min.js" asp-append-version="true"></script>
 <script>
     const emailInput = document.getElementById('emailInput');
     const proceedBtn = document.getElementById('proceedBtn');

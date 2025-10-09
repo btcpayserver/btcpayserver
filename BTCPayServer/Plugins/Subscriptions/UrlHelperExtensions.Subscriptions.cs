@@ -10,6 +10,13 @@ namespace BTCPayServer.Plugins.Subscriptions;
 
 public static class UrlHelperExtensions
 {
+    public static string PlanCheckout(this LinkGenerator urlHelper, string checkoutId, RequestBaseUrl requestBaseUrl)
+        => urlHelper.GetUriByAction(
+            action: nameof(UIPlanCheckoutController.PlanCheckout),
+            values: new { area = SubscriptionsPlugin.Area, checkoutId },
+            controller: "UIPlanCheckout",
+            requestBaseUrl: requestBaseUrl);
+
     public static string SubscriberPortalLink(this LinkGenerator urlHelper, string portalSessionId, RequestBaseUrl requestBaseUrl, string? checkoutPlanId = null)
         => urlHelper.GetUriByAction(
             action: nameof(UISubscriberPortalController.SubscriberPortal),

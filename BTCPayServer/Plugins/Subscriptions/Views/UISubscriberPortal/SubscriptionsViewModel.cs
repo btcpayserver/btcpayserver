@@ -43,8 +43,7 @@ public class SubscriptionsViewModel
 
     public bool EnablePaymentReminders { get; set; }
     public bool EmailConfigured { get; set; }
-    public EmailSettings EmailSettings { get; set; }
-    public OfferingData.AdditionalSettings Settings { get; set; }
+    public OfferingData.MailSettings MailSettings { get; set; }
 
     public class EmailTemplate
     {

@@ -63,11 +63,11 @@
            asp-route-storeId="@storeId"
            asp-route-offeringId="@offeringId"
            asp-route-section="@SubscriptionSection.Plans">Plans</a>
-        <a class="nav-link @(Model.Section == SubscriptionSection.Settings ? "active" : "")"
+        <a class="nav-link @(Model.Section == SubscriptionSection.Mails ? "active" : "")"
            asp-action="Offering"
            asp-route-storeId="@storeId"
            asp-route-offeringId="@offeringId"
-           asp-route-section="@SubscriptionSection.Settings">Settings</a>
+           asp-route-section="@SubscriptionSection.Mails">Mails</a>
     </ul>
 
     @if (Model.Section == SubscriptionSection.Plans)
@@ -296,11 +296,11 @@
             </table>
         </div>
     }
-    else if (Model.Section == SubscriptionSection.Settings)
+    else if (Model.Section == SubscriptionSection.Mails)
     {
         <form asp-antiforgery="true" method="post">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 text-translate="true">Settings</h4>
+                <h4 text-translate="true">Mails</h4>
                 <div class="d-flex justify-content-start sticky-footer">
                     <button class="btn btn-success px-4" type="submit" text-translate="true">Save</button>
                 </div>
@@ -347,27 +347,27 @@
 
 
                             <div class="form-group mb-4 collapse @(Model.EnablePaymentReminders ? "show" : "")" id="EnablePaymentRemindersSection">
-                                <label asp-for="Settings.PaymentRemindersDays" class="form-label">Email Reminder Days Before Due</label>
+                                <label asp-for="MailSettings.PaymentRemindersDays" class="form-label">Email Reminder Days Before Due</label>
                                 <div class="input-group">
-                                    <input inputmode="number" asp-for="Settings.PaymentRemindersDays" class="form-control" style="max-width:12ch;" min="0"/>
+                                    <input inputmode="number" asp-for="MailSettings.PaymentRemindersDays" class="form-control" style="max-width:12ch;" min="0"/>
                                     <span class="input-group-text" text-translate="true">days</span>
                                 </div>
-                                <span asp-validation-for="Settings.PaymentRemindersDays" class="text-danger"></span>
+                                <span asp-validation-for="MailSettings.PaymentRemindersDays" class="text-danger"></span>
                             </div>
 
                             <div class="d-flex align-items-center my-3">
-                                <input asp-for="Settings.EnableFailedPaymentAlerts" type="checkbox" class="btcpay-toggle me-3">
+                                <input asp-for="MailSettings.EnableFailedPaymentAlerts" type="checkbox" class="btcpay-toggle me-3">
                                 <div>
-                                    <label asp-for="Settings.EnableFailedPaymentAlerts" class="form-check-label" text-translate="true">Failed Payment
+                                    <label asp-for="MailSettings.EnableFailedPaymentAlerts" class="form-check-label" text-translate="true">Failed Payment
                                         Alerts</label>
                                     <div class="form-text" text-translate="true">Alert admin on payment failures</div>
                                 </div>
                             </div>
 
                             <div class="d-flex align-items-center my-3">
-                                <input asp-for="Settings.EnableRenewalNotifications" type="checkbox" class="btcpay-toggle me-3">
+                                <input asp-for="MailSettings.EnableRenewalNotifications" type="checkbox" class="btcpay-toggle me-3">
                                 <div>
-                                    <label asp-for="Settings.EnableRenewalNotifications" class="form-check-label" text-translate="true">Renewal
+                                    <label asp-for="MailSettings.EnableRenewalNotifications" class="form-check-label" text-translate="true">Renewal
                                         Notifications</label>
                                     <div class="form-text" text-translate="true">Notify admin on successful renewals</div>
                                 </div>

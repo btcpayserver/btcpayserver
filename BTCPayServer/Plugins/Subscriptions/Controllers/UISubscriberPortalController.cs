@@ -28,7 +28,7 @@ public class UISubscriberPortalController(
     IStringLocalizer stringLocalizer,
     SubscriptionHostedService subsService,
     DisplayFormatter displayFormatter,
-    UriResolver uriResolver) : UISubscriptionsControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
+    UriResolver uriResolver) : UISubscriptionControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
 {
     [HttpGet]
     public async Task<IActionResult> SubscriberPortal(string portalSessionId, string? checkoutPlanId = null, CancellationToken cancellationToken = default)

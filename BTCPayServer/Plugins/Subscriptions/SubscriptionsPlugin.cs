@@ -54,15 +54,15 @@ public class SubscriptionsAppType(
     public override Task<string> ConfigureLink(AppData app)
     {
         var config = app.GetSettings<AppConfig>();
-        return Task.FromResult(linkGenerator.GetPathByAction(nameof(UISubscriptionsController.Offering),
-            "UISubscriptions", new { storeId = app.Id, offeringId = config?.OfferingId, section = SubscriptionSection.Plans }, btcPayServerOptions.Value.RootPath)!);
+        return Task.FromResult(linkGenerator.GetPathByAction(nameof(UIOfferingController.Offering),
+            "UIOffering", new { storeId = app.Id, offeringId = config?.OfferingId, section = SubscriptionSection.Plans }, btcPayServerOptions.Value.RootPath)!);
     }
 
     public override Task<string> ViewLink(AppData app)
     {
         var config = app.GetSettings<AppConfig>();
-        return Task.FromResult(linkGenerator.GetPathByAction(nameof(UISubscriptionsController.Offering),
-            "UISubscriptions", new { storeId = app.Id, offeringId = config?.OfferingId, section = SubscriptionSection.Plans }, btcPayServerOptions.Value.RootPath)!);
+        return Task.FromResult(linkGenerator.GetPathByAction(nameof(UIOfferingController.Offering),
+            "UIOffering", new { storeId = app.Id, offeringId = config?.OfferingId, section = SubscriptionSection.Plans }, btcPayServerOptions.Value.RootPath)!);
     }
 
     public override Task SetDefaultSettings(AppData appData, string defaultCurrency)

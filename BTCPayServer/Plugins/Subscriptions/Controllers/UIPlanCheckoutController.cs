@@ -31,7 +31,7 @@ public class UIPlanCheckoutController(
     UriResolver uriResolver,
     IStringLocalizer stringLocalizer,
     SubscriptionHostedService subsService)
-    : UISubscriptionsControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
+    : UISubscriptionControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
 {
     [HttpGet]
     public async Task<IActionResult> PlanCheckout(string checkoutId)

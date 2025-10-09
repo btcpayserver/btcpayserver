@@ -33,7 +33,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 [Authorize(Policy = Policies.CanViewMembership, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [AutoValidateAntiforgeryToken]
 [Area(SubscriptionsPlugin.Area)]
-public partial class UISubscriptionsController(
+public partial class UIOfferingController(
     ApplicationDbContextFactory dbContextFactory,
     IStringLocalizer stringLocalizer,
     LinkGenerator linkGenerator,
@@ -44,7 +44,7 @@ public partial class UISubscriptionsController(
     DisplayFormatter displayFormatter,
     EmailSenderFactory emailSenderFactory,
     IHtmlHelper htmlHelper
-) : UISubscriptionsControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
+) : UISubscriptionControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
 {
     [HttpPost("stores/{storeId}/offerings/{offeringId}/new-subscriber")]
     [Authorize(Policy = Policies.CanModifyMembership, AuthenticationSchemes = AuthenticationSchemes.Cookie)]

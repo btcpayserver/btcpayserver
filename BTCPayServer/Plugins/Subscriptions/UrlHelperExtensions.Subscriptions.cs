@@ -26,9 +26,9 @@ public static class UrlHelperExtensions
 
     public static string OfferingLink(this LinkGenerator urlHelper, string storeId, string offeringId, SubscriptionSection section, RequestBaseUrl requestBaseUrl)
    =>  urlHelper.GetUriByAction(
-       action: nameof(UISubscriptionsController.Offering),
+       action: nameof(UIOfferingController.Offering),
        values: new { area = SubscriptionsPlugin.Area, storeId, offeringId, section },
-       controller: "UISubscriptions",
+       controller: "UIOffering",
        requestBaseUrl: requestBaseUrl);
 
     public static string PlanCheckoutDefaultLink(this LinkGenerator urlHelper, RequestBaseUrl requestBaseUrl)

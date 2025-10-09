@@ -15,7 +15,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 
-public partial class UISubscriptionsController
+public partial class UIOfferingController
 {
     private async Task<IActionResult> CreateFakeOffering(string storeId, CreateOfferingViewModel vm)
     {

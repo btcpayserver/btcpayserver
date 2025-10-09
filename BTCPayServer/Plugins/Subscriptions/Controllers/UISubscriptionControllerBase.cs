@@ -4,14 +4,13 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Data.Subscriptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 
-public class UISubscriptionsControllerBase(
+public class UISubscriptionControllerBase(
     ApplicationDbContextFactory dbContextFactory,
     LinkGenerator linkGenerator,
     IStringLocalizer stringLocalizer,

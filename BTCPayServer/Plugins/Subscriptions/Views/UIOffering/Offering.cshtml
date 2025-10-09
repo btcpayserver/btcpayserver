@@ -302,7 +302,7 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4 text-translate="true">Mails</h4>
                 <div class="d-flex justify-content-start sticky-footer">
-                    <button class="btn btn-success px-4" type="submit" text-translate="true">Save</button>
+                    <button id="page-primary" class="btn btn-success px-4" type="submit" text-translate="true">Save</button>
                 </div>
             </div>
 
@@ -382,7 +382,7 @@
                     <h5 class="mb-3" text-translate="true">Email Templates</h5>
                     @for (int i = 0; i < Model.EmailTemplates.Count; i++)
                     {
-                        <div class="mb-4 form-group">
+                        <div id="template-@(Model.EmailTemplates[i].Id)" class="mb-4 form-group">
                             <input type="hidden" asp-for="EmailTemplates[i].Id" />
                             <h6><label asp-for="EmailTemplates[i].Body" class="form-label">@Model.EmailTemplates[i].Name</label></h6>
                             <textarea asp-for="EmailTemplates[i].Body" class="form-control richtext2 email-body" rows="4"></textarea>

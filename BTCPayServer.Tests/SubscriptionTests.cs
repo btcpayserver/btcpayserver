@@ -9,10 +9,12 @@ using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Events;
+using BTCPayServer.Plugins;
 using BTCPayServer.Tests.PMO;
 using Microsoft.Playwright;
 using NBitcoin;
 using NBXplorer;
+using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -21,6 +23,110 @@ namespace BTCPayServer.Tests;
 [Collection(nameof(NonParallelizableCollectionDefinition))]
 public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testOutputHelper)
 {
+    [Fact]
+    [Trait("UnitTest", "UnitTest")]
+    public void TestMailTemplate()
+    {
+        var template = new MailTemplate("Hello mister {Name.Firstname} {Name.Lastname} !");
+
+        // Happy path
+        JObject model = new()
+        {
+            ["Name"] = new JObject
+            {
+                ["Firstname"] = "John",
+                ["Lastname"] = "Doe"
+            }
+        };
+        var result = template.Render(model);
+
+        // Null values are not rendered
+        Assert.Equal("Hello mister John Doe !", result);
+        model = new()
+        {
+            ["Name"] = new JObject
+            {
+                ["Firstname"] = "John",
+                ["Lastname"] = null
+            }
+        };
+        result = template.Render(model);
+        Assert.Equal("Hello mister John  !", result);
+
+        // No crash on missing fields
+        model = new()
+        {
+            ["Name"] = new JObject
+            {
+                ["Firstname"] = "John",
+            }
+        };
+        result = template.Render(model);
+        Assert.Equal("Hello mister John <NotFound(Name.Lastname)> !", result);
+
+        // Is Case insensitive
+        model = new()
+        {
+            ["Name"] = new JObject
+            {
+                ["firstname"] = "John",
+            }
+        };
+        result = template.Render(model);
+        Assert.Equal("Hello mister John <NotFound(Name.Lastname)> !", result);
+
+        model = new()
+        {
+            ["Name"] = new JObject
+            {
+                ["Firstname"] = "John",
+                ["Lastname"] = "Doe",
+                ["NameInner"] = new JObject
+                {
+                    ["Ogg"] = 2,
+                    ["Arr"] = new JArray {
+                        new JObject() { ["ItemName"] = "hello" },
+                        2,
+                        new JObject() { ["ItemName"] = "world" } }
+                }
+            }
+        };
+        var paths = template.GetPaths(model);
+        Assert.Equal("{Name.Firstname}", paths[0]);
+        Assert.Equal("{Name.Lastname}", paths[1]);
+        Assert.Equal("{Name.NameInner.Ogg}", paths[2]);
+        Assert.Equal("{Name.NameInner.Arr[0].ItemName}", paths[3]);
+        Assert.Equal("{Name.NameInner.Arr[1]}", paths[4]);
+        Assert.Equal("{Name.NameInner.Arr[2].ItemName}", paths[5]);
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright")]
+    public async Task CanChangeOfferingEmailsSettings()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.RegisterNewUser();
+        await s.CreateNewStore();
+
+        var offering = await CreateNewSubscription(s);
+        await offering.GoToMails();
+
+        var settings = new OfferingData.MailSettings()
+        {
+            EnableFailedPaymentAlerts = false,
+            PaymentRemindersDays = 7,
+            EnableRenewalNotifications = true,
+            FailedTemplate = "f",
+            ReminderTemplate = "r",
+            WelcomeTemplate = "w",
+            RenewalTemplate = "ren"
+        };
+        await offering.SetEmailsSettings(settings);
+        var actual = await offering.ReadEmailsSettings();
+        offering.AssertEqual(settings, actual);
+    }
+
     [Fact]
     [Trait("Playwright", "Playwright")]
     public async Task CanEditOfferingAndPlans()
@@ -442,6 +548,8 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             => s.Page.GetByRole(AriaRole.Link, new() { Name = "Subscribers" }).ClickAsync();
         public void GoToPlans()
             => s.Page.GetByRole(AriaRole.Link, new() { Name = "Plans" }).ClickAsync();
+        public Task GoToMails()
+            => s.Page.GetByRole(AriaRole.Link, new() { Name = "Mails" }).ClickAsync();
 
         public enum ActiveState
         {
@@ -550,6 +658,52 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             var newCredit = await s.Page.Locator($"{SubscriberRowSelector(subscriberEmail)} .subscriber-credit-col").InnerTextAsync();
             if (expectedNewTotal is not null)
                 Assert.Contains(expectedNewTotal.NormalizeWhitespaces(), newCredit.NormalizeWhitespaces());
+        }
+
+        public async Task SetEmailsSettings(OfferingData.MailSettings settings)
+        {
+            await s.Page.SetCheckedAsync("input[name='EnablePaymentReminders']", settings.PaymentRemindersDays is not null);
+            if (settings.PaymentRemindersDays is not null)
+            {
+                await s.Page.FillAsync("input[name='MailSettings.PaymentRemindersDays']", settings.PaymentRemindersDays.Value.ToString());
+            }
+            await s.Page.SetCheckedAsync("input[name='MailSettings.EnableFailedPaymentAlerts']", settings.EnableFailedPaymentAlerts);
+            await s.Page.SetCheckedAsync("input[name='MailSettings.EnableRenewalNotifications']", settings.EnableRenewalNotifications);
+
+            string[] ids = ["welcome", "reminder", "failed", "renewal"];
+            string[] bodies = [settings.WelcomeTemplate, settings.ReminderTemplate, settings.FailedTemplate, settings.RenewalTemplate];
+            for (var i = 0; i < ids.Length; i++)
+            {
+                await s.Page.FillAsync($"#template-{ids[i]} .note-editable", bodies[i]);
+            }
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage();
+        }
+
+        public async Task<OfferingData.MailSettings> ReadEmailsSettings()
+        {
+            var allow = await s.Page.IsCheckedAsync("input[name='EnablePaymentReminders']");
+            var settings = new OfferingData.MailSettings();
+            if (allow)
+                settings.PaymentRemindersDays = int.Parse(await s.Page.InputValueAsync("input[name='MailSettings.PaymentRemindersDays']"));
+            settings.EnableFailedPaymentAlerts = await s.Page.IsCheckedAsync("input[name='MailSettings.EnableFailedPaymentAlerts']");
+            settings.EnableRenewalNotifications = await s.Page.IsCheckedAsync("input[name='MailSettings.EnableRenewalNotifications']");
+            settings.WelcomeTemplate = await s.Page.InnerTextAsync($"#template-welcome .note-editable");
+            settings.ReminderTemplate = await s.Page.InnerTextAsync($"#template-reminder .note-editable");
+            settings.FailedTemplate = await s.Page.InnerTextAsync($"#template-failed .note-editable");
+            settings.RenewalTemplate = await s.Page.InnerTextAsync($"#template-renewal .note-editable");
+            return settings;
+        }
+
+        public void AssertEqual(OfferingData.MailSettings expected, OfferingData.MailSettings actual)
+        {
+            Assert.Equal(expected.PaymentRemindersDays, actual.PaymentRemindersDays);
+            Assert.Equal(expected.EnableFailedPaymentAlerts, actual.EnableFailedPaymentAlerts);
+            Assert.Equal(expected.EnableRenewalNotifications, actual.EnableRenewalNotifications);
+            Assert.Equal(expected.WelcomeTemplate, actual.WelcomeTemplate);
+            Assert.Equal(expected.ReminderTemplate, actual.ReminderTemplate);
+            Assert.Equal(expected.FailedTemplate, actual.FailedTemplate);
+            Assert.Equal(expected.RenewalTemplate, actual.RenewalTemplate);
         }
     }
 

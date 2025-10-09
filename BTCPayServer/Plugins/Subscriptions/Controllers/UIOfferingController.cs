@@ -185,7 +185,7 @@ public partial class UIOfferingController(
     }
 
     [HttpPost("stores/{storeId}/offerings/{offeringId}/Mails")]
-    public async Task<IActionResult> SaveSettings(string storeId, string offeringId, SubscriptionsViewModel vm)
+    public async Task<IActionResult> SaveMailSettings(string storeId, string offeringId, SubscriptionsViewModel vm)
     {
         if (!ModelState.IsValid)
             return await Offering(storeId, offeringId, SubscriptionSection.Mails);

@@ -28,7 +28,17 @@
                        data-testid="offering-link"
                     >@StringLocalizer["Offering ({0})", Model.OfferingName]</a>
                 </li>
-                <li class="breadcrumb-item active" aria-current="page">@StringLocalizer["Edit plan ({0})", Model.Name]</li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    @if (Model.PlanId is null)
+                    {
+                        <span>@StringLocalizer["Add plan"]</span>
+                    }
+                    else
+                    {
+                        <span>@StringLocalizer["Edit plan ({0})", Model.Name]</span>
+                    }
+
+                </li>
             </ol>
             <h2>@ViewData["Title"]</h2>
         </nav>

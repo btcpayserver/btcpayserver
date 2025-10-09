@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
+using BTCPayServer.Services.Mails;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -39,4 +40,19 @@ public class SubscriptionsViewModel
     public int TotalSubscribers { get; set; }
     public record SelectablePlan(string Name, string Id, bool HasTrial);
     public List<SelectablePlan> SelectablePlans { get; set; }
+
+    public bool EnablePaymentReminders { get; set; }
+    public bool EmailConfigured { get; set; }
+    public EmailSettings EmailSettings { get; set; }
+    public OfferingData.AdditionalSettings Settings { get; set; }
+
+    public class EmailTemplate
+    {
+        public string Name { get; set; }
+        public string Body { get; set; }
+        public string Id { get; set; }
+        public string Variables { get; set; }
+    }
+
+    public List<EmailTemplate> EmailTemplates { get; set; }
 }

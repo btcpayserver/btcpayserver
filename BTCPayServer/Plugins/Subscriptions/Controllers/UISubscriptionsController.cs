@@ -15,6 +15,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Mails;
 using BTCPayServer.Views.UIStoreMembership;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
@@ -41,6 +42,7 @@ public partial class UISubscriptionsController(
     AppService appService,
     BTCPayServerEnvironment env,
     DisplayFormatter displayFormatter,
+    EmailSenderFactory emailSenderFactory,
     IHtmlHelper htmlHelper
 ) : UISubscriptionsControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
 {
@@ -138,7 +140,7 @@ public partial class UISubscriptionsController(
     }
 
     private RedirectToActionResult GoToOffering(string storeId, string offeringId, SubscriptionSection section = SubscriptionSection.Plans)
-    => RedirectToAction(nameof(Offering), new { storeId, offeringId, section = section });
+        => RedirectToAction(nameof(Offering), new { storeId, offeringId, section = section });
 
     [HttpPost("stores/{storeId}/offerings")]
     public async Task<IActionResult> CreateOffering(string storeId, CreateOfferingViewModel vm, string? command = null)
@@ -182,8 +184,41 @@ public partial class UISubscriptionsController(
         return GoToOffering(storeId, o.Id, SubscriptionSection.Plans);
     }
 
+    [HttpPost("stores/{storeId}/offerings/{offeringId}/Settings")]
+    public async Task<IActionResult> SaveSettings(string storeId, string offeringId, SubscriptionsViewModel vm)
+    {
+        if (!ModelState.IsValid)
+            return await Offering(storeId, offeringId, SubscriptionSection.Settings);
+        await using var ctx = DbContextFactory.CreateContext();
+        var offering = await ctx.Offerings.GetOfferingData(offeringId, storeId);
+        if (offering is null)
+            return NotFound();
+        var settings = offering.GetBTCPaySettings();
+        settings.EnableFailedPaymentAlerts = vm.Settings.EnableFailedPaymentAlerts;
+        settings.PaymentRemindersDays = vm.EnablePaymentReminders ? vm.Settings.PaymentRemindersDays : null;
+        settings.EnableRenewalNotifications = vm.Settings.EnableRenewalNotifications;
+        foreach (var template in vm.EmailTemplates)
+        {
+            if (template.Id == "welcome")
+                settings.WelcomeTemplate = template.Body;
+            else if (template.Id == "reminder")
+                settings.ReminderTemplate = template.Body;
+            else if (template.Id == "failed")
+                settings.FailedTemplate = template.Body;
+            else if (template.Id == "renewal")
+                settings.RenewalTemplate = template.Body;
+        }
+
+        offering.SetBTCPaySettings(settings);
+
+        await ctx.SaveChangesAsync();
+        this.TempData.SetStatusSuccess(StringLocalizer["Settings saved"]);
+        return GoToOffering(storeId, offeringId, SubscriptionSection.Settings);
+    }
+
     [HttpGet("stores/{storeId}/offerings/{offeringId}/{section}")]
-    public async Task<IActionResult> Offering(string storeId, string offeringId, SubscriptionSection section = SubscriptionSection.Plans, string? checkoutPlanId = null)
+    public async Task<IActionResult> Offering(string storeId, string offeringId, SubscriptionSection section = SubscriptionSection.Plans,
+        string? checkoutPlanId = null)
     {
         await using var ctx = DbContextFactory.CreateContext();
         var offering = await ctx.Offerings.GetOfferingData(offeringId, storeId);
@@ -196,7 +231,7 @@ public partial class UISubscriptionsController(
         if (checkoutPlanId is not null)
         {
             var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutPlanId);
-            if (checkout is not null && checkout.Subscriber is { Customer: {} cust })
+            if (checkout is not null && checkout.Subscriber is { Customer: { } cust })
                 TempData.SetStatusSuccess(StringLocalizer["Subscriber '{0}' successfully created", cust.GetPrimaryIdentity() ?? ""]);
         }
 
@@ -236,6 +271,46 @@ public partial class UISubscriptionsController(
                 {
                     Data = v,
                 }).ToList();
+        }
+        else if (section == SubscriptionSection.Settings)
+        {
+            var settings = await emailSenderFactory.GetSettings(storeId);
+            if (settings is not null)
+            {
+                vm.EmailConfigured = true;
+                vm.EmailSettings = settings;
+            }
+
+            var s = offering.GetBTCPaySettings();
+            vm.EnablePaymentReminders = s.PaymentRemindersDays is not null;
+            s.PaymentRemindersDays ??= 3;
+            vm.Settings = s;
+            vm.EmailTemplates = new();
+            foreach (string template in new[] { "welcome", "reminder", "failed", "renewal" })
+            {
+                var body = template switch
+                {
+                    "welcome" => s.WelcomeTemplate,
+                    "reminder" => s.ReminderTemplate,
+                    "failed" => s.FailedTemplate,
+                    "renewal" => s.RenewalTemplate,
+                    _ => ""
+                };
+                vm.EmailTemplates.Add(new()
+                {
+                    Name = template switch
+                    {
+                        "welcome" => "Subscription Welcome Template",
+                        "reminder" => "Payment Reminder Template",
+                        "failed" => "Failed Payment Alert Template",
+                        "renewal" => "Renewal Notification Template",
+                        _ => "??"
+                    },
+                    Id = template,
+                    Body = body,
+                    Variables = "{amount}, {date}, {plan}, {user}"
+                });
+            }
         }
 
         return View(nameof(Offering), vm);

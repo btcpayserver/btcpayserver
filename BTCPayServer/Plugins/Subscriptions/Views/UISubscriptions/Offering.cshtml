@@ -20,6 +20,7 @@
             color: var(--btcpay-body-text-muted);
         }
     </style>
+    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
 
 }
 
@@ -62,6 +63,11 @@
            asp-route-storeId="@storeId"
            asp-route-offeringId="@offeringId"
            asp-route-section="@SubscriptionSection.Plans">Plans</a>
+        <a class="nav-link @(Model.Section == SubscriptionSection.Settings ? "active" : "")"
+           asp-action="Offering"
+           asp-route-storeId="@storeId"
+           asp-route-offeringId="@offeringId"
+           asp-route-section="@SubscriptionSection.Settings">Settings</a>
     </ul>
 
     @if (Model.Section == SubscriptionSection.Plans)
@@ -290,11 +296,125 @@
             </table>
         </div>
     }
+    else if (Model.Section == SubscriptionSection.Settings)
+    {
+        <form asp-antiforgery="true" method="post">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 text-translate="true">Settings</h4>
+                <div class="d-flex justify-content-start sticky-footer">
+                    <button class="btn btn-success px-4" type="submit" text-translate="true">Save</button>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                @if (!Model.EmailConfigured)
+                {
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <h5 class="mb-0" text-translate="true">Email Configuration</h5>
+                                </div>
+
+                                <p class="text-muted mb-3" text-translate="true">No email address has been configured for the Server. Configure an email address
+                                    to
+                                    begin sending emails.</p>
+                                <a
+                                    asp-action="StoreEmailSettings"
+                                    asp-controller="UIStores"
+                                    asp-route-storeId="@storeId"
+                                    class="btn btn-link p-0" text-translate="true">Configure email</a>
+
+                            </div>
+                        </div>
+                    </div>
+                }
+                <!-- Notifications & Alerts -->
+                <div class="col-lg-@(Model.EmailConfigured ? "12" : "6")">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="mb-3" text-translate="true">Notifications & Alerts</h5>
+
+                            <div class="d-flex align-items-center my-3">
+                                <input asp-for="EnablePaymentReminders" type="checkbox" class="btcpay-toggle me-3"
+                                       data-bs-toggle="collapse" data-bs-target="#EnablePaymentRemindersSection"
+                                       aria-expanded="@Model.EnablePaymentReminders" aria-controls="EnablePaymentRemindersSection">
+                                <div>
+                                    <label asp-for="EnablePaymentReminders" class="form-check-label" text-translate="true">Email Reminders</label>
+                                    <div class="form-text" text-translate="true">Send payment reminders to users</div>
+                                </div>
+                            </div>
+
+
+                            <div class="form-group mb-4 collapse @(Model.EnablePaymentReminders ? "show" : "")" id="EnablePaymentRemindersSection">
+                                <label asp-for="Settings.PaymentRemindersDays" class="form-label">Email Reminder Days Before Due</label>
+                                <div class="input-group">
+                                    <input inputmode="number" asp-for="Settings.PaymentRemindersDays" class="form-control" style="max-width:12ch;" min="0"/>
+                                    <span class="input-group-text" text-translate="true">days</span>
+                                </div>
+                                <span asp-validation-for="Settings.PaymentRemindersDays" class="text-danger"></span>
+                            </div>
+
+                            <div class="d-flex align-items-center my-3">
+                                <input asp-for="Settings.EnableFailedPaymentAlerts" type="checkbox" class="btcpay-toggle me-3">
+                                <div>
+                                    <label asp-for="Settings.EnableFailedPaymentAlerts" class="form-check-label" text-translate="true">Failed Payment
+                                        Alerts</label>
+                                    <div class="form-text" text-translate="true">Alert admin on payment failures</div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center my-3">
+                                <input asp-for="Settings.EnableRenewalNotifications" type="checkbox" class="btcpay-toggle me-3">
+                                <div>
+                                    <label asp-for="Settings.EnableRenewalNotifications" class="form-check-label" text-translate="true">Renewal
+                                        Notifications</label>
+                                    <div class="form-text" text-translate="true">Notify admin on successful renewals</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="mb-3" text-translate="true">Email Templates</h5>
+                    @for (int i = 0; i < Model.EmailTemplates.Count; i++)
+                    {
+                        <div class="mb-4 form-group">
+                            <input type="hidden" asp-for="EmailTemplates[i].Id" />
+                            <h6><label asp-for="EmailTemplates[i].Body" class="form-label">@Model.EmailTemplates[i].Name</label></h6>
+                            <textarea asp-for="EmailTemplates[i].Body" class="form-control richtext2 email-body" rows="4"></textarea>
+                            <span asp-validation-for="EmailTemplates[i].Name" class="text-danger"></span>
+                            <div class="vars mt-2">Variables: @Model.EmailTemplates[i].Variables</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </form>
+    }
     <partial name="SuspendSubscriberModal" />
     <partial name="NewSubscriberModal" model="Model.SelectablePlans" />
-    <partial name="ChangeCreditModal"/>
+    <partial name="ChangeCreditModal" />
 </div>
 
 @section PageFootContent {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            $('.richtext2').summernote({
+                minHeight: 200,
+                tableClassName: 'table table-sm',
+                insertTableMaxSize: {
+                    col: 5,
+                    row: 10
+                },
+                codeviewFilter: true,
+                codeviewFilterRegex: new RegExp($.summernote.options.codeviewFilterRegex.source + '|<.*?( on\\w+?=.*?)>', 'gi'),
+                codeviewIframeWhitelistSrc: ['twitter.com', 'syndication.twitter.com']
+            });
+        });
+    </script>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
 }

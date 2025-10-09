@@ -4,5 +4,5 @@ public enum SubscriptionSection
 {
     Subscribers,
     Plans,
-    Emails
+    Settings
 }

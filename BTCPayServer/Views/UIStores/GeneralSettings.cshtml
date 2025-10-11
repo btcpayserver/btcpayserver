@@ -33,6 +33,16 @@
                 <span asp-validation-for="StoreName" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="StoreTimeZone" class="form-label"></label>
+                <select asp-for="StoreTimeZone" asp-items="Model.TimeZones" class="form-select">
+                    <option value="@Model.StoreTimeZone">@Model.StoreTimeZone</option>
+                </select>
+                <span asp-validation-for="StoreTimeZone" class="text-danger"></span>
+                <div id="PreferredExchangeHelpBlock" class="form-text">
+                    <span text-translate="true">Current Timezone is</span> <a href="@Model.StoreTimeZone" target="_blank" rel="noreferrer noopener">@Model.StoreTimeZone</a>.
+                </div>
+            </div>
+            <div class="form-group">
                 <label asp-for="StoreWebsite" class="form-label"></label>
                 <input asp-for="StoreWebsite" class="form-control" />
                 <span asp-validation-for="StoreWebsite" class="text-danger"></span>

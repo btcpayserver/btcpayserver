@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using BTCPayServer.Client.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
 {
@@ -28,6 +25,8 @@ namespace BTCPayServer.Data
         public string DerivationStrategies { get; set; }
 
         public string StoreName { get; set; }
+
+        public string StoreTimeZone { get; set; } = TimeZoneInfo.Local.Id;
 
         public SpeedPolicy SpeedPolicy { get; set; } = SpeedPolicy.MediumSpeed;
 

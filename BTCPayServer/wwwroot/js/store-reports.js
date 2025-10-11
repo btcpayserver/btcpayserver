@@ -125,7 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
     srv.request.timePeriod.to = moment(to).unix();
     srv.request.viewName = srv.request.viewName || "Invoices";
     srv.request.timePeriod.from = moment(from).unix();
-    srv.request.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    srv.request.timeZone = getDateFormatter().resolvedOptions().timeZone;
     srv.result = {fields: [], values: []};
     searchBtnApp = new Vue({
         el: '#searchGroup',
@@ -155,7 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchStoreReports();
 });
 
-const dtFormatter = new Intl.DateTimeFormat('default', {dateStyle: 'short', timeStyle: 'short'});
+const dtFormatter = getDateFormatter();
 
 function displayDate(val) {
     if (!val) {

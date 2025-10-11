@@ -9,6 +9,7 @@ using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Components.LabelSelector;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Filters;
@@ -96,14 +97,13 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> GetPaymentRequests(string storeId, ListPaymentRequestsViewModel model = null)
         {
-            model = this.ParseListQuery(model ?? new ListPaymentRequestsViewModel());
+            model ??= new ListPaymentRequestsViewModel();
 
-            var timezoneOffset = model.TimezoneOffset ?? 0;
-            var fs = new SearchString(model.SearchTerm, timezoneOffset);
-            var textSearch = model.SearchText;
-            var startDate = fs.GetFilterDate("startdate", timezoneOffset);
-            var endDate   = fs.GetFilterDate("enddate",   timezoneOffset);
+            var fs = model.GetSearch();
+            if (model.FilterCommand is not null)
+                return model.Redirect(Request);
 
+            var period = fs.GetDateRange(TimeZoneInfo.Utc);
             var result = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery
             {
                 UserId = GetUserId(),
@@ -113,13 +113,10 @@ namespace BTCPayServer.Controllers
                 Status = fs.GetFilterArray("status")?.Select(s => Enum.Parse<PaymentRequestStatus>(s, true)).ToArray(),
                 IncludeArchived = fs.GetFilterBool("includearchived") ?? false,
                 SearchText = model.SearchText,
-                StartDate = startDate,
-                EndDate = endDate,
-                LabelFilter = model.LabelFilter
+                StartDate = period.StartDate,
+                EndDate = period.EndDate,
+                LabelFilter = fs.GetFilterArray("label")
             });
-
-            model.Search = fs;
-            model.SearchText = textSearch;
 
             var items = result.Select(data => new ViewPaymentRequestViewModel(data)
             {
@@ -149,7 +146,7 @@ namespace BTCPayServer.Controllers
 
             var allLabels = await _storeLabelRepository.GetStoreLabels(storeId, WalletObjectData.Types.PaymentRequest);
             model.Labels = allLabels
-                .Select(l => new TransactionTagModel
+                .Select(l => new LabelSelectorItemViewModel()
                 {
                     Text = l.Label,
                     Color = l.Color,
@@ -159,6 +156,7 @@ namespace BTCPayServer.Controllers
                 .ToList();
 
             model.Items = items;
+            ViewData.SetPageTimeZone(fs);
             return View(model);
         }
 

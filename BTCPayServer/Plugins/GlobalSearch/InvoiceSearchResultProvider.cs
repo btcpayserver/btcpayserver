@@ -1,9 +1,11 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.GlobalSearch.Views;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
@@ -20,8 +22,9 @@ public class InvoiceSearchResultProvider(InvoiceRepository invoice,
         if (context is { UserQuery: string q, Store: not null })
         {
             var search = new SearchString(q);
+            search.Filters.Clear();
             var invQuery = new InvoiceQuery();
-            invQuery.FillFromSearchText(search, 0);
+            invQuery.FillFromSearchText(search);
             invQuery.StoreId = [context.Store.Id];
             invQuery.UserId = context.UserId;
             invQuery.Take = (context.MaxResult ?? 10);

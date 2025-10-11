@@ -169,10 +169,11 @@ namespace BTCPayServer.Abstractions.Extensions
 
         public static HtmlString ToBrowserDate(this DateTimeOffset date, string netFormat, string jsDateFormat = "short", string jsTimeFormat = "short")
         {
+            var relative = date.ToTimeAgo();
             var dateTime = date.ToString("o", CultureInfo.InvariantCulture);
             var displayDate = date.ToString(netFormat, CultureInfo.InvariantCulture);
             var tooltip = dateTime.Replace("T", " ");
-            return new HtmlString($"<time datetime=\"{dateTime}\" data-date-style=\"{jsDateFormat}\" data-time-style=\"{jsTimeFormat}\" data-initial=\"localized\" data-bs-toggle=\"tooltip\" data-bs-title=\"{tooltip}\">{displayDate}</time>");
+            return new HtmlString($"<time datetime=\"{dateTime}\" data-relative=\"{relative}\" data-date-style=\"{jsDateFormat}\" data-time-style=\"{jsTimeFormat}\" data-initial=\"localized\" data-bs-toggle=\"tooltip\" data-bs-title=\"{tooltip}\">{displayDate}</time>");
         }
 
         public static HtmlString ToBrowserDate(this DateTimeOffset date, DateDisplayFormat format = DateDisplayFormat.Localized)

@@ -134,7 +134,6 @@
                 return;
             }
 
-            console.log({ refundOption, isInvalid, amount, currency })
             const reduceByAmount = (amount * (percentage / 100));
             const refundAmount = (amount - reduceByAmount).toFixed(divisibility);
             $result.innerText = `= ${refundAmount} ${currency} refund`;
@@ -611,7 +610,7 @@
                     <table class="table table-hover mt-3 mb-4">
                         <thead>
                             <tr>
-                                <th>Date</th>
+                                <vc:date-column></vc:date-column>
                                 <th>Message</th>
                             </tr>
                         </thead>
@@ -620,7 +619,7 @@
                             {
                                 var cssClass = string.IsNullOrEmpty(evt.GetCssClass()) ? null : $"text-{evt.GetCssClass()}";
                                 <tr>
-                                    <td class="@cssClass">@evt.Timestamp.ToBrowserDate("o", "short", "medium")</td>
+                                    <td class="@cssClass">@evt.Timestamp.ToBrowserDate()</td>
                                     <td class="@cssClass">@evt.Message</td>
                                 </tr>
                             }

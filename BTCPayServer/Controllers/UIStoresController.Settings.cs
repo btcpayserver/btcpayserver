@@ -30,6 +30,7 @@ public partial class UIStoresController
         {
             Id = store.Id,
             StoreName = store.StoreName,
+            StoreTimeZone = store.StoreTimeZone,
             StoreWebsite = store.StoreWebsite,
             LogoUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.LogoUrl),
             CssUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.CssUrl),
@@ -70,6 +71,12 @@ public partial class UIStoresController
         {
             needUpdate = true;
             CurrentStore.StoreWebsite = model.StoreWebsite;
+        }
+
+        if (CurrentStore.StoreTimeZone != model.StoreTimeZone)
+        {
+            needUpdate = true;
+            CurrentStore.StoreTimeZone = model.StoreTimeZone;
         }
 
         if (CurrentStore.SpeedPolicy != model.SpeedPolicy)

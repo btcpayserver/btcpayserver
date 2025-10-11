@@ -195,6 +195,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 Id = data.Id,
                 Name = data.StoreName,
+                TimeZone = data.StoreTimeZone,
                 Website = data.StoreWebsite,
                 Archived = data.Archived,
                 BrandColor = storeBlob.BrandColor,
@@ -252,6 +253,7 @@ namespace BTCPayServer.Controllers.Greenfield
             // Dereference on .Value is fine. Those values should be set by the template
             var blob = model.GetStoreBlob();
             model.StoreName = restModel.Name;
+            model.StoreTimeZone = restModel.TimeZone;
             model.StoreWebsite = restModel.Website;
             model.Archived = restModel.Archived.Value;
             model.SpeedPolicy = restModel.SpeedPolicy.Value;

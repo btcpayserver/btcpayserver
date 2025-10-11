@@ -988,9 +988,6 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("StoreName")
                         .HasColumnType("text");
 
-                    b.Property<string>("StoreTimeZone")
-                        .HasColumnType("text");
-
                     b.Property<string>("StoreWebsite")
                         .HasColumnType("text");
 

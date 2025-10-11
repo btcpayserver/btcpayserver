@@ -26,8 +26,6 @@ namespace BTCPayServer.Data
 
         public string StoreName { get; set; }
 
-        public string StoreTimeZone { get; set; } = TimeZoneInfo.Local.Id;
-
         public SpeedPolicy SpeedPolicy { get; set; } = SpeedPolicy.MediumSpeed;
 
         public string StoreWebsite { get; set; }

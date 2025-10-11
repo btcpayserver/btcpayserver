@@ -30,7 +30,6 @@ public partial class UIStoresController
         {
             Id = store.Id,
             StoreName = store.StoreName,
-            StoreTimeZone = store.StoreTimeZone,
             StoreWebsite = store.StoreWebsite,
             LogoUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.LogoUrl),
             CssUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.CssUrl),
@@ -41,6 +40,7 @@ public partial class UIStoresController
             PaymentTolerance = storeBlob.PaymentTolerance,
             InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes,
             DefaultCurrency = storeBlob.DefaultCurrency,
+            StoreTimeZone = storeBlob.DefaultTimeZone,
             AdditionalTrackedRates = string.Join(',', storeBlob.AdditionalTrackedRates?.ToArray() ?? []),
             BOLT11Expiration = (long)storeBlob.RefundBOLT11Expiration.TotalDays,
             Archived = store.Archived,
@@ -73,12 +73,6 @@ public partial class UIStoresController
             CurrentStore.StoreWebsite = model.StoreWebsite;
         }
 
-        if (CurrentStore.StoreTimeZone != model.StoreTimeZone)
-        {
-            needUpdate = true;
-            CurrentStore.StoreTimeZone = model.StoreTimeZone;
-        }
-
         if (CurrentStore.SpeedPolicy != model.SpeedPolicy)
         {
             CurrentStore.SpeedPolicy = model.SpeedPolicy;
@@ -90,6 +84,7 @@ public partial class UIStoresController
         blob.NetworkFeeMode = model.NetworkFeeMode;
         blob.PaymentTolerance = model.PaymentTolerance;
         blob.DefaultCurrency = model.DefaultCurrency.ToUpperInvariant().Trim();
+        blob.DefaultTimeZone = model.StoreTimeZone;
         blob.AdditionalTrackedRates = model.AdditionalTrackedRates?.Split(',', StringSplitOptions.RemoveEmptyEntries);
         blob.ShowRecommendedFee = model.ShowRecommendedFee;
         blob.RecommendedFeeBlockTarget = model.RecommendedFeeBlockTarget;

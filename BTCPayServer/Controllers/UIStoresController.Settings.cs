@@ -96,6 +96,10 @@ public partial class UIStoresController
             ModelState.AddModelError(nameof(model.BrandColor), StringLocalizer["The brand color needs to be a valid hex color code"]);
             return View(model);
         }
+        if (!string.IsNullOrEmpty(model.StoreTimeZone) && !TimeZoneInfo.TryFindSystemTimeZoneById(model.StoreTimeZone, out var timezoneInfo))
+        {
+            ModelState.AddModelError(nameof(model.StoreTimeZone), $"Invalid Timezone: {model.StoreTimeZone}");
+        }
         blob.BrandColor = model.BrandColor;
         blob.ApplyBrandColorToBackend = model.ApplyBrandColorToBackend && !string.IsNullOrEmpty(model.BrandColor);
 

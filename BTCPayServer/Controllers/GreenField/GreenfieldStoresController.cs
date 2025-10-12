@@ -339,6 +339,12 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.LogoUrl), "Logo is not a valid url");
             }
+
+            if (!string.IsNullOrEmpty(request.TimeZone) && !TimeZoneInfo.TryFindSystemTimeZoneById(request.TimeZone, out var timezoneInfo))
+            {
+                ModelState.AddModelError(nameof(request.TimeZone), $"Invalid Timezone: {request.TimeZone}");
+            }
+
             if (!string.IsNullOrEmpty(request.CssUrl) && !Uri.TryCreate(request.CssUrl, UriKind.Absolute, out _))
             {
                 ModelState.AddModelError(nameof(request.CssUrl), "CSS is not a valid url");

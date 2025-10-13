@@ -1,0 +1,44 @@
+
+**Instrukcje**:
+- Stwórz repozytorium `todo-list`.
+- Dodaj `index.html` i `README.md`.
+- Otwórz `index.html` w przeglądarce, aby przetestować.
+
+---
+
+### 3. **Kalkulator Tipów (Java)**
+
+**Opis**: Prosty program w Javie do obliczania napiwków w restauracji.
+
+**Kod**: `TipCalculator.java`
+```java
+import java.util.Scanner;
+
+public class TipCalculator {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Restaurant Tip Calculator");
+        
+        try {
+            System.out.print("Enter bill amount ($): ");
+            double bill = scanner.nextDouble();
+            System.out.print("Enter tip percentage (e.g., 15 for 15%): ");
+            double tipPercentage = scanner.nextDouble();
+            
+            if (bill < 0 || tipPercentage < 0) {
+                throw new IllegalArgumentException("Bill and tip percentage must be non-negative.");
+            }
+            
+            double tip = bill * (tipPercentage / 100);
+            double total = bill + tip;
+            
+            System.out.printf("\nBill: $%.2f\n", bill);
+            System.out.printf("Tip: $%.2f\n", tip);
+            System.out.printf("Total: $%.2f\n", total);
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        } finally {
+            scanner.close();
+        }
+    }
+}

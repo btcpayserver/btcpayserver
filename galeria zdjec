@@ -1,0 +1,46 @@
+
+**Instrukcje**:
+- Stwórz repozytorium `bmi-calculator`.
+- Dodaj `bmi_calculator.py` i `README.md`.
+- Opcjonalnie dodaj `.gitignore` z `__pycache__/`.
+
+---
+
+### 2. **To-Do List (JavaScript)**
+
+**Opis**: Prosta aplikacja To-Do w JavaScript z interfejsem HTML/CSS.
+
+**Kod**: `index.html`
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>To-Do List</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; }
+        ul { list-style: none; padding: 0; }
+        li { padding: 10px; border-bottom: 1px solid #ddd; }
+        .completed { text-decoration: line-through; color: #888; }
+    </style>
+</head>
+<body>
+    <h1>To-Do List</h1>
+    <input type="text" id="taskInput" placeholder="Add a task...">
+    <button onclick="addTask()">Add</button>
+    <ul id="taskList"></ul>
+    <script>
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const task = input.value.trim();
+            if (task) {
+                const li = document.createElement('li');
+                li.textContent = task;
+                li.onclick = () => li.classList.toggle('completed');
+                document.getElementById('taskList').appendChild(li);
+                input.value = '';
+            }
+        }
+    </script>
+</body>
+</html>

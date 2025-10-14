@@ -9,12 +9,14 @@ namespace BTCPayServer.Services.Mails
 {
     public abstract class EmailSender : IEmailSender
     {
+        public EventAggregator EventAggregator { get; }
         public Logs Logs { get; }
 
         readonly IBackgroundJobClient _JobClient;
 
-        public EmailSender(IBackgroundJobClient jobClient, Logs logs)
+        public EmailSender(IBackgroundJobClient jobClient, EventAggregator eventAggregator, Logs logs)
         {
+            EventAggregator = eventAggregator;
             Logs = logs;
             _JobClient = jobClient ?? throw new ArgumentNullException(nameof(jobClient));
         }
@@ -36,14 +38,13 @@ namespace BTCPayServer.Services.Mails
                 }
 
                 using var smtp = await emailSettings.CreateSmtpClient();
-                var prefixedSubject = await GetPrefixedSubject(subject);
-                var mail = emailSettings.CreateMailMessage(email, cc, bcc, prefixedSubject, message, true);
-                await smtp.SendAsync(mail, cancellationToken);
+                var mail = emailSettings.CreateMailMessage(email, cc, bcc, subject, message, true);
+                var response = await smtp.SendAsync(mail, cancellationToken);
                 await smtp.DisconnectAsync(true, cancellationToken);
+                EventAggregator.Publish(new Events.EmailSentEvent(response, mail));
             }, TimeSpan.Zero);
         }
 
         public abstract Task<EmailSettings?> GetEmailSettings();
-        public abstract Task<string> GetPrefixedSubject(string subject);
     }
 }

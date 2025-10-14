@@ -15,7 +15,6 @@ using BTCPayServer.Data;
 using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.Forms;
 using BTCPayServer.HostedServices;
-using BTCPayServer.HostedServices.Webhooks;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.Charge;
 using BTCPayServer.Lightning.CLightning;
@@ -384,7 +383,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, Services.NBXplorerConnectionFactory>(o => o.GetRequiredService<Services.NBXplorerConnectionFactory>());
             services.AddSingleton<HostedServices.CheckConfigurationHostedService>();
             services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>(o => o.GetRequiredService<CheckConfigurationHostedService>());
-            services.AddSingleton<IHostedService, StoreEmailRuleProcessorSender>();
             services.AddSingleton<IHostedService, PeriodicTaskLauncherHostedService>();
             services.AddScheduledTask<GithubVersionFetcher>(TimeSpan.FromDays(1));
             services.AddScheduledTask<PluginUpdateFetcher>(TimeSpan.FromDays(1));
@@ -395,7 +393,6 @@ namespace BTCPayServer.Hosting
             services.AddReportProvider<PayoutsReportProvider>();
             services.AddReportProvider<InvoicesReportProvider>();
             services.AddReportProvider<RefundsReportProvider>();
-            services.AddWebhooks();
 
             services.AddSingleton<Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension>>(o =>
             o.GetRequiredService<IEnumerable<IPaymentMethodBitpayAPIExtension>>().ToDictionary(o => o.PaymentMethodId, o => o));
@@ -514,16 +511,6 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             {
                 services.AddSingleton<Cheater>();
                 services.AddSingleton<IHostedService, Cheater>(o => o.GetRequiredService<Cheater>());
-            }
-
-            var userAgent = new System.Net.Http.Headers.ProductInfoHeaderValue("BTCPayServer", BTCPayServerEnvironment.GetInformationalVersion());
-            foreach (var clientName in WebhookSender.AllClients.Concat(new[] { BitpayIPNSender.NamedClient }))
-            {
-                services.AddHttpClient(clientName)
-                    .ConfigureHttpClient(client =>
-                    {
-                        client.DefaultRequestHeaders.UserAgent.Add(userAgent);
-                    });
             }
 
             return services;

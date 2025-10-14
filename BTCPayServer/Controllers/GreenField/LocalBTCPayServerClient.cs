@@ -12,6 +12,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers.GreenField;
 using BTCPayServer.Data;
+using BTCPayServer.Plugins.Webhooks.Controllers;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services.Mails;

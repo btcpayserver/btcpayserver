@@ -6,7 +6,6 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
-using BTCPayServer.HostedServices.Webhooks;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services;
@@ -50,7 +49,6 @@ public partial class UIStoresController : Controller
         IAuthorizationService authorizationService,
         AppService appService,
         IFileService fileService,
-        WebhookSender webhookNotificationManager,
         IDataProtectionProvider dataProtector,
         IOptions<LightningNetworkOptions> lightningNetworkOptions,
         IOptions<ExternalServicesOptions> externalServiceOptions,
@@ -94,7 +92,6 @@ public partial class UIStoresController : Controller
         _html = html;
         _defaultRules = defaultRules;
         _dataProtector = dataProtector.CreateProtector("ConfigProtector");
-        _webhookNotificationManager = webhookNotificationManager;
         _lightningNetworkOptions = lightningNetworkOptions.Value;
         _lnHistogramService = lnHistogramService;
         _lightningClientFactory = lightningClientFactory;
@@ -127,7 +124,6 @@ public partial class UIStoresController : Controller
     private readonly UriResolver _uriResolver;
     private readonly EventAggregator _eventAggregator;
     private readonly IHtmlHelper _html;
-    private readonly WebhookSender _webhookNotificationManager;
     private readonly LightningNetworkOptions _lightningNetworkOptions;
     private readonly IDataProtector _dataProtector;
     private readonly LightningHistogramService _lnHistogramService;
@@ -138,7 +134,7 @@ public partial class UIStoresController : Controller
 
     [TempData]
     private bool StoreNotConfigured { get; set; }
-        
+
     [AllowAnonymous]
     [HttpGet("{storeId}/index")]
     public async Task<IActionResult> Index(string storeId)
@@ -146,7 +142,7 @@ public partial class UIStoresController : Controller
         var userId = _userManager.GetUserId(User);
         if (string.IsNullOrEmpty(userId))
             return Forbid();
-            
+
         var store = await _storeRepo.FindStore(storeId);
         if (store is null)
             return NotFound();
@@ -161,7 +157,7 @@ public partial class UIStoresController : Controller
         }
         return Forbid();
     }
-        
+
     public StoreData CurrentStore => HttpContext.GetStoreData();
 
     public PaymentMethodOptionViewModel.Format[] GetEnabledPaymentMethodChoices(StoreData storeData)

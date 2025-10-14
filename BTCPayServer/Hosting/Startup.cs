@@ -173,6 +173,8 @@ namespace BTCPayServer.Hosting
                 o.AreaViewLocationFormats.Add("/Plugins/{2}/Views/{1}/{0}.cshtml");
                 o.AreaViewLocationFormats.Add("/Plugins/{2}/Views/{0}.cshtml");
                 o.AreaViewLocationFormats.Add("/Plugins/{2}/Views/Shared/{0}.cshtml");
+
+
                 o.AreaViewLocationFormats.Add("/{0}.cshtml");
             })
             .AddNewtonsoftJson()

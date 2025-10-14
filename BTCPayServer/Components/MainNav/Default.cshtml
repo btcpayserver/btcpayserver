@@ -11,6 +11,7 @@
 @using BTCPayServer.Services
 @using BTCPayServer.Views.Apps
 @using BTCPayServer.Configuration
+@using BTCPayServer.Plugins.Emails
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContext;
 @inject BTCPayServerOptions BtcPayServerOptions
 @inject BTCPayServerEnvironment Env
@@ -61,13 +62,13 @@
                                     <a id="StoreNav-@(nameof(StoreNavPages.Roles))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Roles)" asp-controller="UIStores" asp-action="ListRoles" asp-route-storeId="@Model.Store.Id" text-translate="true">Roles</a>
                                 </li>
                                 <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
-                                    <a id="StoreNav-@(nameof(StoreNavPages.Webhooks))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Webhooks)" asp-controller="UIStores" asp-action="Webhooks" asp-route-storeId="@Model.Store.Id" text-translate="true">Webhooks</a>
+                                    <a id="StoreNav-@(nameof(StoreNavPages.Webhooks))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Webhooks)" asp-area="Webhooks" asp-controller="UIStoreWebhooks" asp-action="Webhooks" asp-route-storeId="@Model.Store.Id" text-translate="true">Webhooks</a>
                                 </li>
                                 <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a id="StoreNav-@(nameof(StoreNavPages.PayoutProcessors))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.PayoutProcessors)" asp-controller="UIPayoutProcessors" asp-action="ConfigureStorePayoutProcessors" asp-route-storeId="@Model.Store.Id" text-translate="true">Payout Processors</a>
                                 </li>
                                 <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
-                                    <a id="StoreNav-@(nameof(StoreNavPages.Emails))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Emails)" asp-controller="UIStores" asp-action="StoreEmailSettings" asp-route-storeId="@Model.Store.Id" text-translate="true">Emails</a>
+                                    <a id="StoreNav-@(nameof(StoreNavPages.Emails))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Emails)" asp-area="@EmailsPlugin.Area" asp-controller="UIStoresEmail" asp-action="StoreEmailSettings" asp-route-storeId="@Model.Store.Id" text-translate="true">Emails</a>
                                 </li>
                                 <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a id="StoreNav-@(nameof(StoreNavPages.Forms))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Forms)" asp-controller="UIForms" asp-action="FormsList" asp-route-storeId="@Model.Store.Id" text-translate="true">Forms</a>

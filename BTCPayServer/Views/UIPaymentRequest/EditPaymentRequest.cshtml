@@ -3,9 +3,11 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Controllers
 @using BTCPayServer.Forms
+@using BTCPayServer.Plugins.Emails
 @using BTCPayServer.TagHelpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject FormDataService FormDataService
+@inject LinkGenerator LinkGenerator
 @model BTCPayServer.Models.PaymentRequestViewModels.UpdatePaymentRequestViewModel
 @{
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
@@ -45,7 +47,7 @@
             }
         </div>
     </div>
-    
+
     <partial name="_StatusMessage" />
 
     <div class="row">
@@ -105,8 +107,8 @@
                 <input type="email" asp-for="Email" placeholder="@StringLocalizer["Firstname Lastname <email@example.com>"]" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
                 <div id="PaymentRequestEmailHelpBlock" class="form-text">
-                    @ViewLocalizer["This will send notification mails to the recipient, as configured by the {0}.", 
-                        Html.ActionLink(StringLocalizer["email rules"], nameof(UIStoresController.StoreEmailRulesList), "UIStores", new { storeId = Model.StoreId })]
+                    @ViewLocalizer["This will send notification mails to the recipient, as configured by the <a href=\"{0}\">email rules</a>.",
+                         LinkGenerator.GetStoreEmailRulesLink(Model.StoreId, Context.Request.GetRequestBaseUrl())]
                     @if (Model.HasEmailRules is not true)
                     {
                         <div class="info-note mt-1 text-warning" role="alert">
@@ -121,7 +123,7 @@
                 <select asp-for="FormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
                 <span asp-validation-for="FormId" class="text-danger"></span>
             </div>
-            
+
             @if (Model.FormResponse is not null)
             {
                 <div class="bg-tile rounded py-2 px-3 mb-5">

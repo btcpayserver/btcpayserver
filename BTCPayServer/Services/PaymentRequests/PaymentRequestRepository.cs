@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
@@ -21,14 +22,14 @@ namespace BTCPayServer.Services.PaymentRequests
         public PaymentRequestData Data { get; set; }
         public string Type { get; set; }
     }
-    
+
     public class PaymentRequestRepository
     {
         private readonly ApplicationDbContextFactory _ContextFactory;
         private readonly InvoiceRepository _InvoiceRepository;
         private readonly EventAggregator _eventAggregator;
 
-        public PaymentRequestRepository(ApplicationDbContextFactory contextFactory, 
+        public PaymentRequestRepository(ApplicationDbContextFactory contextFactory,
             InvoiceRepository invoiceRepository, EventAggregator eventAggregator)
         {
             _ContextFactory = contextFactory;
@@ -68,7 +69,7 @@ namespace BTCPayServer.Services.PaymentRequests
                 return null;
             if(pr.Archived && !toggle)
                 return pr.Archived;
-            pr.Archived =  !pr.Archived; 
+            pr.Archived =  !pr.Archived;
             await context.SaveChangesAsync();
             if (pr.Archived)
             {
@@ -78,7 +79,7 @@ namespace BTCPayServer.Services.PaymentRequests
                     Type = PaymentRequestEvent.Archived
                 });
             }
-            
+
             return pr.Archived;
         }
 
@@ -105,9 +106,9 @@ namespace BTCPayServer.Services.PaymentRequests
             if (paymentRequestData == null || paymentRequestData.Status == status)
                 return;
             paymentRequestData.Status = status;
-            
+
             await context.SaveChangesAsync(cancellationToken);
-            
+
             _eventAggregator.Publish(new PaymentRequestEvent()
             {
                 Data = paymentRequestData,
@@ -127,9 +128,9 @@ namespace BTCPayServer.Services.PaymentRequests
         {
             using var context = _ContextFactory.CreateContext();
             var queryable = context.PaymentRequests.Include(data => data.StoreData).AsQueryable();
-            queryable = 
+            queryable =
                 queryable
-                .Where(data => 
+                .Where(data =>
                 (data.Status == Client.Models.PaymentRequestStatus.Pending || data.Status == Client.Models.PaymentRequestStatus.Processing) &&
                 data.Expiry != null);
             return await queryable.ToArrayAsync(cancellationToken);

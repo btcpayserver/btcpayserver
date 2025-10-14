@@ -20,6 +20,7 @@ using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.Lightning;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;
+using BTCPayServer.Plugins.Webhooks.HostedServices;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -1957,7 +1958,7 @@ namespace BTCPayServer.Tests
 
 
             TestLogs.LogInformation("Can prune deliveries");
-            var cleanup = tester.PayTester.GetService<HostedServices.CleanupWebhookDeliveriesTask>();
+            var cleanup = tester.PayTester.GetService<CleanupWebhookDeliveriesTask>();
             cleanup.BatchSize = 1;
             cleanup.PruneAfter = TimeSpan.Zero;
             await cleanup.Do(default);

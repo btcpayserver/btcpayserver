@@ -13,10 +13,12 @@ namespace BTCPayServer.Services.Mails
 
         private readonly IBackgroundJobClient _jobClient;
         private readonly SettingsRepository _settingsRepository;
+        private readonly EventAggregator _eventAggregator;
         private readonly StoreRepository _storeRepository;
 
         public EmailSenderFactory(IBackgroundJobClient jobClient,
             SettingsRepository settingsSettingsRepository,
+            EventAggregator eventAggregator,
             ISettingsAccessor<PoliciesSettings> policiesSettings,
             StoreRepository storeRepository,
             Logs logs)
@@ -24,18 +26,19 @@ namespace BTCPayServer.Services.Mails
             Logs = logs;
             _jobClient = jobClient;
             _settingsRepository = settingsSettingsRepository;
+            _eventAggregator = eventAggregator;
             PoliciesSettings = policiesSettings;
             _storeRepository = storeRepository;
         }
 
         public Task<IEmailSender> GetEmailSender(string? storeId = null)
         {
-            var serverSender = new ServerEmailSender(_settingsRepository, _jobClient, Logs);
+            var serverSender = new ServerEmailSender(_settingsRepository, _jobClient, _eventAggregator, Logs);
             if (string.IsNullOrEmpty(storeId))
                 return Task.FromResult<IEmailSender>(serverSender);
             return Task.FromResult<IEmailSender>(new StoreEmailSender(_storeRepository,
                 !PoliciesSettings.Settings.DisableStoresToUseServerEmailSettings ? serverSender : null, _jobClient,
-                storeId, Logs));
+                _eventAggregator, storeId, Logs));
         }
 
 		public async Task<bool> IsComplete(string? storeId = null)

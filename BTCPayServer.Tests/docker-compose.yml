@@ -16,6 +16,9 @@ services:
       TESTS_BTCNBXPLORERURL: http://nbxplorer:32838/
       TESTS_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=btcpayserver
       TESTS_EXPLORER_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=nbxplorer
+      TESTS_MAILPIT_HOST: mailpit
+      TESTS_MAILPIT_SMTP: 1025
+      TESTS_MAILPIT_HTTP: 8025
       TESTS_HOSTNAME: tests
       TESTS_RUN_EXTERNAL_INTEGRATION: ${TESTS_RUN_EXTERNAL_INTEGRATION:-"false"}
       TESTS_AzureBlobStorageConnectionString: ${TESTS_AzureBlobStorageConnectionString:-none}
@@ -56,6 +59,7 @@ services:
       - merchant_lnd
       - sshd
       - tor
+      - mailpit
 
   sshd:
     build:
@@ -93,6 +97,17 @@ services:
     networks:
       default:
       custom:
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      # Web UI
+      - "34218:8025"
+      # SMTP
+      - "34219:1025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
   nbxplorer:
     image: nicolasdorier/nbxplorer:2.5.29

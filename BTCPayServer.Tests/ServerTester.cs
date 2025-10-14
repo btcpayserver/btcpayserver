@@ -20,12 +20,14 @@ using NBitpayClient;
 using NBXplorer;
 using BTCPayServer.Abstractions.Contracts;
 using System.Diagnostics.Metrics;
+using BTCPayServer.Events;
 
 namespace BTCPayServer.Tests
 {
     public class ServerTester : IDisposable
     {
         public const string DefaultConnectionString = "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=btcpayserver";
+        public (string Hostname, int SmtpPort, int HttpPort) MailPitSettings { get; set; }
         public List<IDisposable> Resources = new List<IDisposable>();
         readonly string _Directory;
 
@@ -42,6 +44,11 @@ namespace BTCPayServer.Tests
                 Utils.DeleteDirectory(_Directory);
             if (!Directory.Exists(_Directory))
                 Directory.CreateDirectory(_Directory);
+
+            MailPitSettings = (
+                GetEnvironment("TESTS_MAILPIT_HOST", "127.0.0.1"),
+                int.Parse(GetEnvironment("TESTS_MAILPIT_SMTP", "34219")),
+                int.Parse(GetEnvironment("TESTS_MAILPIT_HTTP", "34218")));
 
             _NetworkProvider = networkProvider;
             ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_BTCRPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork);
@@ -286,5 +293,19 @@ namespace BTCPayServer.Tests
                 cryptoCode == "LTC" ? NetworkProvider.GetNetwork<BTCPayNetwork>("LTC") :
                 cryptoCode == "LBTC" ? NetworkProvider.GetNetwork<BTCPayNetwork>("LBTC") :
                 throw new NotSupportedException();
+
+        public async Task<MailPitClient.Message> AssertHasEmail(EmailSentEvent sent)
+        {
+            var mailPitClient = GetMailPitClient();
+            return await mailPitClient.GetMessage(sent.ServerResponse.Split(' ').Last());
+        }
+
+        public MailPitClient GetMailPitClient()
+        {
+            var http = PayTester.GetService<IHttpClientFactory>().CreateClient("MAIL_PIT");
+            http.BaseAddress = new Uri($"http://{MailPitSettings.Hostname}:{MailPitSettings.HttpPort}");
+            var mailPitClient = new MailPitClient(http);
+            return mailPitClient;
+        }
     }
 }

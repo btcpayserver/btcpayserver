@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using BTCPayServer.Abstractions;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -756,6 +757,8 @@ namespace BTCPayServer.Services.Invoices
         public decimal NetSettled { get; private set; }
         [JsonIgnore]
         public bool DisableAccounting { get; set; }
+
+        public RequestBaseUrl GetRequestBaseUrl() => RequestBaseUrl.FromUrl(ServerUrl);
     }
 
     public enum InvoiceStatusLegacy

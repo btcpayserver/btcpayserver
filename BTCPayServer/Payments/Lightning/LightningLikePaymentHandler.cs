@@ -77,11 +77,6 @@ namespace BTCPayServer.Payments.Lightning
 
         public async Task ConfigurePrompt(PaymentMethodContext context)
         {
-            if (context.InvoiceEntity.Type == InvoiceType.TopUp)
-            {
-                throw new PaymentMethodUnavailableException("Lightning Network payment method is not available for top-up invoices");
-            }
-
             var paymentPrompt = context.Prompt;
 
             var preferOnion = Uri.TryCreate(context.InvoiceEntity.ServerUrl, UriKind.Absolute, out var u) && u.IsOnion();

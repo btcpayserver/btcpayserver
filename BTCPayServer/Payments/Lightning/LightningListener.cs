@@ -548,7 +548,7 @@ namespace BTCPayServer.Payments.Lightning
                         notification.GetPaymentHash(_network.NBitcoinNetwork) == GetPaymentHash(listenedInvoice)))
                     {
                         if (notification.Status == LightningInvoiceStatus.Paid &&
-                            notification.PaidAt.HasValue && notification.Amount != null)
+                            notification.PaidAt.HasValue)
                         {
                             if (await AddPayment(notification, listenedInvoice.InvoiceId, listenedInvoice.PaymentMethod.PaymentMethodId))
                             {

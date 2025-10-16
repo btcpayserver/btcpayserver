@@ -758,8 +758,8 @@ namespace BTCPayServer.Controllers
                 displayedPaymentMethods.Remove(lnurlId);
             }
 
-            // Exclude lnurl if bolt11 is available
-            if (displayedPaymentMethods.Contains(lnId) && displayedPaymentMethods.Contains(lnurlId))
+            // Exclude lnurl if bolt11 is available with amount
+            if (!invoice.IsUnsetTopUp() && displayedPaymentMethods.Contains(lnId) && displayedPaymentMethods.Contains(lnurlId))
                 displayedPaymentMethods.Remove(lnurlId);
 
 

@@ -1320,7 +1320,6 @@ namespace BTCPayServer.Tests
             Assert.Contains("Lightning", s.Driver.FindElement(By.CssSelector(".payment-method.active")).Text);
             Assert.Contains("LNURL", s.Driver.FindElement(By.CssSelector(".payment-method:nth-child(2)")).Text);
 
-            s.Driver.FindElement(By.CssSelector(".payment-method:nth-child(2)")).Click();
             TestUtils.Eventually(async () =>
             {
                 var lnurl = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LNURL .truncate-center")).GetAttribute("data-text");

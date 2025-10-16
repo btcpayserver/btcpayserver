@@ -353,7 +353,6 @@ namespace BTCPayServer.Tests
             Assert.StartsWith($"bitcoin:{copyAddressOnchain.ToUpperInvariant()}?lightning={copyAddressLightning.ToUpperInvariant()}", qrValue);
             Assert.Contains($"bitcoin:{copyAddressOnchain}?lightning={copyAddressLightning}", clipboard);
             Assert.Equal(clipboard, payUrl);
-            Assert.Equal(clipboard, payUrl);
 
             // Check details
             s.Driver.ToggleCollapse("PaymentDetails");

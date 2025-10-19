@@ -20,6 +20,7 @@ using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payouts;
+using BTCPayServer.Plugins.Webhooks.Views;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -154,7 +155,7 @@ namespace BTCPayServer.Controllers
                 ShowCheckout = invoice.Status == InvoiceStatus.New,
                 ShowReceipt = invoice.Status == InvoiceStatus.Settled && (invoice.ReceiptOptions?.Enabled ?? receipt.Enabled is true),
                 Deliveries = (await _InvoiceRepository.GetWebhookDeliveries(invoiceId))
-                                    .Select(c => new Models.StoreViewModels.DeliveryViewModel(c))
+                                    .Select(c => new DeliveryViewModel(c))
                                     .ToList()
             };
 

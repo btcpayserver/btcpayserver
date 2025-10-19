@@ -39,6 +39,8 @@ namespace Microsoft.AspNetCore.Mvc
             return urlHelper.GetUriByAction(nameof(UIAccountController.LoginUsingCode), "UIAccount", new { loginCode, returnUrl }, scheme, host, pathbase);
         }
 
+        public static string PaymentRequestLink(this LinkGenerator urlHelper, string paymentRequestId, RequestBaseUrl baseUrl)
+        => PaymentRequestLink(urlHelper, paymentRequestId, baseUrl.Scheme, baseUrl.Host, baseUrl.PathBase);
         public static string PaymentRequestLink(this LinkGenerator urlHelper, string paymentRequestId, string scheme, HostString host, string pathbase)
         {
             return urlHelper.GetUriByAction(
@@ -46,6 +48,16 @@ namespace Microsoft.AspNetCore.Mvc
                 controller: "UIPaymentRequest",
                 values: new { payReqId = paymentRequestId },
                 scheme, host, pathbase);
+        }
+
+        public static string WalletTransactionsLink(this LinkGenerator urlHelper, WalletId walletId, RequestBaseUrl baseUrl)
+        {
+            return urlHelper.GetUriByAction(
+                action: nameof(UIWalletsController.WalletTransactions),
+                controller: "UIWallets",
+                values: new { walletId = walletId.ToString() },
+                baseUrl
+            );
         }
 
         public static string AppLink(this LinkGenerator urlHelper, string appId, string scheme, HostString host, string pathbase)
@@ -57,6 +69,8 @@ namespace Microsoft.AspNetCore.Mvc
                 scheme, host, pathbase);
         }
 
+        public static string InvoiceLink(this LinkGenerator urlHelper, string invoiceId, RequestBaseUrl baseUrl)
+        => InvoiceLink(urlHelper, invoiceId, baseUrl.Scheme, baseUrl.Host, baseUrl.PathBase);
         public static string InvoiceLink(this LinkGenerator urlHelper, string invoiceId, string scheme, HostString host, string pathbase)
         {
             return urlHelper.GetUriByAction(

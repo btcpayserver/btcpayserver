@@ -8,7 +8,8 @@ namespace BTCPayServer.Services.Mails
     {
         public ServerEmailSender(SettingsRepository settingsRepository,
                                 IBackgroundJobClient backgroundJobClient,
-                                Logs logs) : base(backgroundJobClient, logs)
+                                EventAggregator eventAggregator,
+                                Logs logs) : base(backgroundJobClient, eventAggregator, logs)
         {
             ArgumentNullException.ThrowIfNull(settingsRepository);
             SettingsRepository = settingsRepository;
@@ -19,13 +20,6 @@ namespace BTCPayServer.Services.Mails
         public override Task<EmailSettings> GetEmailSettings()
         {
             return SettingsRepository.GetSettingAsync<EmailSettings>();
-        }
-
-        public override async Task<string> GetPrefixedSubject(string subject)
-        {
-            var settings = await SettingsRepository.GetSettingAsync<ServerSettings>();
-            var prefix = string.IsNullOrEmpty(settings?.ServerName) ? "BTCPay Server" : settings.ServerName;
-            return $"{prefix}: {subject}";
         }
     }
 }

@@ -194,6 +194,69 @@ namespace BTCPayServer.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.EmailRuleData", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AdditionalData")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("additional_data")
+                        .HasDefaultValueSql("'{}'::jsonb");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("body");
+
+                    b.Property<string>("Condition")
+                        .HasColumnType("text")
+                        .HasColumnName("condition");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("Metadata")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("metadata")
+                        .HasDefaultValueSql("'{}'::jsonb");
+
+                    b.Property<string>("StoreId")
+                        .HasColumnType("text")
+                        .HasColumnName("store_id");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("subject");
+
+                    b.Property<string[]>("To")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("to");
+
+                    b.Property<string>("Trigger")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("trigger");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId");
+
+                    b.ToTable("email_rules");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.Fido2Credential", b =>
                 {
                     b.Property<string>("Id")
@@ -1238,6 +1301,16 @@ namespace BTCPayServer.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("StoreData");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.EmailRuleData", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.StoreData", "Store")
+                        .WithMany()
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Store");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.Fido2Credential", b =>

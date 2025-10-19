@@ -18,6 +18,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Wallets;
+using BTCPayServer.Tests.PMO;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
@@ -390,12 +391,16 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain("You need to configure email settings before this feature works", await s.Page.ContentAsync());
 
             await s.Page.ClickAsync("#CreateEmailRule");
-            await s.Page.Locator("#Trigger").SelectOptionAsync(new[] { "InvoicePaymentSettled" });
-            await s.Page.FillAsync("#To", "test@gmail.com");
-            await s.Page.ClickAsync("#CustomerEmail");
-            await s.Page.FillAsync("#Subject", "Thanks!");
-            await s.Page.Locator(".note-editable").FillAsync("Your invoice is settled");
-            await s.Page.ClickAsync("#SaveEmailRules");
+            var pmo = new EmailRulePMO(s);
+            await pmo.Fill(new()
+                {
+                    Trigger = "WH-InvoicePaymentSettled",
+                    To = "test@gmail.com",
+                    CustomerEmail = true,
+                    Subject = "Thanks!",
+                    Body = "Your invoice is settled"
+                });
+
             await s.FindAlertMessage();
             // we now have a rule
             Assert.DoesNotContain("There are no rules yet.", await s.Page.ContentAsync());
@@ -1404,34 +1409,55 @@ namespace BTCPayServer.Tests
         [Fact]
         public async Task CanSetupEmailRules()
         {
-            await using var s = CreatePlaywrightTester();
+            await using var s = CreatePlaywrightTester(newDb: true);
             await s.StartAsync();
             await s.RegisterNewUser(true);
-            await s.CreateNewStore();
+            var (storeName, _) = await s.CreateNewStore();
 
             await s.GoToStore(StoreNavPages.Emails);
             await s.Page.ClickAsync("#ConfigureEmailRules");
             Assert.Contains("There are no rules yet.", await s.Page.ContentAsync());
             Assert.Contains("You need to configure email settings before this feature works", await s.Page.ContentAsync());
 
+            await s.Page.ClickAsync(".configure-email");
+
+            var mailPMO = new ConfigureEmailPMO(s);
+            await mailPMO.FillMailPit(new()
+            {
+                From = "store@store.com",
+                Login = "store@store.com",
+                Password = "password"
+            });
+
+            await s.GoToStore(StoreNavPages.Emails);
+            await s.Page.ClickAsync("#ConfigureEmailRules");
+
+            var pmo = new EmailRulePMO(s);
             await s.Page.ClickAsync("#CreateEmailRule");
-            await s.Page.SelectOptionAsync("#Trigger", "InvoiceCreated");
-            await s.Page.FillAsync("#To", "invoicecreated@gmail.com");
-            await s.Page.ClickAsync("#CustomerEmail");
-            await s.Page.ClickAsync("#SaveEmailRules");
+
+            await pmo.Fill(new() {
+                Trigger = "WH-InvoiceCreated",
+                To = "invoicecreated@gmail.com",
+                Subject = "Invoice Created in {Invoice.Currency}!",
+                Body = "Invoice has been created in {Invoice.Currency} for {Invoice.Price}!",
+                CustomerEmail = true
+            });
 
             await s.FindAlertMessage();
-            Assert.DoesNotContain("There are no rules yet.", await s.Page.ContentAsync());
-            Assert.Contains("invoicecreated@gmail.com", await s.Page.ContentAsync());
-            Assert.Contains("Invoice {Invoice.Id} created", await s.Page.ContentAsync());
-            Assert.Contains("Yes", await s.Page.ContentAsync());
+            var page = await s.Page.ContentAsync();
+            Assert.DoesNotContain("There are no rules yet.", page);
+            Assert.Contains("invoicecreated@gmail.com", page);
+            Assert.Contains("Invoice Created in {Invoice.Currency}!", page);
+            Assert.Contains("Yes", page);
 
             await s.Page.ClickAsync("#CreateEmailRule");
-            await s.Page.SelectOptionAsync("#Trigger", "PaymentRequestStatusChanged");
-            await s.Page.FillAsync("#To", "statuschanged@gmail.com");
-            await s.Page.FillAsync("#Subject", "Status changed!");
-            await s.Page.Locator(".note-editable").FillAsync("Your Payment Request Status is Changed");
-            await s.Page.ClickAsync("#SaveEmailRules");
+
+            await pmo.Fill(new() {
+                Trigger = "WH-PaymentRequestStatusChanged",
+                To = "statuschanged@gmail.com",
+                Subject = "Status changed!",
+                Body = "Your Payment Request Status is Changed"
+            });
 
             await s.FindAlertMessage();
             Assert.Contains("statuschanged@gmail.com", await s.Page.ContentAsync());
@@ -1441,14 +1467,23 @@ namespace BTCPayServer.Tests
             Assert.True(await editButtons.CountAsync() >= 2);
             await editButtons.Nth(1).ClickAsync();
 
-            await s.Page.Locator("#To").ClearAsync();
-            await s.Page.FillAsync("#To", "changedagain@gmail.com");
-            await s.Page.ClickAsync("#SaveEmailRules");
+            await pmo.Fill(new() {
+                To = "changedagain@gmail.com"
+            });
 
             await s.FindAlertMessage();
             Assert.Contains("changedagain@gmail.com", await s.Page.ContentAsync());
             Assert.DoesNotContain("statuschanged@gmail.com", await s.Page.ContentAsync());
 
+            var rulesUrl = s.Page.Url;
+
+            await s.AddDerivationScheme();
+            await s.GoToInvoices();
+            var sent = await s.Server.WaitForEvent<EmailSentEvent>(() => s.CreateInvoice(amount: 10m, currency: "USD"));
+            var message = await s.Server.AssertHasEmail(sent);
+            Assert.Equal("Invoice has been created in USD for 10!", message.Text);
+
+            await s.GoToUrl(rulesUrl);
             var deleteLinks = s.Page.GetByRole(AriaRole.Link, new() { Name = "Remove" });
             Assert.Equal(2, await deleteLinks.CountAsync());
 
@@ -1466,6 +1501,24 @@ namespace BTCPayServer.Tests
 
             await s.FindAlertMessage();
             Assert.Contains("There are no rules yet.", await s.Page.ContentAsync());
+
+            await s.Page.ClickAsync("#CreateEmailRule");
+
+            await pmo.Fill(new() {
+                Trigger = "WH-InvoiceCreated",
+                To = "invoicecreated@gmail.com",
+                Subject = "Invoice Created in {Invoice.Currency} for {Store.Name}!",
+                Body = "Invoice has been created in {Invoice.Currency} for {Invoice.Price}!",
+                CustomerEmail = true,
+                Condition = "$ ?(@.Invoice.Metadata.buyerEmail == \"john@test.com\")"
+            });
+
+            await s.GoToInvoices();
+            sent = await s.Server.WaitForEvent<EmailSentEvent>(() => s.CreateInvoice(amount: 10m, currency: "USD", refundEmail: "john@test.com"));
+            message = await s.Server.AssertHasEmail(sent);
+            Assert.Equal("Invoice Created in USD for " + storeName + "!", message.Subject);
+            Assert.Equal("Invoice has been created in USD for 10!", message.Text);
+            Assert.Equal("john@test.com", message.To[0].Address);
         }
 
         [Fact]
@@ -2034,7 +2087,7 @@ namespace BTCPayServer.Tests
             var address = await s.Server.ExplorerNode.GetNewAddressAsync();
             await newPage.FillAsync("#Destination", address.ToString());
             await newPage.PressAsync("#Destination", "Enter");
-            
+
             await s.GoToStore(s.StoreId, StoreNavPages.Payouts);
             await s.Page.ClickAsync("#InProgress-view");
 
@@ -2049,7 +2102,7 @@ namespace BTCPayServer.Tests
             await s.Page.ClickAsync(".mass-action-select-all[data-payout-state='InProgress']");
             await s.Page.ClickAsync("#InProgress-mark-awaiting-payment");
             await s.Page.ClickAsync("#AwaitingPayment-view");
-            
+
             var pageContent = await s.Page.ContentAsync();
             Assert.Contains("PP1", pageContent);
         }

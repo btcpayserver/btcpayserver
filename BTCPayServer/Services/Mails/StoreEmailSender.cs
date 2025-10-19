@@ -12,8 +12,9 @@ namespace BTCPayServer.Services.Mails
         public StoreEmailSender(StoreRepository storeRepository,
                                 EmailSender? fallback,
                                 IBackgroundJobClient backgroundJobClient,
+                                EventAggregator eventAggregator,
                                 string storeId,
-                                Logs logs) : base(backgroundJobClient, logs)
+                                Logs logs) : base(backgroundJobClient, eventAggregator, logs)
         {
             StoreId = storeId ?? throw new ArgumentNullException(nameof(storeId));
             StoreRepository = storeRepository;
@@ -44,19 +45,13 @@ namespace BTCPayServer.Services.Mails
             return GetCustomSettings(store);
         }
         EmailSettings? GetCustomSettings(StoreData store)
-        {    
+        {
             var emailSettings = store.GetStoreBlob().EmailSettings;
             if (emailSettings?.IsComplete() is true)
             {
                 return emailSettings;
             }
             return null;
-        }
-
-        public override async Task<string> GetPrefixedSubject(string subject)
-        {
-            var store = await StoreRepository.FindStore(StoreId);
-            return string.IsNullOrEmpty(store?.StoreName) ? subject : $"{store.StoreName}: {subject}";
         }
     }
 }

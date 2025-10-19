@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -59,7 +60,7 @@ namespace BTCPayServer.Plugins
             _httpClient = httpClient;
         }
         static JsonSerializerSettings serializerSettings = new() { ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver() };
-        public async Task<PublishedVersion[]> GetPublishedVersions(string btcpayVersion, bool includePreRelease, string searchPluginName = null, bool? includeAllVersions = null)
+        public async Task<PublishedVersion[]> GetPublishedVersions(string btcpayVersion, bool includePreRelease, string searchPluginName = null, bool? includeAllVersions = null, CancellationToken cancellationToken = default)
         {
             var queryString = $"?includePreRelease={includePreRelease}";
             if (btcpayVersion is not null)
@@ -68,7 +69,7 @@ namespace BTCPayServer.Plugins
                 queryString += $"&searchPluginName={Uri.EscapeDataString(searchPluginName)}";
             if (includeAllVersions is not null)
                 queryString += $"&includeAllVersions={includeAllVersions}";
-            var result = await _httpClient.GetStringAsync($"api/v1/plugins{queryString}");
+            var result = await _httpClient.GetStringAsync($"api/v1/plugins{queryString}", cancellationToken);
             return JsonConvert.DeserializeObject<PublishedVersion[]>(result, serializerSettings) ?? throw new InvalidOperationException();
         }
         public async Task<PublishedVersion> GetPlugin(string pluginSlug, string version)
@@ -97,7 +98,8 @@ namespace BTCPayServer.Plugins
         public async Task<PublishedVersion[]> GetInstalledPluginsUpdates(
             string btcpayVersion,
             bool includePreRelease,
-            IEnumerable<InstalledPluginRequest> plugins)
+            IEnumerable<InstalledPluginRequest> plugins,
+            CancellationToken cancellationToken = default)
         {
             var queryString = $"?includePreRelease={includePreRelease}";
             if (!string.IsNullOrWhiteSpace(btcpayVersion))
@@ -106,10 +108,10 @@ namespace BTCPayServer.Plugins
             var json = JsonConvert.SerializeObject(plugins, serializerSettings);
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            using var resp = await _httpClient.PostAsync($"api/v1/plugins/updates{queryString}", content);
+            using var resp = await _httpClient.PostAsync($"api/v1/plugins/updates{queryString}", content, cancellationToken);
             resp.EnsureSuccessStatusCode();
 
-            var body = await resp.Content.ReadAsStringAsync();
+            var body = await resp.Content.ReadAsStringAsync(cancellationToken);
             var result = JsonConvert.DeserializeObject<PublishedVersion[]>(body, serializerSettings);
 
             if (result is null)

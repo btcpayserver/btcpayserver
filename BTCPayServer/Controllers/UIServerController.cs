@@ -1281,21 +1281,39 @@ namespace BTCPayServer.Controllers
                 settings.Password = null;
                 await _SettingsRepository.UpdateSetting(settings);
                 TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email server password reset"].Value;
-                return RedirectToAction(nameof(Emails));
             }
-
-            // save if user provided valid email; this will also clear settings if no model.Settings.From
-            if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
+            else if (command == "mailpit")
             {
-                ModelState.AddModelError("Settings.From", StringLocalizer["Invalid email"]);
-                return View(model);
+                model.Settings.Server = "localhost";
+                model.Settings.Port = 34219;
+                model.Settings.EnabledCertificateCheck = false;
+                model.Settings.Login ??= "store@example.com";
+                model.Settings.From ??= "store@example.com";
+                model.Settings.Password ??= "password";
+                await _SettingsRepository.UpdateSetting<EmailSettings>(model.Settings);
+                TempData.SetStatusMessageModel(new StatusMessageModel()
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Info,
+                    AllowDismiss = true,
+                    Html = "Mailpit is now running on <a href=\"http://localhost:34218\" target=\"_blank\" class=\"alert-link\">localhost</a>. You can use it to test your SMTP settings."
+                });
             }
-            var oldSettings = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
-            if (!string.IsNullOrEmpty(oldSettings.Password))
-                model.Settings.Password = oldSettings.Password;
+            else
+            {
+                // save if user provided valid email; this will also clear settings if no model.Settings.From
+                if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
+                {
+                    ModelState.AddModelError("Settings.From", StringLocalizer["Invalid email"]);
+                    return View(model);
+                }
 
-            await _SettingsRepository.UpdateSetting(model.Settings);
-            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email settings saved"].Value;
+                var oldSettings = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
+                if (!string.IsNullOrEmpty(oldSettings.Password))
+                    model.Settings.Password = oldSettings.Password;
+
+                await _SettingsRepository.UpdateSetting(model.Settings);
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email settings saved"].Value;
+            }
             return RedirectToAction(nameof(Emails));
         }
 

@@ -1,7 +1,8 @@
+@using BTCPayServer.Plugins.Emails
 <div class="alert alert-warning alert-dismissible">
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
         <vc:icon symbol="close" />
     </button>
     <span text-translate="true">The Email settings have not been configured on this server or store yet. Setting this field will not send emails until then.</span>
-    <a asp-action="StoreEmailSettings" asp-controller="UIStores" asp-route-storeId="@Model" class="alert-link" text-translate="true">Configure store email settings</a>
+    <a asp-area="@EmailsPlugin.Area" asp-action="StoreEmailSettings" asp-controller="UIStoresEmail" asp-route-storeId="@Model" class="alert-link" text-translate="true">Configure store email settings</a>
 </div>

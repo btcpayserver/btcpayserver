@@ -1,17 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Controllers;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
-using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Mails;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -221,7 +217,6 @@ namespace BTCPayServer.Data
         [JsonConverter(typeof(TimeSpanJsonConverter.Days))]
         public TimeSpan RefundBOLT11Expiration { get; set; }
 
-        public List<UIStoresController.StoreEmailRule> EmailRules { get; set; }
         public string BrandColor { get; set; }
         public bool ApplyBrandColorToBackend { get; set; }
 

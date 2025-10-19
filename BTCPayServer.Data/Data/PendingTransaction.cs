@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
+using BTCPayServer.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Data;
 
@@ -21,8 +24,8 @@ public class PendingTransaction: IHasBlob<PendingTransactionBlob>
         public byte[] Blob { get; set; }
 
         public string Blob2 { get; set; }
-        
-        
+
+
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
             builder.Entity<PendingTransaction>()
@@ -37,7 +40,7 @@ public class PendingTransaction: IHasBlob<PendingTransactionBlob>
 
             builder.Entity<PendingTransaction>()
                 .Property(o => o.Blob2)
-                .HasColumnType("JSONB"); 
+                .HasColumnType("JSONB");
             builder.Entity<PendingTransaction>()
                 .Property(o => o.OutpointsUsed)
                 .HasColumnType("text[]");
@@ -56,6 +59,7 @@ public class PendingTransaction: IHasBlob<PendingTransactionBlob>
     public class PendingTransactionBlob
     {
         public string PSBT { get; set; }
+        public string RequestBaseUrl { get; set; }
         public List<CollectedSignature> CollectedSignatures { get; set; } = new();
 
         public int? SignaturesCollected { get; set; }

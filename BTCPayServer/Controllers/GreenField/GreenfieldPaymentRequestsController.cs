@@ -182,7 +182,7 @@ namespace BTCPayServer.Controllers.Greenfield
 					new PaymentRequestQuery() { StoreId = storeId, Ids = new[] { paymentRequestId } })).FirstOrDefault();
 				if (pr is null)
 					return PaymentRequestNotFound();
-				if ((pr.Amount != request.Amount && request.Amount != 0.0m) || 
+				if ((pr.Amount != request.Amount && request.Amount != 0.0m) ||
 					(pr.Currency != request.Currency && request.Currency != null))
 				{
 					var prWithInvoices = await this.PaymentRequestService.GetPaymentRequest(paymentRequestId, GetUserId());
@@ -226,7 +226,8 @@ namespace BTCPayServer.Controllers.Greenfield
 				Description = request.Description,
 				Email = request.Email,
 				FormId = request.FormId,
-				FormResponse = blob.FormId != request.FormId ? null : blob.FormResponse
+				FormResponse = blob.FormId != request.FormId ? null : blob.FormResponse,
+                RequestBaseUrl = Request.GetRequestBaseUrl().ToString()
 			});
 			pr = await _paymentRequestRepository.CreateOrUpdatePaymentRequest(pr);
 			return Ok(FromModel(pr));

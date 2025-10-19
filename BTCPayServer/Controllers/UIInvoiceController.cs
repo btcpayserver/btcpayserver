@@ -12,10 +12,8 @@ using BTCPayServer.Services;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
-using BTCPayServer.HostedServices.Webhooks;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Greenfield;
@@ -29,11 +27,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using NBitcoin;
 using Newtonsoft.Json.Linq;
 using StoreData = BTCPayServer.Data.StoreData;
-using Serilog.Filters;
 using BTCPayServer.Payouts;
+using BTCPayServer.Plugins.Webhooks;
 using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Controllers

@@ -2,11 +2,15 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Data
 {
     public class WebhookDeliveryData
     {
+        public static WebhookDeliveryData Create(string webhookId)
+            => new WebhookDeliveryData { Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)), Timestamp = DateTimeOffset.UtcNow, WebhookId = webhookId };
         [Key]
         [MaxLength(25)]
         public string Id { get; set; }

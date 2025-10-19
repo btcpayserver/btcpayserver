@@ -15,5 +15,6 @@ namespace BTCPayServer.Data
         public string FormId { get; set; }
 
         public JObject FormResponse { get; set; }
+        public string RequestBaseUrl { get; set; }
     }
 }

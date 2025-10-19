@@ -1,22 +1,14 @@
 #nullable enable
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Client.Models;
-using BTCPayServer.Controllers;
+using BTCPayServer.Abstractions;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.HostedServices.Webhooks;
-using BTCPayServer.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBitcoin.DataEncoders;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.HostedServices;
 
@@ -32,14 +24,14 @@ public class PendingTransactionService(
         Subscribe<NewOnChainTransactionEvent>();
         base.SubscribeToEvents();
     }
-    
+
     public Task Do(CancellationToken cancellationToken)
     {
         PushEvent(new CheckForExpiryEvent());
         return Task.CompletedTask;
     }
 
-    public class CheckForExpiryEvent { } 
+    public class CheckForExpiryEvent { }
 
     protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
     {
@@ -92,6 +84,7 @@ public class PendingTransactionService(
     }
 
     public async Task<PendingTransaction> CreatePendingTransaction(string storeId, string cryptoCode, PSBT psbt,
+        RequestBaseUrl requestBaseUrl,
         DateTimeOffset? expiry = null, CancellationToken cancellationToken = default)
     {
         var network = networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
@@ -135,7 +128,8 @@ public class PendingTransactionService(
             PSBT = psbt.ToBase64(),
             SignaturesCollected = 0,
             SignaturesNeeded = signaturesNeeded,
-            SignaturesTotal = signaturesTotal
+            SignaturesTotal = signaturesTotal,
+            RequestBaseUrl = requestBaseUrl.ToString()
         });
 
         ctx.PendingTransactions.Add(pendingTransaction);
@@ -155,7 +149,7 @@ public class PendingTransactionService(
         await using var ctx = dbContextFactory.CreateContext();
         var pendingTransaction = await ctx.PendingTransactions.FirstOrDefaultAsync(p =>
             p.CryptoCode == id.CryptoCode && p.StoreId == id.StoreId && p.Id == id.Id, cancellationToken);
-        
+
         if (pendingTransaction?.State is not PendingTransactionState.Pending)
         {
             return null;
@@ -201,7 +195,7 @@ public class PendingTransactionService(
         {
             // TODO: For now we're going with estimation of how many signatures were collected until we find better way
             // so for example if we have 4 new signatures and only 2 inputs - number of collected signatures will be 2
-            blob.SignaturesCollected += newSignatures / newWorkingCopyPsbt.Inputs.Count();
+            blob.SignaturesCollected += newSignatures / newWorkingCopyPsbt.Inputs.Count;
             blob.CollectedSignatures.Add(new CollectedSignature
             {
                 ReceivedPSBT = newPsbtBase64,
@@ -215,7 +209,7 @@ public class PendingTransactionService(
             // TODO: Better logic here
             if (blob.SignaturesCollected < blob.SignaturesNeeded)
                 blob.SignaturesCollected = blob.SignaturesNeeded;
-                    
+
             pendingTransaction.State = PendingTransactionState.Signed;
         }
 
@@ -284,7 +278,7 @@ public class PendingTransactionService(
         public const string SignatureCollected = nameof(SignatureCollected);
         public const string Broadcast = nameof(Broadcast);
         public const string Cancelled = nameof(Cancelled);
-        
+
         public PendingTransaction Data { get; set; } = null!;
         public string Type { get; set; } = null!;
     }

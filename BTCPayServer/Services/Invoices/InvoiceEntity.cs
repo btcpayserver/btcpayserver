@@ -485,7 +485,8 @@ namespace BTCPayServer.Services.Invoices
         {
             var uriStr = (v ?? string.Empty).Replace("{OrderId}", System.Web.HttpUtility.UrlEncode(Metadata.OrderId) ?? "", StringComparison.OrdinalIgnoreCase)
                                      .Replace("{InvoiceId}", System.Web.HttpUtility.UrlEncode(Id) ?? "", StringComparison.OrdinalIgnoreCase)
-                                     .Replace("{Status}", (Status == InvoiceStatus.Settled) ? "success" : "failed", StringComparison.OrdinalIgnoreCase);
+                                     // NOTE: Not recommended to depend on the status on client side, rather fetch invoice status via API instead
+                                     .Replace("{Status}", System.Web.HttpUtility.UrlEncode(Status.ToString()) ?? "", StringComparison.OrdinalIgnoreCase);
             if (Uri.TryCreate(uriStr, UriKind.Absolute, out var uri) && (uri.Scheme == "http" || uri.Scheme == "https"))
                 return uri;
             return null;

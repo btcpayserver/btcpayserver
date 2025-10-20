@@ -9,70 +9,69 @@
         actionUrl = linkGenerator.GetPathByAction(Model.ActionName, controllerName, values: Model.ActionValues, pathBase: Context.Request.PathBase);
     }
 }
-<div class="modal position-static d-block" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="@Html.Id("ConfirmTitle")">@Model.Title</h4>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
-                    <vc:icon symbol="close" />
-                </button>
-            </div>
 
-            <div class="modal-body">
-                <div id="@Html.Id("ConfirmDescription")">
-                    @if (Model.DescriptionHtml)
-                    {
-                        @Safe.Raw(Model.Description)
-                    }
-                    else
-                    {
-                        @Model.Description
-                    }
-                </div>
-            </div>
+<div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="modal-title" id="@Html.Id("ConfirmTitle")">@Model.Title</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                <vc:icon symbol="close" />
+            </button>
+        </div>
 
-            @if (!string.IsNullOrEmpty(Model.Action))
-            {
-                @if (Model.GenerateForm)
+        <div class="modal-body">
+            <div id="@Html.Id("ConfirmDescription")">
+                @if (Model.DescriptionHtml)
                 {
-                    if (Model.Antiforgery is null)
-                    {
-                        <form id="@Html.Id("ConfirmForm")" method="post" action="@Url.EnsureLocal(actionUrl, Context.Request)"
-                              rel="noreferrer noopener">
-                            @{ ModalContent(); }
-                        </form>
-                    }
-                    else
-                    {
-                        <form id="@Html.Id("ConfirmForm")" method="post" asp-antiforgery="@Model.Antiforgery" action="@Url.EnsureLocal(actionUrl, Context.Request)"
-                              rel="noreferrer noopener">
-                            @{ ModalContent(); }
-                        </form>
-                    }
+                    @Safe.Raw(Model.Description)
                 }
                 else
                 {
-                    ModalContent();
+                    @Model.Description
                 }
+            </div>
+        </div>
 
-                @functions{
-
-                    void ModalContent()
-                    {
-                        <div class="modal-body pt-0" id="@Html.Id("ConfirmText")" hidden>
-                            <label for="@Html.Id("ConfirmInput")" class="form-label">Confirm the action by typing <strong
-                                    id="@Html.Id("ConfirmInputText")"></strong>:</label>
-                            <input id="@Html.Id("ConfirmInput")" class="form-control" />
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary only-for-js" data-bs-dismiss="modal" id="@Html.Id("ConfirmCancel")">Cancel</button>
-                            <button type="submit" class="btn modal-confirm @Model.ButtonClass" id="@Html.Id("ConfirmContinue")">@Model.Action</button>
-                        </div>
-                    }
-
+        @if (!string.IsNullOrEmpty(Model.Action))
+        {
+            @if (Model.GenerateForm)
+            {
+                if (Model.Antiforgery is null)
+                {
+                    <form id="@Html.Id("ConfirmForm")" method="post" action="@Url.EnsureLocal(actionUrl, Context.Request)"
+                          rel="noreferrer noopener">
+                        @{ ModalContent(); }
+                    </form>
+                }
+                else
+                {
+                    <form id="@Html.Id("ConfirmForm")" method="post" asp-antiforgery="@Model.Antiforgery" action="@Url.EnsureLocal(actionUrl, Context.Request)"
+                          rel="noreferrer noopener">
+                        @{ ModalContent(); }
+                    </form>
                 }
             }
-        </div>
+            else
+            {
+                ModalContent();
+            }
+
+            @functions{
+
+                void ModalContent()
+                {
+                    <div class="modal-body pt-0" id="@Html.Id("ConfirmText")" hidden>
+                        <label for="@Html.Id("ConfirmInput")" class="form-label">Confirm the action by typing <strong
+                                id="@Html.Id("ConfirmInputText")"></strong>:</label>
+                        <input id="@Html.Id("ConfirmInput")" class="form-control" />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary only-for-js" data-bs-dismiss="modal" id="@Html.Id("ConfirmCancel")">Cancel</button>
+                        <button type="submit" class="btn modal-confirm @Model.ButtonClass" id="@Html.Id("ConfirmContinue")">@Model.Action</button>
+                    </div>
+                }
+
+            }
+        }
     </div>
 </div>

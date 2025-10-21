@@ -43,6 +43,8 @@ namespace BTCPayServer.Plugins
         public IEnumerable<IBTCPayServerPlugin> LoadedPlugins { get; }
         public BTCPayServerEnvironment Env { get; }
 
+        private static readonly object _fingerprintLock = new object();
+
         public Version GetVersionOfPendingInstall(string plugin)
         {
             var dirName = Path.Combine(_dataDirectories.Value.PluginDir, plugin);
@@ -175,31 +177,47 @@ namespace BTCPayServer.Plugins
 
         public void SavePluginFingerprint(string pluginIdentifier, string fingerprint)
         {
-            var fingerprintsDestination = Path.Combine(_dataDirectories.Value.PluginDir, "last-trusted-fingerprints.json");
-            var map = File.Exists(fingerprintsDestination) ? JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(fingerprintsDestination)) ?? new()
-                : new Dictionary<string, string>();
+            lock (_fingerprintLock)
+            {
+                var fingerprintsDestination = Path.Combine(_dataDirectories.Value.PluginDir, "last-trusted-fingerprints.json");
+                var map = File.Exists(fingerprintsDestination) ? JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(fingerprintsDestination)) ?? new()
+                    : new Dictionary<string, string>();
 
-            map[pluginIdentifier] = fingerprint;
-            File.WriteAllText(fingerprintsDestination, JsonConvert.SerializeObject(map, Formatting.Indented));
+                map[pluginIdentifier] = fingerprint;
+                File.WriteAllText(fingerprintsDestination, JsonConvert.SerializeObject(map, Formatting.Indented));
+            }
         }
 
         public string GetPluginFingerprint(string pluginIdentifier)
         {
-            var fingerprintsDestination = Path.Combine(_dataDirectories.Value.PluginDir, "last-trusted-fingerprints.json");
-            if (!File.Exists(fingerprintsDestination)) return null;
-
-            var map = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(fingerprintsDestination));
-            return map?.GetValueOrDefault(pluginIdentifier);
+            lock (_fingerprintLock)
+            {
+                var fingerprintsDestination = Path.Combine(_dataDirectories.Value.PluginDir, "last-trusted-fingerprints.json");
+                if (!File.Exists(fingerprintsDestination)) return null;
+                try
+                {
+                    var map = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(fingerprintsDestination));
+                    return map?.GetValueOrDefault(pluginIdentifier);
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+            }
         }
 
         public void RemovePluginFingerprint(string pluginIdentifier)
         {
-            var fingerprintsDestination = Path.Combine(_dataDirectories.Value.PluginDir, "last-trusted-fingerprints.json");
-            if (!File.Exists(fingerprintsDestination)) return;
+            lock (_fingerprintLock)
+            {
+                var fingerprintsDestination = Path.Combine(_dataDirectories.Value.PluginDir, "last-trusted-fingerprints.json");
+                if (!File.Exists(fingerprintsDestination))
+                    return;
 
-            var map = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(fingerprintsDestination)) ?? new Dictionary<string, string>();
-            map.Remove(pluginIdentifier);
-            File.WriteAllText(fingerprintsDestination, JsonConvert.SerializeObject(map, Formatting.Indented));
+                var map = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(fingerprintsDestination)) ?? new Dictionary<string, string>();
+                map.Remove(pluginIdentifier);
+                File.WriteAllText(fingerprintsDestination, JsonConvert.SerializeObject(map, Formatting.Indented));
+            }
         }
 
         public IEnumerable<IBTCPayServerPlugin> LoadInstalledPluginWithFingerprints()

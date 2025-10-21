@@ -136,7 +136,13 @@
                 <div class="card h-100" id="@plugin.Identifier">
                     <div class="card-body">
                         <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
-                            <h4 class="card-title mb-0" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
+							<div class="d-flex align-items-center gap-2">
+								<h4 class="card-title mb-0" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
+								@if (!string.IsNullOrEmpty(plugin.Fingerprint))
+								{
+									<span data-bs-toggle="tooltip" title="GPG verified Plugin– Fingerprint: @plugin.Fingerprint"><vc:icon symbol="key" /></span>
+								}
+							</div>
                             @if (!string.IsNullOrEmpty(downloadInfo?.Author))
                             {
                                 <span class="text-muted text-nowrap">
@@ -263,23 +269,6 @@
                         }
                         @if (pendingAction is null  || !exclusivePendingAction)
                         {
-                            @if (updateAvailable && x != null)
-							{
-								bool mismatch = !string.IsNullOrEmpty(plugin.Fingerprint) && !string.Equals(plugin.Fingerprint, x.Fingerprint, StringComparison.OrdinalIgnoreCase);
-                                if (PluginManager.DependenciesMet(x.Dependencies, installed))
-                                {
-                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" class="me-3">
-                                        <button type="submit" class="btn btn-secondary" text-translate="true">Update</button>
-                                    </form>
-                                }
-                                else
-                                {
-                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" class="me-3">
-                                        <button title="Schedule upgrade for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-secondary" text-translate="true">Schedule update</button>
-                                    </form>
-                                }
-                            }
-
 							@if (updateAvailable && x != null)
 							{
 								bool mismatch = !string.IsNullOrEmpty(plugin.Fingerprint) && !string.Equals(plugin.Fingerprint, x.Fingerprint, StringComparison.OrdinalIgnoreCase);
@@ -288,12 +277,12 @@
 								bool dependenciesMet = PluginManager.DependenciesMet(x.Dependencies, installed);
 
 								string buttonText = dependenciesMet ? "Update" : "Schedule update";
-								string buttonClass = mismatch ? "btn btn-warning" : "btn btn-secondary";
 								string tooltip = dependenciesMet ? null : "Schedule upgrade for when dependencies are met to ensure a smooth update";
 
 								<form id="@formId" asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" class="me-3">
-									<button type="@(mismatch ? "button" : "submit")" class="btn btn-secondary" data-plugin-id="@plugin.Identifier" data-form-id="@formId" title="@tooltip"
-											@(tooltip != null ? "data-bs-toggle=tooltip" : "") @(mismatch ? "onclick=showMismatchModal(this)" : null)>
+									<button type="@(mismatch ? "button" : "submit")" class="btn btn-secondary"
+											data-plugin-id="@plugin.Identifier" data-form-id="@formId" title="@tooltip"
+											data-bs-toggle="@(tooltip != null ? "tooltip" : null)" onclick="@(mismatch ? "showMismatchModal(this)" : "")">
 										@buttonText
 									</button>
 								</form>
@@ -340,11 +329,11 @@
 				<h5 class="modal-title" id="fingerprintMismatchLabel">Plugin Fingerprint Mismatch</h5>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 			</div>
-			<div class="modal-body">The plugin fingerprint does not match the expected version. Are you sure you want to continue with the update?
+			<div class="modal-body">The plugin update fingerprint does not match the installed version fingerprint. Are you sure you want to continue with the update?
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-				<button type="button" id="confirmUpdate" class="btn btn-danger">Continue Update</button>
+				<button type="button" id="confirmUpdate" class="btn btn-danger">Update</button>
 			</div>
 		</div>
 	</div>
@@ -410,7 +399,7 @@ else
 								<h4 class="card-title mb-0" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
 								@if (plugin.IsSigned)
 								{
-									<span data-bs-toggle="tooltip" title="This plugin is GPG-signed and verified"><vc:icon symbol="key" /></span>
+									<span data-bs-toggle="tooltip" title="GPG verified Plugin– Fingerprint: @plugin.Fingerprint"><vc:icon symbol="key" /></span>
 								}
 							</div>
 

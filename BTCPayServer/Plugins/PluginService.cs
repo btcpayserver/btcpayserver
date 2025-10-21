@@ -113,6 +113,10 @@ namespace BTCPayServer.Plugins
                 availablePlugin.Author = github.Owner;
                 availablePlugin.AuthorLink = $"https://github.com/{github.Owner}";
             }
+            availablePlugin.Name = publishedVersion.PluginTitle;
+            availablePlugin.Description = publishedVersion.Description;
+            availablePlugin.IsSigned = publishedVersion.IsSigned;
+            availablePlugin.Fingerprint = publishedVersion.Fingerprint;
             availablePlugin.SystemPlugin = false;
             return availablePlugin;
         }
@@ -155,13 +159,60 @@ namespace BTCPayServer.Plugins
             version = Uri.EscapeDataString(version);
             Directory.CreateDirectory(Path.GetDirectoryName(filedest));
             var url = $"api/v1/plugins/{pluginSelector}/versions/{version}/download";
-            var manifest = (await _pluginBuilderClient.GetPlugin(pluginSelector, version))?.ManifestInfo?.ToObject<AvailablePlugin>();
+            var plugin = await _pluginBuilderClient.GetPlugin(pluginSelector, version);
+            var manifest = plugin?.ManifestInfo?.ToObject<AvailablePlugin>();
             await File.WriteAllTextAsync(filemanifestdest, JsonConvert.SerializeObject(manifest, Formatting.Indented));
             using var resp2 = await _pluginBuilderClient.HttpClient.GetAsync(url);
             await using var fs = new FileStream(filedest, FileMode.Create, FileAccess.ReadWrite);
             await resp2.Content.CopyToAsync(fs);
             await fs.FlushAsync();
+            if (plugin?.IsSigned == true)
+            {
+                SavePluginFingerprint(pluginIdentifier, plugin.Fingerprint);
+            }
             return manifest;
+        }
+
+        public void SavePluginFingerprint(string pluginIdentifier, string fingerprint)
+        {
+            var fingerprintsDestination = Path.Combine(_dataDirectories.Value.PluginDir, "last-trusted-fingerprints.json");
+            var map = File.Exists(fingerprintsDestination) ? JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(fingerprintsDestination)) ?? new()
+                : new Dictionary<string, string>();
+
+            map[pluginIdentifier] = fingerprint;
+            File.WriteAllText(fingerprintsDestination, JsonConvert.SerializeObject(map, Formatting.Indented));
+        }
+
+        public string GetPluginFingerprint(string pluginIdentifier)
+        {
+            var fingerprintsDestination = Path.Combine(_dataDirectories.Value.PluginDir, "last-trusted-fingerprints.json");
+            if (!File.Exists(fingerprintsDestination)) return null;
+
+            var map = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(fingerprintsDestination));
+            return map?.GetValueOrDefault(pluginIdentifier);
+        }
+
+        public void RemovePluginFingerprint(string pluginIdentifier)
+        {
+            var fingerprintsDestination = Path.Combine(_dataDirectories.Value.PluginDir, "last-trusted-fingerprints.json");
+            if (!File.Exists(fingerprintsDestination)) return;
+
+            var map = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(fingerprintsDestination)) ?? new Dictionary<string, string>();
+            map.Remove(pluginIdentifier);
+            File.WriteAllText(fingerprintsDestination, JsonConvert.SerializeObject(map, Formatting.Indented));
+        }
+
+        public IEnumerable<IBTCPayServerPlugin> LoadInstalledPluginWithFingerprints()
+        {
+            foreach (var plugin in LoadedPlugins)
+            {
+                var trustedFingerprint = GetPluginFingerprint(plugin.Identifier);
+                if (!string.IsNullOrEmpty(trustedFingerprint))
+                {
+                    plugin.Fingerprint = trustedFingerprint;
+                }
+            }
+            return LoadedPlugins;
         }
 
         public void InstallPlugin(string plugin)
@@ -186,6 +237,7 @@ namespace BTCPayServer.Plugins
             var dest = _dataDirectories.Value.PluginDir;
             PluginManager.CancelCommands(dest, plugin);
             PluginManager.QueueCommands(dest, ("delete", plugin));
+            RemovePluginFingerprint(plugin);
         }
 
         public class AvailablePlugin
@@ -201,6 +253,8 @@ namespace BTCPayServer.Plugins
             public string Source { get; set; }
             public string Author { get; set; }
             public string AuthorLink { get; set; }
+            public bool IsSigned { get; set; }
+            public string Fingerprint { get; set; }
 
             public void Execute(IApplicationBuilder applicationBuilder, IServiceProvider applicationBuilderApplicationServices)
             {

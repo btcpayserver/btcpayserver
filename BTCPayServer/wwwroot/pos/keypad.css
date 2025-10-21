@@ -16,6 +16,8 @@ button[data-bs-toggle] {
 }
 button[data-bs-toggle] .icon {
     --icon-size: 1.75em;
+    display: block;
+    margin: auto;
 }
 #ItemsListToggle {
     right: var(--btcpay-space-m);

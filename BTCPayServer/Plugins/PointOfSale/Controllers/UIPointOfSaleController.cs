@@ -520,7 +520,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     ["id"] = i.Id,
                     ["date"] = i.InvoiceTime,
                     ["price"] = _displayFormatter.Currency(i.Price, i.Currency, DisplayFormatter.CurrencyFormat.Symbol),
-                    ["status"] = i.GetInvoiceState().Status.ToString(),
+                    ["status"] = i.GetInvoiceState().ToString(),
                     ["url"] = Url.Action(nameof(UIInvoiceController.Invoice), "UIInvoice", new { invoiceId = i.Id })
                 });
             return Json(recent);

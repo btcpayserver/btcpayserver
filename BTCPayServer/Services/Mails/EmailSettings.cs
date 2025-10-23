@@ -27,7 +27,7 @@ namespace BTCPayServer.Services.Mails
             get => !DisableCertificateCheck;
             set { DisableCertificateCheck = !value; }
         }
-        
+
         // Conversion functions for mapping to and from the client EmailSettingsData model
 #nullable enable
         public static EmailSettings FromData(EmailSettingsData data, string? existingPassword)
@@ -37,12 +37,12 @@ namespace BTCPayServer.Services.Mails
                 Port = data.Port,
                 Login = data.Login,
                 // If login was provided but password was not, use the existing password from database
-                Password = !string.IsNullOrEmpty(data.Login) && string.IsNullOrEmpty(data.Password) ? 
+                Password = !string.IsNullOrEmpty(data.Login) && string.IsNullOrEmpty(data.Password) ?
                     existingPassword : data.Password,
                 From = data.From,
                 DisableCertificateCheck = data.DisableCertificateCheck
             };
-        
+
         public T ToData<T>() where T : EmailSettingsData, new()
             => new T()
             {
@@ -54,33 +54,23 @@ namespace BTCPayServer.Services.Mails
                 DisableCertificateCheck = DisableCertificateCheck
             };
 #nullable restore
-        
-        
-        // 
+
+
+        //
         public bool IsComplete()
         {
             return MailboxAddressValidator.IsMailboxAddress(From)
                 && !string.IsNullOrWhiteSpace(Server)
-                && Port != null;
+                && Port != null
+                && !string.IsNullOrWhiteSpace(From)
+                && MailboxAddressValidator.IsMailboxAddress(From);
         }
 
         public void Validate(string prefixKey, ModelStateDictionary modelState)
         {
-            if (string.IsNullOrWhiteSpace(From))
-            {
-                modelState.AddModelError($"{prefixKey}{nameof(From)}", new RequiredAttribute().FormatErrorMessage(nameof(From)));
-            }
-            if (!MailboxAddressValidator.IsMailboxAddress(From))
+            if (!string.IsNullOrEmpty(From) && !MailboxAddressValidator.IsMailboxAddress(From))
             {
                 modelState.AddModelError($"{prefixKey}{nameof(From)}", MailboxAddressAttribute.ErrorMessageConst);
-            }
-            if (string.IsNullOrWhiteSpace(Server))
-            {
-                modelState.AddModelError($"{prefixKey}{nameof(Server)}", new RequiredAttribute().FormatErrorMessage(nameof(Server)));
-            }
-            if (Port is null)
-            {
-                modelState.AddModelError($"{prefixKey}{nameof(Port)}", new RequiredAttribute().FormatErrorMessage(nameof(Port)));
             }
         }
 

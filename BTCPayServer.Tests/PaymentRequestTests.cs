@@ -106,6 +106,74 @@ namespace BTCPayServer.Tests
                     .IsType<ViewResult>(await paymentRequestController.GetPaymentRequests(user.StoreId)).Model).Items);
         }
 
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CannotCreatePaymentRequestWithDuplicateReferenceId()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            user.RegisterDerivationScheme("BTC");
+
+            var paymentRequestController = user.GetController<UIPaymentRequestController>();
+
+            // Create first payment request with ReferenceId
+            var request1 = new UpdatePaymentRequestViewModel
+            {
+                Title = "First Payment Request",
+                Currency = "BTC",
+                Amount = 1,
+                StoreId = user.StoreId,
+                Description = "First request",
+                ReferenceId = "duplicate-ref-id"
+            };
+            var id1 = Assert
+                .IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(null, request1))
+                .RouteValues.Values.Last().ToString();
+
+            Assert.False(string.IsNullOrEmpty(id1));
+
+            // Try to create second payment request with same ReferenceId - should fail
+            var request2 = new UpdatePaymentRequestViewModel
+            {
+                Title = "Second Payment Request",
+                Currency = "BTC",
+                Amount = 2,
+                StoreId = user.StoreId,
+                Description = "Second request",
+                ReferenceId = "duplicate-ref-id"
+            };
+            var result = await paymentRequestController.EditPaymentRequest(null, request2);
+            var viewResult = Assert.IsType<ViewResult>(result);
+            Assert.False(paymentRequestController.ModelState.IsValid);
+            Assert.True(paymentRequestController.ModelState.ContainsKey(nameof(request2.ReferenceId)));
+            Assert.Contains("already exists", paymentRequestController.ModelState[nameof(request2.ReferenceId)].Errors[0].ErrorMessage);
+
+            // Try to edit first payment request to use a different ReferenceId - should succeed
+            paymentRequestController.ModelState.Clear();
+            paymentRequestController.HttpContext.SetPaymentRequestData(new PaymentRequestData { Id = id1, StoreDataId = request1.StoreId });
+            request1.ReferenceId = "new-unique-ref-id";
+            Assert.IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(id1, request1));
+
+            // Now create second payment request with the old ReferenceId - should succeed
+            paymentRequestController.HttpContext.SetPaymentRequestData(null); // Clear for new request
+            var id2 = Assert
+                .IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(null, request2))
+                .RouteValues.Values.Last().ToString();
+            Assert.False(string.IsNullOrEmpty(id2));
+
+            // Try to edit second payment request to use first payment request's current ReferenceId - should fail
+            paymentRequestController.ModelState.Clear();
+            paymentRequestController.HttpContext.SetPaymentRequestData(new PaymentRequestData { Id = id2, StoreDataId = request2.StoreId });
+            request2.ReferenceId = "new-unique-ref-id";
+            result = await paymentRequestController.EditPaymentRequest(id2, request2);
+            viewResult = Assert.IsType<ViewResult>(result);
+            Assert.False(paymentRequestController.ModelState.IsValid);
+            Assert.True(paymentRequestController.ModelState.ContainsKey(nameof(request2.ReferenceId)));
+            Assert.Contains("already exists", paymentRequestController.ModelState[nameof(request2.ReferenceId)].Errors[0].ErrorMessage);
+        }
+
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         public async Task CanPayPaymentRequestWhenPossible()

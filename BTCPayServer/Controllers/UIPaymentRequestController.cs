@@ -169,25 +169,47 @@ namespace BTCPayServer.Controllers
             if (!string.IsNullOrEmpty(viewModel.Currency) &&
                 _Currencies.GetCurrencyData(viewModel.Currency, false) == null)
                 ModelState.AddModelError(nameof(viewModel.Currency), "Invalid currency");
+
             if (string.IsNullOrEmpty(viewModel.Currency))
                 viewModel.Currency = null;
+
             var store = GetCurrentStore();
             var paymentRequest = GetCurrentPaymentRequest();
+
             if ((paymentRequest == null && !string.IsNullOrEmpty(payReqId)) ||
                 (paymentRequest != null && paymentRequest.Id != payReqId))
-            {
                 return NotFound();
-            }
 
             if (!store.AnyPaymentMethodAvailable(_handlers))
-            {
                 return NoPaymentMethodResult(store.Id);
-            }
 
             if (paymentRequest?.Archived is true && viewModel.Archived)
-            {
                 ModelState.AddModelError(string.Empty, StringLocalizer["You cannot edit an archived payment request."]);
+
+            // Validate ReferenceId is unique for this store (for both new and edit)
+            if (!string.IsNullOrEmpty(viewModel.ReferenceId))
+            {
+                var existingPaymentRequests = await _PaymentRequestRepository.FindPaymentRequests(
+                    new PaymentRequestQuery
+                    {
+                        StoreId = viewModel.StoreId,
+                        SearchText = viewModel.ReferenceId
+                    });
+
+                var duplicate = existingPaymentRequests.FirstOrDefault(pr => pr.ReferenceId == viewModel.ReferenceId && pr.Id != payReqId);
+
+                if (duplicate != null)
+                    ModelState.AddModelError(nameof(viewModel.ReferenceId),
+                        StringLocalizer["A payment request with reference ID \"{0}\" already exists for this store.", viewModel.ReferenceId].Value);
             }
+
+            if (!ModelState.IsValid)
+            {
+                // Rockstar: This code is kinda ugly but needed to show the email rules warning again
+                viewModel.HasEmailRules = await HasEmailRules(store.Id);
+                return View(nameof(EditPaymentRequest), viewModel);
+            }
+
 
             var data = paymentRequest ?? new PaymentRequestData();
             data.StoreDataId = viewModel.StoreId;
@@ -202,12 +224,6 @@ namespace BTCPayServer.Controllers
                 ModelState.Remove(nameof(data.Currency));
                 viewModel.Amount = data.Amount;
                 viewModel.Currency = data.Currency;
-            }
-
-            if (!ModelState.IsValid)
-            {
-                viewModel.HasEmailRules = await HasEmailRules(store.Id);
-                return View(nameof(EditPaymentRequest), viewModel);
             }
 
             blob.Title = viewModel.Title;
@@ -225,9 +241,7 @@ namespace BTCPayServer.Controllers
             data.SetBlob(blob);
             var isNewPaymentRequest = string.IsNullOrEmpty(payReqId);
             if (isNewPaymentRequest)
-            {
                 data.Created = DateTimeOffset.UtcNow;
-            }
 
             data = await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(data);
 

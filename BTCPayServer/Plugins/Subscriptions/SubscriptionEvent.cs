@@ -51,6 +51,11 @@ public class SubscriptionEvent
         public override string ToString() => $"Subscriber {Subscriber.ToNiceString()} need reminder";
     }
 
+    public class PlanUpdated(PlanData plan) : SubscriptionEvent
+    {
+        public PlanData Plan { get; set; } = plan;
+    }
+
     public class PlanStarted(SubscriberData subscriber, PlanData previous) : SubscriberEvent(subscriber)
     {
         public PlanData PreviousPlan { get; set; } = previous;

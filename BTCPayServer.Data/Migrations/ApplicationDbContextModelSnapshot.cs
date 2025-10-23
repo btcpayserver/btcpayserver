@@ -1272,6 +1272,10 @@ namespace BTCPayServer.Migrations
                         .HasColumnName("metadata")
                         .HasDefaultValueSql("'{}'::jsonb");
 
+                    b.Property<decimal>("MonthlyRevenue")
+                        .HasColumnType("numeric")
+                        .HasColumnName("monthly_revenue");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")

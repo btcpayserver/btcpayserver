@@ -218,8 +218,12 @@ public class SubscriberData : BaseEntityData
         if (date is null)
             return null;
 
-        return date - TimeSpan.FromDays(PaymentReminderDays ?? Plan.Offering.GetMailsSettings()?.PaymentRemindersDays ?? 7);
+        return date - TimeSpan.FromDays(PaymentReminderDaysOrDefault);
     }
+
+
+    [NotMapped]
+    public int PaymentReminderDaysOrDefault => PaymentReminderDays ?? Plan.Offering.GetMailsSettings()?.PaymentRemindersDays ?? 7;
 
     public string ToNiceString()
         => $"{this.Customer?.GetPrimaryIdentity()} ({CustomerId})";

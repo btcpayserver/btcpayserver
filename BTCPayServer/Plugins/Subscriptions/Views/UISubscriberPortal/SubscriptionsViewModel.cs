@@ -40,6 +40,7 @@ public class SubscriptionsViewModel
     public int TotalPlans { get; set; }
 
     public int TotalSubscribers { get; set; }
+    public string TotalMonthlyRevenue { get; set; }
     public record SelectablePlan(string Name, string Id, bool HasTrial);
     public List<SelectablePlan> SelectablePlans { get; set; }
 

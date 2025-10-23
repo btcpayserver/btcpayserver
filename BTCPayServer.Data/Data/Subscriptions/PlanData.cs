@@ -61,6 +61,9 @@ public class PlanData : BaseEntityData
     [Column("members_count")]
     public int MemberCount { get; set; }
 
+    [Column("monthly_revenue")]
+    public decimal MonthlyRevenue { get; set; }
+
     [Column("optimistic_activation")]
     public bool OptimisticActivation { get; set; } = true;
 

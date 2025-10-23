@@ -243,6 +243,9 @@ public partial class UIOfferingController(
         var vm = new SubscriptionsViewModel(offering) { Section = section };
         vm.TotalPlans = plans.Count;
         vm.TotalSubscribers = plans.Select(p => p.MemberCount).Sum();
+        var total = plans.Where(p => p.Currency == vm.Currency).Select(p => p.MonthlyRevenue).Sum();
+        vm.TotalMonthlyRevenue = displayFormatter.Currency(total, vm.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+
         vm.SelectablePlans = plans
             .Where(p => p.Status == PlanData.PlanStatus.Active)
             .OrderBy(p => p.Name)
@@ -545,7 +548,7 @@ public partial class UIOfferingController(
         }
 
         await ctx.SaveChangesAsync();
-
+        eventAggregator.Publish(new SubscriptionEvent.PlanUpdated(plan));
 
         var customIdsToIds = offering.Entitlements.ToDictionary(x => x.CustomId, x => x.Id);
         var enabled = vm.Entitlements.Where(e => e.Selected).Select(e => customIdsToIds[e.CustomId]).ToArray();

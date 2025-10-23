@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251023083827_subs")]
+    [Migration("20251023130045_subs")]
     public partial class subs : Migration
     {
         /// <inheritdoc />
@@ -121,6 +121,7 @@ namespace BTCPayServer.Migrations
                     trial_days = table.Column<int>(type: "integer", nullable: false),
                     description = table.Column<string>(type: "text", nullable: true),
                     members_count = table.Column<int>(type: "integer", nullable: false),
+                    monthly_revenue = table.Column<decimal>(type: "numeric", nullable: false),
                     optimistic_activation = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
                     metadata = table.Column<string>(type: "jsonb", nullable: false, defaultValueSql: "'{}'::jsonb"),
                     additional_data = table.Column<string>(type: "jsonb", nullable: false, defaultValueSql: "'{}'::jsonb"),

@@ -45,6 +45,7 @@ public class SubscriptionHostedService(
     protected override void SubscribeToEvents()
     {
         this.Subscribe<InvoiceEvent>();
+        this.Subscribe<SubscriptionEvent.PlanUpdated>();
     }
 
     protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
@@ -72,6 +73,10 @@ public class SubscriptionHostedService(
             await UpdateSubscriptionStates(subCtx, new MemberSelector.PassedDate(from, to));
             if (subCtx.Events.Count != 0)
                 await settingsRepository.UpdateSetting(new MembershipServerSettings(to), "MembershipHostedService");
+        }
+        else if (evt is SubscriptionEvent.PlanUpdated planUpdated)
+        {
+            await UpdatePlanStats(subCtx.Context, planUpdated.Plan.Id);
         }
         else if (evt is SubscribeRequest subscribeRequest)
         {
@@ -245,7 +250,7 @@ public class SubscriptionHostedService(
                     m.NextPlan.Status is PlanData.PlanStatus.Active &&
                     m.AutoRenew)
                 {
-                    if (await subCtx.TryChargeSubscriber(m, "Auto renewal", m.NextPlan.Price))
+                    if (await subCtx.TryChargeSubscriber(m, $"Auto renewal for plan '{m.NextPlan.Name}'", m.NextPlan.Price))
                     {
                         newPhase = PhaseTypes.Normal;
                         var planBefore = m.Plan;
@@ -300,7 +305,7 @@ public class SubscriptionHostedService(
 
         foreach (var plan in GetActiveMemberChangedPlans(subCtx))
         {
-            await UpdatePlanMemberCount(ctx, plan);
+            await UpdatePlanStats(ctx, plan);
         }
     }
 
@@ -446,7 +451,7 @@ public class SubscriptionHostedService(
         using var scope = sub.NewPlanScope(checkout.Plan);
         if (sub.CanStartNextPlan)
         {
-            if (checkout.IsTrial || await subCtx.TryChargeSubscriber(sub, "Renewal", sub.NextPlan.Price))
+            if (checkout.IsTrial || await subCtx.TryChargeSubscriber(sub, $"Renewal for plan '{sub.NextPlan.Name}'", sub.NextPlan.Price))
             {
                 sub.StartNextPlan(now, checkout.IsTrial);
                 scope.Commit();
@@ -532,13 +537,30 @@ public class SubscriptionHostedService(
         return sub;
     }
 
-    private static async Task UpdatePlanMemberCount(ApplicationDbContext ctx, string planId)
+    private static async Task UpdatePlanStats(ApplicationDbContext ctx, string planId)
     {
         await ctx.Database.GetDbConnection()
             .ExecuteAsync("""
-                          UPDATE subscriptions_plans
-                          SET members_count = (SELECT COUNT(*) FROM subscriptions_subscribers WHERE plan_id = @id AND active)
-                          WHERE id = @id
+                          WITH defaults AS (SELECT 0),
+                              stats AS (
+                              SELECT COUNT(1) AS subscribers_count,
+                                     SUM( CASE sp.recurring_type
+                                                                        WHEN 'Monthly' THEN sp.price
+                                                                        WHEN 'Quarterly' THEN sp.price / 3.0::numeric
+                                                                        WHEN 'Yearly' THEN sp.price / 12.0::numeric
+                                                                        WHEN 'Forever' THEN 0
+                                                                      END) AS monthly_revenue
+                              FROM subscriptions_subscribers ss
+                              JOIN subscriptions_plans sp ON ss.plan_id = sp.id
+                              WHERE ss.plan_id = @id AND ss.active
+                              GROUP BY ss.plan_id
+                          )
+                          UPDATE subscriptions_plans AS sp
+                          SET members_count = COALESCE(stats.subscribers_count,0),
+                            monthly_revenue = COALESCE(stats.monthly_revenue, 0)
+                          FROM defaults d -- forces one row
+                          LEFT JOIN stats ON TRUE
+                          WHERE sp.id = @id;
                           """, new
             {
                 id = planId

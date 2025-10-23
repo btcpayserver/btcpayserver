@@ -40,7 +40,7 @@ namespace BTCPayServer.Controllers
                 availablePluginsByIdentifier.TryAdd(p.Identifier, p);
             var res = new ListPluginsViewModel()
             {
-                Plugins = pluginService.LoadedPlugins,
+                Plugins = pluginService.LoadInstalledPluginWithFingerprints(),
                 Installed = pluginService.Installed,
                 Available = availablePlugins,
                 Commands = pluginService.GetPendingCommands(),

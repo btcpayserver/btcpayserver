@@ -79,14 +79,15 @@ public class UIStoresEmailController(
             {
                 ModelState.AddModelError("Settings.From", StringLocalizer["Invalid email"]);
             }
-            if (!ModelState.IsValid)
-                return View(model);
         }
 
         var storeBlob = store.GetStoreBlob();
         var currentSettings = store.GetStoreBlob().EmailSettings;
         if (model is { IsCustomSMTP: true, Settings: { Password: null } })
             model.Settings.Password = currentSettings?.Password;
+
+        if (!ModelState.IsValid && command is not ("ResetPassword" or "mailpit"))
+            return View(model);
 
         if (command == "Test")
         {

@@ -1,0 +1,51 @@
+﻿<div class="modal fade" id="suspendSubscriberModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" text-translate="true">Suspend Subscriber</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                    <vc:icon symbol="close" />
+                </button>
+            </div>
+            <form method="post">
+                <div class="modal-body">
+                    <div text-translate="true">Would you like to proceed with suspending the following user?</div>
+                </div>
+                <div class="modal-body pt-0">
+                    <input id="suspendSubscriberId" name="customerId" type="hidden" />
+                    <div class="form-group">
+                        <label class="form-label" text-translate="true">Subscriber</label>
+                        <input id="suspendSubscriberName" type="text" disabled="disabled" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="suspensionReason" class="form-label" text-translate="true">Suspension Reason</label>
+                        <input id="suspensionReason" name="suspensionReason" type="text" placeholder="Enter the reason (optional)" class="form-control" />
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" name="command" value="suspend" class="btn btn-danger" text-translate="true">Suspend</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modalEl = document.getElementById('suspendSubscriberModal');
+        if (!modalEl) return;
+        modalEl.addEventListener('show.bs.modal', function (event) {
+            const trigger = event.relatedTarget;
+            if (!trigger) return;
+            const email = trigger.getAttribute('data-subscriber-email');
+
+            const idEl = modalEl.querySelector('#suspendSubscriberId');
+            const nameEl = modalEl.querySelector('#suspendSubscriberName');
+            const reasonEl = modalEl.querySelector('#suspensionReason');
+
+            if (nameEl) nameEl.value = email || '';
+            if (reasonEl) reasonEl.value = '';
+            if (idEl) idEl.value = trigger.getAttribute('data-subscriber-id');
+        });
+    });
+</script>

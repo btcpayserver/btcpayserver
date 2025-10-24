@@ -271,9 +271,9 @@ namespace BTCPayServer.Tests
         {
             foreach (string localizer in new[] { "ViewLocalizer", "StringLocalizer" })
             {
-                if (txt.Contains(localizer))
+                if (txt.Contains(localizer, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    var matches = Regex.Matches(txt, localizer + "\\[\"(.*?)\"[\\],]");
+                    var matches = Regex.Matches(txt, localizer + "\\[\"(.*?)\"[\\],]", RegexOptions.IgnoreCase);
                     foreach (Match match in matches)
                     {
                         var k = match.Groups[1].Value;

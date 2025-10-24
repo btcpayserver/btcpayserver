@@ -71,7 +71,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
         {
             new()
             {
-                Type = PendingTransactionTriggerProvider.PendingTransactionCreated,
+                Trigger = PendingTransactionTriggerProvider.PendingTransactionCreated,
                 Description = "Pending Transaction - Created",
                 SubjectExample = "Pending Transaction {PendingTransaction.TrimmedId} Created",
                 BodyExample = "Review the transaction {PendingTransaction.Id} and sign it on: {PendingTransaction.Link}",
@@ -79,7 +79,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             },
             new()
             {
-                Type = PendingTransactionTriggerProvider.PendingTransactionSignatureCollected,
+                Trigger = PendingTransactionTriggerProvider.PendingTransactionSignatureCollected,
                 Description = "Pending Transaction - Signature Collected",
                 SubjectExample = "Signature Collected for Pending Transaction {PendingTransaction.TrimmedId}",
                 BodyExample = "So far {PendingTransaction.SignaturesCollected} signatures collected out of {PendingTransaction.SignaturesNeeded} signatures needed. ",
@@ -87,7 +87,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             },
             new()
             {
-                Type = PendingTransactionTriggerProvider.PendingTransactionBroadcast,
+                Trigger = PendingTransactionTriggerProvider.PendingTransactionBroadcast,
                 Description = "Pending Transaction - Broadcast",
                 SubjectExample = "Transaction {PendingTransaction.TrimmedId} has been Broadcast",
                 BodyExample = "Transaction is visible in mempool on: https://mempool.space/tx/{PendingTransaction.Id}. ",
@@ -95,7 +95,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             },
             new()
             {
-                Type = PendingTransactionTriggerProvider.PendingTransactionCancelled,
+                Trigger = PendingTransactionTriggerProvider.PendingTransactionCancelled,
                 Description = "Pending Transaction - Cancelled",
                 SubjectExample = "Pending Transaction {PendingTransaction.TrimmedId} Cancelled",
                 BodyExample = "Transaction {PendingTransaction.Id} is cancelled and signatures are no longer being collected. ",
@@ -128,7 +128,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
         {
             new()
             {
-                Type = WebhookEventType.PaymentRequestCreated,
+                Trigger = WebhookEventType.PaymentRequestCreated,
                 Description = "Payment Request - Created",
                 SubjectExample = "Payment Request {PaymentRequest.Id} created",
                 BodyExample = "Payment Request {PaymentRequest.Id} ({PaymentRequest.Title}) created.",
@@ -137,7 +137,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             },
             new()
             {
-                Type = WebhookEventType.PaymentRequestUpdated,
+                Trigger = WebhookEventType.PaymentRequestUpdated,
                 Description = "Payment Request - Updated",
                 SubjectExample = "Payment Request {PaymentRequest.Id} updated",
                 BodyExample = "Payment Request {PaymentRequest.Id} ({PaymentRequest.Title}) updated.",
@@ -146,7 +146,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             },
             new()
             {
-                Type = WebhookEventType.PaymentRequestArchived,
+                Trigger = WebhookEventType.PaymentRequestArchived,
                 Description = "Payment Request - Archived",
                 SubjectExample = "Payment Request {PaymentRequest.Id} archived",
                 BodyExample = "Payment Request {PaymentRequest.Id} ({PaymentRequest.Title}) archived.",
@@ -155,7 +155,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             },
             new()
             {
-                Type = WebhookEventType.PaymentRequestStatusChanged,
+                Trigger = WebhookEventType.PaymentRequestStatusChanged,
                 Description = "Payment Request - Status Changed",
                 SubjectExample = "Payment Request {PaymentRequest.Id} status changed",
                 BodyExample = "Payment Request {PaymentRequest.Id} ({PaymentRequest.Title}) status changed to {PaymentRequest.Status}.",
@@ -164,7 +164,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             },
             new()
             {
-                Type = WebhookEventType.PaymentRequestCompleted,
+                Trigger = WebhookEventType.PaymentRequestCompleted,
                 Description = "Payment Request - Completed",
                 SubjectExample = "Payment Request {PaymentRequest.Title} {PaymentRequest.ReferenceId} Completed",
                 BodyExample = "The total of {PaymentRequest.Amount} {PaymentRequest.Currency} has been received and Payment Request {PaymentRequest.Id} is completed.\nReview the payment request: {PaymentRequest.Link}",
@@ -190,7 +190,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
         {
             new()
             {
-                Type = WebhookEventType.PayoutCreated,
+                Trigger = WebhookEventType.PayoutCreated,
                 Description = "Payout - Created",
                 SubjectExample = "Payout {Payout.Id} created",
                 BodyExample = "Payout {Payout.Id} (Pull Payment Id: {Payout.PullPaymentId}) created.",
@@ -198,7 +198,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             },
             new()
             {
-                Type = WebhookEventType.PayoutApproved,
+                Trigger = WebhookEventType.PayoutApproved,
                 Description = "Payout - Approved",
                 SubjectExample = "Payout {Payout.Id} approved",
                 BodyExample = "Payout {Payout.Id} (Pull Payment Id: {Payout.PullPaymentId}) approved.",
@@ -206,7 +206,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             },
             new()
             {
-                Type = WebhookEventType.PayoutUpdated,
+                Trigger = WebhookEventType.PayoutUpdated,
                 Description = "Payout - Updated",
                 SubjectExample = "Payout {Payout.Id} updated",
                 BodyExample = "Payout {Payout.Id} (Pull Payment Id: {Payout.PullPaymentId}) updated.",
@@ -236,7 +236,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
         {
             new()
             {
-                Type = WebhookEventType.InvoiceCreated,
+                Trigger = WebhookEventType.InvoiceCreated,
                 Description = "Invoice - Created",
                 SubjectExample = "Invoice {Invoice.Id} created",
                 BodyExample = "Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) created.",
@@ -245,7 +245,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             },
             new()
             {
-                Type = WebhookEventType.InvoiceReceivedPayment,
+                Trigger = WebhookEventType.InvoiceReceivedPayment,
                 Description = "Invoice - Received Payment",
                 SubjectExample = "Invoice {Invoice.Id} received payment",
                 BodyExample = "Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) received payment.",
@@ -254,7 +254,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             },
             new()
             {
-                Type = WebhookEventType.InvoiceProcessing,
+                Trigger = WebhookEventType.InvoiceProcessing,
                 Description = "Invoice - Is Processing",
                 SubjectExample = "Invoice {Invoice.Id} processing",
                 BodyExample = "Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) is processing.",
@@ -263,7 +263,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             },
             new()
             {
-                Type = WebhookEventType.InvoiceExpired,
+                Trigger = WebhookEventType.InvoiceExpired,
                 Description = "Invoice - Expired",
                 SubjectExample = "Invoice {Invoice.Id} expired",
                 BodyExample = "Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) expired.",
@@ -272,7 +272,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             },
             new()
             {
-                Type = WebhookEventType.InvoiceSettled,
+                Trigger = WebhookEventType.InvoiceSettled,
                 Description = "Invoice - Is Settled",
                 SubjectExample = "Invoice {Invoice.Id} settled",
                 BodyExample = "Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) is settled.",
@@ -281,7 +281,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             },
             new()
             {
-                Type = WebhookEventType.InvoiceInvalid,
+                Trigger = WebhookEventType.InvoiceInvalid,
                 Description = "Invoice - Became Invalid",
                 SubjectExample = "Invoice {Invoice.Id} invalid",
                 BodyExample = "Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) invalid.",
@@ -290,7 +290,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             },
             new()
             {
-                Type = WebhookEventType.InvoicePaymentSettled,
+                Trigger = WebhookEventType.InvoicePaymentSettled,
                 Description = "Invoice - Payment Settled",
                 SubjectExample = "Invoice {Invoice.Id} payment settled",
                 BodyExample = "Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) payment settled.",
@@ -299,7 +299,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             },
             new()
             {
-                Type = WebhookEventType.InvoiceExpiredPaidPartial,
+                Trigger = WebhookEventType.InvoiceExpiredPaidPartial,
                 Description = "Invoice - Expired Paid Partial",
                 SubjectExample = "Invoice {Invoice.Id} expired with partial payment",
                 BodyExample = "Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) expired with partial payment. \nPlease review and take appropriate action: {Invoice.Link}",
@@ -308,7 +308,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             },
             new()
             {
-                Type = WebhookEventType.InvoicePaidAfterExpiration,
+                Trigger = WebhookEventType.InvoicePaidAfterExpiration,
                 Description = "Invoice - Expired Paid Late",
                 SubjectExample = "Invoice {Invoice.Id} paid after expiration",
                 BodyExample = "Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) paid after expiration.",

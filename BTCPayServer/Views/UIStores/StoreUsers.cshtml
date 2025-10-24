@@ -24,7 +24,7 @@
 <div class="row">
     <div class="col-xxl-constrain col-xl-8">
         <p>@ViewLocalizer["Give other registered BTCPay Server users access to your store. See the {0} for granted permissions.", Html.ActionLink(StringLocalizer["roles"], "ListRoles", "UIStores", new { storeId })]</p>
-            
+
         @if (!ViewContext.ModelState.IsValid)
         {
             <div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
@@ -56,7 +56,7 @@
                         <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
                             <div class="d-inline-flex align-items-center gap-3">
                                 <a asp-action="UpdateStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#EditModal" data-user-email="@user.Email" data-user-role="@user.Role" text-translate="true">Change Role</a>
-                                <a asp-action="DeleteStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@StringLocalizer["This action will prevent {0} from accessing this store and its settings.", Html.Encode(user.Email)]" data-confirm-input="@StringLocalizer["REMOVE"]" text-translate="true">Remove</a>
+                                <a asp-action="DeleteStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@StringLocalizer["This action will prevent {0} from accessing this store and its settings.", Html.Encode(user.Email)]" data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Remove</a>
                             </div>
                         </td>
                     </tr>
@@ -104,7 +104,7 @@
             const action = $target.dataset.action || ($target.nodeName === 'A'
                 ? $target.getAttribute('href')
                 : $target.form.getAttribute('action'))
-    
+
             if ($form && !$form.hasAttribute('action')) $form.setAttribute('action', action)
             if (userEmail) $email.textContent = userEmail
             if (userRole) $role.value = userRole

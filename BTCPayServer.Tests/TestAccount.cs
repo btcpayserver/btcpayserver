@@ -171,14 +171,14 @@ namespace BTCPayServer.Tests
             return controller;
         }
 
-        public async Task CreateStoreAsync()
+        public async Task CreateStoreAsync(string preferredExchange = "CoinGecko")
         {
             if (UserId is null)
             {
                 await RegisterAsync();
             }
             var store = GetController<UIUserStoresController>();
-            await store.CreateStore(new CreateStoreViewModel { Name = "Test Store", PreferredExchange = "coingecko", CanEditPreferredExchange = true});
+            await store.CreateStore(new CreateStoreViewModel { Name = "Test Store", PreferredExchange = preferredExchange.ToLowerInvariant(), CanEditPreferredExchange = true});
             StoreId = store.CreatedStoreId;
             parent.Stores.Add(StoreId);
         }
@@ -225,7 +225,7 @@ namespace BTCPayServer.Tests
             Assert.IsType<RedirectToActionResult>(GetController<UIStoresController>().LightningSettings(lnSettingsVm).Result);
         }
 
-        private async Task RegisterAsync(bool isAdmin = false)
+        public async Task RegisterAsync(bool isAdmin = false)
         {
             var account = parent.PayTester.GetController<UIAccountController>();
             RegisterDetails = new RegisterViewModel()

@@ -39,15 +39,15 @@
             if (confirmInput) {
                 $text.removeAttribute('hidden')
                 $continue.setAttribute('disabled', 'disabled')
-                $inputText.textContent = confirmInput
+                $inputText.textContent = confirmInput.toUpperCase()
                 $input.setAttribute("autocomplete", "off")
                 $input.addEventListener('input', event => {
-                    event.target.value.trim() === confirmInput
+                    event.target.value.trim().toLowerCase() === confirmInput.toLowerCase()
                         ? $continue.removeAttribute('disabled')
                         : $continue.setAttribute('disabled', 'disabled')
                 })
                 $form.addEventListener('submit', event => {
-                    if ($input.value.trim() !== confirmInput) {
+                    if ($input.value.trim().toLowerCase() !== confirmInput.toLowerCase()) {
                         event.preventDefault()
                     }
                 })

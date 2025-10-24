@@ -569,7 +569,7 @@ namespace BTCPayServer.Tests
             return (name, appId);
         }
 
-        public async Task PayInvoice(bool mine = false, decimal? amount = null)
+        public async Task PayInvoice(bool mine = false, decimal? amount = null, bool clickRedirect = false)
         {
             if (amount is not null)
             {
@@ -585,6 +585,10 @@ namespace BTCPayServer.Tests
                 await Page.Locator("xpath=//*[text()=\"Invoice Paid\" or text()=\"Payment Received\"]").WaitForAsync();
             else
                 await Page.Locator("xpath=//*[text()=\"Invoice Paid\" or text()=\"Payment Received\" or text()=\"The invoice hasn't been paid in full.\"]").WaitForAsync();
+            if (clickRedirect)
+            {
+                await Page.ClickAsync("#StoreLink");
+            }
         }
 
         /// <summary>
@@ -761,6 +765,12 @@ namespace BTCPayServer.Tests
                 await ClickPagePrimary();
             });
             return await new StreamReader(await download.CreateReadStreamAsync()).ReadToEndAsync();
+        }
+
+        public async Task ConfirmDeleteModal()
+        {
+            await Page.FillAsync("#ConfirmInput", "DELETE");
+            await Page.ClickAsync("#ConfirmContinue");
         }
     }
 }

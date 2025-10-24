@@ -296,8 +296,15 @@ namespace BTCPayServer.Tests
         }
         public async Task Logout()
         {
-            await Page.Locator("#Nav-Account").ClickAsync();
-            await Page.Locator("#Nav-Logout").ClickAsync();
+            // go to the logout URL 
+            await GoToUrl("/logout");
+            // Wait for the page to load after logout
+            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            // If ended up on store creation page (user has no stores), go to login page
+            if (Page.Url.Contains("/stores/create"))
+            {
+                await GoToUrl("/login");
+            }
         }
 
         public async Task GoToHome()
@@ -761,6 +768,30 @@ namespace BTCPayServer.Tests
                 await ClickPagePrimary();
             });
             return await new StreamReader(await download.CreateReadStreamAsync()).ReadToEndAsync();
+        }
+
+        public async Task AssertPageAccess(bool shouldHaveAccess, string url)
+        {
+            await GoToUrl(url);
+            await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+            var content = await Page.ContentAsync();
+            Assert.DoesNotContain("404 - Page not found", content);
+            if (shouldHaveAccess)
+            {
+                Assert.DoesNotContain("- Denied</h", content);
+                // check associated link is active if present
+                var hrefToMatch = new Uri(Link(url), UriKind.Absolute).AbsolutePath.TrimEnd('/');
+                var sidebarLink = Page.Locator($"#mainNav a[href=\"{hrefToMatch}\"], #mainNav a[href=\"{hrefToMatch}/\"]");
+                if (await sidebarLink.CountAsync() > 0)
+                {
+                    var classAttr = await sidebarLink.First.GetAttributeAsync("class");
+                    Assert.Contains("active", classAttr);
+                }
+            }
+            else
+            {
+               Assert.Contains("- Denied</h", content);
+            }
         }
     }
 }

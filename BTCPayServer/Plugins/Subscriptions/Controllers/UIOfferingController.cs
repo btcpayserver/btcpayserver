@@ -294,6 +294,7 @@ public partial class UIOfferingController(
             var triggers = emailTriggers
                 .Where(t => WebhookSubscriptionEvent.IsSubscriptionTrigger(t.Trigger))
                 .ToDictionary(t => t.Trigger);
+            vm.AvailableTriggers = triggers.Values.ToList();
             foreach (var emailRule in
                      await ctx.EmailRules
                          .Where(r => r.StoreId == storeId && r.OfferingId == offeringId)
@@ -307,7 +308,6 @@ public partial class UIOfferingController(
                 });
                 triggers.Remove(triggerViewModel.Trigger);
             }
-            vm.NewEmailRules = triggers.Values.ToList();
         }
 
         return View(nameof(Offering), vm);

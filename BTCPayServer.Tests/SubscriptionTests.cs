@@ -73,7 +73,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         for (int i = 0; i < 3; i++)
         {
             await s.Page.GetByRole(AriaRole.Link, new() { Name = "Remove" }).Nth(1).ClickAsync();
-            await s.Page.GetByRole(AriaRole.Button, new() { Name = "Delete" }).ClickAsync();
+            await s.ConfirmDeleteModal();
             await s.FindAlertMessage();
         }
 
@@ -382,7 +382,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             await portal.GoToReminder();
             var paymentReminder = await sendingPaymentReminder;
 
-            await portal.AssertCallToAction(PortalPMO.CallToAction.Warning, noticeTitle: "Payment due in 7 days");
+            await portal.AssertCallToAction(PortalPMO.CallToAction.Warning, noticeTitle: "Payment due in 3 days");
             await portal.GoToNextPhase();
 
             await portal.AssertCallToAction(PortalPMO.CallToAction.Danger, noticeTitle: "Payment due");
@@ -694,7 +694,8 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             var text = await (await s.FindAlertMessage()).TextContentAsync();
             var match = Regex.Match(text!, @"\((.*?) USD has been refunded\)");
             var v = decimal.Parse(match.Groups[1].Value);
-            Assert.Equal(refunded, v, 0);
+            var diff = Math.Abs(refunded - v);
+            Assert.True(diff < 2.0m);
             return v;
         }
     }

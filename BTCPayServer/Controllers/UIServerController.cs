@@ -919,7 +919,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             return View("Confirm",
                 new ConfirmModel("Delete dynamic DNS service",
-                    $"Deleting the dynamic DNS service for <strong>{Html.Encode(hostname)}</strong> means your BTCPay Server will stop updating the associated DNS record periodically.", "Delete"));
+                    $"Deleting the dynamic DNS service for <strong>{Html.Encode(hostname)}</strong> means your BTCPay Server will stop updating the associated DNS record periodically.", StringLocalizer["Delete"]));
         }
 
         [HttpPost("server/services/dynamic-dns/{hostname}/delete")]

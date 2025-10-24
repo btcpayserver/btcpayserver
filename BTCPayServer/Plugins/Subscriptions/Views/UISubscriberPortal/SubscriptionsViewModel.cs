@@ -55,5 +55,5 @@ public class SubscriptionsViewModel
     }
 
     public List<EmailRule> EmailRules { get; set; }
-    public List<EmailTriggerViewModel> NewEmailRules { get; set; }
+    public List<EmailTriggerViewModel> AvailableTriggers { get; set; }
 }

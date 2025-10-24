@@ -651,7 +651,7 @@ public partial class UIStoresController
         {
             Title = StringLocalizer["Remove {0} wallet", network.CryptoCode],
             Description = WalletRemoveWarning(derivation.IsHotWallet, network.CryptoCode),
-            Action = StringLocalizer["Remove"]
+            Action = StringLocalizer["Delete"]
         });
     }
 

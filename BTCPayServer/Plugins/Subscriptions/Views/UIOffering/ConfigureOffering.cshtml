@@ -8,7 +8,7 @@
     string offeringId = (string)this.Context.GetRouteValue("offeringId");
     ViewData.SetActivePage(AppsNavPages.Update, StringLocalizer["Configure offering"], offeringId);
     string storeId = (string)this.Context.GetRouteValue("storeId");
-    var deleteModal = new ConfirmModel("Delete offering", "This offering will be removed from this store.", "Delete")
+    var deleteModal = new ConfirmModel(StringLocalizer["Delete offering"], StringLocalizer["This offering will be removed from this store."], StringLocalizer["Delete"])
     {
         ControllerName = "UIApps",
         ActionName = nameof(UIAppsController.DeleteApp),
@@ -104,7 +104,7 @@
         <div class="d-grid d-sm-flex flex-wrap gap-3 mt-3">
             <a id="DeleteApp" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal"
                data-description="The app <strong>@Html.Encode(Model.Name)</strong> and its settings will be permanently deleted."
-               data-confirm-input="DELETE"
+               data-confirm-input="@StringLocalizer["Delete"]"
                permission="@Policies.CanModifyStoreSettings">Delete this offering</a>
         </div>
     </section>

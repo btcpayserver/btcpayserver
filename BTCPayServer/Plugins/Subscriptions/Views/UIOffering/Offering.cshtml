@@ -158,7 +158,7 @@
                                         asp-route-planId="@p.Data.Id"
                                         data-bs-toggle="modal" data-bs-target="#ConfirmModal"
                                         data-description="@ViewLocalizer["This action will remove the plan <b>{0}</b>.", Html.Encode(p.Data.Name)]"
-                                        data-confirm-input="@StringLocalizer["REMOVE"]" text-translate="true">Remove</a>
+                                        data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Remove</a>
                                 </div>
                             </td>
                         </tr>
@@ -375,20 +375,17 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center gap-4 mb-3">
                         <h5 class="mb-0" text-translate="true">Email rules</h5>
-                        @if (Model.NewEmailRules.Count != 0)
-                        {
-                            <span class="dropdown-toggle btn btn-outline-secondary" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Add email rule</span>
-                            <div class="dropdown-menu">
-                                @foreach (var availableRule in Model.NewEmailRules)
-                                {
-                                    <button
-                                        type="submit"
-                                        name="addEmailRule"
-                                        value="@availableRule.Trigger"
-                                        class="new-subscriber-link dropdown-item lh-base">@StringLocalizer[availableRule.Description]</button>
-                                }
-                            </div>
-                        }
+                        <span class="dropdown-toggle btn btn-outline-secondary" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Add email rule</span>
+                        <div class="dropdown-menu">
+                            @foreach (var availableRule in Model.AvailableTriggers)
+                            {
+                                <button
+                                    type="submit"
+                                    name="addEmailRule"
+                                    value="@availableRule.Trigger"
+                                    class="new-subscriber-link dropdown-item lh-base">@StringLocalizer[availableRule.Description]</button>
+                            }
+                        </div>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-hover">
@@ -425,7 +422,7 @@
                                                    asp-route-redirectUrl="@thisPage"
                                                    asp-route-ruleId="@rule.Data.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal"
                                                    data-description="@ViewLocalizer["This action will remove the rule with the trigger <b>{0}</b>.", Html.Encode(rule.TriggerViewModel.Description)]"
-                                                   data-confirm-input="@StringLocalizer["REMOVE"]" text-translate="true">Remove</a>
+                                                   data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Remove</a>
                                             </div>
                                         </td>
                                     </tr>

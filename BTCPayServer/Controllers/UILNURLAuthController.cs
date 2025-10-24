@@ -41,7 +41,7 @@ namespace BTCPayServer
             return View("Confirm",
                 new ConfirmModel(StringLocalizer["Remove LNURL Auth link"],
                     StringLocalizer["Your account will no longer have this Lightning wallet as an option for two-factor authentication."],
-                    StringLocalizer["Remove"]));
+                    StringLocalizer["Delete"]));
         }
 
         [HttpPost("{id}/delete")]

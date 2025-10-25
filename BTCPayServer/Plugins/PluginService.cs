@@ -188,6 +188,14 @@ namespace BTCPayServer.Plugins
             PluginManager.QueueCommands(dest, ("delete", plugin));
         }
 
+        public void EnablePlugin(string plugin){
+            PluginManager.QueueCommands(_dataDirectories.Value.PluginDir, ("enable", plugin));
+        }
+
+        public void DisablePlugin(string plugin){
+            PluginManager.QueueCommands(_dataDirectories.Value.PluginDir, ("disable", plugin));
+        }
+
         public class AvailablePlugin
         {
             public string Identifier { get; set; }

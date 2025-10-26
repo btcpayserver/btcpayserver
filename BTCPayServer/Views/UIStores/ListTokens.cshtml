@@ -32,7 +32,7 @@
             <span text-translate="true">To generate Greenfield API keys, please</span>
             <a asp-controller="UIManage" asp-action="APIKeys" text-translate="true">click here</a>.
         </p>
-        
+
         <div class="d-flex align-items-center justify-content-between mt-5 mb-3">
             <h3 class="mb-0">@ViewData["Title"]</h3>
             <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanModifyStoreSettings" text-translate="true">
@@ -102,4 +102,4 @@
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Revoke access token", "The access token will be revoked. Do you wish to continue?", "Revoke"))" permission="@Policies.CanModifyStoreSettings" />
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Revoke access token"], StringLocalizer["The access token will be revoked. Do you wish to continue?"], StringLocalizer["Revoke"]))" permission="@Policies.CanModifyStoreSettings" />

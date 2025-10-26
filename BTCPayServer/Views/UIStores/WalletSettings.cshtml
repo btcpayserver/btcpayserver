@@ -67,8 +67,8 @@
                             data-bs-target="#ConfirmModal"
                             data-title="@StringLocalizer["Remove {0} wallet", Model.CryptoCode]"
                             data-description="@ViewData["RemoveDescription"]"
-                            data-confirm="@StringLocalizer["Remove"]"
-                            data-confirm-input="@StringLocalizer["REMOVE"]"
+                            data-confirm="@StringLocalizer["Delete"]"
+                            data-confirm-input="@StringLocalizer["Delete"]"
                             text-translate="true">Remove wallet</button>
                 </form>
             </div>
@@ -176,7 +176,7 @@
     }
 </form>
 
-<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["{0} wallet", Model.CryptoCode], StringLocalizer["Change"], "Update"))" />
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["{0} wallet", Model.CryptoCode], StringLocalizer["Change"], StringLocalizer["Update"]))" />
 <partial name="ShowQR"/>
 
 @section PageFootContent {

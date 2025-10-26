@@ -74,7 +74,7 @@
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Disable modification of SSH settings", "This action is permanent and will remove the ability to change the SSH settings via the BTCPay Server user interface.", "Disable"))"/>
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Disable modification of SSH settings"], StringLocalizer["This action is permanent and will remove the ability to change the SSH settings via the BTCPay Server user interface."], StringLocalizer["Disable"]))"/>
 
 @section PageFootContent {
     <script>

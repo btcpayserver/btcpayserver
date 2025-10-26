@@ -53,7 +53,7 @@
                                 <td class="d-block text-break">@wh.Url</td>
                                 <td class="actions-col text-md-nowrap" permission="@Policies.CanModifyStoreSettings">
                                     <a asp-action="ModifyWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id" text-translate="true">Modify</a> -
-                                    <a asp-action="DeleteWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-confirm-input="DELETE" text-translate="true">Delete</a>
+                                    <a asp-action="DeleteWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Delete</a>
                                 </td>
                             </tr>
                         }

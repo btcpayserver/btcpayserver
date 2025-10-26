@@ -33,7 +33,7 @@ namespace BTCPayServer.Fido2
         [HttpGet("{id}/delete")]
         public IActionResult Remove(string id)
         {
-            return View("Confirm", new ConfirmModel(StringLocalizer["Remove security device"], StringLocalizer["Your account will no longer have this security device as an option for two-factor authentication."], StringLocalizer["Remove"]));
+            return View("Confirm", new ConfirmModel(StringLocalizer["Remove security device"], StringLocalizer["Your account will no longer have this security device as an option for two-factor authentication."], StringLocalizer["Delete"]));
         }
 
         [HttpPost("{id}/delete")]

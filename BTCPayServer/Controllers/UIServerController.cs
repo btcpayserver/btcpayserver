@@ -919,7 +919,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             return View("Confirm",
                 new ConfirmModel("Delete dynamic DNS service",
-                    $"Deleting the dynamic DNS service for <strong>{Html.Encode(hostname)}</strong> means your BTCPay Server will stop updating the associated DNS record periodically.", "Delete"));
+                    $"Deleting the dynamic DNS service for <strong>{Html.Encode(hostname)}</strong> means your BTCPay Server will stop updating the associated DNS record periodically.", StringLocalizer["Delete"]));
         }
 
         [HttpPost("server/services/dynamic-dns/{hostname}/delete")]
@@ -1054,7 +1054,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/services/ssh/disable")]
         public IActionResult SSHServiceDisable()
         {
-            return View("Confirm", new ConfirmModel("Disable modification of SSH settings", "This action is permanent and will remove the ability to change the SSH settings via the BTCPay Server user interface.", "Disable"));
+            return View("Confirm", new ConfirmModel(StringLocalizer["Disable modification of SSH settings"], StringLocalizer["This action is permanent and will remove the ability to change the SSH settings via the BTCPay Server user interface."], StringLocalizer["Disable"]));
         }
 
         [HttpPost("server/services/ssh/disable")]

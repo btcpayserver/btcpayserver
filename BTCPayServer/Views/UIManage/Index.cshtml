@@ -70,7 +70,7 @@
         }
         <h3 class="mt-5 mb-4" text-translate="true">Delete Account</h3>
         <div id="danger-zone">
-            <a id="delete-user" class="btn btn-outline-danger mb-5" data-confirm-input="DELETE" data-bs-toggle="modal" data-bs-target="#ConfirmModal" asp-action="DeleteUserPost" data-description="@StringLocalizer["This action will also delete all stores, invoices, apps and data associated with the user."]" text-translate="true">Delete Account</a>
+            <a id="delete-user" class="btn btn-outline-danger mb-5" data-confirm-input="@StringLocalizer["Delete"]" data-bs-toggle="modal" data-bs-target="#ConfirmModal" asp-action="DeleteUserPost" data-description="@StringLocalizer["This action will also delete all stores, invoices, apps and data associated with the user."]" text-translate="true">Delete Account</a>
         </div>
     </div>
 </form>

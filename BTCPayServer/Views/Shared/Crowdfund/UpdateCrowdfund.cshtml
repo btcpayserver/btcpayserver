@@ -165,7 +165,7 @@
                 <span asp-validation-for="StartDate" class="text-danger"></span>
                 <span asp-validation-for="EndDate" class="text-danger"></span>
             </div>
-            
+
             <div class="form-group mt-4" id="ResetRow" hidden="@(Model.StartDate == null)">
                 <div class="d-flex align-items-center mb-3">
                     <input asp-for="IsRecurring" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#ResetEverySettings" aria-expanded="@(Model.IsRecurring)" aria-controls="ResetEverySettings" />
@@ -175,7 +175,7 @@
                         <div class="text-muted" text-translate="true">Reset goal after a specific period of time, based on your crowdfund's start date.</div>
                     </div>
                 </div>
-                
+
                 <div class="collapse @(Model.IsRecurring ? "show" : "")" id="ResetEverySettings">
                     <div class="form-group mb-0 pt-2 w-250px">
                         <label asp-for="ResetEveryAmount" class="form-label"></label>
@@ -222,14 +222,14 @@
                 <label asp-for="EnforceTargetAmount" class="form-check-label"></label>
                 <span asp-validation-for="EnforceTargetAmount" class="text-danger"></span>
             </div>
-            
+
             <h3 class="mt-5 mb-4" text-translate="true">Crowdfund Behavior</h3>
             <div class="d-flex">
                 <input asp-for="UseAllStoreInvoices" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="UseAllStoreInvoices" class="form-check-label"></label>
                 <span asp-validation-for="UseAllStoreInvoices" class="text-danger"></span>
             </div>
-            
+
             <h3 class="mt-5 mb-4" text-translate="true">Checkout</h3>
             <div class="form-group">
                 <label asp-for="FormId" class="form-label"></label>
@@ -384,8 +384,8 @@ Please insert valid HTML here. Only meta tags accepted.'>
             }
         </button>
     </form>
-    <a id="DeleteApp" class="btn btn-outline-danger" asp-controller="UIApps" asp-action="DeleteApp" asp-route-appId="@Model.AppId" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Html.Encode(Model.AppName)</strong> and its settings will be permanently deleted." data-confirm-input="DELETE" permission="@Policies.CanModifyStoreSettings">Delete this app</a>
+    <a id="DeleteApp" class="btn btn-outline-danger" asp-controller="UIApps" asp-action="DeleteApp" asp-route-appId="@Model.AppId" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Html.Encode(Model.AppName)</strong> and its settings will be permanently deleted." data-confirm-input="@StringLocalizer["Delete"]" permission="@Policies.CanModifyStoreSettings">Delete this app</a>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" permission="@Policies.CanModifyStoreSettings" />
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete app"], StringLocalizer["This app will be removed from this store."], StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />
 

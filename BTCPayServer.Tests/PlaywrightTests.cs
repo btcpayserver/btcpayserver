@@ -144,8 +144,7 @@ namespace BTCPayServer.Tests
             await s.GoToStore(StoreNavPages.Forms);
             Assert.Contains("Custom Form 1", await s.Page.ContentAsync());
             await s.Page.GetByRole(AriaRole.Link, new() { Name = "Remove" }).ClickAsync();
-            await s.Page.FillAsync("#ConfirmInput", "DELETE");
-            await s.Page.ClickAsync("#ConfirmContinue");
+            await s.ConfirmDeleteModal();
             Assert.DoesNotContain("Custom Form 1", await s.Page.ContentAsync());
             await s.ClickPagePrimary();
             await s.Page.FillAsync("[name='Name']", "Custom Form 2");
@@ -491,8 +490,7 @@ namespace BTCPayServer.Tests
             //let's test delete user quickly while we're at it
             await s.GoToProfile();
             await s.Page.ClickAsync("#delete-user");
-            await s.Page.FillAsync("#ConfirmInput", "DELETE");
-            await s.Page.ClickAsync("#ConfirmContinue");
+            await s.ConfirmDeleteModal();
             Assert.Contains("/login", s.Page.Url);
         }
 
@@ -1488,16 +1486,14 @@ namespace BTCPayServer.Tests
             Assert.Equal(2, await deleteLinks.CountAsync());
 
             await deleteLinks.First.ClickAsync();
-            await s.Page.FillAsync("#ConfirmInput", "REMOVE");
-            await s.Page.ClickAsync("#ConfirmContinue");
+            await s.ConfirmDeleteModal();
 
             await s.FindAlertMessage();
             deleteLinks = s.Page.GetByRole(AriaRole.Link, new() { Name = "Remove" });
             Assert.Equal(1, await deleteLinks.CountAsync());
 
             await deleteLinks.First.ClickAsync();
-            await s.Page.FillAsync("#ConfirmInput", "REMOVE");
-            await s.Page.ClickAsync("#ConfirmContinue");
+            await s.ConfirmDeleteModal();
 
             await s.FindAlertMessage();
             Assert.Contains("There are no rules yet.", await s.Page.ContentAsync());
@@ -1712,8 +1708,7 @@ namespace BTCPayServer.Tests
             Assert.Contains(await passEl.TextContentAsync(), "hellorockstar", StringComparison.OrdinalIgnoreCase);
             await s.Page.ClickAsync("#delete");
             await s.Page.WaitForSelectorAsync("#ConfirmInput");
-            await s.Page.FillAsync("#ConfirmInput", "DELETE");
-            await s.Page.ClickAsync("#ConfirmContinue");
+            await s.ConfirmDeleteModal();
             await s.FindAlertMessage();
             seedEl = s.Page.Locator("#Seed");
             Assert.Contains("Seed removed", await seedEl.TextContentAsync(), StringComparison.OrdinalIgnoreCase);
@@ -2131,8 +2126,7 @@ namespace BTCPayServer.Tests
             var deleteLinks = await s.Page.Locator("a:has-text('Delete')").AllAsync();
             Assert.Equal(2, deleteLinks.Count);
             await deleteLinks[0].ClickAsync();
-            await s.Page.FillAsync("#ConfirmInput", "DELETE");
-            await s.Page.ClickAsync("#ConfirmContinue");
+            await s.ConfirmDeleteModal();
             deleteLinks = await s.Page.Locator("a:has-text('Delete')").AllAsync();
             Assert.Single(deleteLinks);
             await s.FindAlertMessage();
@@ -2213,8 +2207,7 @@ namespace BTCPayServer.Tests
             TestLogs.LogInformation("Let's see if we can delete store with some webhooks inside");
             await s.GoToStore();
             await s.Page.ClickAsync("#DeleteStore");
-            await s.Page.FillAsync("#ConfirmInput", "DELETE");
-            await s.Page.ClickAsync("#ConfirmContinue");
+            await s.ConfirmDeleteModal();
             await s.FindAlertMessage();
         }
 

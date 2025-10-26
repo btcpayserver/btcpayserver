@@ -762,5 +762,11 @@ namespace BTCPayServer.Tests
             });
             return await new StreamReader(await download.CreateReadStreamAsync()).ReadToEndAsync();
         }
+
+        public async Task ConfirmDeleteModal()
+        {
+            await Page.FillAsync("#ConfirmInput", "DELETE");
+            await Page.ClickAsync("#ConfirmContinue");
+        }
     }
 }

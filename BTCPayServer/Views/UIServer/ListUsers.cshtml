@@ -166,5 +166,5 @@
 
 <vc:pager view-model="Model"></vc:pager>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Send verification email", $"This will send a verification email to the user.", "Send"))" />
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Send verification email"], StringLocalizer["This will send a verification email to the user."], StringLocalizer["Send"]))" />
 <partial name="ShowQR" />

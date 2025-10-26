@@ -15,8 +15,8 @@
 
 @section PageFootContent {
     <script>
-        delegate('click', '.remove', event => { 
-            event.preventDefault() 
+        delegate('click', '.remove', event => {
+            event.preventDefault()
             const { name, value } = event.target
             const confirmButton = document.getElementById('ConfirmContinue')
             confirmButton.setAttribute('name', name)
@@ -48,7 +48,7 @@
         var showAddForm = !ViewContext.ViewData.ModelState.IsValid || !string.IsNullOrEmpty(Model.Add?.Username) || Model.Add?.Max != null || Model.Add?.Min != null || !string.IsNullOrEmpty(Model.Add?.CurrencyCode);
         var showAdvancedOptions = !string.IsNullOrEmpty(Model.Add?.CurrencyCode) || !string.IsNullOrEmpty(Model.Add?.InvoiceMetadata) || Model.Add?.Min != null || Model.Add?.Max != null;
      }
-    
+
     <div class="collapse @(showAddForm ? "show": "")" id="AddAddress">
         <div class="form-group">
             <label asp-for="Add.Username" class="form-label"></label>
@@ -97,12 +97,12 @@
                 </div>
             </div>
         </div>
-    
+
         <div class="form-group">
             <button type="submit" name="command" value="add" class="btn btn-primary">Save</button>
         </div>
     </div>
-    
+
     @if (Model.Items.Any())
     {
         <table class="table table-hover">
@@ -151,7 +151,7 @@
                         }
                     </td>
                     <td class="text-end">
-                        <button type="submit" title="Remove" name="command" value="@($"remove:{Model.Items[index].Username}")" class="btn btn-link px-0 remove" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The Lightning Address <strong>@Html.Encode(address)</strong> will be removed." data-confirm-input="REMOVE" text-translate="true">
+                        <button type="submit" title="Remove" name="command" value="@($"remove:{Model.Items[index].Username}")" class="btn btn-link px-0 remove" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The Lightning Address <strong>@Html.Encode(address)</strong> will be removed." data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">
                             Remove
                         </button>
                     </td>
@@ -168,4 +168,4 @@
     }
 </form>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Remove Lightning Address", "This Lightning Address will be removed.", "Remove"))" />
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Remove Lightning Address"], StringLocalizer["This Lightning Address will be removed."], StringLocalizer["Delete"]))" />

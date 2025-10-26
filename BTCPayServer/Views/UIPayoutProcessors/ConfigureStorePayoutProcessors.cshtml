@@ -44,7 +44,7 @@
                                 else
                                 {
                                     <a id="Configure-@conf.Key" href="@processorsView.Factory.ConfigureLink(storeId, conf.Key, Context.Request)" text-translate="true">Modify</a>
-                                    
+
                                     @if (await processorsView.Factory.CanRemove())
                                     {
                                         <span>-</span>
@@ -67,7 +67,7 @@
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Delete payout processor", "This payout processor will be removed from this store.", "Delete"))" permission="@Policies.CanModifyStoreSettings" />
+<partial name="_Confirm" model="@(new ConfirmModel("Delete payout processor", "This payout processor will be removed from this store.", StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial"/>
 }

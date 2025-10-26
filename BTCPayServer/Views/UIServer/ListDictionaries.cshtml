@@ -55,7 +55,7 @@
 							}
 							@if (v.Editable && !v.IsSelected)
 							{
-								<a id="Delete-@v.DictionaryName" asp-action="DeleteDictionary" asp-route-dictionary="@v.DictionaryName" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The dictionary <b>@Html.Encode(v.DictionaryName)</b> will be removed from this server." data-confirm-input="DELETE" text-translate="true">Remove</a>
+								<a id="Delete-@v.DictionaryName" asp-action="DeleteDictionary" asp-route-dictionary="@v.DictionaryName" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The dictionary <b>@Html.Encode(v.DictionaryName)</b> will be removed from this server." data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Remove</a>
 							}
 						</div>
 					</td>
@@ -63,5 +63,5 @@
 			}
 		</tbody>
 	</table>
-	<partial name="_Confirm" model="@(new ConfirmModel("Delete dictionary", "This dictionary will be removed from this server.", "Delete"))" />
+	<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete dictionary"], StringLocalizer["This dictionary will be removed from this server."], StringLocalizer["Delete"]))" />
 </div>

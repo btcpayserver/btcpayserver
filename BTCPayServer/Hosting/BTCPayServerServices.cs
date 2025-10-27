@@ -19,6 +19,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.Charge;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Lightning.Eclair;
+using BTCPayServer.Lightning.LNbits;
 using BTCPayServer.Lightning.Phoenixd;
 using BTCPayServer.Lightning.LNbank;
 using BTCPayServer.Lightning.LND;
@@ -136,6 +137,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(_ =>
                 new CLightningConnectionStringHandler());
             services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
+                new LNbitsConnectionStringHandler(client));
+	    services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
                 new EclairConnectionStringHandler(client));
             services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
                 new PhoenixdConnectionStringHandler(client));

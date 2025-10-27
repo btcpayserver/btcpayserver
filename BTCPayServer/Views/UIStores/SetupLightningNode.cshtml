@@ -74,6 +74,31 @@
                 </div>
                 <span asp-validation-for="ConnectionString" class="text-danger"></span>
             </div>
+<!-- NEW: Tips Wallet Configuration -->
+            <div class="border-top mt-4 pt-4">
+                <h4 class="mb-3">💵 Tips Wallet (Optional)</h4>
+                <p class="text-muted">Route tip payments to a separate Lightning wallet for easy accounting</p>
+                
+                <div class="form-check mb-3">
+                    <input asp-for="EnableTipsSeparation" type="checkbox" class="form-check-input" id="enable-tips-wallet" />
+                    <label asp-for="EnableTipsSeparation" class="form-check-label">
+                        Enable separate wallet for tips
+                    </label>
+                </div>
+                
+                <div id="tips-wallet-section" style="display: none;">
+                    <div class="form-group">
+                        <label asp-for="TipsConnectionString" class="form-label">Tips wallet connection string:</label>
+                        <textarea asp-for="TipsConnectionString" class="form-control" 
+                                  placeholder="type=lnbits;server=https://lnbits.com;wallet-id=...;api-key=..." 
+                                  rows="3"></textarea>
+                        <span asp-validation-for="TipsConnectionString" class="text-danger"></span>
+                        <small class="form-text text-muted">
+                            Use a different LNbits wallet ID for tips. This wallet will receive all tip payments.
+                        </small>
+                    </div>
+                </div>
+            </div>
             <vc:ui-extension-point location="ln-payment-method-setup-custom" model="@Model" />
             <p class="mt-4 mb-2" text-translate="true">BTCPay Server currently supports:</p>
             <div class="accordion" id="CustomNodeSupport">
@@ -245,7 +270,17 @@
         <button id="page-primary" name="command" type="submit" value="save" class="btn btn-primary me-2">Save</button>
     </div>
 </form>
-
+<script>
+    document.getElementById('enable-tips-wallet')?.addEventListener('change', function() {
+        const section = document.getElementById('tips-wallet-section');
+        section.style.display = this.checked ? 'block' : 'none';
+    });
+    
+    // Show on page load if already enabled
+    if (document.getElementById('enable-tips-wallet')?.checked) {
+        document.getElementById('tips-wallet-section').style.display = 'block';
+    }
+</script>
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 }

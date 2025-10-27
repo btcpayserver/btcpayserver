@@ -93,6 +93,28 @@ namespace BTCPayServer.Payments.Lightning
             var nodeInfo = GetNodeInfo(config, context.Logs, preferOnion);
 
             var invoice = context.InvoiceEntity;
+
+            // NEW: Route tips to separate wallet if configured
+            bool isTipPayment = false;
+            if (invoice.Metadata?.ReceiptData != null)
+            {
+                try
+                {
+                    var receiptJson = JObject.Parse(invoice.Metadata.ReceiptData.ToString() ?? "{}");
+                    var tipAmount = receiptJson["Tip"]?.Value<decimal?>();
+                    isTipPayment = tipAmount.HasValue && tipAmount.Value > 0;
+                }
+                catch { /* Ignore JSON parsing errors */ }
+            }
+            
+            // Use tips wallet if this is a tip payment
+            if (isTipPayment && 
+                storeBlob.EnableTipsSeparation && 
+                !string.IsNullOrEmpty(storeBlob.LightningTipsConnectionString))
+            {
+                config = ParsePaymentMethodConfig(storeBlob.LightningTipsConnectionString);
+                context.Logs.Write("Routing tip payment to tips wallet", InvoiceEventData.EventSeverity.Info);
+            }
             decimal due = paymentPrompt.Calculate().Due;
             var client = config.CreateLightningClient(_Network, Options.Value, _lightningClientFactory);
             var expiry = invoice.ExpirationTime - DateTimeOffset.UtcNow;

@@ -21,5 +21,10 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Connection string")]
         public string ConnectionString { get; set; }
+[Display(Name = "Tips wallet connection string (optional)")]
+        public string TipsConnectionString { get; set; }
+
+        [Display(Name = "Enable separate tips wallet")]
+        public bool EnableTipsSeparation { get; set; }
     }
 }

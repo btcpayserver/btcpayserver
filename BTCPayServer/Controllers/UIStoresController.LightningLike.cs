@@ -187,19 +187,6 @@ public partial class UIStoresController
                     UseBech32Scheme = true,
                     LUD12Enabled = false
                 });
-// NEW: Save tips wallet configuration
-                var blob = store.GetStoreBlob();
-                if (vm.EnableTipsSeparation && !string.IsNullOrEmpty(vm.TipsConnectionString))
-                {
-                    blob.LightningTipsConnectionString = vm.TipsConnectionString;
-                    blob.EnableTipsSeparation = true;
-                }
-                else
-                {
-                    blob.LightningTipsConnectionString = null;
-                    blob.EnableTipsSeparation = false;
-                }
-                store.SetStoreBlob(blob);
                 await _storeRepo.UpdateStore(store);
                 TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["{0} Lightning node updated.", network.CryptoCode].Value;
                 return RedirectToAction(nameof(LightningSettings), new { storeId, cryptoCode });

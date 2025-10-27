@@ -198,8 +198,6 @@ namespace BTCPayServer.Data
                 _LightningDescriptionTemplate = value;
             }
         }
-	public string LightningTipsConnectionString { get; set; }    // NEW!
-        public bool EnableTipsSeparation { get; set; }                // NEW!        
 	[DefaultValue(0)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public double PaymentTolerance { get; set; }

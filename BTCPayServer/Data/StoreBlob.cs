@@ -198,6 +198,10 @@ namespace BTCPayServer.Data
                 _LightningDescriptionTemplate = value;
             }
         }
+
+        // Multi-wallet support for tips
+        public string LightningTipsConnectionString { get; set; }
+        public bool EnableTipsSeparation { get; set; }
 	[DefaultValue(0)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public double PaymentTolerance { get; set; }

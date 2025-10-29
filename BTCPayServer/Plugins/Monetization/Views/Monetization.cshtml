@@ -1,0 +1,38 @@
+@using BTCPayServer.Plugins.Subscriptions
+@model MonetizationViewModel
+
+@{
+    ViewData.SetLayoutModel(new(WellKnownCategories.Server, nameof(MonetizationPlugin), StringLocalizer["Monetization"]));
+}
+<div class="sticky-header">
+    <h2 class="my-1">@ViewData["Title"]</h2>
+    @if (Model.Offering is null)
+    {
+        <a id="page-primary"
+           class="btn btn-primary"
+           data-bs-toggle="modal"
+           data-bs-target="#activateMonetization"
+           role="button">
+            Continue
+        </a>
+    }
+    else
+    {
+        <a id="go-to-offering"
+           asp-area="@SubscriptionsPlugin.Area"
+           asp-controller="UIOffering"
+           asp-action="Offering"
+           asp-route-storeId="@Model.Offering.App.StoreDataId"
+           asp-route-offeringId="@Model.Settings.OfferingId"
+           asp-route-section="Plans"
+           class="btn btn-secondary"
+           role="button">
+            Go to offering
+        </a>
+    }
+</div>
+<partial name="_StatusMessage" />
+
+<p class="mb-0" text-translate="true">Monetization allows you to get paid for sharing your BTCPay Server instance with other users.</p>
+
+<partial name="ActivateMonetizationModal"/>

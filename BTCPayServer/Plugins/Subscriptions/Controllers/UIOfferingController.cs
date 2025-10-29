@@ -155,35 +155,14 @@ public partial class UIOfferingController(
         if (!ModelState.IsValid)
             return View();
 
-        var app = new AppData()
-        {
-            Name = vm.Name,
-            AppType = SubscriptionsAppType.AppType,
-            StoreDataId = storeId
-        };
-        app.SetSettings(new SubscriptionsAppType.AppConfig());
-        await appService.UpdateOrCreateApp(app, sendEvents: false);
-
-        await using var ctx = DbContextFactory.CreateContext();
-        var o = new OfferingData()
-        {
-            AppId = app.Id,
-        };
-        ctx.Offerings.Add(o);
-        await ctx.SaveChangesAsync();
-        app.SetSettings(new SubscriptionsAppType.AppConfig()
-        {
-            OfferingId = o.Id
-        });
-        await appService.UpdateOrCreateApp(app, sendEvents: false);
-        eventAggregator.Publish(new AppEvent.Created(app));
+        var (_, offeringId) = await appService.CreateOffering(storeId, vm.Name);
         this.TempData.SetStatusMessageModel(new()
         {
             Html = StringLocalizer["New offering created. You can now <a href='{0}' class='alert-link'>configure it.</a>",
-                Url.Action(nameof(ConfigureOffering), new { storeId, offeringId = o.Id })!],
+                Url.Action(nameof(ConfigureOffering), new { storeId, offeringId })!],
             Severity = StatusMessageModel.StatusSeverity.Success
         });
-        return GoToOffering(storeId, o.Id, SubscriptionSection.Plans);
+        return GoToOffering(storeId, offeringId, SubscriptionSection.Plans);
     }
 
     [HttpPost("stores/{storeId}/offerings/{offeringId}/Mails")]

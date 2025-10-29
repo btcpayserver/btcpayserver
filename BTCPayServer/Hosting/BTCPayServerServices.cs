@@ -485,6 +485,7 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
 
             services.AddAPIKeyAuthentication();
             services.AddBtcPayServerAuthenticationSchemes();
+
             services.AddAuthorization(o => o.AddBTCPayPolicies());
 
             services.AddCors(options =>

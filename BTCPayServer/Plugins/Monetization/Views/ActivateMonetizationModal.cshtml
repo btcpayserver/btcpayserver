@@ -1,0 +1,28 @@
+﻿<div class="modal fade" id="activateMonetization" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" text-translate="true">Activate Monetization</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                    <vc:icon symbol="close" />
+                </button>
+            </div>
+            <form method="post">
+                <div class="modal-body">
+                    <p html-translate="true">By activating monetization, new users registering to you will need a subscription to use your server. This change doesn't affect your current users. Do you want to proceed?</p>
+                    <p>@ViewLocalizer["A new offering will be create on the currently selected store <strong>{0}<strong>", Html.Encode(Context.GetStoreData().StoreName)].</p>
+                </div>
+                <div class="modal-footer">
+                    <form method="post">
+                        <button type="submit"
+                                class="btn btn-success"
+                                name="command"
+                                value="activate-monetization"
+                                text-translate="true">Proceed</button>
+                    </form>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+

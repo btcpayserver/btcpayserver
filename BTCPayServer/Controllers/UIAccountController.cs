@@ -619,7 +619,6 @@ namespace BTCPayServer.Controllers
             var user = await userManager.FindByIdAsync(userId);
             await signInManager.SignOutAsync();
             HttpContext.DeleteUserPrefsCookie();
-            _logger.LogInformation("User {Email} logged out", user!.Email);
             return RedirectToAction(nameof(Login));
         }
 

@@ -1,6 +1,9 @@
+using System.IO;
+using System.Text.Encodings.Web;
 using System.Web;
 using Ganss.Xss;
 using Microsoft.AspNetCore.Html;
+using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Abstractions.Services
@@ -16,15 +19,19 @@ namespace BTCPayServer.Abstractions.Services
             _htmlHelper = htmlHelper;
             _jsonHelper = jsonHelper;
             _htmlSanitizer = htmlSanitizer;
-
-
         }
 
         public IHtmlContent Raw(string value)
         {
             return _htmlHelper.Raw(_htmlSanitizer.Sanitize(value));
         }
-        
+        public IHtmlContent Raw(LocalizedHtmlString value)
+        {
+            var sw = new StringWriter();
+            value.WriteTo(sw, HtmlEncoder.Default);
+            return Raw(sw.ToString());
+        }
+
         public IHtmlContent RawEncode(string value)
         {
             return _htmlHelper.Raw(HttpUtility.HtmlEncode(_htmlSanitizer.Sanitize(value)));
@@ -60,7 +67,7 @@ namespace BTCPayServer.Abstractions.Services
             sane.RemovingComment += (sender, e) => bHtmlModified = true;
             sane.RemovingCssClass += (sender, e) => bHtmlModified = true;
             sane.RemovingStyle += (sender, e) => bHtmlModified = true;
-            
+
             bHtmlModified = false;
 
             var sRet = sane.Sanitize(inputHtml);

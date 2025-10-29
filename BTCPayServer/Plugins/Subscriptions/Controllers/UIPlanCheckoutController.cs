@@ -63,7 +63,7 @@ public class UIPlanCheckoutController(
         return InvoiceMetadata.FromJObject(JObject.Parse(checkout.InvoiceMetadata));
     }
 
-    [HttpGet("plan-checkout/default-redirect")]
+    [HttpGet("~/plan-checkout/default-redirect")]
     public async Task<IActionResult> PlanCheckoutDefaultRedirect(string? checkoutPlanId = null)
     {
         if (checkoutPlanId is null)

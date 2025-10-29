@@ -300,7 +300,7 @@ namespace BTCPayServer.Migrations
                 {
                     id = table.Column<string>(type: "text", nullable: false),
                     subscriber_id = table.Column<long>(type: "bigint", nullable: false),
-                    expiration = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    expiration = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now() + interval '1 day'"),
                     base_url = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>

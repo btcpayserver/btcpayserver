@@ -25,8 +25,18 @@ public static partial class ApplicationDbContextExtensions
         if (storeId is not null && plan?.Offering.App.StoreDataId != storeId)
             return null;
         if (plan is not null)
-            await FetchPlanEntitlementsAsync(plans, plan);
+            await plan.EnsureEntitlementLoaded(plans);
         return plan;
+    }
+
+    public static async Task<bool> HasEntitlements(this DbSet<PlanData> plans, string planId, string entitlementCustomId)
+    {
+        var connection = plans.GetDbConnection();
+        return await connection.ExecuteScalarAsync<bool>("""
+                                              SELECT true FROM subs_plans_entitlements pe
+                                              JOIN subs_entitlements e ON e.id = pe.entitlement_id
+                                              WHERE pe.plan_id = @planId AND e.custom_id = @entitlementCustomId
+                                              """, new{ planId, entitlementCustomId });
     }
 
     public static async Task FetchPlanEntitlementsAsync<T>(this DbSet<T> ctx, IEnumerable<PlanData> plans) where T : class
@@ -54,8 +64,6 @@ public static partial class ApplicationDbContextExtensions
         var res = result.ToDictionary(x => x.Id, x => x);
         foreach (var plan in plans)
         {
-            if (plan.PlanEntitlements is not null)
-                continue;
             plan.PlanEntitlements = new();
             if (res.TryGetValue(plan.Id, out var r))
             {
@@ -88,7 +96,8 @@ public static partial class ApplicationDbContextExtensions
             .Include(o => o.Entitlements)
             .Include(o => o.Plans)
             .Include(o => o.App)
-            .ThenInclude(o => o.StoreData);
+            .ThenInclude(o => o.StoreData)
+            .AsSplitQuery();
 
         var o = await offering
                 .Where(o => o.Id == offeringId)

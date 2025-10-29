@@ -3,7 +3,7 @@
 
 @{
     var storeId = Model.StoreId;
-    bool isEdit = Model.Trigger != null;
+    var isEdit = !Model.IsNew;
     if (storeId is not null)
     {
         ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Emails), StringLocalizer[isEdit ? "Edit Email Rule" : "Create Email Rule"])
@@ -80,7 +80,7 @@
         <input type="hidden" asp-for="CanChangeCondition" ></input>
         @if (Model.CanChangeCondition)
         {
-            <input asp-for="Condition" class="form-control" placeholder="@StringLocalizer["A Postgres compatible JSON Path (eg. $.Customer.Name == \"john\")"]" />
+            <input asp-for="Condition" class="form-control" placeholder="@StringLocalizer["A Postgres compatible JSON Path (eg. $ ? (@.Customer.Name == \"John\"))"]" />
         }
         else
         {

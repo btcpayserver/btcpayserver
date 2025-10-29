@@ -223,7 +223,7 @@ public class EmailsTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
         await s.GoToStore(StoreNavPages.Emails);
         await s.Page.ClickAsync("#ConfigureEmailRules");
-        Assert.Contains("There are no rules yet.", await s.Page.ContentAsync());
+        await AssertNoRules(s);
         Assert.Contains("You need to configure email settings before this feature works", await s.Page.ContentAsync());
 
         await s.Page.ClickAsync(".configure-email");
@@ -307,7 +307,7 @@ public class EmailsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.ConfirmDeleteModal();
 
         await s.FindAlertMessage();
-        Assert.Contains("There are no rules yet.", await s.Page.ContentAsync());
+        await AssertNoRules(s);
 
         await s.Page.ClickAsync("#CreateEmailRule");
 
@@ -343,6 +343,11 @@ public class EmailsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Page.FillAsync("#Email", s.CreatedUser);
         message = await s.Server.AssertHasEmail(() => s.ClickPagePrimary());
         Assert.Contains("<p>Hello, <a id=\"reset-link\" href=\"http://", message.Html);
+    }
+
+    private static async Task AssertNoRules(PlaywrightTester s)
+    {
+        await s.Page.Locator("text=There are no rules yet.").WaitForAsync();
     }
 
     [Fact]
@@ -396,7 +401,7 @@ public class EmailsTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
         // Store Email Rules
         await s.Page.ClickAsync("#ConfigureEmailRules");
-        await s.Page.Locator("text=There are no rules yet.").WaitForAsync();
+        await AssertNoRules(s);
         Assert.DoesNotContain("id=\"SaveEmailRules\"", await s.Page.ContentAsync());
         Assert.DoesNotContain("You need to configure email settings before this feature works", await s.Page.ContentAsync());
 

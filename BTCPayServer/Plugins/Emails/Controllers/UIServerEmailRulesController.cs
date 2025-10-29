@@ -21,7 +21,7 @@ namespace BTCPayServer.Plugins.Emails.Controllers;
 [AutoValidateAntiforgeryToken]
 public class UIServerEmailRulesController(
     EmailSenderFactory emailSenderFactory,
-    IEnumerable<EmailTriggerViewModel> triggers,
+    EmailTriggerViewModels triggers,
     ApplicationDbContextFactory dbContextFactory,
     IStringLocalizer stringLocalizer
     ) : UIEmailRuleControllerBase(dbContextFactory, stringLocalizer, emailSenderFactory)
@@ -36,7 +36,7 @@ public class UIServerEmailRulesController(
         {
             EmailSettingsLink = Url.Action(nameof(UIServerEmailController.ServerEmailSettings), "UIServerEmail") ?? throw new InvalidOperationException("Bug 1928"),
             Rules = (ctx) => ctx.EmailRules.GetServerRules().ToListAsync(),
-            Triggers = triggers.Where(t => t.ServerTrigger).ToList(),
+            Triggers = triggers.GetViewModels().Where(t => t.ServerTrigger).ToList(),
             ModifyViewModel = (vm) =>
             {
                 vm.ShowCustomerEmailColumn = false;

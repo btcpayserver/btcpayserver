@@ -1,0 +1,12 @@
+@using BTCPayServer.Client
+@using BTCPayServer.Views.Server
+@model BTCPayServer.Components.MainNav.MainNavViewModel
+
+<li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
+    <a
+        asp-area="@MonetizationPlugin.Area"
+        asp-controller="UIServerMonetization"
+        asp-action="Monetization"
+        layout-menu-item="@nameof(MonetizationPlugin)"
+        text-translate="true">Monetization</a>
+</li>

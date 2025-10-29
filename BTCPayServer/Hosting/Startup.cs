@@ -102,12 +102,6 @@ namespace BTCPayServer.Hosting
                 opts.DefaultSignInScheme = null;
                 opts.DefaultSignOutScheme = null;
             });
-            services.PostConfigure<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme, opt =>
-            {
-                opt.LoginPath = "/login";
-                opt.AccessDeniedPath = "/errors/403";
-                opt.LogoutPath = "/logout";
-            });
 
             services.Configure<SecurityStampValidatorOptions>(opts =>
             {

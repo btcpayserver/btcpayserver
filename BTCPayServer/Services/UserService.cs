@@ -129,6 +129,10 @@ namespace BTCPayServer.Services
             internal readonly ApplicationUser? _user = user;
             public ApplicationUser User => _user ?? throw new InvalidOperationException("User is not set");
             public List<LoginFailure> Failures { get; } = new();
+            /// <summary>
+            /// A redirect URL to redirect the user if login failed.
+            /// </summary>
+            public string? FailedRedirectUrl { get; set; }
         }
 
         public async Task<bool> CanLogin(CanLoginContext context)
@@ -152,6 +156,9 @@ namespace BTCPayServer.Services
             {
                 if (context.User is { EmailConfirmed: false, RequiresEmailConfirmation: true })
                     context.Failures.Add(new(context.StringLocalizer["You must have a confirmed email to log in."]));
+                else if (context.User.PasswordHash is null)
+                    context.Failures.Add(new(context.StringLocalizer["Your user account has no password set."]));
+
                 if (context.User is { Approved: false, RequiresApproval: true })
                     context.Failures.Add(new(context.StringLocalizer["Your user account requires approval by an admin before you can log in."]));
                 if (context.User is { IsDisabled: true })
@@ -185,13 +192,20 @@ namespace BTCPayServer.Services
             return succeeded;
         }
 
-        public async Task<bool> SetDisabled(string userId, bool disabled)
+        public record SetDisabledResult
+        {
+            public record Unchanged : SetDisabledResult;
+            public record Success : SetDisabledResult;
+            public record Error(IdentityError[] Errors) : SetDisabledResult;
+        }
+
+        public async Task<SetDisabledResult> SetDisabled(string userId, bool disabled)
         {
             using var scope = _serviceProvider.CreateScope();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var user = await userManager.FindByIdAsync(userId);
             if (user is null || disabled == user.IsDisabled)
-                return true;
+                return new SetDisabledResult.Unchanged();
             if (!user.LockoutEnabled)
                 await userManager.SetLockoutEnabledAsync(user, true);
 
@@ -207,20 +221,12 @@ namespace BTCPayServer.Services
             {
                 _disabledUsers.Remove(userId);
             }
-            if (res.Succeeded)
-            {
-                _logger.LogInformation("User {Email} is now {Status}", user.Email, (lockedOutDeadline is null ? "unlocked" : "locked"));
-            }
-            else
-            {
-                _logger.LogError("Failed to set lockout for user {Email}", user.Email);
-            }
-            return res.Succeeded;
+            return res.Succeeded ? new SetDisabledResult.Success() : new SetDisabledResult.Error(res.Errors.ToArray());
         }
 
         [Obsolete("Use SetDisabled instead")]
         public async Task<bool?> ToggleUser(string userId, DateTimeOffset? lockedOutDeadline)
-            => await SetDisabled(userId, lockedOutDeadline is not null);
+            => await SetDisabled(userId, lockedOutDeadline is not null) is not SetDisabledResult.Error;
 
         public async Task<bool> IsAdminUser(ApplicationUser user)
         {

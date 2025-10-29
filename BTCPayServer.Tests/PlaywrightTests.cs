@@ -18,13 +18,11 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Wallets;
-using BTCPayServer.Tests.PMO;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
 using Dapper;
-using ExchangeSharp;
 using LNURL;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -53,7 +51,7 @@ namespace BTCPayServer.Tests
             await using var s = CreatePlaywrightTester();
             await s.StartAsync();
             await s.RegisterNewUser(true);
-            await s.GoToHome();
+            await s.SkipWizard();
             await s.GoToServer();
             await s.Page.AssertNoError();
             await s.ClickOnAllSectionLinks("#mainNavSettings");
@@ -90,7 +88,7 @@ namespace BTCPayServer.Tests
 
             await s.Page.Context.Pages.First().BringToFrontAsync();
             await s.GoToUrl($"/invoices/{invoiceId}/");
-            Assert.Contains("aa@aa.com", await s.Page.ContentAsync());
+            await Expect(s.Page.Locator("text=aa@aa.com")).ToBeVisibleAsync();
             // Payment Request
             await s.Page.ClickAsync("#menu-item-PaymentRequests");
             await s.ClickPagePrimary();
@@ -119,7 +117,7 @@ namespace BTCPayServer.Tests
             //Custom Forms
             await s.GoToStore();
             await s.GoToStore(StoreNavPages.Forms);
-            Assert.Contains("There are no forms yet.", await s.Page.ContentAsync());
+            await Expect(s.Page.Locator("text=There are no forms yet.")).ToBeVisibleAsync();
             await s.ClickPagePrimary();
             await s.Page.FillAsync("[name='Name']", "Custom Form 1");
             await s.Page.ClickAsync("#ApplyEmailTemplate");
@@ -142,7 +140,7 @@ namespace BTCPayServer.Tests
             await s.GoToStore();
             await s.GoToStore(StoreNavPages.Forms);
             await s.Page.WaitForLoadStateAsync();
-            Assert.Contains("Custom Form 1", await s.Page.ContentAsync());
+            await Expect(s.Page.Locator("text=Custom Form 1")).ToBeVisibleAsync();
             await s.Page.GetByRole(AriaRole.Link, new() { Name = "Remove" }).ClickAsync();
             await s.ConfirmDeleteModal();
             await s.Page.WaitForLoadStateAsync();
@@ -163,13 +161,12 @@ namespace BTCPayServer.Tests
             await s.GoToHome();
             await s.GoToStore();
             await s.GoToStore(StoreNavPages.Forms);
-            Assert.Contains("Custom Form 2", await s.Page.ContentAsync());
             await s.Page.GetByRole(AriaRole.Link, new() { Name = "Custom Form 2" }).ClickAsync();
             await s.Page.Locator("[name='Name']").ClearAsync();
             await s.Page.FillAsync("[name='Name']", "Custom Form 3");
             await s.ClickPagePrimary();
             await s.GoToStore(StoreNavPages.Forms);
-            Assert.Contains("Custom Form 3", await s.Page.ContentAsync());
+            await Expect(s.Page.Locator("text=Custom Form 3")).ToBeVisibleAsync();
             await s.Page.ClickAsync("#menu-item-PaymentRequests");
             await s.ClickPagePrimary();
             var selectOptions = await s.Page.Locator("#FormId >> option").CountAsync();
@@ -215,11 +212,11 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             await s.RegisterNewUser();
             var user = s.AsTestAccount();
-            await s.GoToHome();
+            await s.SkipWizard();
             await s.Logout();
             await s.GoToRegister();
             await s.RegisterNewUser(true);
-            await s.GoToHome();
+            await s.SkipWizard();
             await s.GoToServer(ServerNavPages.Users);
 
 
@@ -227,6 +224,7 @@ namespace BTCPayServer.Tests
             await s.Page.Locator("#SearchTerm").ClearAsync();
             await s.Page.FillAsync("#SearchTerm", user.RegisterDetails.Email);
             await s.Page.Locator("#SearchTerm").PressAsync("Enter");
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             var rows = s.Page.Locator("#UsersList tr.user-overview-row");
             Assert.Equal(1, await rows.CountAsync());
             Assert.Contains(user.RegisterDetails.Email, await rows.First.TextContentAsync());
@@ -235,12 +233,14 @@ namespace BTCPayServer.Tests
             await s.Page.FillAsync("#ConfirmPassword", "Password@1!");
             await s.ClickPagePrimary();
             await s.FindAlertMessage(partialText: "Password successfully set");
+            user.Password = "Password@1!";
 
             var userPage = await s.Browser.NewPageAsync();
             await using (await s.SwitchPage(userPage, false))
             {
                 await s.GoToLogin();
                 await s.LogIn(user.Email, user.Password);
+                await s.SkipWizard();
             }
             // Manage user status (disable and enable)
             // Disable user
@@ -257,6 +257,7 @@ namespace BTCPayServer.Tests
             await using (await s.SwitchPage(userPage, false))
             {
                 await s.Page.ReloadAsync();
+                await s.LogIn(user.Email, user.Password);
                 await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Warning, partialText: "Your user account is currently disabled");
             }
 
@@ -368,7 +369,7 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             //Register & Log Out
             var email = await s.RegisterNewUser();
-            await s.GoToHome();
+            await s.SkipWizard();
             await s.Logout();
             await s.Page.AssertNoError();
             Assert.Contains("/login", s.Page.Url);
@@ -414,7 +415,7 @@ namespace BTCPayServer.Tests
             await s.Logout();
             await s.GoToRegister();
             await s.RegisterNewUser(true);
-            await s.GoToHome();
+            await s.SkipWizard();
             await s.GoToServer(ServerNavPages.Users);
             await s.ClickPagePrimary();
 
@@ -1216,7 +1217,7 @@ namespace BTCPayServer.Tests
 
             await s.RegisterNewUser(true);
             var admin = s.AsTestAccount();
-            await s.GoToHome();
+            await s.SkipWizard();
             await s.GoToServer(ServerNavPages.Policies);
 
             Assert.True(await s.Page.Locator("#EnableRegistration").IsCheckedAsync());
@@ -1232,8 +1233,7 @@ namespace BTCPayServer.Tests
 
             await s.GoToRegister();
             await s.RegisterNewUser();
-            await s.Page.AssertNoError();
-            await s.FindAlertMessage(partialText: "Account created. The new account requires approval by an admin before you can log in");
+            await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Warning, partialText: "Your user account requires approval by an admin before you can log in.");
             Assert.Contains("/login", s.Page.Url);
 
             var unapproved = s.AsTestAccount();
@@ -1498,7 +1498,7 @@ namespace BTCPayServer.Tests
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.RegisterNewUser(true);
-            await s.GoToHome();
+            await s.SkipWizard();
             await s.GoToServer(ServerNavPages.Services);
             await s.Page.AssertNoError();
             s.TestLogs.LogInformation("Let's see if we can access LND's seed");
@@ -1525,7 +1525,7 @@ namespace BTCPayServer.Tests
             await using var s = CreatePlaywrightTester();
             await s.StartAsync();
             var user = await s.RegisterNewUser(true);
-            await s.GoToHome();
+            await s.SkipWizard();
             await s.GoToProfile(ManageNavPages.TwoFactorAuthentication);
             await s.Page.FillAsync("[name='Name']", "ln wallet");
             await s.Page.SelectOptionAsync("[name='type']", $"{(int)Fido2Credential.CredentialType.LNURLAuth}");
@@ -2041,15 +2041,15 @@ namespace BTCPayServer.Tests
 
             // Setup users
             var manager = await s.RegisterNewUser();
-            await s.GoToHome();
+            await s.SkipWizard();
             await s.Logout();
             await s.GoToRegister();
             var employee = await s.RegisterNewUser();
-            await s.GoToHome();
+            await s.SkipWizard();
             await s.Logout();
             await s.GoToRegister();
             var guest = await s.RegisterNewUser();
-            await s.GoToHome();
+            await s.SkipWizard();
             await s.Logout();
             await s.GoToRegister();
 
@@ -2528,7 +2528,7 @@ namespace BTCPayServer.Tests
 
             // Setup users and store
             var employee = await s.RegisterNewUser();
-            await s.GoToHome();
+            await s.SkipWizard();
             await s.Logout();
             await s.GoToRegister();
             var owner = await s.RegisterNewUser(true);

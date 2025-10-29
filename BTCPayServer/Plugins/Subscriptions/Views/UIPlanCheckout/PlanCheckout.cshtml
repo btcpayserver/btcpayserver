@@ -237,14 +237,14 @@
                         </div>
                         @if (Model.IsTrial)
                         {
-                            <button type="submit" name="command" value="start-trial" class="btn btn-primary btn-checkout btn-lg" id="proceedBtn">
+                            <button type="submit" name="command" value="start-trial" class="btn btn-primary btn-checkout btn-lg" id="page-primary">
                                 <i class="fas fa fa-lock me-2"></i>
                                 Proceed to free trial
                             </button>
                         }
                         else
                         {
-                            <button type="submit" name="command" value="pay" class="btn btn-primary btn-checkout btn-lg" id="proceedBtn">
+                            <button type="submit" name="command" value="pay" class="btn btn-primary btn-checkout btn-lg" id="page-primary">
                                 <i class="fas fa fa-lock me-2"></i>
                                 Proceed to Secure Payment
                             </button>
@@ -287,7 +287,7 @@
 <script src="~/vendor/bootstrap/bootstrap.bundle.min.js" asp-append-version="true"></script>
 <script>
     const emailInput = document.getElementById('emailInput');
-    const proceedBtn = document.getElementById('proceedBtn');
+    const proceedBtn = document.getElementById('page-primary');
     const checkoutForm = document.getElementById('checkoutForm');
 
     emailInput.addEventListener('input', function () {

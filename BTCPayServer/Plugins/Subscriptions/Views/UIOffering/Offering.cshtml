@@ -37,20 +37,19 @@
 
 <div class="container-fluid px-4 py-4">
     <!-- Metrics Cards -->
-    <div class="row">
-        <div class="col-md-2">
+    <div class="d-flex gap-5">
+        <div>
             <div>
                 <h6 text-translate="true">Active Subscribers</h6>
-                <h4>@Model.TotalSubscribers</h4>
+                <h4 id="total-subscribers">@Model.TotalSubscribers</h4>
             </div>
         </div>
-        <div class="col-md-2">
+        <div>
             <div>
                 <h6 text-translate="true">Monthly revenue</h6>
                 <h4 class="text-nowrap">@Model.TotalMonthlyRevenue</h4>
             </div>
         </div>
-        <div class="col-md-8"></div>
     </div>
 
     <!-- Navigation Tabs -->
@@ -217,7 +216,7 @@
                             data-subscriber-id="@subscriber.Data.CustomerId"
                             data-currency="@subscriber.Data.Plan.Currency"
                             data-current-credit-value="@subscriber.Data.GetCredit()">
-                            <td class="fw-semibold text-nowrap d-flex align-items-center">
+                            <td class="fw-semibold text-nowrap d-flex align-items-center subscriber-email-col">
                                 <form method="post" asp-antiforgery="true" class="me-2">
                                     @if (subscriber.Data.TestAccount)
                                     {

@@ -1,0 +1,87 @@
+﻿@model SelectExistingOfferingModalViewModel
+
+<div class="modal fade" id="selectExistingOffering" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" text-translate="true">Select an existing offering</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                    <vc:icon symbol="close" />
+                </button>
+            </div>
+            <form method="post" id="selectExistingOffering-form">
+                <div class="modal-body">
+                    <p>@ViewLocalizer["Choose a different offering for monetization"]</p>
+                    <div class="form-group">
+                        <label class="form-label" text-translate="true">Select store</label>
+                        <select name="@Html.NameFor(o =>o.SelectedStoreId)" class="form-select" v-model="selectedStoreId">
+                            <option v-for="store in model.stores" :key="store.id" :value="store.id">{{ store.name }}</option>
+                        </select>
+                    </div>
+                    <div class="form-group" v-if="selectedStore">
+                        <label class="form-label" text-translate="true">Select offering</label>
+                        <select name="@Html.NameFor(o =>o.SelectedOfferingId)" class="form-select" v-model="selectedOfferingId">
+                            <option v-for="offering in selectedStore.offerings" :key="offering.id" :value="offering.id">{{ offering.name }}</option>
+                        </select>
+                    </div>
+                    <div class="form-group" v-if="selectedOffering">
+                        <label class="form-label" text-translate="true">Select default plan</label>
+                        <select name="@Html.NameFor(o =>o.SelectedPlanId)" class="form-select" v-model="selectedPlanId">
+                            <option v-for="plan in selectedOffering.plans" :key="plan.id" :value="plan.id">{{ plan.name }}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit"
+                            class="btn btn-success modal-confirm"
+                            name="command"
+                            value="change-offering"
+                            :disabled="!selectedPlanId"
+                            text-translate="true">Proceed
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    var model = @Safe.Json(Model);
+    document.addEventListener('DOMContentLoaded', function () {
+        var app = new Vue({
+            el: '#selectExistingOffering-form',
+            data() {
+                return {
+                    model: model,
+                    selectedStoreId: model.selectedStoreId,
+                    selectedOfferingId: model.selectedOfferingId,
+                    selectedPlanId: model.selectedPlanId,
+                };
+            },
+            computed: {
+                selectedStore() {
+                    return this.selectedStoreId ? this.model.stores.find(o => o.id === this.selectedStoreId) : null;
+                },
+                selectedOffering() {
+                    return this.selectedStore ? this.selectedStore.offerings.find(o => o.id === this.selectedOfferingId) : null;
+                },
+                plans() {
+                    return this.selectedOffering ? this.selectedOffering.plans : null;
+                },
+                offerings() {
+                    return this.selectedStore ? this.selectedStore.offerings : null;
+                }
+            },
+            watch: {
+                selectedStoreId() {
+                    this.selectedOfferingId = null;
+                    this.selectedPlanId = null;
+                },
+                selectedOfferingId() {
+                    this.selectedPlanId = null;
+                }
+            }
+        });
+    });
+</script>
+

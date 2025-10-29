@@ -92,7 +92,9 @@ public class UISubscriberPortalController(
             StoreName = store.StoreName,
             StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, store.GetStoreBlob()),
             PlanChanges = planChanges,
-            Refund = (refundValue, displayFormatter.Currency(refundValue, curr, DisplayFormatter.CurrencyFormat.Symbol))
+            Refund = (refundValue, displayFormatter.Currency(refundValue, curr, DisplayFormatter.CurrencyFormat.Symbol)),
+            Url = string.IsNullOrEmpty(store.StoreWebsite) ? Request.GetRequestBaseUrl().ToString() : store.StoreWebsite,
+            BTCPayLogo = Url.Content("~/img/btcpay-logo.svg")
         };
         var creditHist = await ctx.SubscriberCreditHistory
             .Where(s => s.SubscriberId == session.SubscriberId && s.Currency == session.Subscriber.Plan.Currency)

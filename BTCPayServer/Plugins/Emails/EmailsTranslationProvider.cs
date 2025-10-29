@@ -8,11 +8,11 @@ using BTCPayServer.Services;
 
 namespace BTCPayServer.Plugins.Emails;
 
-public class EmailsTranslationProvider(IEnumerable<EmailTriggerViewModel> viewModels) : IDefaultTranslationProvider
+public class EmailsTranslationProvider(EmailTriggerViewModels viewModels) : IDefaultTranslationProvider
 {
     public Task<KeyValuePair<string, string?>[]> GetDefaultTranslations()
         => Task.FromResult(
-            viewModels.Select(vm => KeyValuePair.Create(vm.Description, vm.Description))
-                .Concat(viewModels.SelectMany(vm => vm.PlaceHolders).Select(p => KeyValuePair.Create(p.Description, p.Description)))
+            viewModels.GetViewModels().Select(vm => KeyValuePair.Create(vm.Description, vm.Description))
+                .Concat(viewModels.GetViewModels().SelectMany(vm => vm.PlaceHolders).Select(p => KeyValuePair.Create(p.Description, p.Description)))
                 .ToArray())!;
 }

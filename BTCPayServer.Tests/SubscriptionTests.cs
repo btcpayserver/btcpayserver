@@ -17,6 +17,7 @@ using NBXplorer;
 using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
+using static Microsoft.Playwright.Assertions;
 
 namespace BTCPayServer.Tests;
 
@@ -261,7 +262,6 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             unused = await portal.AssertRefunded(unused);
             totalRefunded += unused;
             await s.Page.EvaluateAsync("window.scrollTo(0, document.body.scrollHeight)");
-            await s.TakeScreenshot("upgrade2.png");
             await portal.AssertCreditHistory(
                 [
                     "Upgrade to new plan 'Enterprise Plan'",
@@ -351,18 +351,18 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         await offering.NewSubscriber("Enterprise Plan", "enterprise@example.com", true);
 
         // basic@example.com is a basic plan subscriber (without optimistic activation), so he needs to wait confirmation
-        offering.GoToPlans();
+        await offering.GoToPlans();
         var edit = await offering.Edit("Basic Plan");
         edit.OptimisticActivation = false;
         await edit.Save();
 
         await offering.NewSubscriber("Basic Plan", "basic@example.com", false);
-        offering.GoToPlans();
+        await offering.GoToPlans();
         edit = await offering.Edit("Basic Plan");
         edit.OptimisticActivation = true;
         await edit.Save();
 
-        // basic2@example.com is a basic plan subscriber (optimistic activation), so he is imediatly activated
+        // basic2@example.com is a basic plan subscriber (optimistic activation), so he is immediately activated
         await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () => {
             await offering.NewSubscriber("Basic Plan", "basic2@example.com", false);
         });
@@ -505,7 +505,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         }
     }
 
-    class OfferingPMO(PlaywrightTester s)
+    public class OfferingPMO(PlaywrightTester s)
     {
         public Task Configure()
             => s.Page.GetByRole(AriaRole.Link, new() { Name = "Configure" }).ClickAsync();
@@ -543,7 +543,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
 
         public Task GoToSubscribers()
             => s.Page.GetByRole(AriaRole.Link, new() { Name = "Subscribers" }).ClickAsync();
-        public void GoToPlans()
+        public Task GoToPlans()
             => s.Page.GetByRole(AriaRole.Link, new() { Name = "Plans" }).ClickAsync();
         public Task GoToMails()
             => s.Page.GetByRole(AriaRole.Link, new() { Name = "Mails" }).ClickAsync();
@@ -683,9 +683,20 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         {
             Assert.Equal(expected.PaymentRemindersDays, actual.PaymentRemindersDays);
         }
+
+        public async Task AssertActiveSubscribers(int subscribersCount)
+        {
+            await Expect(s.Page.Locator("#total-subscribers")).ToHaveTextAsync(subscribersCount.ToString());
+        }
+
+        public async Task ToggleTestSubscriber(string subscriber)
+        {
+            await s.Page.ClickAsync(SubscriberRowSelector(subscriber) + " .subscriber-email-col .dropdown-toggle");
+            await s.Page.ClickAsync(SubscriberRowSelector(subscriber) + " .subscriber-email-col button");
+        }
     }
 
-    class PortalPMO(PlaywrightTester s, IAsyncDisposable disposable) : IAsyncDisposable
+    public class PortalPMO(PlaywrightTester s, IAsyncDisposable? disposable) : IAsyncDisposable
     {
         public async Task ClickCallToAction()
             => await s.Page.ClickAsync("div.alert-translucent button");
@@ -726,7 +737,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             => Assert.Equal(0, await s.Page.Locator($"div.alert-translucent").CountAsync());
 
 
-        public ValueTask DisposeAsync() => disposable.DisposeAsync();
+        public ValueTask DisposeAsync() => disposable?.DisposeAsync() ?? ValueTask.CompletedTask;
 
         public Task GoToNextPhase()
             => s.Page.ClickAsync("#MovePhase");
@@ -852,7 +863,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         }
     }
 
-    class AddEditPlanPMO(PlaywrightTester tester)
+    public class AddEditPlanPMO(PlaywrightTester tester)
     {
         public string? PlanName { get; set; }
         public string? Price { get; set; }

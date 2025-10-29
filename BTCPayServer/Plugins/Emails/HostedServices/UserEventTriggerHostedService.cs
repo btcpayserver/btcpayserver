@@ -20,7 +20,6 @@ namespace BTCPayServer.Plugins.Emails.HostedServices;
 public class UserEventHostedService(
     EventAggregator eventAggregator,
     IServiceScopeFactory serviceScopeFactory,
-    ISettingsAccessor<ServerSettings> serverSettings,
     NotificationSender notificationSender,
     Logs logs)
     : EventHostedServiceBase(eventAggregator, logs)
@@ -60,12 +59,16 @@ public class UserEventHostedService(
                 if (ev is UserEvent.Invited invited)
                 {
                     if (invited.SendInvitationEmail)
-                        EventAggregator.Publish(await CreateTriggerEvent(ServerMailTriggers.InvitePending,
+                    {
+                        var trigger = await CreateTriggerEvent(ServerMailTriggers.InvitePending,
                             new JObject()
                             {
-                                ["InvitationLink"] = HtmlEncoder.Default.Encode(invited.InvitationLink),
+                                ["InvitationLink"] = invited.InvitationLink,
                                 ["InvitationLinkQR"] = GetQrCodeImg(invited.InvitationLink)
-                            }, user));
+                            }, user);
+                        trigger.RawHtml.Add("InvitationLinkQR");
+                        EventAggregator.Publish(trigger);
+                    }
                 }
                 else if (requiresEmailConfirmation)
                 {
@@ -76,7 +79,7 @@ public class UserEventHostedService(
                 EventAggregator.Publish(await CreateTriggerEvent(ServerMailTriggers.EmailConfirm,
                     new JObject()
                     {
-                        ["ConfirmLink"] = HtmlEncoder.Default.Encode(confReq.ConfirmLink)
+                        ["ConfirmLink"] = confReq.ConfirmLink
                     }, user));
                 break;
 
@@ -84,7 +87,7 @@ public class UserEventHostedService(
                 EventAggregator.Publish(await CreateTriggerEvent(ServerMailTriggers.PasswordReset,
                     new JObject()
                     {
-                        ["ResetLink"] = HtmlEncoder.Default.Encode(pwResetEvent.ResetLink)
+                        ["ResetLink"] = pwResetEvent.ResetLink
                     }, user));
                 break;
 
@@ -93,7 +96,7 @@ public class UserEventHostedService(
                 EventAggregator.Publish(await CreateTriggerEvent(ServerMailTriggers.ApprovalConfirmed,
                     new JObject()
                     {
-                        ["LoginLink"] = HtmlEncoder.Default.Encode(approvedEvent.LoginLink)
+                        ["LoginLink"] = approvedEvent.LoginLink
                     }, user));
 
                 break;
@@ -110,7 +113,7 @@ public class UserEventHostedService(
         EventAggregator.Publish(await CreateTriggerEvent(ServerMailTriggers.ApprovalRequest,
             new JObject()
             {
-                ["ApprovalLink"] = HtmlEncoder.Default.Encode(approvalLink)
+                ["ApprovalLink"] = approvalLink
             }, user));
     }
 
@@ -129,11 +132,6 @@ public class UserEventHostedService(
             ["Name"] = user.UserName,
             ["Email"] = user.Email,
             ["MailboxAddress"] = user.GetMailboxAddress().ToString(),
-        };
-        model["Branding"] = new JObject()
-        {
-            ["ServerName"] = serverSettings.Settings.ServerName ?? "BTCPay Server",
-            ["ContactUrl"] = serverSettings.Settings.ContactUrl,
         };
          var evt = new TriggerEvent(null, trigger, model, null);
         return evt;

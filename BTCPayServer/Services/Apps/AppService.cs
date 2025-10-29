@@ -40,10 +40,12 @@ namespace BTCPayServer.Services.Apps
         private static JsonSerializerSettings _defaultSerializer;
 
         readonly ApplicationDbContextFactory _ContextFactory;
+        public ApplicationDbContextFactory ContextFactory => _ContextFactory;
         private readonly InvoiceRepository _InvoiceRepository;
         readonly CurrencyNameTable _Currencies;
         private readonly StoreRepository _storeRepository;
         private readonly EventAggregator _eventAggregator;
+        public EventAggregator EventAggregator => _eventAggregator;
         public CurrencyNameTable Currencies => _Currencies;
         private readonly string[] _paidStatuses = [
             InvoiceStatus.Processing.ToString(),

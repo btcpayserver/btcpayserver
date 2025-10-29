@@ -35,4 +35,10 @@ public class EmailTriggerViewModel
 
     public List<PlaceHolder> PlaceHolders { get; set; } = new();
     public bool ServerTrigger { get; set; }
+
+    public EmailTriggerViewModel Clone()
+    {
+        var json = JsonConvert.SerializeObject(this);
+        return JsonConvert.DeserializeObject<EmailTriggerViewModel>(json);
+    }
 }

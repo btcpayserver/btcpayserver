@@ -1377,8 +1377,10 @@ namespace BTCPayServer.Migrations
                         .HasColumnName("base_url");
 
                     b.Property<DateTimeOffset>("Expiration")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expiration");
+                        .HasColumnName("expiration")
+                        .HasDefaultValueSql("now() + interval '1 day'");
 
                     b.Property<long>("SubscriberId")
                         .HasColumnType("bigint")

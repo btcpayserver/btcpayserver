@@ -42,7 +42,7 @@ public class PlanData : BaseEntityData
 
     [Required]
     [Column("currency")]
-    public string Currency { get; set; } = string.Empty;
+    public string Currency { get; set; } = null!;
 
     [Required]
     [Column("recurring_type")]

@@ -8,7 +8,7 @@
     var isSignable = !isReady;
     var needsExport = !isSignable && !isReady;
     Layout = "_LayoutWizard";
-	ViewData.SetActivePage(WalletsNavPages.PSBT, isReady ? StringLocalizer["Confirm broadcasting this transaction"] : StringLocalizer["Transaction Details"], walletId);
+	ViewData.SetTitle(StringLocalizer["Confirm broadcasting this transaction"]);
     Csp.UnsafeEval();
 }
 
@@ -33,7 +33,7 @@
 
     <script>
         hljs.initHighlightingOnLoad();
-        
+
         document.addEventListener("DOMContentLoaded", () => {
             const psbtHex = @Json.Serialize(Model.PSBTHex);
             const buffer = new window.URlib.Buffer.from(psbtHex, "hex");
@@ -49,14 +49,14 @@
                 document.querySelector("#PSBTOptionsImportHeader button").click()
                 document.getElementById("scanqrcode").click()
             };
-            
+
             initQRShow({
                 title: "Scan the PSBT with your wallet",
                 modes,
                 continueTitle: "Continue with signed PSBT",
                 continueCallback
             });
-            
+
             initCameraScanningApp("Scan the PSBT from your wallet", data => {
                 let hex = data;
                 if (typeof(data) === "object") {
@@ -95,18 +95,18 @@
         <input type="hidden" asp-for="FileName" />
         <input type="hidden" asp-for="ReturnUrl" />
         <input type="hidden" asp-for="BackUrl" />
-        
+
         <partial name="SigningContext" for="SigningContext" />
         <div class="d-flex flex-column flex-sm-row flex-wrap justify-content-center align-items-sm-center gap-2">
             <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" text-translate="true">Sign transaction</button>
             @if (Model.SigningContext.PendingTransactionId is null && !Model.NBXSeedAvailable)
             {
-                <button type="submit" id="CreatePendingTransaction" name="command" value="createpending" 
+                <button type="submit" id="CreatePendingTransaction" name="command" value="createpending"
                         class="btn btn-primary">Create pending transaction</button>
             }
             else if (Model.SigningContext.PendingTransactionId is not null)
             {
-                <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId" 
+                <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId"
                    asp-route-pendingTransactionId="@Model.SigningContext.PendingTransactionId" class="btn btn-danger">Cancel</a>
             }
         </div>

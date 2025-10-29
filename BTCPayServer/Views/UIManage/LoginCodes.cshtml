@@ -1,6 +1,7 @@
 @inject UserManager<ApplicationUser> UserManager;
 @{
-    ViewData.SetActivePage(ManageNavPages.LoginCodes, StringLocalizer["Login Codes"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ManageNavPages.LoginCodes), StringLocalizer["Login Codes"])
+        .SetCategory(nameof(ManageNavPages)));
 }
 
 <div class="sticky-header">

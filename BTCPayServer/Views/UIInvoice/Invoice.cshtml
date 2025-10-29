@@ -1,7 +1,7 @@
 @using BTCPayServer.Client
 @model InvoiceDetailsModel
 @{
-    ViewData["Title"] = StringLocalizer["Invoice {0}", Model.Id];
+    ViewData.SetLayoutModel(new("Invoices", StringLocalizer["Invoice {0}", Model.Id]));
 }
 
 @section PageHeadContent {

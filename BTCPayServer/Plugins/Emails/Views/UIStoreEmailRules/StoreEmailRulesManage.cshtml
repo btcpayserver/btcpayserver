@@ -3,7 +3,8 @@
 @{
     var storeId = Context.GetStoreData().Id;
     bool isEdit = Model.Trigger != null;
-    ViewData.SetActivePage(StoreNavPages.Emails, StringLocalizer[isEdit ? "Edit Email Rule" : "Create Email Rule"], storeId);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Emails), StringLocalizer[isEdit ? "Edit Email Rule" : "Create Email Rule"])
+        .SetCategory(WellKnownCategories.Store));
 }
 
 @section PageHeadContent {

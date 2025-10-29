@@ -1,6 +1,7 @@
 ﻿@model LndServicesViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, StringLocalizer["Core Lightning {0}", Model.ConnectionType]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Services), StringLocalizer["Core Lightning {0}", Model.ConnectionType])
+        .SetCategory(WellKnownCategories.Server));
 }
 
 <div class="sticky-header">

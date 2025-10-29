@@ -1,19 +1,12 @@
-﻿@model AddEditPlanViewModel
+﻿@using BTCPayServer.Plugins.Subscriptions
+@model AddEditPlanViewModel
 
 @{
     string storeId = (string)this.Context.GetRouteValue("storeId");
     string offeringId = (string)this.Context.GetRouteValue("offeringId");
-    string submitLabel = "";
-    if (Model.PlanId is null)
-    {
-        ViewData.SetActivePage(AppsNavPages.Update, StringLocalizer["Add plan"], offeringId);
-        submitLabel = StringLocalizer["Create"];
-    }
-    else
-    {
-        ViewData.SetActivePage(AppsNavPages.Update, StringLocalizer["Edit plan"], offeringId);
-        submitLabel = StringLocalizer["Save"];
-    }
+    var title = Model.PlanId is null ? StringLocalizer["Add plan"] : StringLocalizer["Edit plan"];
+    var submitLabel = Model.PlanId is null ? StringLocalizer["Create"] : StringLocalizer["Save"];
+    ViewData.SetLayoutModel(new LayoutModel($"{nameof(SubscriptionsPlugin)}-{offeringId}", title));
 }
 
 <form method="post">

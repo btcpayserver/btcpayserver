@@ -1,6 +1,7 @@
 @model GenerateRecoveryCodesViewModel
 @{
-    ViewData.SetActivePage(ManageNavPages.TwoFactorAuthentication, StringLocalizer["Recovery codes"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ManageNavPages.TwoFactorAuthentication), StringLocalizer["Recovery codes"])
+        .SetCategory(nameof(ManageNavPages)));
 }
 
 <h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>

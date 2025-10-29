@@ -7,8 +7,7 @@
 @inject IFileService FileService
 @model CheckoutAppearanceViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.CheckoutAppearance, StringLocalizer["Checkout Experience"], Context.GetStoreData().Id);
-
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.CheckoutAppearance), StringLocalizer["Checkout Experience"]).SetCategory(WellKnownCategories.Store));
     var canUpload = await FileService.IsAvailable();
 }
 @functions {
@@ -44,7 +43,7 @@
 			$("#ShowPayInWalletButton").prop('checked', true);
 			$("#ShowStoreHeader").prop('checked', true);
 		});
-        
+
 		delegate('click', '#CheckNFC button', async e => {
 			if ('NDEFReader' in window) {
                 const ndef = new NDEFReader();

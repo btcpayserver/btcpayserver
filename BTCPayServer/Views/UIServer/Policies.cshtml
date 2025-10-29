@@ -4,7 +4,8 @@
 @inject EmailSenderFactory EmailSenderFactory
 @inject TransactionLinkProviders TransactionLinkProviders
 @{
-    ViewData.SetActivePage(ServerNavPages.Policies, StringLocalizer["Policies"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Policies), StringLocalizer["Policies"])
+        .SetCategory(WellKnownCategories.Server));
     var linkProviders = TransactionLinkProviders.ToArray();
 }
 

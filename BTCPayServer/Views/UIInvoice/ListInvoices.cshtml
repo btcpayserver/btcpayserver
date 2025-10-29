@@ -5,7 +5,7 @@
 @inject DisplayFormatter DisplayFormatter
 @model InvoicesModel
 @{
-    ViewData.SetActivePage(InvoiceNavPages.Index, StringLocalizer["Invoices"]);
+    ViewData.SetLayoutModel(new("Invoices", StringLocalizer["Invoices"]));
     var statusFilterCount = CountArrayFilter("status") + CountArrayFilter("exceptionstatus") + (HasBooleanFilter("includearchived") ? 1 : 0) + (HasBooleanFilter("unusual") ? 1 : 0);
     var hasDateFilter = HasArrayFilter("startdate") || HasArrayFilter("enddate");
     var appFilterCount = Model.Apps.Count(app => HasArrayFilter("appid", app.Id));

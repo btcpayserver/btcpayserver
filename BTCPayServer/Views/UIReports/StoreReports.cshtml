@@ -4,7 +4,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model StoreReportsViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.Reporting, StringLocalizer["Reporting"]);
+    ViewData.SetLayoutModel(new(nameof(StoreNavPages.Reporting), StringLocalizer["Reporting"]));
     Csp.UnsafeEval();
 }
 

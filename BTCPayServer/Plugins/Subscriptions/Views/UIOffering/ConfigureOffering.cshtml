@@ -1,12 +1,12 @@
 ﻿
-@using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Client
 @using BTCPayServer.Controllers
+@using BTCPayServer.Plugins.Subscriptions
 @model ConfigureOfferingViewModel
 
 @{
     string offeringId = (string)this.Context.GetRouteValue("offeringId");
-    ViewData.SetActivePage(AppsNavPages.Update, StringLocalizer["Configure offering"], offeringId);
+    ViewData.SetLayoutModel(new LayoutModel($"{nameof(SubscriptionsPlugin)}-{offeringId}", StringLocalizer["Configure offering"]));
     string storeId = (string)this.Context.GetRouteValue("storeId");
     var deleteModal = new ConfirmModel(StringLocalizer["Delete offering"], StringLocalizer["This offering will be removed from this store."], StringLocalizer["Delete"])
     {

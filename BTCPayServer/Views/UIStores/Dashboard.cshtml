@@ -10,7 +10,7 @@
 @model StoreDashboardViewModel
 @{
     BTCPayServer.Plugins.PluginExceptionHandler.SetDisablePluginIfCrash(Context);
-    ViewData.SetActivePage(StoreNavPages.Dashboard, Model.StoreName, Model.StoreId);
+    ViewData.SetLayoutModel(new(nameof(StoreNavPages.Dashboard), Model.StoreName));
     var store = ViewContext.HttpContext.GetStoreData();
 }
 

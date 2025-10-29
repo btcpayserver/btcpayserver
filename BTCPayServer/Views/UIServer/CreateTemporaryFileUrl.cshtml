@@ -1,7 +1,8 @@
 @using BTCPayServer.Controllers
 @model BTCPayServer.Controllers.UIServerController.CreateTemporaryFileUrlViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, StringLocalizer["Create temporary file link"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Services), StringLocalizer["Create temporary file link"])
+        .SetCategory(WellKnownCategories.Server));
 }
 
 <form method="post">

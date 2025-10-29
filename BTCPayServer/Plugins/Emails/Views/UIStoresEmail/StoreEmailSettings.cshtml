@@ -4,7 +4,8 @@
 @model BTCPayServer.Models.EmailsViewModel
 @{
     var storeId = Context.GetStoreData().Id;
-    ViewData.SetActivePage(StoreNavPages.Emails, StringLocalizer["Email Rules"], storeId);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Emails), StringLocalizer["Email Rules"])
+        .SetCategory(WellKnownCategories.Store));
 }
 
 <form method="post" autocomplete="off" permissioned="@Policies.CanModifyStoreSettings">

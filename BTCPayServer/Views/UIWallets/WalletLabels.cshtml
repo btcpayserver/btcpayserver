@@ -1,8 +1,9 @@
-@using BTCPayServer.Abstractions.Models
 @model WalletLabelsModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
-    ViewData.SetActivePage(WalletsNavPages.Settings, StringLocalizer["{0} Wallet Labels", Model.WalletId.CryptoCode], walletId);
+    var cryptoCode = Model.WalletId.CryptoCode;
+    ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Settings)}-{cryptoCode}", StringLocalizer["{0} Wallet Labels", Model.WalletId.CryptoCode])
+        .SetCategory(WellKnownCategories.ForWallet(cryptoCode)));
 }
 
 @section PageFootContent {

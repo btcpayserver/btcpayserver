@@ -1,7 +1,7 @@
-@using BTCPayServer.Abstractions.Models
 @model BTCPayServer.Models.ServerViewModels.SSHServiceViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, StringLocalizer["SSH settings"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Services), StringLocalizer["SSH settings"])
+        .SetCategory(WellKnownCategories.Server));
 }
 
 <div class="sticky-header">

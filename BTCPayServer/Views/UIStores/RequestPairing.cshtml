@@ -5,7 +5,7 @@
 @{
     var store = Context.GetStoreData();
     Layout = store is null ? "_LayoutWizard" : "_Layout";
-    ViewData.SetActivePage(StoreNavPages.Tokens, StringLocalizer["Pairing Permission"], store?.Id);
+    ViewData.SetLayoutModel(new(nameof(StoreNavPages.Tokens), StringLocalizer["Pairing Permission"]));
 }
 
 @if (store is null)

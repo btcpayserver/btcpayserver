@@ -1,9 +1,8 @@
-@using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Client
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model TokensViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.Tokens, StringLocalizer["Access Tokens"], Context.GetStoreData().Id);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Tokens), StringLocalizer["Access Tokens"]).SetCategory(WellKnownCategories.Store));
 }
 
 @if (Model.StoreNotConfigured)

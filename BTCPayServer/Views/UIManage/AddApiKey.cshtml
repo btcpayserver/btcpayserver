@@ -3,7 +3,8 @@
 @model UIManageController.AddApiKeyViewModel
 
 @{
-    ViewData.SetActivePage(ManageNavPages.APIKeys, StringLocalizer["Generate API Key"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ManageNavPages.APIKeys), StringLocalizer["Generate API Key"])
+        .SetCategory(nameof(ManageNavPages)));
 }
 
 @section PageHeadContent {
@@ -50,7 +51,7 @@
                 <input asp-for="Label" class="form-control"/>
                 <span asp-validation-for="Label" class="text-danger"></span>
             </div>
-        
+
             <h5 class="mt-4 mb-3">Permissions</h5>
             <div class="list-group mb-4">
                 @for (int i = 0; i < Model.PermissionValues.Count; i++)
@@ -92,7 +93,7 @@
                                     </h5>
                                     <div class="text-muted">@Model.PermissionValues[i].Description</div>
                                     <button type="submit" class="btn btn-link p-0" name="command" value="@($"{Model.PermissionValues[i].Permission}:change-store-mode")">Give permission to all stores instead</button>
-        
+
                                     @if (!Model.Stores.Any())
                                     {
                                         <p class="info-note text-warning mt-2 mb-0">
@@ -138,7 +139,7 @@
                                         <span asp-validation-for="PermissionValues[i].Value" class="text-danger"></span>
                                         <span class="text-muted">@Model.PermissionValues[i].Description</span>
                                     </div>
-                                </div>  
+                                </div>
                             }
                         </div>
                     }

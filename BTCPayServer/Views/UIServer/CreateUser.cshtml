@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Controllers.RegisterFromAdminViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Users, StringLocalizer["Create account"]);
+    ViewData.SetLayoutModel(new(nameof(ServerNavPages.Users), StringLocalizer["Create account"]));
     var canSendEmail = ViewData["CanSendEmail"] is true;
 }
 

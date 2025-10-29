@@ -1,7 +1,7 @@
 ﻿@using BTCPayServer.Client
 @model BTCPayServer.Models.WalletViewModels.ListWalletsViewModel
 @{
-    ViewData.SetActivePage(WalletsNavPages.Index, StringLocalizer["Wallets"]);
+    ViewData.SetLayoutModel(new(nameof(WalletsNavPages.Index), StringLocalizer["Wallets"]));
 }
 
 <partial name="_StatusMessage" />

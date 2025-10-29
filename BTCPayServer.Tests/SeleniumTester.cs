@@ -222,7 +222,7 @@ retry:
             Assert.Equal("Recommendation (Kraken)", rateSource.SelectedOption.Text);
             rateSource.SelectByText("CoinGecko");
             Driver.WaitForElement(By.Id("Create")).Click();
-            Driver.FindElement(By.Id("StoreNav-General")).Click();
+            Driver.FindElement(By.Id("menu-item-General")).Click();
             var storeId = Driver.WaitForElement(By.Id("Id")).GetAttribute("value");
             if (keepId)
                 StoreId = storeId;
@@ -415,7 +415,7 @@ retry:
         {
             if (!Driver.PageSource.Contains("id=\"Nav-Logout\""))
                 GoToUrl("/account");
-            Driver.FindElement(By.Id("Nav-Account")).Click();
+            Driver.FindElement(By.Id("menu-item-Account")).Click();
             Driver.FindElement(By.Id("Nav-Logout")).Click();
         }
 
@@ -447,27 +447,27 @@ retry:
 
             if (storeNavPage != StoreNavPages.General)
             {
-                Driver.FindElement(By.Id($"StoreNav-{StoreNavPages.General}")).Click();
+                Driver.FindElement(By.Id($"menu-item-{StoreNavPages.General}")).Click();
             }
-            Driver.FindElement(By.Id($"StoreNav-{storeNavPage}")).Click();
+            Driver.FindElement(By.Id($"menu-item-{storeNavPage}")).Click();
         }
 
         public void GoToWalletSettings(string cryptoCode = "BTC")
         {
-            Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
-            if (Driver.PageSource.Contains("id=\"WalletNav-Settings\""))
+            Driver.FindElement(By.CssSelector($"[data-testid=\"Wallet-{cryptoCode}\"] a")).Click();
+            if (Driver.PageSource.Contains($"id=\"menu-item-Settings-{cryptoCode}\""))
             {
-                Driver.FindElement(By.Id("WalletNav-Settings")).Click();
+                Driver.FindElement(By.Id($"menu-item-Settings-{cryptoCode}")).Click();
             }
         }
 
         public void GoToLightningSettings(string cryptoCode = "BTC")
         {
-            Driver.FindElement(By.Id($"StoreNav-Lightning{cryptoCode}")).Click();
+            Driver.FindElement(By.CssSelector($"[data-testid=\"Lightning-{cryptoCode}\"]")).Click();
             // if Lightning is already set up we need to navigate to the settings
-            if (Driver.PageSource.Contains("id=\"StoreNav-LightningSettings\""))
+            if (Driver.PageSource.Contains($"id=\"menu-item-LightningSettings-{cryptoCode}\""))
             {
-                Driver.FindElement(By.Id("StoreNav-LightningSettings")).Click();
+                Driver.FindElement(By.Id($"menu-item-LightningSettings-{cryptoCode}")).Click();
             }
         }
 
@@ -480,7 +480,7 @@ retry:
         public void GoToInvoiceCheckout(string invoiceId = null)
         {
             invoiceId ??= InvoiceId;
-            Driver.FindElement(By.Id("StoreNav-Invoices")).Click();
+            Driver.FindElement(By.Id("menu-item-Invoices")).Click();
             Driver.FindElement(By.Id($"invoice-checkout-{invoiceId}")).Click();
             CheckForJSErrors();
             Driver.WaitUntilAvailable(By.Id("Checkout"));
@@ -495,7 +495,7 @@ retry:
         {
             if (storeId is null)
             {
-                Driver.FindElement(By.Id("StoreNav-Invoices")).Click();
+                Driver.FindElement(By.Id("menu-item-Invoices")).Click();
             }
             else
             {
@@ -506,11 +506,11 @@ retry:
 
         public void GoToProfile(ManageNavPages navPages = ManageNavPages.Index)
         {
-            Driver.WaitForAndClick(By.Id("Nav-Account"));
+            Driver.WaitForAndClick(By.Id("menu-item-Account"));
             Driver.WaitForAndClick(By.Id("Nav-ManageAccount"));
             if (navPages != ManageNavPages.Index)
             {
-                Driver.WaitForAndClick(By.Id($"SectionNav-{navPages.ToString()}"));
+                Driver.WaitForAndClick(By.Id($"menu-item-{navPages.ToString()}"));
             }
         }
 
@@ -614,12 +614,12 @@ retry:
             Driver.Navigate().GoToUrl(new Uri(ServerUri, $"wallets/{walletId}"));
             if (navPages == WalletsNavPages.PSBT)
             {
-                Driver.FindElement(By.Id("WalletNav-Send")).Click();
+                Driver.FindElement(By.Id($"menu-item-Send-{walletId.CryptoCode}")).Click();
                 Driver.FindElement(By.Id("PSBT")).Click();
             }
             else if (navPages != WalletsNavPages.Transactions)
             {
-                Driver.FindElement(By.Id($"WalletNav-{navPages}")).Click();
+                Driver.FindElement(By.Id($"menu-item-{navPages}-{walletId.CryptoCode}")).Click();
             }
         }
 
@@ -630,10 +630,10 @@ retry:
 
         public void GoToServer(ServerNavPages navPages = ServerNavPages.Policies)
         {
-            Driver.FindElement(By.Id("Nav-ServerSettings")).Click();
+            Driver.FindElement(By.Id("menu-item-Policies")).Click();
             if (navPages != ServerNavPages.Policies)
             {
-                Driver.FindElement(By.Id($"SectionNav-{navPages}")).Click();
+                Driver.FindElement(By.Id($"menu-item-{navPages}")).Click();
             }
         }
 
@@ -671,7 +671,7 @@ retry:
         {
             if (string.IsNullOrEmpty(name))
                 name = $"{type}-{Guid.NewGuid().ToString()[..14]}";
-            Driver.FindElement(By.Id($"StoreNav-Create{type}")).Click();
+            Driver.FindElement(By.Id($"menu-item-CreateApp-{type}")).Click();
             Driver.FindElement(By.Name("AppName")).SendKeys(name);
             ClickPagePrimary();
             Assert.Contains("App successfully created", FindAlertMessage().Text);

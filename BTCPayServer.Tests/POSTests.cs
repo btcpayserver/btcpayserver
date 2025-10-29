@@ -148,7 +148,7 @@ fruit tea:
         }
 
         [Fact]
-        [Trait("Integration", "Integration")]
+        [Trait("Playwright", "Playwright")]
         public async Task CanExportInvoicesWithMetadata()
         {
             await using var s = CreatePlaywrightTester();

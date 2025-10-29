@@ -5,7 +5,7 @@
     var walletId = WalletId.Parse(Context.GetRouteValue("walletId").ToString());
 	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
     Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.Send, StringLocalizer["Sign the transaction"], walletId.ToString());
+    ViewData.SetTitle(StringLocalizer["Sign the transaction"]);
 }
 
 @section Navbar {

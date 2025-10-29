@@ -8,7 +8,7 @@
 @if (store.IsLightningEnabled(cryptoCode) && store.IsLNUrlEnabled(cryptoCode))
 {
     <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
-        <a asp-area="" asp-controller="UILNURL" asp-action="EditLightningAddress" asp-route-storeId="@store.Id" class="nav-link @ViewData.ActivePageClass("LightningAddress", nameof(StoreNavPages))" id="StoreNav-LightningAddress">
+        <a layout-menu-item="LightningAddress" asp-area="" asp-controller="UILNURL" asp-action="EditLightningAddress" asp-route-storeId="@store.Id">
             <vc:icon symbol="nav-lightning-address "/>
             <span text-translate="true">Lightning Address</span>
         </a>

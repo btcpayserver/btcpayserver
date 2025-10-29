@@ -1,6 +1,6 @@
 ﻿@model BTCPayServer.Security.Bitpay.BitTokenEntity
 @{
-    ViewData.SetActivePage(StoreNavPages.Tokens, StringLocalizer["Access Tokens"], Context.GetStoreData().Id);
+    ViewData.SetLayoutModel(new(nameof(StoreNavPages.Tokens), StringLocalizer["Access Tokens"]));
 }
 <h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
 <partial name="_StatusMessage" />

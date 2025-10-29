@@ -1,8 +1,9 @@
-﻿@using BTCPayServer.Services
+﻿@using BTCPayServer.Plugins.Subscriptions
+@using BTCPayServer.Services
 @model CreateOfferingViewModel
 
 @{
-    ViewData.SetActivePage(StoreNavPages.Subscriptions, StringLocalizer["New offering"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(SubscriptionsPlugin), StringLocalizer["New offering"]));
 }
 
 <form method="post">

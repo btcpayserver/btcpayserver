@@ -6,7 +6,7 @@
     var store = string.IsNullOrEmpty(Model.StoreId) ? null : Model.Stores.FirstOrDefault(s => s.Id == Model.StoreId);
     var permissions = Model.Permissions?.Split(';') ?? Array.Empty<string>();
     var groupedPermissions = Permission.ToPermissions(permissions).GroupBy(permission => permission.Policy);
-    ViewData["Title"] = $"Authorize {displayName ?? "Application"}";
+    ViewData.SetTitle($"Authorize {displayName ?? "Application"}");
     Layout = "_LayoutWizard";
 }
 
@@ -73,20 +73,20 @@
     else
     {
         <input type="hidden" asp-for="StoreId" class="form-select"/>
-        
+
         @if (Model.RedirectUrl != null)
         {
             <p class="alert alert-info mb-4">
                 <span text-translate="true">If authorized, the generated API key will be provided to</span> <strong>@Model.RedirectUrl.AbsoluteUri</strong>
             </p>
         }
-        
+
         <div class="form-group">
             <label asp-for="Label" class="form-label"></label>
             <input asp-for="Label" class="form-control"/>
             <span asp-validation-for="Label" class="text-danger"></span>
         </div>
-        
+
         <h2 class="h5 fw-semibold mt-4" text-translate="true">Permissions</h2>
         @if (!groupedPermissions.Any())
         {

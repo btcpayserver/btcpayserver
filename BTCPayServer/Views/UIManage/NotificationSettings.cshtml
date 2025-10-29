@@ -1,6 +1,7 @@
 @model BTCPayServer.Controllers.UIManageController.NotificationSettingsViewModel
 @{
-    ViewData.SetActivePage(ManageNavPages.Notifications, StringLocalizer["Notification Settings"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ManageNavPages.Notifications), StringLocalizer["Notification Settings"])
+        .SetCategory(nameof(ManageNavPages)));
 }
 
 <form method="post" asp-action="NotificationSettings">

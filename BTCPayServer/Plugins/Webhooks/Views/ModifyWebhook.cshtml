@@ -2,7 +2,7 @@
 @inject IEnumerable<AvailableWebhookViewModel> Webhooks
 @{
     var storeId = Context.GetStoreData().Id;
-    ViewData.SetActivePage(StoreNavPages.Webhooks, StringLocalizer["Webhook"], storeId);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Webhooks), StringLocalizer["Webhooks"]).SetCategory(WellKnownCategories.Store));
 }
 
 @section PageHeadContent {

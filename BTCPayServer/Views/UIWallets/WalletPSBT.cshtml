@@ -5,7 +5,7 @@
 	var walletId = Context.GetRouteValue("walletId").ToString();
 	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
 	Layout = "_LayoutWizard";
-	ViewData.SetActivePage(WalletsNavPages.PSBT, StringLocalizer["Decode PSBT"], walletId);
+	ViewData.SetTitle(StringLocalizer["Decode PSBT"]);
 	Csp.UnsafeEval();
 }
 
@@ -32,7 +32,7 @@
                 const cryptoPSBT = new window.URlib.CryptoPSBT(buffer);
                 const encoder = cryptoPSBT.toUREncoder();
                 const bbqrSplitResult = BBQr.splitQRs(buffer, 'P', { maxVersion: 10});
-                
+
                 const modes = {
                     ur: { title: "UR", fragments: encoder.encodeWhole() },
                     static: { title: "Static", fragments: [psbtHex] },
@@ -94,7 +94,7 @@
         <div class="d-flex">
             @if (this.Model.SigningContext.PendingTransactionId is not null)
             {
-                <button type="submit" name="command" value="collect" class="btn btn-primary mt-2" id="Collect" text-translate="true">Collect signatures</button>   
+                <button type="submit" name="command" value="collect" class="btn btn-primary mt-2" id="Collect" text-translate="true">Collect signatures</button>
             }
             else
             {

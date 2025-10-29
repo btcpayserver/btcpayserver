@@ -1,6 +1,6 @@
 ﻿@model LightningWalletServices
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, StringLocalizer["BTCPay Server Configurator"]);
+    ViewData.SetLayoutModel(new(nameof(ServerNavPages.Services), StringLocalizer["BTCPay Server Configurator"]));
 }
 
 
@@ -28,7 +28,7 @@
         <div class="form-group">
             <p text-translate="true">This page exposes information to use the configured BTCPay Server Configurator to modify this setup.</p>
         </div>
-       
+
         <a href="@Model.ServiceLink" target="_blank" class="form-group" rel="noreferrer noopener">
             <label asp-for="ServiceLink" class="form-label" text-translate="true">Service</label>
             <input asp-for="ServiceLink" class="form-control" readonly />

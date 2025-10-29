@@ -1,17 +1,18 @@
 @using System.Globalization
 @using BTCPayServer.Abstractions.Contracts
-@using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Client
 @using BTCPayServer.TagHelpers
 @using BTCPayServer.Views.Apps
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Forms
+@using BTCPayServer.Plugins.Crowdfund
 @inject FormDataService FormDataService
 @inject IFileService FileService
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.Crowdfund.Models.UpdateCrowdfundViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Update, StringLocalizer["Update Crowdfund"], Model.AppId);
+    // layout-menu-item="@nameof(CrowdfundPlugin)-@app.Id"
+    ViewData.SetLayoutModel(new LayoutModel($"{nameof(CrowdfundPlugin)}-{Model.AppId}", StringLocalizer["Update Crowdfund"]));
 	Csp.UnsafeEval();
     var canUpload = await FileService.IsAvailable();
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);

@@ -5,7 +5,8 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model EnableAuthenticatorViewModel
 @{
-    ViewData.SetActivePage(ManageNavPages.TwoFactorAuthentication, StringLocalizer["Enable Authenticator App"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ManageNavPages.TwoFactorAuthentication), StringLocalizer["Enable Authenticator App"])
+        .SetCategory(nameof(ManageNavPages)));
 }
 <div class="sticky-header">
     <nav aria-label="breadcrumb">
@@ -59,7 +60,7 @@
                 <span text-translate="true">Your two-factor authenticator app will provide you with a unique code.</span>
                 <br/>
                 <span text-translate="true">Enter the code in the confirmation box below.</span>
-            </p>    
+            </p>
             <form method="post">
                 <input asp-for="AuthenticatorUri" type="hidden" />
                 <input asp-for="SharedKey" type="hidden" />

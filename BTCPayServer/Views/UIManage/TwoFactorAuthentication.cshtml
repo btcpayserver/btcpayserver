@@ -1,7 +1,7 @@
-@using BTCPayServer.Abstractions.Models
 @model TwoFactorAuthenticationViewModel
 @{
-    ViewData.SetActivePage(ManageNavPages.TwoFactorAuthentication, StringLocalizer["Two-Factor Authentication"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ManageNavPages.TwoFactorAuthentication), StringLocalizer["Two-Factor Authentication"])
+        .SetCategory(nameof(ManageNavPages)));
 }
 <div class="sticky-header">
 	<h2 class="my-1">@ViewData["Title"]</h2>

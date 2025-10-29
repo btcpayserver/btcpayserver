@@ -1,7 +1,7 @@
-@using BTCPayServer.Abstractions.Models
 @model ListDictionariesViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Translations, StringLocalizer["Dictionaries"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Translations), StringLocalizer["Dictionaries"])
+        .SetCategory(WellKnownCategories.Server));
 }
 
 <div class="sticky-header">

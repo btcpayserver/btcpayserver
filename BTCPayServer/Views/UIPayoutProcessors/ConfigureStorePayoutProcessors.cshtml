@@ -1,11 +1,10 @@
 @using BTCPayServer.Views.Stores
 @using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Client
 @model List<BTCPayServer.PayoutProcessors.UIPayoutProcessorsController.StorePayoutProcessorsView>
 @{
     var storeId = Context.GetStoreData().Id;
-    ViewData.SetActivePage(StoreNavPages.PayoutProcessors, StringLocalizer["Payout Processors"], storeId);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.PayoutProcessors), StringLocalizer["Payout Processors"]).SetCategory(WellKnownCategories.Store));
 }
 <div class="sticky-header">
 	<h2 class="my-1">@ViewData["Title"]</h2>

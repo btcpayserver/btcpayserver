@@ -6,7 +6,7 @@
 @if (store != null)
 {
     <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
-        <a asp-area="" asp-controller="UIPayButton" asp-action="PayButton" asp-route-storeId="@store.Id" class="nav-link @ViewData.ActivePageClass(StoreNavPages.PayButton)" id="StoreNav-PayButton">
+        <a layout-menu-item="PayButton" asp-area="" asp-controller="UIPayButton" asp-action="PayButton" asp-route-storeId="@store.Id">
             <vc:icon symbol="nav-pay-button"/>
 			<span text-translate="true">Pay Button</span>
         </a>

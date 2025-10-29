@@ -1,6 +1,7 @@
 ﻿@model LightningWalletServices
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, Model.WalletName);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Services), Model.WalletName)
+        .SetCategory(WellKnownCategories.Server));
 }
 
 <div class="sticky-header">

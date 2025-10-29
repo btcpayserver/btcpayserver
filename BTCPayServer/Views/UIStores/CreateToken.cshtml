@@ -1,7 +1,7 @@
 @model CreateTokenViewModel
 @{
     var store = Context.GetStoreData();
-    ViewData.SetActivePage(StoreNavPages.Tokens, StringLocalizer["Create New Token"], store?.Id);
+    ViewData.SetLayoutModel(new(nameof(StoreNavPages.Tokens), StringLocalizer["Create New Token"]));
     ViewBag.HidePublicKey ??= false;
     ViewBag.ShowStores ??= false;
 }

@@ -47,7 +47,7 @@ namespace BTCPayServer.Tests
             var psbt = await ExtractPSBT(s);
 
             await s.GoToStore(hot.storeId);
-            await s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.PSBT);
+            await s.GoToWallet(s.WalletId, navPages: Views.Wallets.WalletsNavPages.PSBT);
             await s.Page.Locator("[name='PSBT']").FillAsync(psbt);
             await s.Page.ClickAsync("#Decode");
             await s.Page.ClickAsync("#SignTransaction");
@@ -72,7 +72,7 @@ namespace BTCPayServer.Tests
             var skeletonPSBT = psbtParsed;
 
             await s.GoToStore(cold.storeId);
-            await s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.PSBT);
+            await s.GoToWallet(s.WalletId, navPages: Views.Wallets.WalletsNavPages.PSBT);
             await s.Page.Locator("[name='PSBT']").FillAsync(skeletonPSBT.ToBase64());
             await s.Page.ClickAsync("#Decode");
             await s.Page.ClickAsync("#SignTransaction");
@@ -96,7 +96,7 @@ namespace BTCPayServer.Tests
 
             // Let's if we can combine the updated psbt (which has hdkeys, but no sig)
             // with the signed psbt (which has sig, but no hdkeys)
-            await s.GoToWallet(navPages: Views.Wallets.WalletsNavPages.PSBT);
+            await s.GoToWallet(s.WalletId, navPages: Views.Wallets.WalletsNavPages.PSBT);
             await s.Page.Locator("[name='PSBT']").FillAsync(psbtParsed.ToBase64());
             await s.Page.ClickAsync("#Decode");
             await s.Page.ClickAsync("#PSBTOptionsAdvancedHeader");

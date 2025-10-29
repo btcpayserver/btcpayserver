@@ -1,6 +1,6 @@
 @model ServerEmailsViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Emails, StringLocalizer["Emails"]);
+    ViewData.SetLayoutModel(new LayoutModel("Server-" + nameof(ServerNavPages.Emails), StringLocalizer["Emails"]).SetCategory(WellKnownCategories.Server));
 }
 
 <form method="post" autocomplete="off">

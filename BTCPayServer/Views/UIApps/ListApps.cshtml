@@ -1,10 +1,9 @@
 @using BTCPayServer.Services.Apps
-@using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Client
 @model ListAppsViewModel
 @inject AppService AppService
 @{
-    ViewData.SetActivePage(AppsNavPages.Index, "Apps");
+    ViewData.SetLayoutModel(new(nameof(AppsNavPages), "Apps"));
     var nextAppNameSortOrder = (string)ViewData["AppNameNextSortOrder"];
     var nextAppTypeSortOrder = (string)ViewData["AppTypeNextSortOrder"];
     var nextStoreNameSortOrder = (string)ViewData["StoreNameNextSortOrder"];

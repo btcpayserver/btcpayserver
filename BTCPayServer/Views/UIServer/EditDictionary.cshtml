@@ -1,7 +1,7 @@
 @model EditDictionaryViewModel
 @{
-	ViewData.SetActivePage(ServerNavPages.Translations);
-	ViewData["Title"] = Context.GetRouteValue("dictionary");
+	ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Translations), Context.GetRouteValue("dictionary") as string)
+        .SetCategory(WellKnownCategories.Server));
 }
 
 <form method="post" class="d-flex flex-column">

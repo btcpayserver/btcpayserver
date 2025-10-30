@@ -220,6 +220,7 @@ namespace BTCPayServer.Tests
             await s.GoToHome();
             await s.GoToServer(ServerNavPages.Users);
 
+
             // Manage user password reset
             await s.Page.Locator("#SearchTerm").ClearAsync();
             await s.Page.FillAsync("#SearchTerm", user.RegisterDetails.Email);
@@ -233,6 +234,12 @@ namespace BTCPayServer.Tests
             await s.ClickPagePrimary();
             await s.FindAlertMessage(partialText: "Password successfully set");
 
+            var userPage = await s.Browser.NewPageAsync();
+            await using (await s.SwitchPage(userPage, false))
+            {
+                await s.GoToLogin();
+                await s.LogIn(user.Email, user.Password);
+            }
             // Manage user status (disable and enable)
             // Disable user
             await s.Page.Locator("#SearchTerm").ClearAsync();
@@ -244,6 +251,13 @@ namespace BTCPayServer.Tests
             await s.Page.ClickAsync("#UsersList tr.user-overview-row:first-child .disable-user");
             await s.Page.ClickAsync("#ConfirmContinue");
             await s.FindAlertMessage(partialText: "User disabled");
+
+            await using (await s.SwitchPage(userPage, false))
+            {
+                await s.Page.ReloadAsync();
+                await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Warning, partialText: "Your user account is currently disabled");
+            }
+
             //Enable user
             await s.Page.Locator("#SearchTerm").ClearAsync();
             await s.Page.FillAsync("#SearchTerm", user.RegisterDetails.Email);
@@ -254,6 +268,14 @@ namespace BTCPayServer.Tests
             await s.Page.ClickAsync("#UsersList tr.user-overview-row:first-child .enable-user");
             await s.Page.ClickAsync("#ConfirmContinue");
             await s.FindAlertMessage(partialText: "User enabled");
+
+            await using (await s.SwitchPage(userPage))
+            {
+                // Can log again
+                await s.LogIn(user.Email, "Password@1!");
+                await s.CreateNewStore();
+                await s.Logout();
+            }
 
             // Manage user details (edit)
             await s.Page.Locator("#SearchTerm").ClearAsync();

@@ -94,51 +94,8 @@ namespace BTCPayServer.Payments.Lightning
 
             var invoice = context.InvoiceEntity;
 
-            // NEW: Route tips to separate wallet if configured
-            bool isTipPayment = false;
-            if (invoice.Metadata?.ReceiptData != null)
-            {
-                try
-                {
-                    var receiptJson = JObject.Parse(invoice.Metadata.ReceiptData.ToString() ?? "{}");
-                    var tipAmount = receiptJson["Tip"]?.Value<decimal?>();
-                    isTipPayment = tipAmount.HasValue && tipAmount.Value > 0;
-                }
-                catch { /* Ignore JSON parsing errors */ }
-            }
-            
-            // Use tips wallet if this is a tip payment
-            if (isTipPayment && 
-                storeBlob.EnableTipsSeparation && 
-                !string.IsNullOrEmpty(storeBlob.LightningTipsConnectionString))
-            {
-                config = ParsePaymentMethodConfig(storeBlob.LightningTipsConnectionString);
-                context.Logs.Write("Routing tip payment to tips wallet", InvoiceEventData.EventSeverity.Info);
-            }
-            decimal due = paymentPrompt.Calculate().Due;
-            var client = config.CreateLightningClient(_Network, Options.Value, _lightningClientFactory);
-            var expiry = invoice.ExpirationTime - DateTimeOffset.UtcNow;
-            if (expiry < TimeSpan.Zero)
-                expiry = TimeSpan.FromSeconds(1);
-
-            LightningInvoice? lightningInvoice;
-
-            string description = storeBlob.LightningDescriptionTemplate;
-            description = description.Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
-                .Replace("{ItemDescription}", invoice.Metadata.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
-                .Replace("{OrderId}", invoice.Metadata.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
-            using (var cts = new CancellationTokenSource(LightningTimeout))
-            {
-                try
-                {
-                    var request = new CreateInvoiceParams(new LightMoney(due, LightMoneyUnit.BTC), description, expiry);
-                    request.PrivateRouteHints = storeBlob.LightningPrivateRouteHints;
-                    lightningInvoice = await client.CreateInvoice(request, cts.Token);
-                    var diff = request.Amount - lightningInvoice.Amount;
-                    if (diff != LightMoney.Zero)
-                    {
-                        // Some providers doesn't round up to msat. So we tweak the fees so the due match the BOLT11's amount.
-                        paymentPrompt.AddTweakFee(-diff.ToUnit(LightMoneyUnit.BTC));
+              // Some providers doesn't round up to msat. So we tweak the fees so the due match the BOLT11's amount.
+                paymentPrompt.AddTweakFee(-diff.ToUnit(LightMoneyUnit.BTC));
                     }
                 }
                 catch (OperationCanceledException) when (cts.IsCancellationRequested)

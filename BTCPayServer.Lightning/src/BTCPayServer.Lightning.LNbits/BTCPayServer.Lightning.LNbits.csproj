@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BTCPayServer.Lightning.All\BTCPayServer.Lightning.All.csproj" />
+  </ItemGroup>
+</Project>

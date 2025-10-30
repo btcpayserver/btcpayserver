@@ -93,9 +93,30 @@ namespace BTCPayServer.Payments.Lightning
             var nodeInfo = GetNodeInfo(config, context.Logs, preferOnion);
 
             var invoice = context.InvoiceEntity;
+            decimal due = paymentPrompt.Calculate().Due;
+            var client = config.CreateLightningClient(_Network, Options.Value, _lightningClientFactory);
+            var expiry = invoice.ExpirationTime - DateTimeOffset.UtcNow;
+            if (expiry < TimeSpan.Zero)
+                expiry = TimeSpan.FromSeconds(1);
 
-              // Some providers doesn't round up to msat. So we tweak the fees so the due match the BOLT11's amount.
-                paymentPrompt.AddTweakFee(-diff.ToUnit(LightMoneyUnit.BTC));
+            LightningInvoice? lightningInvoice;
+
+            string description = storeBlob.LightningDescriptionTemplate;
+            description = description.Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
+                .Replace("{ItemDescription}", invoice.Metadata.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
+                .Replace("{OrderId}", invoice.Metadata.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
+            using (var cts = new CancellationTokenSource(LightningTimeout))
+            {
+                try
+                {
+                    var request = new CreateInvoiceParams(new LightMoney(due, LightMoneyUnit.BTC), description, expiry);
+                    request.PrivateRouteHints = storeBlob.LightningPrivateRouteHints;
+                    lightningInvoice = await client.CreateInvoice(request, cts.Token);
+                    var diff = request.Amount - lightningInvoice.Amount;
+                    if (diff != LightMoney.Zero)
+                    {
+                        // Some providers doesn't round up to msat. So we tweak the fees so the due match the BOLT11's amount.
+                        paymentPrompt.AddTweakFee(-diff.ToUnit(LightMoneyUnit.BTC));
                     }
                 }
                 catch (OperationCanceledException) when (cts.IsCancellationRequested)

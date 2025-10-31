@@ -4,8 +4,7 @@
 
 @{
 	Layout = "_LayoutWalletSetup";
-	var title = StringLocalizer["Setup {0} Wallet", Model.CryptoCode];
-	ViewData.SetActivePage(StoreNavPages.OnchainSettings, title, $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+    ViewData.SetTitle(StringLocalizer["Setup {0} Wallet", Model.CryptoCode]);
 }
 
 <h1 class="text-center" text-translate="true">Let's get started</h1>

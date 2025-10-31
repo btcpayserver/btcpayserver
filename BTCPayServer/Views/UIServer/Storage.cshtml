@@ -1,6 +1,7 @@
 @model BTCPayServer.Storage.ViewModels.ChooseStorageViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Files, StringLocalizer["Storage Provider"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Files), StringLocalizer["Storage Provider"])
+        .SetCategory(WellKnownCategories.Server));
 }
 
 <form method="post">
@@ -13,7 +14,7 @@
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>
             <h2>@ViewData["Title"]</h2>
-        </nav>         
+        </nav>
         <button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save" text-translate="true">Next</button>
     </div>
     <partial name="_StatusMessage" />
@@ -23,7 +24,7 @@
             @if (Model.ShowChangeWarning)
             {
                 <div class="alert alert-danger mb-4" text-translate="true">
-                    If you change your configured storage provider, your current files will become inaccessible. 
+                    If you change your configured storage provider, your current files will become inaccessible.
                 </div>
             }
             @if (!ViewContext.ModelState.IsValid)

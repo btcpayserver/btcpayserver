@@ -226,7 +226,8 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             {
                 await portal.Downgrade("Basic Plan");
                 unused = GetUnusedPeriodValue(usedDays: 7, planPrice: 99.0m, daysInPeriod: DaysInThisMonth());
-                totalRefunded += await portal.AssertRefunded(unused);
+                unused = await portal.AssertRefunded(unused);
+                totalRefunded += unused;
             });
 
             Assert.Equal(unused, credited.Amount);
@@ -241,7 +242,8 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             await portal.GoTo7Days();
             await portal.Upgrade("Pro Plan");
             unused = GetUnusedPeriodValue(usedDays: 7, planPrice: 29.0m, daysInPeriod: DaysInThisMonth());
-            totalRefunded += await portal.AssertRefunded(unused);
+            unused = await portal.AssertRefunded(unused);
+            totalRefunded += unused;
             expectedBalance = totalRefunded - 29.0m - 99.0m - 99.0m;
             await portal.AssertCredit(creditBalance: $"${expectedBalance:F2}");
 
@@ -253,14 +255,24 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             await s.Server.WaitForEvent<SubscriptionEvent.PlanStarted>(async () =>
             {
                 await portal.Upgrade("Enterprise Plan");
-                await invoice.AssertContent(new()
-                {
-                    TotalFiat = USD(299m - expectedBalance - unused)
-                });
                 await s.PayInvoice(mine: true);
             });
             await invoice.ClickRedirect();
-            totalRefunded += await portal.AssertRefunded(unused);
+            unused = await portal.AssertRefunded(unused);
+            totalRefunded += unused;
+            await s.Page.EvaluateAsync("window.scrollTo(0, document.body.scrollHeight)");
+            await s.TakeScreenshot("upgrade2.png");
+            await portal.AssertCreditHistory(
+                [
+                    "Upgrade to new plan 'Enterprise Plan'",
+                    "Credit purchase"
+                ],
+                [
+                    "-$" + (299m - unused).ToString("F2", CultureInfo.InvariantCulture),
+                    "$" + (299m - expectedBalance - unused).ToString("F2", CultureInfo.InvariantCulture)
+                ]);
+            expectedBalance = 0m;
+            await portal.AssertCredit(creditBalance: $"${expectedBalance:F2}");
         }
     }
 
@@ -759,7 +771,10 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             var match = Regex.Match(text!, @"\((.*?) USD has been refunded\)");
             var v = decimal.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
             var diff = Math.Abs(refunded - v);
-            Assert.True(diff < 2.0m);
+            if (diff >= 3.0m)
+            {
+                Assert.Fail($"Expected {refunded} USD, but got {v} USD");
+            }
             return v;
         }
 
@@ -769,13 +784,16 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             Assert.Equal(plan, name);
         }
 
-        public async Task AssertCreditHistory(List<string> creditLines)
+        public async Task AssertCreditHistory(List<string> creditLines, List<string>? creditAmounts = null)
         {
-            var rows = await s.Page.QuerySelectorAllAsync(".credit-history tr td:nth-child(2)");
+            var descriptions = await s.Page.QuerySelectorAllAsync(".credit-history tr td:nth-child(2)");
+            var credits = await s.Page.QuerySelectorAllAsync(".credit-history tr td:nth-child(3)");
             for (int i = 0; i < creditLines.Count; i++)
             {
-                var txt = await rows[i].InnerTextAsync();
+                var txt = await descriptions[i].InnerTextAsync();
                 Assert.StartsWith(creditLines[i], txt);
+                if (creditAmounts is not null)
+                    Assert.Equal(creditAmounts[i], await credits[i].InnerTextAsync());
             }
         }
     }

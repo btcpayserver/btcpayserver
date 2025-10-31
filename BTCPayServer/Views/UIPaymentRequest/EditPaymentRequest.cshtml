@@ -11,8 +11,7 @@
 @model BTCPayServer.Models.PaymentRequestViewModels.UpdatePaymentRequestViewModel
 @{
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
-
-    ViewData.SetActivePage(PaymentRequestsNavPages.Create, string.IsNullOrEmpty(Model.Id) ? StringLocalizer["Create Payment Request"] : StringLocalizer["Edit Payment Request"], Model.Id);
+    ViewData.SetLayoutModel(new LayoutModel("PaymentRequests", string.IsNullOrEmpty(Model.Id) ? StringLocalizer["Create Payment Request"] : StringLocalizer["Edit Payment Request"]));
 }
 
 @section PageHeadContent {

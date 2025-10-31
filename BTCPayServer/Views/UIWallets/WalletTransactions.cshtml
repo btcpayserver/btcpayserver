@@ -15,7 +15,8 @@
     var wallet = walletId != null ? WalletId.Parse(walletId) : new WalletId(storeId, cryptoCode);
     storeId = wallet.StoreId;
 
-    ViewData.SetActivePage(WalletsNavPages.Transactions, StringLocalizer["{0} Transactions", Model.CryptoCode], walletId);
+    ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Transactions)}-{Model.CryptoCode}", StringLocalizer["{0} Transactions", Model.CryptoCode])
+        .SetCategory(WellKnownCategories.ForWallet(Model.CryptoCode)));
 }
 
 @section PageHeadContent {

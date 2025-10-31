@@ -25,7 +25,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var txs = (await client.ShowOnChainWalletTransactions(s.StoreId, "BTC")).Select(t => t.TransactionHash).ToArray();
         Assert.Equal(3, txs.Length);
 
-        var w = await s.GoToWalletTransactions();
+        var w = await s.GoToWalletTransactions(s.WalletId);
         await w.BumpFee(txs[0]);
 
         // Because a single transaction is selected, we should be able to select CPFP only (Because no change are available, we can't do RBF)
@@ -145,7 +145,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
         for (int i = 0; i < 5; i++)
         {
-            var txs = await s.GoToWalletTransactions();
+            var txs = await s.GoToWalletTransactions(s.WalletId);
             await txs.SelectAll();
             await txs.BumpFeeSelected();
             await s.ClickPagePrimary();

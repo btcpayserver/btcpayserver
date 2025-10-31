@@ -1,11 +1,12 @@
 @using NBitcoin.DataEncoders
 @using Newtonsoft.Json
 @using System.Text
-@using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Views.Wallets
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model WalletSettingsViewModel
 @{
-	ViewData.SetActivePage(StoreNavPages.OnchainSettings, StringLocalizer["{0} Wallet Settings", Model.CryptoCode], $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+    ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Settings)}-{Model.CryptoCode}", StringLocalizer["{0} Wallet Settings", Model.CryptoCode])
+        .SetCategory(WellKnownCategories.ForWallet(Model.CryptoCode)));
 	Csp.UnsafeEval();
 }
 

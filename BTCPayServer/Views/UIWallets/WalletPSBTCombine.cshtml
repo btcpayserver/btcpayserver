@@ -4,7 +4,7 @@
     var walletId = Context.GetRouteValue("walletId").ToString();
 	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
     Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.PSBT, StringLocalizer["Combine PSBT"], walletId);
+    ViewData.SetTitle(StringLocalizer["Combine PSBT"]);
 }
 
 @section Navbar {

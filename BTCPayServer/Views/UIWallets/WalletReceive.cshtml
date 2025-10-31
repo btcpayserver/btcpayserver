@@ -4,10 +4,10 @@
 @using BTCPayServer.Services
 @model BTCPayServer.Controllers.WalletReceiveViewModel
 @{
-    var walletId = Context.GetRouteValue("walletId").ToString();
+    var walletId = Context.GetRouteValue("walletId")!.ToString();
     var returnUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
     Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.Receive, StringLocalizer["Receive {0}", Model.CryptoCode], walletId);
+    ViewData.SetTitle(StringLocalizer["Receive {0}", Model!.CryptoCode]);
 }
 
 @section PageHeadContent

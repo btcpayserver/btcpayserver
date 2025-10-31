@@ -7,7 +7,7 @@
 @inject PayoutMethodHandlerDictionary PayoutHandlers;
 @{
     var storeId = Context.GetRouteValue("storeId") as string;
-    ViewData.SetActivePage(StoreNavPages.Payouts, string.IsNullOrEmpty(Model.PullPaymentName) ? StringLocalizer["Payouts"] : StringLocalizer["Payouts for pull payment {0}", Model.PullPaymentName], Context.GetStoreData().Id);
+    ViewData.SetLayoutModel(new(nameof(StoreNavPages.Payouts), string.IsNullOrEmpty(Model.PullPaymentName) ? StringLocalizer["Payouts"] : StringLocalizer["Payouts for pull payment {0}", Model.PullPaymentName]));
     Model.PaginationQuery ??= new Dictionary<string, object>();
     Model.PaginationQuery.Add("pullPaymentId", Model.PullPaymentId);
     Model.PaginationQuery.Add("payoutMethodId", Model.PayoutMethodId);

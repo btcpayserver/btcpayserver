@@ -1,11 +1,8 @@
-@using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Client
 @model BTCPayServer.Models.StoreViewModels.RatesViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.Rates, StringLocalizer["Rates"], Context.GetStoreData().Id);
+    ViewData.SetLayoutModel(new LayoutModel("Rates", StringLocalizer["Rates"]).SetCategory(WellKnownCategories.Store));
 }
-
-
 
 <form method="post" permissioned="@Policies.CanModifyStoreSettings">
     <div class="sticky-header">

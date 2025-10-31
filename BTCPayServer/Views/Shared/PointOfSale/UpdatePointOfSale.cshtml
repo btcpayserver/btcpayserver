@@ -1,4 +1,3 @@
-@using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Views.Apps
 @using BTCPayServer.Client
 @using BTCPayServer.Plugins.PointOfSale
@@ -9,7 +8,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.PointOfSale.Models.UpdatePointOfSaleViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Update, StringLocalizer["Update Point of Sale"], Model.Id);
+    ViewData.SetLayoutModel(new($"{nameof(PointOfSalePlugin)}-{Model.Id}",StringLocalizer["Update Point of Sale"]));
 	Csp.UnsafeEval();
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
     var posPath = Url.Action("ViewPointOfSale", "UIPointOfSale", new { appId = Model.Id });

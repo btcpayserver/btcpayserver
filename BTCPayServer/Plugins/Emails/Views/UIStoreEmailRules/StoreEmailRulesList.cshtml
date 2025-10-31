@@ -2,7 +2,8 @@
 
 @{
     var storeId = Context.GetStoreData().Id;
-    ViewData.SetActivePage(StoreNavPages.Emails, StringLocalizer["Email Rules"], storeId);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Emails), StringLocalizer["Email Rules"])
+        .SetCategory(WellKnownCategories.Store));
 }
 <div class="sticky-header">
     <nav aria-label="breadcrumb">

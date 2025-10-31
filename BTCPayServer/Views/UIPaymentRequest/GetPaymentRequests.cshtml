@@ -9,7 +9,7 @@
 @model BTCPayServer.Models.PaymentRequestViewModels.ListPaymentRequestsViewModel
 @{
     Layout = "_Layout";
-    ViewData["Title"] = ViewLocalizer["Payment Requests"];
+    ViewData.SetLayoutModel(new("PaymentRequests", StringLocalizer["Payment Requests"]));
     var storeId = Context.GetStoreData().Id;
     var statusFilterCount = CountArrayFilter("status") + (HasBooleanFilter("includearchived") ? 1 : 0);
 }

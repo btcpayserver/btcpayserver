@@ -3,7 +3,8 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Models.ServerViewModels.MaintenanceViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Maintenance, StringLocalizer["Maintenance"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Maintenance), StringLocalizer["Maintenance"])
+        .SetCategory(WellKnownCategories.Server));
 }
 
 <div class="sticky-header">

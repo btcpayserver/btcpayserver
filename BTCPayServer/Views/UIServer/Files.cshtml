@@ -1,6 +1,7 @@
 @model ViewFilesViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Files, StringLocalizer["File Storage"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Files), StringLocalizer["File Storage"])
+        .SetCategory(WellKnownCategories.Server));
 }
 
 <div class="sticky-header">

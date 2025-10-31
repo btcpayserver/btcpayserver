@@ -51,23 +51,19 @@ else
                 @foreach (var option in Model.Options)
                 {
                     <li>
-                        <a asp-controller="UIStores" asp-action="Index" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected && ViewData.ActivePageClass(ServerNavPages.Stores) != "active" ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
+                        <a asp-controller="UIStores" asp-action="Index" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected && !ViewData.ContainsKey("StoreList"))" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
                     </li>
                 }
                 @if (Model.Options.Any())
                 {
                     <li><hr class="dropdown-divider"></li>
                 }
-                <li><a asp-controller="UIUserStores" asp-action="CreateStore" class="dropdown-item @ViewData.ActivePageClass(StoreNavPages.Create)" id="StoreSelectorCreate" text-translate="true">Create Store</a></li>
+                <li><a asp-controller="UIUserStores" asp-action="CreateStore" class="dropdown-item @(ViewData.ContainsKey("CreateStore") ? "active" : "")" id="StoreSelectorCreate" text-translate="true">Create Store</a></li>
                 @if (Model.ArchivedCount > 0)
                 {
                     <li><hr class="dropdown-divider"></li>
-                    <li><a asp-controller="UIUserStores" asp-action="ListStores" asp-route-archived="true" class="dropdown-item @ViewData.ActivePageClass(StoreNavPages.Index)" id="StoreSelectorArchived">@(Model.ArchivedCount == 1 ? StringLocalizer["{0} Archived Store", Model.ArchivedCount] : StringLocalizer["{0} Archived Stores", Model.ArchivedCount])</a></li>
+                    <li><a asp-controller="UIUserStores" asp-action="ListStores" asp-route-archived="true" class="dropdown-item @(ViewData.ContainsKey("ArchivedStores") ? "active" : "")" id="StoreSelectorArchived">@(Model.ArchivedCount == 1 ? StringLocalizer["{0} Archived Store", Model.ArchivedCount] : StringLocalizer["{0} Archived Stores", Model.ArchivedCount])</a></li>
                 }
-                @*
-                <li permission="@Policies.CanModifyServerSettings"><hr class="dropdown-divider"></li>
-                <li permission="@Policies.CanModifyServerSettings"><a asp-controller="UIServer" asp-action="ListStores" class="dropdown-item @ViewData.ActivePageClass(ServerNavPages.Stores)" id="StoreSelectorAdminStores" text-translate="true">Admin Store Overview</a></li>
-                *@
             </ul>
         </div>
     </div>

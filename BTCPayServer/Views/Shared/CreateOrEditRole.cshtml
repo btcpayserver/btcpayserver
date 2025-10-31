@@ -13,10 +13,8 @@
 
     var storeId = Context.GetRouteValue("storeId") as string;
     var title = role is null ? StringLocalizer["Create role"] : StringLocalizer["Update Role"];
-    if (storeId is null)
-        ViewData.SetActivePage(ServerNavPages.Roles, title);
-    else
-        ViewData.SetActivePage(StoreNavPages.Roles, title, storeId);
+    var category = storeId is null ? WellKnownCategories.Server : WellKnownCategories.Store;
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Roles), title).SetCategory(category));
     var storePolicies = Policies.AllPolicies.Where(Policies.IsStorePolicy).ToArray();
 }
 
@@ -103,7 +101,7 @@
         const { checked, value: policy } = element;
         const policySelect = document.getElementById('Policies');
         const subPolicies = element.parentElement.querySelectorAll(`.list-group .policy-cb:not([value="${policy}"])`);
-        
+
         policySelect.querySelector(`option[value="${policy}"]`).selected = checked;
         subPolicies.forEach(subPolicy => {
             subPolicy.checked = checked? false : subPolicy.checked;
@@ -115,12 +113,12 @@
             policySelect.querySelector(`option[value="${subPolicy.value}"]`).selected = subPolicy.checked;
         });
     }
-    
+
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll(".policy-cb:checked").forEach(handleCheckboxChange);
-        
+
         delegate('change', '.policy-cb', event => {
            handleCheckboxChange(event.target);
         });
-    });    
+    });
 </script>

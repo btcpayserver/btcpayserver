@@ -45,7 +45,6 @@ public partial class UIOfferingController(
     BTCPayServerEnvironment env,
     DisplayFormatter displayFormatter,
     EmailSenderFactory emailSenderFactory,
-    IHtmlHelper htmlHelper,
     IEnumerable<EmailTriggerViewModel> emailTriggers
 ) : UISubscriptionControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
 {

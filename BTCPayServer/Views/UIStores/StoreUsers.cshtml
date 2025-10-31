@@ -1,4 +1,3 @@
-@using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Services.Stores
 @using BTCPayServer.Client
 @using Microsoft.AspNetCore.Mvc.TagHelpers
@@ -10,7 +9,7 @@
         await StoreRepository.GetStoreRoles(storeId),
         nameof(StoreRepository.StoreRole.Id), nameof(StoreRepository.StoreRole.Role),
         Model.Role);
-    ViewData.SetActivePage(StoreNavPages.Users, StringLocalizer["Store Users"], storeId);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Users), StringLocalizer["Store Users"]).SetCategory(WellKnownCategories.Store));
 }
 @section PageHeadContent {
     <style>

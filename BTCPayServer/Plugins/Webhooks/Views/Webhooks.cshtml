@@ -1,8 +1,7 @@
-@using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Client
 @model WebhooksViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.Webhooks, StringLocalizer["Webhooks"], Context.GetStoreData().Id);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Webhooks), StringLocalizer["Webhooks"]).SetCategory(WellKnownCategories.Store));
 }
 
 <div class="sticky-header">

@@ -3,7 +3,8 @@
 @model BrandingViewModel;
 @inject IFileService FileService
 @{
-    ViewData.SetActivePage(ServerNavPages.Branding, StringLocalizer["Branding"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Branding), StringLocalizer["Branding"])
+        .SetCategory(WellKnownCategories.Server));
     var canUpload = await FileService.IsAvailable();
     var themeExtension = ((ThemeExtension[])Enum.GetValues(typeof(ThemeExtension))).Select(t =>
         new SelectListItem(typeof(ThemeExtension).DisplayName(t.ToString()), t == ThemeExtension.Custom ? null : t.ToString()));
@@ -65,7 +66,7 @@
 
 			<h3 class="mt-5 mb-3" text-translate="true">Theme</h3>
             <p text-translate="true">Use the default Light or Dark Themes, or provide a custom CSS theme file below.</p>
-            
+
             <div class="d-flex align-items-center mb-3">
                 <input asp-for="CustomTheme" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomThemeSettings" aria-expanded="@(Model.CustomTheme)" aria-controls="CustomThemeSettings" />
                 <div>

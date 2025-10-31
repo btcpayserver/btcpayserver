@@ -165,7 +165,7 @@ namespace BTCPayServer.Tests
             Assert.True(s.Driver.FindElement(By.Id("Dashboard")).Displayed);
 
             // setup offchain wallet
-            s.Driver.FindElement(By.Id("StoreNav-LightningBTC")).Click();
+            s.Driver.FindElement(By.CssSelector("[data-testid='Lightning-BTC']")).Click();
             s.AddLightningNode();
             s.Driver.AssertNoError();
             var successAlert = s.FindAlertMessage();
@@ -449,16 +449,16 @@ namespace BTCPayServer.Tests
 
             // Archive
             s.Driver.SwitchTo().Window(windows[0]);
-            Assert.True(s.Driver.ElementDoesNotExist(By.Id("Nav-ArchivedApps")));
+            Assert.True(s.Driver.ElementDoesNotExist(By.Id("menu-item-AppsNavPages")));
             s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
             Assert.Contains("The app has been archived and will no longer appear in the apps list by default.", s.FindAlertMessage().Text);
 
             Assert.True(s.Driver.ElementDoesNotExist(By.Id("ViewApp")));
-            Assert.Contains("1 Archived App", s.Driver.FindElement(By.Id("Nav-ArchivedApps")).Text);
+            Assert.Contains("1 Archived App", s.Driver.FindElement(By.Id("menu-item-AppsNavPages")).Text);
             s.Driver.Navigate().GoToUrl(posBaseUrl);
             Assert.Contains("Page not found", s.Driver.Title, StringComparison.OrdinalIgnoreCase);
             s.Driver.Navigate().Back();
-            s.Driver.FindElement(By.Id("Nav-ArchivedApps")).Click();
+            s.Driver.FindElement(By.Id("menu-item-AppsNavPages")).Click();
 
             // Unarchive
             s.Driver.FindElement(By.Id($"App-{appId}")).Click();
@@ -527,17 +527,17 @@ namespace BTCPayServer.Tests
             s.Driver.SwitchTo().Window(windows[0]);
 
             // Archive
-            Assert.True(s.Driver.ElementDoesNotExist(By.Id("Nav-ArchivedApps")));
+            Assert.True(s.Driver.ElementDoesNotExist(By.Id("menu-item-AppsNavPages")));
             s.Driver.SwitchTo().Window(windows[0]);
             s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
             Assert.Contains("The app has been archived and will no longer appear in the apps list by default.", s.FindAlertMessage().Text);
 
             Assert.True(s.Driver.ElementDoesNotExist(By.Id("ViewApp")));
-            Assert.Contains("1 Archived App", s.Driver.FindElement(By.Id("Nav-ArchivedApps")).Text);
+            Assert.Contains("1 Archived App", s.Driver.FindElement(By.Id("menu-item-AppsNavPages")).Text);
             s.Driver.Navigate().GoToUrl(cfUrl);
             Assert.Contains("Page not found", s.Driver.Title, StringComparison.OrdinalIgnoreCase);
             s.Driver.Navigate().Back();
-            s.Driver.FindElement(By.Id("Nav-ArchivedApps")).Click();
+            s.Driver.FindElement(By.Id("menu-item-AppsNavPages")).Click();
 
             // Unarchive
             s.Driver.FindElement(By.Id($"App-{appId}")).Click();
@@ -612,14 +612,14 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             s.RegisterNewUser();
             s.CreateNewStore();
-            s.Driver.FindElement(By.Id("StoreNav-PaymentRequests")).Click();
+            s.Driver.FindElement(By.Id("menu-item-PaymentRequests")).Click();
 
             // Should give us an error message if we try to create a payment request before adding a wallet
             s.ClickPagePrimary();
             Assert.Contains("To create a payment request, you need to", s.Driver.PageSource);
 
             s.AddDerivationScheme();
-            s.Driver.FindElement(By.Id("StoreNav-PaymentRequests")).Click();
+            s.Driver.FindElement(By.Id("menu-item-PaymentRequests")).Click();
             s.ClickPagePrimary();
             s.Driver.FindElement(By.Id("Title")).SendKeys("Pay123");
             s.Driver.FindElement(By.Id("Amount")).Clear();
@@ -1483,11 +1483,11 @@ namespace BTCPayServer.Tests
             //ln address tests
             s.CreateNewStore();
             //ensure ln address is not available as Lightning is not enable
-            s.Driver.AssertElementNotFound(By.Id("StoreNav-LightningAddress"));
+            s.Driver.AssertElementNotFound(By.Id("menu-item-LightningAddress"));
 
             s.AddLightningNode(LightningConnectionType.LndREST, false);
 
-            s.Driver.FindElement(By.Id("StoreNav-LightningAddress")).Click();
+            s.Driver.FindElement(By.Id("menu-item-LightningAddress")).Click();
 
             s.Driver.ToggleCollapse("AddAddress");
             var lnaddress1 = Guid.NewGuid().ToString();

@@ -1,9 +1,8 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Client
 @model List<BTCPayServer.Data.FormData>
 @{
-    ViewData.SetActivePage(StoreNavPages.Forms, StringLocalizer["Forms"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Forms), StringLocalizer["Forms"]).SetCategory(WellKnownCategories.Store));
     var storeId = Context.GetCurrentStoreId();
 }
 

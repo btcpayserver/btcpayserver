@@ -11,7 +11,8 @@
 }
 
 @{
-    ViewData.SetActivePage(WalletsNavPages.Receive, "Reserved Addresses");
+    ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Settings)}-{wallet.CryptoCode}", StringLocalizer["Reserved Addresses"])
+        .SetCategory(WellKnownCategories.ForWallet(wallet.CryptoCode)));
     Csp.Add("worker-src", "blob:");
     Csp.UnsafeEval();
 }

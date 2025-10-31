@@ -1,7 +1,7 @@
 @using LNURL
 @model Uri
 @{
-    ViewData.SetActivePage(ManageNavPages.TwoFactorAuthentication, StringLocalizer["Register your Lightning node for LNURL Auth"]);
+    ViewData.SetLayoutModel(new(nameof(ManageNavPages.TwoFactorAuthentication), StringLocalizer["Register your Lightning node for LNURL Auth"]));
     var formats = new Dictionary<string, string>
     {
         { "Bech32", LNURL.EncodeUri(Model, "login", true).ToString().ToUpperInvariant() },

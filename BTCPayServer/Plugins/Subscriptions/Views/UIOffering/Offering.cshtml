@@ -1,7 +1,6 @@
-﻿@using BTCPayServer.Abstractions.Models
-@using BTCPayServer.Client
-@using BTCPayServer.Controllers
+﻿@using BTCPayServer.Client
 @using BTCPayServer.Plugins.Emails
+@using BTCPayServer.Plugins.Subscriptions
 @using BTCPayServer.Plugins.Subscriptions.Controllers
 @using BTCPayServer.Services
 @model SubscriptionsViewModel
@@ -11,7 +10,7 @@
 @{
     string storeId = (string)this.Context.GetRouteValue("storeId");
     string offeringId = (string)this.Context.GetRouteValue("offeringId");
-    ViewData.SetActivePage(AppsNavPages.Update, StringLocalizer["Subscriptions"], offeringId);
+    ViewData.SetLayoutModel(new LayoutModel($"{nameof(SubscriptionsPlugin)}-{offeringId}", StringLocalizer["Subscriptions"]));
     Csp.UnsafeEval();
 }
 

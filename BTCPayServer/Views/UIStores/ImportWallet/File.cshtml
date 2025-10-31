@@ -1,7 +1,7 @@
 @model WalletSetupViewModel
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, StringLocalizer["Import your wallet file"], $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+    ViewData.SetTitle(StringLocalizer["Import your wallet file"]);
 }
 
 @section Navbar {
@@ -60,10 +60,10 @@
      <tr>
         <td>Passport</td>
         <td>Wallet ❯ Connect Wallet ❯ BTCPay ❯ microSD ❯ Save wallet file</td>
-    </tr>   
+    </tr>
      <tr>
         <td>Nunchuk</td>
         <td>... ❯ Export wallet configuration</td>
-    </tr>    
+    </tr>
     </tbody>
 </table>

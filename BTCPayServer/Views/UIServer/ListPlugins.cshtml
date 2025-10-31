@@ -5,7 +5,7 @@
 @inject PluginService PluginService
 @{
     Layout = "_Layout";
-    ViewData.SetActivePage(ServerNavPages.Plugins);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Plugins), StringLocalizer["Plugins"]));
     var installed = Model.Installed;
     var availableAndNotInstalled = new List<PluginService.AvailablePlugin>();
     var availableAndNotInstalledx = Model.Available

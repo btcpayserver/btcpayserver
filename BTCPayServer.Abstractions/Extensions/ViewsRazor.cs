@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using BTCPayServer.Abstractions.Models;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
@@ -35,15 +36,27 @@ namespace BTCPayServer.Abstractions.Extensions
             SetActivePage(viewData, activePage.ToString(), activePage.GetType().ToString(), title, activeId);
         }
 
-        public static void SetActivePage(this ViewDataDictionary viewData, string activePage, string category, string title = null, string activeId = null)
+        public static void SetTitle(this ViewDataDictionary viewData, string title) => viewData["Title"] = title;
+        public static string GetTitle(this ViewDataDictionary viewData) => viewData["Title"]?.ToString();
+
+        public static void SetLayoutModel(this ViewDataDictionary viewData, LayoutModel model)
         {
             // Page Title
-            viewData["Title"] = title ?? activePage;
+            viewData["Title"] = model.Title ?? model.MenuItemId;
             // Navigation
-            viewData[ACTIVE_PAGE_KEY] = activePage;
-            viewData[ACTIVE_ID_KEY] = activeId;
-            SetActiveCategory(viewData, category);
+            viewData[ACTIVE_PAGE_KEY] = model.MenuItemId;
+            viewData[ACTIVE_ID_KEY] = model.SubMenuItemId;
+            SetActiveCategory(viewData, model.ActiveCategory);
         }
+
+        public static bool IsCategory(this ViewDataDictionary viewData, string category) =>
+            viewData.TryGetValue(ACTIVE_CATEGORY_KEY, out var k) && category == k as string;
+
+        public static bool IsCategory(this ViewDataDictionary viewData, WellKnownCategories category) =>
+            IsCategory(viewData, LayoutModel.Map(category));
+
+        public static void SetActivePage(this ViewDataDictionary viewData, string activePage, string category, string title = null, string activeId = null)
+        => viewData.SetLayoutModel(new(activePage, title){ SubMenuItemId = activeId, ActiveCategory = category } );
 
         public static void SetActiveCategory<T>(this ViewDataDictionary viewData, T activeCategory)
         {
@@ -55,6 +68,7 @@ namespace BTCPayServer.Abstractions.Extensions
             viewData[ACTIVE_CATEGORY_KEY] = activeCategory;
         }
 
+        [Obsolete("Use IsCategory instead")]
         public static bool IsCategoryActive(this ViewDataDictionary viewData, string category, object id = null)
         {
             if (!viewData.ContainsKey(ACTIVE_CATEGORY_KEY)) return false;
@@ -65,6 +79,7 @@ namespace BTCPayServer.Abstractions.Extensions
             return categoryMatch && idMatch;
         }
 
+        [Obsolete("Use IsCategory instead")]
         public static bool IsCategoryActive<T>(this ViewDataDictionary viewData, T category, object id = null)
         {
             return IsCategoryActive(viewData, category.ToString(), id);
@@ -81,7 +96,7 @@ namespace BTCPayServer.Abstractions.Extensions
             var idMatch = id == null || activeId == null || id.Equals(activeId);
             return categoryAndPageMatch && idMatch;
         }
-        
+
         public static bool IsPageActive<T>(this ViewDataDictionary viewData, IEnumerable<T> pages, object id = null)
             where T : IConvertible
         {
@@ -98,17 +113,20 @@ namespace BTCPayServer.Abstractions.Extensions
             return IsCategoryActive(viewData, category, id) ? ACTIVE_CLASS : null;
         }
 
+        [Obsolete("Use the tagHelper layout-menu-item instead")]
         public static string ActivePageClass<T>(this ViewDataDictionary viewData, T page, object id = null)
             where T : IConvertible
         {
             return ActivePageClass(viewData, page.ToString(), page.GetType().ToString(), id);
         }
 
+        [Obsolete("Use the tagHelper layout-menu-item instead")]
         public static string ActivePageClass(this ViewDataDictionary viewData, string page, string category, object id = null)
         {
             return IsPageActive(viewData, page, category, id) ? ACTIVE_CLASS : null;
         }
 
+        [Obsolete("Use the tagHelper layout-menu-item instead")]
         public static string ActivePageClass<T>(this ViewDataDictionary viewData, IEnumerable<T> pages, object id = null) where T : IConvertible
         {
             return IsPageActive(viewData, pages, id) ? ACTIVE_CLASS : null;

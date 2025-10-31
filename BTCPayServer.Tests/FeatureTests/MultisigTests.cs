@@ -91,7 +91,7 @@ public class MultisigTests : UnitTestBase
         s.TestLogs.LogInformation($"Multisig wallet setup: {multisigDerivationScheme}");
 
         // fetch address from receive page
-        await s.Page.ClickAsync("#WalletNav-Receive");
+        await s.GoToWallet(navPages: WalletsNavPages.Receive);
 
         var addressElement = s.Page.Locator("#Address");
         await addressElement.ClickAsync();
@@ -101,7 +101,7 @@ public class MultisigTests : UnitTestBase
         await s.Page.ClickAsync("#CancelWizard");
 
         // we are creating a pending transaction
-        await s.Page.ClickAsync("#WalletNav-Send");
+        await s.GoToWallet(navPages: WalletsNavPages.Send);
         await s.Page.FillAsync("#Outputs_0__DestinationAddress", address);
         var amount = "0.1";
         await s.Page.FillAsync("#Outputs_0__Amount", amount);
@@ -127,7 +127,7 @@ public class MultisigTests : UnitTestBase
         Assert.False(await s.Page.Locator("//a[text()='Broadcast']").IsVisibleAsync());
 
         // Abort pending transaction flow
-        await s.Page.ClickAsync("#WalletNav-Send");
+        await s.GoToWallet(navPages: WalletsNavPages.Send);
         await s.Page.FillAsync("#Outputs_0__DestinationAddress", address);
         await s.Page.FillAsync("#Outputs_0__Amount", "0.2");
         await s.Page.ClickAsync("#CreatePendingTransaction");

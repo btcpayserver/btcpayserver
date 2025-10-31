@@ -1,6 +1,7 @@
 @model CreateDictionaryViewModel
 @{
-	ViewData.SetActivePage(ServerNavPages.Translations, "Create a new dictionary");
+	ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Translations), "Create a new dictionary")
+        .SetCategory(WellKnownCategories.Server));
 }
 <form method="post">
 	<div class="sticky-header">

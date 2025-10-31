@@ -5,7 +5,7 @@
     var walletId = Context.GetRouteValue("walletId")?.ToString() ?? "";
 	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
     Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.Send, StringLocalizer["Sign the transaction"], walletId);
+    ViewData.SetTitle(StringLocalizer["Sign the transaction"]);
     this.ViewData.SetBlazorAllowed(true);
 
     // Calculate maximum PSBT size accounting for SignalR message overhead
@@ -20,7 +20,7 @@
 }
 
 <header class="text-center">
-    <h1>@ViewData["Title"]</h1>
+    <h1>@ViewData.GetTitle()</h1>
     <p class="lead text-secondary mt-3" text-translate="true">Using BTCPay Server Vault</p>
 </header>
 

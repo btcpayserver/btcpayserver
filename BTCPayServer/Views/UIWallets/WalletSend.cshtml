@@ -9,7 +9,8 @@
 	var walletId = Context.GetRouteValue("walletId").ToString();
 	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
 	Layout = "_LayoutWizard";
-	ViewData.SetActivePage(WalletsNavPages.Send, StringLocalizer["Send {0}", Model.CryptoCode], walletId);
+    ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Send)}-{Model.CryptoCode}", StringLocalizer["Send {0}", Model.CryptoCode])
+        .SetCategory(WellKnownCategories.ForWallet(Model.CryptoCode)));
 	Csp.Add("worker-src", "blob:");
 	Csp.UnsafeEval();
 }

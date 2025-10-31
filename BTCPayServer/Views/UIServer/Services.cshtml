@@ -1,6 +1,7 @@
 @model BTCPayServer.Models.ServerViewModels.ServicesViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, StringLocalizer["Services"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Services), StringLocalizer["Services"])
+        .SetCategory(WellKnownCategories.Server));
 }
 
 <div class="sticky-header">

@@ -1,7 +1,7 @@
-@using BTCPayServer.Abstractions.Models
 @model LndSeedBackupViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, StringLocalizer["LND Seed Backup"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Services), StringLocalizer["LND Seed Backup"])
+        .SetCategory(WellKnownCategories.Server));
 }
 
 <div class="sticky-header">
@@ -26,7 +26,7 @@
                 <p>The recovering process is documented by LND on <a href="https://github.com/lightningnetwork/lnd/blob/master/docs/recovery.md" rel="noreferrer noopener">this page</a>.</p>
             </div>
             <button class="btn btn-primary @(Model.Removed ? "collapse" : "")" id="details" type="button">See confidential seed information</button>
-            
+
             @if (Model.Removed)
             {
                 <div class="alert alert-light d-flex align-items-center" role="alert">

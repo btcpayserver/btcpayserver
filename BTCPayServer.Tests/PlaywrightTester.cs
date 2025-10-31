@@ -7,21 +7,17 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Blazor.VaultBridge.Elements;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Data;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Playwright;
 using NBitcoin;
 using NBitcoin.RPC;
-using OpenQA.Selenium;
 using Xunit;
 
 namespace BTCPayServer.Tests
@@ -52,7 +48,8 @@ namespace BTCPayServer.Tests
             Browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
                 Headless = Server.PayTester.InContainer,
-                SlowMo = 0 // 50 if you want to slow down
+                SlowMo = 0, // 50 if you want to slow down
+                Args = ["--disable-frame-rate-limit"] // Fix slowness on linux (https://github.com/microsoft/playwright/issues/34625#issuecomment-2822015672)
             });
             var context = await Browser.NewContextAsync();
             Page = await context.NewPageAsync();
@@ -67,7 +64,7 @@ namespace BTCPayServer.Tests
         {
             if (storeId is null)
             {
-                await Page.Locator("#StoreNav-Invoices").ClickAsync();
+                await Page.Locator("#menu-item-Invoices").ClickAsync();
             }
             else
             {
@@ -117,19 +114,49 @@ namespace BTCPayServer.Tests
             await GoToUrl($"/i/{invoiceId}");
         }
 
-        public async Task GoToWallet(WalletId walletId = null, WalletsNavPages navPages = WalletsNavPages.Send)
+        public async Task GoToWallet(WalletId walletId = null, WalletsNavPages? navPages = null)
         {
-            walletId ??= WalletId;
-            await GoToUrl($"wallets/{walletId}");
-            if (navPages == WalletsNavPages.PSBT)
+            var walletPage =  GetWalletIdFromUrl();
+            // If null, we try to go to the wallet of the current page
+            if (walletId is null)
             {
-                await Page.Locator("#WalletNav-Send").ClickAsync();
+                if (walletPage is not null)
+                    walletId = WalletId.Parse(walletPage);
+                walletId ??= WalletId;
+                if (walletId is not null && walletId.ToString() != walletPage)
+                    await GoToUrl($"wallets/{walletId}");
+            }
+            // If not, we browse to the wallet before going to subpages
+            else
+            {
+                await GoToUrl($"wallets/{walletId}");
+            }
+            var cryptoCode = walletId?.CryptoCode ?? "BTC";
+            if (navPages is null)
+            {
+                await Page.GetByTestId("Wallet-" + cryptoCode).Locator("a").ClickAsync();
+            }
+            else if (navPages == WalletsNavPages.PSBT)
+            {
+                await Page.Locator($"#menu-item-Send-{cryptoCode}").ClickAsync();
                 await Page.Locator("#PSBT").ClickAsync();
             }
-            else if (navPages != WalletsNavPages.Transactions)
+            else
             {
-                await Page.Locator($"#WalletNav-{navPages}").ClickAsync();
+                await Page.Locator($"#menu-item-{navPages}-{cryptoCode}").ClickAsync();
             }
+        }
+
+        private string GetWalletIdFromUrl()
+        {
+            var m = Regex.Match(Page.Url, "wallets/([^/]+)");
+            if (m.Success)
+                return m.Groups[1].Value;
+
+            m = Regex.Match(Page.Url, "([^/]+)/onchain/([^/]+)");
+            if (m.Success)
+                return new WalletId(m.Groups[1].Value, m.Groups[2].Value).ToString();
+            return null;
         }
 
         public async Task<ILocator> FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success, string partialText = null)
@@ -219,7 +246,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("Recommendation (Kraken)", selectedOption?.Trim());
             await Page.Locator("#PreferredExchange").SelectOptionAsync(new SelectOptionValue { Label = preferredExchange });
             await Page.ClickAsync("#Create");
-            await Page.ClickAsync("#StoreNav-General");
+            await GoToStore(StoreNavPages.General);
             var storeId = await Page.InputValueAsync("#Id");
             if (keepId)
                 StoreId = storeId;
@@ -232,7 +259,8 @@ namespace BTCPayServer.Tests
             var isImport = !string.IsNullOrEmpty(seed);
             await GoToWalletSettings(cryptoCode);
             // Replace previous wallet case
-            if (await Page.Locator("#ActionsDropdownToggle").IsVisibleAsync())
+            var isSettings = Page.Url.EndsWith("/settings");
+            if (isSettings)
             {
                 TestLogs.LogInformation($"Replacing the wallet");
                 await Page.ClickAsync("#ActionsDropdownToggle");
@@ -296,7 +324,7 @@ namespace BTCPayServer.Tests
         }
         public async Task Logout()
         {
-            await Page.Locator("#Nav-Account").ClickAsync();
+            await Page.Locator("#menu-item-Account").ClickAsync();
             await Page.Locator("#Nav-Logout").ClickAsync();
         }
 
@@ -330,24 +358,24 @@ namespace BTCPayServer.Tests
 
         public async Task GoToProfile(ManageNavPages navPages = ManageNavPages.Index)
         {
-            await Page.ClickAsync("#Nav-Account");
+            await Page.ClickAsync("#menu-item-Account");
             await Page.ClickAsync("#Nav-ManageAccount");
             if (navPages != ManageNavPages.Index)
             {
-                await Page.ClickAsync($"#SectionNav-{navPages.ToString()}");
+                await Page.ClickAsync($"#menu-item-{navPages.ToString()}");
             }
         }
 
         public async Task GoToServer(ServerNavPages navPages = ServerNavPages.Policies)
         {
-            await Page.ClickAsync("#Nav-ServerSettings");
+            await Page.ClickAsync("#menu-item-Policies");
             if (navPages != ServerNavPages.Policies)
             {
-                await Page.ClickAsync($"#SectionNav-{navPages}");
+                await Page.ClickAsync($"#menu-item-{navPages}");
             }
         }
 
-        public async Task ClickOnAllSectionLinks(string sectionSelector = "#SectionNav")
+        public async Task ClickOnAllSectionLinks(string sectionSelector = "#menu-item")
         {
             List<string> links = [];
             foreach (var locator in await Page.Locator($"{sectionSelector} .nav-link").AllAsync())
@@ -441,11 +469,11 @@ namespace BTCPayServer.Tests
 
         public async Task GoToLightningSettings(string cryptoCode = "BTC")
         {
-            await Page.ClickAsync($"#StoreNav-Lightning{cryptoCode}");
+            await Page.GetByTestId("Lightning-" + cryptoCode).ClickAsync();
             // if Lightning is already set up we need to navigate to the settings
-            if ((await Page.ContentAsync()).Contains("id=\"StoreNav-LightningSettings\""))
+            if ((await Page.ContentAsync()).Contains($"id=\"menu-item-LightningSettings-{cryptoCode}\""))
             {
-                await Page.ClickAsync("#StoreNav-LightningSettings");
+                await Page.ClickAsync($"#menu-item-LightningSettings-{cryptoCode}");
             }
         }
 
@@ -456,8 +484,8 @@ namespace BTCPayServer.Tests
 
         public async Task GoToWalletSettings(string cryptoCode = "BTC")
         {
-            await Page.ClickAsync($"#StoreNav-Wallet{cryptoCode}");
-            var walletNavSettings = Page.Locator("#WalletNav-Settings");
+            await Page.GetByTestId("Wallet-" + cryptoCode).Locator("a").ClickAsync();
+            var walletNavSettings = Page.Locator($"#menu-item-Settings-{cryptoCode}");
             if (await walletNavSettings.CountAsync() > 0)
                 await walletNavSettings.ClickAsync();
         }
@@ -476,9 +504,9 @@ namespace BTCPayServer.Tests
                 if (WalletId != null)
                     WalletId = new WalletId(storeId, WalletId.CryptoCode);
                 if (storeNavPage != StoreNavPages.General)
-                    await Page.Locator($"#StoreNav-{StoreNavPages.General}").ClickAsync();
+                    await Page.Locator($"#menu-item-{StoreNavPages.General}").ClickAsync();
             }
-            await Page.Locator($"#StoreNav-{storeNavPage}").ClickAsync();
+            await Page.Locator($"#menu-item-{storeNavPage}").ClickAsync();
         }
         public async Task ClickCancel()
         {
@@ -561,7 +589,7 @@ namespace BTCPayServer.Tests
         {
             if (string.IsNullOrEmpty(name))
                 name = $"{type}-{Guid.NewGuid().ToString()[..14]}";
-            await Page.Locator($"#StoreNav-Create{type}").ClickAsync();
+            await Page.Locator($"#menu-item-CreateApp-{type}").ClickAsync();
             await Page.Locator("[name='AppName']").FillAsync(name);
             await ClickPagePrimary();
             await FindAlertMessage(partialText: "App successfully created");

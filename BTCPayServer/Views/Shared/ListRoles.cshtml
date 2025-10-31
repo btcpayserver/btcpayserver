@@ -6,10 +6,9 @@
 @{
     var storeId = Context.GetRouteValue("storeId") as string;
     var controller = ViewContext.RouteData.Values["controller"].ToString().TrimEnd("Controller", StringComparison.InvariantCultureIgnoreCase);
-    if (string.IsNullOrEmpty(storeId))
-        ViewData.SetActivePage(ServerNavPages.Roles, StringLocalizer["Roles"]);
-    else
-        ViewData.SetActivePage(StoreNavPages.Roles, StringLocalizer["Roles"], storeId);
+    var category = string.IsNullOrEmpty(storeId) ? WellKnownCategories.Server : WellKnownCategories.Store;
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Roles), StringLocalizer["Roles"]).SetCategory(category));
+
     var permission = string.IsNullOrEmpty(storeId) ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings;
     var nextRoleSortOrder = (string) ViewData["NextRoleSortOrder"];
     var roleSortOrder = nextRoleSortOrder switch

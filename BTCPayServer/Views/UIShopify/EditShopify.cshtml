@@ -1,8 +1,6 @@
-@using BTCPayServer.Views.Stores
 @model BTCPayServer.Plugins.Shopify.Models.ShopifySettings
 @{
-    ViewData.SetActivePage("shopify", nameof(StoreNavPages), StringLocalizer["Shopify"], Context.GetStoreData().Id);
-
+    ViewData.SetLayoutModel(new LayoutModel("shopify", StringLocalizer["Shopify"]).SetCategory(WellKnownCategories.Store));
     var shopifyCredsSet = Model?.IntegratedAt.HasValue is true;
     var shopifyUrl = Model?.ShopifyUrl;
 }
@@ -71,7 +69,7 @@
             @if (shopifyCredsSet)
             {
                 <div class="alert alert-warning">
-                    <h5 class="alert-heading" text-translate="true">In Shopify, please do the following …</h5> 
+                    <h5 class="alert-heading" text-translate="true">In Shopify, please do the following …</h5>
                     <ul>
                         <li>
                             Add a payment method at <a href="@shopifyUrl/admin/settings/payments" class="alert-link fw-bold" target="_blank" rel="noreferrer noopener">Settings &gt; Payments &gt; Manual Payment Methods</a> with the name <strong>Bitcoin with BTCPay Server</strong>

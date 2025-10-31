@@ -1,5 +1,4 @@
 @namespace BTCPayServer.Client
-@using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.TagHelpers
 @using Microsoft.AspNetCore.Html
@@ -7,7 +6,8 @@
 @inject Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Controllers.UIManageController.ApiKeysViewModel
 @{
-	ViewData.SetActivePage(ManageNavPages.APIKeys, StringLocalizer["API Keys"]);
+	ViewData.SetLayoutModel(new LayoutModel(nameof(ManageNavPages.APIKeys), StringLocalizer["API Keys"])
+        .SetCategory(nameof(ManageNavPages)));
 	Csp.UnsafeEval();
 }
 

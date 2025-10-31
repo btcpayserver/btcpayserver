@@ -7,7 +7,7 @@
 	var walletId = Context.GetRouteValue("walletId").ToString();
 	var cancelUrl = this.Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
 	Layout = "_LayoutWizard";
-	ViewData.SetActivePage(WalletsNavPages.Send, StringLocalizer["Bump fee"], walletId);
+	ViewData.SetTitle(StringLocalizer["Bump fee"]);
 }
 
 @section Navbar {

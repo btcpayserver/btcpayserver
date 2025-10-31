@@ -3,7 +3,7 @@
 @inject BTCPayNetworkProvider NetworkProvider
 @model BTCPayServer.Plugins.PayButton.Models.PayButtonViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.PayButton, StringLocalizer["Pay Button"], Context.GetStoreData().Id);
+    ViewData.SetLayoutModel(new(nameof(StoreNavPages.PayButton), StringLocalizer["Pay Button"]));
 	Csp.UnsafeEval();
 }
 
@@ -74,7 +74,7 @@
         const max = parseInt(event.target.getAttribute('max'));
         if (event.target.value < min) {
             event.target.value = min;
-        } else if (event.target.value > max) { 
+        } else if (event.target.value > max) {
             event.target.value = max;
         }
     }
@@ -93,11 +93,11 @@
         const price = parseInt(el.value);
         const min = parseInt(event.target.getAttribute('min')) || 1;
         const max = parseInt(event.target.getAttribute('max'));
-        if (price < min) { 
+        if (price < min) {
             el.value = min;
         } else if (price > max) {
             el.value = max;
-        } 
+        }
         root.querySelector('.btcpay-input-range').value = el.value;
     }
     function handleSliderInput(event) {
@@ -116,11 +116,11 @@
         }
     });
     </template>
-    
+
     <script>
         window.lnurlEndpoint = @Safe.Json(Url.Action("GetLNUrlForStore", "UILNURL", new
                                {
-                                   storeId = Model.StoreId, 
+                                   storeId = Model.StoreId,
                                    cryptoCode = NetworkProvider.DefaultNetwork.CryptoCode
                                }, "lnurlp", Context.Request.Host.ToString()));
         const srvModel = @Safe.Json(Model);
@@ -145,7 +145,7 @@
                         light: '#f5f5f7'
                     }
                 }
-                
+
             },
             computed: {
                 imageUrlRequired() {
@@ -245,7 +245,7 @@
                     <label for="buttonInlineTextMode" class="form-check-label" text-translate="true">Customize Pay Button Text</label>
                 </div>
             </div>
-            
+
             <div class="form-group" v-show="buttonInlineTextMode">
                 <label class="form-label" for="pb-text" text-translate="true">Pay Button Text</label>
                 <input name="payButtonText" type="text" class="form-control" id="pb-text"
@@ -262,7 +262,7 @@
             <div class="form-group mb-4">
                 <label class="form-label" text-translate="true">Image Size</label>
                 <div class="btn-group d-flex" role="group">
-                    <button type="button" class="btn btn-outline-secondary" 
+                    <button type="button" class="btn btn-outline-secondary"
                             v-on:click="inputChanges($event, 0)">146 x 40 px</button>
                     <button type="button" class="btn btn-outline-secondary"
                             v-on:click="inputChanges($event, 1)">168 x 46 px</button>
@@ -419,7 +419,7 @@
             Please fix errors shown in order for code generation to successfully execute.
         </div>
     </div>
-    
+
     <div v-if="!srvModel.appIdEndpoint && (previewLink || lnurlLink)">
         <h4 class="mt-5 mb-3" text-translate="true">Alternatives</h4>
         <p text-translate="true">You can also share the link/LNURL or encode it in a QR code.</p>
@@ -540,7 +540,7 @@
             line-height: 35px;
             background: #fff;
         }
-        
+
         .btcpay-input-price::-webkit-outer-spin-button,
         .btcpay-input-price::-webkit-inner-spin-button {
           -webkit-appearance: none;

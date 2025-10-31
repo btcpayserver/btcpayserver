@@ -8,7 +8,7 @@
 @if (store != null)
 {
     <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
-        <a asp-area="" asp-controller="UIShopify" asp-action="EditShopify" asp-route-storeId="@store.Id" class="nav-link @ViewData.ActivePageClass("shopify", nameof(StoreNavPages))" id="StoreNav-Shopify">
+        <a layout-menu-item="Shopify" asp-area="" asp-controller="UIShopify" asp-action="EditShopify" asp-route-storeId="@store.Id">
             <vc:icon symbol="logo-shopify" />
             <span text-translate="true">Shopify</span>
         </a>

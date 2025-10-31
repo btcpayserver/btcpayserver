@@ -3,8 +3,7 @@
 @inject Microsoft.Extensions.Localization.IStringLocalizer StringLocalizer
 @{
 	Layout = "_LayoutWalletSetup";
-	var title = StringLocalizer["Generate {0} Wallet", Model.CryptoCode];
-	ViewData.SetActivePage(StoreNavPages.OnchainSettings, title, $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+	ViewData.SetTitle(StringLocalizer["Generate {0} Wallet", Model.CryptoCode]);
 }
 
 @section Navbar {
@@ -71,7 +70,7 @@
 				<h4 text-translate="true">Watch-only wallet</h4>
 				<p class="mb-0" text-translate="true">Please note that this instance does not support creating a new cold wallet for non-administrators. However, you can import one from other wallet software.</p>
 			</div>
-		</div>		
+		</div>
 	}
 </div>
 

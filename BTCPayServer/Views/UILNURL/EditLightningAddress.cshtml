@@ -1,8 +1,7 @@
 @using BTCPayServer.Views.Stores
-@using BTCPayServer.Abstractions.Models
 @model UILNURLController.EditLightningAddressVM
 @{
-    ViewData.SetActivePage("LightningAddress", nameof(StoreNavPages), StringLocalizer["Lightning Address"], Context.GetStoreData().Id);
+    ViewData.SetLayoutModel(new LayoutModel("LightningAddress", StringLocalizer["Lightning Address"]).SetCategory(WellKnownCategories.Store));
 }
 
 @section PageHeadContent {

@@ -103,17 +103,31 @@
                         </span>
 						@{
 							var uninstalled = Model.Commands.Any(c => c.plugin == plugin && c.command == "delete");
+                            var enabled = Model.Commands.Any(c => c.plugin == plugin && c.command == "enable");
 						}
-						<form asp-action="UnInstallPlugin" asp-route-plugin="@plugin">
-							@if (uninstalled)
-							{
-								<button type="submit" class="btn btn-sm btn-outline-danger" disabled text-translate="true">Marked for deletion</button>
-							}
-							else
-							{
-								<button type="submit" class="btn btn-sm btn-outline-danger" text-translate="true">Uninstall</button>
-							}
-						</form>
+                        <div class="d-flex gap-2">
+                            <form asp-action="EnablePlugin" asp-route-plugin="@plugin">
+							    @if (enabled)
+							    {
+								    <button type="submit" class="btn btn-sm btn-outline-primary" disabled text-translate="true">Marked for enabling</button>
+							    }
+							    else if (!uninstalled)
+							    {
+								    <button type="submit" class="btn btn-sm btn-outline-primary" text-translate="true">Enable</button>
+							    }
+						    </form>
+
+                            <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin">
+                                @if (uninstalled)
+                                {
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" disabled text-translate="true">Marked for deletion</button>
+                                }
+                                else if (!enabled)
+                                {
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" text-translate="true">Uninstall</button>
+                                }
+                            </form>
+                        </div>
                     </div>
                 </li>
             }
@@ -287,6 +301,8 @@
                                     </form>
                                 }
                             }
+                            
+                            
                             @if (DependentOn(plugin.Identifier))
                             {
                                 <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-3" data-bs-toggle="tooltip" title="This plugin cannot be uninstalled as it is depended on by other plugins.">

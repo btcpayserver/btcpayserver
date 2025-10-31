@@ -187,7 +187,6 @@ public partial class UIStoresController
                     UseBech32Scheme = true,
                     LUD12Enabled = false
                 });
-
                 await _storeRepo.UpdateStore(store);
                 TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["{0} Lightning node updated.", network.CryptoCode].Value;
                 return RedirectToAction(nameof(LightningSettings), new { storeId, cryptoCode });

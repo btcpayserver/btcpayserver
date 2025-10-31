@@ -28,6 +28,8 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Payments;
+using BTCPayServer.Payments.Lightning;
 using Ganss.Xss;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -265,6 +267,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
+
             var posFormId = settings.FormId;
 
             // skip forms feature for JSON requests (from the app)

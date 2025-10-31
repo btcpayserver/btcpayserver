@@ -199,7 +199,7 @@ namespace BTCPayServer.Data
             }
         }
 
-        [DefaultValue(0)]
+	[DefaultValue(0)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public double PaymentTolerance { get; set; }
 

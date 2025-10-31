@@ -74,20 +74,6 @@
                 </div>
                 <span asp-validation-for="ConnectionString" class="text-danger"></span>
             </div>
-            <vc:ui-extension-point location="ln-payment-method-setup-custom" model="@Model" />
-            <p class="mt-4 mb-2" text-translate="true">BTCPay Server currently supports:</p>
-            <div class="accordion" id="CustomNodeSupport">
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="CustomNodeCLightningHeader">
-                        <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeCLightningContent"
-                                aria-controls="CustomNodeCLightningContent" aria-expanded="false">
-                            <span><strong>Core Lightning</strong> <span text-translate="true">via TCP or unix domain socket connection</span></span>
-                            <vc:icon symbol="caret-down" />
-                        </button>
-                    </h2>
-                    <div id="CustomNodeCLightningContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeCLightningHeader"
-                         data-bs-parent="#CustomNodeSupport">
-                        <div class="accordion-body">
                             <ul class="mb-0">
                                 <li>
                                     <code><b>type=</b>clightning;<b>server=</b>unix://root/.lightning/lightning-rpc</code>
@@ -148,6 +134,28 @@
                 </div>
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="CustomNodePhoenixdHeader">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="CustomNodeLNbitsHeader">
+                        <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeLNbitsContent"
+                                aria-controls="CustomNodeLNbitsContent" aria-expanded="false">
+                            <span><strong>LNbits</strong> <span text-translate="true">via HTTPS</span></span>
+                            <vc:icon symbol="caret-down" />
+                        </button>
+                    </h2>
+                    <div id="CustomNodeLNbitsContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeLNbitsHeader"
+                         data-bs-parent="#CustomNodeSupport">
+                        <div class="accordion-body">
+                            <ul class="pb-3">
+                                <li>
+                                    <code><b>type=</b>lnbits;<b>server=</b>https://YOUR_LNBITS_DOMAIN;<b>wallet-id=</b>YOUR_WALLET_ID;<b>api-key=</b>YOUR_API_KEY</code>
+                                </li>
+                            </ul>
+                            <p class="mt-2" html-translate="true">
+                                Get your <strong>Wallet ID</strong> and <strong>Invoice/Read API Key</strong> from your LNbits wallet page at <code>https://YOUR_LNBITS_DOMAIN</code>
+                            </p>
+                        </div>
+                    </div>
+                </div>
                         <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodePhoenixdContent"
                                 aria-controls="CustomNodePhoenixdContent" aria-expanded="false">
                             <span><strong>Phoenixd</strong> <span text-translate="true">via HTTP</span></span>
@@ -245,7 +253,8 @@
         <button id="page-primary" name="command" type="submit" value="save" class="btn btn-primary me-2">Save</button>
     </div>
 </form>
-
+<script>
+</script>
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 }

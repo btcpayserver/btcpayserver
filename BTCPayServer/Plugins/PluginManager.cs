@@ -438,6 +438,12 @@ namespace BTCPayServer.Plugins
                         {
                             File.Move(manifestFileName, Path.Combine(dirName, Path.GetFileName(manifestFileName)));
                         }
+                        var fingerprintTempPath = Path.Combine(pluginsFolder, $"{command.extension}.fingerprint");
+                        if (File.Exists(fingerprintTempPath))
+                        {
+                            var fingerprintDest = Path.Combine(dirName, "fingerprint.txt");
+                            File.Move(fingerprintTempPath, fingerprintDest, true);
+                        }
                     }
                     break;
 

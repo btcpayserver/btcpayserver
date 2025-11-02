@@ -55,7 +55,6 @@ namespace BTCPayServer.Abstractions.Models
             }
         }
         public bool SystemPlugin { get; set; }
-        public string Fingerprint { get; set; }
         public virtual IBTCPayServerPlugin.PluginDependency[] Dependencies { get; } = Array.Empty<IBTCPayServerPlugin.PluginDependency>();
 
         public virtual void Execute(IApplicationBuilder applicationBuilder,

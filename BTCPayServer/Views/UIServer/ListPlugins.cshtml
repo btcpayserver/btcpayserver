@@ -138,9 +138,11 @@
                         <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
 							<div class="d-flex align-items-center gap-2">
 								<h4 class="card-title mb-0" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
-								@if (!string.IsNullOrEmpty(plugin.Fingerprint))
+								@if (Model.InstalledPluginFingerprints.TryGetValue(plugin.Identifier, out var fingerprint) && !string.IsNullOrEmpty(fingerprint))
 								{
-									<span data-bs-toggle="tooltip" title="GPG verified Plugin– Fingerprint: @plugin.Fingerprint"><vc:icon symbol="key" /></span>
+									<span data-bs-toggle="tooltip" title="GPG verified Plugin – Fingerprint: @fingerprint">
+										<vc:icon symbol="key" />
+									</span>
 								}
 							</div>
                             @if (!string.IsNullOrEmpty(downloadInfo?.Author))
@@ -271,8 +273,8 @@
                         {
 							@if (updateAvailable && x != null)
 							{
-								bool mismatch = !string.IsNullOrEmpty(plugin.Fingerprint) && !string.Equals(plugin.Fingerprint, x.Fingerprint, StringComparison.OrdinalIgnoreCase);
-
+								Model.InstalledPluginFingerprints.TryGetValue(plugin.Identifier, out var installedFingerprint);
+								bool mismatch = !string.IsNullOrEmpty(installedFingerprint) && !string.Equals(installedFingerprint, x.Fingerprint, StringComparison.OrdinalIgnoreCase);
 								string formId = $"updateForm_{plugin.Identifier.Replace(".", "_")}";
 								bool dependenciesMet = PluginManager.DependenciesMet(x.Dependencies, installed);
 
@@ -397,7 +399,7 @@ else
                         <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
 							<div class="d-flex align-items-center gap-2">
 								<h4 class="card-title mb-0" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
-								@if (plugin.IsSigned)
+								@if (!string.IsNullOrEmpty(plugin.Fingerprint))
 								{
 									<span data-bs-toggle="tooltip" title="GPG verified Plugin– Fingerprint: @plugin.Fingerprint"><vc:icon symbol="key" /></span>
 								}

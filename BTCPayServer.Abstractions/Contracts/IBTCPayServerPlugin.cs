@@ -14,7 +14,6 @@ namespace BTCPayServer.Abstractions.Contracts
         Version Version { get; }
         string Description { get; }
         bool SystemPlugin { get; set; }
-        string Fingerprint { get; set; }
         PluginDependency[] Dependencies { get; }
         void Execute(IApplicationBuilder applicationBuilder, IServiceProvider applicationBuilderApplicationServices);
         void Execute(IServiceCollection applicationBuilder);

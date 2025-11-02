@@ -43,8 +43,6 @@ namespace BTCPayServer.Plugins
         public IEnumerable<IBTCPayServerPlugin> LoadedPlugins { get; }
         public BTCPayServerEnvironment Env { get; }
 
-        private static readonly object _fingerprintLock = new object();
-
         public Version GetVersionOfPendingInstall(string plugin)
         {
             var dirName = Path.Combine(_dataDirectories.Value.PluginDir, plugin);
@@ -117,7 +115,6 @@ namespace BTCPayServer.Plugins
             }
             availablePlugin.Name = publishedVersion.PluginTitle;
             availablePlugin.Description = publishedVersion.Description;
-            availablePlugin.IsSigned = publishedVersion.IsSigned;
             availablePlugin.Fingerprint = publishedVersion.Fingerprint;
             availablePlugin.SystemPlugin = false;
             return availablePlugin;
@@ -168,69 +165,36 @@ namespace BTCPayServer.Plugins
             await using var fs = new FileStream(filedest, FileMode.Create, FileAccess.ReadWrite);
             await resp2.Content.CopyToAsync(fs);
             await fs.FlushAsync();
-            if (plugin?.IsSigned == true)
+            if (!string.IsNullOrEmpty(plugin.Fingerprint))
             {
-                SavePluginFingerprint(pluginIdentifier, plugin.Fingerprint);
+                var fingerprintTempPath = Path.Combine(dest, $"{pluginIdentifier}.fingerprint");
+                await File.WriteAllTextAsync(fingerprintTempPath, plugin.Fingerprint);
             }
             return manifest;
         }
 
-        public void SavePluginFingerprint(string pluginIdentifier, string fingerprint)
+        public Dictionary<string, string> LoadInstalledPluginWithFingerprints()
         {
-            lock (_fingerprintLock)
+            var pluginFingerprints = new Dictionary<string, string?>();
+            foreach (var plugin in LoadedPlugins)
             {
-                var fingerprintsDestination = Path.Combine(_dataDirectories.Value.PluginDir, "last-trusted-fingerprints.json");
-                var map = File.Exists(fingerprintsDestination) ? JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(fingerprintsDestination)) ?? new()
-                    : new Dictionary<string, string>();
-
-                map[pluginIdentifier] = fingerprint;
-                File.WriteAllText(fingerprintsDestination, JsonConvert.SerializeObject(map, Formatting.Indented));
-            }
-        }
-
-        public string GetPluginFingerprint(string pluginIdentifier)
-        {
-            lock (_fingerprintLock)
-            {
-                var fingerprintsDestination = Path.Combine(_dataDirectories.Value.PluginDir, "last-trusted-fingerprints.json");
-                if (!File.Exists(fingerprintsDestination)) return null;
                 try
                 {
-                    var map = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(fingerprintsDestination));
-                    return map?.GetValueOrDefault(pluginIdentifier);
+                    var pluginFolder = Path.Combine(_dataDirectories.Value.PluginDir, plugin.Identifier);
+                    var fingerprintPath = Path.Combine(pluginFolder, "fingerprint.txt");
+                    string fingerprint = null;
+                    if (File.Exists(fingerprintPath))
+                    {
+                        fingerprint = File.ReadAllText(fingerprintPath).Trim();
+                    }
+                    pluginFingerprints[plugin.Identifier] = fingerprint;
                 }
                 catch (Exception)
                 {
-                    return null;
+                    pluginFingerprints[plugin.Identifier] = null;
                 }
             }
-        }
-
-        public void RemovePluginFingerprint(string pluginIdentifier)
-        {
-            lock (_fingerprintLock)
-            {
-                var fingerprintsDestination = Path.Combine(_dataDirectories.Value.PluginDir, "last-trusted-fingerprints.json");
-                if (!File.Exists(fingerprintsDestination))
-                    return;
-
-                var map = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(fingerprintsDestination)) ?? new Dictionary<string, string>();
-                map.Remove(pluginIdentifier);
-                File.WriteAllText(fingerprintsDestination, JsonConvert.SerializeObject(map, Formatting.Indented));
-            }
-        }
-
-        public IEnumerable<IBTCPayServerPlugin> LoadInstalledPluginWithFingerprints()
-        {
-            foreach (var plugin in LoadedPlugins)
-            {
-                var trustedFingerprint = GetPluginFingerprint(plugin.Identifier);
-                if (!string.IsNullOrEmpty(trustedFingerprint))
-                {
-                    plugin.Fingerprint = trustedFingerprint;
-                }
-            }
-            return LoadedPlugins;
+            return pluginFingerprints;
         }
 
         public void InstallPlugin(string plugin)
@@ -255,7 +219,6 @@ namespace BTCPayServer.Plugins
             var dest = _dataDirectories.Value.PluginDir;
             PluginManager.CancelCommands(dest, plugin);
             PluginManager.QueueCommands(dest, ("delete", plugin));
-            RemovePluginFingerprint(plugin);
         }
 
         public class AvailablePlugin
@@ -271,7 +234,6 @@ namespace BTCPayServer.Plugins
             public string Source { get; set; }
             public string Author { get; set; }
             public string AuthorLink { get; set; }
-            public bool IsSigned { get; set; }
             public string Fingerprint { get; set; }
 
             public void Execute(IApplicationBuilder applicationBuilder, IServiceProvider applicationBuilderApplicationServices)

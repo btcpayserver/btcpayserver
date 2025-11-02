@@ -830,6 +830,7 @@ namespace BTCPayServer.Controllers.Greenfield
             DateTimeOffset? endDate = null,
             string textSearch = null,
             bool includeArchived = false,
+            bool includePaymentMethods = false,
             int? skip = null,
             int? take = null,
             CancellationToken token = default
@@ -838,7 +839,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return GetFromActionResult<IEnumerable<InvoiceData>>(
                 await GetController<GreenfieldInvoiceController>().GetInvoices(storeId, orderId,
                     status?.Select(invoiceStatus => invoiceStatus.ToString())?.ToArray(), startDate,
-                    endDate, textSearch, includeArchived, skip, take));
+                    endDate, textSearch, includeArchived, includePaymentMethods, skip, take));
         }
 
         public override async Task<InvoiceData> GetInvoice(string storeId, string invoiceId,

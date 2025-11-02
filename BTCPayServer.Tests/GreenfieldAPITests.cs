@@ -2570,11 +2570,13 @@ namespace BTCPayServer.Tests
 
             Assert.NotNull(invoices);
             Assert.Single(invoices);
+            Assert.NotNull(invoices.First().PaymentMethods);
             Assert.Equal(newInvoice.Id, invoices.First().Id);
 
             invoices = await viewOnly.GetInvoices(user.StoreId, textSearch: "Banana");
             Assert.NotNull(invoices);
             Assert.Single(invoices);
+            Assert.NotNull(invoices.First().PaymentMethods);
             Assert.Equal(newInvoice.Id, invoices.First().Id);
 
             invoices = await viewOnly.GetInvoices(user.StoreId, textSearch: "apples");
@@ -2587,6 +2589,7 @@ namespace BTCPayServer.Tests
                 endDate: DateTimeOffset.Now.AddHours(1));
 
             Assert.NotNull(invoicesFiltered);
+            Assert.NotNull(invoicesFiltered.First().PaymentMethods);
             Assert.Single(invoicesFiltered);
             Assert.Equal(newInvoice.Id, invoicesFiltered.First().Id);
 

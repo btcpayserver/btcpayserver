@@ -1,4 +1,6 @@
-﻿<div class="modal fade" id="activateMonetization" tabindex="-1" aria-hidden="true">
+﻿@model ActivateMonetizationModelViewModel
+
+<div class="modal fade" id="activateMonetization" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -10,19 +12,65 @@
             <form method="post">
                 <div class="modal-body">
                     <p html-translate="true">By activating monetization, new users registering to you will need a subscription to use your server. This change doesn't affect your current users. Do you want to proceed?</p>
-                    <p>@ViewLocalizer["A new offering will be create on the currently selected store <strong>{0}<strong>", Html.Encode(Context.GetStoreData().StoreName)].</p>
+                    <p v-if="isNew" v-pre>@ViewLocalizer["A new offering will be create on the currently selected store <strong>{0}<strong>", Html.Encode(Context.GetStoreData().StoreName)].</p>
+                    <div v-if="!isNew" class="form-group">
+                        <label asp-for="SelectedOfferingId" class="form-label" text-translate="true">Select offering</label>
+                        <select class="form-select" asp-for="SelectedOfferingId"
+                                v-model="selectedOfferingId">
+                            <option v-for="o in model.offerings" :key="o.id" :value="o.id">{{o.name}}</option>
+                        </select>
+                    </div>
+                    <div v-if="!isNew" class="form-group">
+                        <label asp-for="SelectedPlanId" class="form-label" text-translate="true">Select default plan</label>
+                        <select class="form-select" asp-for="SelectedPlanId" v-model="selectedPlanId">
+                            <option v-for="o in availablePlans" :key="o.id" :value="o.id">{{o.name}}</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <form method="post">
-                        <button type="submit"
-                                class="btn btn-success"
-                                name="command"
-                                value="activate-monetization"
-                                text-translate="true">Proceed</button>
-                    </form>
+                    <button type="submit"
+                            class="btn btn-success"
+                            name="command"
+                            value="activate-monetization"
+                            text-translate="true">Proceed</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<script>
+    var model = @Safe.Json(Model);
+    document.addEventListener('DOMContentLoaded', function () {
+        var app = new Vue({
+            el: '#activateMonetization',
+            data() {
+                return {
+                    isNew: false,
+                    model: model,
+                    selectedOfferingId: model.selectedOfferingId,
+                    selectedPlanId: model.selectedPlanId,
+                };
+            },
+            computed: {
+                selectedOffering() {
+                    return this.model.offerings.find(o => o.id === this.selectedOfferingId) || this.model.offerings[0];
+                },
+                availablePlans() {
+                    return this.selectedOffering ? this.selectedOffering.plans : [];
+                }
+            },
+            watch: {
+                selectedOfferingId() {
+                    this.selectedPlanId = this.selectedOffering ? this.selectedOffering.plans[0].id : null;
+                }
+            }
+        });
+        const activateMonetization = document.getElementById('activateMonetization');
+        activateMonetization.addEventListener('show.bs.modal', function (event) {
+            const trigger = event.relatedTarget;
+            if (!trigger) return;
+            app.isNew = trigger.dataset.isNew === "true";
+        });
+    });
+</script>

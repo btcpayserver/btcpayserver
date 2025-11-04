@@ -82,7 +82,7 @@ public class UIServerMonetizationController(
             string? defaultPlanId;
             if (vm is { ActivateModal: { SelectedOfferingId: { } selectedOfferingId, SelectedPlanId: { } defaultPlanId2 } })
             {
-                var offering = await ctx.Offerings.GetOfferingData(selectedStore, selectedOfferingId);
+                var offering = await ctx.Offerings.GetOfferingData(selectedOfferingId, selectedStore);
                 offeringId = offering?.Id;
                 var plan = offering?.Plans.FirstOrDefault(p => p.Id == defaultPlanId2);
                 defaultPlanId = plan?.Id;

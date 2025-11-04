@@ -11,8 +11,8 @@
             </div>
             <form method="post">
                 <div class="modal-body">
-                    <p html-translate="true">By activating monetization, new users registering to you will need a subscription to use your server. This change doesn't affect your current users. Do you want to proceed?</p>
-                    <p v-if="isNew" v-pre>@ViewLocalizer["A new offering will be create on the currently selected store <strong>{0}<strong>", Html.Encode(Context.GetStoreData().StoreName)].</p>
+                    <p html-translate="true">By activating monetization, new users registering to your server will need a subscription. This change doesn't affect your current users. Do you want to proceed?</p>
+                    <p v-if="isNew" v-pre>@ViewLocalizer["A new offering will be created on the currently selected store <strong>{0}<strong>", Html.Encode(Context.GetStoreData().StoreName)].</p>
                     <div v-if="!isNew" class="form-group">
                         <label asp-for="SelectedOfferingId" class="form-label" text-translate="true">Select offering</label>
                         <select class="form-select" asp-for="SelectedOfferingId"

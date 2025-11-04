@@ -161,9 +161,9 @@ namespace BTCPayServer.Hosting
             services.AddStartupTask<MigrationStartupTask>();
 
             //
-            AddSettingsAccessor<PoliciesSettings>(services);
-            AddSettingsAccessor<ThemeSettings>(services);
-            AddSettingsAccessor<ServerSettings>(services);
+            services.AddSettingsAccessor<PoliciesSettings>();
+            services.AddSettingsAccessor<ThemeSettings>();
+            services.AddSettingsAccessor<ServerSettings>();
             //
 
             AddOnchainWalletParsers(services);

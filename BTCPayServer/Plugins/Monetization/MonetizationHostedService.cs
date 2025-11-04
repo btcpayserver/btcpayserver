@@ -57,13 +57,16 @@ public class MonetizationHostedService(
             var email = sub.Customer.Email.Get();
             var user = await userManager.FindByEmailAsync(email ?? "");
             var activated = evt is SubscriptionEvent.SubscriberActivated;
-            if (activated && user is { IsDisabled: true })
+            if (user is not null)
             {
-                await userService.ToggleUser(user.Id, null);
-            }
-            if (!activated && user is { IsDisabled: false })
-            {
-                await userService.ToggleUser(user.Id, DateTimeOffset.MaxValue);
+                if (activated)
+                {
+                    await userService.SetDisabled(user.Id, false);
+                }
+                else
+                {
+                    await userService.SetDisabled(user.Id, true);
+                }
             }
         }
     }

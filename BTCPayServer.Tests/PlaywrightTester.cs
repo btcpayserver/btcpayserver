@@ -802,12 +802,10 @@ namespace BTCPayServer.Tests
             return await new StreamReader(await download.CreateReadStreamAsync()).ReadToEndAsync();
         }
 
-<<<<<<< HEAD
         public async Task ConfirmDeleteModal()
         {
             await Page.FillAsync("#ConfirmInput", "DELETE");
             await Page.ClickAsync("#ConfirmContinue");
-=======
         public async Task AssertPageAccess(bool shouldHaveAccess, string url)
         {
             await GoToUrl(url);
@@ -830,7 +828,6 @@ namespace BTCPayServer.Tests
             {
                Assert.Contains("- Denied</h", content);
             }
->>>>>>> 55a7f824b ((Test):Converted/Added Playwright Test for CanUsePredefinedRoles)
         }
     }
 }

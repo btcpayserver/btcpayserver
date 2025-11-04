@@ -324,8 +324,27 @@ namespace BTCPayServer.Tests
         }
         public async Task Logout()
         {
-            await Page.Locator("#menu-item-Account").ClickAsync();
-            await Page.Locator("#Nav-Logout").ClickAsync();
+            // Try to find the account nav or a logout button, or fallback to /logout
+            if (await Page.Locator("#Nav-Account").CountAsync() > 0 && await Page.Locator("#Nav-Account").IsVisibleAsync())
+            {
+                await Page.Locator("#Nav-Account").ClickAsync();
+                await Page.Locator("#Nav-Logout").ClickAsync();
+            }
+            else if (await Page.Locator("#Nav-Logout").CountAsync() > 0 && await Page.Locator("#Nav-Logout").IsVisibleAsync())
+            {
+                await Page.Locator("#Nav-Logout").ClickAsync();
+            }
+            else if (await Page.Locator("a[href='/logout']").CountAsync() > 0 && await Page.Locator("a[href='/logout']").IsVisibleAsync())
+            {
+                await Page.Locator("a[href='/logout']").ClickAsync();
+            }
+            else
+            {
+                await GoToUrl("/logout");
+            }
+            // Wait for login form or login page URL as a sign of successful logout
+            await Page.WaitForURLAsync("**/login");
+            await Page.Locator("#LoginButton").WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 15000 });
         }
 
         public async Task GoToHome()
@@ -795,10 +814,33 @@ namespace BTCPayServer.Tests
             return await new StreamReader(await download.CreateReadStreamAsync()).ReadToEndAsync();
         }
 
+<<<<<<< HEAD
         public async Task ConfirmDeleteModal()
         {
             await Page.FillAsync("#ConfirmInput", "DELETE");
             await Page.ClickAsync("#ConfirmContinue");
+=======
+        public async Task AssertPageAccess(bool shouldHaveAccess, string url)
+        {
+            await GoToUrl(url);
+            var content = await Page.ContentAsync();
+            Assert.DoesNotContain("404 - Page not found", content);
+            if (shouldHaveAccess)
+            {
+                Assert.DoesNotContain("- Denied", content);
+                // check associated link is active if present
+                var sidebarLink = Page.Locator($"#mainNav a[href=\"{url}\"]");
+                if (await sidebarLink.CountAsync() > 0)
+                {
+                    var classAttr = await sidebarLink.First.GetAttributeAsync("class");
+                    Assert.Contains("active", classAttr);
+                }
+            }
+            else
+            {
+                Assert.Contains("- Denied", content);
+            }
+>>>>>>> 55a7f824b ((Test):Converted/Added Playwright Test for CanUsePredefinedRoles)
         }
     }
 }

@@ -2241,6 +2241,150 @@ namespace BTCPayServer.Tests
             await newPage.CloseAsync();
         }
 
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanUsePredefinedRoles()
+        {
+            await using var s = CreatePlaywrightTester(newDb: true);
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+            await s.Server.EnsureChannelsSetup();
+            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks", "payout-processors",
+                "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC", "emails/rules", "email-settings", "forms"};
+
+            // Setup users
+            var manager = await s.RegisterNewUser();
+            await s.Logout();
+            await s.GoToRegister();
+            var employee = await s.RegisterNewUser();
+            await s.Logout();
+            await s.GoToRegister();
+            var guest = await s.RegisterNewUser();
+            await s.Logout();
+            await s.GoToRegister();
+
+            // Setup store, wallets and add users
+            await s.RegisterNewUser(true);
+            var (_, storeId) = await s.CreateNewStore();
+            await s.GoToStore();
+            await s.GenerateWallet(isHotWallet: true);
+            await s.AddLightningNode("CLightning", false);
+            await s.AddUserToStore(storeId, manager, "Manager");
+            await s.AddUserToStore(storeId, employee, "Employee");
+            await s.AddUserToStore(storeId, guest, "Guest");
+
+            // Add apps
+            var (_, posId) = await s.CreateApp("PointOfSale");
+            var (_, crowdfundId) = await s.CreateApp("Crowdfund");
+
+            string GetStorePath(string subPath) => $"/stores/{storeId}" + (string.IsNullOrEmpty(subPath) ? "" : $"/{subPath}");
+
+            // Owner access
+            await s.AssertPageAccess(true, GetStorePath(""));
+            await s.AssertPageAccess(true, GetStorePath("reports"));
+            await s.AssertPageAccess(true, GetStorePath("invoices"));
+            await s.AssertPageAccess(true, GetStorePath("invoices/create"));
+            await s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            await s.AssertPageAccess(true, GetStorePath("payment-requests/edit"));
+            await s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            await s.AssertPageAccess(true, GetStorePath("payouts"));
+            await s.AssertPageAccess(true, GetStorePath("onchain/BTC"));
+            await s.AssertPageAccess(true, GetStorePath("onchain/BTC/settings"));
+            await s.AssertPageAccess(true, GetStorePath("lightning/BTC"));
+            await s.AssertPageAccess(true, GetStorePath("lightning/BTC/settings"));
+            await s.AssertPageAccess(true, GetStorePath("apps/create"));
+            await s.AssertPageAccess(true, $"/apps/{posId}/settings/pos");
+            await s.AssertPageAccess(true, $"/apps/{crowdfundId}/settings/crowdfund");
+            foreach (var path in storeSettingsPaths)
+            {   // should have manage access to settings, hence should see submit buttons or create links
+                s.TestLogs.LogInformation($"Checking access to store page {path} as owner");
+                await s.AssertPageAccess(true, $"stores/{storeId}/{path}");
+                if (path != "payout-processors")
+                {
+                    var saveButton = s.Page.GetByRole(AriaRole.Button, new() { Name = "Save" });
+                    if (await saveButton.CountAsync() > 0)
+                    {
+                        Assert.True(await saveButton.IsVisibleAsync());
+                    }
+                }
+            }
+            await s.Logout();
+
+            // Manager access
+            await s.LogIn(manager);
+            await s.AssertPageAccess(false, GetStorePath(""));
+            await s.AssertPageAccess(true, GetStorePath("reports"));
+            await s.AssertPageAccess(true, GetStorePath("invoices"));
+            await s.AssertPageAccess(true, GetStorePath("invoices/create"));
+            await s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            await s.AssertPageAccess(true, GetStorePath("payment-requests/edit"));
+            await s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            await s.AssertPageAccess(true, GetStorePath("payouts"));
+            await s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
+            await s.AssertPageAccess(false, GetStorePath("onchain/BTC/settings"));
+            await s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
+            await s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
+            await s.AssertPageAccess(false, GetStorePath("apps/create"));
+            await s.AssertPageAccess(true, $"/apps/{posId}/settings/pos");
+            await s.AssertPageAccess(true, $"/apps/{crowdfundId}/settings/crowdfund");
+            foreach (var path in storeSettingsPaths)
+            {   // should have view access to settings, but no submit buttons or create links
+                s.TestLogs.LogInformation($"Checking access to store page {path} as manager");
+                await s.AssertPageAccess(true, $"stores/{storeId}/{path}");
+                Assert.False(await s.Page.GetByRole(AriaRole.Button, new() { Name = "Save" }).IsVisibleAsync());
+            }
+            await s.Logout();
+
+            // Employee access
+            await s.LogIn(employee);
+            await s.AssertPageAccess(false, GetStorePath(""));
+            await s.AssertPageAccess(false, GetStorePath("reports"));
+            await s.AssertPageAccess(true, GetStorePath("invoices"));
+            await s.AssertPageAccess(true, GetStorePath("invoices/create"));
+            await s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            await s.AssertPageAccess(true, GetStorePath("payment-requests/edit"));
+            await s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            await s.AssertPageAccess(true, GetStorePath("payouts"));
+            await s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
+            await s.AssertPageAccess(false, GetStorePath("onchain/BTC/settings"));
+            await s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
+            await s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
+            await s.AssertPageAccess(false, GetStorePath("apps/create"));
+            await s.AssertPageAccess(false, $"/apps/{posId}/settings/pos");
+            await s.AssertPageAccess(false, $"/apps/{crowdfundId}/settings/crowdfund");
+            foreach (var path in storeSettingsPaths)
+            {   // should not have access to settings
+                s.TestLogs.LogInformation($"Checking access to store page {path} as employee");
+                await s.AssertPageAccess(false, $"stores/{storeId}/{path}");
+            }
+            await s.Logout();
+
+            // Guest access
+            await s.LogIn(guest);
+            await s.AssertPageAccess(false, GetStorePath(""));
+            await s.AssertPageAccess(false, GetStorePath("reports"));
+            await s.AssertPageAccess(true, GetStorePath("invoices"));
+            await s.AssertPageAccess(true, GetStorePath("invoices/create"));
+            await s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            await s.AssertPageAccess(false, GetStorePath("payment-requests/edit"));
+            await s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            await s.AssertPageAccess(true, GetStorePath("payouts"));
+            await s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
+            await s.AssertPageAccess(false, GetStorePath("onchain/BTC/settings"));
+            await s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
+            await s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
+            await s.AssertPageAccess(false, GetStorePath("apps/create"));
+            await s.AssertPageAccess(false, $"/apps/{posId}/settings/pos");
+            await s.AssertPageAccess(false, $"/apps/{crowdfundId}/settings/crowdfund");
+            foreach (var path in storeSettingsPaths)
+            {   // should not have access to settings
+                s.TestLogs.LogInformation($"Checking access to store page {path} as guest");
+                await s.AssertPageAccess(false, $"stores/{storeId}/{path}");
+            }
+            await s.Logout();
+        }
+
     }
 }
 

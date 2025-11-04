@@ -538,7 +538,7 @@ public class SubscriptionHostedService(
         checkout.Subscriber = sub;
         checkout.SubscriberId = sub.Id;
         await ctx.SaveChangesAsync();
-        subCtx.AddEvent(new SubscriptionEvent.NewSubscriber(sub));
+        subCtx.AddEvent(new SubscriptionEvent.NewSubscriber(sub, checkout));
         return sub;
     }
 

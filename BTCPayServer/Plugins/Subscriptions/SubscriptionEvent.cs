@@ -10,8 +10,9 @@ public class SubscriptionEvent
         public SubscriberData Subscriber { get; } = subscriber;
     }
 
-    public class NewSubscriber(SubscriberData subscriber) : SubscriberEvent(subscriber)
+    public class NewSubscriber(SubscriberData subscriber, PlanCheckoutData checkout) : SubscriberEvent(subscriber)
     {
+        public PlanCheckoutData Checkout { get; } = checkout;
         public override string ToString() => $"New Subscriber {Subscriber.ToNiceString()}";
     }
 

@@ -1,20 +1,40 @@
 @using BTCPayServer.Plugins.Subscriptions
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
+
 @model MonetizationViewModel
 
 @{
-    ViewData.SetLayoutModel(new(WellKnownCategories.Server, nameof(MonetizationPlugin), StringLocalizer["Monetization"]));
+    ViewData.SetLayoutModel(new LayoutModel(nameof(MonetizationPlugin), StringLocalizer["Monetization"])
+        .SetCategory(WellKnownCategories.Server));
+    Csp.UnsafeEval();
+    var store = this.Context.GetStoreData();
 }
 <div class="sticky-header">
     <h2 class="my-1">@ViewData["Title"]</h2>
-    @if (Model.Offering is null)
+    @if (Model.DefaultPlan is null && store is not null)
     {
-        <a id="page-primary"
-           class="btn btn-primary"
-           data-bs-toggle="modal"
-           data-bs-target="#activateMonetization"
-           role="button">
-            Continue
-        </a>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span>Selected store:</span>
+                <span class="fw-bold">@store.StoreName</span>
+            </div>
+            <a
+                class="btn btn-secondary"
+                data-bs-toggle="modal"
+                data-bs-target="#activateMonetization"
+                data-is-new="false"
+                role="button" text-translate="true">
+                Use an existing offering
+            </a>
+            <a id="page-primary"
+               class="btn btn-primary"
+               data-bs-toggle="modal"
+               data-bs-target="#activateMonetization"
+               data-is-new="true"
+               role="button" text-translate="true">
+                Create a new offering
+            </a>
+        </div>
     }
     else
     {
@@ -22,7 +42,7 @@
            asp-area="@SubscriptionsPlugin.Area"
            asp-controller="UIOffering"
            asp-action="Offering"
-           asp-route-storeId="@Model.Offering.App.StoreDataId"
+           asp-route-storeId="@Model.DefaultPlan.Offering.App.StoreDataId"
            asp-route-offeringId="@Model.Settings.OfferingId"
            asp-route-section="Plans"
            class="btn btn-secondary"
@@ -33,6 +53,49 @@
 </div>
 <partial name="_StatusMessage" />
 
-<p class="mb-0" text-translate="true">Monetization allows you to get paid for sharing your BTCPay Server instance with other users.</p>
 
-<partial name="ActivateMonetizationModal"/>
+@if (Model.DefaultPlan is not null)
+{
+    <p text-translate="true">New users created on your server will now automatically join the default plan.</p>
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <h5 class="card-title">Current Subscription Settings</h5>
+                <form method="post">
+                    <button class="btn btn-outline-danger"
+                            name="command" value="demonetize"
+                            text-translate="true">
+                        Demonetize
+                    </button>
+                </form>
+            </div>
+            <div class="form-group">
+                <label class="form-label" text-translate="true">Offering and default plan</label>
+                <div class="d-flex align-items-center">
+                    @{
+                        var name = $"{Model.DefaultPlan.Offering.App.Name} / {Model.DefaultPlan.Name}";
+                    }
+                    <input type="text" class="form-control me-2 w-auto" value="@name" title="@name" readonly disabled />
+                    <a
+                        class="btn btn-secondary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#activateMonetization"
+                        data-is-new="false"
+                        role="button" text-translate="true">
+                        Modify
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <p class="mb-0" text-translate="true">Monetization allows you to get paid for sharing your BTCPay Server instance with other users.</p>
+}
+
+<partial name="ActivateMonetizationModal" for="ActivateModal" />
+
+@section PageFootContent {
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+}

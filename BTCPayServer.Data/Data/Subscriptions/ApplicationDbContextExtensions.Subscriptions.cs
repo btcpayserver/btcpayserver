@@ -88,7 +88,8 @@ public static partial class ApplicationDbContextExtensions
             .Include(o => o.Entitlements)
             .Include(o => o.Plans)
             .Include(o => o.App)
-            .ThenInclude(o => o.StoreData);
+            .ThenInclude(o => o.StoreData)
+            .AsSplitQuery();
 
         var o = await offering
                 .Where(o => o.Id == offeringId)

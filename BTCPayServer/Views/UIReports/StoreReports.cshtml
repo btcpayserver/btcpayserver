@@ -110,10 +110,10 @@
                         </td>
                         <td v-if="row.isTotal" :colspan="row.rLevel">Total</td>
                         <td v-for="(value, columnIndex) in row.values" class="text-end">
-                            <template v-if="chart.aggregates[columnIndex] === 'BalanceChange' && (value >= 0 || typeof value === 'object' && value.d >= 0)">
+                            <template v-if="chart.aggregates[columnIndex] === 'BalanceChange' && (value >= 0 || (typeof value === 'object' && value.d >= 0))">
                                 <span class="text-success">{{ displayValue(value) }}</span></template>
                             <template
-                                v-else-if="chart.aggregates[columnIndex] === 'BalanceChange' && (value < 0 || typeof value === 'object' && value.d < 0)">
+                                v-else-if="chart.aggregates[columnIndex] === 'BalanceChange' && (value < 0 || (typeof value === 'object' && value.d < 0))">
                                 <span class="text-danger">{{ displayValue(value) }}</span></template>
                             <template v-else>{{ displayValue(value) }}</template>
                         </td>
@@ -176,10 +176,10 @@
                         <span v-else-if="srv.result.fields[columnIndex].type === 'boolean' && value === false"><vc:icon symbol="cross"
                                                                                                                         css-class="text-danger" /></span>
                         <span
-                            v-else-if="['BalanceChange'].includes(srv.result.fields[columnIndex].name) && (value >= 0 || typeof value === 'object' && value.d >= 0)"
+                            v-else-if="['BalanceChange'].includes(srv.result.fields[columnIndex].name) && (value >= 0 || (typeof value === 'object' && value.v >= 0))"
                             class="text-success">{{ displayValue(value) }}</span>
                         <span
-                            v-else-if="['BalanceChange'].includes(srv.result.fields[columnIndex].name) && (value < 0 || typeof value === 'object' && value.d < 0)"
+                            v-else-if="['BalanceChange'].includes(srv.result.fields[columnIndex].name) && (value < 0 || (typeof value === 'object' && value.v < 0))"
                             class="text-danger">{{ displayValue(value) }}</span>
                         <span v-else-if="['State'].includes(srv.result.fields[columnIndex].name)" class="badge"
                               :class="`badge-${value.toLowerCase()}`">{{ displayValue(value) }}</span>

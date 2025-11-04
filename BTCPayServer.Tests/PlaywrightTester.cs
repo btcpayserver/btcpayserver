@@ -324,15 +324,10 @@ namespace BTCPayServer.Tests
         }
         public async Task Logout()
         {
-            // go to the logout URL 
-            await GoToUrl("/logout");
-            // Wait for the page to load after logout
-            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-            // If ended up on store creation page (user has no stores), go to login page
-            if (Page.Url.Contains("/stores/create"))
-            {
-                await GoToUrl("/login");
-            }
+            if (!await Page.Locator("#Nav-Logout").IsVisibleAsync())
+                await GoToUrl("/account");
+            await Page.Locator("#menu-item-Account").ClickAsync();
+            await Page.Locator("#Nav-Logout").ClickAsync();
         }
 
         public async Task GoToHome()

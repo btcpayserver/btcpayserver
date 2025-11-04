@@ -806,6 +806,7 @@ namespace BTCPayServer.Tests
         {
             await Page.FillAsync("#ConfirmInput", "DELETE");
             await Page.ClickAsync("#ConfirmContinue");
+        }
         public async Task AssertPageAccess(bool shouldHaveAccess, string url)
         {
             await GoToUrl(url);

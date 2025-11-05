@@ -351,7 +351,7 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["User was the last enabled admin and could not be disabled."].Value;
                 return RedirectToAction(nameof(ListUsers));
             }
-            await _userService.ToggleUser(userId, enable ? null : DateTimeOffset.MaxValue);
+            await _userService.SetDisabled(userId, !enable);
 
             TempData[WellKnownTempData.SuccessMessage] = enable
                 ? StringLocalizer["User enabled"].Value

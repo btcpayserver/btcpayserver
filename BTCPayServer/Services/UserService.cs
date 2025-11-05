@@ -149,23 +149,20 @@ namespace BTCPayServer.Services
             return succeeded;
         }
 
-        public async Task<bool?> ToggleUser(string userId, DateTimeOffset? lockedOutDeadline)
+        public async Task<bool> SetDisabled(string userId, bool disabled)
         {
             using var scope = _serviceProvider.CreateScope();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var user = await userManager.FindByIdAsync(userId);
-            if (user is null)
-            {
-                return null;
-            }
-            if (lockedOutDeadline is not null)
-            {
+            if (user is null || disabled == user.IsDisabled)
+                return true;
+            if (!user.LockoutEnabled)
                 await userManager.SetLockoutEnabledAsync(user, true);
-            }
 
+            var lockedOutDeadline = disabled ? DateTimeOffset.MaxValue : (DateTimeOffset?)null;
             var res = await userManager.SetLockoutEndDateAsync(user, lockedOutDeadline);
             // Without this, the user won't be logged out automatically when his authentication ticket expires
-            if (lockedOutDeadline is not null)
+            if (disabled)
             {
                 await userManager.UpdateSecurityStampAsync(user);
                 _disabledUsers.Add(userId);
@@ -174,7 +171,6 @@ namespace BTCPayServer.Services
             {
                 _disabledUsers.Remove(userId);
             }
-
             if (res.Succeeded)
             {
                 _logger.LogInformation("User {Email} is now {Status}", user.Email, (lockedOutDeadline is null ? "unlocked" : "locked"));
@@ -183,9 +179,12 @@ namespace BTCPayServer.Services
             {
                 _logger.LogError("Failed to set lockout for user {Email}", user.Email);
             }
-
             return res.Succeeded;
         }
+
+        [Obsolete("Use SetDisabled instead")]
+        public async Task<bool?> ToggleUser(string userId, DateTimeOffset? lockedOutDeadline)
+            => await SetDisabled(userId, lockedOutDeadline is not null);
 
         public async Task<bool> IsAdminUser(ApplicationUser user)
         {

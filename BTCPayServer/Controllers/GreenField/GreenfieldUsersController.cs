@@ -100,8 +100,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.UserNotFound();
             }
 
-            var success = await _userService.ToggleUser(user.Id, request.Locked ? DateTimeOffset.MaxValue : null);
-            return success.HasValue && success.Value ? Ok() : this.CreateAPIError("invalid-state",
+            var success = await _userService.SetDisabled(user.Id, request.Locked);
+            return success ? Ok() : this.CreateAPIError("invalid-state",
                 $"{(request.Locked ? "Locking" : "Unlocking")} user failed");
         }
 

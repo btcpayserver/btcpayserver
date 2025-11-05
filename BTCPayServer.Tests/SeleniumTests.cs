@@ -134,7 +134,6 @@ namespace BTCPayServer.Tests
             });
         }
 
-<<<<<<< HEAD
         [Fact(Timeout = TestTimeout)]
         [Trait("Lightning", "Lightning")]
         public async Task CanCreateStores()
@@ -297,8 +296,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
             Assert.Contains("The store has been unarchived and will appear in the stores list by default again.", s.FindAlertMessage().Text);
         }
-=======
->>>>>>> 6b1d8f044 ((Refactor): Removed Selenium Test for CanCreateStores)
 
         [Fact(Timeout = TestTimeout)]
         public async Task CanCreateAppPoS()

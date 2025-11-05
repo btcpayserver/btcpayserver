@@ -2255,12 +2255,15 @@ namespace BTCPayServer.Tests
 
             // Setup users
             var manager = await s.RegisterNewUser();
+            await s.GoToHome();
             await s.Logout();
             await s.GoToRegister();
             var employee = await s.RegisterNewUser();
+            await s.GoToHome();
             await s.Logout();
             await s.GoToRegister();
             var guest = await s.RegisterNewUser();
+            await s.GoToHome();
             await s.Logout();
             await s.GoToRegister();
 
@@ -2360,6 +2363,7 @@ namespace BTCPayServer.Tests
                 s.TestLogs.LogInformation($"Checking access to store page {path} as employee");
                 await s.AssertPageAccess(false, $"/stores/{storeId}/{path}");
             }
+            await s.GoToHome();
             await s.Logout();
 
             // Guest access
@@ -2384,6 +2388,7 @@ namespace BTCPayServer.Tests
                 s.TestLogs.LogInformation($"Checking access to store page {path} as guest");
                 await s.AssertPageAccess(false, $"/stores/{storeId}/{path}");
             }
+            await s.GoToHome();
             await s.Logout();
         }
 

@@ -324,8 +324,6 @@ namespace BTCPayServer.Tests
         }
         public async Task Logout()
         {
-            if (!await Page.Locator("#Nav-Logout").IsVisibleAsync())
-                await GoToUrl("/account");
             await Page.Locator("#menu-item-Account").ClickAsync();
             await Page.Locator("#Nav-Logout").ClickAsync();
         }

@@ -427,7 +427,9 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             services.AddSingleton<IHostedService, InvoiceEventSaverService>();
             services.AddSingleton<IHostedService, BitpayIPNSender>();
             services.AddSingleton<IHostedService, InvoiceWatcher>();
-            services.AddSingleton<IHostedService, RatesHostedService>();
+            services.AddSingleton<RatesHostedService>();
+            services.AddSingleton<IHostedService>(s => s.GetRequiredService<RatesHostedService>());
+            services.AddScheduledTask<RatesHostedService>(TimeSpan.FromSeconds(30));
             services.AddSingleton<IHostedService, BackgroundJobSchedulerHostedService>();
             services.AddSingleton<IHostedService, AppHubStreamer>();
             services.AddSingleton<IHostedService, AppInventoryUpdaterHostedService>();

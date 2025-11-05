@@ -1,46 +1,33 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Logging;
-using BTCPayServer.Services;
+using BTCPayServer.Configuration;
 using BTCPayServer.Services.Rates;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using NBitcoin;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.HostedServices
 {
-    public class RatesHostedService : BaseAsyncService
+    public class RatesHostedService(
+        IOptions<DataDirectories> dataDirectories,
+        RateProviderFactory rateProviderFactory) : IHostedService, IPeriodicTask
     {
         public class ExchangeRatesCache
         {
             [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
             public DateTimeOffset Created { get; set; }
-            public List<BackgroundFetcherState> States { get; set; }
+            public List<BackgroundFetcherState>? States { get; set; }
             public override string ToString()
             {
                 return "";
             }
-        }
-        private readonly SettingsRepository _SettingsRepository;
-        readonly RateProviderFactory _RateProviderFactory;
-
-        public RatesHostedService(SettingsRepository repo,
-                                  RateProviderFactory rateProviderFactory,
-                                  Logs logs) : base(logs)
-        {
-            this._SettingsRepository = repo;
-            _RateProviderFactory = rateProviderFactory;
-        }
-
-        internal override Task[] InitializeTasks()
-        {
-            return new Task[]
-            {
-                CreateLoopTask(RefreshRates)
-            };
         }
 
         bool IsStillUsed(BackgroundFetcherRateProvider fetcher)
@@ -51,7 +38,7 @@ namespace BTCPayServer.HostedServices
 
         IEnumerable<(string ExchangeName, BackgroundFetcherRateProvider Fetcher)> GetStillUsedProviders()
         {
-            foreach (var kv in _RateProviderFactory.Providers)
+            foreach (var kv in rateProviderFactory.Providers)
             {
                 if (kv.Value is BackgroundFetcherRateProvider fetcher && IsStillUsed(fetcher))
                 {
@@ -59,89 +46,75 @@ namespace BTCPayServer.HostedServices
                 }
             }
         }
-        async Task RefreshRates()
+        public async Task Do(CancellationToken cancellationToken)
         {
             var usedProviders = GetStillUsedProviders().ToArray();
             if (usedProviders.Length == 0)
-            {
-                await Task.Delay(TimeSpan.FromSeconds(30), CancellationToken);
                 return;
-            }
-            using (var timeout = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken))
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(20.0));
+            try
             {
-                timeout.CancelAfter(TimeSpan.FromSeconds(20.0));
-                try
-                {
-                    await Task.WhenAll(usedProviders
-                                    .Select(p => p.Fetcher.UpdateIfNecessary(timeout.Token).ContinueWith(t =>
-                                    {
-                                        if (t.Result.Exception != null && t.Result.Exception is not NotSupportedException)
-                                        {
-                                            Logs.PayServer.LogWarning($"Error while contacting exchange {p.ExchangeName}: {t.Result.Exception.Message}");
-                                        }
-                                    }, TaskScheduler.Default))
-                                    .ToArray()).WithCancellation(timeout.Token);
-                }
-                catch (OperationCanceledException) when (timeout.IsCancellationRequested)
-                {
-                }
-                if (_LastCacheDate is DateTimeOffset lastCache)
-                {
-                    if (DateTimeOffset.UtcNow - lastCache > TimeSpan.FromMinutes(8.0))
-                    {
-                        await SaveRateCache();
-                    }
-                }
-                else
+                await Task.WhenAll(usedProviders
+                    .Select(p => p.Fetcher.UpdateIfNecessary(timeout.Token))
+                    .ToArray()).WithCancellation(timeout.Token);
+            }
+            catch (OperationCanceledException) when (timeout.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+            {
+            }
+            if (_lastCacheDate is DateTimeOffset lastCache)
+            {
+                if (DateTimeOffset.UtcNow - lastCache > TimeSpan.FromMinutes(8.0))
                 {
                     await SaveRateCache();
                 }
             }
-            await Task.Delay(TimeSpan.FromSeconds(30), CancellationToken);
+            else
+            {
+                await SaveRateCache();
+            }
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
             await TryLoadRateCache();
-            await base.StartAsync(cancellationToken);
         }
-        public override async Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
             await SaveRateCache();
-            await base.StopAsync(cancellationToken);
         }
 
         private async Task TryLoadRateCache()
         {
+            ExchangeRatesCache? cache = null;
             try
             {
-                var cache = await _SettingsRepository.GetSettingAsync<ExchangeRatesCache>();
-                if (cache != null)
+                cache = JsonConvert.DeserializeObject<ExchangeRatesCache>(await File.ReadAllTextAsync(GetRatesCacheFilePath(), new UTF8Encoding(false)));
+            }
+            catch
+            {
+            }
+            if (cache is { States: not null })
+            {
+                _lastCacheDate = cache.Created;
+                var stateByExchange = cache.States.ToDictionary(o => o.ExchangeName);
+                foreach (var kv in stateByExchange)
                 {
-                    _LastCacheDate = cache.Created;
-                    var stateByExchange = cache.States.ToDictionary(o => o.ExchangeName);
-                    foreach (var provider in _RateProviderFactory.Providers)
+                    if (rateProviderFactory.Providers.TryGetValue(kv.Key, out var prov) &&
+                        prov is BackgroundFetcherRateProvider fetcher)
                     {
-                        if (stateByExchange.TryGetValue(provider.Key, out var state) &&
-                            provider.Value is BackgroundFetcherRateProvider fetcher)
-                        {
-                            fetcher.LoadState(state);
-                        }
+                        fetcher.LoadState(kv.Value);
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                Logs.PayServer.LogWarning(ex, "Warning: Error while trying to load rates from cache");
-            }
         }
 
-        DateTimeOffset? _LastCacheDate;
+        DateTimeOffset? _lastCacheDate;
         private async Task SaveRateCache()
         {
             var cache = new ExchangeRatesCache();
             cache.Created = DateTimeOffset.UtcNow;
-            _LastCacheDate = cache.Created;
+            _lastCacheDate = cache.Created;
 
             var usedProviders = GetStillUsedProviders().ToArray();
             cache.States = new List<BackgroundFetcherState>(usedProviders.Length);
@@ -151,7 +124,10 @@ namespace BTCPayServer.HostedServices
                 state.ExchangeName = provider.ExchangeName;
                 cache.States.Add(state);
             }
-            await _SettingsRepository.UpdateSetting(cache);
+
+            await File.WriteAllTextAsync(GetRatesCacheFilePath(), JsonConvert.SerializeObject(cache), new UTF8Encoding(false));
         }
+
+        private string GetRatesCacheFilePath() => Path.Combine(dataDirectories.Value.DataDir, "rates-cache.json");
     }
 }

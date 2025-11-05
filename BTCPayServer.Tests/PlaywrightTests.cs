@@ -2255,15 +2255,12 @@ namespace BTCPayServer.Tests
 
             // Setup users
             var manager = await s.RegisterNewUser();
-            await s.GoToHome();
             await s.Logout();
             await s.GoToRegister();
             var employee = await s.RegisterNewUser();
-            await s.GoToHome();
             await s.Logout();
             await s.GoToRegister();
             var guest = await s.RegisterNewUser();
-            await s.GoToHome();
             await s.Logout();
             await s.GoToRegister();
 
@@ -2362,7 +2359,6 @@ namespace BTCPayServer.Tests
                 s.TestLogs.LogInformation($"Checking access to store page {path} as employee");
                 await s.AssertPageAccess(false, $"/stores/{storeId}/{path}");
             }
-            await s.GoToHome();
             await s.Logout();
 
             // Guest access
@@ -2387,7 +2383,6 @@ namespace BTCPayServer.Tests
                 s.TestLogs.LogInformation($"Checking access to store page {path} as guest");
                 await s.AssertPageAccess(false, $"/stores/{storeId}/{path}");
             }
-            await s.GoToHome();
             await s.Logout();
         }
 
@@ -2468,7 +2463,7 @@ namespace BTCPayServer.Tests
             Assert.True(await s.Page.Locator("#Dashboard").IsVisibleAsync());
 
             // setup offchain wallet
-            await s.Page.Locator("#StoreNav-LightningBTC").ClickAsync();
+            await s.Page.Locator("#menu-item-LightningSettings-BTC").ClickAsync();
             await s.AddLightningNode();
             await s.Page.AssertNoError();
             var successAlert = await s.FindAlertMessage();
@@ -2638,7 +2633,7 @@ namespace BTCPayServer.Tests
                     coin => coin.OutPoint == spentOutpoint);
             });
             await s.Server.ExplorerNode.GenerateAsync(1);
-            await s.GoToWallet(walletId);
+            await s.GoToWallet(walletId, WalletsNavPages.Send);
             await s.Page.Locator("#toggleInputSelection").ClickAsync();
             await s.Page.Locator($"[id='{spentOutpoint}']").WaitForAsync();
             Assert.Equal("true", (await s.Page.Locator("[name='InputSelection']").InputValueAsync()).ToLowerInvariant());

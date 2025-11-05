@@ -38,6 +38,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using NBitcoin;
 using NBitcoin.Payment;
 using NBitcoin.RPC;
@@ -448,7 +449,7 @@ namespace BTCPayServer
         public static IServiceCollection AddScheduledTask<T>(this IServiceCollection services, TimeSpan every)
             where T : class, IPeriodicTask
         {
-            services.AddSingleton<T>();
+            services.TryAddSingleton<T>();
             services.AddTransient<ScheduledTask>(o => new ScheduledTask(typeof(T), every));
             return services;
         }

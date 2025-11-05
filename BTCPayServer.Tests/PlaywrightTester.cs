@@ -800,5 +800,28 @@ namespace BTCPayServer.Tests
             await Page.FillAsync("#ConfirmInput", "DELETE");
             await Page.ClickAsync("#ConfirmContinue");
         }
+        public async Task AssertPageAccess(bool shouldHaveAccess, string url)
+        {
+            await GoToUrl(url);
+            await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+            var content = await Page.ContentAsync();
+            Assert.DoesNotContain("404 - Page not found", content);
+            if (shouldHaveAccess)
+            {
+                Assert.DoesNotContain("- Denied</h", content);
+                // check associated link is active if present
+                var hrefToMatch = new Uri(Link(url), UriKind.Absolute).AbsolutePath.TrimEnd('/');
+                var sidebarLink = Page.Locator($"#mainNav a[href=\"{hrefToMatch}\"], #mainNav a[href=\"{hrefToMatch}/\"]");
+                if (await sidebarLink.CountAsync() > 0)
+                {
+                    var classAttr = await sidebarLink.First.GetAttributeAsync("class");
+                    Assert.Contains("active", classAttr);
+                }
+            }
+            else
+            {
+               Assert.Contains("- Denied</h", content);
+            }
+        }
     }
 }

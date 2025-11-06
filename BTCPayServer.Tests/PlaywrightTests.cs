@@ -2338,7 +2338,6 @@ namespace BTCPayServer.Tests
                 await s.AssertPageAccess(true, $"stores/{storeId}/{path}");
                 Assert.False(await s.Page.GetByRole(AriaRole.Button, new() { Name = "Save" }).IsVisibleAsync());
             }
-            await s.GoToHome();
             await s.Logout();
 
             // Employee access
@@ -2388,6 +2387,7 @@ namespace BTCPayServer.Tests
                 s.TestLogs.LogInformation($"Checking access to store page {path} as guest");
                 await s.AssertPageAccess(false, $"/stores/{storeId}/{path}");
             }
+            await s.GoToHome();
             await s.Logout();
         }
 

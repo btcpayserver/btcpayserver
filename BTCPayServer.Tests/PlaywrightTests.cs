@@ -2255,12 +2255,15 @@ namespace BTCPayServer.Tests
 
             // Setup users
             var manager = await s.RegisterNewUser();
+            await s.GoToHome();
             await s.Logout();
             await s.GoToRegister();
             var employee = await s.RegisterNewUser();
+            await s.GoToHome();
             await s.Logout();
             await s.GoToRegister();
             var guest = await s.RegisterNewUser();
+            await s.GoToHome();
             await s.Logout();
             await s.GoToRegister();
 
@@ -2335,6 +2338,7 @@ namespace BTCPayServer.Tests
                 await s.AssertPageAccess(true, $"stores/{storeId}/{path}");
                 Assert.False(await s.Page.GetByRole(AriaRole.Button, new() { Name = "Save" }).IsVisibleAsync());
             }
+            await s.GoToHome();
             await s.Logout();
 
             // Employee access
@@ -2359,6 +2363,7 @@ namespace BTCPayServer.Tests
                 s.TestLogs.LogInformation($"Checking access to store page {path} as employee");
                 await s.AssertPageAccess(false, $"/stores/{storeId}/{path}");
             }
+            await s.GoToHome();
             await s.Logout();
 
             // Guest access
@@ -2515,6 +2520,7 @@ namespace BTCPayServer.Tests
             Assert.Contains(invoiceId, await s.Page.ContentAsync());
 
             // When logout out we should not be able to access store and invoice details
+            await s.GoToUrl("/account");
             await s.Logout();
             await s.GoToUrl(storeUrl);
             Assert.Contains("ReturnUrl", s.Page.Url);
@@ -2529,7 +2535,7 @@ namespace BTCPayServer.Tests
             await s.Page.GotoAsync(invoiceUrl);
             Assert.Contains("ReturnUrl", s.Page.Url);
             // s.AssertAccessDenied(); // TODO: Playwright equivalent if needed
-            await s.GoToHome();
+            await s.GoToUrl("/account");
             await s.Logout();
 
             // Let's add Bob as an employee to alice's store
@@ -2543,7 +2549,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("ReturnUrl", s.Page.Url);
             await s.GoToUrl(invoiceUrl);
             await s.Page.AssertNoError();
-
+            await s.GoToUrl("/account");
             await s.Logout();
             await s.LogIn(alice);
 

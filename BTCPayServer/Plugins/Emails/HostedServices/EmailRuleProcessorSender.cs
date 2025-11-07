@@ -1,6 +1,8 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -10,7 +12,7 @@ using Microsoft.Extensions.Logging;
 using MimeKit;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Plugins.Emails;
+namespace BTCPayServer.Plugins.Emails.HostedServices;
 
 public interface ITriggerOwner
 {
@@ -65,13 +67,29 @@ public class StoreEmailRuleProcessorSender(
                     var subject = new TextTemplate(actionableRule.Subject ?? "");
                     matchedContext.Recipients.AddRange(
                         actionableRule.To
-                        .Select(o =>
+                        .SelectMany(o =>
                         {
-                            if (!MailboxAddressValidator.TryParse(o, out var oo))
+                            if (MailboxAddressValidator.TryParse(o, out var oo))
+                                return new[] { oo };
+
+                            var emails = new TextTemplate(o).Render(triggEvent.Model);
+                            MailAddressCollection mailCollection = new();
+                            try
                             {
-                                MailboxAddressValidator.TryParse(new TextTemplate(o).Render(triggEvent.Model), out oo);
+                                mailCollection.Add(emails);
                             }
-                            return oo;
+                            catch (FormatException)
+                            {
+                                return Array.Empty<MailboxAddress>();
+                            }
+
+                            return mailCollection.Select(a =>
+                            {
+                                MailboxAddressValidator.TryParse(a.ToString(), out oo);
+                                return oo;
+                            })
+                            .Where(a => a != null)
+                            .ToArray();
                         })
                         .Where(o => o != null)!);
 

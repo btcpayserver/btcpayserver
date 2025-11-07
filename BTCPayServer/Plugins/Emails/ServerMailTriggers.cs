@@ -8,4 +8,5 @@ public class ServerMailTriggers
     public const string ApprovalConfirmed = "SRV-ApprovalConfirmed";
     public const string ApprovalPending = "SRV-ApprovalPending";
     public const string EmailConfirm = "SRV-EmailConfirmation";
+    public const string ApprovalRequest = "SRV-ApprovalRequest";
 }

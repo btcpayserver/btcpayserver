@@ -7,11 +7,18 @@ namespace BTCPayServer.Plugins.Emails.Views;
 /// </summary>
 public class EmailTriggerViewModel
 {
+    public class Default
+    {
+        public string SubjectExample { get; set; }
+        public string BodyExample { get; set; }
+        public bool CanIncludeCustomerEmail { get; set; }
+        public string RecipientExample { get; set; }
+    }
+
     public string Trigger { get; set; }
+
     public string Description { get; set; }
-    public string SubjectExample { get; set; }
-    public string BodyExample { get; set; }
-    public bool CanIncludeCustomerEmail { get; set; }
+
 
     public class PlaceHolder(string name, string description)
     {
@@ -21,5 +28,4 @@ public class EmailTriggerViewModel
 
     public List<PlaceHolder> PlaceHolders { get; set; } = new();
     public bool ServerTrigger { get; set; }
-    public string RecipientExample { get; set; }
 }

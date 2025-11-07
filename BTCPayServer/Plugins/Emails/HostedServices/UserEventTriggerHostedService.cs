@@ -1,10 +1,12 @@
+#nullable enable
+using System.Linq;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
-using BTCPayServer.Plugins.Emails;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Notifications;
@@ -13,13 +15,13 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using QRCoder;
 
-namespace BTCPayServer.HostedServices;
+namespace BTCPayServer.Plugins.Emails.HostedServices;
 
 public class UserEventHostedService(
     EventAggregator eventAggregator,
     UserManager<ApplicationUser> userManager,
-    CallbackGenerator callbackGenerator,
     ISettingsAccessor<ServerSettings> serverSettings,
     EmailSenderFactory emailSenderFactory,
     NotificationSender notificationSender,
@@ -28,62 +30,64 @@ public class UserEventHostedService(
     : EventHostedServiceBase(eventAggregator, logs)
 {
     public UserManager<ApplicationUser> UserManager { get; } = userManager;
-    public CallbackGenerator CallbackGenerator { get; } = callbackGenerator;
 
     protected override void SubscribeToEvents()
     {
-        Subscribe<UserEvent.Registered>();
-        Subscribe<UserEvent.Invited>();
-        Subscribe<UserEvent.Approved>();
-        Subscribe<UserEvent.ConfirmedEmail>();
-        Subscribe<UserEvent.PasswordResetRequested>();
-        Subscribe<UserEvent.InviteAccepted>();
+        SubscribeAny<UserEvent>();
+    }
+
+    public static string GetQrCodeImg(string data)
+    {
+        using var qrGenerator = new QRCodeGenerator();
+        using var qrCodeData = qrGenerator.CreateQrCode(data, QRCodeGenerator.ECCLevel.Q);
+        using var qrCode = new Base64QRCode(qrCodeData);
+        var base64 = qrCode.GetGraphic(20);
+        return $"<img src='data:image/png;base64,{base64}' alt='{data}' width='320' height='320'/>";
     }
 
     protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
     {
-        ApplicationUser user = (evt as UserEvent).User;
-        IEmailSender emailSender;
+        var user = (evt as UserEvent)?.User;
+        if (user is null) return;
         switch (evt)
         {
             case UserEvent.Registered ev:
-                // can be either a self-registration or by invite from another user
-                var type = await UserManager.IsInRoleAsync(user, Roles.ServerAdmin) ? "admin" : "user";
-                var info = ev switch
-                {
-                    UserEvent.Invited { InvitedByUser: { } invitedBy } => $"invited by {invitedBy.Email}",
-                    UserEvent.Invited => "invited",
-                    _ => "registered"
-                };
-                var requiresApproval = user.RequiresApproval && !user.Approved;
-                var requiresEmailConfirmation = user.RequiresEmailConfirmation && !user.EmailConfirmed;
-
-                // log registration info
-                var newUserInfo = $"New {type} {user.Email} {info}";
-                Logs.PayServer.LogInformation(newUserInfo);
+                var requiresApproval = user is { RequiresApproval: true, Approved: false };
+                var requiresEmailConfirmation = user is { RequiresEmailConfirmation: true, EmailConfirmed: false };
 
                 // send notification if the user does not require email confirmation.
                 // inform admins only about qualified users and not annoy them with bot registrations.
                 if (requiresApproval && !requiresEmailConfirmation)
                 {
-                    await NotifyAdminsAboutUserRequiringApproval(user, ev.ApprovalLink, newUserInfo);
+                    await NotifyAdminsAboutUserRequiringApproval(user, ev.ApprovalLink);
                 }
 
                 // set callback result and send email to user
-                emailSender = await emailSenderFactory.GetEmailSender();
                 if (ev is UserEvent.Invited invited)
                 {
                     if (invited.SendInvitationEmail)
-                        emailSender.SendInvitation(user.GetMailboxAddress(), invited.InvitationLink);
+                        EventAggregator.Publish(await CreateTriggerEvent(ServerMailTriggers.InvitePending,
+                            new JObject()
+                            {
+                                ["InvitationLink"] = HtmlEncoder.Default.Encode(invited.InvitationLink),
+                                ["InvitationLinkQR"] = GetQrCodeImg(invited.InvitationLink)
+                            }, user));
                 }
                 else if (requiresEmailConfirmation)
                 {
-                    emailSender.SendEmailConfirmation(user.GetMailboxAddress(), ev.ConfirmationEmailLink);
+                    EventAggregator.Publish(new UserEvent.ConfirmationEmailRequested(user, ev.ConfirmationEmailLink));
                 }
+                break;
+            case UserEvent.ConfirmationEmailRequested confReq:
+                EventAggregator.Publish(await CreateTriggerEvent(ServerMailTriggers.EmailConfirm,
+                    new JObject()
+                    {
+                        ["ConfirmLink"] = HtmlEncoder.Default.Encode(confReq.ConfirmLink)
+                    }, user));
                 break;
 
             case UserEvent.PasswordResetRequested pwResetEvent:
-                EventAggregator.Publish(CreateTriggerEvent(ServerMailTriggers.PasswordReset,
+                EventAggregator.Publish(await CreateTriggerEvent(ServerMailTriggers.PasswordReset,
                     new JObject()
                     {
                         ["ResetLink"] = HtmlEncoder.Default.Encode(pwResetEvent.ResetLink)
@@ -92,15 +96,16 @@ public class UserEventHostedService(
 
             case UserEvent.Approved approvedEvent:
                 if (!user.Approved) break;
-                emailSender = await emailSenderFactory.GetEmailSender();
-                emailSender.SendApprovalConfirmation(user.GetMailboxAddress(), approvedEvent.LoginLink);
+                EventAggregator.Publish(await CreateTriggerEvent(ServerMailTriggers.ApprovalConfirmed,
+                    new JObject()
+                    {
+                        ["LoginLink"] = approvedEvent.LoginLink
+                    }, user));
+
                 break;
 
-            case UserEvent.ConfirmedEmail confirmedEvent:
-                if (!user.EmailConfirmed) break;
-                var confirmedUserInfo = $"User {user.Email} confirmed their email address";
-                Logs.PayServer.LogInformation(confirmedUserInfo);
-                await NotifyAdminsAboutUserRequiringApproval(user, confirmedEvent.ApprovalLink, confirmedUserInfo);
+            case UserEvent.ConfirmedEmail confirmedEvent when user is { RequiresApproval: true, Approved: false, EmailConfirmed: true }:
+                await NotifyAdminsAboutUserRequiringApproval(user, confirmedEvent.ApprovalLink);
                 break;
 
             case UserEvent.InviteAccepted inviteAcceptedEvent:
@@ -110,8 +115,24 @@ public class UserEventHostedService(
         }
     }
 
-    private TriggerEvent CreateTriggerEvent(string trigger, JObject model, ApplicationUser user)
+    private async Task NotifyAdminsAboutUserRequiringApproval(ApplicationUser user, string approvalLink)
     {
+        await notificationSender.SendNotification(new AdminScope(), new NewUserRequiresApprovalNotification(user));
+        EventAggregator.Publish(await CreateTriggerEvent(ServerMailTriggers.ApprovalRequest,
+            new JObject()
+            {
+                ["ApprovalLink"] = approvalLink
+            }, user));
+    }
+
+    private async Task<TriggerEvent> CreateTriggerEvent(string trigger, JObject model, ApplicationUser user)
+    {
+        var admins = await UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+        var adminMailboxes = string.Join(", ", admins.Select(a => a.GetMailboxAddress().ToString()).ToArray());
+        model["Admins"] = new JObject()
+        {
+            ["MailboxAddresses"] = adminMailboxes,
+        };
         model["User"] = new JObject()
         {
             ["Name"] = user.UserName,
@@ -126,21 +147,6 @@ public class UserEventHostedService(
          var evt = new TriggerEvent(null, trigger, model, null);
         return evt;
     }
-
-    private async Task NotifyAdminsAboutUserRequiringApproval(ApplicationUser user, string approvalLink, string newUserInfo)
-    {
-        if (!user.RequiresApproval || user.Approved) return;
-        // notification
-        await notificationSender.SendNotification(new AdminScope(), new NewUserRequiresApprovalNotification(user));
-        // email
-        var admins = await UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
-        var emailSender = await emailSenderFactory.GetEmailSender();
-        foreach (var admin in admins)
-        {
-            emailSender.SendNewUserInfo(admin.GetMailboxAddress(), newUserInfo, approvalLink);
-        }
-    }
-
     private async Task NotifyAboutUserAcceptingInvite(ApplicationUser user, string storeUsersLink)
     {
         var stores = await storeRepository.GetStoresByUserId(user.Id);

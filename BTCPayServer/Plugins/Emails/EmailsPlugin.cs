@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Plugins.Emails.Views;
 using BTCPayServer.Plugins.Webhooks;
 using BTCPayServer.Services;
@@ -19,6 +20,7 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
     {
         services.AddSingleton<IDefaultTranslationProvider, EmailsTranslationProvider>();
         services.AddSingleton<IHostedService, StoreEmailRuleProcessorSender>();
+        services.AddSingleton<IHostedService, UserEventHostedService>();
         RegisterServerEmailTriggers(services);
     }
     private static string BODY_STYLE = "font-family: Open Sans, Helvetica Neue,Arial,sans-serif; font-color: #292929;";
@@ -50,8 +52,67 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
             Description = "Password Reset Requested",
         };
         vms.Add(vm);
+
+        vm = new EmailTriggerViewModel()
+        {
+            Trigger = ServerMailTriggers.EmailConfirm,
+            RecipientExample = "{User.MailboxAddress}",
+            SubjectExample = "Confirm your email",
+            BodyExample = CreateEmailBody($"Please confirm your account.<br/><br/>{CallToAction("Confirm Email", "{ConfirmLink}")}"),
+            PlaceHolders = new()
+            {
+                new ("{ConfirmLink}", "The link used to confirm the user's email address")
+            },
+            Description = "Confirm new user's email",
+        };
+        vms.Add(vm);
+
+        vm = new EmailTriggerViewModel()
+        {
+            Trigger = ServerMailTriggers.InvitePending,
+            RecipientExample = "{User.MailboxAddress}",
+            SubjectExample = "Invitation to join {Branding.ServerName}",
+            BodyExample = CreateEmailBody($"<p>Please complete your account setup by clicking <a href='{{InvitationLink}}'>this link</a>.</p><p>You can also use the BTCPay Server app and scan this QR code when connecting:</p>{{InvitationLinkQR}}"),
+            PlaceHolders = new()
+            {
+                new ("{InvitationLink}", "The link where the invited user can set up their account"),
+                new ("{InvitationLinkQR}", "The QR code representation of the invitation link")
+            },
+            Description = "User invitation email",
+        };
+        vms.Add(vm);
+
+        vm = new EmailTriggerViewModel()
+        {
+            Trigger = ServerMailTriggers.ApprovalConfirmed,
+            RecipientExample = "{User.MailboxAddress}",
+            SubjectExample = "Your account has been approved",
+            BodyExample = CreateEmailBody($"Your account has been approved and you can now.<br/><br/>{CallToAction("Login here", "{LoginLink}")}"),
+            PlaceHolders = new()
+            {
+                new ("{LoginLink}", "The link that the user can use to login"),
+            },
+            Description = "User account approved",
+        };
+        vms.Add(vm);
+
+        vm = new EmailTriggerViewModel()
+        {
+            Trigger = ServerMailTriggers.ApprovalRequest,
+            RecipientExample = "{Admin.MailboxAddresses}",
+            SubjectExample = "Approval request to access the server for {User.Email}",
+            BodyExample = CreateEmailBody($"A new user ({{User.MailboxAddress}}), is awaiting approval to access the server.<br/><br/>{CallToAction("Approve", "{ApprovalLink}")}"),
+            PlaceHolders = new()
+            {
+                new ("{ApprovalLink}", "The link that the admin needs to use to approve the user"),
+            },
+            Description = "Approval request to administrators",
+        };
+        vms.Add(vm);
+
         var commonPlaceholders = new List<EmailTriggerViewModel.PlaceHolder>()
         {
+            new("{Admins.MailboxAddresses}", "The email addresses of the admins separated by a comma (eg. ,)"),
             new("{User.Name}", "The name of the user (eg. John Doe)"),
             new("{User.Email}", "The email of the user (eg. john.doe@example.com)"),
             new("{User.MailboxAddress}", "The formatted mailbox address to use when sending an email. (eg. \"John Doe\" <john.doe@example.com>)"),

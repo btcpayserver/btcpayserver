@@ -405,9 +405,7 @@ namespace BTCPayServer.Controllers
             }
 
             var callbackUrl = await _callbackGenerator.ForEmailConfirmation(user, Request);
-
-            (await _emailSenderFactory.GetEmailSender()).SendEmailConfirmation(user.GetMailboxAddress(), callbackUrl);
-
+            _eventAggregator.Publish(new UserEvent.ConfirmationEmailRequested(user, callbackUrl));
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Verification email sent"].Value;
             return RedirectToAction(nameof(ListUsers));
         }

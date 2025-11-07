@@ -4,6 +4,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Events;
 using BTCPayServer.Plugins.Emails;
+using BTCPayServer.Plugins.Emails.HostedServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json.Linq;

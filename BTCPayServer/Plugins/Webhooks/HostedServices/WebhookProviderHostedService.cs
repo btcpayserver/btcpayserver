@@ -7,6 +7,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Plugins.Emails;
+using BTCPayServer.Plugins.Emails.HostedServices;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using StoreData = BTCPayServer.Data.StoreData;

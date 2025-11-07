@@ -152,31 +152,19 @@
             const bodyTextarea = document.querySelector('.email-rule-body');
             const placeholdersTd = document.querySelector('#placeholders');
 
-            const isEmptyOrDefault = (value, type) => {
-                const val = value.replace(/<.*?>/gi, '').trim();
-                if (!val) return true;
-                return Object.values(triggersByType).some(t => t[type] === val);
-            };
-
             function applyTemplate() {
                 const selectedTrigger = triggerSelect.value;
-                console.log(selectedTrigger);
                 if (triggersByType[selectedTrigger]) {
-                    if (isEmptyOrDefault(subjectInput.value, 'subjectExample')) {
-                        subjectInput.value = triggersByType[selectedTrigger].subjectExample;
-                    }
-                    if (isEmptyOrDefault(recipientInput.value, 'recipientExample')) {
-                        recipientInput.value = triggersByType[selectedTrigger].recipientExample;
-                    }
+                    subjectInput.value = triggersByType[selectedTrigger].subjectExample;
+                    recipientInput.value = triggersByType[selectedTrigger].recipientExample;
                     var body = triggersByType[selectedTrigger].bodyExample;
 
-                    if (isEmptyOrDefault(bodyTextarea.value, 'bodyExample')) {
-                        if ($(bodyTextarea).summernote) {
-                            $(bodyTextarea).summernote('reset');
-                            $(bodyTextarea).summernote('code', body.replace(/\n/g, '<br/>'));
-                        } else {
-                            bodyTextarea.value = body;
-                        }
+                    if ($(bodyTextarea).summernote) {
+                        console.log(body);
+                        $(bodyTextarea).summernote('reset');
+                        $(bodyTextarea).summernote('code', body.replace(/\n/g, '<br/>'));
+                    } else {
+                        bodyTextarea.value = body;
                     }
 
                     placeholdersTd.innerHTML = '';
@@ -213,7 +201,10 @@
 
             // Apply template on page load if a trigger is selected
             if (triggerSelect.value) {
-                applyTemplate();
+                if (@Safe.Json(!isEdit))
+                {
+                    applyTemplate();
+                }
                 toggleCustomerEmailVisibility();
             }
         });

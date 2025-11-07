@@ -48,10 +48,7 @@ namespace BTCPayServer.Services.Notifications
                 }
                 await db.SaveChangesAsync();
             }
-            foreach (string user in users)
-            {
-                _notificationManager.InvalidateNotificationCache(user);
-            }
+            _notificationManager.InvalidateNotificationCache(users);
         }
 
         public BaseNotification GetBaseNotification(NotificationData notificationData)

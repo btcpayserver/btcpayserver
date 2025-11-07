@@ -30,6 +30,7 @@
   "invoice_expired": "Fatura Expirada.",
   "invoice_expired_body": "Uma fatura é válida por apenas {{minutes}} minutos. Retorne a {{storeName}} se desejar reenviar o pagamento.",
   "view_receipt": "Ver recibo",
+  "Close": "Fechar",
   "return_to_store": "Voltar para {{storeName}}",
   "copy": "Copiar",
   "copy_confirm": "Copiado",

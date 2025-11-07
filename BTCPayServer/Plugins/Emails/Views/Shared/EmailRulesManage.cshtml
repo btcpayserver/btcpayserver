@@ -128,6 +128,16 @@
     <partial name="_ValidationScriptsPartial" />
     <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
     <script>
+        // Fix annoying summernote bug (need to go back to preview after changing codeview): https://github.com/summernote/summernote/issues/94
+        document.querySelector('#save-form').addEventListener('submit', function (e) {
+            const codeView = document.querySelector(".note-codeview-keep.active");
+            if (codeView) {
+                codeView.click();
+            }
+        });
+
+    </script>
+    <script>
         var triggers = @Safe.Json(Model.Triggers);
         var triggersByType = {};
         for (var i = 0; i < triggers.length; i++) {

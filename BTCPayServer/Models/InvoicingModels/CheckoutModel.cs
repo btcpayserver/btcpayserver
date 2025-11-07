@@ -77,6 +77,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool RedirectAutomatically { get; set; }
         public bool Activated { get; set; }
         public string InvoiceCurrency { get; set; }
+        public bool IsUnifiedQrCode { get; set; }
         public string ReceiptLink { get; set; }
         public int? RequiredConfirmations { get; set; }
         public long? ReceivedConfirmations { get; set; }

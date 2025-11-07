@@ -159,6 +159,7 @@ namespace BTCPayServer.Hosting
             //
             AddSettingsAccessor<PoliciesSettings>(services);
             AddSettingsAccessor<ThemeSettings>(services);
+            AddSettingsAccessor<ServerSettings>(services);
             //
 
             AddOnchainWalletParsers(services);

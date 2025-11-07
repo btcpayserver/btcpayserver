@@ -66,9 +66,9 @@ namespace BTCPayServer.Controllers
         private readonly IEnumerable<IStorageProviderService> _StorageProviderServices;
         private readonly CallbackGenerator _callbackGenerator;
         private readonly UriResolver _uriResolver;
-        private readonly EmailSenderFactory _emailSenderFactory;
         private readonly TransactionLinkProviders _transactionLinkProviders;
         private readonly LocalizerService _localizer;
+        private readonly EmailSenderFactory _emailSenderFactory;
         public IStringLocalizer StringLocalizer { get; }
 
         public UIServerController(
@@ -76,6 +76,7 @@ namespace BTCPayServer.Controllers
             UserService userService,
             StoredFileRepository storedFileRepository,
             IFileService fileService,
+            EmailSenderFactory emailSenderFactory,
             IEnumerable<IStorageProviderService> storageProviderServices,
             BTCPayServerOptions options,
             SettingsRepository settingsRepository,
@@ -92,7 +93,6 @@ namespace BTCPayServer.Controllers
             Logs logs,
             CallbackGenerator callbackGenerator,
             UriResolver uriResolver,
-            EmailSenderFactory emailSenderFactory,
             IHostApplicationLifetime applicationLifetime,
             IHtmlHelper html,
             TransactionLinkProviders transactionLinkProviders,
@@ -119,9 +119,9 @@ namespace BTCPayServer.Controllers
             _eventAggregator = eventAggregator;
             _externalServiceOptions = externalServiceOptions;
             Logs = logs;
+            _emailSenderFactory = emailSenderFactory;
             _callbackGenerator = callbackGenerator;
             _uriResolver = uriResolver;
-            _emailSenderFactory = emailSenderFactory;
             ApplicationLifetime = applicationLifetime;
             Html = html;
             _transactionLinkProviders = transactionLinkProviders;
@@ -1222,99 +1222,6 @@ namespace BTCPayServer.Controllers
             }
 
             return View(vm);
-        }
-
-        [HttpGet("server/emails")]
-        public async Task<IActionResult> Emails()
-        {
-            var email = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
-            var vm = new ServerEmailsViewModel(email)
-            {
-                EnableStoresToUseServerEmailSettings = !_policiesSettings.DisableStoresToUseServerEmailSettings
-            };
-            return View(vm);
-        }
-
-        [HttpPost("server/emails")]
-        public async Task<IActionResult> Emails(ServerEmailsViewModel model, string command)
-        {
-            if (command == "Test")
-            {
-                try
-                {
-                    if (model.PasswordSet)
-                    {
-                        var settings = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
-                        model.Settings.Password = settings.Password;
-                    }
-                    model.Settings.Validate("Settings.", ModelState);
-                    if (string.IsNullOrEmpty(model.TestEmail))
-                        ModelState.AddModelError(nameof(model.TestEmail), new RequiredAttribute().FormatErrorMessage(nameof(model.TestEmail)));
-                    if (!ModelState.IsValid)
-                        return View(model);
-                    var serverSettings = await _SettingsRepository.GetSettingAsync<ServerSettings>();
-                    var serverName = string.IsNullOrEmpty(serverSettings?.ServerName) ? "BTCPay Server" : serverSettings.ServerName;
-                    using (var client = await model.Settings.CreateSmtpClient())
-                    using (var message = model.Settings.CreateMailMessage(MailboxAddress.Parse(model.TestEmail), $"{serverName}: Email test", "You received it, the BTCPay Server SMTP settings work.", false))
-                    {
-                        await client.SendAsync(message);
-                        await client.DisconnectAsync(true);
-                    }
-                    TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email sent to {0}. Please verify you received it.", model.TestEmail].Value;
-                }
-                catch (Exception ex)
-                {
-                    TempData[WellKnownTempData.ErrorMessage] = ex.Message;
-                }
-                return View(model);
-            }
-
-            if (_policiesSettings.DisableStoresToUseServerEmailSettings == model.EnableStoresToUseServerEmailSettings)
-            {
-                _policiesSettings.DisableStoresToUseServerEmailSettings = !model.EnableStoresToUseServerEmailSettings;
-                await _SettingsRepository.UpdateSetting(_policiesSettings);
-            }
-
-            if (command == "ResetPassword")
-            {
-                var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
-                settings.Password = null;
-                await _SettingsRepository.UpdateSetting(settings);
-                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email server password reset"].Value;
-            }
-            else if (command == "mailpit")
-            {
-                model.Settings.Server = "localhost";
-                model.Settings.Port = 34219;
-                model.Settings.EnabledCertificateCheck = false;
-                model.Settings.Login ??= "store@example.com";
-                model.Settings.From ??= "store@example.com";
-                model.Settings.Password ??= "password";
-                await _SettingsRepository.UpdateSetting<EmailSettings>(model.Settings);
-                TempData.SetStatusMessageModel(new StatusMessageModel()
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Info,
-                    AllowDismiss = true,
-                    Html = "Mailpit is now running on <a href=\"http://localhost:34218\" target=\"_blank\" class=\"alert-link\">localhost</a>. You can use it to test your SMTP settings."
-                });
-            }
-            else
-            {
-                // save if user provided valid email; this will also clear settings if no model.Settings.From
-                if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
-                {
-                    ModelState.AddModelError("Settings.From", StringLocalizer["Invalid email"]);
-                    return View(model);
-                }
-
-                var oldSettings = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
-                if (!string.IsNullOrEmpty(oldSettings.Password))
-                    model.Settings.Password = oldSettings.Password;
-
-                await _SettingsRepository.UpdateSetting(model.Settings);
-                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email settings saved"].Value;
-            }
-            return RedirectToAction(nameof(Emails));
         }
 
         [Route("server/logs/{file?}")]

@@ -1496,8 +1496,7 @@ namespace BTCPayServer.Tests
 
             await s.AddDerivationScheme();
             await s.GoToInvoices();
-            var sent = await s.Server.WaitForEvent<EmailSentEvent>(() => s.CreateInvoice(amount: 10m, currency: "USD"));
-            var message = await s.Server.AssertHasEmail(sent);
+            var message = await s.Server.AssertHasEmail(() => s.CreateInvoice(amount: 10m, currency: "USD"));
             Assert.Equal("Invoice has been created in USD for 10!", message.Text);
 
             await s.GoToUrl(rulesUrl);
@@ -1529,11 +1528,27 @@ namespace BTCPayServer.Tests
             });
 
             await s.GoToInvoices();
-            sent = await s.Server.WaitForEvent<EmailSentEvent>(() => s.CreateInvoice(amount: 10m, currency: "USD", refundEmail: "john@test.com"));
-            message = await s.Server.AssertHasEmail(sent);
+            message = await s.Server.AssertHasEmail(() => s.CreateInvoice(amount: 10m, currency: "USD", refundEmail: "john@test.com"));
             Assert.Equal("Invoice Created in USD for " + storeName + "!", message.Subject);
             Assert.Equal("Invoice has been created in USD for 10!", message.Text);
             Assert.Equal("john@test.com", message.To[0].Address);
+
+            await s.GoToServer(ServerNavPages.Emails);
+
+            await mailPMO.UseMailPit();
+            var rules = await mailPMO.ConfigureEmailRules();
+            await rules.CreateEmailRule();
+            await pmo.Fill(new()
+            {
+                Trigger = "SRV-PasswordReset",
+                HtmlBody = true,
+                Body = "<p>Hello, <a id=\"reset-link\" href=\"{ResetLink}\">click here</a> to reset the password</p>"
+            });
+            await s.Logout();
+            await s.Page.GetByRole(AriaRole.Link, new() { Name = "Forgot password?" }).ClickAsync();
+            await s.Page.FillAsync("#Email", s.CreatedUser);
+            message = await s.Server.AssertHasEmail(() => s.ClickPagePrimary());
+            Assert.Contains("<p>Hello, <a id=\"reset-link\" href=\"http://", message.Html);
         }
 
         [Fact]

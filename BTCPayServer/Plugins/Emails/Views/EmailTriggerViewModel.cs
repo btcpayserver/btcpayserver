@@ -20,4 +20,6 @@ public class EmailTriggerViewModel
     }
 
     public List<PlaceHolder> PlaceHolders { get; set; } = new();
+    public bool ServerTrigger { get; set; }
+    public string RecipientExample { get; set; }
 }

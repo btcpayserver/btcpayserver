@@ -16,6 +16,7 @@ public class StoreEmailRuleViewModel
     {
         if (data is not null)
         {
+            StoreId = data.StoreId;
             Data = data;
             OfferingId = data.OfferingId;
             AdditionalData = data.GetBTCPayAdditionalData() ?? new();
@@ -51,6 +52,7 @@ public class StoreEmailRuleViewModel
     public bool CanChangeTrigger { get; set; } = true;
     public bool CanChangeCondition { get; set; } = true;
     public string OfferingId { get; set; }
+    public string StoreId { get; set; }
 
     public string[] ToAsArray()
     => (To ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries)

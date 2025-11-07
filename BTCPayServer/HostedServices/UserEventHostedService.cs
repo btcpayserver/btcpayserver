@@ -1,8 +1,10 @@
+using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
+using BTCPayServer.Plugins.Emails;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Notifications;
@@ -10,6 +12,7 @@ using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices;
 
@@ -17,6 +20,7 @@ public class UserEventHostedService(
     EventAggregator eventAggregator,
     UserManager<ApplicationUser> userManager,
     CallbackGenerator callbackGenerator,
+    ISettingsAccessor<ServerSettings> serverSettings,
     EmailSenderFactory emailSenderFactory,
     NotificationSender notificationSender,
     StoreRepository storeRepository,
@@ -59,7 +63,7 @@ public class UserEventHostedService(
                 Logs.PayServer.LogInformation(newUserInfo);
 
                 // send notification if the user does not require email confirmation.
-                // inform admins only about qualified users and not annoy them with bot registrations. 
+                // inform admins only about qualified users and not annoy them with bot registrations.
                 if (requiresApproval && !requiresEmailConfirmation)
                 {
                     await NotifyAdminsAboutUserRequiringApproval(user, ev.ApprovalLink, newUserInfo);
@@ -79,9 +83,11 @@ public class UserEventHostedService(
                 break;
 
             case UserEvent.PasswordResetRequested pwResetEvent:
-                Logs.PayServer.LogInformation("User {Email} requested a password reset", user.Email);
-                emailSender = await emailSenderFactory.GetEmailSender();
-                emailSender.SendResetPassword(user.GetMailboxAddress(), pwResetEvent.ResetLink);
+                EventAggregator.Publish(CreateTriggerEvent(ServerMailTriggers.PasswordReset,
+                    new JObject()
+                    {
+                        ["ResetLink"] = HtmlEncoder.Default.Encode(pwResetEvent.ResetLink)
+                    }, user));
                 break;
 
             case UserEvent.Approved approvedEvent:
@@ -102,6 +108,23 @@ public class UserEventHostedService(
                 await NotifyAboutUserAcceptingInvite(user, inviteAcceptedEvent.StoreUsersLink);
                 break;
         }
+    }
+
+    private TriggerEvent CreateTriggerEvent(string trigger, JObject model, ApplicationUser user)
+    {
+        model["User"] = new JObject()
+        {
+            ["Name"] = user.UserName,
+            ["Email"] = user.Email,
+            ["MailboxAddress"] = user.GetMailboxAddress().ToString(),
+        };
+        model["Branding"] = new JObject()
+        {
+            ["ServerName"] = serverSettings.Settings.ServerName ?? "BTCPay Server",
+            ["ContactUrl"] = serverSettings.Settings.ContactUrl,
+        };
+         var evt = new TriggerEvent(null, trigger, model, null);
+        return evt;
     }
 
     private async Task NotifyAdminsAboutUserRequiringApproval(ApplicationUser user, string approvalLink, string newUserInfo)

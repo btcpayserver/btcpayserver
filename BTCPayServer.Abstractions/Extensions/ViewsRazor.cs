@@ -97,6 +97,7 @@ namespace BTCPayServer.Abstractions.Extensions
             return categoryAndPageMatch && idMatch;
         }
 
+        [Obsolete()]
         public static bool IsPageActive<T>(this ViewDataDictionary viewData, IEnumerable<T> pages, object id = null)
             where T : IConvertible
         {

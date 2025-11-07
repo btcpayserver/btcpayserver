@@ -45,16 +45,14 @@ namespace BTCPayServer.Hosting
 {
     public class Startup
     {
-        public Startup(IConfiguration conf, IWebHostEnvironment env, ILoggerFactory loggerFactory)
+        public Startup(IConfiguration conf, ILoggerFactory loggerFactory)
         {
             Configuration = conf;
-            _Env = env;
             LoggerFactory = loggerFactory;
             Logs = new Logs();
             Logs.Configure(loggerFactory);
         }
 
-        readonly IWebHostEnvironment _Env;
         public IConfiguration Configuration
         {
             get; set;
@@ -177,7 +175,6 @@ namespace BTCPayServer.Hosting
                 o.AreaViewLocationFormats.Add("/Plugins/{2}/Views/{1}/{0}.cshtml");
                 o.AreaViewLocationFormats.Add("/Plugins/{2}/Views/{0}.cshtml");
                 o.AreaViewLocationFormats.Add("/Plugins/{2}/Views/Shared/{0}.cshtml");
-
 
                 o.AreaViewLocationFormats.Add("/{0}.cshtml");
             })

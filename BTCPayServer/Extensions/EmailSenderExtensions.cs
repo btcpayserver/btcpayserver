@@ -34,12 +34,6 @@ namespace BTCPayServer.Services
                 $"Your account has been approved and you can now <a href='{HtmlEncoder.Default.Encode(link)}'>login here</a>."));
         }
 
-        public static void SendResetPassword(this IEmailSender emailSender, MailboxAddress address, string link)
-        {
-            emailSender.SendEmail(address, "Update Password", CreateEmailBody(
-                $"A request has been made to reset your BTCPay Server password. Please set your password by clicking below.<br/><br/>{CallToAction("Update Password", link)}"));
-        }
-
         public static void SendInvitation(this IEmailSender emailSender, MailboxAddress address, string link)
         {
             emailSender.SendEmail(address, "Invitation", CreateEmailBody(

@@ -16,6 +16,9 @@ using Microsoft.Extensions.Logging;
 
 [assembly: InternalsVisibleTo("BTCPayServer.Tests")]
 
+// This help JetBrains to find partial views referenced by views in plugins
+[assembly: JetBrains.Annotations.AspMvcAreaPartialViewLocationFormat("/Plugins/{2}/Views/Shared/{0}.cshtml")]
+
 namespace BTCPayServer
 {
     class Program

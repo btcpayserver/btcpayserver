@@ -25,7 +25,7 @@ namespace BTCPayServer.Tests
     public class PlaywrightTester : IAsyncDisposable
     {
         public Uri ServerUri;
-        private string CreatedUser;
+        public string CreatedUser;
         internal string InvoiceId;
         public Logging.ILog TestLogs => Server.TestLogs;
         public IPage Page { get; set; }
@@ -369,7 +369,11 @@ namespace BTCPayServer.Tests
         public async Task GoToServer(ServerNavPages navPages = ServerNavPages.Policies)
         {
             await Page.ClickAsync("#menu-item-Policies");
-            if (navPages != ServerNavPages.Policies)
+            if (navPages == ServerNavPages.Emails)
+            {
+                await Page.ClickAsync($"#menu-item-Server-{navPages}");
+            }
+            else if (navPages != ServerNavPages.Policies)
             {
                 await Page.ClickAsync($"#menu-item-{navPages}");
             }

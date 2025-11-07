@@ -3352,7 +3352,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("admin@admin.com", (await Assert.IsType<ServerEmailSender>(await emailSenderFactory.GetEmailSender()).GetEmailSettings()).Login);
             Assert.Null(await Assert.IsType<StoreEmailSender>(await emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings());
 
-            Assert.IsType<RedirectToActionResult>(await acc.GetController<UIStoresEmailController>().StoreEmailSettings(acc.StoreId, new EmailsViewModel(new EmailSettings
+            Assert.IsType<RedirectToActionResult>(await acc.GetController<UIServerEmailController>().ServerEmailSettings(new (new EmailSettings
             {
                 From = "store@store.com",
                 Login = "store@store.com",
@@ -3363,13 +3363,11 @@ namespace BTCPayServer.Tests
 
             Assert.Equal("store@store.com", (await Assert.IsType<StoreEmailSender>(await emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings()).Login);
 
-            var sent = await tester.WaitForEvent<Events.EmailSentEvent>(
-                async () =>
-                {
-                    var sender = await emailSenderFactory.GetEmailSender(acc.StoreId);
-                    sender.SendEmail(MailboxAddress.Parse("destination@test.com"), "test", "hello world");
-                });
-            var message = await tester.AssertHasEmail(sent);
+            var message = await tester.AssertHasEmail(async () =>
+            {
+                var sender = await emailSenderFactory.GetEmailSender(acc.StoreId);
+                sender.SendEmail(MailboxAddress.Parse("destination@test.com"), "test", "hello world");
+            });
             Assert.Equal("test", message.Subject);
             Assert.Equal("hello world", message.Text);
         }

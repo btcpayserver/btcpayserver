@@ -300,6 +300,12 @@ namespace BTCPayServer.Tests
             return await mailPitClient.GetMessage(sent.ServerResponse.Split(' ').Last());
         }
 
+        public async Task<MailPitClient.Message> AssertHasEmail(Func<Task> action)
+        {
+            var sent = await WaitForEvent<EmailSentEvent>(action);
+            return await AssertHasEmail(sent);
+        }
+
         public MailPitClient GetMailPitClient()
         {
             var http = PayTester.GetService<IHttpClientFactory>().CreateClient("MAIL_PIT");

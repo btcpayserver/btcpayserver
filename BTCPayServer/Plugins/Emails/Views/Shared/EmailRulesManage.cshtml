@@ -1,29 +1,52 @@
+@using BTCPayServer.Views.Server
 @model StoreEmailRuleViewModel
 
 @{
-    var storeId = Context.GetStoreData().Id;
+    var storeId = Model.StoreId;
     bool isEdit = Model.Trigger != null;
-    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Emails), StringLocalizer[isEdit ? "Edit Email Rule" : "Create Email Rule"])
-        .SetCategory(WellKnownCategories.Store));
+    if (storeId is not null)
+    {
+        ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Emails), StringLocalizer[isEdit ? "Edit Email Rule" : "Create Email Rule"])
+            .SetCategory(WellKnownCategories.Store));
+    }
+    else
+    {
+        ViewData.SetLayoutModel(new LayoutModel("Server-" + nameof(ServerNavPages.Emails), StringLocalizer[isEdit ? "Edit Email Rule" : "Create Email Rule"])
+            .SetCategory(WellKnownCategories.Server));
+    }
 }
 
 @section PageHeadContent {
     <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
 }
 
-<form method="post">
+<form id="save-form" method="post">
     <div class="sticky-header">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-controller="UIStoresEmail" asp-action="StoreEmailSettings" asp-route-storeId="@storeId" text-translate="true">Emails</a>
+                    @if (storeId is not null)
+                    {
+                        <a asp-controller="UIStoresEmail" asp-action="StoreEmailSettings" asp-route-storeId="@storeId" text-translate="true">Emails</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="UIServerEmail" asp-action="ServerEmailSettings" text-translate="true">Server Emails</a>
+                    }
                 </li>
                 <li class="breadcrumb-item">
-                    <a asp-action="StoreEmailRulesList" asp-route-storeId="@storeId" text-translate="true">Email Rules</a>
+                    @if (storeId is not null)
+                    {
+                        <a asp-action="StoreEmailRulesList" asp-route-storeId="@storeId" text-translate="true">Email Rules</a>
+                    }
+                    else
+                    {
+                        <a asp-action="ServerEmailRulesList" text-translate="true">Email Rules</a>
+                    }
                 </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData.GetTitle()</li>
             </ol>
-            <h2>@ViewData["Title"]</h2>
+            <h2>@ViewData.GetTitle()</h2>
         </nav>
         <div>
             <button id="page-primary" type="submit" class="btn btn-primary" text-translate="true">Save</button>
@@ -57,7 +80,7 @@
         <input type="hidden" asp-for="CanChangeCondition" ></input>
         @if (Model.CanChangeCondition)
         {
-            <input asp-for="Condition" class="form-control" placeholder="@StringLocalizer["A Postgres compatible JSON Path (eg. $.Offering.Id == \"john\")"]" />
+            <input asp-for="Condition" class="form-control" placeholder="@StringLocalizer["A Postgres compatible JSON Path (eg. $.Customer.Name == \"john\")"]" />
         }
         else
         {
@@ -115,6 +138,7 @@
 
             const triggerSelect = document.querySelector('.email-rule-trigger') ?? document.querySelector('.email-rule-trigger-hidden');
             const subjectInput = document.querySelector('.email-rule-subject');
+            const recipientInput = document.querySelector('.email-rule-to');
             const bodyTextarea = document.querySelector('.email-rule-body');
             const placeholdersTd = document.querySelector('#placeholders');
 
@@ -130,6 +154,9 @@
                 if (triggersByType[selectedTrigger]) {
                     if (isEmptyOrDefault(subjectInput.value, 'subjectExample')) {
                         subjectInput.value = triggersByType[selectedTrigger].subjectExample;
+                    }
+                    if (isEmptyOrDefault(recipientInput.value, 'recipientExample')) {
+                        recipientInput.value = triggersByType[selectedTrigger].recipientExample;
                     }
                     var body = triggersByType[selectedTrigger].bodyExample;
 

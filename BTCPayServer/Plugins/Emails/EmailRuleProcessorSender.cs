@@ -52,8 +52,7 @@ public class StoreEmailRuleProcessorSender(
         if (evt is TriggerEvent triggEvent)
         {
             await using var ctx = dbContextFactory.CreateContext();
-            var actionableRules = await ctx.EmailRules
-                .GetMatches(triggEvent.StoreId, triggEvent.Trigger, triggEvent.Model);
+            var actionableRules = await ctx.EmailRules.GetMatches(triggEvent.StoreId, triggEvent.Trigger, triggEvent.Model);
 
             if (actionableRules.Length > 0)
             {

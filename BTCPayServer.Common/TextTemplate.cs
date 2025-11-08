@@ -10,6 +10,9 @@ namespace BTCPayServer;
 public class TextTemplate(string template)
 {
     static readonly Regex _interpolationRegex = new Regex(@"\{([^}]+)\}", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    public Func<string, string> NotFoundReplacement { get; set; } = path => $"[NotFound({path})]";
+    public Func<string, string> ParsingErrorReplacement { get; set; } = path => $"[ParsingError({path})]";
+
     public string Render(JObject model)
     {
         model = (JObject)ToLowerCase(model);
@@ -23,11 +26,11 @@ public class TextTemplate(string template)
             try
             {
                 var token = model.SelectToken(path);
-                return token?.ToString() ?? $"<NotFound({initial})>";
+                return token?.ToString() ?? NotFoundReplacement(initial);
             }
             catch
             {
-                return $"<ParsingError({initial})>";
+                return ParsingErrorReplacement(initial);
             }
         });
     }

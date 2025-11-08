@@ -106,7 +106,9 @@ public class UIEmailRuleControllerBase(
             Subject = model.Subject,
             Condition = string.IsNullOrWhiteSpace(model.Condition) ? null : model.Condition,
             OfferingId = model.OfferingId,
-            To = model.ToAsArray()
+            To = model.AsArray(model.To),
+            CC = model.AsArray(model.CC),
+            BCC = model.AsArray(model.BCC),
         };
         c.SetBTCPayAdditionalData(model.AdditionalData);
         ctx.EmailRules.Add(c);
@@ -143,7 +145,9 @@ public class UIEmailRuleControllerBase(
 
         rule.Trigger = model.Trigger;
         rule.SetBTCPayAdditionalData(model.AdditionalData);
-        rule.To = model.ToAsArray();
+        rule.To = model.AsArray(model.To);
+        rule.CC = model.AsArray(model.CC);
+        rule.BCC = model.AsArray(model.BCC);
         rule.Subject = model.Subject;
         rule.Condition = model.Condition;
         rule.Body = model.Body;
@@ -170,6 +174,20 @@ public class UIEmailRuleControllerBase(
 
     protected async Task ValidateCondition(StoreEmailRuleViewModel model)
     {
+        string[] modelKeys = [nameof(model.To), nameof(model.CC), nameof(model.BCC)];
+        string[] values = [model.To, model.CC, model.BCC];
+        for (int i = 0; i < modelKeys.Length; i++)
+        {
+            try
+            {
+                model.AsArray(values[i]);
+            }
+            catch (FormatException)
+            {
+                ModelState.AddModelError(modelKeys[i], StringLocalizer["Invalid email address or placeholder detected"]);
+            }
+        }
+
         model.Condition = model.Condition?.Trim() ?? "";
         if (model.Condition.Length == 0)
             model.Condition = null;

@@ -280,10 +280,20 @@ namespace BTCPayServer.Migrations
                         .HasColumnName("additional_data")
                         .HasDefaultValueSql("'{}'::jsonb");
 
+                    b.Property<string[]>("BCC")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("bcc");
+
                     b.Property<string>("Body")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("body");
+
+                    b.Property<string[]>("CC")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("cc");
 
                     b.Property<string>("Condition")
                         .HasColumnType("text")

@@ -43,18 +43,17 @@ public class SubscriptionsPlugin : BaseBTCPayServerPlugin
 
         var placeHolders = new List<EmailTriggerViewModel.PlaceHolder>()
         {
-            new ("{Plan.Id}", "Plan ID"),
-            new ("{Plan.Name}", "Plan name"),
-            new ("{Offering.Name}", "Offering name"),
-            new ("{Offering.Id}", "Offering ID"),
-            new ("{Offering.AppId}", "Offering app ID"),
-            new ("{Offering.Metadata}*", "Offering metadata"),
-            new ("{Subscriber.Phase}", "Subscriber phase"),
-            new ("{Subscriber.Email}", "Subscriber email"),
-            new ("{Customer.ExternalRef}", "Customer external reference"),
-            new ("{Customer.Name}", "Customer name"),
-            new ("{Customer.Metadata}*", "Customer metadata")
-
+            new("{Plan.Id}", "Plan ID"),
+            new("{Plan.Name}", "Plan name"),
+            new("{Offering.Name}", "Offering name"),
+            new("{Offering.Id}", "Offering ID"),
+            new("{Offering.AppId}", "Offering app ID"),
+            new("{Offering.Metadata}*", "Offering metadata"),
+            new("{Subscriber.Phase}", "Subscriber phase"),
+            new("{Subscriber.Email}", "Subscriber email"),
+            new("{Customer.ExternalRef}", "Customer external reference"),
+            new("{Customer.Name}", "Customer name"),
+            new("{Customer.Metadata}*", "Customer metadata")
         }.AddStoresPlaceHolders();
 
         var viewModels = new List<EmailTriggerViewModel>()
@@ -63,72 +62,99 @@ public class SubscriptionsPlugin : BaseBTCPayServerPlugin
             {
                 Trigger = WebhookSubscriptionEvent.SubscriberCreated,
                 Description = "Subscription - New subscriber",
-                SubjectExample = "Welcome {Customer.Name}!",
-                BodyExample = "Hello {Customer.Name},\n\nThank you for subscribing to our service.\n\nRegards,\n{Store.Name}",
+                DefaultEmail = new()
+                {
+                    Subject = "Welcome {Customer.Name}!",
+                    Body = "Hello {Customer.Name},\n\nThank you for subscribing to our service.\n\nRegards,\n{Store.Name}"
+                },
                 PlaceHolders = placeHolders
             },
             new()
             {
                 Trigger = WebhookSubscriptionEvent.SubscriberCredited,
                 Description = "Subscription - Subscriber credited",
-                SubjectExample = "Your subscription has been credited",
-                BodyExample = "Hello {Customer.Name},\n\nYour subscription has been credited.\n\nRegards,\n{Store.Name}",
+                DefaultEmail = new()
+                {
+                    Subject = "Your subscription has been credited",
+                    Body = "Hello {Customer.Name},\n\nYour subscription has been credited.\n\nRegards,\n{Store.Name}"
+                },
                 PlaceHolders = placeHolders
             },
             new()
             {
                 Trigger = WebhookSubscriptionEvent.SubscriberCharged,
                 Description = "Subscription - Subscriber charged",
-                SubjectExample = "Your subscription payment has been processed",
-                BodyExample = "Hello {Customer.Name},\n\nYour subscription payment for {Plan.Name} has been processed.\n\nRegards,\n{Store.Name}",
+                DefaultEmail = new()
+                {
+                    Subject = "Your subscription payment has been processed",
+                    Body = "Hello {Customer.Name},\n\nYour subscription payment for {Plan.Name} has been processed.\n\nRegards,\n{Store.Name}"
+                },
                 PlaceHolders = placeHolders
             },
             new()
             {
                 Trigger = WebhookSubscriptionEvent.SubscriberActivated,
                 Description = "Subscription - Subscriber activated",
-                SubjectExample = "Your subscription is now active",
-                BodyExample = "Hello {Customer.Name},\n\nYour subscription to {Plan.Name} is now active.\n\nRegards,\n{Store.Name}",
+                DefaultEmail = new()
+                {
+                    Subject = "Your subscription is now active",
+                    Body = "Hello {Customer.Name},\n\nYour subscription to {Plan.Name} is now active.\n\nRegards,\n{Store.Name}"
+                },
                 PlaceHolders = placeHolders
             },
             new()
             {
                 Trigger = WebhookSubscriptionEvent.SubscriberPhaseChanged,
                 Description = "Subscription - Subscriber phase changed",
-                SubjectExample = "Your subscription phase has changed",
-                BodyExample = "Hello {Customer.Name},\n\nYour subscription phase has been updated to {Subscriber.Phase}.\n\nRegards,\n{Store.Name}",
+                DefaultEmail = new()
+                {
+                    Subject = "Your subscription phase has changed",
+                    Body = "Hello {Customer.Name},\n\nYour subscription phase has been updated to {Subscriber.Phase}.\n\nRegards,\n{Store.Name}"
+                },
                 PlaceHolders = placeHolders
             },
             new()
             {
                 Trigger = WebhookSubscriptionEvent.SubscriberDisabled,
                 Description = "Subscription - Subscriber disabled",
-                SubjectExample = "Your subscription has been disabled",
-                BodyExample = "Hello {Customer.Name},\n\nYour subscription has been disabled.\n\nRegards,\n{Store.Name}",
+                DefaultEmail = new()
+                {
+                    Subject = "Your subscription has been disabled",
+                    Body = "Hello {Customer.Name},\n\nYour subscription has been disabled.\n\nRegards,\n{Store.Name}"
+                },
                 PlaceHolders = placeHolders
             },
             new()
             {
                 Trigger = WebhookSubscriptionEvent.PaymentReminder,
                 Description = "Subscription - Payment reminder",
-                SubjectExample = "Payment reminder for your subscription",
-                BodyExample = "Hello {Customer.Name},\n\nThis is a reminder about your upcoming subscription payment.\n\nRegards,\n{Store.Name}",
+                DefaultEmail = new()
+                {
+                    Subject = "Payment reminder for your subscription",
+                    Body = "Hello {Customer.Name},\n\nThis is a reminder about your upcoming subscription payment.\n\nRegards,\n{Store.Name}"
+                },
                 PlaceHolders = placeHolders
             },
             new()
             {
                 Trigger = WebhookSubscriptionEvent.PlanStarted,
                 Description = "Subscription - Plan started",
-                SubjectExample = "Your subscription plan has started",
-                BodyExample = "Hello {Customer.Name},\n\nYour subscription plan {Plan.Name} has started.\n\nRegards,\n{Store.Name}",
+                DefaultEmail = new()
+                {
+                    Subject = "Your subscription plan has started",
+                    Body = "Hello {Customer.Name},\n\nYour subscription plan {Plan.Name} has started.\n\nRegards,\n{Store.Name}"
+                },
                 PlaceHolders = placeHolders
             },
             new()
             {
                 Trigger = WebhookSubscriptionEvent.SubscriberNeedUpgrade,
                 Description = "Subscription - Need upgrade",
-                SubjectExample = "Your subscription needs to be upgraded",
-                BodyExample = "Hello {Customer.Name},\n\nYour subscription needs to be upgraded to continue using our service.\n\nRegards,\n{Store.Name}",
+                DefaultEmail = new()
+                {
+                    Subject = "Your subscription needs to be upgraded",
+                    Body = "Hello {Customer.Name},\n\nYour subscription needs to be upgraded to continue using our service.\n\nRegards,\n{Store.Name}"
+                },
                 PlaceHolders = placeHolders
             },
         };
@@ -141,6 +167,7 @@ public class SubscriptionsAppType(
     IOptions<BTCPayServerOptions> btcPayServerOptions) : AppBaseType(AppType)
 {
     public const string AppType = "Subscriptions";
+
     public class AppConfig
     {
         public string OfferingId { get; set; } = null!;

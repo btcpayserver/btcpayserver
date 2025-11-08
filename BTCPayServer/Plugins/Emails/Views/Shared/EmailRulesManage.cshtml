@@ -91,11 +91,24 @@
         <div class="form-text" text-translate="true">Only send email when the specified JSON Path exists</div>
     </div>
 
+    @{
+        var placeholder = "\"John Smith\" <john.smith@example.com>, john.smith@example.com, {Placeholder}";
+    }
     <div class="form-group">
-        <label asp-for="To" class="form-label" text-translate="true">Recipients</label>
-        <input type="text" asp-for="To" class="form-control email-rule-to" />
+        <label asp-for="To" class="form-label" text-translate="true">To</label>
+        <input type="text" asp-for="To" placeholder="@placeholder" class="form-control email-rule-to" />
         <span asp-validation-for="To" class="text-danger"></span>
         <div class="form-text" text-translate="true">Who to send the email to. For multiple emails, separate with a comma.</div>
+    </div>
+    <div class="form-group">
+        <label asp-for="CC" class="form-label" text-translate="true">CC</label>
+        <input type="text" asp-for="CC" placeholder="@placeholder" class="form-control email-rule-cc" />
+        <span asp-validation-for="CC" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="BCC" class="form-label" text-translate="true">BCC</label>
+        <input type="text" asp-for="BCC" placeholder="@placeholder" class="form-control email-rule-bcc" />
+        <span asp-validation-for="BCC" class="text-danger"></span>
     </div>
 
     <div class="form-check mb-4 customer-email-container">
@@ -148,16 +161,23 @@
 
             const triggerSelect = document.querySelector('.email-rule-trigger') ?? document.querySelector('.email-rule-trigger-hidden');
             const subjectInput = document.querySelector('.email-rule-subject');
-            const recipientInput = document.querySelector('.email-rule-to');
+            const toInput = document.querySelector('.email-rule-to');
+            const ccInput = document.querySelector('.email-rule-cc');
+            const bccInput = document.querySelector('.email-rule-bcc');
             const bodyTextarea = document.querySelector('.email-rule-body');
             const placeholdersTd = document.querySelector('#placeholders');
 
+            function join(arr) {
+                return arr ? arr.join(', ') : '';
+            }
             function applyTemplate() {
                 const selectedTrigger = triggerSelect.value;
                 if (triggersByType[selectedTrigger]) {
-                    subjectInput.value = triggersByType[selectedTrigger].subjectExample;
-                    recipientInput.value = triggersByType[selectedTrigger].recipientExample;
-                    var body = triggersByType[selectedTrigger].bodyExample;
+                    subjectInput.value = triggersByType[selectedTrigger].defaultEmail.subject;
+                    toInput.value = join(triggersByType[selectedTrigger].defaultEmail.to);
+                    ccInput.value = join(triggersByType[selectedTrigger].defaultEmail.cc);
+                    bccInput.value = join(triggersByType[selectedTrigger].defaultEmail.bcc);
+                    var body = triggersByType[selectedTrigger].defaultEmail.body;
 
                     if ($(bodyTextarea).summernote) {
                         console.log(body);
@@ -166,7 +186,13 @@
                     } else {
                         bodyTextarea.value = body;
                     }
-
+                    applyPlaceholders();
+                }
+            }
+            function applyPlaceholders()
+            {
+                const selectedTrigger = triggerSelect.value;
+                if (triggersByType[selectedTrigger]) {
                     placeholdersTd.innerHTML = '';
                     triggersByType[selectedTrigger].placeHolders.forEach(p => {
                         const tr = document.createElement('tr');
@@ -180,7 +206,6 @@
                         tr.appendChild(td2);
                         placeholdersTd.appendChild(tr);
                     });
-
                 }
             }
 
@@ -204,6 +229,10 @@
                 if (@Safe.Json(!isEdit))
                 {
                     applyTemplate();
+                }
+                else
+                {
+                    applyPlaceholders();
                 }
                 toggleCustomerEmailVisibility();
             }

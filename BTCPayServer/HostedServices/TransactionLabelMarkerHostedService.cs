@@ -141,8 +141,8 @@ namespace BTCPayServer.HostedServices
                                 // if we the tx is matching some known address and utxo, we link them to this tx
                                 {
                                     if (walletObjectData.Value.Type is WalletObjectData.Types.Utxo or WalletObjectData.Types.Address)
-                                    links.Add(
-                                        WalletRepository.NewWalletObjectLinkData(txWalletObject, walletObjectData.Key));
+                                        links.Add(
+                                            WalletRepository.NewWalletObjectLinkData(txWalletObject, walletObjectData.Key));
                                 }
                                 // if the object is an address, we also link its labels (the ones added in the wallet receive page)
                                 {
@@ -154,7 +154,7 @@ namespace BTCPayServer.HostedServices
                                                 new WalletObjectId(wid, data.Type, data.Id));
                                         foreach (var label in labels)
                                         {
-											links.Add(WalletRepository.NewWalletObjectLinkData(label, txWalletObject));
+                                            links.Add(WalletRepository.NewWalletObjectLinkData(label, txWalletObject));
                                             var attachments = neighbours.Where(data => data.Type == label.Id);
                                             foreach (var attachment in attachments)
                                             {

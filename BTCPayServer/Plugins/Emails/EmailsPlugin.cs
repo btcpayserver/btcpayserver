@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Data;
 using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Plugins.Emails.Views;
 using BTCPayServer.Plugins.Webhooks;
@@ -21,6 +22,7 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
         services.AddSingleton<IDefaultTranslationProvider, EmailsTranslationProvider>();
         services.AddSingleton<IHostedService, StoreEmailRuleProcessorSender>();
         services.AddSingleton<IHostedService, UserEventHostedService>();
+        services.AddMigration<ApplicationDbContext, DefaultServerEmailRulesMigration>();
         RegisterServerEmailTriggers(services);
     }
     private static string BODY_STYLE = "font-family: Open Sans, Helvetica Neue,Arial,sans-serif; font-color: #292929;";

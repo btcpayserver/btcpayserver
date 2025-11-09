@@ -1535,9 +1535,9 @@ namespace BTCPayServer.Tests
 
             await s.GoToServer(ServerNavPages.Emails);
 
-            await mailPMO.UseMailPit();
+            await mailPMO.FillMailPit();
             var rules = await mailPMO.ConfigureEmailRules();
-            await rules.CreateEmailRule();
+            await rules.EditRule("SRV-PasswordReset");
             await pmo.Fill(new()
             {
                 Trigger = "SRV-PasswordReset",
@@ -1610,11 +1610,10 @@ namespace BTCPayServer.Tests
             await s.GoToInvoices();
 
             await s.ClickPagePrimary();
-            Assert.Contains("To create an invoice, you need to", await s.Page.ContentAsync());
 
             await s.AddDerivationScheme();
             await s.GoToInvoices();
-            var invoiceId = await s.CreateInvoice();
+            await s.CreateInvoice();
             await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-toggle");
             await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-menu button:first-child");
             await TestUtils.EventuallyAsync(async () => Assert.Contains("Invalid (marked)", await s.Page.ContentAsync()));

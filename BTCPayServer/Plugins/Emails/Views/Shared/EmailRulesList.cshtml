@@ -81,7 +81,7 @@ else
             <tbody>
             @foreach (var rule in Model.Rules)
             {
-                <tr>
+                <tr data-trigger="@rule.Trigger">
                     <td>@rule.Trigger</td>
                 @if (Model.ShowCustomerEmailColumn)
                     {
@@ -94,12 +94,12 @@ else
                         @if (storeId is not null)
                         {
 
-                            <a asp-action="StoreEmailRulesEdit" asp-route-storeId="@storeId" asp-route-ruleId="@rule.Data.Id">Edit</a>
+                            <a asp-action="StoreEmailRulesEdit" asp-route-storeId="@storeId" asp-route-ruleId="@rule.Data.Id" text-translate="true">Edit</a>
                             <a asp-action="StoreEmailRulesDelete" asp-route-storeId="@storeId" asp-route-ruleId="@rule.Data.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@ViewLocalizer["This action will remove the rule with the trigger <b>{0}</b>.", Html.Encode(rule.Trigger)]" data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Remove</a>
                         }
                         else
                         {
-                            <a asp-action="ServerEmailRulesEdit" asp-route-ruleId="@rule.Data.Id">Edit</a>
+                            <a asp-action="ServerEmailRulesEdit" asp-route-ruleId="@rule.Data.Id" text-translate="true">Edit</a>
                             <a asp-action="ServerEmailRulesDelete" asp-route-ruleId="@rule.Data.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@ViewLocalizer["This action will remove the rule with the trigger <b>{0}</b>.", Html.Encode(rule.Trigger)]" data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Remove</a>
                         }
                         </div >

@@ -180,7 +180,6 @@
                     var body = triggersByType[selectedTrigger].defaultEmail.body;
 
                     if ($(bodyTextarea).summernote) {
-                        console.log(body);
                         $(bodyTextarea).summernote('reset');
                         $(bodyTextarea).summernote('code', body.replace(/\n/g, '<br/>'));
                     } else {
@@ -213,7 +212,7 @@
                 const customerEmailContainer = document.querySelector('.customer-email-container');
                 const customerEmailCheckbox = document.querySelector('.customer-email-checkbox');
                 const selectedTrigger = triggerSelect.value;
-                if (triggersByType[selectedTrigger].canIncludeCustomerEmail) {
+                if (triggersByType[selectedTrigger].defaultEmail.canIncludeCustomerEmail) {
                     customerEmailContainer.style.display = 'block';
                 } else {
                     customerEmailContainer.style.display = 'none';

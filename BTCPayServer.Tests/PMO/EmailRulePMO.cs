@@ -10,6 +10,11 @@ public class EmailRulesPMO(PlaywrightTester s)
         await s.Page.ClickAsync("#CreateEmailRule");
         return new EmailRulePMO(s);
     }
+
+    public async Task EditRule(string trigger, int nth = 0)
+    {
+        await s.Page.ClickAsync($"tr[data-trigger='{trigger}']:nth-child({nth + 1}) a:has-text('Edit')");
+    }
 }
 
 public  class EmailRulePMO(PlaywrightTester s)

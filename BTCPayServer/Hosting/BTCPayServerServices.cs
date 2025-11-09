@@ -74,6 +74,7 @@ using ExchangeSharp;
 using Microsoft.Extensions.Localization;
 using Microsoft.AspNetCore.Mvc.Localization;
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Hosting
 {
@@ -96,6 +97,9 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<MvcNewtonsoftJsonOptions>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value);
             services.AddSingleton<JsonSerializerSettings>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value.SerializerSettings);
+
+            services.AddSingleton<IDbContextFactory<ApplicationDbContext>, ApplicationDbContextFactory>((provider) => provider.GetRequiredService<ApplicationDbContextFactory>());
+            services.AddSingleton<IMigrationExecutor, MigrationExecutor<ApplicationDbContext>>();
             services.AddDbContext<ApplicationDbContext>((provider, o) =>
             {
                 var factory = provider.GetRequiredService<ApplicationDbContextFactory>();

@@ -15,11 +15,6 @@ public class ConfigureEmailPMO(PlaywrightTester s)
         public string? Password { get; set; }
         public bool? EnabledCertificateCheck { get; set; }
     }
-    public async Task UseMailPit()
-    {
-        await s.Page.ClickAsync("#mailpit");
-        await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Info);
-    }
 
     public async Task<EmailRulesPMO> ConfigureEmailRules()
     {
@@ -27,14 +22,14 @@ public class ConfigureEmailPMO(PlaywrightTester s)
         return new EmailRulesPMO(s);
     }
 
-    public Task FillMailPit(Form form)
+    public Task FillMailPit(Form? form = null)
         => Fill(new()
         {
             Server =  s.Server.MailPitSettings.Hostname,
             Port = s.Server.MailPitSettings.SmtpPort,
-            From = form.From,
-            Login = form.Login,
-            Password = form.Password,
+            From = form?.From ?? "from@example.com",
+            Login = form?.Login ?? "login@example.com",
+            Password = form?.Password ?? "password",
             EnabledCertificateCheck = false,
         });
 

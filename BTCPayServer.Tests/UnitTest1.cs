@@ -3352,14 +3352,17 @@ namespace BTCPayServer.Tests
             Assert.Equal("admin@admin.com", (await Assert.IsType<ServerEmailSender>(await emailSenderFactory.GetEmailSender()).GetEmailSettings()).Login);
             Assert.Null(await Assert.IsType<StoreEmailSender>(await emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings());
 
-            Assert.IsType<RedirectToActionResult>(await acc.GetController<UIServerEmailController>().ServerEmailSettings(new (new EmailSettings
+            Assert.IsType<RedirectToActionResult>(await acc.GetController<UIStoresEmailController>().StoreEmailSettings(acc.StoreId, new(new()
             {
                 From = "store@store.com",
                 Login = "store@store.com",
                 Password = "store@store.com",
                 Port = tester.MailPitSettings.SmtpPort,
                 Server = tester.MailPitSettings.Hostname
-            }), ""));
+            })
+            {
+                IsCustomSMTP = true
+            }, ""));
 
             Assert.Equal("store@store.com", (await Assert.IsType<StoreEmailSender>(await emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings()).Login);
 
@@ -3370,6 +3373,26 @@ namespace BTCPayServer.Tests
             });
             Assert.Equal("test", message.Subject);
             Assert.Equal("hello world", message.Text);
+
+            // Configure at server level
+            Assert.IsType<RedirectToActionResult>(await acc.GetController<UIServerEmailController>().ServerEmailSettings(new(new()
+            {
+                From = "server@server.com",
+                Login = "server@server.com",
+                Password = "server@server.com",
+                Port = tester.MailPitSettings.SmtpPort,
+                Server = tester.MailPitSettings.Hostname
+            })
+            {
+                EnableStoresToUseServerEmailSettings = true
+            }, ""));
+
+            // The store should now use it
+            Assert.IsType<RedirectToActionResult>(await acc.GetController<UIStoresEmailController>().StoreEmailSettings(acc.StoreId, new(new())
+            {
+                IsCustomSMTP = false
+            }, ""));
+            Assert.Equal("server@server.com", (await Assert.IsType<StoreEmailSender>(await emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings()).Login);
         }
 
         [Fact(Timeout = TestUtils.TestTimeout)]

@@ -3245,33 +3245,23 @@ namespace BTCPayServer.Tests
             var unrestricted = await user.CreateClient(Policies.Unrestricted);
             var store1 = await unrestricted.CreateStore(new CreateStoreRequest { Name = "Store A" });
             await tester.PayTester.GetService<NotificationSender>()
-                .SendNotification(new UserScope(user.UserId), new InviteAcceptedNotification{
-                    UserId = user.UserId,
-                    UserEmail = user.Email,
-                    StoreId = store1.Id,
-                    StoreName = store1.Name
-                });
+                .SendNotification(new UserScope(user.UserId), new InvoiceEventNotification("aaaaaaaa", InvoiceEvent.Confirmed, store1.Id));
             notifications = (await client.GetNotifications()).ToList();
             Assert.Single(notifications);
 
             notification = notifications.First();
             Assert.Equal(store1.Id, notification.StoreId);
-            Assert.Equal($"User {user.Email} accepted the invite to {store1.Name}.", notification.Body);
+            Assert.Equal($"Invoice aaaaa.. is settled", notification.Body);
 
             var store2 = await unrestricted.CreateStore(new CreateStoreRequest { Name = "Store B" });
             await tester.PayTester.GetService<NotificationSender>()
-                .SendNotification(new UserScope(user.UserId), new InviteAcceptedNotification{
-                    UserId = user.UserId,
-                    UserEmail = user.Email,
-                    StoreId = store2.Id,
-                    StoreName = store2.Name
-                });
+                .SendNotification(new UserScope(user.UserId), new InvoiceEventNotification("baaaaaaa", InvoiceEvent.Confirmed, store2.Id));
             notifications = (await client.GetNotifications(storeId: [store2.Id])).ToList();
             Assert.Single(notifications);
 
             notification = notifications.First();
             Assert.Equal(store2.Id, notification.StoreId);
-            Assert.Equal($"User {user.Email} accepted the invite to {store2.Name}.", notification.Body);
+            Assert.Equal($"Invoice baaaa.. is settled", notification.Body);
 
             Assert.Equal(2, (await client.GetNotifications(storeId: [store1.Id, store2.Id])).Count());
             Assert.Equal(2, (await client.GetNotifications()).Count());
@@ -3280,25 +3270,25 @@ namespace BTCPayServer.Tests
             var settings = await client.GetNotificationSettings();
             Assert.True(settings.Notifications.Find(n => n.Identifier == "newversion").Enabled);
             Assert.True(settings.Notifications.Find(n => n.Identifier == "pluginupdate").Enabled);
-            Assert.True(settings.Notifications.Find(n => n.Identifier == "inviteaccepted").Enabled);
+            Assert.True(settings.Notifications.Find(n => n.Identifier == "invoicestate").Enabled);
 
             var request = new UpdateNotificationSettingsRequest { Disabled = ["newversion", "pluginupdate"] };
             settings = await client.UpdateNotificationSettings(request);
             Assert.False(settings.Notifications.Find(n => n.Identifier == "newversion").Enabled);
             Assert.False(settings.Notifications.Find(n => n.Identifier == "pluginupdate").Enabled);
-            Assert.True(settings.Notifications.Find(n => n.Identifier == "inviteaccepted").Enabled);
+            Assert.True(settings.Notifications.Find(n => n.Identifier == "invoicestate").Enabled);
 
             request = new UpdateNotificationSettingsRequest { Disabled = ["all"] };
             settings = await client.UpdateNotificationSettings(request);
             Assert.False(settings.Notifications.Find(n => n.Identifier == "newversion").Enabled);
             Assert.False(settings.Notifications.Find(n => n.Identifier == "pluginupdate").Enabled);
-            Assert.False(settings.Notifications.Find(n => n.Identifier == "inviteaccepted").Enabled);
+            Assert.False(settings.Notifications.Find(n => n.Identifier == "invoicestate").Enabled);
 
             request = new UpdateNotificationSettingsRequest { Disabled = [] };
             settings = await client.UpdateNotificationSettings(request);
             Assert.True(settings.Notifications.Find(n => n.Identifier == "newversion").Enabled);
             Assert.True(settings.Notifications.Find(n => n.Identifier == "pluginupdate").Enabled);
-            Assert.True(settings.Notifications.Find(n => n.Identifier == "inviteaccepted").Enabled);
+            Assert.True(settings.Notifications.Find(n => n.Identifier == "invoicestate").Enabled);
         }
 
         [Fact(Timeout = TestTimeout)]

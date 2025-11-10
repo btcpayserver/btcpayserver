@@ -27,22 +27,28 @@ public class MigrationExecutor<TDbContext>(
         var history = dbContext.Database.GetService<IHistoryRepository>();
         var appliedMigrations = (await history.GetAppliedMigrationsAsync(cancellationToken)).Select(m => m.MigrationId).ToHashSet();
         var insertedRows = new List<HistoryRow>();
-        foreach (var migration in migrations
-                     .Where(m => !appliedMigrations.Contains(m.MigrationId))
-                     .OrderBy(m => m.MigrationId))
-        {
-            logger.LogInformation("Applying migration '{MigrationId}'", migration.MigrationId);
-            await migration.MigrateAsync(dbContext, cancellationToken);
-            insertedRows.Add(new HistoryRow(migration.MigrationId, ProductInfo.GetVersion()));
-        }
-        if (insertedRows.Count > 0)
-        {
-            await dbContext.SaveChangesAsync(cancellationToken);
-            var insertMigrations =
-                string.Concat(insertedRows
-                    .Select(r => history.GetInsertScript(r))
-                    .ToArray());
-            await dbContext.Database.ExecuteSqlRawAsync(insertMigrations, cancellationToken);
-        }
+        var pending = migrations
+            .Where(m => !appliedMigrations.Contains(m.MigrationId))
+            .OrderBy(m => m.MigrationId)
+            .ToArray();
+        if (pending.Length == 0)
+            return;
+
+        await dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+            {
+                foreach (var migration in pending)
+                {
+                    logger.LogInformation("Applying migration '{MigrationId}'", migration.MigrationId);
+                    await migration.MigrateAsync(dbContext, cancellationToken);
+                    insertedRows.Add(new HistoryRow(migration.MigrationId, ProductInfo.GetVersion()));
+                }
+
+                await dbContext.SaveChangesAsync(cancellationToken);
+                var insertMigrations =
+                    string.Concat(insertedRows
+                        .Select(r => history.GetInsertScript(r))
+                        .ToArray());
+                await dbContext.Database.ExecuteSqlRawAsync(insertMigrations, cancellationToken);
+            });
     }
 }

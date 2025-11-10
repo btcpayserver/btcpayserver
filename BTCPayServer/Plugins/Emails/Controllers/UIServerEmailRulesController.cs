@@ -46,12 +46,13 @@ public class UIServerEmailRulesController(
             ModifyViewModel = (vm) =>
             {
                 vm.ShowCustomerEmailColumn = false;
+                vm.ModifyPermission = Policies.CanModifyServerSettings;
             },
             GetRule = (ctx, ruleId) => ctx.EmailRules.GetServerRule(ruleId),
-            RedirectToRuleList = GoToStoreServerRulesList
+            RedirectToRuleList = GoToServerRulesList
         };
 
-    private IActionResult GoToStoreServerRulesList(string redirectUrl)
+    private IActionResult GoToServerRulesList(string redirectUrl)
     {
         if (redirectUrl != null)
             return LocalRedirect(redirectUrl);
@@ -59,7 +60,6 @@ public class UIServerEmailRulesController(
     }
 
     [HttpGet("create")]
-    [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult ServerEmailRulesCreate(
         string trigger = null,
         string condition = null,
@@ -69,22 +69,18 @@ public class UIServerEmailRulesController(
 
 
     [HttpPost("create")]
-    [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public Task<IActionResult> ServerEmailRulesCreate(StoreEmailRuleViewModel model)
         => EmailRulesCreateCore(CreateContext(), model);
 
     [HttpGet("{ruleId}/edit")]
-    [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public Task<IActionResult> ServerEmailRulesEdit(long ruleId, string redirectUrl = null)
     => EmailRulesEditCore(CreateContext(), ruleId, redirectUrl);
 
     [HttpPost("{ruleId}/edit")]
-    [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public Task<IActionResult> ServerEmailRulesEdit(long ruleId, StoreEmailRuleViewModel model)
     => EmailRulesEditCore(CreateContext(), ruleId, model);
 
     [HttpPost("{ruleId}/delete")]
-    [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public Task<IActionResult> ServerEmailRulesDelete(long ruleId, string redirectUrl = null)
         => EmailRulesDeleteCore(CreateContext(), ruleId, redirectUrl);
 }

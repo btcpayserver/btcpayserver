@@ -1601,7 +1601,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        [Trait("UnitTest", "UnitTest")]
+        [Trait("FastTest", "FastTest")]
         public void TestMailTemplate()
         {
             var template = new TextTemplate("Hello mister {Name.Firstname} {Name.Lastname} !");
@@ -1639,7 +1639,7 @@ namespace BTCPayServer.Tests
                 }
             };
             result = template.Render(model);
-            Assert.Equal("Hello mister John <NotFound(Name.Lastname)> !", result);
+            Assert.Equal("Hello mister John [NotFound(Name.Lastname)] !", result);
 
             // Is Case insensitive
             model = new()
@@ -1650,7 +1650,7 @@ namespace BTCPayServer.Tests
                 }
             };
             result = template.Render(model);
-            Assert.Equal("Hello mister John <NotFound(Name.Lastname)> !", result);
+            Assert.Equal("Hello mister John [NotFound(Name.Lastname)] !", result);
 
             model = new()
             {

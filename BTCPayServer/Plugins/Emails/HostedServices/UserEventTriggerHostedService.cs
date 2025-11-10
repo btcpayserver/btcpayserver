@@ -23,9 +23,7 @@ public class UserEventHostedService(
     EventAggregator eventAggregator,
     UserManager<ApplicationUser> userManager,
     ISettingsAccessor<ServerSettings> serverSettings,
-    EmailSenderFactory emailSenderFactory,
     NotificationSender notificationSender,
-    StoreRepository storeRepository,
     Logs logs)
     : EventHostedServiceBase(eventAggregator, logs)
 {
@@ -42,7 +40,7 @@ public class UserEventHostedService(
         using var qrCodeData = qrGenerator.CreateQrCode(data, QRCodeGenerator.ECCLevel.Q);
         using var qrCode = new Base64QRCode(qrCodeData);
         var base64 = qrCode.GetGraphic(20);
-        return $"<img src='data:image/png;base64,{base64}' alt='{data}' width='320' height='320'/>";
+        return $"<img src='data:image/png;base64,{base64}' alt='{HtmlEncoder.Default.Encode(data)}' width='320' height='320'/>";
     }
 
     protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
@@ -99,18 +97,13 @@ public class UserEventHostedService(
                 EventAggregator.Publish(await CreateTriggerEvent(ServerMailTriggers.ApprovalConfirmed,
                     new JObject()
                     {
-                        ["LoginLink"] = approvedEvent.LoginLink
+                        ["LoginLink"] = HtmlEncoder.Default.Encode(approvedEvent.LoginLink)
                     }, user));
 
                 break;
 
             case UserEvent.ConfirmedEmail confirmedEvent when user is { RequiresApproval: true, Approved: false, EmailConfirmed: true }:
                 await NotifyAdminsAboutUserRequiringApproval(user, confirmedEvent.ApprovalLink);
-                break;
-
-            case UserEvent.InviteAccepted inviteAcceptedEvent:
-                Logs.PayServer.LogInformation("User {Email} accepted the invite", user.Email);
-                await NotifyAboutUserAcceptingInvite(user, inviteAcceptedEvent.StoreUsersLink);
                 break;
         }
     }
@@ -121,7 +114,7 @@ public class UserEventHostedService(
         EventAggregator.Publish(await CreateTriggerEvent(ServerMailTriggers.ApprovalRequest,
             new JObject()
             {
-                ["ApprovalLink"] = approvalLink
+                ["ApprovalLink"] = HtmlEncoder.Default.Encode(approvalLink)
             }, user));
     }
 
@@ -146,26 +139,5 @@ public class UserEventHostedService(
         };
          var evt = new TriggerEvent(null, trigger, model, null);
         return evt;
-    }
-    private async Task NotifyAboutUserAcceptingInvite(ApplicationUser user, string storeUsersLink)
-    {
-        var stores = await storeRepository.GetStoresByUserId(user.Id);
-        var notifyRoles = new[] { StoreRoleId.Owner, StoreRoleId.Manager };
-        foreach (var store in stores)
-        {
-            // notification
-            await notificationSender.SendNotification(new StoreScope(store.Id, notifyRoles), new InviteAcceptedNotification(user, store));
-            // email
-            var notifyUsers = await storeRepository.GetStoreUsers(store.Id, notifyRoles);
-            var link = string.Format(storeUsersLink, store.Id);
-            var emailSender = await emailSenderFactory.GetEmailSender(store.Id);
-            foreach (var storeUser in notifyUsers)
-            {
-                if (storeUser.Id == user.Id) continue; // do not notify the user itself (if they were added as owner or manager)
-                var notifyUser = await UserManager.FindByIdOrEmail(storeUser.Id);
-                var info = $"User {user.Email} accepted the invite to {store.StoreName}";
-                emailSender.SendUserInviteAcceptedInfo(notifyUser.GetMailboxAddress(), info, link);
-            }
-        }
     }
 }

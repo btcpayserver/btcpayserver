@@ -100,7 +100,7 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
             {
                 To = ["{User.MailboxAddress}"],
                 Subject = "Your account has been approved",
-                Body = CreateEmailBody($"Your account has been approved and you can now.<br/><br/>{CallToAction("Login here", "{LoginLink}")}"),
+                Body = CreateEmailBody($"Your account has been approved and you can now log in.<br/><br/>{CallToAction("Login here", "{LoginLink}")}"),
             },
             PlaceHolders = new()
             {
@@ -115,7 +115,7 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
             Trigger = ServerMailTriggers.ApprovalRequest,
             DefaultEmail = new()
             {
-                To = ["{Admin.MailboxAddresses}"],
+                To = ["{Admins.MailboxAddresses}"],
                 Subject = "Approval request to access the server for {User.Email}",
                 Body = CreateEmailBody($"A new user ({{User.MailboxAddress}}), is awaiting approval to access the server.<br/><br/>{CallToAction("Approve", "{ApprovalLink}")}"),
             },

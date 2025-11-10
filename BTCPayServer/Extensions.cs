@@ -460,7 +460,7 @@ namespace BTCPayServer
             where TMigration : MigrationBase<TDbContext>
         {
             services.TryAddSingleton<IMigrationExecutor, MigrationExecutor<TDbContext>>();
-            services.TryAddSingleton<MigrationBase<TDbContext>, TMigration>();
+            services.AddSingleton<MigrationBase<TDbContext>, TMigration>();
             return services;
         }
 

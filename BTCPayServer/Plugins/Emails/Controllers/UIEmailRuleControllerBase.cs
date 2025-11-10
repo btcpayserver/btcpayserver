@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
@@ -42,15 +43,13 @@ public class UIEmailRuleControllerBase(
     protected async Task<IActionResult> EmailRulesListCore(EmailsRuleControllerContext emailCtx)
     {
         await using var ctx = DbContextFactory.CreateContext();
-        var store = HttpContext.GetStoreData();
-        var configured = await emailSenderFactory.IsComplete(store.Id);
+        var configured = await emailSenderFactory.IsComplete(emailCtx.StoreId);
         if (!configured && !TempData.HasStatusMessage())
         {
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Warning,
-                Html = "You need to configure email settings before this feature works." +
-                       $" <a class='alert-link configure-email' href='{emailCtx.EmailSettingsLink}'>Configure email settings</a>."
+                Html = StringLocalizer["You need to configure email settings before this feature works. <a class='alert-link configure-email' href='{0}'>Configure email settings</a>.", HtmlEncoder.Default.Encode(emailCtx.EmailSettingsLink)]
             });
         }
 
@@ -126,7 +125,6 @@ public class UIEmailRuleControllerBase(
             return NotFound();
         return View("EmailRulesManage", new StoreEmailRuleViewModel(r, emailCtx.Triggers)
         {
-            OfferingId = emailCtx.StoreId,
             CanChangeTrigger = r.OfferingId is null,
             CanChangeCondition = r.OfferingId is null,
             RedirectUrl = redirectUrl

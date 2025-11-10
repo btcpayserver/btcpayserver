@@ -16,10 +16,6 @@ public class UserEvent(ApplicationUser user)
             return $"{base.ToString()} has been deleted";
         }
     }
-    public class InviteAccepted(ApplicationUser user, string storeUsersLink) : UserEvent(user)
-    {
-        public string StoreUsersLink { get; set; } = storeUsersLink;
-    }
     public class PasswordResetRequested(ApplicationUser user, string resetLink) : UserEvent(user)
     {
         public string ResetLink { get; } = resetLink;

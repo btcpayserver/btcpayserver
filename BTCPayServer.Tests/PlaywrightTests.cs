@@ -2464,9 +2464,8 @@ namespace BTCPayServer.Tests
             await s.Page.AssertNoError();
 
             await s.GoToStore(storeId, StoreNavPages.Dashboard);
-            await s.Page.WaitForLoadStateAsync();
+            await s.Page.WaitForSelectorAsync("#Dashboard");
             Assert.DoesNotContain("id=\"SetupGuide\"", await s.Page.ContentAsync());
-            Assert.True(await s.Page.Locator("#Dashboard").IsVisibleAsync());
 
             // setup offchain wallet
             await s.Page.Locator("#menu-item-LightningSettings-BTC").ClickAsync();

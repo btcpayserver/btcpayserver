@@ -2272,7 +2272,7 @@ namespace BTCPayServer.Tests
             var (_, storeId) = await s.CreateNewStore();
             await s.GoToStore();
             await s.GenerateWallet(isHotWallet: true);
-            await s.AddLightningNode("CLightning", false);
+            await s.AddLightningNode(LightningConnectionType.CLightning, false);
             await s.AddUserToStore(storeId, manager, "Manager");
             await s.AddUserToStore(storeId, employee, "Employee");
             await s.AddUserToStore(storeId, guest, "Guest");
@@ -2454,9 +2454,9 @@ namespace BTCPayServer.Tests
 
             // verify steps for wallet setup are displayed correctly
             await s.GoToStore(storeId, StoreNavPages.Dashboard);
-            Assert.True(await s.Page.Locator("#SetupGuide-StoreDone").IsVisibleAsync());
-            Assert.True(await s.Page.Locator("#SetupGuide-Wallet").IsVisibleAsync());
-            Assert.True(await s.Page.Locator("#SetupGuide-Lightning").IsVisibleAsync());
+            await s.Page.WaitForSelectorAsync("#SetupGuide-StoreDone");
+            await s.Page.WaitForSelectorAsync("#SetupGuide-Wallet");
+            await s.Page.WaitForSelectorAsync("#SetupGuide-Lightning");
 
             // setup onchain wallet
             await s.Page.Locator("#SetupGuide-Wallet").ClickAsync();
@@ -2464,6 +2464,7 @@ namespace BTCPayServer.Tests
             await s.Page.AssertNoError();
 
             await s.GoToStore(storeId, StoreNavPages.Dashboard);
+            await s.Page.WaitForLoadStateAsync();
             Assert.DoesNotContain("id=\"SetupGuide\"", await s.Page.ContentAsync());
             Assert.True(await s.Page.Locator("#Dashboard").IsVisibleAsync());
 
@@ -2471,8 +2472,7 @@ namespace BTCPayServer.Tests
             await s.Page.Locator("#menu-item-LightningSettings-BTC").ClickAsync();
             await s.AddLightningNode();
             await s.Page.AssertNoError();
-            var successAlert = await s.FindAlertMessage();
-            Assert.Contains("BTC Lightning node updated.", await successAlert.InnerTextAsync());
+            await s.FindAlertMessage(partialText: "BTC Lightning node updated.");
 
             // Only click on section links if they exist
             if (await s.Page.Locator("#SectionNav .nav-link").CountAsync() > 0)

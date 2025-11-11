@@ -323,7 +323,7 @@ namespace BTCPayServer.Tests
             await GoToUrl("/login");
         }
         public async Task Logout()
-        {
+        { 
             await Page.Locator("#menu-item-Account").ClickAsync();
             await Page.Locator("#Nav-Logout").ClickAsync();
         }

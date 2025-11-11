@@ -3,6 +3,20 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Tests.PMO;
 
+public class EmailRulesPMO(PlaywrightTester s)
+{
+    public async Task<EmailRulePMO> CreateEmailRule()
+    {
+        await s.Page.ClickAsync("#CreateEmailRule");
+        return new EmailRulePMO(s);
+    }
+
+    public async Task EditRule(string trigger, int nth = 0)
+    {
+        await s.Page.ClickAsync($"tr[data-trigger='{trigger}']:nth-child({nth + 1}) a:has-text('Edit')");
+    }
+}
+
 public  class EmailRulePMO(PlaywrightTester s)
 {
     public class Form
@@ -13,6 +27,7 @@ public  class EmailRulePMO(PlaywrightTester s)
         public string? Body { get; set; }
         public bool? CustomerEmail { get; set; }
         public string? Condition { get; set; }
+        public bool HtmlBody { get; set; }
     }
 
     public async Task Fill(Form form)
@@ -26,7 +41,18 @@ public  class EmailRulePMO(PlaywrightTester s)
         if (form.Subject is not null)
             await s.Page.FillAsync("#Subject", form.Subject);
         if (form.Body is not null)
-            await s.Page.Locator(".note-editable").FillAsync(form.Body);
+        {
+            if (form.HtmlBody)
+            {
+                await s.Page.ClickAsync(".btn-codeview");
+                await s.Page.FillAsync(".note-codable", form.Body);
+            }
+            else
+            {
+                await s.Page.FillAsync(".note-editable", form.Body);
+            }
+        }
+
         if (form.CustomerEmail is {} v)
             await s.Page.SetCheckedAsync("#AdditionalData_CustomerEmail", v);
         await s.ClickPagePrimary();

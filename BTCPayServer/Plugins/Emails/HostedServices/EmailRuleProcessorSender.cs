@@ -1,6 +1,8 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -10,7 +12,7 @@ using Microsoft.Extensions.Logging;
 using MimeKit;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Plugins.Emails;
+namespace BTCPayServer.Plugins.Emails.HostedServices;
 
 public interface ITriggerOwner
 {
@@ -30,9 +32,9 @@ public class EmailRuleMatchContext(
     public TriggerEvent TriggerEvent { get; } = triggerEvent;
     public EmailRuleData MatchedRule { get; } = matchedRule;
 
-    public List<MailboxAddress> Recipients { get; set; } = new();
-    public List<MailboxAddress> Cc { get; set; } = new();
-    public List<MailboxAddress> Bcc { get; set; } = new();
+    public List<MailboxAddress> To { get; set; } = new();
+    public List<MailboxAddress> CC { get; set; } = new();
+    public List<MailboxAddress> BCC { get; set; } = new();
 }
 
 public class StoreEmailRuleProcessorSender(
@@ -52,8 +54,7 @@ public class StoreEmailRuleProcessorSender(
         if (evt is TriggerEvent triggEvent)
         {
             await using var ctx = dbContextFactory.CreateContext();
-            var actionableRules = await ctx.EmailRules
-                .GetMatches(triggEvent.StoreId, triggEvent.Trigger, triggEvent.Model);
+            var actionableRules = await ctx.EmailRules.GetMatches(triggEvent.StoreId, triggEvent.Trigger, triggEvent.Model);
 
             if (actionableRules.Length > 0)
             {
@@ -64,25 +65,45 @@ public class StoreEmailRuleProcessorSender(
 
                     var body = new TextTemplate(actionableRule.Body ?? "");
                     var subject = new TextTemplate(actionableRule.Subject ?? "");
-                    matchedContext.Recipients.AddRange(
-                        actionableRule.To
-                        .Select(o =>
-                        {
-                            if (!MailboxAddressValidator.TryParse(o, out var oo))
-                            {
-                                MailboxAddressValidator.TryParse(new TextTemplate(o).Render(triggEvent.Model), out oo);
-                            }
-                            return oo;
-                        })
-                        .Where(o => o != null)!);
+                    AddToMatchedContext(triggEvent.Model, matchedContext.To, actionableRule.To);
+                    AddToMatchedContext(triggEvent.Model, matchedContext.CC, actionableRule.CC);
+                    AddToMatchedContext(triggEvent.Model, matchedContext.BCC, actionableRule.BCC);
 
                     if (triggEvent.Owner is not null)
                         await triggEvent.Owner.BeforeSending(matchedContext);
-                    if (matchedContext.Recipients.Count == 0)
+                    if (matchedContext.To.Count == 0)
                         continue;
-                    sender.SendEmail(matchedContext.Recipients.ToArray(), matchedContext.Cc.ToArray(), matchedContext.Bcc.ToArray(), subject.Render(triggEvent.Model), body.Render(triggEvent.Model));
+                    sender.SendEmail(matchedContext.To.ToArray(), matchedContext.CC.ToArray(), matchedContext.BCC.ToArray(), subject.Render(triggEvent.Model), body.Render(triggEvent.Model));
                 }
             }
         }
+    }
+
+    private void AddToMatchedContext(JObject model, List<MailboxAddress> mailboxAddresses, string[] rulesAddresses)
+    {
+        mailboxAddresses.AddRange(
+            rulesAddresses
+                .SelectMany(o =>
+                {
+                    var emails = new TextTemplate(o).Render(model);
+                    MailAddressCollection mailCollection = new();
+                    try
+                    {
+                        mailCollection.Add(emails);
+                    }
+                    catch (FormatException)
+                    {
+                        return Array.Empty<MailboxAddress>();
+                    }
+
+                    return mailCollection.Select(a =>
+                        {
+                            MailboxAddressValidator.TryParse(a.ToString(), out var oo);
+                            return oo;
+                        })
+                        .Where(a => a != null)
+                        .ToArray();
+                })
+                .Where(o => o != null)!);
     }
 }

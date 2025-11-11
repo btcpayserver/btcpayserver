@@ -36,6 +36,7 @@ using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -451,6 +452,15 @@ namespace BTCPayServer
         {
             services.TryAddSingleton<T>();
             services.AddTransient<ScheduledTask>(o => new ScheduledTask(typeof(T), every));
+            return services;
+        }
+
+        public static IServiceCollection AddMigration<TDbContext, TMigration>(this IServiceCollection services)
+            where TDbContext : DbContext
+            where TMigration : MigrationBase<TDbContext>
+        {
+            services.TryAddSingleton<IMigrationExecutor, MigrationExecutor<TDbContext>>();
+            services.AddSingleton<MigrationBase<TDbContext>, TMigration>();
             return services;
         }
 

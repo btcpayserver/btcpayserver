@@ -701,7 +701,6 @@ namespace BTCPayServer.Controllers
                         Severity = StatusMessageModel.StatusSeverity.Success,
                         Message = StringLocalizer["Your email has been confirmed."].Value
                     });
-                    await FinalizeInvitationIfApplicable(user);
                     return RedirectToAction(nameof(Login), new { email = user.Email });
                 }
 
@@ -809,8 +808,6 @@ namespace BTCPayServer.Controllers
                         : StringLocalizer["Account successfully created."].Value
                 });
 
-                if (!hasPassword) await FinalizeInvitationIfApplicable(user);
-
                 // see if we can sign in user after accepting an invitation and setting the password
                 if (needsInitialPassword && UserService.TryCanLogin(user, out _))
                 {
@@ -866,20 +863,7 @@ namespace BTCPayServer.Controllers
                 Severity = StatusMessageModel.StatusSeverity.Info,
                 Message = StringLocalizer["Your password has been set by the user who invited you."].Value
             });
-
-            await FinalizeInvitationIfApplicable(user);
             return RedirectToAction(nameof(Login), new { email = user.Email });
-        }
-
-        private async Task FinalizeInvitationIfApplicable(ApplicationUser user)
-        {
-            if (!_userManager.HasInvitationToken<ApplicationUser>(user)) return;
-
-            // This is a placeholder, the real storeIds will be set by the UserEventHostedService
-            var storeUsersLink = _callbackGenerator.StoreUsersLink("{0}", Request);
-            _eventAggregator.Publish(new UserEvent.InviteAccepted(user, storeUsersLink));
-            // unset used token
-            await _userManager.UnsetInvitationTokenAsync<ApplicationUser>(user.Id);
         }
 
         private async Task<IActionResult> RedirectToConfirmEmail(ApplicationUser user)

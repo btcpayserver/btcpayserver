@@ -314,7 +314,7 @@
                     <a layout-menu-item="@nameof(ServerNavPages.Roles)" asp-controller="UIServer" asp-action="ListRoles" text-translate="true">Roles</a>
                 </li>
                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
-                    <a layout-menu-item="Server-@nameof(ServerNavPages.Emails)" asp-controller="UIServer" asp-action="Emails" text-translate="true">Email</a>
+                    <a layout-menu-item="Server-@nameof(ServerNavPages.Emails)" asp-area="@EmailsPlugin.Area" asp-controller="UIServerEmail" asp-action="ServerEmailSettings" text-translate="true">Emails</a>
                 </li>
                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
                     <a layout-menu-item="@nameof(ServerNavPages.Services)" asp-controller="UIServer" asp-action="Services" text-translate="true">Services</a>

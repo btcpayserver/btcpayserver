@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Models;
 
 namespace BTCPayServer.Tests.PMO;
 
@@ -15,14 +16,20 @@ public class ConfigureEmailPMO(PlaywrightTester s)
         public bool? EnabledCertificateCheck { get; set; }
     }
 
-    public Task FillMailPit(Form form)
+    public async Task<EmailRulesPMO> ConfigureEmailRules()
+    {
+        await s.Page.ClickAsync("#ConfigureEmailRules");
+        return new EmailRulesPMO(s);
+    }
+
+    public Task FillMailPit(Form? form = null)
         => Fill(new()
         {
             Server =  s.Server.MailPitSettings.Hostname,
             Port = s.Server.MailPitSettings.SmtpPort,
-            From = form.From,
-            Login = form.Login,
-            Password = form.Password,
+            From = form?.From ?? "from@example.com",
+            Login = form?.Login ?? "login@example.com",
+            Password = form?.Password ?? "password",
             EnabledCertificateCheck = false,
         });
 

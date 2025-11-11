@@ -6,6 +6,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Plugins.Emails;
+using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Services.PaymentRequests;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
@@ -42,7 +43,7 @@ public class PaymentRequestTriggerProvider(LinkGenerator linkGenerator)
             context.MatchedRule.GetBTCPayAdditionalData()?.CustomerEmail is true &&
             MailboxAddressValidator.TryParse(email, out var mb))
         {
-            context.Recipients.Insert(0, mb);
+            context.To.Insert(0, mb);
         }
         return Task.CompletedTask;
     }

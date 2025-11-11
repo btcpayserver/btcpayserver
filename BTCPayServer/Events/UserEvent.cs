@@ -16,14 +16,16 @@ public class UserEvent(ApplicationUser user)
             return $"{base.ToString()} has been deleted";
         }
     }
-    public class InviteAccepted(ApplicationUser user, string storeUsersLink) : UserEvent(user)
-    {
-        public string StoreUsersLink { get; set; } = storeUsersLink;
-    }
     public class PasswordResetRequested(ApplicationUser user, string resetLink) : UserEvent(user)
     {
         public string ResetLink { get; } = resetLink;
     }
+
+    public class ConfirmationEmailRequested(ApplicationUser user, string confirmLink) : UserEvent(user)
+    {
+        public string ConfirmLink { get; } = confirmLink;
+    }
+
     public class Registered(ApplicationUser user, string approvalLink, string confirmationEmail) : UserEvent(user)
     {
         public string ApprovalLink { get; } = approvalLink;

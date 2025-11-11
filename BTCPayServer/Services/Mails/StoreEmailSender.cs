@@ -47,11 +47,7 @@ namespace BTCPayServer.Services.Mails
         EmailSettings? GetCustomSettings(StoreData store)
         {
             var emailSettings = store.GetStoreBlob().EmailSettings;
-            if (emailSettings?.IsComplete() is true)
-            {
-                return emailSettings;
-            }
-            return null;
+            return emailSettings?.IsComplete() is true ? emailSettings : null;
         }
     }
 }

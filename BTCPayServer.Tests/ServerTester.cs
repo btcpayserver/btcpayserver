@@ -20,6 +20,7 @@ using NBitpayClient;
 using NBXplorer;
 using BTCPayServer.Abstractions.Contracts;
 using System.Diagnostics.Metrics;
+using System.Threading;
 using BTCPayServer.Events;
 
 namespace BTCPayServer.Tests
@@ -49,7 +50,7 @@ namespace BTCPayServer.Tests
                 GetEnvironment("TESTS_MAILPIT_HOST", "127.0.0.1"),
                 int.Parse(GetEnvironment("TESTS_MAILPIT_SMTP", "34219")),
                 int.Parse(GetEnvironment("TESTS_MAILPIT_HTTP", "34218")));
-
+            TestLogs.LogInformation($"MailPit settings: http://{MailPitSettings.Hostname}:{MailPitSettings.HttpPort} (SMTP: {MailPitSettings.SmtpPort})");
             _NetworkProvider = networkProvider;
             ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_BTCRPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork);
             ExplorerNode.ScanRPCCapabilities();
@@ -198,6 +199,8 @@ namespace BTCPayServer.Tests
         public async Task<T> WaitForEvent<T>(Func<Task> action, Func<T, bool> correctEvent = null)
         {
             var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            await using var register = cts.Token.Register(() => tcs.TrySetCanceled());
             var sub = PayTester.GetService<EventAggregator>().SubscribeAny<T>(evt =>
             {
                 if (correctEvent is null)
@@ -298,6 +301,12 @@ namespace BTCPayServer.Tests
         {
             var mailPitClient = GetMailPitClient();
             return await mailPitClient.GetMessage(sent.ServerResponse.Split(' ').Last());
+        }
+
+        public async Task<MailPitClient.Message> AssertHasEmail(Func<Task> action)
+        {
+            var sent = await WaitForEvent<EmailSentEvent>(action);
+            return await AssertHasEmail(sent);
         }
 
         public MailPitClient GetMailPitClient()

@@ -2307,16 +2307,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        [Trait("FastTest", "FastTest")]
-        public void CanParseEmailDestination()
-        {
-            var vm = new StoreEmailRuleViewModel();
-            var actual = vm.AsArray("\"Nicolas, The, Great\" <emperor@btc.pay>,{SomeTemplate} ,\"Madd,Test\" <madd@example.com>");
-            string[] expected = ["\"Nicolas, The, Great\" <emperor@btc.pay>", "{SomeTemplate}", "\"Madd,Test\" <madd@example.com>"];
-            Assert.Equal(expected, actual);
-        }
-
-        [Fact]
         [Trait("Altcoins", "Altcoins")]
         public void CanCalculateCryptoDue2()
         {

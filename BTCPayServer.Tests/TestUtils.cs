@@ -14,6 +14,7 @@ namespace BTCPayServer.Tests
 {
     public static class TestUtils
     {
+        public const int LongRunningTestTimeout = 60_000; // 60s
 #if DEBUG && !SHORT_TIMEOUT
         public const int TestTimeout = 600_000;
 #else
@@ -47,10 +48,7 @@ namespace BTCPayServer.Tests
         }
 
         public static T AssertType<T>(this object obj)
-        {
-            Assert.IsType<T>(obj);
-            return (T)obj;
-        }
+            => Assert.IsType<T>(obj);
 
         public static FormFile GetFormFile(string filename, string content)
         {

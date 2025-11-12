@@ -21,7 +21,7 @@ using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.Mails;
+using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Services;
 using BTCPayServer.Storage.Services.Providers;

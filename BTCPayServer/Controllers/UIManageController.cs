@@ -11,7 +11,7 @@ using BTCPayServer.Fido2;
 using BTCPayServer.Models.ManageViewModels;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Mails;
+using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;

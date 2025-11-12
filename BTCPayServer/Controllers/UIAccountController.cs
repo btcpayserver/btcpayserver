@@ -15,7 +15,7 @@ using BTCPayServer.Filters;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Mails;
+using BTCPayServer.Plugins.Emails.Services;
 using Fido2NetLib;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;

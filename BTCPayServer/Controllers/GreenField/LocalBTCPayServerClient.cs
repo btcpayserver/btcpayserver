@@ -15,7 +15,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Plugins.Webhooks.Controllers;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Greenfield;
-using BTCPayServer.Services.Mails;
+using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;

@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using BTCPayServer.Services.Mails;
+using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Validation;
 
 namespace BTCPayServer.Plugins.Emails.Views;

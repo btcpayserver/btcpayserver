@@ -8,12 +8,9 @@ using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
-using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using QRCoder;
 

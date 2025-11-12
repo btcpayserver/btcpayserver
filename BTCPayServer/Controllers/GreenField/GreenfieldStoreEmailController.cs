@@ -5,7 +5,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Services.Mails;
+using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -72,7 +72,7 @@ namespace BTCPayServer.Controllers.GreenField
         {
             if (!string.IsNullOrWhiteSpace(request.From) && !MailboxAddressValidator.IsMailboxAddress(request.From))
                 ModelState.AddModelError(nameof(request.From), "Invalid email address");
-            
+
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 

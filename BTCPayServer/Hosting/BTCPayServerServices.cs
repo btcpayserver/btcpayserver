@@ -94,6 +94,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<ViewLocalizer>();
             services.TryAddSingleton<IStringLocalizer>(o => o.GetRequiredService<IStringLocalizerFactory>().Create("",""));
             services.TryAddSingleton<DelayedTaskScheduler>();
+            services.TryAddSingleton<UIExtensionsRegistry>();
 
             services.AddSingleton<MvcNewtonsoftJsonOptions>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value);
             services.AddSingleton<JsonSerializerSettings>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value.SerializerSettings);

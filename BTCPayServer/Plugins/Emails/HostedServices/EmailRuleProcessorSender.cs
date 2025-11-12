@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
-using BTCPayServer.Services.Mails;
+using BTCPayServer.Plugins.Emails.Services;
 using Microsoft.Extensions.Logging;
 using MimeKit;
 using Newtonsoft.Json.Linq;

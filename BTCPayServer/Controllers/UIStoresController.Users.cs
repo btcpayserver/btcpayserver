@@ -10,12 +10,9 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Security;
-using BTCPayServer.Services;
-using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Localization;
 using NicolasDorier.RateLimits;
 using static BTCPayServer.Services.Stores.StoreRepository;
 

@@ -16,6 +16,7 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payouts;
 using BTCPayServer.Plugins.Crowdfund;
+using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -593,7 +594,7 @@ namespace BTCPayServer.Hosting
         private async Task MigrateEmailServerDisableTLSCerts()
         {
             await using var ctx = _DBContextFactory.CreateContext();
-            var serverEmailSettings = await _Settings.GetSettingAsync<Services.Mails.EmailSettings>();
+            var serverEmailSettings = await _Settings.GetSettingAsync<EmailSettings>();
             if (serverEmailSettings?.Server is String server)
             {
                 serverEmailSettings.DisableCertificateCheck = Extensions.IsLocalNetwork(server);

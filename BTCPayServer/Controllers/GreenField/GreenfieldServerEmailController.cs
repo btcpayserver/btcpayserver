@@ -1,17 +1,14 @@
 #nullable enable
-using System;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Mails;
+using BTCPayServer.Plugins.Emails.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -30,7 +27,7 @@ namespace BTCPayServer.Controllers.GreenField
             _policiesSettings = policiesSettings;
             _settingsRepository = settingsRepository;
         }
-        
+
         private ServerEmailSettingsData ToApiModel(EmailSettings email)
         {
             var data = email.ToData<ServerEmailSettingsData>();
@@ -52,7 +49,7 @@ namespace BTCPayServer.Controllers.GreenField
         {
             if (!string.IsNullOrWhiteSpace(request.From) && !MailboxAddressValidator.IsMailboxAddress(request.From))
                 ModelState.AddModelError(nameof(request.From), "Invalid email address");
-            
+
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 

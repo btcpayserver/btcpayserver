@@ -94,6 +94,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Folder Include="Plugins\Emails\Mails\" />
 	  <Folder Include="wwwroot\vendor\bootstrap" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	  <Folder Include="wwwroot\vendor\highlightjs\" />

@@ -7,8 +7,8 @@ using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.Client.Models;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Rating;
-using BTCPayServer.Services.Mails;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

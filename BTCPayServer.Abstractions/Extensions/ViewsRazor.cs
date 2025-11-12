@@ -104,11 +104,13 @@ namespace BTCPayServer.Abstractions.Extensions
             return pages.Any(page => ActivePageClass(viewData, page.ToString(), page.GetType().ToString(), id) == ACTIVE_CLASS);
         }
 
+        [Obsolete("Use IsCategory instead")]
         public static string ActiveCategoryClass<T>(this ViewDataDictionary viewData, T category, object id = null)
         {
             return ActiveCategoryClass(viewData, category.ToString(), id);
         }
 
+        [Obsolete("Use IsCategory instead")]
         public static string ActiveCategoryClass(this ViewDataDictionary viewData, string category, object id = null)
         {
             return IsCategoryActive(viewData, category, id) ? ACTIVE_CLASS : null;

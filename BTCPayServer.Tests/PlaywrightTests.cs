@@ -2463,6 +2463,124 @@ namespace BTCPayServer.Tests
             Assert.Equal(spentOutpoint, tx.Inputs[0].PrevOut);
         }
 
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanAccessUserStoreAsAdmin()
+        {
+            await using var s = CreatePlaywrightTester(newDb: true);
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+            await s.Server.EnsureChannelsSetup();
+
+            // Setup user, store and wallets
+            await s.RegisterNewUser();
+            var (_, storeId) = await s.CreateNewStore();
+            await s.GoToStore();
+            await s.GenerateWallet(isHotWallet: true);
+            await s.AddLightningNode(LightningConnectionType.CLightning, false);
+
+            // Add apps
+            await s.CreateApp("PointOfSale");
+            await s.CreateApp("Crowdfund");
+            await s.Logout();
+
+            // Setup admin and check access
+            await s.GoToRegister();
+            await s.RegisterNewUser(true);
+            string GetStorePath(string subPath) => $"/stores/{storeId}/{subPath}";
+
+            // Admin access
+            await s.AssertPageAccess(false, GetStorePath(""));
+            await s.AssertPageAccess(true, GetStorePath("reports"));
+            await s.AssertPageAccess(true, GetStorePath("invoices"));
+            await s.AssertPageAccess(false, GetStorePath("invoices/create"));
+            await s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            await s.AssertPageAccess(false, GetStorePath("payment-requests/edit"));
+            await s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            await s.AssertPageAccess(true, GetStorePath("payouts"));
+            await s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
+            await s.AssertPageAccess(false, GetStorePath("onchain/BTC/settings"));
+            await s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
+            await s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
+            await s.AssertPageAccess(false, GetStorePath("apps/create"));
+
+            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks",
+                "payout-processors", "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC",
+                "emails/rules", "email-settings", "forms"};
+            foreach (var path in storeSettingsPaths)
+            {   // should have view access to settings, but no submit buttons or create links
+                s.TestLogs.LogInformation($"Checking access to store page {path} as admin");
+                await s.AssertPageAccess(true, $"stores/{storeId}/{path}");
+                if (path != "payout-processors")
+                {
+                    Assert.Equal(0, await s.Page.Locator("#mainContent .btn-primary").CountAsync());
+                }
+            }
+        }
+
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        public async Task CanChangeUserRoles()
+        {
+            await using var s = CreatePlaywrightTester(newDb: true);
+            await s.StartAsync();
+
+            // Setup users and store
+            var employee = await s.RegisterNewUser();
+            await s.GoToHome();
+            await s.Logout();
+            await s.GoToRegister();
+            var owner = await s.RegisterNewUser(true);
+            var (_, storeId) = await s.CreateNewStore();
+            await s.GoToStore();
+            await s.AddUserToStore(storeId, employee, "Employee");
+
+            // Should successfully change the role
+            var userRows = await s.Page.Locator("#StoreUsersList tr").AllAsync();
+            Assert.Equal(2, userRows.Count);
+            ILocator employeeRow = null;
+            foreach (var row in userRows)
+            {
+                if ((await row.InnerTextAsync()).Contains(employee, StringComparison.InvariantCultureIgnoreCase)) employeeRow = row;
+            }
+            Assert.NotNull(employeeRow);
+            await employeeRow.Locator("a[data-bs-target='#EditModal']").ClickAsync();
+            Assert.Equal(employee, await s.Page.InnerTextAsync("#EditUserEmail"));
+            await s.Page.SelectOptionAsync("#EditUserRole", "Manager");
+            await s.Page.ClickAsync("#EditContinue");
+            await s.FindAlertMessage(partialText: $"The role of {employee} has been changed to Manager.");
+
+            // Should not see a message when not changing role
+            userRows = await s.Page.Locator("#StoreUsersList tr").AllAsync();
+            Assert.Equal(2, userRows.Count);
+            employeeRow = null;
+            foreach (var row in userRows)
+            {
+                if ((await row.InnerTextAsync()).Contains(employee, StringComparison.InvariantCultureIgnoreCase)) employeeRow = row;
+            }
+            Assert.NotNull(employeeRow);
+            await employeeRow.Locator("a[data-bs-target='#EditModal']").ClickAsync();
+            Assert.Equal(employee, await s.Page.InnerTextAsync("#EditUserEmail"));
+            await s.Page.ClickAsync("#EditContinue");
+            await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error, "The user already has the role Manager.");
+
+            // Should not change last owner
+            userRows = await s.Page.Locator("#StoreUsersList tr").AllAsync();
+            Assert.Equal(2, userRows.Count);
+            ILocator ownerRow = null;
+            foreach (var row in userRows)
+            {
+                if ((await row.InnerTextAsync()).Contains(owner, StringComparison.InvariantCultureIgnoreCase)) ownerRow = row;
+            }
+            Assert.NotNull(ownerRow);
+            await ownerRow.Locator("a[data-bs-target='#EditModal']").ClickAsync();
+            Assert.Equal(owner, await s.Page.InnerTextAsync("#EditUserEmail"));
+            await s.Page.SelectOptionAsync("#EditUserRole", "Employee");
+            await s.Page.ClickAsync("#EditContinue");
+            await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error, "The user is the last owner. Their role cannot be changed.");
+        }
+
     }
 }
 

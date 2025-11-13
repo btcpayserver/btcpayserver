@@ -2528,6 +2528,7 @@ namespace BTCPayServer.Tests
 
             // Setup users and store
             var employee = await s.RegisterNewUser();
+            await s.GoToHome();
             await s.Logout();
             await s.GoToRegister();
             var owner = await s.RegisterNewUser(true);

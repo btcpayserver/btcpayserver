@@ -2546,8 +2546,8 @@ namespace BTCPayServer.Tests
             }
             Assert.NotNull(employeeRow);
             await employeeRow.Locator("a[data-bs-target='#EditModal']").ClickAsync();
-            Assert.Equal(employee, await s.Page.Locator("#EditUserEmail").InnerTextAsync());
-            await s.Page.Locator("#EditUserRole").SelectOptionAsync("Manager");
+            Assert.Equal(employee, await s.Page.InnerTextAsync("#EditUserEmail"));
+            await s.Page.SelectOptionAsync("#EditUserRole", "Manager");
             await s.Page.ClickAsync("#EditContinue");
             await s.FindAlertMessage(partialText: $"The role of {employee} has been changed to Manager.");
 
@@ -2561,7 +2561,7 @@ namespace BTCPayServer.Tests
             }
             Assert.NotNull(employeeRow);
             await employeeRow.Locator("a[data-bs-target='#EditModal']").ClickAsync();
-            Assert.Equal(employee, await s.Page.Locator("#EditUserEmail").InnerTextAsync());
+            Assert.Equal(employee, await s.Page.InnerTextAsync("#EditUserEmail"));
             await s.Page.ClickAsync("#EditContinue");
             await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error, "The user already has the role Manager.");
 
@@ -2575,8 +2575,8 @@ namespace BTCPayServer.Tests
             }
             Assert.NotNull(ownerRow);
             await ownerRow.Locator("a[data-bs-target='#EditModal']").ClickAsync();
-            Assert.Equal(owner, await s.Page.Locator("#EditUserEmail").InnerTextAsync());
-            await s.Page.Locator("#EditUserRole").SelectOptionAsync("Employee");
+            Assert.Equal(owner, await s.Page.InnerTextAsync("#EditUserEmail"));
+            await s.Page.SelectOptionAsync("#EditUserRole", "Employee");
             await s.Page.ClickAsync("#EditContinue");
             await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error, "The user is the last owner. Their role cannot be changed.");
         }

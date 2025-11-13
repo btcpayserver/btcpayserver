@@ -2548,8 +2548,8 @@ namespace BTCPayServer.Tests
             await employeeRow.Locator("a[data-bs-target='#EditModal']").ClickAsync();
             Assert.Equal(employee, await s.Page.Locator("#EditUserEmail").InnerTextAsync());
             await s.Page.Locator("#EditUserRole").SelectOptionAsync("Manager");
-            await s.Page.Locator("#EditContinue").ClickAsync();
-            Assert.Contains($"The role of {employee} has been changed to Manager.", await (await s.FindAlertMessage()).InnerTextAsync());
+            await s.Page.ClickAsync("#EditContinue");
+            await s.FindAlertMessage(partialText: $"The role of {employee} has been changed to Manager.");
 
             // Should not see a message when not changing role
             userRows = await s.Page.Locator("#StoreUsersList tr").AllAsync();
@@ -2562,8 +2562,8 @@ namespace BTCPayServer.Tests
             Assert.NotNull(employeeRow);
             await employeeRow.Locator("a[data-bs-target='#EditModal']").ClickAsync();
             Assert.Equal(employee, await s.Page.Locator("#EditUserEmail").InnerTextAsync());
-            await s.Page.Locator("#EditContinue").ClickAsync();
-            Assert.Contains("The user already has the role Manager.", await (await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error)).InnerTextAsync());
+            await s.Page.ClickAsync("#EditContinue");
+            await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error, "The user already has the role Manager.");
 
             // Should not change last owner
             userRows = await s.Page.Locator("#StoreUsersList tr").AllAsync();
@@ -2577,8 +2577,8 @@ namespace BTCPayServer.Tests
             await ownerRow.Locator("a[data-bs-target='#EditModal']").ClickAsync();
             Assert.Equal(owner, await s.Page.Locator("#EditUserEmail").InnerTextAsync());
             await s.Page.Locator("#EditUserRole").SelectOptionAsync("Employee");
-            await s.Page.Locator("#EditContinue").ClickAsync();
-            Assert.Contains("The user is the last owner. Their role cannot be changed.", await (await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error)).InnerTextAsync());
+            await s.Page.ClickAsync("#EditContinue");
+            await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error, "The user is the last owner. Their role cannot be changed.");
         }
 
     }

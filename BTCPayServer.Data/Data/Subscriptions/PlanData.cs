@@ -119,6 +119,8 @@ public class PlanData : BaseEntityData
 
     public PlanEntitlementData? GetEntitlement(long entitmentId)
         => PlanEntitlements.FirstOrDefault(p => p.EntitlementId == entitmentId);
+    public PlanEntitlementData? GetEntitlement(string entitmentCustomId)
+        => PlanEntitlements.FirstOrDefault(p => p.Entitlement.CustomId == entitmentCustomId);
     public string[] GetEntitlementIds()
         => PlanEntitlements.Select(p => p.Entitlement.CustomId).ToArray();
 }

@@ -27,6 +27,7 @@ namespace BTCPayServer.Plugins.Monetization.Controllers;
 [Area(MonetizationPlugin.Area)]
 public class UIServerMonetizationController(
     ApplicationDbContextFactory contextFactory,
+    MonetizationHostedService monetizationService,
     LinkGenerator linkGenerator,
     SettingsRepository settingsRepository,
     AppService appService,
@@ -55,7 +56,27 @@ public class UIServerMonetizationController(
             .Where(o => o.App.StoreDataId == storeId && !o.App.Archived)
             .OrderBy(o => o.App.Name)
             .ToListAsync();
+
+        var offering = offerings?.FirstOrDefault(o => o.Id == settings?.OfferingId);
+        var activePlans = offering?.Plans.Where(p => p.Status == PlanData.PlanStatus.Active).ToArray() ?? [];
+        var defaultPlan = activePlans.FirstOrDefault(p => p.Id == settings?.DefaultPlanId);
+        HashSet<string> canLogin = new();
+        if (offering is not null)
+        {
+            var planIds = activePlans.Select(p => p.Id).Distinct().ToArray();
+            canLogin = (await ctx.PlanEntitlements.Where(p => planIds.Contains(p.PlanId))
+                .Where(o => o.Entitlement.CustomId == MonetizationEntitlments.CanLogin)
+                .Select(o => o.PlanId)
+                .ToArrayAsync()).ToHashSet();
+        }
+
+        string GetLabel(PlanData p) => canLogin.Contains(p.Id) ? StringLocalizer["{0} (Can login)", p.Name] : p.Name;
         vm.ActivateModal = new ActivateMonetizationModelViewModel(settings, offerings);
+        vm.MigrateUsersModal = new MigrateUsersModalViewModel()
+        {
+            AvailablePlans = activePlans.OrderBy(p => p.Name).Select(p => new SelectListItem(GetLabel(p), p.Id)).ToList() ?? [],
+            SelectedPlanId = defaultPlan?.Id ?? ""
+        };
         return View(vm);
     }
 
@@ -118,7 +139,7 @@ public class UIServerMonetizationController(
                 };
                 ctx.Plans.Add(freePlan);
                 ctx.PlanEntitlements.AddRange(
-                    new[] { "can-login", "one-store" }
+                    new[] { MonetizationEntitlments.CanLogin, "one-store" }
                         .Select(e => new PlanEntitlementData()
                         {
                             Plan = freePlan,
@@ -136,7 +157,7 @@ public class UIServerMonetizationController(
                 };
                 ctx.Plans.Add(paidPlan);
                 ctx.PlanEntitlements.AddRange(
-                    new[] { "can-login", "one-store", "unlimited-store" }
+                    new[] { MonetizationEntitlments.CanLogin, "one-store", "unlimited-store" }
                         .Select(e => new PlanEntitlementData()
                         {
                             Plan = paidPlan,
@@ -162,6 +183,17 @@ public class UIServerMonetizationController(
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
         }
+        else if (command == "migrate-users")
+        {
+            var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>() ?? new();
+            var plan = await ctx.Plans.GetPlanFromId(vm.MigrateUsersModal?.SelectedPlanId ?? "");
+            var count = await monetizationService.MigrateUsers(settings.OfferingId, vm.MigrateUsersModal?.SelectedPlanId);
+            TempData.SetStatusMessageModel(new()
+            {
+                Message = StringLocalizer["{0} users migrated to the plan '{1}'.", count, plan?.Name ?? ""],
+                Severity = StatusMessageModel.StatusSeverity.Success
+            });
+        }
         else if (command == "demonetize")
         {
             var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>() ?? new();
@@ -182,7 +214,7 @@ public class UIServerMonetizationController(
     {
         var entitlements = new[]
         {
-            ("can-login", "Can login to BTCPay Server"),
+            (MonetizationEntitlments.CanLogin, "Can login to BTCPay Server"),
             ("one-store", "Can create a one store"),
             ("unlimited-store", "Can create more than one store"),
         }.Select(e => new EntitlementData()

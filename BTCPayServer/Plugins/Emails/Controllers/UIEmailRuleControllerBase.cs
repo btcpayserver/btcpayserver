@@ -109,7 +109,10 @@ public class UIEmailRuleControllerBase(
             CC = model.AsArray(model.CC),
             BCC = model.AsArray(model.BCC),
         };
+#pragma warning disable CS0618 // Type or member is obsolete
+        // Safe, we just created the instance, nobody modifying at same time
         c.SetBTCPayAdditionalData(model.AdditionalData);
+#pragma warning restore CS0618 // Type or member is obsolete
         ctx.EmailRules.Add(c);
         await ctx.SaveChangesAsync();
 
@@ -142,7 +145,10 @@ public class UIEmailRuleControllerBase(
         if (rule is null) return NotFound();
 
         rule.Trigger = model.Trigger;
+#pragma warning disable CS0618 // Type or member is obsolete
+        // TODO: Do direct db update to avoid race condition
         rule.SetBTCPayAdditionalData(model.AdditionalData);
+#pragma warning restore CS0618 // Type or member is obsolete
         rule.To = model.AsArray(model.To);
         rule.CC = model.AsArray(model.CC);
         rule.BCC = model.AsArray(model.BCC);

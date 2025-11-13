@@ -12,6 +12,7 @@ public class MonetizationViewModel
 
     public PlanData DefaultPlan { get; set; }
     public ActivateMonetizationModelViewModel ActivateModal { get; set; }
+    public MigrateUsersModalViewModel MigrateUsersModal { get; set; }
 }
 
 public class ActivateMonetizationModelViewModel

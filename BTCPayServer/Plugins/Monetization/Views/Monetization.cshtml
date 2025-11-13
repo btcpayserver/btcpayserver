@@ -86,8 +86,18 @@
                     </a>
                 </div>
             </div>
+            <div class="form-group">
+                <a class="btn btn-secondary"
+                   role="button"
+                   data-bs-toggle="modal"
+                   data-bs-target="#migrateUsers"
+                   text-translate="true">
+                    Migrate existing users
+                </a>
+            </div>
         </div>
     </div>
+    <partial name="MigrateUsersModal" for="MigrateUsersModal" />
 }
 else
 {

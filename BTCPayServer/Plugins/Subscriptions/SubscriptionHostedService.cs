@@ -542,7 +542,7 @@ public class SubscriptionHostedService(
         return sub;
     }
 
-    private static async Task UpdatePlanStats(ApplicationDbContext ctx, string planId)
+    public static async Task UpdatePlanStats(ApplicationDbContext ctx, string planId)
     {
         await ctx.Database.GetDbConnection()
             .ExecuteAsync("""

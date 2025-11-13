@@ -4,6 +4,7 @@ using BTCPayServer.Abstractions.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace BTCPayServer.Plugins.Monetization;
 
@@ -17,7 +18,8 @@ public class MonetizationPlugin : BaseBTCPayServerPlugin
     public override void Execute(IServiceCollection services)
     {
         services.AddUIExtension("server-nav", "/Plugins/Monetization/Views/NavExtension.cshtml");
-        services.AddHostedService<MonetizationHostedService>();
+        services.AddSingleton<MonetizationHostedService>();
+        services.AddSingleton<IHostedService, MonetizationHostedService>(o => o.GetRequiredService<MonetizationHostedService>());
         services.AddSettingsAccessor<MonetizationSettings>();
     }
 }

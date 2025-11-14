@@ -106,7 +106,7 @@ namespace BTCPayServer.Controllers
 
 
         [HttpGet("server/roles/{role}/delete")]
-        public async Task<IActionResult> DeleteRole(string role)
+        public async Task<IActionResult> DeleteRole(string role, string storeId = null)
         {
             var roleData = await _StoreRepository.GetStoreRole(new StoreRoleId(role), true);
             if (roleData == null)
@@ -122,7 +122,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("server/roles/{role}/delete")]
-        public async Task<IActionResult> DeleteRolePost(string role)
+        public async Task<IActionResult> DeleteRolePost(string role, string storeId = null)
         {
             var roleId = new StoreRoleId(role);
             var roleData = await _StoreRepository.GetStoreRole(roleId, true);
@@ -143,7 +143,12 @@ namespace BTCPayServer.Controllers
             {
                 TempData[WellKnownTempData.ErrorMessage] = errorMessage;
             }
-
+            
+            if (!string.IsNullOrEmpty(storeId))
+            {
+                return RedirectToAction(nameof(ListRoles), "UIStores", new { storeId });
+            }
+            
             return RedirectToAction(nameof(ListRoles));
         }
 

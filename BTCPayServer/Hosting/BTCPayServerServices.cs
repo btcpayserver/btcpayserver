@@ -427,7 +427,7 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             services.AddSingleton<PayoutMethodHandlerDictionary>();
 
             services.AddSingleton<NotificationManager>();
-            services.AddScoped<NotificationSender>();
+            services.AddSingleton<NotificationSender>();
 
             RegisterExchangeRecommendations(services);
             services.AddSingleton<DefaultRulesCollection>();

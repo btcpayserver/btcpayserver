@@ -28,6 +28,7 @@ using ExchangeSharp;
 using LNURL;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
 using static Microsoft.Playwright.Assertions;
 using NBitcoin;
@@ -200,7 +201,8 @@ namespace BTCPayServer.Tests
             await s.Page.FillAsync("#Email", changedEmail);
             await s.ClickPagePrimary();
             await s.FindAlertMessage();
-            var manager = tester.PayTester.GetService<UserManager<ApplicationUser>>();
+            using var scope = tester.PayTester.ServiceProvider.CreateScope();
+            var manager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             Assert.NotNull(await manager.FindByNameAsync(changedEmail));
             Assert.NotNull(await manager.FindByEmailAsync(changedEmail));
         }

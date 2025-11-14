@@ -15,7 +15,6 @@ using BTCPayServer.Data;
 using BTCPayServer.Plugins.Webhooks.Controllers;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Greenfield;
-using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -38,26 +37,13 @@ using WebhookDeliveryData = BTCPayServer.Client.Models.WebhookDeliveryData;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
-    public class BTCPayServerClientFactory : IBTCPayServerClientFactory
+    public class BTCPayServerClientFactory(
+        StoreRepository storeRepository,
+        IOptionsMonitor<IdentityOptions> identityOptions,
+        IServiceProvider serviceProvider,
+        IServiceScopeFactory servicesScopeFactory)
+        : IBTCPayServerClientFactory
     {
-        private readonly StoreRepository _storeRepository;
-        private readonly IOptionsMonitor<IdentityOptions> _identityOptions;
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        private readonly IServiceProvider _serviceProvider;
-
-        public BTCPayServerClientFactory(
-            StoreRepository storeRepository,
-            IOptionsMonitor<IdentityOptions> identityOptions,
-            UserManager<ApplicationUser> userManager,
-            IServiceProvider serviceProvider)
-        {
-            _storeRepository = storeRepository;
-            _identityOptions = identityOptions;
-            _userManager = userManager;
-            _serviceProvider = serviceProvider;
-        }
-
         public Task<BTCPayServerClient> Create(string userId, params string[] storeIds)
         {
             return Create(userId, storeIds, new DefaultHttpContext()
@@ -74,17 +60,19 @@ namespace BTCPayServer.Controllers.Greenfield
 
         public async Task<BTCPayServerClient> Create(string userId, string[] storeIds, HttpContext context)
         {
+            using var scope = servicesScopeFactory.CreateScope();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             if (!string.IsNullOrEmpty(userId))
             {
-                var user = await _userManager.FindByIdAsync(userId);
+                var user = await userManager.FindByIdAsync(userId);
                 List<Claim> claims = new List<Claim>
                 {
-                    new Claim(_identityOptions.CurrentValue.ClaimsIdentity.UserIdClaimType, userId),
+                    new Claim(identityOptions.CurrentValue.ClaimsIdentity.UserIdClaimType, userId),
                     new Claim(GreenfieldConstants.ClaimTypes.Permission,
                         Permission.Create(Policies.Unrestricted).ToString())
                 };
-                claims.AddRange((await _userManager.GetRolesAsync(user)).Select(s =>
-                    new Claim(_identityOptions.CurrentValue.ClaimsIdentity.RoleClaimType, s)));
+                claims.AddRange((await userManager.GetRolesAsync(user)).Select(s =>
+                    new Claim(identityOptions.CurrentValue.ClaimsIdentity.RoleClaimType, s)));
                 context.User =
                     new ClaimsPrincipal(new ClaimsIdentity(claims,
                         $"Local{GreenfieldConstants.AuthenticationType}WithUser"));
@@ -95,22 +83,22 @@ namespace BTCPayServer.Controllers.Greenfield
                     new ClaimsPrincipal(new ClaimsIdentity(
                         new List<Claim>()
                         {
-                            new(_identityOptions.CurrentValue.ClaimsIdentity.RoleClaimType, Roles.ServerAdmin)
+                            new(identityOptions.CurrentValue.ClaimsIdentity.RoleClaimType, Roles.ServerAdmin)
                         },
                         $"Local{GreenfieldConstants.AuthenticationType}"));
             }
 
             if (storeIds?.Any() is true)
             {
-                context.SetStoreData(await _storeRepository.FindStore(storeIds.First()));
-                context.SetStoresData(await _storeRepository.GetStoresByUserId(userId, storeIds));
+                context.SetStoreData(await storeRepository.FindStore(storeIds.First()));
+                context.SetStoresData(await storeRepository.GetStoresByUserId(userId, storeIds));
             }
             else
             {
-                context.SetStoresData(await _storeRepository.GetStoresByUserId(userId));
+                context.SetStoresData(await storeRepository.GetStoresByUserId(userId));
             }
 
-            return ActivatorUtilities.CreateInstance<LocalBTCPayServerClient>(_serviceProvider,
+            return ActivatorUtilities.CreateInstance<LocalBTCPayServerClient>(serviceProvider,
                 new LocalHttpContextAccessor() { HttpContext = context });
 
         }

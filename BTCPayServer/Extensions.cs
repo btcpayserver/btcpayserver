@@ -44,6 +44,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using NBitcoin;
 using NBitcoin.Payment;
 using NBitcoin.RPC;
@@ -442,6 +443,14 @@ namespace BTCPayServer
             services.AddSingleton<IUIExtension>(new UIExtension(partialViewName, location));
 #pragma warning restore CS0618 // Type or member is obsolete
             return services;
+        }
+        public static void AddSettingsAccessor<T>(this IServiceCollection services) where T : class, new()
+        {
+            services.TryAddSingleton<ISettingsAccessor<T>, SettingsAccessor<T>>();
+            services.AddSingleton<IHostedService>(provider => (SettingsAccessor<T>)provider.GetRequiredService<ISettingsAccessor<T>>());
+            services.AddSingleton<IStartupTask>(provider => (SettingsAccessor<T>)provider.GetRequiredService<ISettingsAccessor<T>>());
+            // Singletons shouldn't reference the settings directly, but ISettingsAccessor<T>, since singletons won't have refreshed values of the setting
+            services.AddTransient<T>(provider => provider.GetRequiredService<ISettingsAccessor<T>>().Settings);
         }
         public static IServiceCollection AddReportProvider<T>(this IServiceCollection services)
     where T : ReportProvider

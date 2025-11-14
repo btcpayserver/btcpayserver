@@ -25,7 +25,7 @@ public static partial class ApplicationDbContextExtensions
         if (storeId is not null && plan?.Offering.App.StoreDataId != storeId)
             return null;
         if (plan is not null)
-            await FetchPlanEntitlementsAsync(plans, plan);
+            await plan.EnsureEntitlmentLoaded(plans);
         return plan;
     }
 
@@ -54,8 +54,6 @@ public static partial class ApplicationDbContextExtensions
         var res = result.ToDictionary(x => x.Id, x => x);
         foreach (var plan in plans)
         {
-            if (plan.PlanEntitlements is not null)
-                continue;
             plan.PlanEntitlements = new();
             if (res.TryGetValue(plan.Id, out var r))
             {
@@ -88,7 +86,8 @@ public static partial class ApplicationDbContextExtensions
             .Include(o => o.Entitlements)
             .Include(o => o.Plans)
             .Include(o => o.App)
-            .ThenInclude(o => o.StoreData);
+            .ThenInclude(o => o.StoreData)
+            .AsSplitQuery();
 
         var o = await offering
                 .Where(o => o.Id == offeringId)

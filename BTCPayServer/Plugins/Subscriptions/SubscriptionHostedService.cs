@@ -538,11 +538,11 @@ public class SubscriptionHostedService(
         checkout.Subscriber = sub;
         checkout.SubscriberId = sub.Id;
         await ctx.SaveChangesAsync();
-        subCtx.AddEvent(new SubscriptionEvent.NewSubscriber(sub));
+        subCtx.AddEvent(new SubscriptionEvent.NewSubscriber(sub, checkout));
         return sub;
     }
 
-    private static async Task UpdatePlanStats(ApplicationDbContext ctx, string planId)
+    public static async Task UpdatePlanStats(ApplicationDbContext ctx, string planId)
     {
         await ctx.Database.GetDbConnection()
             .ExecuteAsync("""

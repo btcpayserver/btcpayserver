@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -12,7 +11,6 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Events;
-using BTCPayServer.Models;
 using BTCPayServer.Plugins.Emails.Views;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -22,12 +20,10 @@ using BTCPayServer.Views.UIStoreMembership;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using DisplayFormatter = BTCPayServer.Services.DisplayFormatter;
 
 namespace BTCPayServer.Plugins.Subscriptions.Controllers;
@@ -155,35 +151,14 @@ public partial class UIOfferingController(
         if (!ModelState.IsValid)
             return View();
 
-        var app = new AppData()
-        {
-            Name = vm.Name,
-            AppType = SubscriptionsAppType.AppType,
-            StoreDataId = storeId
-        };
-        app.SetSettings(new SubscriptionsAppType.AppConfig());
-        await appService.UpdateOrCreateApp(app, sendEvents: false);
-
-        await using var ctx = DbContextFactory.CreateContext();
-        var o = new OfferingData()
-        {
-            AppId = app.Id,
-        };
-        ctx.Offerings.Add(o);
-        await ctx.SaveChangesAsync();
-        app.SetSettings(new SubscriptionsAppType.AppConfig()
-        {
-            OfferingId = o.Id
-        });
-        await appService.UpdateOrCreateApp(app, sendEvents: false);
-        eventAggregator.Publish(new AppEvent.Created(app));
+        var (_, offeringId) = await appService.CreateOffering(storeId, vm.Name);
         this.TempData.SetStatusMessageModel(new()
         {
             Html = StringLocalizer["New offering created. You can now <a href='{0}' class='alert-link'>configure it.</a>",
-                Url.Action(nameof(ConfigureOffering), new { storeId, offeringId = o.Id })!],
+                Url.Action(nameof(ConfigureOffering), new { storeId, offeringId })!],
             Severity = StatusMessageModel.StatusSeverity.Success
         });
-        return GoToOffering(storeId, o.Id, SubscriptionSection.Plans);
+        return GoToOffering(storeId, offeringId, SubscriptionSection.Plans);
     }
 
     [HttpPost("stores/{storeId}/offerings/{offeringId}/Mails")]
@@ -562,7 +537,6 @@ public partial class UIOfferingController(
         }
 
         await ctx.SaveChangesAsync();
-        eventAggregator.Publish(new SubscriptionEvent.PlanUpdated(plan));
 
         var customIdsToIds = offering.Entitlements.ToDictionary(x => x.CustomId, x => x.Id);
         var enabled = vm.Entitlements.Where(e => e.Selected).Select(e => customIdsToIds[e.CustomId]).ToArray();
@@ -574,11 +548,12 @@ public partial class UIOfferingController(
                           SELECT @planId, e FROM unnest(@enabled) e
                           ON CONFLICT DO NOTHING;
                           """, new { planId = plan.Id, enabled });
-
+        await plan.ReloadEntitlment(ctx);
         if (planId is null)
             this.TempData.SetStatusSuccess(StringLocalizer["New plan created"]);
         else
             this.TempData.SetStatusSuccess(StringLocalizer["Plan edited"]);
+        eventAggregator.Publish(new SubscriptionEvent.PlanUpdated(plan));
         return GoToOffering(plan.Offering.App.StoreDataId, plan.OfferingId);
     }
 

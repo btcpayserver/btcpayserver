@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -113,9 +114,32 @@ public class PlanData : BaseEntityData
         return (to, GracePeriodDays is 0 ? null : to.AddDays(GracePeriodDays));
     }
 
-    [NotMapped]
     // Avoid cartesian explosion if there are lots of entitlements
-    public List<PlanEntitlementData> PlanEntitlements { get; set; } = null!;
+    private List<PlanEntitlementData>? _planEntitlements;
+    [NotMapped]
+    public List<PlanEntitlementData> PlanEntitlements
+    {
+        get => _planEntitlements ?? throw EntitlementNotLoadedException();
+        set => _planEntitlements = value;
+    }
+
+    private static InvalidOperationException EntitlementNotLoadedException()
+    {
+        return new InvalidOperationException("PlanEntitlements not loaded. Use ctx.PlanEntitlements.FetchPlanEntitlementsAsync() to load it");
+    }
+    [NotMapped]
+    public bool EntitlementsLoaded => _planEntitlements is not null;
+
+    public Task EnsureEntitlmentLoaded(ApplicationDbContext ctx) => EnsureEntitlmentLoaded(ctx.Plans);
+    public async Task EnsureEntitlmentLoaded(DbSet<PlanData> set)
+    {
+        if (!EntitlementsLoaded)
+            await set.FetchPlanEntitlementsAsync(this);
+    }
+    public Task ReloadEntitlment(ApplicationDbContext ctx) => ReloadEntitlment(ctx.Plans);
+    public Task ReloadEntitlment(DbSet<PlanData> set) =>set.FetchPlanEntitlementsAsync(this);
+
+    public void AssertEntitlementsLoaded() => _ = _planEntitlements ?? throw EntitlementNotLoadedException();
 
     public PlanEntitlementData? GetEntitlement(long entitmentId)
         => PlanEntitlements.FirstOrDefault(p => p.EntitlementId == entitmentId);
@@ -123,4 +147,5 @@ public class PlanData : BaseEntityData
         => PlanEntitlements.FirstOrDefault(p => p.Entitlement.CustomId == entitmentCustomId);
     public string[] GetEntitlementIds()
         => PlanEntitlements.Select(p => p.Entitlement.CustomId).ToArray();
+
 }

@@ -18,14 +18,17 @@
                 <span>Selected store:</span>
                 <span class="fw-bold">@store.StoreName</span>
             </div>
-            <a
-                class="btn btn-secondary"
-                data-bs-toggle="modal"
-                data-bs-target="#activateMonetization"
-                data-is-new="false"
-                role="button" text-translate="true">
-                Use an existing offering
-            </a>
+            @if (Model.ActivateModal.Offerings.Count > 0)
+            {
+                <a
+                    class="btn btn-secondary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#activateMonetization"
+                    data-is-new="false"
+                    role="button" text-translate="true">
+                    Use an existing offering
+                </a>
+            }
             <a id="page-primary"
                class="btn btn-primary"
                data-bs-toggle="modal"

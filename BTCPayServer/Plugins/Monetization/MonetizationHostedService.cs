@@ -1,4 +1,6 @@
+#nullable enable
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,8 +15,6 @@ using Dapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins.Monetization;
 
@@ -24,6 +24,7 @@ public class MonetizationHostedService(
     SettingsRepository settingsRepository,
     UserManager<ApplicationUser> userManager,
     UserService userService,
+    BTCPayServerSecurityStampValidator.DisabledUsers disabledUsers,
     ISettingsAccessor<MonetizationSettings> monetizationSettingsAccessor,
     CallbackGenerator callbackGenerator,
     Logs logger) : EventHostedServiceBase(eventAggregator, logger)
@@ -33,6 +34,7 @@ public class MonetizationHostedService(
         this.Subscribe<SubscriptionEvent.NewSubscriber>();
         this.Subscribe<SubscriptionEvent.SubscriberActivated>();
         this.Subscribe<SubscriptionEvent.SubscriberDisabled>();
+        this.Subscribe<SubscriptionEvent.PlanUpdated>();
     }
 
     protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
@@ -56,7 +58,7 @@ public class MonetizationHostedService(
             if (created.Succeeded)
             {
                 await AttachUserIdToSubscriber(user, newSub);
-                var invited = await UserEvent.Invited.Create(user!, user, callbackGenerator, newSub.Checkout.BaseUrl, true);
+                var invited = await UserEvent.Invited.Create(user, user, callbackGenerator, newSub.Checkout.BaseUrl, true);
                 EventAggregator.Publish(invited);
             }
         }
@@ -79,6 +81,12 @@ public class MonetizationHostedService(
                 }
             }
         }
+
+        if (evt is SubscriptionEvent.PlanUpdated pu)
+        {
+            await using var ctx = dbContextFactory.CreateContext();
+            await UpdateUserLockoutStatus(ctx, pu.Plan);
+        }
     }
 
     private async Task AttachUserIdToSubscriber(ApplicationUser user, SubscriptionEvent.NewSubscriber newSub)
@@ -94,7 +102,7 @@ public class MonetizationHostedService(
     private bool IsMonetization(SubscriptionEvent.SubscriberEvent se)
         => monetizationSettingsAccessor.Settings.OfferingId == se.Subscriber.OfferingId;
 
-    public async Task<int> MigrateUsers(string offeringId, string planId)
+    public async Task<int> MigrateUsers(string? offeringId, string? planId)
     {
         if (offeringId is null || planId is null)
             return 0;
@@ -130,7 +138,7 @@ public class MonetizationHostedService(
                               WHERE s.user_id IS NULL
                           ),
                           customers_to_create AS (
-                              SELECT 'cust_' || substr(md5(um.email || @salt), 0, 15) AS customer_id, um.email, um.user_id FROM users_to_migrate um
+                              SELECT 'cust_' || translate(encode(decode(md5(um.email || @salt), 'hex'), 'base64'), '=+-', '') AS customer_id, um.email, um.user_id FROM users_to_migrate um
                               LEFT JOIN customers_identities ci ON ci.type = 'Email' AND ci.value = um.email
                               LEFT JOIN customers c ON c.id = ci.customer_id AND c.store_id = @storeId
                               WHERE c.id IS NULL
@@ -198,23 +206,40 @@ public class MonetizationHostedService(
         if (userIds.Length != 0)
         {
             await SubscriptionHostedService.UpdatePlanStats(ctx, plan.Id);
-            await UpdateUserLockoutStatus(ctx, plan.Id, userIds);
+            await UpdateUserLockoutStatus(ctx, plan, userIds);
         }
         return userIds.Length;
     }
 
-    private static async Task UpdateUserLockoutStatus(ApplicationDbContext ctx, string planId, string[] userIds)
+    private async Task UpdateUserLockoutStatus(ApplicationDbContext ctx, PlanData plan, string[]? userIds = null)
     {
-        var canLogin =
-            await ctx.PlanEntitlements
-                .Where(pe => pe.PlanId == planId && pe.Entitlement.CustomId == MonetizationEntitlments.CanLogin)
-                .AnyAsync();
+        if (userIds is null)
+            userIds = await GetUserIdsInPlan(ctx, plan);
+        if (userIds.Length == 0)
+            return;
+        await plan.EnsureEntitlmentLoaded(ctx);
+        var canLogin = plan.PlanEntitlements.Any(pe => pe.Entitlement.CustomId == MonetizationEntitlments.CanLogin);
         var lockoutEnabled = !canLogin;
         DateTimeOffset? lockoutDate = canLogin ? null : DateTimeOffset.MaxValue;
         await ctx.Database.GetDbConnection()
             .ExecuteAsync("""
-                          UPDATE "AspNetUsers" SET "LockoutEnabled" = @lockoutEnabled, "LockoutEnd" = @lockoutDate
+                          UPDATE "AspNetUsers" SET "LockoutEnabled" = @lockoutEnabled,
+                                                   "LockoutEnd" = @lockoutDate,
+                                                   "SecurityStamp" = translate(encode(decode(md5("Id" || @salt), 'hex'), 'base64'), '=+-', '')
                           WHERE "Id" = ANY(@userIds) AND ("LockoutEnabled" IS DISTINCT FROM @lockoutEnabled OR "LockoutEnd" IS DISTINCT FROM @lockoutDate);
-                          """, new{ userIds, lockoutEnabled, lockoutDate });
+                          """, new{ userIds, lockoutEnabled, lockoutDate, salt = RandomUtils.GetUInt256().ToString() });
+        foreach (var userId in userIds)
+            if (canLogin)
+                disabledUsers.Remove(userId);
+            else
+                disabledUsers.Add(userId);
     }
+
+    private static async Task<string[]> GetUserIdsInPlan(ApplicationDbContext ctx, PlanData plan)
+    => (await ctx.Database.GetDbConnection()
+        .QueryAsync<string>($"""
+                             SELECT additional_data->'{SubscriberMonetizationAdditionalData.Key}'->>'userId'
+                             FROM subs_subscribers
+                             WHERE offering_id=@offeringId AND plan_id = @planId
+                             """, new { planId = plan.Id, offeringId = plan.OfferingId })).ToArray();
 }

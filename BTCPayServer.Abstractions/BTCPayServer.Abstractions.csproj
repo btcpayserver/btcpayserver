@@ -20,9 +20,9 @@
     <Optimize>true</Optimize>
     <NoWarn>1591;1573;1572;1584;1570;3021</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>  
+  </PropertyGroup>
   <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />

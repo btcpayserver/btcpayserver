@@ -47,6 +47,10 @@ namespace BTCPayServer.Plugins
         public BuildInfoClass BuildInfo { get; set; }
         public JObject ManifestInfo { get; set; }
         public string Documentation { get; set; }
+        public string PluginLogo { get; set; }
+        public string PluginTitle { get; set; }
+        public string Description { get; set; }
+        public string Fingerprint { get; set; }
     }
 
     public record InstalledPluginRequest(string Identifier, string Version);

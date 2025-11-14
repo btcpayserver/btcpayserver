@@ -45,6 +45,7 @@ namespace BTCPayServer.Controllers
                 Available = availablePlugins,
                 Commands = pluginService.GetPendingCommands(),
                 Disabled = pluginService.GetDisabledPlugins(),
+                InstalledPluginFingerprints = pluginService.LoadInstalledPluginWithFingerprints(),
                 CanShowRestart = true,
                 DownloadedPluginsByIdentifier = availablePluginsByIdentifier
             };
@@ -57,6 +58,7 @@ namespace BTCPayServer.Controllers
             public IEnumerable<PluginService.AvailablePlugin> Available { get; set; }
             public (string command, string plugin)[] Commands { get; set; }
             public bool CanShowRestart { get; set; }
+            public Dictionary<string, string> InstalledPluginFingerprints { get; set; }
             public Dictionary<string, Version> Disabled { get; set; }
             public Dictionary<string, AvailablePlugin> DownloadedPluginsByIdentifier { get; set; } = new Dictionary<string, AvailablePlugin>();
             public Dictionary<string, Version> Installed { get; set; }

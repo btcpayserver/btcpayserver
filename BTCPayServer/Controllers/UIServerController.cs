@@ -29,6 +29,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Hosting;
@@ -70,6 +71,7 @@ namespace BTCPayServer.Controllers
         private readonly LocalizerService _localizer;
         private readonly EmailSenderFactory _emailSenderFactory;
         public IStringLocalizer StringLocalizer { get; }
+        public ViewLocalizer ViewLocalizer { get; }
 
         public UIServerController(
             UserManager<ApplicationUser> userManager,
@@ -98,6 +100,7 @@ namespace BTCPayServer.Controllers
             TransactionLinkProviders transactionLinkProviders,
             LocalizerService localizer,
             IStringLocalizer stringLocalizer,
+            ViewLocalizer viewLocalizer,
             BTCPayServerEnvironment environment
         )
         {
@@ -128,6 +131,7 @@ namespace BTCPayServer.Controllers
             _localizer = localizer;
             Environment = environment;
             StringLocalizer = stringLocalizer;
+            ViewLocalizer = viewLocalizer;
         }
 
         [HttpGet("server/stores")]

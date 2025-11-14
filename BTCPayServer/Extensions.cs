@@ -11,10 +11,13 @@ using System.Net.WebSockets;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Abstractions.Services;
 using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Configuration;
@@ -36,6 +39,7 @@ using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -857,6 +861,23 @@ namespace BTCPayServer
 
         public static string RemoveUserInfo(this Uri uri)
         => string.IsNullOrEmpty(uri.UserInfo) ? uri.ToString() : uri.ToString().Replace(uri.UserInfo, "***");
+
+        public static void SetStatusLoginResult(this ITempDataDictionary tempData, UserService.CanLoginContext loginContext)
+        {
+            if (!loginContext.Failures.Any())
+                throw new InvalidOperationException("No login failure found");
+            var model = new StatusMessageModel()
+            {
+                Severity = loginContext._user is null ? StatusMessageModel.StatusSeverity.Error : StatusMessageModel.StatusSeverity.Warning
+            };
+            var failures =
+                loginContext
+                .Failures
+                .Select(f => f.Html is null ? HtmlEncoder.Default.Encode(f.Text.Value) : f.Html.Value)
+                .ToArray();
+            model.Html = string.Join("<br/>", failures);
+            tempData.SetStatusMessageModel(model);
+        }
 
         public static DataDirectories Configure(this DataDirectories dataDirectories, IConfiguration configuration)
         {

@@ -444,7 +444,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             // User shouldn't be deleted if it's the only admin
-            if (await _userService.IsUserTheOnlyOneAdmin(user))
+            if (await _userService.IsUserTheOnlyOneAdmin(new (user, baseUrl: Request.GetRequestBaseUrl())))
             {
                 return Forbid(AuthenticationSchemes.GreenfieldBasic);
             }

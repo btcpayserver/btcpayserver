@@ -8,6 +8,7 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Models.ServerViewModels;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -296,7 +297,8 @@ namespace BTCPayServer.Controllers
             var roles = await _UserManager.GetRolesAsync(user);
             if (Roles.HasServerAdmin(roles))
             {
-                if (await _userService.IsUserTheOnlyOneAdmin(user))
+                var loginContext = CreateLoginContext(user);
+                if (await _userService.IsUserTheOnlyOneAdmin(loginContext))
                 {
                     return View("Confirm", new ConfirmModel(StringLocalizer["Delete admin"],
                         $"Unable to proceed: As the user <strong>{Html.Encode(user.Email)}</strong> is the last enabled admin, it cannot be removed."));
@@ -330,7 +332,8 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
 
-            if (!enable && await _userService.IsUserTheOnlyOneAdmin(user))
+            var loginContext = CreateLoginContext(user);
+            if (!enable && await _userService.IsUserTheOnlyOneAdmin(loginContext))
             {
                 return View("Confirm", new ConfirmModel(StringLocalizer["Disable admin"],
                     $"Unable to proceed: As the user <strong>{Html.Encode(user.Email)}</strong> is the last enabled admin, it cannot be disabled."));
@@ -344,7 +347,8 @@ namespace BTCPayServer.Controllers
             var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
-            if (!enable && await _userService.IsUserTheOnlyOneAdmin(user))
+            var loginContext = CreateLoginContext(user);
+            if (!enable && await _userService.IsUserTheOnlyOneAdmin(loginContext))
             {
                 TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["User was the last enabled admin and could not be disabled."].Value;
                 return RedirectToAction(nameof(ListUsers));
@@ -355,6 +359,11 @@ namespace BTCPayServer.Controllers
                 ? StringLocalizer["User enabled"].Value
                 : StringLocalizer["User disabled"].Value;
             return RedirectToAction(nameof(ListUsers));
+        }
+
+        private UserService.CanLoginContext CreateLoginContext(ApplicationUser user)
+        {
+            return new UserService.CanLoginContext(user, StringLocalizer, ViewLocalizer, Request.GetRequestBaseUrl());
         }
 
         [HttpGet("server/users/{userId}/approve")]

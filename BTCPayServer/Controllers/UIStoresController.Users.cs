@@ -74,7 +74,7 @@ public partial class UIStoresController
                     (await _userManager.CreateAsync(user)) is { Succeeded: true })
                 {
                     var invitationEmail = await _emailSenderFactory.IsComplete();
-                    var evt = await UserEvent.Invited.Create(user!, currentUser, _callbackGenerator, Request, invitationEmail);
+                    var evt = await UserEvent.Invited.Create(user!, currentUser, _callbackGenerator, invitationEmail);
                     _eventAggregator.Publish(evt);
                     inviteInfo = invitationEmail
                         ? StringLocalizer["An invitation email has been sent.<br/>You may alternatively share this link with them: <a class='alert-link' href='{0}'>{0}</a>", evt.InvitationLink]

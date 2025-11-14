@@ -267,7 +267,7 @@ namespace BTCPayServer.Controllers
                 {
                     RememberMe = rememberMe,
                     UserId = user.Id,
-                    LNURLEndpoint = new Uri(callbackGenerator.ForLNUrlAuth(user, r, Request))
+                    LNURLEndpoint = new Uri(callbackGenerator.ForLNUrlAuth(user, r))
                 };
             }
             return null;
@@ -573,7 +573,7 @@ namespace BTCPayServer.Controllers
                         RegisteredAdmin = true;
                     }
 
-                    eventAggregator.Publish(await UserEvent.Registered.Create(user, callbackGenerator, Request));
+                    eventAggregator.Publish(await UserEvent.Registered.Create(user, callbackGenerator));
                     RegisteredUserId = user.Id;
 
                     TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Account created."].Value;
@@ -640,7 +640,7 @@ namespace BTCPayServer.Controllers
             var result = await userManager.ConfirmEmailAsync(user, code);
             if (result.Succeeded)
             {
-                var approvalLink = callbackGenerator.ForApproval(user, Request);
+                var approvalLink = callbackGenerator.ForApproval(user);
                 eventAggregator.Publish(new UserEvent.ConfirmedEmail(user, approvalLink));
 
                 var hasPassword = await userManager.HasPasswordAsync(user);
@@ -686,7 +686,7 @@ namespace BTCPayServer.Controllers
                 {
                     return RedirectToAction(nameof(ForgotPasswordConfirmation));
                 }
-                var callbackUri = await callbackGenerator.ForPasswordReset(user, Request);
+                var callbackUri = await callbackGenerator.ForPasswordReset(user);
                 eventAggregator.Publish(new UserEvent.PasswordResetRequested(user, callbackUri));
                 return RedirectToAction(nameof(ForgotPasswordConfirmation));
             }

@@ -123,7 +123,7 @@
                             <div class="d-inline-flex align-items-center gap-3">
                                 <a asp-action="ViewPaymentRequest" asp-route-payReqId="@item.Id" id="PaymentRequest-@item.Id" target="_blank" text-translate="true">View</a>
                                 <button type="button" class="btn btn-link p-0 clipboard-button"
-                                        data-clipboard="@CallbackGenerator.PaymentRequestByIdLink(item.Id, this.Context.Request)"
+                                        data-clipboard="@CallbackGenerator.PaymentRequestByIdLink(item.Id)"
                                         title="Copy Link">
                                     <vc:icon symbol="actions-copy" />
                                 </button>

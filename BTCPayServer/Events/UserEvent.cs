@@ -30,10 +30,10 @@ public class UserEvent(ApplicationUser user)
     {
         public string ApprovalLink { get; } = approvalLink;
 		public string ConfirmationEmailLink { get; set; } = confirmationEmail;
-		public static async Task<Registered> Create(ApplicationUser user, CallbackGenerator callbackGenerator, HttpRequest request)
+		public static async Task<Registered> Create(ApplicationUser user, CallbackGenerator callbackGenerator)
 		{
-			var approvalLink = callbackGenerator.ForApproval(user, request);
-			var confirmationEmail = await callbackGenerator.ForEmailConfirmation(user, request);
+			var approvalLink = callbackGenerator.ForApproval(user);
+			var confirmationEmail = await callbackGenerator.ForEmailConfirmation(user);
 			return new Registered(user, approvalLink, confirmationEmail);
 		}
 	}
@@ -43,11 +43,11 @@ public class UserEvent(ApplicationUser user)
         public ApplicationUser InvitedByUser { get; } = invitedBy;
         public string InvitationLink { get; } = invitationLink;
 
-        public static async Task<Invited> Create(ApplicationUser user, ApplicationUser currentUser, CallbackGenerator callbackGenerator, HttpRequest request, bool sendEmail)
+        public static async Task<Invited> Create(ApplicationUser user, ApplicationUser currentUser, CallbackGenerator callbackGenerator, bool sendEmail)
         {
-			var invitationLink = await callbackGenerator.ForInvitation(user, request);
-			var approvalLink = callbackGenerator.ForApproval(user, request);
-			var confirmationEmail = await callbackGenerator.ForEmailConfirmation(user, request);
+			var invitationLink = await callbackGenerator.ForInvitation(user);
+			var approvalLink = callbackGenerator.ForApproval(user);
+			var confirmationEmail = await callbackGenerator.ForEmailConfirmation(user);
 			return new Invited(user, currentUser, invitationLink, approvalLink, confirmationEmail)
             {
                 SendInvitationEmail = sendEmail

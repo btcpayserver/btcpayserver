@@ -90,7 +90,7 @@ namespace BTCPayServer.Services
                     ? null
                     : await uriResolver.Resolve(request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),
                 InvitationUrl = string.IsNullOrEmpty(blob.InvitationToken) ? null
-                    : callbackGenerator.ForInvitation(data.Id, blob.InvitationToken, request)
+                    : callbackGenerator.ForInvitation(data.Id, blob.InvitationToken)
             };
         }
 

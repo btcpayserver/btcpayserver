@@ -117,7 +117,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (user.RequiresApproval)
             {
-                var loginLink = _callbackGenerator.ForLogin(user, Request);
+                var loginLink = _callbackGenerator.ForLogin(user);
                 return await _userService.SetUserApproval(user.Id, request.Approved, loginLink)
                     ? Ok()
                     : this.CreateAPIError("invalid-state", $"User is already {(request.Approved ? "approved" : "unapproved")}");
@@ -416,8 +416,8 @@ namespace BTCPayServer.Controllers.Greenfield
             var currentUser = await _userManager.GetUserAsync(User);
             var userEvent = currentUser switch
             {
-                { } invitedBy => await UserEvent.Invited.Create(user, invitedBy, _callbackGenerator, Request, request.SendInvitationEmail is not false),
-                _ => await UserEvent.Registered.Create(user, _callbackGenerator, Request)
+                { } invitedBy => await UserEvent.Invited.Create(user, invitedBy, _callbackGenerator, request.SendInvitationEmail is not false),
+                _ => await UserEvent.Registered.Create(user, _callbackGenerator)
             };
             _eventAggregator.Publish(userEvent);
 

@@ -15,118 +15,93 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Http.Extensions;
 using NBitcoin.DataEncoders;
 using System.Runtime.CompilerServices;
+using BTCPayServer.Abstractions;
 
 namespace BTCPayServer.Services
 {
-    public class CallbackGenerator(LinkGenerator linkGenerator, UserManager<ApplicationUser> userManager)
+    public class CallbackGenerator(
+        LinkGenerator linkGenerator,
+        UserManager<ApplicationUser> userManager,
+        IHttpContextAccessor httpContextAccessor)
     {
         public LinkGenerator LinkGenerator { get; } = linkGenerator;
         public UserManager<ApplicationUser> UserManager { get; } = userManager;
 
-        public string ForLNUrlAuth(ApplicationUser user, byte[] r, HttpRequest request)
-        {
-            return LinkGenerator.GetUriByAction(
-                        action: nameof(UILNURLAuthController.LoginResponse),
-                        controller: "UILNURLAuth",
-                        values: new { userId = user.Id, action = "login", tag = "login", k1 = Encoders.Hex.EncodeData(r) },
-                        request.Scheme,
-                        request.Host,
-                        request.PathBase) ?? throw Bug();
-        }
+        public string ForLNUrlAuth(ApplicationUser user, byte[] r)
+        => LinkGenerator.GetUriByAction(
+            action: nameof(UILNURLAuthController.LoginResponse),
+            controller: "UILNURLAuth",
+            values: new { userId = user.Id, action = "login", tag = "login", k1 = Encoders.Hex.EncodeData(r) },
+            GetRequestBaseUrl());
 
-        public string StoreUsersLink(string storeId, HttpRequest request)
-        {
-            return LinkGenerator.GetUriByAction(nameof(UIStoresController.StoreUsers), "UIStores",
-                new { storeId }, request.Scheme, request.Host, request.PathBase) ?? throw Bug();
-        }
+        private RequestBaseUrl GetRequestBaseUrl()
+        => httpContextAccessor.HttpContext?.Request.GetRequestBaseUrl() ?? throw new InvalidOperationException($"You should be in a HttpContext to call this method");
 
-        public async Task<string> ForEmailConfirmation(ApplicationUser user, HttpRequest request)
+        public string StoreUsersLink(string storeId)
+        => LinkGenerator.GetUriByAction(nameof(UIStoresController.StoreUsers), "UIStores",
+            new { storeId }, GetRequestBaseUrl());
+
+        public async Task<string> ForEmailConfirmation(ApplicationUser user)
         {
             var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
             return LinkGenerator.GetUriByAction(nameof(UIAccountController.ConfirmEmail), "UIAccount",
-                new { userId = user.Id, code }, request.Scheme, request.Host, request.PathBase) ?? throw Bug();
+                new { userId = user.Id, code }, GetRequestBaseUrl());
         }
-        public async Task<string> ForInvitation(ApplicationUser user, HttpRequest request)
+
+        public async Task<string> ForInvitation(ApplicationUser user)
         {
-            var code = await UserManager.GenerateInvitationTokenAsync<ApplicationUser>(user.Id) ?? throw Bug();
-            return ForInvitation(user.Id, code, request);
+            var code = await UserManager.GenerateInvitationTokenAsync<ApplicationUser>(user.Id);
+            return ForInvitation(user.Id, code ?? "???");
         }
-        public string ForInvitation(string userId, string code, HttpRequest request)
-        {
-            return LinkGenerator.GetUriByAction(nameof(UIAccountController.AcceptInvite), "UIAccount",
-                new { userId, code }, request.Scheme, request.Host, request.PathBase) ?? throw Bug();
-        }
-        public async Task<string> ForPasswordReset(ApplicationUser user, HttpRequest request)
+
+        public string ForInvitation(string userId, string code)
+        => LinkGenerator.GetUriByAction(nameof(UIAccountController.AcceptInvite), "UIAccount",
+            new { userId, code }, GetRequestBaseUrl());
+
+        public async Task<string> ForPasswordReset(ApplicationUser user)
         {
             var code = await UserManager.GeneratePasswordResetTokenAsync(user);
             return LinkGenerator.GetUriByAction(
                 action: nameof(UIAccountController.SetPassword),
                 controller: "UIAccount",
                 values: new { userId = user.Id, code },
-                scheme: request.Scheme,
-                host: request.Host,
-                pathBase: request.PathBase
-            ) ?? throw Bug();
+                GetRequestBaseUrl());
         }
 
-        public string ForApproval(ApplicationUser user, HttpRequest request)
-        {
-            return LinkGenerator.GetUriByAction(nameof(UIServerController.User), "UIServer",
-                new { userId = user.Id }, request.Scheme, request.Host, request.PathBase) ?? throw Bug();
-        }
-        public string ForLogin(ApplicationUser user, HttpRequest request)
-        {
-            return LinkGenerator.GetUriByAction(nameof(UIAccountController.Login), "UIAccount", new { email = user.Email }, request.Scheme, request.Host, request.PathBase) ?? throw Bug();
-        }
+        public string ForApproval(ApplicationUser user)
+        => LinkGenerator.GetUriByAction(nameof(UIServerController.User), "UIServer",
+            new { userId = user.Id }, GetRequestBaseUrl());
 
-        private Exception Bug([CallerMemberName] string? name = null) => new InvalidOperationException($"Error generating link for {name} (Report this bug to BTCPay Server github repository)");
+        public string ForLogin(ApplicationUser user)
+        => LinkGenerator.GetUriByAction(nameof(UIAccountController.Login), "UIAccount",
+            new { email = user.Email }, GetRequestBaseUrl());
 
-        public string WalletTransactionsLink(WalletId walletId, HttpRequest request)
-        {
-            return LinkGenerator.GetUriByAction(
-                action: nameof(UIWalletsController.WalletTransactions),
-                controller: "UIWallets",
-                values: new { walletId = walletId.ToString() },
-                scheme: request.Scheme,
-                host: request.Host,
-                pathBase: request.PathBase
-            ) ?? throw Bug();
-        }
+        public string WalletTransactionsLink(WalletId walletId)
+        => LinkGenerator.GetUriByAction(
+            action: nameof(UIWalletsController.WalletTransactions),
+            controller: "UIWallets",
+            values: new { walletId = walletId.ToString() },
+            GetRequestBaseUrl());
 
-        public string PaymentRequestByIdLink(string payReqId, HttpRequest request)
-        {
-            return LinkGenerator.GetUriByAction(
-                action: nameof(UIPaymentRequestController.ViewPaymentRequest),
-                controller: "UIPaymentRequest",
-                values: new { payReqId },
-                scheme: request.Scheme,
-                host: request.Host,
-                pathBase: request.PathBase
-            ) ?? throw Bug();
-        }
+        public string PaymentRequestByIdLink(string payReqId)
+        => LinkGenerator.GetUriByAction(
+            action: nameof(UIPaymentRequestController.ViewPaymentRequest),
+            controller: "UIPaymentRequest",
+            values: new { payReqId },
+            GetRequestBaseUrl());
 
-        public string PaymentRequestListLink(string storeId, HttpRequest request)
-        {
-            return LinkGenerator.GetUriByAction(
-                action: nameof(UIPaymentRequestController.GetPaymentRequests),
-                controller: "UIPaymentRequest",
-                values: new { storeId },
-                scheme: request.Scheme,
-                host: request.Host,
-                pathBase: request.PathBase
-            ) ?? throw Bug();
-        }
+        public string PaymentRequestListLink(string storeId)
+        => LinkGenerator.GetUriByAction(
+            action: nameof(UIPaymentRequestController.GetPaymentRequests),
+            controller: "UIPaymentRequest",
+            values: new { storeId },
+            GetRequestBaseUrl());
 
-        public string InvoiceLink(string invoiceId, HttpRequest request)
-        {
-            return LinkGenerator.GetUriByAction(
-                action: nameof(UIInvoiceController.Invoice),
-                controller: "UIInvoice",
-                values: new { invoiceId },
-                scheme: request.Scheme,
-                host: request.Host,
-                pathBase: request.PathBase
-            ) ?? throw Bug();
-        }
+        public string InvoiceLink(string invoiceId)
+        => LinkGenerator.GetUriByAction(
+            action: nameof(UIInvoiceController.Invoice),
+            controller: "UIInvoice",
+            values: new { invoiceId },
+            GetRequestBaseUrl());
     }
 }

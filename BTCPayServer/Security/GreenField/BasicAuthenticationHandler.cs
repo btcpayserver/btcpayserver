@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Services;
@@ -16,25 +17,16 @@ using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Security.Greenfield
 {
-    public class BasicAuthenticationHandler : AuthenticationHandler<GreenfieldAuthenticationOptions>
+    public class BasicAuthenticationHandler(
+        IOptionsMonitor<IdentityOptions> identityOptions,
+        IOptionsMonitor<GreenfieldAuthenticationOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder,
+        SignInManager<ApplicationUser> signInManager,
+        UserService UserService,
+        UserManager<ApplicationUser> userManager)
+        : AuthenticationHandler<GreenfieldAuthenticationOptions>(options, logger, encoder)
     {
-        private readonly IOptionsMonitor<IdentityOptions> _identityOptions;
-        private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        public BasicAuthenticationHandler(
-            IOptionsMonitor<IdentityOptions> identityOptions,
-            IOptionsMonitor<GreenfieldAuthenticationOptions> options,
-            ILoggerFactory logger,
-            UrlEncoder encoder,
-            SignInManager<ApplicationUser> signInManager,
-            UserManager<ApplicationUser> userManager) : base(options, logger, encoder)
-        {
-            _identityOptions = identityOptions;
-            _signInManager = signInManager;
-            _userManager = userManager;
-        }
-
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             string authHeader = Context.Request.Headers["Authorization"];
@@ -58,30 +50,29 @@ namespace BTCPayServer.Security.Greenfield
                     "Basic authentication header was not in a correct format. (username:password encoded in base64)");
             }
 
-            var result = await _signInManager.PasswordSignInAsync(username, password, true, true);
-            if (!result.Succeeded)
-                return AuthenticateResult.Fail(result.ToString());
-
-            var user = await _userManager.Users
+            var user = await userManager.Users
                 .Include(applicationUser => applicationUser.Fido2Credentials)
                 .FirstOrDefaultAsync(applicationUser =>
-                    applicationUser.NormalizedUserName == _userManager.NormalizeName(username));
-
-            if (!UserService.TryCanLogin(user, out var error))
+                    applicationUser.NormalizedUserName == userManager.NormalizeName(username));
+            var loggingContext = new UserService.CanLoginContext(user, baseUrl: Request.GetRequestBaseUrl());
+            if (!await UserService.CanLogin(loggingContext))
             {
-                return AuthenticateResult.Fail($"Basic authentication failed: {error}");
+                return AuthenticateResult.Fail($"Basic authentication failed: {loggingContext.Failures[0].Text.Value}");
             }
             if (user.Fido2Credentials.Any())
             {
                 return AuthenticateResult.Fail("Cannot use Basic authentication with multi-factor is enabled.");
             }
+            var result = await signInManager.CheckPasswordSignInAsync(user, password, true);
+            if (!result.Succeeded)
+                return AuthenticateResult.Fail(result.ToString());
             var claims = new List<Claim>()
             {
-                new Claim(_identityOptions.CurrentValue.ClaimsIdentity.UserIdClaimType, user.Id),
+                new Claim(identityOptions.CurrentValue.ClaimsIdentity.UserIdClaimType, user.Id),
                 new Claim(GreenfieldConstants.ClaimTypes.Permission,
                     Permission.Create(Policies.Unrestricted).ToString())
             };
-            claims.AddRange((await _userManager.GetRolesAsync(user)).Select(s => new Claim(_identityOptions.CurrentValue.ClaimsIdentity.RoleClaimType, s)));
+            claims.AddRange((await userManager.GetRolesAsync(user)).Select(s => new Claim(identityOptions.CurrentValue.ClaimsIdentity.RoleClaimType, s)));
 
             return AuthenticateResult.Success(new AuthenticationTicket(
                 new ClaimsPrincipal(new ClaimsIdentity(claims, GreenfieldConstants.AuthenticationType)),

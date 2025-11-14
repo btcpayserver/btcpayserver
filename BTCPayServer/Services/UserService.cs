@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -11,8 +12,10 @@ using BTCPayServer.Events;
 using BTCPayServer.Storage.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Services
@@ -25,6 +28,7 @@ namespace BTCPayServer.Services
         private readonly EventAggregator _eventAggregator;
         private readonly ApplicationDbContextFactory _applicationDbContextFactory;
         private readonly BTCPayServerSecurityStampValidator.DisabledUsers _disabledUsers;
+        private readonly IEnumerable<LoginExtension> _loginExtensions;
         private readonly ILogger<UserService> _logger;
 
         public UserService(
@@ -34,6 +38,7 @@ namespace BTCPayServer.Services
             EventAggregator eventAggregator,
             ApplicationDbContextFactory applicationDbContextFactory,
             BTCPayServerSecurityStampValidator.DisabledUsers disabledUsers,
+            IEnumerable<LoginExtension> loginExtensions,
             ILogger<UserService> logger)
         {
             _serviceProvider = serviceProvider;
@@ -42,6 +47,7 @@ namespace BTCPayServer.Services
             _eventAggregator = eventAggregator;
             _applicationDbContextFactory = applicationDbContextFactory;
             _disabledUsers = disabledUsers;
+            _loginExtensions = loginExtensions;
             _logger = logger;
         }
 
@@ -88,40 +94,70 @@ namespace BTCPayServer.Services
             };
         }
 
-        private static bool IsEmailConfirmed(ApplicationUser user)
+        public class LoginFailure
         {
-            return user.EmailConfirmed || !user.RequiresEmailConfirmation;
+            public LoginFailure(LocalizedString text)
+            {
+                ArgumentNullException.ThrowIfNull(text);
+                Text = text;
+            }
+            public LoginFailure(LocalizedString text, LocalizedHtmlString html) : this(text)
+            {
+                Html = html;
+            }
+
+            public LocalizedString Text { get; }
+            public LocalizedHtmlString? Html { get; }
+            public override string ToString() => Html?.ToString() ?? Text?.ToString() ?? "";
         }
 
-        private static bool IsApproved(ApplicationUser user)
+        public abstract class LoginExtension
         {
-            return user.Approved || !user.RequiresApproval;
+            public abstract Task Check(CanLoginContext context);
         }
 
-        public static bool TryCanLogin([NotNullWhen(true)] ApplicationUser? user, [MaybeNullWhen(true)] out string error)
+        public class CanLoginContext(
+            ApplicationUser? user,
+            IStringLocalizer? stringLocalizer = null,
+            IViewLocalizer? viewLocalizer = null,
+            RequestBaseUrl? baseUrl = null)
         {
-            error = null;
-            if (user == null)
+            public CanLoginContext Clone(ApplicationUser? user) => new(user, stringLocalizer, viewLocalizer, BaseUrl);
+            public IStringLocalizer StringLocalizer { get; } = stringLocalizer ?? NullStringLocalizer.Instance;
+            public IViewLocalizer ViewLocalizer { get; } = viewLocalizer ?? NullViewLocalizer.Instance;
+            public RequestBaseUrl? BaseUrl { get; } = baseUrl;
+            internal readonly ApplicationUser? _user = user;
+            public ApplicationUser User => _user ?? throw new InvalidOperationException("User is not set");
+            public List<LoginFailure> Failures { get; } = new();
+        }
+
+        public async Task<bool> CanLogin(CanLoginContext context)
+        {
+            if (context._user is null)
             {
-                error = "Invalid login attempt.";
+                context.Failures.Add(new LoginFailure(context.StringLocalizer["User not found or invalid password"]));
                 return false;
             }
-            if (!IsEmailConfirmed(user))
+
+            foreach (var loginExtension in _loginExtensions)
             {
-                error = "You must have a confirmed email to log in.";
-                return false;
+                await loginExtension.Check(context);
             }
-            if (!IsApproved(user))
+            return !context.Failures.Any();
+        }
+
+        public class DefaultLoginExtension : LoginExtension
+        {
+            public override Task Check(CanLoginContext context)
             {
-                error = "Your user account requires approval by an admin before you can log in.";
-                return false;
+                if (context.User is { EmailConfirmed: false, RequiresEmailConfirmation: true })
+                    context.Failures.Add(new(context.StringLocalizer["You must have a confirmed email to log in."]));
+                if (context.User is { Approved: false, RequiresApproval: true })
+                    context.Failures.Add(new(context.StringLocalizer["Your user account requires approval by an admin before you can log in."]));
+                if (context.User is { IsDisabled: true })
+                    context.Failures.Add(new(context.StringLocalizer["Your user account is currently disabled."]));
+                return Task.CompletedTask;
             }
-            if (user.IsDisabled)
-            {
-                error = "Your user account is currently disabled.";
-                return false;
-            }
-            return true;
         }
 
         public async Task<bool> SetUserApproval(string userId, bool approved, string loginLink)
@@ -249,21 +285,25 @@ namespace BTCPayServer.Services
             }
         }
 
-        public async Task<bool> IsUserTheOnlyOneAdmin(ApplicationUser user)
+        public async Task<bool> IsUserTheOnlyOneAdmin(CanLoginContext canLoginContext)
         {
             using var scope = _serviceProvider.CreateScope();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-            var roles = await userManager.GetRolesAsync(user);
+            var roles = await userManager.GetRolesAsync(canLoginContext.User);
             if (!Roles.HasServerAdmin(roles))
             {
                 return false;
             }
             var adminUsers = await userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
-            var enabledAdminUsers = adminUsers
-                                        .Where(applicationUser => !applicationUser.IsDisabled && IsApproved(applicationUser))
-                                        .Select(applicationUser => applicationUser.Id).ToList();
+            var enabledAdminUsers = new List<string>();
+            foreach (var admin in adminUsers)
+            {
+                var loginContext = canLoginContext.Clone(admin);
+                if (await CanLogin(loginContext))
+                    enabledAdminUsers.Add(admin.Id);
+            }
 
-            return enabledAdminUsers.Count == 1 && enabledAdminUsers.Contains(user.Id);
+            return enabledAdminUsers.Count == 1 && enabledAdminUsers.Contains(canLoginContext.User.Id);
         }
     }
 }

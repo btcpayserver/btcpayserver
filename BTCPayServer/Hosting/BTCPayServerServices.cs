@@ -181,6 +181,8 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<UserService>();
+            services.AddSingleton<UserService.LoginExtension, UserService.DefaultLoginExtension>();
+
             services.TryAddSingleton<UriResolver>();
             services.TryAddSingleton<WalletHistogramService>();
             services.TryAddSingleton<LightningHistogramService>();

@@ -2687,6 +2687,7 @@ namespace BTCPayServer.Tests
             }
 
             await ownerRow.Locator("text=Remove").ClickAsync();
+            await s.Page.WaitForLoadStateAsync();
             Assert.DoesNotContain("ConfirmContinue", await s.Page.ContentAsync());
             await s.Page.GoBackAsync();
             existingServerRoles = await s.Page.Locator("table tr").AllAsync();
@@ -2701,7 +2702,7 @@ namespace BTCPayServer.Tests
             }
 
             await guestRow.Locator("text=Remove").ClickAsync();
-            await s.Page.Locator("#ConfirmContinue").ClickAsync();
+            await s.Page.ClickAsync("#ConfirmContinue");
             await s.FindAlertMessage();
 
             await s.GoToStore(StoreNavPages.Roles);
@@ -2747,10 +2748,10 @@ namespace BTCPayServer.Tests
 
             await s.Page.Locator("#Email").FillAsync(s.AsTestAccount().Email);
             await s.Page.Locator("#Role").SelectOptionAsync("Owner");
-            await s.Page.Locator("#AddUser").ClickAsync();
+            await s.Page.ClickAsync("#AddUser");
             Assert.Contains("The user already has the role Owner.", await s.Page.Locator(".validation-summary-errors").TextContentAsync());
             await s.Page.Locator("#Role").SelectOptionAsync("Manager");
-            await s.Page.Locator("#AddUser").ClickAsync();
+            await s.Page.ClickAsync("#AddUser");
             Assert.Contains("The user is the last owner. Their role cannot be changed.", await s.Page.Locator(".validation-summary-errors").TextContentAsync());
 
             await s.GoToStore(StoreNavPages.Roles);

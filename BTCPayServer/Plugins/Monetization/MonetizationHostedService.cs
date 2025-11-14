@@ -1,6 +1,5 @@
 #nullable enable
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +13,7 @@ using BTCPayServer.Services;
 using Dapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 
 namespace BTCPayServer.Plugins.Monetization;
@@ -22,11 +22,10 @@ public class MonetizationHostedService(
     ApplicationDbContextFactory dbContextFactory,
     EventAggregator eventAggregator,
     SettingsRepository settingsRepository,
-    UserManager<ApplicationUser> userManager,
     UserService userService,
     BTCPayServerSecurityStampValidator.DisabledUsers disabledUsers,
     ISettingsAccessor<MonetizationSettings> monetizationSettingsAccessor,
-    CallbackGenerator callbackGenerator,
+    IServiceScopeFactory serviceScopeFactory,
     Logs logger) : EventHostedServiceBase(eventAggregator, logger)
 {
     protected override void SubscribeToEvents()
@@ -41,6 +40,8 @@ public class MonetizationHostedService(
     {
         if (evt is SubscriptionEvent.SubscriberEvent se && !IsMonetization(se))
             return;
+        using var scope = serviceScopeFactory.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         if (evt is SubscriptionEvent.NewSubscriber newSub)
         {
             var policies = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
@@ -58,7 +59,9 @@ public class MonetizationHostedService(
             if (created.Succeeded)
             {
                 await AttachUserIdToSubscriber(user, newSub);
-                var invited = await UserEvent.Invited.Create(user, user, callbackGenerator, newSub.Checkout.BaseUrl, true);
+                var callbackGenerator = scope.ServiceProvider.GetRequiredService<CallbackGenerator>();
+                callbackGenerator.BaseUrl = newSub.Checkout.BaseUrl;
+                var invited = await UserEvent.Invited.Create(user, user, callbackGenerator, true);
                 EventAggregator.Publish(invited);
             }
         }
@@ -138,7 +141,7 @@ public class MonetizationHostedService(
                               WHERE s.user_id IS NULL
                           ),
                           customers_to_create AS (
-                              SELECT 'cust_' || translate(encode(decode(md5(um.email || @salt), 'hex'), 'base64'), '=+-', '') AS customer_id, um.email, um.user_id FROM users_to_migrate um
+                              SELECT 'cust_' || translate(encode(decode(md5(um.email || @salt), 'hex'), 'base64'), '/=+-', '') AS customer_id, um.email, um.user_id FROM users_to_migrate um
                               LEFT JOIN customers_identities ci ON ci.type = 'Email' AND ci.value = um.email
                               LEFT JOIN customers c ON c.id = ci.customer_id AND c.store_id = @storeId
                               WHERE c.id IS NULL
@@ -225,7 +228,7 @@ public class MonetizationHostedService(
             .ExecuteAsync("""
                           UPDATE "AspNetUsers" SET "LockoutEnabled" = @lockoutEnabled,
                                                    "LockoutEnd" = @lockoutDate,
-                                                   "SecurityStamp" = translate(encode(decode(md5("Id" || @salt), 'hex'), 'base64'), '=+-', '')
+                                                   "SecurityStamp" = translate(encode(decode(md5("Id" || @salt), 'hex'), 'base64'), '/=+-', '')
                           WHERE "Id" = ANY(@userIds) AND ("LockoutEnabled" IS DISTINCT FROM @lockoutEnabled OR "LockoutEnd" IS DISTINCT FROM @lockoutDate);
                           """, new{ userIds, lockoutEnabled, lockoutDate, salt = RandomUtils.GetUInt256().ToString() });
         foreach (var userId in userIds)

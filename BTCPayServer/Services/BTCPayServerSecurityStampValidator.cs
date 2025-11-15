@@ -26,6 +26,10 @@ public class BTCPayServerSecurityStampValidator(
         ConcurrentDictionary<string, DateTimeOffset> _DisabledUsers = new ConcurrentDictionary<string, DateTimeOffset>();
         public bool HasAny => !_DisabledUsers.IsEmpty;
 
+        /// <summary>
+        /// Note that you also need to invalidate the security stamp of the user
+        /// </summary>
+        /// <param name="user"></param>
         public void Add(string user)
         {
             _DisabledUsers.TryAdd(user, DateTimeOffset.UtcNow);

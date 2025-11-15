@@ -18,6 +18,7 @@ using BTCPayServer.Services.Rates;
 using Dapper;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using static BTCPayServer.Data.Subscriptions.SubscriberData;
@@ -30,7 +31,7 @@ public class SubscriptionHostedService(
     EventAggregator eventAggregator,
     ApplicationDbContextFactory applicationDbContextFactory,
     SettingsRepository settingsRepository,
-    UIInvoiceController invoiceController,
+    IServiceScopeFactory scopeFactory,
     CurrencyNameTable currencyNameTable,
     LinkGenerator linkGenerator,
     Logs logger) : EventHostedServiceBase(eventAggregator, logger), IPeriodicTask
@@ -162,6 +163,8 @@ public class SubscriptionHostedService(
 
         if (amount > 0)
         {
+            using var scope = scopeFactory.CreateScope();
+            var invoiceController = scope.ServiceProvider.GetRequiredService<UIInvoiceController>();
             var request = await invoiceController.CreateInvoiceCoreRaw(new()
                 {
                     Currency = plan.Currency,

@@ -11,6 +11,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using QRCoder;
 
@@ -18,14 +19,12 @@ namespace BTCPayServer.Plugins.Emails.HostedServices;
 
 public class UserEventHostedService(
     EventAggregator eventAggregator,
-    UserManager<ApplicationUser> userManager,
+    IServiceScopeFactory serviceScopeFactory,
     ISettingsAccessor<ServerSettings> serverSettings,
     NotificationSender notificationSender,
     Logs logs)
     : EventHostedServiceBase(eventAggregator, logs)
 {
-    public UserManager<ApplicationUser> UserManager { get; } = userManager;
-
     protected override void SubscribeToEvents()
     {
         SubscribeAny<UserEvent>();
@@ -117,7 +116,9 @@ public class UserEventHostedService(
 
     private async Task<TriggerEvent> CreateTriggerEvent(string trigger, JObject model, ApplicationUser user)
     {
-        var admins = await UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+        using var scope = serviceScopeFactory.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var admins = await userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
         var adminMailboxes = string.Join(", ", admins.Select(a => a.GetMailboxAddress().ToString()).ToArray());
         model["Admins"] = new JObject()
         {

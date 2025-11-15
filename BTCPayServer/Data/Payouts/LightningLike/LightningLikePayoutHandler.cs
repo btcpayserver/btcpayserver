@@ -43,15 +43,13 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         public const string LightningLikePayoutHandlerClearnetNamedClient =
             nameof(LightningLikePayoutHandlerClearnetNamedClient);
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly UserService _userService;
-        private readonly IAuthorizationService _authorizationService;
 
         public LightningLikePayoutHandler(
             PayoutMethodId payoutMethodId,
             IOptions<LightningNetworkOptions> options,
             BTCPayNetwork network,
             PaymentMethodHandlerDictionary paymentHandlers,
-            IHttpClientFactory httpClientFactory, UserService userService, IAuthorizationService authorizationService)
+            IHttpClientFactory httpClientFactory)
         {
             _paymentHandlers = paymentHandlers;
             Network = network;
@@ -59,8 +57,6 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             _options = options;
             PaymentMethodId = PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode);
             _httpClientFactory = httpClientFactory;
-            _userService = userService;
-            _authorizationService = authorizationService;
             Currency = network.CryptoCode;
         }
 

@@ -186,7 +186,9 @@ namespace BTCPayServer.HostedServices
                         foreach (var prId in paymentRequestIds)
                         {
                             var pr = await _paymentRequestRepository.FindPaymentRequest(prId, null);
-                            var data = pr != null ? new JObject { ["title"] = pr.GetBlob().Title } : null;
+                            var data = pr?.GetBlob()?.Title is { } title 
+                                ? new JObject { ["title"] = title } 
+                                : null;
                             labels.Add(Attachment.PaymentRequest(prId, data));
                         }
                         

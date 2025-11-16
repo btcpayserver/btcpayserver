@@ -24,12 +24,14 @@ namespace BTCPayServer.HostedServices
     {
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly WalletRepository _walletRepository;
+        private readonly PaymentRequestRepository _paymentRequestRepository;
 
-        public TransactionLabelMarkerHostedService(PaymentMethodHandlerDictionary handlers, EventAggregator eventAggregator, WalletRepository walletRepository, Logs logs) :
+        public TransactionLabelMarkerHostedService(PaymentMethodHandlerDictionary handlers, EventAggregator eventAggregator, WalletRepository walletRepository, PaymentRequestRepository paymentRequestRepository, Logs logs) :
             base(eventAggregator, logs)
         {
             _handlers = handlers;
             _walletRepository = walletRepository;
+            _paymentRequestRepository = paymentRequestRepository;
         }
 
         protected override void SubscribeToEvents()
@@ -179,7 +181,15 @@ namespace BTCPayServer.HostedServices
                     {
                         Attachment.Invoice(invoiceEvent.Invoice.Id)
                     };
-                        labels.AddRange(PaymentRequestRepository.GetPaymentIdsFromInternalTags(invoiceEvent.Invoice).Select(Attachment.PaymentRequest));
+                        
+                        var paymentRequestIds = PaymentRequestRepository.GetPaymentIdsFromInternalTags(invoiceEvent.Invoice);
+                        foreach (var prId in paymentRequestIds)
+                        {
+                            var pr = await _paymentRequestRepository.FindPaymentRequest(prId, null);
+                            var data = pr != null ? new JObject { ["title"] = pr.GetBlob().Title } : null;
+                            labels.Add(Attachment.PaymentRequest(prId, data));
+                        }
+                        
                         labels.AddRange(AppService.GetAppInternalTags(invoiceEvent.Invoice).Select(Attachment.App));
 
                         await _walletRepository.AddWalletTransactionAttachment(walletId, transactionId, labels);

@@ -170,8 +170,22 @@ namespace BTCPayServer.Controllers
                 var loginContext = CreateLoginContext(user);
                 if (!await userService.CanLogin(loginContext))
                 {
-                    TempData.SetStatusLoginResult(loginContext);
-                    return View(model);
+                    if (user is null || !await userManager.CheckPasswordAsync(user, model.Password))
+                    {
+                        if (user is not null)
+                            await userManager.AccessFailedAsync(user);
+                        ModelState.AddModelError(string.Empty, errorMessage!);
+                        return View(model);
+                    }
+                    // Only show the real reason if the user has input the right password...
+                    else
+                    {
+                        if (loginContext.RedirectUrl is { } url)
+                            return Redirect(url);
+                        else
+                            TempData.SetStatusLoginResult(loginContext);
+                        return View(model);
+                    }
                 }
 
                 var fido2Devices = await fido2Service.HasCredentials(user!.Id);
@@ -762,6 +776,7 @@ namespace BTCPayServer.Controllers
                 if (needsInitialPassword && await userService.CanLogin(loginContext))
                 {
                     var signInResult = await signInManager.PasswordSignInAsync(user.Email!, model.Password, true, true);
+                    await userManager.UnsetInvitationTokenAsync(user.Id);
                     if (signInResult.Succeeded)
                     {
                         return RedirectToLocal(returnUrl);
@@ -784,7 +799,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            var user = await userManager.FindByInvitationTokenAsync<ApplicationUser>(userId, Uri.UnescapeDataString(code));
+            var user = await userManager.FindByInvitationTokenAsync(userId, Uri.UnescapeDataString(code));
             if (user == null)
             {
                 return NotFound();
@@ -812,6 +827,7 @@ namespace BTCPayServer.Controllers
                 Severity = StatusMessageModel.StatusSeverity.Info,
                 Message = StringLocalizer["Your password has been set by the user who invited you."].Value
             });
+            await userManager.UnsetInvitationTokenAsync(user.Id);
             return RedirectToAction(nameof(Login), new { email = user.Email });
         }
 

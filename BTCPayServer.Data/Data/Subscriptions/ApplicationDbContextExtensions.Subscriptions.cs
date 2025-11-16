@@ -29,6 +29,16 @@ public static partial class ApplicationDbContextExtensions
         return plan;
     }
 
+    public static async Task<bool> HasEntitlements(this DbSet<PlanData> plans, string planId, string entitlementCustomId)
+    {
+        var connection = plans.GetDbConnection();
+        return await connection.ExecuteScalarAsync<bool>("""
+                                              SELECT true FROM subs_plans_entitlements pe
+                                              JOIN subs_entitlements e ON e.id = pe.entitlement_id
+                                              WHERE pe.plan_id = @planId AND e.custom_id = @entitlementCustomId
+                                              """, new{ planId, entitlementCustomId });
+    }
+
     public static async Task FetchPlanEntitlementsAsync<T>(this DbSet<T> ctx, IEnumerable<PlanData> plans) where T : class
     {
         var planIds = plans.Select(p => p.Id).Distinct().ToArray();

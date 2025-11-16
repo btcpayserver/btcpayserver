@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -21,5 +22,6 @@ public class MonetizationPlugin : BaseBTCPayServerPlugin
         services.AddSingleton<MonetizationHostedService>();
         services.AddSingleton<IHostedService, MonetizationHostedService>(o => o.GetRequiredService<MonetizationHostedService>());
         services.AddSettingsAccessor<MonetizationSettings>();
+        services.AddSingleton<UserService.LoginExtension, MonetizationLoginExtension>();
     }
 }

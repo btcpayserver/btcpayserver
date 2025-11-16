@@ -129,6 +129,10 @@ namespace BTCPayServer.Services
             internal readonly ApplicationUser? _user = user;
             public ApplicationUser User => _user ?? throw new InvalidOperationException("User is not set");
             public List<LoginFailure> Failures { get; } = new();
+            /// <summary>
+            /// A redirect URL to redirect the user if login failed.
+            /// </summary>
+            public string? RedirectUrl { get; set; }
         }
 
         public async Task<bool> CanLogin(CanLoginContext context)

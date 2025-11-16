@@ -69,7 +69,7 @@ public class MonetizationHostedService(
         if (evt is (SubscriptionEvent.SubscriberActivated or SubscriptionEvent.SubscriberDisabled)
             and SubscriptionEvent.SubscriberEvent { Subscriber: {} sub })
         {
-            var userId = sub.GetMonetizationData()?.UserId;
+            var userId = sub.GetApplicationUserId();
             var user = await userManager.FindByIdAsync(userId ?? "");
             var activated = evt is SubscriptionEvent.SubscriberActivated;
             if (user is not null)
@@ -95,11 +95,10 @@ public class MonetizationHostedService(
     private async Task AttachUserIdToSubscriber(ApplicationUser user, SubscriptionEvent.NewSubscriber newSub)
     {
         await using var ctx = dbContextFactory.CreateContext();
-        var json = BaseEntityData.ToUpdateAdditionalDataJson(SubscriberMonetizationAdditionalData.Key, new SubscriberMonetizationAdditionalData()
-        {
-            UserId = user.Id
-        });
-        await ctx.Database.ExecuteSqlAsync($"UPDATE subs_subscribers SET additional_data = additional_data || {json}::JSONB WHERE Id = {newSub.Subscriber.Id}");
+        await ctx.Database.GetDbConnection()
+            .ExecuteAsync("""
+                          INSERT INTO customers_identities (customer_id, type, value) VALUES (@customerId, @identityType, @userId);
+                          """, new { customerId = newSub.Subscriber.CustomerId, userId = user.Id, identityType = SubscriberDataExtensions.IdentityType });
     }
 
     private bool IsMonetization(SubscriptionEvent.SubscriberEvent se)
@@ -121,17 +120,18 @@ public class MonetizationHostedService(
         dummy.Plan = plan;
         dummy.StartNextPlan(DateTimeOffset.UtcNow, hasTrial);
         var userIds = (await ctx.Database.GetDbConnection()
-            .QueryAsync<string>($"""
+            .QueryAsync<string>("""
                           WITH subs AS (
-                              SELECT id, additional_data->'{SubscriberMonetizationAdditionalData.Key}'->>'userId' user_id
-                              FROM subs_subscribers
-                              WHERE offering_id = @offeringId
+                              SELECT s.id, ci.value user_id
+                              FROM subs_subscribers s
+                              JOIN customers_identities ci ON ci.customer_id = s.customer_id
+                              WHERE s.offering_id = @offeringId AND ci.type = @applicationUserId
                           ),
                           non_admin_users AS (
                               SELECT DISTINCT u."Id" user_id, u."Email" email
                               FROM "AspNetUsers" u
                                     LEFT JOIN "AspNetUserRoles" ur ON u."Id" = ur."UserId"
-                                    LEFT JOIN "AspNetRoles" r ON r."Name"='{Roles.ServerAdmin}' AND ur."RoleId" = r."Id"
+                                    LEFT JOIN "AspNetRoles" r ON r."Name"=@adminRole AND ur."RoleId" = r."Id"
                               WHERE r."Id" IS NULL
                           ),
                           users_to_migrate AS (
@@ -147,9 +147,12 @@ public class MonetizationHostedService(
                               WHERE c.id IS NULL
                           ),
                           customers_already_created AS (
-                              SELECT c.id, um.email, um.user_id  FROM users_to_migrate um
+                              SELECT c.id AS customer_id, um.email, um.user_id  FROM users_to_migrate um
                               JOIN customers_identities ci ON ci.type = 'Email' AND ci.value = um.email
                               JOIN customers c ON c.id = ci.customer_id AND c.store_id = @storeId
+                          ),
+                          customers_all AS (
+                                SELECT * FROM customers_to_create UNION ALL SELECT * FROM customers_already_created
                           ),
                           inserted_customers AS (
                               INSERT INTO customers (id, store_id)
@@ -157,9 +160,15 @@ public class MonetizationHostedService(
                                   FROM customers_to_create cc
                               RETURNING id, store_id
                           ),
-                          inserted_identities AS (
+                          inserted_email_identities AS (
                               INSERT INTO customers_identities (customer_id, type, value)
                                      SELECT customer_id, 'Email', email FROM customers_to_create
+                                  RETURNING customer_id, type, value
+                          ),
+                          inserted_userId_identities AS (
+                              INSERT INTO customers_identities (customer_id, type, value)
+                                     SELECT customer_id, @applicationUserId, user_id FROM customers_all
+                                    ON CONFLICT DO NOTHING
                                   RETURNING customer_id, type, value
                           ),
                           inserted_subs AS (
@@ -174,8 +183,7 @@ public class MonetizationHostedService(
                               paid_amount,
                               phase,
                               active,
-                              optimistic_activation,
-                              additional_data)
+                              optimistic_activation)
                               SELECT um.customer_id,
                                      @offeringId,
                                      @planId,
@@ -186,13 +194,14 @@ public class MonetizationHostedService(
                                      @paidAmount,
                                      @phase,
                                      true,
-                                     false,
-                                     jsonb_build_object('{SubscriberMonetizationAdditionalData.Key}',jsonb_build_object('userId', um.user_id))
-                                     FROM (SELECT * FROM customers_to_create UNION ALL SELECT * FROM customers_already_created) um
+                                     false
+                                     FROM customers_all um
                               ON CONFLICT (customer_id, offering_id) DO NOTHING
-                              RETURNING additional_data->'{SubscriberMonetizationAdditionalData.Key}'->>'userId' user_id
+                              RETURNING customer_id
                           )
-                          SELECT user_id FROM inserted_subs;
+                          SELECT ci.value as user_id
+                          FROM inserted_subs
+                          JOIN customers_identities ci ON ci.customer_id = inserted_subs.customer_id AND ci.type = @applicationUserId;
                           """, new
             {
                 offeringId,
@@ -204,7 +213,9 @@ public class MonetizationHostedService(
                 periodEnd = dummy.PeriodEnd,
                 gracePeriodEnd = dummy.GracePeriodEnd,
                 paidAmount = dummy.PaidAmount,
-                phase = (hasTrial ? SubscriberData.PhaseTypes.Trial : SubscriberData.PhaseTypes.Normal).ToString()
+                phase = (hasTrial ? SubscriberData.PhaseTypes.Trial : SubscriberData.PhaseTypes.Normal).ToString(),
+                applicationUserId = SubscriberDataExtensions.IdentityType,
+                adminRole = Roles.ServerAdmin
             })).ToArray();
         if (userIds.Length != 0)
         {
@@ -221,7 +232,7 @@ public class MonetizationHostedService(
         if (userIds.Length == 0)
             return;
         await plan.EnsureEntitlmentLoaded(ctx);
-        var canLogin = plan.PlanEntitlements.Any(pe => pe.Entitlement.CustomId == MonetizationEntitlments.CanLogin);
+        var canLogin = await ctx.Plans.HasEntitlements(plan.Id, MonetizationEntitlments.CanLogin);
         var lockoutEnabled = !canLogin;
         DateTimeOffset? lockoutDate = canLogin ? null : DateTimeOffset.MaxValue;
         await ctx.Database.GetDbConnection()
@@ -240,9 +251,10 @@ public class MonetizationHostedService(
 
     private static async Task<string[]> GetUserIdsInPlan(ApplicationDbContext ctx, PlanData plan)
     => (await ctx.Database.GetDbConnection()
-        .QueryAsync<string>($"""
-                             SELECT additional_data->'{SubscriberMonetizationAdditionalData.Key}'->>'userId'
-                             FROM subs_subscribers
-                             WHERE offering_id=@offeringId AND plan_id = @planId
-                             """, new { planId = plan.Id, offeringId = plan.OfferingId })).ToArray();
+        .QueryAsync<string>("""
+                             SELECT ci.value
+                             FROM subs_subscribers s
+                             JOIN customers_identities ci ON ci.customer_id = s.customer_id
+                             WHERE s.offering_id=@offeringId AND s.plan_id = @planId AND ci.type = @applicationUserId
+                             """, new { planId = plan.Id, offeringId = plan.OfferingId, applicationUserId = SubscriberDataExtensions.IdentityType })).ToArray();
 }

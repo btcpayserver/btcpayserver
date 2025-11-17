@@ -568,7 +568,6 @@ public partial class UIOfferingController(
         var portal = new PortalSessionData()
         {
             SubscriberId = sub.Id,
-            Expiration = DateTimeOffset.UtcNow + TimeSpan.FromHours(1.0),
             BaseUrl = Request.GetRequestBaseUrl()
         };
         ctx.PortalSessions.Add(portal);

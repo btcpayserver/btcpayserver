@@ -19,6 +19,7 @@ public class MonetizationPlugin : BaseBTCPayServerPlugin
     public override void Execute(IServiceCollection services)
     {
         services.AddUIExtension("server-nav", "/Plugins/Monetization/Views/NavExtension.cshtml");
+        services.AddUIExtension("user-nav", "/Plugins/Monetization/Views/UserNavExtension.cshtml");
         services.AddSingleton<MonetizationHostedService>();
         services.AddSingleton<IHostedService, MonetizationHostedService>(o => o.GetRequiredService<MonetizationHostedService>());
         services.AddSettingsAccessor<MonetizationSettings>();

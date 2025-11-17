@@ -59,7 +59,6 @@ public class MonetizationLoginExtension(
                     var portal = new PortalSessionData()
                     {
                         SubscriberId = subscriber.Id,
-                        Expiration = DateTimeOffset.UtcNow + TimeSpan.FromHours(1.0),
                         BaseUrl = context.BaseUrl
                     };
                     ctx.PortalSessions.Add(portal);

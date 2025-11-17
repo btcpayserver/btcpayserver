@@ -448,11 +448,22 @@
                             <div class="text-muted">Plan price</div>
                             <div>@DisplayFormatter.Currency(Model.Subscriber.Plan.Price, Model.Subscriber.Plan.Currency, DisplayFormatter.CurrencyFormat.Symbol)</div>
                         </div>
-                        <div class="d-flex justify-content-between credit-applied">
-                            <div class="text-muted">Credit applied</div>
-                            <div class="text-success">
-                                - @DisplayFormatter.Currency(Model.Credit.CreditApplied, Model.Credit.Currency, DisplayFormatter.CurrencyFormat.Symbol)</div>
-                        </div>
+                        @if (Model.Credit.CreditApplied > 0m)
+                        {
+                            <div class="d-flex justify-content-between credit-applied">
+                                <div class="text-muted">Credit applied</div>
+                                <div class="text-success">
+                                    - @DisplayFormatter.Currency(Model.Credit.CreditApplied, Model.Credit.Currency, DisplayFormatter.CurrencyFormat.Symbol)</div>
+                            </div>
+                        }
+                        @if (Model.Credit.CreditApplied < 0m)
+                        {
+                            <div class="d-flex justify-content-between credit-past-due">
+                                <div class="text-muted">Past due</div>
+                                <div class="text-danger">
+                                    - @DisplayFormatter.Currency((-Model.Credit.CreditApplied), Model.Credit.Currency, DisplayFormatter.CurrencyFormat.Symbol)</div>
+                            </div>
+                        }
                         <div class="d-flex justify-content-between fw-semibold credit-next-charge">
                             <div>Next charge on @date</div>
                             <div>@DisplayFormatter.Currency(Model.Credit.NextCharge, Model.Credit.Currency, DisplayFormatter.CurrencyFormat.Symbol)</div>

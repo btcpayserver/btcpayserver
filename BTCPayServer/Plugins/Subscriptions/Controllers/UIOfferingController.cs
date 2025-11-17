@@ -484,7 +484,11 @@ public partial class UIOfferingController(
         if (plan is null && planId is not null)
             return NotFound();
 
-        plan ??= new PlanData();
+        plan ??= new PlanData()
+        {
+            CreatedAt = DateTimeOffset.UtcNow,
+            PlanEntitlements = new()
+        };
         plan.Name = vm.Name;
         plan.Description = vm.Description;
         plan.Price = vm.Price;
@@ -493,11 +497,8 @@ public partial class UIOfferingController(
         plan.TrialDays = vm.TrialDays;
         plan.OptimisticActivation = vm.OptimisticActivation;
         plan.Renewable = vm.Renewable;
-        if (planId is null)
-            plan.CreatedAt = DateTimeOffset.UtcNow;
         plan.RecurringType = vm.RecurringType;
         plan.OfferingId = vm.OfferingId;
-        plan.PlanEntitlements ??= new();
         plan.PlanChanges ??= new();
 
         foreach (var vmPC in vm.PlanChanges)

@@ -362,7 +362,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         edit.OptimisticActivation = true;
         await edit.Save();
 
-        // basic2@example.com is a basic plan subscriber (optimistic activation), so he is imediatly activated
+        // basic2@example.com is a basic plan subscriber (optimistic activation), so he is immediately activated
         await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () => {
             await offering.NewSubscriber("Basic Plan", "basic2@example.com", false);
         });

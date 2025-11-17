@@ -32,11 +32,17 @@ public class UserEvent(ApplicationUser user)
     {
         public string ApprovalLink { get; } = approvalLink;
 		public string ConfirmationEmailLink { get; set; } = confirmationEmail;
-		public static async Task<Registered> Create(ApplicationUser user, CallbackGenerator callbackGenerator)
+		public static async Task<Registered> Create(ApplicationUser user, ApplicationUser? invitedBy, CallbackGenerator callbackGenerator, bool sendInvitationEmail = true)
 		{
 			var approvalLink = callbackGenerator.ForApproval(user);
 			var confirmationEmail = await callbackGenerator.ForEmailConfirmation(user);
-			return new Registered(user, approvalLink, confirmationEmail);
+            if (invitedBy is null)
+                return new Registered(user, approvalLink, confirmationEmail);
+            var invitationLink = await callbackGenerator.ForInvitation(user);
+            return new Invited(user, invitedBy, invitationLink, approvalLink, confirmationEmail)
+            {
+                SendInvitationEmail = sendInvitationEmail
+            };
 		}
 	}
     public class Invited(ApplicationUser user, ApplicationUser invitedBy, string invitationLink, string approvalLink, string confirmationEmail) : Registered(user, approvalLink, confirmationEmail)
@@ -44,17 +50,6 @@ public class UserEvent(ApplicationUser user)
         public bool SendInvitationEmail { get; set; }
         public ApplicationUser InvitedByUser { get; } = invitedBy;
         public string InvitationLink { get; } = invitationLink;
-
-        public static async Task<Invited> Create(ApplicationUser user, ApplicationUser currentUser, CallbackGenerator callbackGenerator, bool sendEmail)
-        {
-			var invitationLink = await callbackGenerator.ForInvitation(user);
-			var approvalLink = callbackGenerator.ForApproval(user);
-			var confirmationEmail = await callbackGenerator.ForEmailConfirmation(user);
-			return new Invited(user, currentUser, invitationLink, approvalLink, confirmationEmail)
-            {
-                SendInvitationEmail = sendEmail
-            };
-		}
     }
     public class Updated(ApplicationUser user) : UserEvent(user)
     {

@@ -129,49 +129,25 @@ public class UIServerMonetizationController(
                     ctx.Entitlements.Add(e);
                 }
 
-                PlanData freePlan = new()
+                PlanData starterPlan = new()
                 {
-                    Name = "Free Plan",
+                    Name = "Starter Plan",
                     RecurringType = PlanData.RecurringInterval.Monthly,
-                    Renewable = false,
+                    TrialDays = 7,
                     Currency = currency,
                     OfferingId = offeringId,
                 };
-                ctx.Plans.Add(freePlan);
+                ctx.Plans.Add(starterPlan);
                 ctx.PlanEntitlements.AddRange(
-                    new[] { MonetizationEntitlments.CanLogin, "one-store" }
+                    new[] { MonetizationEntitlments.CanLogin }
                         .Select(e => new PlanEntitlementData()
                         {
-                            Plan = freePlan,
+                            Plan = starterPlan,
                             Entitlement = entitlements[e],
                         }));
 
-                PlanData paidPlan = new()
-                {
-                    Name = "Paid Plan",
-                    RecurringType = PlanData.RecurringInterval.Monthly,
-                    Price = 10m,
-                    Currency = currency,
-                    Renewable = true,
-                    OfferingId = offeringId
-                };
-                ctx.Plans.Add(paidPlan);
-                ctx.PlanEntitlements.AddRange(
-                    new[] { MonetizationEntitlments.CanLogin, "one-store", "unlimited-store" }
-                        .Select(e => new PlanEntitlementData()
-                        {
-                            Plan = paidPlan,
-                            Entitlement = entitlements[e],
-                        }));
-
-                ctx.PlanChanges.Add(new()
-                {
-                    Plan = freePlan,
-                    PlanChange = paidPlan,
-                    Type = PlanChangeData.ChangeType.Upgrade
-                });
                 await ctx.SaveChangesAsync();
-                defaultPlanId = freePlan.Id;
+                defaultPlanId = starterPlan.Id;
             }
             var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>() ?? new();
             settings.OfferingId = offeringId;
@@ -210,13 +186,11 @@ public class UIServerMonetizationController(
         return RedirectToAction(nameof(Monetization));
     }
 
-    private static Dictionary<string, EntitlementData> CreateDefaultEntitlements(string offeringId)
+    private Dictionary<string, EntitlementData> CreateDefaultEntitlements(string offeringId)
     {
         var entitlements = new[]
         {
-            (MonetizationEntitlments.CanLogin, "Can login to BTCPay Server"),
-            ("one-store", "Can create a one store"),
-            ("unlimited-store", "Can create more than one store"),
+            (MonetizationEntitlments.CanLogin, StringLocalizer["Can login to BTCPay Server"].Value),
         }.Select(e => new EntitlementData()
         {
             CustomId = e.Item1,

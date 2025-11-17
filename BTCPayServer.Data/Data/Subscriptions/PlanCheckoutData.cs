@@ -25,7 +25,6 @@ public class PlanCheckoutData : BaseEntityData
         SubscriberId = subscriber.Id;
         Plan = plan;
         PlanId = plan.Id;
-        IsTrial = plan.TrialDays > 0;
     }
     [Key]
     [Column("id")]

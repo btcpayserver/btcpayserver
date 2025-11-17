@@ -587,7 +587,7 @@ namespace BTCPayServer.Controllers
                         RegisteredAdmin = true;
                     }
 
-                    eventAggregator.Publish(await UserEvent.Registered.Create(user, callbackGenerator));
+                    eventAggregator.Publish(await UserEvent.Registered.Create(user, null, callbackGenerator));
                     RegisteredUserId = user.Id;
 
                     TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Account created."].Value;

@@ -11,8 +11,37 @@
             </div>
             <form method="post">
                 <div class="modal-body">
-                    <p html-translate="true">By activating monetization, new users registering to your server will need a subscription. This change doesn't affect your current users. Do you want to proceed?</p>
-                    <p v-if="isNew" v-pre>@ViewLocalizer["A new offering will be created on the currently selected store <strong>{0}<strong>", Html.Encode(Context.GetStoreData().StoreName)].</p>
+                    <p html-translate="true">By activating monetization, a new offering will be created in your store. New users will be added as subscriber
+                        of this offering, and access will be granted only to users with an active plan with feature "can-login" enabled.</p>
+                    <div v-if="isNew">
+                        <div v-pre>
+                            <div class="form-group">
+                                <label asp-for="SelectedStoreId" class="form-label" text-translate="true">Store</label>
+                                <select asp-for="SelectedStoreId" class="form-control" asp-items="Model.Stores"></select>
+                            </div>
+                            <div class="d-flex gap-3">
+                                <div class="form-group">
+                                    <label asp-for="StarterPlanCost" class="form-label" text-translate="true">Starter plan monthly cost</label>
+                                    <input inputmode="decimal" asp-for="StarterPlanCost" class="form-control"></input>
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="TrialDays" class="form-label"></label>
+                                    <div class="input-group">
+                                        <input asp-for="TrialDays" class="form-control" min="0" placeholder="7" />
+                                        <span class="input-group-text">days</span>
+                                    </div>
+                                    <span asp-validation-for="TrialDays" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-check">
+                                    <input class="form-check-input" asp-for="MigrateExistingUsers" />
+                                    <label class="form-check-label" asp-for="MigrateExistingUsers"></label>
+                                </div>
+                                <p class="text-muted" text-translate="true">Those initial settings can be modified later.</p>
+                            </div>
+                        </div>
+                    </div>
                     <div v-if="!isNew" class="form-group">
                         <label asp-for="SelectedOfferingId" class="form-label" text-translate="true">Select offering</label>
                         <select class="form-select" asp-for="SelectedOfferingId"
@@ -32,7 +61,8 @@
                             class="btn btn-success"
                             name="command"
                             value="activate-monetization"
-                            text-translate="true">Proceed</button>
+                            text-translate="true">Proceed
+                    </button>
                 </div>
             </form>
         </div>

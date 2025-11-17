@@ -70,7 +70,8 @@ public class MonetizationLoginExtension(
                     var checkout = new PlanCheckoutData(subscriber, upgradePlan)
                     {
                         BaseUrl = context.BaseUrl,
-                        IsTrial = upgradePlan.TrialDays > 0
+                        IsTrial = upgradePlan.TrialDays > 0,
+                        OnPay = PlanCheckoutData.OnPayBehavior.HardMigration
                     };
                     ctx.PlanCheckouts.Add(checkout);
                     await ctx.SaveChangesAsync();

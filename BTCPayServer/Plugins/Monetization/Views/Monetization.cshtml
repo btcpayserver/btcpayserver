@@ -14,10 +14,6 @@
     @if (Model.DefaultPlan is null && store is not null)
     {
         <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <span>Selected store:</span>
-                <span class="fw-bold">@store.StoreName</span>
-            </div>
             @if (Model.ActivateModal.Offerings.Count > 0)
             {
                 <a
@@ -95,7 +91,7 @@
                    data-bs-toggle="modal"
                    data-bs-target="#migrateUsers"
                    text-translate="true">
-                    Migrate existing users
+                    Migrate existing non-admin users
                 </a>
             </div>
         </div>

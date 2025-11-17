@@ -11,9 +11,13 @@ using BTCPayServer.Plugins.Monetization.Views;
 using BTCPayServer.Plugins.Subscriptions;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
 using BTCPayServer.Views.UIStoreMembership;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -26,19 +30,23 @@ namespace BTCPayServer.Plugins.Monetization.Controllers;
 [Route("server/monetization")]
 [Area(MonetizationPlugin.Area)]
 public class UIServerMonetizationController(
-    ApplicationDbContextFactory contextFactory,
+    ApplicationDbContext ctx,
     MonetizationHostedService monetizationService,
-    LinkGenerator linkGenerator,
     SettingsRepository settingsRepository,
     AppService appService,
+    CurrencyNameTable currencyNameTable,
+    UserManager<ApplicationUser> userManager,
+    StoreRepository storeRepo,
+    ViewLocalizer viewLocalizer,
+    LinkGenerator linkGenerator,
     IStringLocalizer stringLocalizer) : Controller
 {
+    public ViewLocalizer ViewLocalizer { get; } = viewLocalizer;
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
 
     [HttpGet]
     public async Task<IActionResult> Monetization()
     {
-        await using var ctx = contextFactory.CreateContext();
         var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>();
         var vm = new MonetizationViewModel()
         {
@@ -71,7 +79,8 @@ public class UIServerMonetizationController(
         }
 
         string GetLabel(PlanData p) => canLogin.Contains(p.Id) ? StringLocalizer["{0} (Can login)", p.Name] : p.Name;
-        vm.ActivateModal = new ActivateMonetizationModelViewModel(settings, offerings);
+        var stores = await storeRepo.GetStoresByUserId(userManager.GetUserId(User)!);
+        vm.ActivateModal = new ActivateMonetizationModelViewModel(settings, offerings, storeId, stores);
         vm.MigrateUsersModal = new MigrateUsersModalViewModel()
         {
             AvailablePlans = activePlans.OrderBy(p => p.Name).Select(p => new SelectListItem(GetLabel(p), p.Id)).ToList() ?? [],
@@ -83,8 +92,9 @@ public class UIServerMonetizationController(
     [HttpPost]
     public async Task<IActionResult> Monetization(MonetizationViewModel vm, string command)
     {
-        var selectedStore = this.HttpContext.GetCurrentStoreId();
-        if (selectedStore is null)
+        var selectedStore = vm.ActivateModal?.SelectedStoreId ?? this.HttpContext.GetCurrentStoreId() ?? "";
+        var store = await ctx.Stores.FindAsync(selectedStore);
+        if (store is null)
         {
             TempData.SetStatusMessageModel(new()
             {
@@ -94,13 +104,10 @@ public class UIServerMonetizationController(
             return RedirectToAction(nameof(Monetization));
         }
 
-        await using var ctx = contextFactory.CreateContext();
-        var store = await ctx.Stores.FindAsync(selectedStore);
-        var currency = store!.GetStoreBlob().DefaultCurrency;
         if (command == "activate-monetization")
         {
-            string? offeringId;
-            string? defaultPlanId;
+            string? offeringId = null;
+            string? defaultPlanId = null;
             if (vm is { ActivateModal: { SelectedOfferingId: { } selectedOfferingId, SelectedPlanId: { } defaultPlanId2 } })
             {
                 var offering = await ctx.Offerings.GetOfferingData(selectedOfferingId, selectedStore);
@@ -119,8 +126,10 @@ public class UIServerMonetizationController(
                     }
                 }
             }
-            else
+            else if (vm.ActivateModal is { })
             {
+                if (!ModelState.IsValid)
+                    return await Monetization();
                 (_, offeringId) = await appService.CreateOffering(selectedStore, "BTCPay Server Access");
 
                 var entitlements = CreateDefaultEntitlements(offeringId);
@@ -129,12 +138,16 @@ public class UIServerMonetizationController(
                     ctx.Entitlements.Add(e);
                 }
 
+                var currency = store.GetStoreBlob().DefaultCurrency;
+                var price = vm.ActivateModal.StarterPlanCost;
+                price = Math.Round(price, currencyNameTable.GetNumberFormatInfo(currency)?.CurrencyDecimalDigits ?? 2);
                 PlanData starterPlan = new()
                 {
                     Name = "Starter Plan",
                     RecurringType = PlanData.RecurringInterval.Monthly,
-                    TrialDays = 7,
+                    TrialDays = vm.ActivateModal.TrialDays,
                     Currency = currency,
+                    Price = price,
                     OfferingId = offeringId,
                 };
                 ctx.Plans.Add(starterPlan);
@@ -148,16 +161,28 @@ public class UIServerMonetizationController(
 
                 await ctx.SaveChangesAsync();
                 defaultPlanId = starterPlan.Id;
+
+                if (vm.ActivateModal.MigrateExistingUsers)
+                {
+                    await monetizationService.MigrateUsers(offeringId, vm.MigrateUsersModal?.SelectedPlanId);
+                }
             }
-            var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>() ?? new();
-            settings.OfferingId = offeringId;
-            settings.DefaultPlanId = defaultPlanId;
-            await settingsRepository.UpdateSetting(settings);
-            TempData.SetStatusMessageModel(new()
+
+            if (offeringId is not null &&
+                defaultPlanId is not null &&
+                await ctx.Offerings.GetOfferingData(offeringId) is {} off)
             {
-                Message = StringLocalizer["Monetization activated, users who register to your server from now will be subscriber of this offering."],
-                Severity = StatusMessageModel.StatusSeverity.Success
-            });
+                var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>() ?? new();
+                settings.OfferingId = offeringId;
+                settings.DefaultPlanId = defaultPlanId;
+                await settingsRepository.UpdateSetting(settings);
+                var offeringUrl = linkGenerator.OfferingLink(off.App.StoreDataId, off.Id, SubscriptionSection.Plans, Request.GetRequestBaseUrl());
+                TempData.SetStatusMessageModel(new()
+                {
+                    LocalizedHtml = ViewLocalizer["Monetization activated, users who register to your server from now will be subscriber of <a class=\"alert-link\" href=\"{0}\">this offering</a>.", offeringUrl],
+                    Severity = StatusMessageModel.StatusSeverity.Success
+                });
+            }
         }
         else if (command == "migrate-users")
         {
@@ -198,10 +223,5 @@ public class UIServerMonetizationController(
             OfferingId = offeringId,
         }).ToDictionary(e => e.CustomId, e => e);
         return entitlements;
-    }
-
-    private RedirectResult RedirectToOffering(string selectedStore, string offeringId)
-    {
-        return Redirect(linkGenerator.OfferingLink(selectedStore, offeringId, SubscriptionSection.Plans, Request.GetRequestBaseUrl()));
     }
 }

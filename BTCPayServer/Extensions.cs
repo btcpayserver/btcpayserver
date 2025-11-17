@@ -879,11 +879,22 @@ namespace BTCPayServer
             {
                 Severity = loginContext._user is null ? StatusMessageModel.StatusSeverity.Error : StatusMessageModel.StatusSeverity.Warning
             };
-            var failures =
-                loginContext
-                .Failures
-                .Select(f => f.Html is null ? HtmlEncoder.Default.Encode(f.Text.Value) : f.Html.Value)
-                .ToArray();
+
+            List<string> failures = new();
+            foreach (var failure in loginContext.Failures)
+            {
+                StringWriter writer = new();
+                if (failure.Html is null)
+                {
+                    writer.Write(failure.Text.Value);
+                }
+                else
+                {
+                    failure.Html.WriteTo(writer, HtmlEncoder.Default);
+                }
+                failures.Add(writer.ToString());
+            }
+
             model.Html = string.Join("<br/>", failures);
             tempData.SetStatusMessageModel(model);
         }

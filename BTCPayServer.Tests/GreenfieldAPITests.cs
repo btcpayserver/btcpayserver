@@ -54,41 +54,6 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        [Trait("Lightning", "Lightning")]
-        public async Task LocalClientTests()
-        {
-            using var tester = CreateServerTester();
-            tester.ActivateLightning();
-            await tester.StartAsync();
-            await tester.EnsureChannelsSetup();
-            var user = tester.NewAccount();
-            await user.GrantAccessAsync();
-            await user.MakeAdmin();
-            user.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
-            var factory = tester.PayTester.GetService<IBTCPayServerClientFactory>();
-            Assert.NotNull(factory);
-            var client = await factory.Create(user.UserId, user.StoreId);
-            await client.GetCurrentUser();
-            await client.GetStores();
-            var store = await client.GetStore(user.StoreId);
-            Assert.NotNull(store);
-            var addr = await client.GetLightningDepositAddress(user.StoreId, "BTC");
-            Assert.NotNull(BitcoinAddress.Create(addr, Network.RegTest));
-
-            await user.CreateStoreAsync();
-            var store1 = user.StoreId;
-            await user.CreateStoreAsync();
-            var store2 = user.StoreId;
-            var store1Client = await factory.Create(null, store1);
-            var store2Client = await factory.Create(null, store2);
-            var store1Res = await store1Client.GetStore(store1);
-            var store2Res = await store2Client.GetStore(store2);
-            Assert.Equal(store1, store1Res.Id);
-            Assert.Equal(store2, store2Res.Id);
-        }
-
-        [Fact(Timeout = TestTimeout)]
-        [Trait("Integration", "Integration")]
         public async Task MissingPermissionTest()
         {
             using var tester = CreateServerTester();

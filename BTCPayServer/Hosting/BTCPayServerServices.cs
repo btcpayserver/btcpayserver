@@ -481,10 +481,6 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             services.AddSingleton<EmailSenderFactory>();
             services.AddSingleton<InvoiceActivator>();
 
-            //create a simple client which hooks up to the http scope
-            services.AddScoped<BTCPayServerClient, LocalBTCPayServerClient>();
-            //also provide a factory that can impersonate user/store id
-            services.AddSingleton<IBTCPayServerClientFactory, BTCPayServerClientFactory>();
             services.AddPayoutProcesors();
             services.AddForms();
 

@@ -73,7 +73,6 @@ using BTCPayServer.Payouts;
 using ExchangeSharp;
 using Microsoft.Extensions.Localization;
 using Microsoft.AspNetCore.Mvc.Localization;
-using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Hosting
@@ -427,7 +426,7 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             services.AddSingleton<PayoutMethodHandlerDictionary>();
 
             services.AddSingleton<NotificationManager>();
-            services.AddScoped<NotificationSender>();
+            services.AddSingleton<NotificationSender>();
 
             RegisterExchangeRecommendations(services);
             services.AddSingleton<DefaultRulesCollection>();
@@ -481,10 +480,6 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             services.AddSingleton<EmailSenderFactory>();
             services.AddSingleton<InvoiceActivator>();
 
-            //create a simple client which hooks up to the http scope
-            services.AddScoped<BTCPayServerClient, LocalBTCPayServerClient>();
-            //also provide a factory that can impersonate user/store id
-            services.AddSingleton<IBTCPayServerClientFactory, BTCPayServerClientFactory>();
             services.AddPayoutProcesors();
             services.AddForms();
 

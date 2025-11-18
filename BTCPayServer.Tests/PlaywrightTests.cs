@@ -28,6 +28,7 @@ using ExchangeSharp;
 using LNURL;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
 using static Microsoft.Playwright.Assertions;
 using NBitcoin;
@@ -200,7 +201,8 @@ namespace BTCPayServer.Tests
             await s.Page.FillAsync("#Email", changedEmail);
             await s.ClickPagePrimary();
             await s.FindAlertMessage();
-            var manager = tester.PayTester.GetService<UserManager<ApplicationUser>>();
+            using var scope = tester.PayTester.ServiceProvider.CreateScope();
+            var manager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             Assert.NotNull(await manager.FindByNameAsync(changedEmail));
             Assert.NotNull(await manager.FindByEmailAsync(changedEmail));
         }
@@ -1242,13 +1244,9 @@ namespace BTCPayServer.Tests
             await s.LogIn(admin.RegisterDetails.Email, admin.RegisterDetails.Password);
             await s.GoToHome();
 
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                Assert.Equal("1", await s.Page.Locator("#NotificationsBadge").TextContentAsync());
-            });
-
+            await Expect(s.Page.Locator("#NotificationsBadge")).ToContainTextAsync("1");
             await s.Page.ClickAsync("#NotificationsHandle");
-            await s.Page.Locator($"#NotificationsList .notification:has-text('New user {unapproved.RegisterDetails.Email} requires approval')").WaitForAsync();
+            await Expect(s.Page.Locator("#NotificationsList .notification")).ToContainTextAsync($"New user {unapproved.RegisterDetails.Email} requires approval");
             await s.Page.ClickAsync("#NotificationsMarkAllAsSeen");
 
             await s.GoToServer(ServerNavPages.Policies);
@@ -1754,8 +1752,8 @@ namespace BTCPayServer.Tests
             opening = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("text=View");
             newPage = await opening;
-            await Expect(newPage.Locator("body")).ToContainTextAsync("Description Edit");
-            await Expect(newPage.Locator("body")).ToContainTextAsync("PP1 Edited");
+            await Expect(newPage.GetByTestId("description")).ToContainTextAsync("Description Edit");
+            await Expect(newPage.GetByTestId("title")).ToContainTextAsync("PP1 Edited");
         }
 
         [Fact]
@@ -2288,22 +2286,23 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage();
             Assert.DoesNotContain("Unarchive", await s.Page.Locator("#btn-archive-toggle").InnerTextAsync());
             await s.GoToInvoices(storeId);
+            await s.Page.WaitForSelectorAsync($"tr[id=invoice_{invoiceId}]");
             Assert.Contains(invoiceId, await s.Page.ContentAsync());
 
             // archive via list
-            await s.Page.Locator($".mass-action-select[value=\"{invoiceId}\"]").ClickAsync();
-            await s.Page.Locator("#ArchiveSelected").ClickAsync();
-            Assert.Contains("1 invoice archived", await (await s.FindAlertMessage()).InnerTextAsync());
+            await s.Page.ClickAsync($".mass-action-select[value=\"{invoiceId}\"]");
+            await s.Page.ClickAsync("#ArchiveSelected");
+            await s.FindAlertMessage(partialText: "1 invoice archived");
             Assert.DoesNotContain(invoiceId, await s.Page.ContentAsync());
 
             // unarchive via list
             await s.Page.Locator("#StatusOptionsToggle").ClickAsync();
             await s.Page.Locator("#StatusOptionsIncludeArchived").ClickAsync();
             Assert.Contains(invoiceId, await s.Page.ContentAsync());
-            await s.Page.Locator($".mass-action-select[value=\"{invoiceId}\"]").ClickAsync();
-            await s.Page.Locator("#UnarchiveSelected").ClickAsync();
-            Assert.Contains("1 invoice unarchived", await (await s.FindAlertMessage()).InnerTextAsync());
-            Assert.Contains(invoiceId, await s.Page.ContentAsync());
+            await s.Page.ClickAsync($".mass-action-select[value=\"{invoiceId}\"]");
+            await s.Page.ClickAsync("#UnarchiveSelected");
+            await s.FindAlertMessage(partialText: "1 invoice unarchived");
+            await s.Page.WaitForSelectorAsync($"tr[id=invoice_{invoiceId}]");
 
             // When logout out we should not be able to access store and invoice details
             await s.GoToUrl("/account");

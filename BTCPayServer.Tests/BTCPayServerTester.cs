@@ -169,6 +169,10 @@ namespace BTCPayServer.Tests
 #endif
             var conf = confBuilder.Build();
             _Host = new WebHostBuilder()
+                    .UseDefaultServiceProvider(options =>
+                    {
+                        options.ValidateScopes = true;
+                    })
                     .UseConfiguration(conf)
                     .UseContentRoot(FindBTCPayServerDirectory())
                     .UseWebRoot(Path.Combine(FindBTCPayServerDirectory(), "wwwroot"))
@@ -284,10 +288,7 @@ namespace BTCPayServer.Tests
         public string IntegratedLightning { get; internal set; }
         public bool InContainer { get; internal set; }
 
-        public T GetService<T>()
-        {
-            return _Host.Services.GetRequiredService<T>();
-        }
+        public T GetService<T>() => _Host.Services.GetRequiredService<T>();
 
         public IServiceProvider ServiceProvider => _Host.Services;
 

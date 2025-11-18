@@ -3,6 +3,7 @@ const baseUrl = Object.values(document.scripts).find(s => s.src.includes('/main/
 const flatpickrInstances = [];
 
 
+
 const switchTimeFormat = event => {
     const curr = event.target.dataset.mode || 'localized';
     const mode = curr === 'relative' ? 'localized' : 'relative';
@@ -148,7 +149,20 @@ const initLabelManagers = () => {
     });
 }
 
+// Remove this hack when browser fix bug https://github.com/btcpayserver/btcpayserver/issues/7003
+const reinsertSvgUseElements = () => {
+    document.querySelectorAll('svg use').forEach(useElement => {
+        const svg = useElement.closest('svg');
+        if (svg) {
+            const clone = svg.cloneNode(true);
+            if (svg.parentNode)
+                svg.parentNode.replaceChild(clone, svg);
+        }
+    });
+};
+
 document.addEventListener("DOMContentLoaded", () => {
+    reinsertSvgUseElements();
     // sticky header
     const stickyHeader = document.querySelector('#mainContent > section .sticky-header');
     if (stickyHeader) {

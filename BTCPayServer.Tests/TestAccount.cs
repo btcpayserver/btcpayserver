@@ -66,7 +66,7 @@ namespace BTCPayServer.Tests
                 await userManager.AddToRoleAsync(u, Roles.ServerAdmin);
             else
                 await userManager.RemoveFromRoleAsync(u, Roles.ServerAdmin);
-            IsAdmin = true;
+            IsAdmin = isAdmin;
         }
 
         public Task<BTCPayServerClient> CreateClient()

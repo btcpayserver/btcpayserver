@@ -73,7 +73,6 @@ using BTCPayServer.Payouts;
 using ExchangeSharp;
 using Microsoft.Extensions.Localization;
 using Microsoft.AspNetCore.Mvc.Localization;
-using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Hosting

@@ -363,8 +363,11 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         await edit.Save();
 
         // basic2@example.com is a basic plan subscriber (optimistic activation), so he is imediatly activated
-        await offering.NewSubscriber("Basic Plan", "basic2@example.com", false);
+        await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () => {
+            await offering.NewSubscriber("Basic Plan", "basic2@example.com", false);
+        });
 
+        await s.FastReloadAsync();
         await offering.AssertHasSubscriber("enterprise@example.com", new()
         {
             Phase = SubscriberData.PhaseTypes.Trial,
@@ -381,7 +384,9 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
 
         // Mark the invoice of basic2 invalid, so he should go from active to inactive
         var api = await s.AsTestAccount().CreateClient();
-        var invoiceId = (await api.GetInvoices(storeId)).First().Id;
+        var invoice = (await api.GetInvoices(storeId)).First();
+        var invoiceId = invoice.Id;
+        Assert.Equal("basic2@example.com", invoice.Metadata["buyerEmail"]?.ToString());
 
         var waiting = offering.WaitEvent<SubscriptionEvent.SubscriberEvent.SubscriberDisabled>();
         await api.MarkInvoiceStatus(storeId, invoiceId, new()
@@ -392,7 +397,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         Assert.True(disabled.Subscriber.IsSuspended);
         Assert.Equal("The plan has been started by an invoice which later became invalid.", disabled.Subscriber.SuspensionReason);
 
-        await s.Page.ReloadAsync(new() { WaitUntil = WaitUntilState.Commit });
+        await s.FastReloadAsync();
 
         await offering.AssertHasSubscriber("basic2@example.com",
             new()
@@ -411,7 +416,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         var activated = await activating;
         Assert.Equal("basic@example.com", activated.Subscriber.Customer.GetPrimaryIdentity());
 
-        await s.Page.ReloadAsync(new() { WaitUntil = WaitUntilState.Commit });
+        await s.FastReloadAsync();
 
         // Payment confirmed, this one should be active now
         await offering.AssertHasSubscriber("basic@example.com",

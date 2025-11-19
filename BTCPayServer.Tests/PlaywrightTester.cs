@@ -323,7 +323,7 @@ namespace BTCPayServer.Tests
             await GoToUrl("/login");
         }
         public async Task Logout()
-        { 
+        {
             await Page.Locator("#menu-item-Account").ClickAsync();
             await Page.Locator("#Nav-Logout").ClickAsync();
         }
@@ -827,5 +827,8 @@ namespace BTCPayServer.Tests
                Assert.Contains("- Denied</h", content);
             }
         }
+
+        public Task FastReloadAsync()
+            => Page.ReloadAsync(new() { WaitUntil = WaitUntilState.Commit });
     }
 }

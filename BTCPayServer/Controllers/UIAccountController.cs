@@ -23,11 +23,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using NBitcoin.DataEncoders;
-using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Controllers
@@ -545,6 +543,12 @@ namespace BTCPayServer.Controllers
             }
             if (PoliciesSettings.LockSubscription && !User.IsInRole(Roles.ServerAdmin))
                 return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
+
+            if (!string.IsNullOrWhiteSpace(PoliciesSettings.RegisterPageRedirect))
+            {
+                return Redirect(HttpContext.Request.GetAbsoluteUri(PoliciesSettings.RegisterPageRedirect));
+            }
+
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
@@ -555,16 +559,13 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null, bool logon = true)
         {
             if (!CanLoginOrRegister())
-            {
-                return RedirectToAction("Register");
-            }
+                return RedirectToAction(nameof(Register));
+            var r = Register(returnUrl);
+            if (r is not ViewResult)
+                return r;
 
-            ViewData["ReturnUrl"] = returnUrl;
             ViewData["Logon"] = logon.ToString(CultureInfo.InvariantCulture).ToLowerInvariant();
             var policies = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
-            if (policies.LockSubscription && !User.IsInRole(Roles.ServerAdmin))
-                return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
-
             if (ModelState.IsValid)
             {
                 var anyAdmin = (await userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();

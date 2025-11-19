@@ -104,6 +104,8 @@ public class UIServerMonetizationController(
             return RedirectToAction(nameof(Monetization));
         }
 
+        var registrationLink = Url.Action(action: nameof(UIUserMonetizationController.NewUser), controller: "UIUserMonetization");
+
         if (command == "activate-monetization")
         {
             string? offeringId = null;
@@ -160,6 +162,11 @@ public class UIServerMonetizationController(
                         }));
 
                 await ctx.SaveChangesAsync();
+
+                var policies = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new();
+                policies.RequiresConfirmedEmail = true;
+                policies.RegisterPageRedirect = registrationLink;
+                await settingsRepository.UpdateSetting(policies);
                 defaultPlanId = starterPlan.Id;
 
                 if (vm.ActivateModal.MigrateExistingUsers)
@@ -176,6 +183,14 @@ public class UIServerMonetizationController(
                 settings.OfferingId = offeringId;
                 settings.DefaultPlanId = defaultPlanId;
                 await settingsRepository.UpdateSetting(settings);
+
+                var policies = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new();
+                if (policies.RegisterPageRedirect == registrationLink)
+                {
+                    policies.RegisterPageRedirect = null;
+                    await settingsRepository.UpdateSetting(policies);
+                }
+
                 var offeringUrl = linkGenerator.OfferingLink(off.App.StoreDataId, off.Id, SubscriptionSection.Plans, Request.GetRequestBaseUrl());
                 TempData.SetStatusMessageModel(new()
                 {

@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -181,7 +182,11 @@ namespace BTCPayServer.Controllers
                     else
                     {
                         if (loginContext.RedirectUrl is { } url)
+                        {
+                            var principal = await signInManager.CreateUserPrincipalAsync(user);
+                            await this.HttpContext.SignInAsync(AuthenticationSchemes.PasswordVerified, principal);
                             return Redirect(url);
+                        }
                         else
                             TempData.SetStatusLoginResult(loginContext);
                         return View(model);

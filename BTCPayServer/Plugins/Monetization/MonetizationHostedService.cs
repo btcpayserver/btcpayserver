@@ -109,6 +109,7 @@ public class MonetizationHostedService(
                 parameters.Add("email", reg.User.Email);
                 parameters.Add("customerId", CustomerData.GenerateId());
             });
+            // Fire NewSubscriber event!
         }
     }
 
@@ -167,7 +168,8 @@ public class MonetizationHostedService(
         var hasTrial = plan.TrialDays > 0;
         var dummy = new SubscriberData();
         dummy.Plan = plan;
-        dummy.StartNextPlan(DateTimeOffset.UtcNow, hasTrial);
+        if (hasTrial)
+            dummy.StartNextPlan(DateTimeOffset.UtcNow, hasTrial);
 
         DynamicParameters parameters = new(new
         {
@@ -180,7 +182,8 @@ public class MonetizationHostedService(
             periodEnd = dummy.PeriodEnd,
             gracePeriodEnd = dummy.GracePeriodEnd,
             paidAmount = dummy.PaidAmount,
-            phase = (hasTrial ? SubscriberData.PhaseTypes.Trial : SubscriberData.PhaseTypes.Normal).ToString(),
+            phase = (hasTrial ? SubscriberData.PhaseTypes.Trial : SubscriberData.PhaseTypes.Expired).ToString(),
+            active = hasTrial,
             applicationUserId = SubscriberDataExtensions.IdentityType,
             adminRole = Roles.ServerAdmin
         });
@@ -241,7 +244,7 @@ public class MonetizationHostedService(
                                            @gracePeriodEnd,
                                            @paidAmount,
                                            @phase,
-                                           true,
+                                           @active,
                                            false
                                            FROM customers_all um
                                     ON CONFLICT (customer_id, offering_id) DO NOTHING
@@ -250,12 +253,13 @@ public class MonetizationHostedService(
                                 SELECT i.customer_id, COALESCE(u.value, ci.value) user_id
                                 FROM inserted_subs i
                                 LEFT JOIN customers_identities ci ON ci.type = @applicationUserId AND ci.customer_id = i.customer_id
-                                LEFT JOIN inserted_userId_identities u ON u.customer_id = ci.customer_id;
+                                LEFT JOIN inserted_userId_identities u ON u.customer_id = i.customer_id;
                                 """, parameters)).ToArray();
         if (userIds.Length != 0)
         {
             await SubscriptionHostedService.UpdatePlanStats(ctx, plan.Id);
-            await UpdateUserLockoutStatus(ctx, plan, userIds.Select(c => c.CustomerId).ToArray());
+            await UpdateUserLockoutStatus(ctx, plan, userIds.Select(c => c.UserId).ToArray());
+            // We expect the call to call NewSubscriberEvent.
         }
 
         return userIds.Length;
@@ -267,21 +271,39 @@ public class MonetizationHostedService(
             userIds = await GetUserIdsInPlan(ctx, plan);
         if (userIds.Length == 0)
             return;
-        var canLogin = await ctx.Plans.HasEntitlements(plan.Id, MonetizationEntitlments.CanAccess);
-        var lockoutEnabled = !canLogin;
-        DateTimeOffset? lockoutDate = canLogin ? null : DateTimeOffset.MaxValue;
-        await ctx.Database.GetDbConnection()
-            .ExecuteAsync("""
-                          UPDATE "AspNetUsers" SET "LockoutEnabled" = @lockoutEnabled,
-                                                   "LockoutEnd" = @lockoutDate,
-                                                   "SecurityStamp" = translate(encode(decode(md5("Id" || @salt), 'hex'), 'base64'), '/=+-', '')
-                          WHERE "Id" = ANY(@userIds) AND ("LockoutEnabled" IS DISTINCT FROM @lockoutEnabled OR "LockoutEnd" IS DISTINCT FROM @lockoutDate);
-                          """, new { userIds, lockoutEnabled, lockoutDate, salt = RandomUtils.GetUInt256().ToString() });
-        foreach (var userId in userIds)
-            if (canLogin)
-                disabledUsers.Remove(userId);
+        var canAccess = await ctx.Plans.HasEntitlements(plan.Id, MonetizationEntitlments.CanAccess);
+        var updated = await ctx.Database.GetDbConnection()
+            .QueryAsync<(string UserId, bool LockoutEnabled)>("""
+                          WITH
+                          subs AS (
+                              SELECT user_id AS user_id,
+                                     NOT (ss.active AND @canAccess) AS lockout_enabled,
+                                     CASE WHEN (ss.active AND @canAccess) THEN NULL ELSE 'infinity'::timestamptz END lockout_end
+                              FROM unnest(@userIds) AS user_id
+                                       JOIN customers_identities ci ON ci.type = @applicationUserId AND ci.value = user_id
+                                       JOIN subs_subscribers ss ON ss.customer_id = ci.customer_id
+                                       JOIN "AspNetUsers" ON "AspNetUsers"."Id" = user_id
+                              WHERE ss.plan_id = @planId
+                          )
+                          UPDATE "AspNetUsers"
+                          SET "LockoutEnabled" = subs.lockout_enabled,
+                              "LockoutEnd" = subs.lockout_end,
+                              "SecurityStamp" = translate(encode(decode(md5("Id" || @salt), 'hex'), 'base64'), '/=+-', '')
+                          FROM subs WHERE "AspNetUsers"."Id" = subs.user_id AND ("AspNetUsers"."LockoutEnabled" IS DISTINCT FROM subs.lockout_enabled OR "AspNetUsers"."LockoutEnd" IS DISTINCT FROM subs.lockout_end)
+                          RETURNING "Id", "LockoutEnabled";
+                          """,
+                new{
+                    userIds,
+                    planId = plan.Id,
+                    salt = RandomUtils.GetUInt256().ToString(),
+                    applicationUserId = SubscriberDataExtensions.IdentityType,
+                    canAccess
+                });
+        foreach (var update in updated)
+            if (update.LockoutEnabled)
+                disabledUsers.Add(update.UserId);
             else
-                disabledUsers.Add(userId);
+                disabledUsers.Remove(update.UserId);
     }
 
     private static async Task<string[]> GetUserIdsInPlan(ApplicationDbContext ctx, PlanData plan)

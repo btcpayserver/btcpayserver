@@ -189,6 +189,10 @@ public class UIServerMonetizationController(
             var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>() ?? new();
             var plan = await ctx.Plans.GetPlanFromId(vm.MigrateUsersModal?.SelectedPlanId ?? "");
             var count = await monetizationService.MigrateUsers(settings.OfferingId, vm.MigrateUsersModal?.SelectedPlanId);
+            // Should we fire NewSubscriber event?
+            // Given this is a one time operation maybe not...
+            // This means the email rules won't be triggered
+            // Anyway, if we do, we should do it on a separate task to not block this method.
             TempData.SetStatusMessageModel(new()
             {
                 Message = StringLocalizer["{0} users migrated to the plan '{1}'.", count, plan?.Name ?? ""],

@@ -69,6 +69,7 @@ using BTCPayServer.Services.Reporting;
 using BTCPayServer.Services.WalletFileParsing;
 using BTCPayServer.Payments.LNURLPay;
 using System.Collections.Generic;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Payouts;
 using ExchangeSharp;
 using Microsoft.Extensions.Localization;
@@ -722,6 +723,14 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
         private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services)
         {
             services.AddAuthentication()
+                .AddCookie(AuthenticationSchemes.PasswordVerified, options =>
+                {
+                    options.Cookie.Name = "pwd_verified";
+                    options.ExpireTimeSpan = TimeSpan.FromMinutes(60);   // short-lived
+                    options.SlidingExpiration = false;
+                    options.Cookie.HttpOnly = true;
+                    options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest;
+                })
                 .AddBitpayAuthentication()
                 .AddAPIKeyAuthentication();
         }

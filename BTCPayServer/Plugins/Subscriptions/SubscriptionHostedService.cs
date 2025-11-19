@@ -152,6 +152,8 @@ public class SubscriptionHostedService(
             invoiceMetadata["planId"] = checkout.PlanId;
             invoiceMetadata["offeringId"] = checkout.Plan.OfferingId;
         }
+        if (GetBuyerEmail(checkout, customerSelector) is string email)
+            invoiceMetadata["buyerEmail"] = email;
 
         var plan = checkout.Plan;
         var existingCredit = checkout.Subscriber?.GetCredit() ?? 0m;
@@ -193,6 +195,11 @@ public class SubscriptionHostedService(
             await StartPlanCheckoutWithoutInvoice(subCtx, checkout, customerSelector);
         }
     }
+
+    private static string? GetBuyerEmail(PlanCheckoutData checkout, CustomerSelector customerSelector)
+    => customerSelector is CustomerSelector.Identity { Type: "Email", Value: { } email }
+        ? email
+        : checkout.Subscriber?.Customer.Email.Get();
 
     class MembershipServerSettings
     {

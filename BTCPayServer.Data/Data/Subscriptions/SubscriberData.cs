@@ -56,6 +56,9 @@ public class SubscriberData : BaseEntityData
     public decimal MissingCredit()
     => Math.Max(0m, NextPlan.Price - GetCredit(NextPlan.Currency));
 
+    [Column("processing_invoice_id")]
+    public string? ProcessingInvoiceId { get; set; }
+
     [Required]
     [Column("phase")]
     public PhaseTypes Phase { get; set; } = PhaseTypes.Expired;

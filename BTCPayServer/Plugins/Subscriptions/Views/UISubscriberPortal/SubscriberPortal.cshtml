@@ -280,6 +280,10 @@
                         {
                             <span class="badge badge-translucent rounded-pill text-bg-warning">Grace</span>
                         }
+                        @if (Model.Data.Subscriber is { ProcessingInvoiceId: {} pendingInvoiceId, OptimisticActivation: false })
+                        {
+                            <span class="badge badge-translucent rounded-pill text-bg-warning" title="@pendingInvoiceId">Pending invoice</span>
+                        }
                     </h5>
                     @if (Model.Subscriber.Plan.Description is not null)
                     {

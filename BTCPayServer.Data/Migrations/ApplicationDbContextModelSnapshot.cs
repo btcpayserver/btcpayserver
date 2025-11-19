@@ -1567,6 +1567,10 @@ namespace BTCPayServer.Migrations
                         .HasColumnName("plan_started")
                         .HasDefaultValueSql("now()");
 
+                    b.Property<string>("ProcessingInvoiceId")
+                        .HasColumnType("text")
+                        .HasColumnName("processing_invoice_id");
+
                     b.Property<string>("SuspensionReason")
                         .HasColumnType("text")
                         .HasColumnName("suspension_reason");

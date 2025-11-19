@@ -375,7 +375,6 @@ public class SubscriptionHostedService(
         var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
         var plan = checkout?.Plan;
         if (checkout is null || plan is null ||
-            (invoice.Status == InvoiceStatus.Processing && !plan.OptimisticActivation) ||
             checkout.Plan.Offering.App.StoreDataId != invoice.StoreId)
             return;
 
@@ -384,6 +383,16 @@ public class SubscriptionHostedService(
             throw new InvalidOperationException("Bug: Subscriber is null and not a new subscriber");
 
         var sub = checkout.Subscriber;
+        var processingInvoiceId = invoice.Status == InvoiceStatus.Processing ? invoice.Id : null;
+        if (sub is not null &&
+            sub.ProcessingInvoiceId != processingInvoiceId)
+        {
+            sub.ProcessingInvoiceId = processingInvoiceId;
+            await ctx.SaveChangesAsync();
+        }
+
+        if (invoice.Status == InvoiceStatus.Processing && !plan.OptimisticActivation)
+            return;
 
         if (invoice.Status is InvoiceStatus.Settled or InvoiceStatus.Processing)
         {

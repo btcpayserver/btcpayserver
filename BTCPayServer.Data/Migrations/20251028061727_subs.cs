@@ -200,6 +200,7 @@ namespace BTCPayServer.Migrations
                     plan_id = table.Column<string>(type: "text", nullable: false),
                     new_plan_id = table.Column<string>(type: "text", nullable: true),
                     paid_amount = table.Column<decimal>(type: "numeric", nullable: true),
+                    processing_invoice_id = table.Column<string>(type: "text", nullable: true),
                     phase = table.Column<string>(type: "text", nullable: false, defaultValueSql: "'Expired'::TEXT"),
                     plan_started = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
                     period_end = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),

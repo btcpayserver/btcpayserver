@@ -40,7 +40,7 @@ public class MonetizationLoginExtension(
             }
 
             if (subscriber is { PlanId: { } planId } &&
-                !await ctx.Plans.HasEntitlements(planId, MonetizationEntitlments.CanLogin))
+                !await ctx.Plans.HasEntitlements(planId, MonetizationEntitlments.CanAccess))
             {
                 context.Failures.Add(new (context.StringLocalizer["Your current plan does not allow you to log in."]));
                 var upgrades = await ctx.PlanChanges

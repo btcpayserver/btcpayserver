@@ -267,7 +267,7 @@ public class MonetizationHostedService(
             userIds = await GetUserIdsInPlan(ctx, plan);
         if (userIds.Length == 0)
             return;
-        var canLogin = await ctx.Plans.HasEntitlements(plan.Id, MonetizationEntitlments.CanLogin);
+        var canLogin = await ctx.Plans.HasEntitlements(plan.Id, MonetizationEntitlments.CanAccess);
         var lockoutEnabled = !canLogin;
         DateTimeOffset? lockoutDate = canLogin ? null : DateTimeOffset.MaxValue;
         await ctx.Database.GetDbConnection()

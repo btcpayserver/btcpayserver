@@ -73,7 +73,7 @@ public class UIServerMonetizationController(
         {
             var planIds = activePlans.Select(p => p.Id).Distinct().ToArray();
             canLogin = (await ctx.PlanEntitlements.Where(p => planIds.Contains(p.PlanId))
-                .Where(o => o.Entitlement.CustomId == MonetizationEntitlments.CanLogin)
+                .Where(o => o.Entitlement.CustomId == MonetizationEntitlments.CanAccess)
                 .Select(o => o.PlanId)
                 .ToArrayAsync()).ToHashSet();
         }
@@ -152,7 +152,7 @@ public class UIServerMonetizationController(
                 };
                 ctx.Plans.Add(starterPlan);
                 ctx.PlanEntitlements.AddRange(
-                    new[] { MonetizationEntitlments.CanLogin }
+                    new[] { MonetizationEntitlments.CanAccess }
                         .Select(e => new PlanEntitlementData()
                         {
                             Plan = starterPlan,
@@ -215,7 +215,7 @@ public class UIServerMonetizationController(
     {
         var entitlements = new[]
         {
-            (MonetizationEntitlments.CanLogin, StringLocalizer["Can login to BTCPay Server"].Value),
+            (MonetizationEntitlments.CanAccess, StringLocalizer["Can access BTCPay Server"].Value),
         }.Select(e => new EntitlementData()
         {
             CustomId = e.Item1,

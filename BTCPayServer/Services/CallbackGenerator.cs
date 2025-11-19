@@ -35,7 +35,7 @@ namespace BTCPayServer.Services
             values: new { userId = user.Id, action = "login", tag = "login", k1 = Encoders.Hex.EncodeData(r) },
             GetRequestBaseUrl());
 
-        private RequestBaseUrl GetRequestBaseUrl()
+        public RequestBaseUrl GetRequestBaseUrl()
         => BaseUrl ?? httpContextAccessor.HttpContext?.Request.GetRequestBaseUrl() ?? throw new InvalidOperationException($"You should be in a HttpContext to call this method");
 
         public string StoreUsersLink(string storeId)

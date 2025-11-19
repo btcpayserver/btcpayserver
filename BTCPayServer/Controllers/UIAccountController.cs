@@ -181,7 +181,7 @@ namespace BTCPayServer.Controllers
                     // Only show the real reason if the user has input the right password...
                     else
                     {
-                        if (loginContext.RedirectUrl is { } url)
+                        if (loginContext.FailedRedirectUrl is { } url)
                         {
                             var principal = await signInManager.CreateUserPrincipalAsync(user);
                             await this.HttpContext.SignInAsync(AuthenticationSchemes.PasswordVerified, principal);
@@ -596,20 +596,21 @@ namespace BTCPayServer.Controllers
                     RegisteredUserId = user.Id;
 
                     TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Account created."].Value;
-                    var requiresConfirmedEmail = policies.RequiresConfirmedEmail && !user.EmailConfirmed;
-                    var requiresUserApproval = policies.RequiresUserApproval && !user.Approved;
-                    if (requiresConfirmedEmail)
+
+                    var ctx = CreateLoginContext(user);
+                    if (!await userService.CanLogin(ctx))
                     {
-                        TempData[WellKnownTempData.SuccessMessage] += " Please confirm your email.";
+                        if (ctx.FailedRedirectUrl is { } url)
+                        {
+                            return Redirect(url);
+                        }
+                        else
+                        {
+                            TempData.SetStatusLoginResult(ctx);
+                            return RedirectToAction(nameof(Login));
+                        }
                     }
-                    if (requiresUserApproval)
-                    {
-                        TempData[WellKnownTempData.SuccessMessage] += " The new account requires approval by an admin before you can log in.";
-                    }
-                    if (requiresConfirmedEmail || requiresUserApproval)
-                    {
-                        return RedirectToAction(nameof(Login));
-                    }
+
                     if (logon)
                     {
                         await signInManager.SignInAsync(user, isPersistent: false);
@@ -762,8 +763,11 @@ namespace BTCPayServer.Controllers
             var needsInitialPassword = !await userManager.HasPasswordAsync(user);
             // Let unapproved users set a password. Otherwise, don't reveal that the user does not exist.
             var loginContext = CreateLoginContext(user);
-            if (!await userService.CanLogin(loginContext)  && !needsInitialPassword)
+            if (!await userService.CanLogin(loginContext) && !needsInitialPassword)
+            {
+                TempData.SetStatusLoginResult(loginContext);
                 return RedirectToAction(nameof(Login));
+            }
 
             var result = await userManager.ResetPasswordAsync(user!, model.Code, model.Password);
             if (result.Succeeded)

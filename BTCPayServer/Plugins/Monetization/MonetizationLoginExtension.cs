@@ -39,7 +39,7 @@ public class MonetizationLoginExtension(
                 canRedirect = false;
             }
 
-            if (subscriber is { PlanId: { } planId } &&
+            if (subscriber is { PlanId: { } planId, IsActive: false } &&
                 !await ctx.Plans.HasEntitlements(planId, MonetizationEntitlments.CanAccess))
             {
                 context.Failures.Add(new (context.StringLocalizer["Your current plan does not allow you to log in."]));
@@ -63,7 +63,7 @@ public class MonetizationLoginExtension(
                     };
                     ctx.PortalSessions.Add(portal);
                     await ctx.SaveChangesAsync();
-                    context.RedirectUrl = linkGenerator.SubscriberPortalLink(portal.Id, context.BaseUrl);
+                    context.FailedRedirectUrl = linkGenerator.SubscriberPortalLink(portal.Id, context.BaseUrl);
                 }
                 else
                 {
@@ -75,7 +75,7 @@ public class MonetizationLoginExtension(
                     };
                     ctx.PlanCheckouts.Add(checkout);
                     await ctx.SaveChangesAsync();
-                    context.RedirectUrl = linkGenerator.PlanCheckout(checkout.Id, context.BaseUrl);
+                    context.FailedRedirectUrl = linkGenerator.PlanCheckout(checkout.Id, context.BaseUrl);
                 }
             }
         }

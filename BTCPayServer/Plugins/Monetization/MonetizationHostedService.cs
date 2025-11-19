@@ -61,7 +61,7 @@ public class MonetizationHostedService(
             {
                 await AttachUserIdToSubscriber(user, newSub);
                 var callbackGenerator = scope.ServiceProvider.GetRequiredService<CallbackGenerator>();
-                callbackGenerator.BaseUrl = newSub.Checkout.BaseUrl;
+                callbackGenerator.BaseUrl = newSub.RequestBaseUrl;
                 EventAggregator.Publish(await UserEvent.Registered.Create(user, null, callbackGenerator));
             }
         }
@@ -103,13 +103,18 @@ public class MonetizationHostedService(
             var userSub = await ctx.Subscribers.GetBySelector(offeringId, CustomerSelector.ByIdentity(SubscriberDataExtensions.IdentityType, reg.User.Id));
             if (userSub is not null)
                 return;
-            await MigrateUsers(offeringId, defaultPlanId, OneUserQuery, parameters =>
+            var inserted = (await MigrateUsers(offeringId, defaultPlanId, OneUserQuery, parameters =>
             {
                 parameters.Add("userId", reg.User.Id);
                 parameters.Add("email", reg.User.Email);
                 parameters.Add("customerId", CustomerData.GenerateId());
-            });
-            // Fire NewSubscriber event!
+            }));
+            if (inserted.Length == 1)
+            {
+                var s = await ctx.Subscribers.GetByCustomerId(inserted[0].CustomerId, offeringId);
+                if (s is not null)
+                    EventAggregator.Publish(new SubscriptionEvent.NewSubscriber(s, reg.RequestBaseUrl));
+            }
         }
     }
 
@@ -154,16 +159,16 @@ public class MonetizationHostedService(
                                         )
                                         """;
 
-    public async Task<int> MigrateUsers(string? offeringId, string? planId, string usersQuery = NonAdminUserQuery, Action<DynamicParameters>? addParameters = null)
+    public async Task<(string CustomerId, string UserId)[]> MigrateUsers(string? offeringId, string? planId, string usersQuery = NonAdminUserQuery, Action<DynamicParameters>? addParameters = null)
     {
         if (offeringId is null || planId is null)
-            return 0;
+            return Array.Empty<(string CustomerId, string UserId)>();
         await using var ctx = dbContextFactory.CreateContext();
         if (await ctx.Offerings.GetOfferingData(offeringId) is not { } offering ||
             offering.Plans
                 .Where(p => p.Status == PlanData.PlanStatus.Active)
                 .FirstOrDefault(p => p.Id == planId) is not { } plan)
-            return 0;
+            return Array.Empty<(string CustomerId, string UserId)>();
 
         var hasTrial = plan.TrialDays > 0;
         var dummy = new SubscriberData();
@@ -262,7 +267,7 @@ public class MonetizationHostedService(
             // We expect the call to call NewSubscriberEvent.
         }
 
-        return userIds.Length;
+        return userIds;
     }
 
     private async Task UpdateUserLockoutStatus(ApplicationDbContext ctx, PlanData plan, string[]? userIds = null)

@@ -132,7 +132,7 @@ namespace BTCPayServer.Services
             /// <summary>
             /// A redirect URL to redirect the user if login failed.
             /// </summary>
-            public string? RedirectUrl { get; set; }
+            public string? FailedRedirectUrl { get; set; }
         }
 
         public async Task<bool> CanLogin(CanLoginContext context)

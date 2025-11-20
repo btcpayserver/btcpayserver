@@ -14,7 +14,6 @@ using Microsoft.AspNetCore.Routing;
 namespace BTCPayServer.Plugins.Monetization.Controllers;
 
 [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewProfile)]
-[Route("account/subscription")]
 [Area(MonetizationPlugin.Area)]
 public class UIUserMonetizationController(
     ApplicationDbContext ctx,
@@ -48,8 +47,8 @@ public class UIUserMonetizationController(
         return Redirect(linkGenerator.PlanCheckout(checkout.Id, checkout.BaseUrl));
     }
 
-    [HttpGet]
-    public async Task<IActionResult> ManageSubscription()
+    [HttpGet("~/account/billing")]
+    public async Task<IActionResult> ManageBilling()
     {
         if (settings.OfferingId is not { } offeringId)
             return NotFound();

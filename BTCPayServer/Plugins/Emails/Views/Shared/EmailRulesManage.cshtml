@@ -3,7 +3,7 @@
 
 @{
     var storeId = Model.StoreId;
-    bool isEdit = Model.Trigger != null;
+    var isEdit = !Model.IsNew;
     if (storeId is not null)
     {
         ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Emails), StringLocalizer[isEdit ? "Edit Email Rule" : "Create Email Rule"])

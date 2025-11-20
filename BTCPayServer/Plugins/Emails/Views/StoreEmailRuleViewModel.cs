@@ -59,7 +59,7 @@ public class StoreEmailRuleViewModel
     public bool CanChangeCondition { get; set; } = true;
     public string OfferingId { get; set; }
     public string StoreId { get; set; }
-
+    public bool IsNew { get; set; }
     public string[] AsArray(string values)
     {
         // This replace the placeholders with random email addresses

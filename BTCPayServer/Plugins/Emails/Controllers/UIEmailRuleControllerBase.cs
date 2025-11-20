@@ -82,7 +82,8 @@ public class UIEmailRuleControllerBase(
             Trigger = trigger,
             OfferingId = offeringId,
             RedirectUrl = redirectUrl,
-            To = to
+            To = to,
+            IsNew = true
         });
     }
 
@@ -130,7 +131,8 @@ public class UIEmailRuleControllerBase(
         {
             CanChangeTrigger = r.OfferingId is null,
             CanChangeCondition = r.OfferingId is null,
-            RedirectUrl = redirectUrl
+            RedirectUrl = redirectUrl,
+            IsNew = false
         });
     }
 

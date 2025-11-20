@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Text.Encodings.Web;
+using BTCPayServer.Data;
 using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Plugins.Emails.Views;
 using BTCPayServer.Services;
@@ -24,7 +26,7 @@ public class ServerTransformer(ISettingsAccessor<ServerSettings> serverSettings)
         var serverObj = (JObject)(context.TriggerEvent.Model["Server"] ??= new JObject());
         serverObj["Name"] = serverSettings.Settings.ServerName ?? "BTCPay Server";
         serverObj["ContactUrl"] = serverSettings.Settings.ContactUrl;
-        serverObj["BaseUrl"] = serverSettings.Settings.BaseUrl;
+        serverObj["BaseUrl"] = HtmlEncoder.Default.Encode(serverSettings.Settings.BaseUrl ?? "");
     }
 }
 
@@ -36,12 +38,16 @@ public class StoreTransformer : IEmailTriggerViewModelTransformer, IEmailTrigger
         {
             viewModel.PlaceHolders.Add(new("{Store.Id}", StoreIdDoc));
             viewModel.PlaceHolders.Add(new("{Store.Name}", StoreNameDoc));
+            viewModel.PlaceHolders.Add(new("{Store.WebsiteUrl}", StoreUrlDoc));
+            viewModel.PlaceHolders.Add(new("{Store.SupportUrl}", SupportUrlDoc));
         }
     }
 
     public const string StoreNameDoc = "The name of the store";
     public const string StoreIdDoc = "The id of the store";
-    public static string[] TranslatedStrings => new[] { StoreIdDoc, StoreNameDoc };
+    public const string StoreUrlDoc = "The website of the store";
+    public const string SupportUrlDoc = "The support url of the store";
+    public static string[] TranslatedStrings => new[] { StoreIdDoc, StoreNameDoc, StoreUrlDoc, SupportUrlDoc };
     public void Transform(IEmailTriggerEventTransformer.Context context)
     {
         if (context.Store is { } store)
@@ -49,6 +55,8 @@ public class StoreTransformer : IEmailTriggerViewModelTransformer, IEmailTrigger
             var storeObj = (JObject)(context.TriggerEvent.Model["Store"] ??= new JObject());
             storeObj["Id"] = store.Id;
             storeObj["Name"] = store.StoreName;
+            storeObj["SupportUrl"] = HtmlEncoder.Default.Encode(store.GetStoreBlob().StoreSupportUrl ?? "");
+            storeObj["WebsiteUrl"] = HtmlEncoder.Default.Encode(store.StoreWebsite ?? "");
         }
     }
 }

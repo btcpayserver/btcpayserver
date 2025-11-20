@@ -160,7 +160,9 @@ public class UIServerMonetizationController(
                             Plan = starterPlan,
                             Entitlement = entitlements[e],
                         }));
-
+                var serverBase = Request.GetRequestBaseUrl().ToString();
+                if (store.StoreWebsite != serverBase)
+                    store.StoreWebsite = serverBase;
                 await ctx.SaveChangesAsync();
 
                 var policies = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new();
@@ -169,9 +171,9 @@ public class UIServerMonetizationController(
                 await settingsRepository.UpdateSetting(policies);
 
                 var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new();
-                if (serverSettings.BaseUrl != Request.GetRequestBaseUrl().ToString())
+                if (serverSettings.BaseUrl != serverBase)
                 {
-                    serverSettings.BaseUrl = Request.GetRequestBaseUrl().ToString();
+                    serverSettings.BaseUrl = serverBase;
                     await settingsRepository.UpdateSetting(serverSettings);
                 }
 

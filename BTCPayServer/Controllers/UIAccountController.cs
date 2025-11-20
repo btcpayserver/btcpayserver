@@ -84,9 +84,9 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("/login")]
         [AllowAnonymous]
-        public async Task<IActionResult> Login(string returnUrl = null, string email = null)
+        public async Task<IActionResult> Login(string returnUrl = null, string email = null, bool allowLimitedLogin = false)
         {
-            if (User.Identity.IsAuthenticated && string.IsNullOrEmpty(returnUrl))
+            if (User.Identity?.IsAuthenticated is true && string.IsNullOrEmpty(returnUrl))
                 return RedirectToLocal();
 
             // Clear the existing external cookie to ensure a clean login process
@@ -98,7 +98,7 @@ namespace BTCPayServer.Controllers
             }
 
             ViewData["ReturnUrl"] = returnUrl;
-            return View(nameof(Login), new LoginViewModel { Email = email });
+            return View(nameof(Login), new LoginViewModel { Email = email, AllowLimitedLogin = allowLimitedLogin });
         }
 
         // GET is for signin via the POS backend
@@ -179,10 +179,13 @@ namespace BTCPayServer.Controllers
                     // Only show the real reason if the user has input the right password...
                     else
                     {
+                        var principal = await signInManager.CreateUserPrincipalAsync(user);
+                        await HttpContext.SignInAsync(AuthenticationSchemes.LimitedLogin, principal);
+                        if (model.AllowLimitedLogin && returnUrl != null)
+                            return RedirectToLocal(returnUrl);
+
                         if (loginContext.FailedRedirectUrl is { } url)
-                        {
                             return Redirect(url);
-                        }
                         else
                             TempData.SetStatusLoginResult(loginContext);
                         return View(model);
@@ -191,7 +194,7 @@ namespace BTCPayServer.Controllers
 
                 var fido2Devices = await fido2Service.HasCredentials(user!.Id);
                 var lnurlAuthCredentials = await lnurlAuthService.HasCredentials(user.Id);
-                if (!await userManager.IsLockedOutAsync(user) && (fido2Devices || lnurlAuthCredentials))
+                if (fido2Devices || lnurlAuthCredentials)
                 {
                     if (await userManager.CheckPasswordAsync(user, model.Password))
                     {

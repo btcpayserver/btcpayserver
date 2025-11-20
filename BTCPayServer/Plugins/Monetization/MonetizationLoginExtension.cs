@@ -6,6 +6,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Plugins.Subscriptions;
 using BTCPayServer.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 
@@ -63,7 +64,8 @@ public class MonetizationLoginExtension(
                 // Else => Redirect to Subscriber Portal
                 else
                 {
-                    await RedirectToSubscriberPortal(context, subscriber, ctx);
+                    if (context.BaseUrl is not null)
+                        context.FailedRedirectUrl = linkGenerator.UserManageBillingLink(context.BaseUrl);
                 }
                 return;
             }
@@ -72,23 +74,10 @@ public class MonetizationLoginExtension(
             if (subscriber is { IsActive: false, IsSuspended: false })
             {
                 context.Failures.Add(new (context.StringLocalizer["Your subscription is not active."]));
-                await RedirectToSubscriberPortal(context, subscriber, ctx);
+                if (context.BaseUrl is not null)
+                    context.FailedRedirectUrl = linkGenerator.UserManageBillingLink(context.BaseUrl);
             }
         }
     }
 
-    private async Task RedirectToSubscriberPortal(UserService.CanLoginContext context, SubscriberData subscriber,
-        ApplicationDbContext ctx)
-    {
-        if (context.BaseUrl is null)
-            return;
-        var portal = new PortalSessionData()
-        {
-            SubscriberId = subscriber.Id,
-            BaseUrl = context.BaseUrl
-        };
-        ctx.PortalSessions.Add(portal);
-        await ctx.SaveChangesAsync();
-        context.FailedRedirectUrl = linkGenerator.SubscriberPortalLink(portal.Id, context.BaseUrl);
-    }
 }

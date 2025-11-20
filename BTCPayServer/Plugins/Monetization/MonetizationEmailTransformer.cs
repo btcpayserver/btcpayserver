@@ -18,10 +18,10 @@ public class MonetizationEmailTriggerTransformer(
     {
         if (serverSettings.Settings?.BaseUrl != null && monetization.Settings.IsSetup() && !viewModel.ServerTrigger)
         {
-            viewModel.PlaceHolders.Add(new("{User.BillingPortalUrl}", BillingPortalUrlDoc));
+            viewModel.PlaceHolders.Add(new("{Links.BillingPortalUrl}", BillingPortalUrlDoc));
         }
     }
-    public const string BillingPortalUrlDoc = "The billing portal URL of the user";
+    public const string BillingPortalUrlDoc = "The billing portal URL of the logged account";
     public static string[] TranslatedStrings => new[] { BillingPortalUrlDoc };
 
     public void Transform(IEmailTriggerEventTransformer.Context context)
@@ -31,12 +31,8 @@ public class MonetizationEmailTriggerTransformer(
             && RequestBaseUrl.TryFromUrl(baseUrl, out var r)
             && monetization.Settings.IsSetup())
         {
-            var userObj = (JObject)(context.TriggerEvent.Model["User"] ??= new JObject());
-            userObj["BillingPortalUrl"] = linkGenerator.GetUriByAction(
-                nameof(UIUserMonetizationController.ManageBilling),
-                "UIUserMonetization",
-                new{ area = MonetizationPlugin.Area },
-                r);
+            var userObj = (JObject)(context.TriggerEvent.Model["Links"] ??= new JObject());
+            userObj["BillingPortalUrl"] = linkGenerator.UserManageBillingLink(r);
         }
     }
 }

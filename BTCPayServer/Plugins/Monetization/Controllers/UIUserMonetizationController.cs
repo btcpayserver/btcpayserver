@@ -48,6 +48,7 @@ public class UIUserMonetizationController(
     }
 
     [HttpGet("~/account/billing")]
+    [Authorize(AuthenticationSchemes = $"{AuthenticationSchemes.LimitedLogin},{AuthenticationSchemes.Cookie}")]
     public async Task<IActionResult> ManageBilling()
     {
         if (settings.OfferingId is not { } offeringId)

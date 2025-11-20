@@ -17,15 +17,15 @@ public class ServerTransformer(ISettingsAccessor<ServerSettings> serverSettings)
         viewModel.PlaceHolders.Add(new("{Server.BaseUrl}", BaseUrlDoc));
     }
 
-    public const string ServerNameDoc = "The name of the server (You can configure this in Server Settings ➡ Branding)";
-    public const string ContactUrlDoc = "The contact URL of the server (You can configure this in Server Settings ➡ Branding)";
-    public const string BaseUrlDoc = "The base URL of this server (no trailing slash)";
+    public const string ServerNameDoc = "The name of the server (Server Settings ➡ Branding)";
+    public const string ContactUrlDoc = "The contact URL of the server (Server Settings ➡ Branding)";
+    public const string BaseUrlDoc = "The base URL of this server (Server Settings ➡ Branding)";
     public static string[] TranslatedStrings => new[] { ServerNameDoc, ContactUrlDoc, BaseUrlDoc };
     public void Transform(IEmailTriggerEventTransformer.Context context)
     {
         var serverObj = (JObject)(context.TriggerEvent.Model["Server"] ??= new JObject());
         serverObj["Name"] = serverSettings.Settings.ServerName ?? "BTCPay Server";
-        serverObj["ContactUrl"] = serverSettings.Settings.ContactUrl;
+        serverObj["ContactUrl"] =  HtmlEncoder.Default.Encode(serverSettings.Settings.ContactUrl);
         serverObj["BaseUrl"] = HtmlEncoder.Default.Encode(serverSettings.Settings.BaseUrl ?? "");
     }
 }

@@ -167,13 +167,22 @@ public partial class UIOfferingController(
         await using var ctx = DbContextFactory.CreateContext();
         if (addEmailRule is not null)
         {
+            var condition = $"@.Offering.Id == \"{offeringId}\"";
+            if (addEmailRule.StartsWith($"{PhaseChangedTrigger}-"))
+            {
+                var phase = addEmailRule.Skip($"{PhaseChangedTrigger}-".Length);
+                addEmailRule = PhaseChangedTrigger;
+                condition += $" && @.Subscriber.Phase == \"{phase}\"";
+            }
+
+            condition = $"$ ?({condition})";
             var requestBase = Request.GetRequestBaseUrl();
             var link = LinkGenerator.CreateEmailRuleLink(storeId, requestBase, new()
             {
                 OfferingId = offeringId,
                 Trigger = addEmailRule,
                 To = "{Subscriber.Email}",
-                Condition =  $"$.Offering.Id == \"{offeringId}\"",
+                Condition =  condition,
                 RedirectUrl = new Uri(LinkGenerator.OfferingLink(storeId, offeringId, SubscriptionSection.Mails, requestBase)).AbsolutePath
             });
             return Redirect(link);
@@ -196,6 +205,8 @@ public partial class UIOfferingController(
             return GoToOffering(storeId, offeringId, SubscriptionSection.Mails);
         }
     }
+
+    private static string PhaseChangedTrigger => $"WH-{WebhookSubscriptionEvent.SubscriberPhaseChanged}";
 
     [HttpGet("stores/{storeId}/offerings/{offeringId}/{section}")]
     public async Task<IActionResult> Offering(string storeId, string offeringId, SubscriptionSection section = SubscriptionSection.Plans,
@@ -282,7 +293,28 @@ public partial class UIOfferingController(
                 .GetViewModels()
                 .Where(t => WebhookSubscriptionEvent.IsSubscriptionTrigger(t.Trigger))
                 .ToDictionary(t => t.Trigger);
-            vm.AvailableTriggers = triggers.Values.ToList();
+
+            // Those aren't real trigger, we just add trigger condition
+            // on the WH-PhaseChangedTrigger when the user select one of them
+            var phaseChanged = triggers[PhaseChangedTrigger];
+            foreach (string phase in new[] { "Trial", "Normal", "Expired", "Grace" })
+            {
+                var subPhaseChanged = $"{phaseChanged.Trigger}-{phase}";
+                triggers.Add(subPhaseChanged, new()
+                    {
+                        Trigger = subPhaseChanged,
+                        Description = phaseChanged.Description + " - " + StringLocalizer[phase]
+                    });
+            }
+            // Remove the suffix "Subscription - "
+            foreach (var trigger in triggers.Values)
+            {
+                var idx = trigger.Description.IndexOf('-');
+                if (idx != -1)
+                    trigger.Description = trigger.Description.Substring(idx + 1).Trim();
+            }
+
+            vm.AvailableTriggers = triggers.Values.OrderBy(t => t.Description).ToList();
             foreach (var emailRule in
                      await ctx.EmailRules
                          .Where(r => r.StoreId == storeId && r.OfferingId == offeringId)

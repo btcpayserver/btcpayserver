@@ -80,7 +80,7 @@
         <input type="hidden" asp-for="CanChangeCondition" ></input>
         @if (Model.CanChangeCondition)
         {
-            <input asp-for="Condition" class="form-control" placeholder="@StringLocalizer["A Postgres compatible JSON Path (eg. $.Customer.Name == \"john\")"]" />
+            <input asp-for="Condition" class="form-control" placeholder="@StringLocalizer["A Postgres compatible JSON Path (eg. $ ? (@.Customer.Name == \"John\"))"]" />
         }
         else
         {

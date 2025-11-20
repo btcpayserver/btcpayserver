@@ -80,6 +80,8 @@ public class MonetizationLoginExtension(
     private async Task RedirectToSubscriberPortal(UserService.CanLoginContext context, SubscriberData subscriber,
         ApplicationDbContext ctx)
     {
+        if (context.BaseUrl is null)
+            return;
         var portal = new PortalSessionData()
         {
             SubscriberId = subscriber.Id,

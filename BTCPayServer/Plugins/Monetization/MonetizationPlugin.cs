@@ -1,10 +1,8 @@
 #nullable enable
-using System;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Plugins.Emails;
 using BTCPayServer.Services;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
 namespace BTCPayServer.Plugins.Monetization;
@@ -24,5 +22,9 @@ public class MonetizationPlugin : BaseBTCPayServerPlugin
         services.AddSingleton<IHostedService, MonetizationHostedService>(o => o.GetRequiredService<MonetizationHostedService>());
         services.AddSettingsAccessor<MonetizationSettings>();
         services.AddSingleton<UserService.LoginExtension, MonetizationLoginExtension>();
+
+        services.AddSingleton<IEmailTriggerViewModelTransformer, MonetizationEmailTriggerTransformer>();
+        services.AddSingleton<IEmailTriggerEventTransformer, MonetizationEmailTriggerTransformer>();
+        services.AddDefaultTranslations(MonetizationEmailTriggerTransformer.TranslatedStrings);
     }
 }

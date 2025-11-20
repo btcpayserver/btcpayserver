@@ -54,7 +54,7 @@ public class SubscriptionsPlugin : BaseBTCPayServerPlugin
             new("{Customer.ExternalRef}", "Customer external reference"),
             new("{Customer.Name}", "Customer name"),
             new("{Customer.Metadata}*", "Customer metadata")
-        }.AddStoresPlaceHolders();
+        };
 
         var viewModels = new List<EmailTriggerViewModel>()
         {

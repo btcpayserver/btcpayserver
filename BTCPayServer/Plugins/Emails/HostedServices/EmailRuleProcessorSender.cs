@@ -41,6 +41,7 @@ public class StoreEmailRuleProcessorSender(
     ApplicationDbContextFactory dbContextFactory,
     EventAggregator eventAggregator,
     ILogger<StoreEmailRuleProcessorSender> logger,
+    IEnumerable<IEmailTriggerEventTransformer> emailTriggerBodyTransformers,
     EmailSenderFactory emailSenderFactory)
     : EventHostedServiceBase(eventAggregator, logger)
 {
@@ -55,6 +56,7 @@ public class StoreEmailRuleProcessorSender(
         {
             await using var ctx = dbContextFactory.CreateContext();
             var actionableRules = await ctx.EmailRules.GetMatches(triggEvent.StoreId, triggEvent.Trigger, triggEvent.Model);
+            await Transform(ctx, triggEvent);
 
             if (actionableRules.Length > 0)
             {
@@ -77,6 +79,14 @@ public class StoreEmailRuleProcessorSender(
                 }
             }
         }
+    }
+
+    private async Task Transform(ApplicationDbContext ctx, TriggerEvent triggEvent)
+    {
+        var store = triggEvent.StoreId is null ? null : await ctx.Stores.FindAsync(triggEvent.StoreId);
+        var context = new IEmailTriggerEventTransformer.Context(triggEvent, store);
+        foreach (var transformer in emailTriggerBodyTransformers)
+            transformer.Transform(context);
     }
 
     private void AddToMatchedContext(JObject model, List<MailboxAddress> mailboxAddresses, string[] rulesAddresses)

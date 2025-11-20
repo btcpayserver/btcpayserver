@@ -41,7 +41,7 @@ public partial class UIOfferingController(
     BTCPayServerEnvironment env,
     DisplayFormatter displayFormatter,
     EmailSenderFactory emailSenderFactory,
-    IEnumerable<EmailTriggerViewModel> emailTriggers
+    EmailTriggerViewModels emailTriggers
 ) : UISubscriptionControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
 {
     [HttpPost("stores/{storeId}/offerings/{offeringId}/new-subscriber")]
@@ -279,6 +279,7 @@ public partial class UIOfferingController(
             vm.EmailRules = new();
 
             var triggers = emailTriggers
+                .GetViewModels()
                 .Where(t => WebhookSubscriptionEvent.IsSubscriptionTrigger(t.Trigger))
                 .ToDictionary(t => t.Trigger);
             vm.AvailableTriggers = triggers.Values.ToList();

@@ -167,6 +167,14 @@ public class UIServerMonetizationController(
                 policies.RequiresConfirmedEmail = true;
                 policies.RegisterPageRedirect = registrationLink;
                 await settingsRepository.UpdateSetting(policies);
+
+                var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new();
+                if (serverSettings.BaseUrl != Request.GetRequestBaseUrl().ToString())
+                {
+                    serverSettings.BaseUrl = Request.GetRequestBaseUrl().ToString();
+                    await settingsRepository.UpdateSetting(serverSettings);
+                }
+
                 defaultPlanId = starterPlan.Id;
 
                 if (vm.ActivateModal.MigrateExistingUsers)

@@ -181,8 +181,6 @@ namespace BTCPayServer.Controllers
                     {
                         if (loginContext.FailedRedirectUrl is { } url)
                         {
-                            var principal = await signInManager.CreateUserPrincipalAsync(user);
-                            await this.HttpContext.SignInAsync(AuthenticationSchemes.PasswordVerified, principal);
                             return Redirect(url);
                         }
                         else

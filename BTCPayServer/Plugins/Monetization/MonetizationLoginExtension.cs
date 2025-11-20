@@ -25,48 +25,31 @@ public class MonetizationLoginExtension(
             if (subscriber is null)
                 return;
 
-            PlanData? upgradePlan = null;
-            var canRedirect = false;
-            if (subscriber is { IsActive: false, IsSuspended: false })
-            {
-                context.Failures.Add(new (context.StringLocalizer["Your subscription is not active."]));
-                canRedirect = true;
-            }
-            else if (subscriber is { IsActive: false, IsSuspended: true })
+            // The subscriber is not active and suspended => Show the suspension error
+            if (subscriber is { IsActive: false, IsSuspended: true })
             {
                 var message = subscriber.SuspensionReason is {} reason ? new(reason, reason)  : context.StringLocalizer["Please contact support."];
                 context.Failures.Add(new (context.StringLocalizer["Your subscription is suspended. {0}", message]));
-                canRedirect = false;
+                return;
             }
 
-            if (subscriber is { PlanId: { } planId, IsActive: false } &&
+            // The subscriber is in a plan without an access feature
+            if (subscriber is { PlanId: { } planId } &&
                 !await ctx.Plans.HasEntitlements(planId, MonetizationEntitlments.CanAccess))
             {
-                context.Failures.Add(new (context.StringLocalizer["Your current plan does not allow you to log in."]));
+                context.Failures.Add(new (context.StringLocalizer["Your plan does not allow you to log in."]));
                 var upgrades = await ctx.PlanChanges
                     .Include(o => o.PlanChange)
                     .Where(p => p.PlanId == planId && p.Type == PlanChangeData.ChangeType.Upgrade)
                     .ToArrayAsync();
-                if (upgrades.Length == 1)
-                    upgradePlan = upgrades[0].PlanChange;
-                canRedirect = upgrades.Length > 0;
-            }
+                if (context.BaseUrl is null)
+                    return;
 
-            if (canRedirect && context.BaseUrl is not null)
-            {
-                if (upgradePlan is null)
+                //  If there is one single upgrade with access feature => Redirect to Portal checkout for upgrade (Hard migration)
+                if (upgrades.Length == 1)
                 {
-                    var portal = new PortalSessionData()
-                    {
-                        SubscriberId = subscriber.Id,
-                        BaseUrl = context.BaseUrl
-                    };
-                    ctx.PortalSessions.Add(portal);
-                    await ctx.SaveChangesAsync();
-                    context.FailedRedirectUrl = linkGenerator.SubscriberPortalLink(portal.Id, context.BaseUrl);
-                }
-                else
-                {
+
+                    var upgradePlan = upgrades[0].PlanChange;
                     var checkout = new PlanCheckoutData(subscriber, upgradePlan)
                     {
                         BaseUrl = context.BaseUrl,
@@ -77,7 +60,33 @@ public class MonetizationLoginExtension(
                     await ctx.SaveChangesAsync();
                     context.FailedRedirectUrl = linkGenerator.PlanCheckout(checkout.Id, context.BaseUrl);
                 }
+                // Else => Redirect to Subscriber Portal
+                else
+                {
+                    await RedirectToSubscriberPortal(context, subscriber, ctx);
+                }
+                return;
+            }
+
+            // The subscriber is not active and not suspended => Redirect to subscriber portal
+            if (subscriber is { IsActive: false, IsSuspended: false })
+            {
+                context.Failures.Add(new (context.StringLocalizer["Your subscription is not active."]));
+                await RedirectToSubscriberPortal(context, subscriber, ctx);
             }
         }
+    }
+
+    private async Task RedirectToSubscriberPortal(UserService.CanLoginContext context, SubscriberData subscriber,
+        ApplicationDbContext ctx)
+    {
+        var portal = new PortalSessionData()
+        {
+            SubscriberId = subscriber.Id,
+            BaseUrl = context.BaseUrl
+        };
+        ctx.PortalSessions.Add(portal);
+        await ctx.SaveChangesAsync();
+        context.FailedRedirectUrl = linkGenerator.SubscriberPortalLink(portal.Id, context.BaseUrl);
     }
 }

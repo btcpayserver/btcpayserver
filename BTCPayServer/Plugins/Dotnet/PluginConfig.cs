@@ -120,5 +120,12 @@ namespace BTCPayServer.Plugins.Dotnet
         /// Default value is 200 milliseconds.
         /// </summary>
         public TimeSpan ReloadDelay { get; set; } = TimeSpan.FromMilliseconds(200);
+
+        /// <summary>
+        /// This will load assemblies into the default load context.
+        /// This is used for integration tests. Tests run in the default load context, so we do
+        /// not want type mismatch errors due to loading types in different load contexts.
+        /// </summary>
+        public bool LoadAssembliesInDefaultLoadContext { get; set; }
     }
 }

@@ -69,6 +69,7 @@ namespace BTCPayServer.Plugins.Dotnet.Loader
             _additionalProbingPaths = additionalProbingPaths ?? throw new ArgumentNullException(nameof(additionalProbingPaths));
             _assemblyLoadContexts.Add(defaultLoadContext);
             _preferDefaultLoadContext = preferDefaultLoadContext;
+            _loadAssembliesInDefaultLoadContext = loadAssembliesInDefaultLoadContext;
             _loadInMemory = loadInMemory;
             _lazyLoadReferences = lazyLoadReferences;
 

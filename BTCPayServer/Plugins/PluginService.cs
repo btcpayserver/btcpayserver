@@ -113,6 +113,9 @@ namespace BTCPayServer.Plugins
                 availablePlugin.Author = github.Owner;
                 availablePlugin.AuthorLink = $"https://github.com/{github.Owner}";
             }
+            availablePlugin.Name = publishedVersion.PluginTitle;
+            availablePlugin.Description = publishedVersion.Description;
+            availablePlugin.Fingerprint = publishedVersion.Fingerprint;
             availablePlugin.SystemPlugin = false;
             return availablePlugin;
         }
@@ -155,13 +158,43 @@ namespace BTCPayServer.Plugins
             version = Uri.EscapeDataString(version);
             Directory.CreateDirectory(Path.GetDirectoryName(filedest));
             var url = $"api/v1/plugins/{pluginSelector}/versions/{version}/download";
-            var manifest = (await _pluginBuilderClient.GetPlugin(pluginSelector, version))?.ManifestInfo?.ToObject<AvailablePlugin>();
+            var plugin = await _pluginBuilderClient.GetPlugin(pluginSelector, version);
+            var manifest = plugin?.ManifestInfo?.ToObject<AvailablePlugin>();
             await File.WriteAllTextAsync(filemanifestdest, JsonConvert.SerializeObject(manifest, Formatting.Indented));
             using var resp2 = await _pluginBuilderClient.HttpClient.GetAsync(url);
             await using var fs = new FileStream(filedest, FileMode.Create, FileAccess.ReadWrite);
             await resp2.Content.CopyToAsync(fs);
             await fs.FlushAsync();
+            if (!string.IsNullOrEmpty(plugin.Fingerprint))
+            {
+                var fingerprintTempPath = Path.Combine(dest, $"{pluginIdentifier}.fingerprint");
+                await File.WriteAllTextAsync(fingerprintTempPath, plugin.Fingerprint);
+            }
             return manifest;
+        }
+
+        public Dictionary<string, string> LoadInstalledPluginWithFingerprints()
+        {
+            var pluginFingerprints = new Dictionary<string, string?>();
+            foreach (var plugin in LoadedPlugins)
+            {
+                try
+                {
+                    var pluginFolder = Path.Combine(_dataDirectories.Value.PluginDir, plugin.Identifier);
+                    var fingerprintPath = Path.Combine(pluginFolder, "fingerprint.txt");
+                    string fingerprint = null;
+                    if (File.Exists(fingerprintPath))
+                    {
+                        fingerprint = File.ReadAllText(fingerprintPath).Trim();
+                    }
+                    pluginFingerprints[plugin.Identifier] = fingerprint;
+                }
+                catch (Exception)
+                {
+                    pluginFingerprints[plugin.Identifier] = null;
+                }
+            }
+            return pluginFingerprints;
         }
 
         public void InstallPlugin(string plugin)
@@ -201,6 +234,7 @@ namespace BTCPayServer.Plugins
             public string Source { get; set; }
             public string Author { get; set; }
             public string AuthorLink { get; set; }
+            public string Fingerprint { get; set; }
 
             public void Execute(IApplicationBuilder applicationBuilder, IServiceProvider applicationBuilderApplicationServices)
             {

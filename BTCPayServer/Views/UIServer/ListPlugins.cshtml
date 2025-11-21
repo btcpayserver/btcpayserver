@@ -126,7 +126,7 @@
     <h3 class="mb-4">Installed Plugins</h3>
     <div class="row mb-4">
         @foreach (var plugin in Model.Plugins.Where(i => !i.SystemPlugin))
-        {
+		{
             Model.DownloadedPluginsByIdentifier.TryGetValue(plugin.Identifier, out var downloadInfo);
             var matchedAvailable = Model.Available.Where(availablePlugin => availablePlugin.Identifier == plugin.Identifier && availablePlugin.Version > plugin.Version).OrderByDescending(availablePlugin => availablePlugin.Version).ToArray();
             var x = matchedAvailable.FirstOrDefault(availablePlugin => PluginManager.DependenciesMet(availablePlugin.Dependencies, installed)) ?? matchedAvailable.FirstOrDefault();
@@ -136,7 +136,15 @@
                 <div class="card h-100" id="@plugin.Identifier">
                     <div class="card-body">
                         <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
-                            <h4 class="card-title mb-0" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
+							<div class="d-flex align-items-center gap-2">
+								<h4 class="card-title mb-0" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
+								@if (Model.InstalledPluginFingerprints.TryGetValue(plugin.Identifier, out var fingerprint) && !string.IsNullOrEmpty(fingerprint))
+								{
+									<span data-bs-toggle="tooltip" title="GPG verified Plugin – Fingerprint: @fingerprint">
+										<vc:icon symbol="key" />
+									</span>
+								}
+							</div>
                             @if (!string.IsNullOrEmpty(downloadInfo?.Author))
                             {
                                 <span class="text-muted text-nowrap">
@@ -218,15 +226,6 @@
                             {
                                 <h6 class="text-muted fw-semibold mt-4" text-translate="true">Resources</h6>
                                 <ul class="list-group list-group-flush list-unstyled">
-                                    @if (downloadInfo?.Source is not null)
-                                    {
-                                        <li>
-                                            <a href="@downloadInfo.Source" rel="noreferrer noopener" class="d-flex align-items-center" target="_blank">
-                                                <vc:icon symbol="social-github" />
-                                                <span style="margin-left:.4rem" text-translate="true">Sources</span>
-                                            </a>
-                                        </li>
-                                    }
                                     @if (!string.IsNullOrEmpty(downloadInfo?.Documentation))
                                     {
                                         <li>
@@ -272,21 +271,25 @@
                         }
                         @if (pendingAction is null  || !exclusivePendingAction)
                         {
-                            @if (updateAvailable && x != null)
-                            {
-                                if (PluginManager.DependenciesMet(x.Dependencies, installed))
-                                {
-                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" class="me-3">
-                                        <button type="submit" class="btn btn-secondary" text-translate="true">Update</button>
-                                    </form>
-                                }
-                                else
-                                {
-                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" class="me-3">
-                                        <button title="Schedule upgrade for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-secondary" text-translate="true">Schedule update</button>
-                                    </form>
-                                }
-                            }
+							@if (updateAvailable && x != null)
+							{
+								Model.InstalledPluginFingerprints.TryGetValue(plugin.Identifier, out var installedFingerprint);
+								bool mismatch = !string.IsNullOrEmpty(installedFingerprint) && !string.Equals(installedFingerprint, x.Fingerprint, StringComparison.OrdinalIgnoreCase);
+								string formId = $"updateForm_{plugin.Identifier.Replace(".", "_")}";
+								bool dependenciesMet = PluginManager.DependenciesMet(x.Dependencies, installed);
+
+								string buttonText = dependenciesMet ? "Update" : "Schedule update";
+								string tooltip = dependenciesMet ? null : "Schedule upgrade for when dependencies are met to ensure a smooth update";
+
+								<form id="@formId" asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" class="me-3">
+									<button type="@(mismatch ? "button" : "submit")" class="btn btn-secondary"
+											data-plugin-id="@plugin.Identifier" data-form-id="@formId" title="@tooltip"
+											data-bs-toggle="@(tooltip != null ? "tooltip" : null)" onclick="@(mismatch ? "showMismatchModal(this)" : "")">
+										@buttonText
+									</button>
+								</form>
+							}
+
                             @if (DependentOn(plugin.Identifier))
                             {
                                 <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-3" data-bs-toggle="tooltip" title="This plugin cannot be uninstalled as it is depended on by other plugins.">
@@ -319,26 +322,61 @@
         </div>
     </div>
 </form>
-<script>
-    // if we search using form, scroll to it
-    document.addEventListener("DOMContentLoaded", function() {
-        const searchForm = document.getElementById('searchForm');
 
-        // Set session storage flag on form submit
-        searchForm.addEventListener('submit', function() {
-            sessionStorage.setItem('formSubmitted', 'true');
-        });
 
-        // Check session storage to see if form was submitted, and scroll + clear it
-        if (sessionStorage.getItem('formSubmitted') === 'true') {
-            sessionStorage.removeItem('formSubmitted');
-            if (searchForm) {
-                searchForm.scrollIntoView();
-            }
-        }
-    });
+<div class="modal fade" id="fingerprintMismatchModal" tabindex="-1" aria-labelledby="fingerprintMismatchLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="fingerprintMismatchLabel">Plugin Fingerprint Mismatch</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">The plugin update fingerprint does not match the installed version fingerprint. Are you sure you want to continue with the update?
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+				<button type="button" id="confirmUpdate" class="btn btn-danger">Update</button>
+			</div>
+		</div>
+	</div>
+</div>
 
-</script>
+
+
+@section PageFootContent {
+	<script>
+
+		let targetFormId = null;
+		function showMismatchModal(button) {
+			targetFormId = button.getAttribute("data-form-id");
+			const modal = new bootstrap.Modal(document.getElementById('fingerprintMismatchModal'));
+			modal.show();
+		}
+		document.getElementById("confirmUpdate").addEventListener("click", function () {
+			if (targetFormId) {
+				document.getElementById(targetFormId).submit();
+			}
+		});
+
+		// Handle result scroll for plugin search
+		document.addEventListener("DOMContentLoaded", function() {
+			const searchForm = document.getElementById('searchForm');
+
+			// Set session storage flag on form submit
+			searchForm.addEventListener('submit', function() {
+				sessionStorage.setItem('formSubmitted', 'true');
+			});
+
+			// Check session storage to see if form was submitted, and scroll + clear it
+			if (sessionStorage.getItem('formSubmitted') === 'true') {
+				sessionStorage.removeItem('formSubmitted');
+				if (searchForm) {
+					searchForm.scrollIntoView();
+				}
+			}
+		});
+	</script>
+}
 
 @if (!availableAndNotInstalled.Any())
 {
@@ -359,7 +397,14 @@ else
                 <div class="card h-100" id="@plugin.Identifier">
                     <div class="card-body">
                         <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
-                            <h4 class="card-title mb-0" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
+							<div class="d-flex align-items-center gap-2">
+								<h4 class="card-title mb-0" data-bs-toggle="tooltip" title="@plugin.Identifier">@plugin.Name</h4>
+								@if (!string.IsNullOrEmpty(plugin.Fingerprint))
+								{
+									<span data-bs-toggle="tooltip" title="GPG verified Plugin– Fingerprint: @plugin.Fingerprint"><vc:icon symbol="key" /></span>
+								}
+							</div>
+
                             @if (!string.IsNullOrEmpty(plugin.Author))
                             {
                                 <span class="text-muted text-nowrap">
@@ -418,15 +463,6 @@ else
                         {
                             <h6 class="text-muted fw-semibold mt-4" text-translate="true">Resources</h6>
                             <ul class="list-group list-group-flush list-unstyled">
-                                @if (plugin.Source is not null)
-                                {
-                                    <li>
-                                        <a href="@plugin.Source" rel="noreferrer noopener" class="d-flex align-items-center" target="_blank">
-                                            <vc:icon symbol="social-github" />
-                                            <span style="margin-left:.4rem" text-translate="true">Sources</span>
-                                        </a>
-                                    </li>
-                                }
                                 @if (!string.IsNullOrEmpty(plugin.Documentation))
                                 {
                                     <li>

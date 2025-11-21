@@ -7,6 +7,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
+using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Plugins.Monetization.Views;
 using BTCPayServer.Plugins.Subscriptions;
 using BTCPayServer.Services;
@@ -38,6 +39,7 @@ public class UIServerMonetizationController(
     UserManager<ApplicationUser> userManager,
     StoreRepository storeRepo,
     ViewLocalizer viewLocalizer,
+    EmailSenderFactory emailSenderFactory,
     LinkGenerator linkGenerator,
     IStringLocalizer stringLocalizer) : Controller
 {
@@ -47,29 +49,29 @@ public class UIServerMonetizationController(
     [HttpGet]
     public async Task<IActionResult> Monetization()
     {
-        var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>();
+        var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>() ?? new();
         var vm = new MonetizationViewModel()
         {
-            Settings = settings ?? new MonetizationSettings()
+            Settings = settings
         };
-        if (settings is not null)
-        {
-            vm.DefaultPlan = await ctx.Plans.GetPlanFromId(settings.DefaultPlanId ?? "");
-        }
 
-        var storeId = HttpContext.GetCurrentStoreId();
-        var offerings = await ctx.Offerings
-            .Include(o => o.App)
-            .Include(o => o.Plans)
-            .Where(o => o.App.StoreDataId == storeId && !o.App.Archived)
-            .OrderBy(o => o.App.Name)
-            .ToListAsync();
+        var offeringAndPlan = await ctx.GetOfferingAndPlan(settings);
+        vm.DefaultPlan = offeringAndPlan?.Plan;
+        vm.Offering = offeringAndPlan?.Offering;
 
-        var offering = offerings?.FirstOrDefault(o => o.Id == settings?.OfferingId);
-        var activePlans = offering?.Plans.Where(p => p.Status == PlanData.PlanStatus.Active).ToArray() ?? [];
-        var defaultPlan = activePlans.FirstOrDefault(p => p.Id == settings?.DefaultPlanId);
+        var activePlans = vm.Offering?.Plans.Where(p => p.Status == PlanData.PlanStatus.Active).ToArray() ?? [];
+        vm.EmailServerConfigured = (await (await emailSenderFactory.GetEmailSender()).GetEmailSettings())?.IsComplete() is true;
+        vm.EmailStoreConfigured = vm.Offering is not null &&
+                                  (await (await emailSenderFactory.GetEmailSender(vm.Offering.App.StoreDataId)).GetEmailSettings())?.IsComplete() is true;
+
+        vm.Step =
+            offeringAndPlan is null ? MonetizationViewModel.InstallStatus.SetOffering :
+            !vm.EmailServerConfigured ? MonetizationViewModel.InstallStatus.ConfigureServerEmail :
+            !vm.EmailStoreConfigured ? MonetizationViewModel.InstallStatus.ConfigureStoreEmail :
+            MonetizationViewModel.InstallStatus.Done;
+
         HashSet<string> canLogin = new();
-        if (offering is not null)
+        if (vm.Offering is not null)
         {
             var planIds = activePlans.Select(p => p.Id).Distinct().ToArray();
             canLogin = (await ctx.PlanEntitlements.Where(p => planIds.Contains(p.PlanId))
@@ -78,13 +80,64 @@ public class UIServerMonetizationController(
                 .ToArrayAsync()).ToHashSet();
         }
 
-        string GetLabel(PlanData p) => canLogin.Contains(p.Id) ? StringLocalizer["{0} (Can login)", p.Name] : p.Name;
         var stores = await storeRepo.GetStoresByUserId(userManager.GetUserId(User)!);
-        vm.ActivateModal = new ActivateMonetizationModelViewModel(settings, offerings, storeId, stores);
+        if (vm.Offering is null)
+        {
+            var vmSelect = new SelectExistingOfferingModalViewModel();
+            var storeIds = stores.Select(s => s.Id).ToArray();
+            var offerings = await ctx
+                .Offerings
+                .Include(o => o.App)
+                .Include(o => o.Plans)
+                .Where(o => storeIds.Contains(o.App.StoreDataId))
+                .ToArrayAsync();
+            var offeringsByStores = offerings.GroupBy(o => o.App.StoreDataId).ToDictionary(o => o.Key, o => o.ToArray());
+            vmSelect.Stores =
+                stores
+                    .Where(s => offeringsByStores.ContainsKey(s.Id))
+                    .Select(s => new SelectExistingOfferingModalViewModel.Store()
+                {
+                    Id = s.Id,
+                    Name = s.StoreName,
+                    Offerings = offeringsByStores[s.Id]
+                        .Where(o => !o.App.Archived)
+                        .Select(o => new SelectExistingOfferingModalViewModel.Offering()
+                        {
+                            Id = o.Id,
+                            Name = o.App.Name,
+                            Plans = o.Plans
+                                .Where(p => p.Status == PlanData.PlanStatus.Active)
+                                .Select(p => new SelectExistingOfferingModalViewModel.Item()
+                                {
+                                    Id = p.Id,
+                                    Name = p.Name
+                                })
+                                .OrderBy(p => p.Name)
+                                .ToList()
+                        })
+                        .OrderBy(p => p.Name)
+                        .ToList()
+                })
+                .OrderBy(p => p.Name)
+                .ToList();
+
+            // Remove empty
+            foreach (var store in vmSelect.Stores)
+            {
+                store.Offerings = store.Offerings.Where(o => o.Plans.Count != 0).ToList();
+            }
+            vmSelect.Stores = vmSelect.Stores.Where(s => s.Offerings.Count != 0).ToList();
+            if (vmSelect.Stores.Count > 0)
+                vm.SelectExistingOfferingModal = vmSelect;
+        }
+
+        string GetLabel(PlanData p) => canLogin.Contains(p.Id) ? $"{p.Name} (can-access)" : p.Name;
+        var storeId = HttpContext.GetCurrentStoreId();
+        vm.ActivateModal = new ActivateMonetizationModelViewModel(storeId, stores);
         vm.MigrateUsersModal = new MigrateUsersModalViewModel()
         {
-            AvailablePlans = activePlans.OrderBy(p => p.Name).Select(p => new SelectListItem(GetLabel(p), p.Id)).ToList() ?? [],
-            SelectedPlanId = defaultPlan?.Id ?? ""
+            AvailablePlans = activePlans.OrderBy(p => p.Name).Select(p => new SelectListItem(GetLabel(p), p.Id)).ToList(),
+            SelectedPlanId = vm.DefaultPlan?.Id ?? ""
         };
         return View(vm);
     }
@@ -92,43 +145,24 @@ public class UIServerMonetizationController(
     [HttpPost]
     public async Task<IActionResult> Monetization(MonetizationViewModel vm, string command)
     {
-        var selectedStore = vm.ActivateModal?.SelectedStoreId ?? this.HttpContext.GetCurrentStoreId() ?? "";
-        var store = await ctx.Stores.FindAsync(selectedStore);
-        if (store is null)
-        {
-            TempData.SetStatusMessageModel(new()
-            {
-                Message = "You need to select a store first",
-                Severity = StatusMessageModel.StatusSeverity.Error
-            });
-            return RedirectToAction(nameof(Monetization));
-        }
-
-        var registrationLink = Url.Action(action: nameof(UIUserMonetizationController.NewUser), controller: "UIUserMonetization");
-
         if (command == "activate-monetization")
         {
+            var registrationLink = Url.Action(action: nameof(UIUserMonetizationController.NewUser), controller: "UIUserMonetization");
+            var selectedStore = vm.ActivateModal?.SelectedStoreId ?? "";
+            var store = await storeRepo.FindStore(selectedStore, userManager.GetUserId(User) ?? "");
+            if (store is null)
+            {
+                TempData.SetStatusMessageModel(new()
+                {
+                    Message = "You need to select a store first",
+                    Severity = StatusMessageModel.StatusSeverity.Error
+                });
+                return RedirectToAction(nameof(Monetization));
+            }
+
             string? offeringId = null;
             string? defaultPlanId = null;
-            if (vm is { ActivateModal: { SelectedOfferingId: { } selectedOfferingId, SelectedPlanId: { } defaultPlanId2 } })
-            {
-                var offering = await ctx.Offerings.GetOfferingData(selectedOfferingId, selectedStore);
-                offeringId = offering?.Id;
-                var plan = offering?.Plans.FirstOrDefault(p => p.Id == defaultPlanId2);
-                defaultPlanId = plan?.Id;
-                if (offeringId is not null && offering is not null)
-                {
-                    var defaultEntitlement = CreateDefaultEntitlements(offeringId).Values;
-                    var existingCustomIds = offering.Entitlements.Select(e => e.CustomId).ToHashSet(StringComparer.Ordinal);
-                    var toAdd = defaultEntitlement.Where(e => !existingCustomIds.Contains(e.CustomId)).ToList();
-                    if (toAdd.Count != 0)
-                    {
-                        ctx.Entitlements.AddRange(toAdd);
-                        await ctx.SaveChangesAsync();
-                    }
-                }
-            }
-            else if (vm.ActivateModal is { })
+            if (vm.ActivateModal is { })
             {
                 if (!ModelState.IsValid)
                     return await Monetization();
@@ -187,7 +221,7 @@ public class UIServerMonetizationController(
 
             if (offeringId is not null &&
                 defaultPlanId is not null &&
-                await ctx.Offerings.GetOfferingData(offeringId) is {} off)
+                await ctx.Offerings.GetOfferingData(offeringId) is { } off)
             {
                 var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>() ?? new();
                 settings.OfferingId = offeringId;
@@ -204,25 +238,46 @@ public class UIServerMonetizationController(
                 var offeringUrl = linkGenerator.OfferingLink(off.App.StoreDataId, off.Id, SubscriptionSection.Plans, Request.GetRequestBaseUrl());
                 TempData.SetStatusMessageModel(new()
                 {
-                    LocalizedHtml = ViewLocalizer["Monetization activated, users who register to your server from now will be subscriber of <a class=\"alert-link\" href=\"{0}\">this offering</a>.", offeringUrl],
+                    LocalizedHtml = ViewLocalizer[
+                        "Monetization activated, users who register to your server from now will be subscriber of <a class=\"alert-link\" href=\"{0}\">this offering</a>.",
+                        offeringUrl],
+                    Severity = StatusMessageModel.StatusSeverity.Success
+                });
+            }
+        }
+        else if (command == "change-offering")
+        {
+            var settings = new MonetizationSettings()
+            {
+                OfferingId = vm.SelectExistingOfferingModal?.SelectedOfferingId,
+                DefaultPlanId = vm.SelectExistingOfferingModal?.SelectedPlanId
+            };
+            if (await ctx.GetOfferingAndPlan(settings) is {} v)
+            {
+                await settingsRepository.UpdateSetting(settings);
+                TempData.SetStatusMessageModel(new()
+                {
+                    Message = StringLocalizer["Monetization order updated to offering {0} with default plan {1}.", v.Offering.App.Name, v.Plan.Name],
                     Severity = StatusMessageModel.StatusSeverity.Success
                 });
             }
         }
         else if (command == "migrate-users")
         {
-            var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>() ?? new();
-            var plan = await ctx.Plans.GetPlanFromId(vm.MigrateUsersModal?.SelectedPlanId ?? "");
-            var count = (await monetizationService.MigrateUsers(settings.OfferingId, vm.MigrateUsersModal?.SelectedPlanId)).Length;
-            // Should we fire NewSubscriber event?
-            // Given this is a one time operation maybe not...
-            // This means the email rules won't be triggered
-            // Anyway, if we do, we should do it on a separate task to not block this method.
-            TempData.SetStatusMessageModel(new()
+            var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>();
+            if (await ctx.GetOfferingAndPlan(settings) is { } v)
             {
-                Message = StringLocalizer["{0} users migrated to the plan '{1}'.", count, plan?.Name ?? ""],
-                Severity = StatusMessageModel.StatusSeverity.Success
-            });
+                var count = (await monetizationService.MigrateUsers(v.Offering.Id, vm.MigrateUsersModal?.SelectedPlanId)).Length;
+                // Should we fire NewSubscriber event?
+                // Given this is a one time operation maybe not...
+                // This means the email rules won't be triggered
+                // Anyway, if we do, we should do it on a separate task to not block this method.
+                TempData.SetStatusMessageModel(new()
+                {
+                    Message = StringLocalizer["{0} users migrated to the plan '{1}'.", count, v.Plan.Name ?? ""],
+                    Severity = StatusMessageModel.StatusSeverity.Success
+                });
+            }
         }
         else if (command == "demonetize")
         {
@@ -235,6 +290,39 @@ public class UIServerMonetizationController(
                 Message = StringLocalizer["Monetization deactivated, users who register to your server from now will not be subscriber of any offering."],
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
+        }
+        else if (command == "copy-server-email-settings")
+        {
+            var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>();
+            var offeringAndPlan = await ctx.GetOfferingAndPlan(settings);
+            if (offeringAndPlan is { Offering: { } offering } &&
+                await storeRepo.FindStore(offering.App.StoreDataId, userManager.GetUserId(User) ?? "") is { } store)
+            {
+                var storeBlob = store.GetStoreBlob();
+                var policies = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new();
+                if (policies.DisableStoresToUseServerEmailSettings)
+                {
+                    var serverSettings = await settingsRepository.GetSettingAsync<EmailSettings>() ?? new();
+                    storeBlob.EmailSettings = serverSettings;
+                    TempData.SetStatusMessageModel(new()
+                    {
+                        Message = StringLocalizer["Store emails settings copied from server settings"],
+                        Severity = StatusMessageModel.StatusSeverity.Success
+                    });
+                }
+                else
+                {
+                    storeBlob.EmailSettings = null;
+                    TempData.SetStatusMessageModel(new()
+                    {
+                        Message = StringLocalizer["Store emails settings and now using the server's SMTP settings."],
+                        Severity = StatusMessageModel.StatusSeverity.Success
+                    });
+                }
+
+                store.SetStoreBlob(storeBlob);
+                await storeRepo.UpdateStoreBlob(store);
+            }
         }
 
         return RedirectToAction(nameof(Monetization));

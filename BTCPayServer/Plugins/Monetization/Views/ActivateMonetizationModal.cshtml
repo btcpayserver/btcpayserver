@@ -15,47 +15,32 @@
                         All newly registered users will be added to this plan.
                         You may also migrate your existing users.
                         Only users with an active subscription with access feature can log in and use your server.</p>
-                    <div v-if="isNew">
-                        <div v-pre>
+                    <div>
+                        <div class="form-group">
+                            <label asp-for="SelectedStoreId" class="form-label" text-translate="true">Store</label>
+                            <select asp-for="SelectedStoreId" class="form-control" asp-items="Model.Stores"></select>
+                        </div>
+                        <div class="d-flex gap-3">
                             <div class="form-group">
-                                <label asp-for="SelectedStoreId" class="form-label" text-translate="true">Store</label>
-                                <select asp-for="SelectedStoreId" class="form-control" asp-items="Model.Stores"></select>
-                            </div>
-                            <div class="d-flex gap-3">
-                                <div class="form-group">
-                                    <label asp-for="StarterPlanCost" class="form-label" text-translate="true">Starter plan monthly cost</label>
-                                    <input inputmode="decimal" asp-for="StarterPlanCost" class="form-control"></input>
-                                </div>
-                                <div class="form-group">
-                                    <label asp-for="TrialDays" class="form-label"></label>
-                                    <div class="input-group">
-                                        <input asp-for="TrialDays" class="form-control" min="0" placeholder="7" />
-                                        <span class="input-group-text">days</span>
-                                    </div>
-                                    <span asp-validation-for="TrialDays" class="text-danger"></span>
-                                </div>
+                                <label asp-for="StarterPlanCost" class="form-label" text-translate="true">Starter plan monthly cost</label>
+                                <input inputmode="decimal" asp-for="StarterPlanCost" class="form-control"></input>
                             </div>
                             <div class="form-group">
-                                <div class="form-check">
-                                    <input class="form-check-input" asp-for="MigrateExistingUsers" />
-                                    <label class="form-check-label" asp-for="MigrateExistingUsers"></label>
+                                <label asp-for="TrialDays" class="form-label"></label>
+                                <div class="input-group">
+                                    <input asp-for="TrialDays" class="form-control" min="0" placeholder="7" />
+                                    <span class="input-group-text">days</span>
                                 </div>
-                                <p class="text-muted" text-translate="true">Those initial settings can be modified later.</p>
+                                <span asp-validation-for="TrialDays" class="text-danger"></span>
                             </div>
                         </div>
-                    </div>
-                    <div v-if="!isNew" class="form-group">
-                        <label asp-for="SelectedOfferingId" class="form-label" text-translate="true">Select offering</label>
-                        <select class="form-select" asp-for="SelectedOfferingId"
-                                v-model="selectedOfferingId">
-                            <option v-for="o in model.offerings" :key="o.id" :value="o.id">{{o.name}}</option>
-                        </select>
-                    </div>
-                    <div v-if="!isNew" class="form-group">
-                        <label asp-for="SelectedPlanId" class="form-label" text-translate="true">Select default plan</label>
-                        <select class="form-select" asp-for="SelectedPlanId" v-model="selectedPlanId">
-                            <option v-for="o in availablePlans" :key="o.id" :value="o.id">{{o.name}}</option>
-                        </select>
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input class="form-check-input" asp-for="MigrateExistingUsers" />
+                                <label class="form-check-label" asp-for="MigrateExistingUsers"></label>
+                            </div>
+                            <p class="text-muted" text-translate="true">Those initial settings can be modified later.</p>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -70,39 +55,3 @@
         </div>
     </div>
 </div>
-
-<script>
-    var model = @Safe.Json(Model);
-    document.addEventListener('DOMContentLoaded', function () {
-        var app = new Vue({
-            el: '#activateMonetization',
-            data() {
-                return {
-                    isNew: false,
-                    model: model,
-                    selectedOfferingId: model.selectedOfferingId,
-                    selectedPlanId: model.selectedPlanId,
-                };
-            },
-            computed: {
-                selectedOffering() {
-                    return this.model.offerings.find(o => o.id === this.selectedOfferingId) || this.model.offerings[0];
-                },
-                availablePlans() {
-                    return this.selectedOffering ? this.selectedOffering.plans : [];
-                }
-            },
-            watch: {
-                selectedOfferingId() {
-                    this.selectedPlanId = this.selectedOffering ? this.selectedOffering.plans[0].id : null;
-                }
-            }
-        });
-        const activateMonetization = document.getElementById('activateMonetization');
-        activateMonetization.addEventListener('show.bs.modal', function (event) {
-            const trigger = event.relatedTarget;
-            if (!trigger) return;
-            app.isNew = trigger.dataset.isNew === "true";
-        });
-    });
-</script>

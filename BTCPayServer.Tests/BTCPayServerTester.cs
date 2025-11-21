@@ -88,6 +88,12 @@ namespace BTCPayServer.Tests
         public bool MockRates { get; set; } = true;
         public string SocksEndpoint { get; set; }
 
+        /// <summary>
+        /// This helps testing plugins.
+        /// See https://github.com/btcpayserver/btcpayserver/pull/7008
+        /// </summary>
+        public bool LoadPluginsInDefaultAssemblyContext { get; set; } = true;
+
         public HashSet<string> Chains { get; set; } = new HashSet<string>() { "BTC" };
         public bool UseLightning { get; set; }
         public bool CheatMode { get; set; } = true;
@@ -167,6 +173,8 @@ namespace BTCPayServer.Tests
 #if DEBUG
             confBuilder.AddJsonFile("appsettings.dev.json", true, false);
 #endif
+            if (LoadPluginsInDefaultAssemblyContext)
+                confBuilder.AddInMemoryCollection([new("TEST_RUNNER_ENABLED", "true")]);
             var conf = confBuilder.Build();
             _Host = new WebHostBuilder()
                     .UseDefaultServiceProvider(options =>

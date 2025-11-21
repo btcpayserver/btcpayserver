@@ -31,6 +31,7 @@ namespace BTCPayServer.Plugins.Dotnet.Loader
         private readonly bool _preferDefaultLoadContext;
         private readonly string[] _resourceRoots;
         private readonly bool _loadInMemory;
+        private readonly bool _loadAssembliesInDefaultLoadContext;
         private readonly bool _lazyLoadReferences;
         private readonly List<AssemblyLoadContext> _assemblyLoadContexts = new();
         private readonly AssemblyDependencyResolver _dependencyResolver;
@@ -49,6 +50,7 @@ namespace BTCPayServer.Plugins.Dotnet.Loader
             bool lazyLoadReferences,
             bool isCollectible,
             bool loadInMemory,
+            bool loadAssembliesInDefaultLoadContext,
             bool shadowCopyNativeLibraries)
             : base(Path.GetFileNameWithoutExtension(mainAssemblyPath), isCollectible)
         {
@@ -190,11 +192,12 @@ namespace BTCPayServer.Plugins.Dotnet.Loader
             return null;
         }
 
+        private AssemblyLoadContext LoadContext => _loadAssembliesInDefaultLoadContext ? Default : this;
         public Assembly LoadAssemblyFromFilePath(string path)
         {
             if (!_loadInMemory)
             {
-                return LoadFromAssemblyPath(path);
+                return LoadContext.LoadFromAssemblyPath(path);
             }
 
             using var file = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -202,9 +205,9 @@ namespace BTCPayServer.Plugins.Dotnet.Loader
             if (File.Exists(pdbPath))
             {
                 using var pdbFile = File.Open(pdbPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                return LoadFromStream(file, pdbFile);
+                return LoadContext.LoadFromStream(file, pdbFile);
             }
-            return LoadFromStream(file);
+            return LoadContext.LoadFromStream(file);
 
         }
 

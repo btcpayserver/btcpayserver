@@ -2581,6 +2581,230 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error, "The user is the last owner. Their role cannot be changed.");
         }
 
+
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        public async Task CanUseRoleManager()
+        {
+            await using var s = CreatePlaywrightTester(newDb: true);
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.GoToHome();
+            await s.GoToServer(ServerNavPages.Roles);
+            var existingServerRoles = await s.Page.Locator("table tr").AllAsync();
+            Assert.Equal(5, existingServerRoles.Count);
+            ILocator ownerRow = null;
+            ILocator managerRow = null;
+            ILocator employeeRow = null;
+            ILocator guestRow = null;
+            foreach (var roleItem in existingServerRoles)
+            {
+                var text = await roleItem.TextContentAsync();
+                if (text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    ownerRow = roleItem;
+                }
+                else if (text.Contains("manager", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    managerRow = roleItem;
+                }
+                else if (text.Contains("employee", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    employeeRow = roleItem;
+                }
+                else if (text.Contains("guest", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    guestRow = roleItem;
+                }
+            }
+
+            Assert.NotNull(ownerRow);
+            Assert.NotNull(managerRow);
+            Assert.NotNull(employeeRow);
+            Assert.NotNull(guestRow);
+
+            var ownerBadges = await ownerRow.Locator(".badge").AllAsync();
+            var ownerBadgeTexts = await Task.WhenAll(ownerBadges.Select(async element => await element.TextContentAsync()));
+            Assert.Contains(ownerBadgeTexts, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+            Assert.Contains(ownerBadgeTexts, text => text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
+
+            var managerBadges = await managerRow.Locator(".badge").AllAsync();
+            var managerBadgeTexts = await Task.WhenAll(managerBadges.Select(async element => await element.TextContentAsync()));
+            Assert.DoesNotContain(managerBadgeTexts, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+            Assert.Contains(managerBadgeTexts, text => text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
+
+            var employeeBadges = await employeeRow.Locator(".badge").AllAsync();
+            var employeeBadgeTexts = await Task.WhenAll(employeeBadges.Select(async element => await element.TextContentAsync()));
+            Assert.DoesNotContain(employeeBadgeTexts, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+            Assert.Contains(employeeBadgeTexts, text => text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
+
+            var guestBadges = await guestRow.Locator(".badge").AllAsync();
+            var guestBadgeTexts = await Task.WhenAll(guestBadges.Select(async element => await element.TextContentAsync()));
+            Assert.DoesNotContain(guestBadgeTexts, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+            Assert.Contains(guestBadgeTexts, text => text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
+            await guestRow.Locator("#SetDefault").ClickAsync();
+            await s.FindAlertMessage(partialText: "Role set default");
+
+            existingServerRoles = await s.Page.Locator("table tr").AllAsync();
+            foreach (var roleItem in existingServerRoles)
+            {
+                var text = await roleItem.TextContentAsync();
+                if (text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    ownerRow = roleItem;
+                }
+                else if (text.Contains("guest", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    guestRow = roleItem;
+                }
+            }
+            guestBadges = await guestRow.Locator(".badge").AllAsync();
+            var guestBadgeTexts2 = await Task.WhenAll(guestBadges.Select(async element => await element.TextContentAsync()));
+            Assert.Contains(guestBadgeTexts2, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+
+            ownerBadges = await ownerRow.Locator(".badge").AllAsync();
+            var ownerBadgeTexts2 = await Task.WhenAll(ownerBadges.Select(async element => await element.TextContentAsync()));
+            Assert.DoesNotContain(ownerBadgeTexts2, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+            await ownerRow.Locator("#SetDefault").ClickAsync();
+
+            await s.FindAlertMessage(partialText: "Role set default");
+
+            await s.CreateNewStore();
+            await s.GoToStore(StoreNavPages.Roles);
+            existingServerRoles = await s.Page.Locator("table tr").AllAsync();
+            Assert.Equal(5, existingServerRoles.Count);
+            var serverRoleTexts = await Task.WhenAll(existingServerRoles.Select(async element => await element.TextContentAsync()));
+            Assert.Equal(4, serverRoleTexts.Count(text => text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)));
+
+            foreach (var roleItem in existingServerRoles)
+            {
+                var text = await roleItem.TextContentAsync();
+                if (text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    ownerRow = roleItem;
+                    break;
+                }
+            }
+
+            await ownerRow.Locator("text=Remove").ClickAsync();
+            await s.Page.WaitForLoadStateAsync();
+            Assert.DoesNotContain("ConfirmContinue", await s.Page.ContentAsync());
+            await s.Page.GoBackAsync();
+            existingServerRoles = await s.Page.Locator("table tr").AllAsync();
+            foreach (var roleItem in existingServerRoles)
+            {
+                var text = await roleItem.TextContentAsync();
+                if (text.Contains("guest", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    guestRow = roleItem;
+                    break;
+                }
+            }
+
+            await guestRow.Locator("text=Remove").ClickAsync();
+            await s.Page.ClickAsync("#ConfirmContinue");
+            await s.FindAlertMessage();
+
+            await s.GoToStore(StoreNavPages.Roles);
+            await s.ClickPagePrimary();
+
+            Assert.Contains("Create role", await s.Page.ContentAsync());
+            await s.ClickPagePrimary();
+            await s.Page.Locator("#Role").FillAsync("store role");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage();
+
+            existingServerRoles = await s.Page.Locator("table tr").AllAsync();
+            foreach (var roleItem in existingServerRoles)
+            {
+                var text = await roleItem.TextContentAsync();
+                if (text.Contains("store role", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    guestRow = roleItem;
+                    break;
+                }
+            }
+
+            guestBadges = await guestRow.Locator(".badge").AllAsync();
+            var guestBadgeTexts3 = await Task.WhenAll(guestBadges.Select(async element => await element.TextContentAsync()));
+            Assert.DoesNotContain(guestBadgeTexts3, text => text.Equals("server-wide", StringComparison.InvariantCultureIgnoreCase));
+            await s.GoToStore(StoreNavPages.Users);
+            var options = await s.Page.Locator("#Role option").AllAsync();
+            Assert.Equal(4, options.Count);
+            var optionTexts = await Task.WhenAll(options.Select(async element => await element.TextContentAsync()));
+            Assert.Contains(optionTexts, text => text.Equals("store role", StringComparison.InvariantCultureIgnoreCase));
+            await s.CreateNewStore();
+            await s.GoToStore(StoreNavPages.Roles);
+            existingServerRoles = await s.Page.Locator("table tr").AllAsync();
+            Assert.Equal(4, existingServerRoles.Count);
+            var serverRoleTexts2 = await Task.WhenAll(existingServerRoles.Select(async element => await element.TextContentAsync()));
+            Assert.Equal(3, serverRoleTexts2.Count(text => text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)));
+            Assert.Equal(0, serverRoleTexts2.Count(text => text.Contains("store role", StringComparison.InvariantCultureIgnoreCase)));
+            await s.GoToStore(StoreNavPages.Users);
+            options = await s.Page.Locator("#Role option").AllAsync();
+            Assert.Equal(3, options.Count);
+            var optionTexts2 = await Task.WhenAll(options.Select(async element => await element.TextContentAsync()));
+            Assert.DoesNotContain(optionTexts2, text => text.Equals("store role", StringComparison.InvariantCultureIgnoreCase));
+
+            await s.Page.Locator("#Email").FillAsync(s.AsTestAccount().Email);
+            await s.Page.Locator("#Role").SelectOptionAsync("Owner");
+            await s.Page.ClickAsync("#AddUser");
+            Assert.Contains("The user already has the role Owner.", await s.Page.Locator(".validation-summary-errors").TextContentAsync());
+            await s.Page.Locator("#Role").SelectOptionAsync("Manager");
+            await s.Page.ClickAsync("#AddUser");
+            Assert.Contains("The user is the last owner. Their role cannot be changed.", await s.Page.Locator(".validation-summary-errors").TextContentAsync());
+
+            await s.GoToStore(StoreNavPages.Roles);
+            await s.ClickPagePrimary();
+            await s.Page.Locator("#Role").FillAsync("Malice");
+
+            await s.Page.EvaluateAsync($"document.getElementById('Policies')['{Policies.CanModifyServerSettings}']=new Option('{Policies.CanModifyServerSettings}', '{Policies.CanModifyServerSettings}', true,true);");
+
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage();
+            Assert.Contains("Malice", await s.Page.ContentAsync());
+            Assert.DoesNotContain(Policies.CanModifyServerSettings, await s.Page.ContentAsync());
+        }
+
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        public async Task CanSigninWithLoginCode()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            var user = await s.RegisterNewUser();
+            await s.GoToHome();
+            await s.GoToProfile(ManageNavPages.LoginCodes);
+
+            string code = null;
+            await s.Page.WaitForSelectorAsync("#LoginCode .qr-code");
+            code = await s.Page.Locator("#LoginCode .qr-code").GetAttributeAsync("alt");
+            string prevCode = code;
+            await s.Page.ReloadAsync();
+            await s.Page.WaitForSelectorAsync("#LoginCode .qr-code");
+            code = await s.Page.Locator("#LoginCode .qr-code").GetAttributeAsync("alt");
+            Assert.NotEqual(prevCode, code);
+            await s.Page.WaitForSelectorAsync("#LoginCode .qr-code");
+            code = await s.Page.Locator("#LoginCode .qr-code").GetAttributeAsync("alt");
+            await s.Logout();
+            await s.GoToLogin();
+            await s.Page.EvaluateAsync("document.getElementById('LoginCode').value = 'bad code'");
+            await s.Page.EvaluateAsync("document.getElementById('logincode-form').submit()");
+            await s.Page.WaitForLoadStateAsync();
+
+            await s.GoToLogin();
+            await s.Page.EvaluateAsync($"document.getElementById('LoginCode').value = '{code}'");
+            await s.Page.EvaluateAsync("document.getElementById('logincode-form').submit()");
+            await s.Page.WaitForLoadStateAsync();
+            await s.Page.WaitForLoadStateAsync();
+            
+            await s.CreateNewStore();
+            await s.GoToHome();
+            await s.Page.WaitForLoadStateAsync();
+            await s.Page.WaitForLoadStateAsync();
+            var content = await s.Page.ContentAsync();
+            Assert.Contains(user, content);
+        }
     }
 }
 

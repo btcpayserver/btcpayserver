@@ -111,7 +111,8 @@ namespace BTCPayServer.Tests
             await popOutPage.CloseAsync();
             await s.Page.Context.Pages.First().BringToFrontAsync();
             await s.GoToUrl(editUrl.PathAndQuery);
-            Assert.Contains("aa@aa.com", await s.Page.ContentAsync());
+
+            await Expect(s.Page.Locator("#Email")).ToHaveValueAsync("aa@aa.com");
             var invoice = await s.Server.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId);
             Assert.Equal("aa@aa.com", invoice.Metadata.BuyerEmail);
 

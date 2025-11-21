@@ -491,6 +491,7 @@ namespace BTCPayServer.Plugins
             QueueCommands(pluginDir, ("disable", plugin));
         }
 
+
         // Loads the list of disabled plugins from the file
         private static HashSet<string> GetDisabledPluginIdentifiers(string pluginsFolder)
         {

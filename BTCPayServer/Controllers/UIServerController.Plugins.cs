@@ -86,6 +86,20 @@ namespace BTCPayServer.Controllers
             return RedirectToAction("ListPlugins");
         }
 
+        [HttpPost("server/plugins/enable")]
+        public IActionResult EnablePlugin(
+            [FromServices] PluginService pluginService, string plugin)
+        {
+            pluginService.EnablePlugin(plugin);
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Message = StringLocalizer["Plugin scheduled to be enabled."].Value,
+                Severity = StatusMessageModel.StatusSeverity.Success
+            });
+
+            return RedirectToAction("ListPlugins");
+        }
+
         [HttpPost("server/plugins/cancel")]
         public IActionResult CancelPluginCommands(
             [FromServices] PluginService pluginService, string plugin)

@@ -32,6 +32,10 @@ namespace BTCPayServer.Services
         {
             return new Attachment(WalletObjectData.Types.PaymentRequest, paymentRequestId);
         }
+        public static Attachment PaymentRequest(string paymentRequestId, JObject? data)
+        {
+            return new Attachment(WalletObjectData.Types.PaymentRequest, paymentRequestId, data);
+        }
         public static Attachment App(string appId)
         {
             return new Attachment(WalletObjectData.Types.App, appId);

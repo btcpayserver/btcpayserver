@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
@@ -1080,6 +1081,7 @@ namespace BTCPayServer.Controllers
             var vm = new BrandingViewModel
             {
                 ServerName = server.ServerName,
+                BaseUrl = server.BaseUrl,
                 ContactUrl = server.ContactUrl,
                 CustomTheme = theme.CustomTheme,
                 CustomThemeExtension = theme.CustomThemeExtension,
@@ -1093,8 +1095,25 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Branding(
             BrandingViewModel vm,
             [FromForm] bool RemoveLogoFile,
-            [FromForm] bool RemoveCustomThemeFile)
+            [FromForm] bool RemoveCustomThemeFile,
+            [FromForm] string? command = null)
         {
+            if (command is "SetBaseUrl")
+                vm.BaseUrl = HttpContext.Request.GetRequestBaseUrl().ToString();
+            if (string.IsNullOrEmpty(vm.BaseUrl))
+            {
+                vm.BaseUrl = null;
+            }
+            else
+            {
+                if (!RequestBaseUrl.TryFromUrl(vm.BaseUrl, out var baseUrl))
+                    ModelState.AddModelError(nameof(vm.BaseUrl), StringLocalizer["Invalid Base URL"]);
+                vm.BaseUrl = baseUrl?.ToString();
+                vm.BaseUrl = vm.BaseUrl?.WithoutEndingSlash();
+            }
+
+            if (!ModelState.IsValid)
+                return View(vm);
             var settingsChanged = false;
             var server = await _SettingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
             var theme = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
@@ -1117,6 +1136,11 @@ namespace BTCPayServer.Controllers
                 server.ContactUrl = !string.IsNullOrWhiteSpace(vm.ContactUrl)
                     ? vm.ContactUrl.IsValidEmail() ? $"mailto:{vm.ContactUrl}" : vm.ContactUrl
                     : null;
+                settingsChanged = true;
+            }
+            if (server.BaseUrl != vm.BaseUrl)
+            {
+                server.BaseUrl = vm.BaseUrl;
                 settingsChanged = true;
             }
 

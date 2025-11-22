@@ -129,6 +129,10 @@ namespace BTCPayServer.Services
             internal readonly ApplicationUser? _user = user;
             public ApplicationUser User => _user ?? throw new InvalidOperationException("User is not set");
             public List<LoginFailure> Failures { get; } = new();
+            /// <summary>
+            /// A redirect URL to redirect the user if login failed.
+            /// </summary>
+            public string? FailedRedirectUrl { get; set; }
         }
 
         public async Task<bool> CanLogin(CanLoginContext context)
@@ -152,6 +156,9 @@ namespace BTCPayServer.Services
             {
                 if (context.User is { EmailConfirmed: false, RequiresEmailConfirmation: true })
                     context.Failures.Add(new(context.StringLocalizer["You must have a confirmed email to log in."]));
+                else if (context.User.PasswordHash is null)
+                    context.Failures.Add(new(context.StringLocalizer["Your user account has no password set."]));
+
                 if (context.User is { Approved: false, RequiresApproval: true })
                     context.Failures.Add(new(context.StringLocalizer["Your user account requires approval by an admin before you can log in."]));
                 if (context.User is { IsDisabled: true })

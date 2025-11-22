@@ -39,6 +39,7 @@ public class PortalSessionData
             .ValueGeneratedOnAdd()
             .HasValueGenerator(ValueGenerators.WithPrefix("ps"));
         b.HasIndex(x => x.Expiration);
+        b.Property(x => x.Expiration).HasDefaultValueSql("now() + interval '1 day'");
         b.Property(x => x.BaseUrl)
             .HasConversion<string>(
                 x => x.ToString(),

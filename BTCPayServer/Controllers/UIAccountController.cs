@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -22,11 +23,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using NBitcoin.DataEncoders;
-using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Controllers
@@ -85,9 +84,9 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("/login")]
         [AllowAnonymous]
-        public async Task<IActionResult> Login(string returnUrl = null, string email = null)
+        public async Task<IActionResult> Login(string returnUrl = null, string email = null, bool allowLimitedLogin = false)
         {
-            if (User.Identity.IsAuthenticated && string.IsNullOrEmpty(returnUrl))
+            if (User.Identity?.IsAuthenticated is true && string.IsNullOrEmpty(returnUrl))
                 return RedirectToLocal();
 
             // Clear the existing external cookie to ensure a clean login process
@@ -99,7 +98,7 @@ namespace BTCPayServer.Controllers
             }
 
             ViewData["ReturnUrl"] = returnUrl;
-            return View(nameof(Login), new LoginViewModel { Email = email });
+            return View(nameof(Login), new LoginViewModel { Email = email, AllowLimitedLogin = allowLimitedLogin });
         }
 
         // GET is for signin via the POS backend
@@ -170,13 +169,32 @@ namespace BTCPayServer.Controllers
                 var loginContext = CreateLoginContext(user);
                 if (!await userService.CanLogin(loginContext))
                 {
-                    TempData.SetStatusLoginResult(loginContext);
-                    return View(model);
+                    if (user is null || !await userManager.CheckPasswordAsync(user, model.Password))
+                    {
+                        if (user is not null)
+                            await userManager.AccessFailedAsync(user);
+                        ModelState.AddModelError(string.Empty, errorMessage!);
+                        return View(model);
+                    }
+                    // Only show the real reason if the user has input the right password...
+                    else
+                    {
+                        var principal = await signInManager.CreateUserPrincipalAsync(user);
+                        await HttpContext.SignInAsync(AuthenticationSchemes.LimitedLogin, principal);
+                        if (model.AllowLimitedLogin && returnUrl != null)
+                            return RedirectToLocal(returnUrl);
+
+                        if (loginContext.FailedRedirectUrl is { } url)
+                            return Redirect(url);
+                        else
+                            TempData.SetStatusLoginResult(loginContext);
+                        return RedirectToAction(nameof(Login));
+                    }
                 }
 
                 var fido2Devices = await fido2Service.HasCredentials(user!.Id);
                 var lnurlAuthCredentials = await lnurlAuthService.HasCredentials(user.Id);
-                if (!await userManager.IsLockedOutAsync(user) && (fido2Devices || lnurlAuthCredentials))
+                if (fido2Devices || lnurlAuthCredentials)
                 {
                     if (await userManager.CheckPasswordAsync(user, model.Password))
                     {
@@ -526,6 +544,12 @@ namespace BTCPayServer.Controllers
             }
             if (PoliciesSettings.LockSubscription && !User.IsInRole(Roles.ServerAdmin))
                 return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
+
+            if (!string.IsNullOrWhiteSpace(PoliciesSettings.RegisterPageRedirect))
+            {
+                return Redirect(HttpContext.Request.GetAbsoluteUri(PoliciesSettings.RegisterPageRedirect));
+            }
+
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
@@ -536,16 +560,13 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null, bool logon = true)
         {
             if (!CanLoginOrRegister())
-            {
-                return RedirectToAction("Register");
-            }
+                return RedirectToAction(nameof(Register));
+            var r = Register(returnUrl);
+            if (r is not ViewResult)
+                return r;
 
-            ViewData["ReturnUrl"] = returnUrl;
             ViewData["Logon"] = logon.ToString(CultureInfo.InvariantCulture).ToLowerInvariant();
             var policies = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
-            if (policies.LockSubscription && !User.IsInRole(Roles.ServerAdmin))
-                return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
-
             if (ModelState.IsValid)
             {
                 var anyAdmin = (await userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();
@@ -573,24 +594,25 @@ namespace BTCPayServer.Controllers
                         RegisteredAdmin = true;
                     }
 
-                    eventAggregator.Publish(await UserEvent.Registered.Create(user, callbackGenerator));
+                    eventAggregator.Publish(await UserEvent.Registered.Create(user, null, callbackGenerator));
                     RegisteredUserId = user.Id;
 
                     TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Account created."].Value;
-                    var requiresConfirmedEmail = policies.RequiresConfirmedEmail && !user.EmailConfirmed;
-                    var requiresUserApproval = policies.RequiresUserApproval && !user.Approved;
-                    if (requiresConfirmedEmail)
+
+                    var ctx = CreateLoginContext(user);
+                    if (!await userService.CanLogin(ctx))
                     {
-                        TempData[WellKnownTempData.SuccessMessage] += " Please confirm your email.";
+                        if (ctx.FailedRedirectUrl is { } url)
+                        {
+                            return Redirect(url);
+                        }
+                        else
+                        {
+                            TempData.SetStatusLoginResult(ctx);
+                            return RedirectToAction(nameof(Login));
+                        }
                     }
-                    if (requiresUserApproval)
-                    {
-                        TempData[WellKnownTempData.SuccessMessage] += " The new account requires approval by an admin before you can log in.";
-                    }
-                    if (requiresConfirmedEmail || requiresUserApproval)
-                    {
-                        return RedirectToAction(nameof(Login));
-                    }
+
                     if (logon)
                     {
                         await signInManager.SignInAsync(user, isPersistent: false);
@@ -619,7 +641,6 @@ namespace BTCPayServer.Controllers
             var user = await userManager.FindByIdAsync(userId);
             await signInManager.SignOutAsync();
             HttpContext.DeleteUserPrefsCookie();
-            _logger.LogInformation("User {Email} logged out", user!.Email);
             return RedirectToAction(nameof(Login));
         }
 
@@ -744,8 +765,11 @@ namespace BTCPayServer.Controllers
             var needsInitialPassword = !await userManager.HasPasswordAsync(user);
             // Let unapproved users set a password. Otherwise, don't reveal that the user does not exist.
             var loginContext = CreateLoginContext(user);
-            if (!await userService.CanLogin(loginContext)  && !needsInitialPassword)
+            if (!await userService.CanLogin(loginContext) && !needsInitialPassword)
+            {
+                TempData.SetStatusLoginResult(loginContext);
                 return RedirectToAction(nameof(Login));
+            }
 
             var result = await userManager.ResetPasswordAsync(user!, model.Code, model.Password);
             if (result.Succeeded)
@@ -763,6 +787,7 @@ namespace BTCPayServer.Controllers
                 if (needsInitialPassword && await userService.CanLogin(loginContext))
                 {
                     var signInResult = await signInManager.PasswordSignInAsync(user.Email!, model.Password, true, true);
+                    await userManager.UnsetInvitationTokenAsync(user.Id);
                     if (signInResult.Succeeded)
                     {
                         return RedirectToLocal(returnUrl);
@@ -785,7 +810,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            var user = await userManager.FindByInvitationTokenAsync<ApplicationUser>(userId, Uri.UnescapeDataString(code));
+            var user = await userManager.FindByInvitationTokenAsync(userId, Uri.UnescapeDataString(code));
             if (user == null)
             {
                 return NotFound();
@@ -813,6 +838,7 @@ namespace BTCPayServer.Controllers
                 Severity = StatusMessageModel.StatusSeverity.Info,
                 Message = StringLocalizer["Your password has been set by the user who invited you."].Value
             });
+            await userManager.UnsetInvitationTokenAsync(user.Id);
             return RedirectToAction(nameof(Login), new { email = user.Email });
         }
 

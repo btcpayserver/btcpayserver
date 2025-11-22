@@ -413,14 +413,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     await _settingsRepository.FirstAdminRegistered(policies, _options.UpdateUrl != null, _options.DisableRegistration, Logs);
                 }
             }
-            var currentUser = await _userManager.GetUserAsync(User);
-            var userEvent = currentUser switch
-            {
-                { } invitedBy => await UserEvent.Invited.Create(user, invitedBy, _callbackGenerator, request.SendInvitationEmail is not false),
-                _ => await UserEvent.Registered.Create(user, _callbackGenerator)
-            };
-            _eventAggregator.Publish(userEvent);
-
+            _eventAggregator.Publish(await UserEvent.Registered.Create(user, await _userManager.GetUserAsync(User), _callbackGenerator, request.SendInvitationEmail is not false));
             var model = await ForAPI(user);
             return CreatedAtAction(string.Empty, model);
         }

@@ -17,5 +17,7 @@ namespace BTCPayServer.Models.AccountViewModels
 
         [Display(Name = "Remember me")]
         public bool RememberMe { get; set; }
+
+        public bool AllowLimitedLogin { get; set; }
     }
 }

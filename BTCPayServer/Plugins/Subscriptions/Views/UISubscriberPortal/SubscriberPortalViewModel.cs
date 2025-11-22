@@ -91,4 +91,7 @@ public class SubscriberPortalViewModel
     public PlanData Plan => Data.Subscriber.Plan;
 
     public string Anchor { get; set; }
+    public string Url { get; set; }
+    public string Logo => StoreBranding?.LogoUrl ?? BTCPayLogo;
+    public string BTCPayLogo { get; set; }
 }

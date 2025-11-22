@@ -20,7 +20,6 @@ namespace BTCPayServer.Plugins.Emails.HostedServices;
 public class UserEventHostedService(
     EventAggregator eventAggregator,
     IServiceScopeFactory serviceScopeFactory,
-    ISettingsAccessor<ServerSettings> serverSettings,
     NotificationSender notificationSender,
     Logs logs)
     : EventHostedServiceBase(eventAggregator, logs)
@@ -129,11 +128,6 @@ public class UserEventHostedService(
             ["Name"] = user.UserName,
             ["Email"] = user.Email,
             ["MailboxAddress"] = user.GetMailboxAddress().ToString(),
-        };
-        model["Branding"] = new JObject()
-        {
-            ["ServerName"] = serverSettings.Settings.ServerName ?? "BTCPay Server",
-            ["ContactUrl"] = serverSettings.Settings.ContactUrl,
         };
          var evt = new TriggerEvent(null, trigger, model, null);
         return evt;

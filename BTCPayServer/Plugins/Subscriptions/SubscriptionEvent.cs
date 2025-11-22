@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using BTCPayServer.Abstractions;
 using BTCPayServer.Data.Subscriptions;
 
 namespace BTCPayServer.Events;
@@ -10,8 +11,9 @@ public class SubscriptionEvent
         public SubscriberData Subscriber { get; } = subscriber;
     }
 
-    public class NewSubscriber(SubscriberData subscriber) : SubscriberEvent(subscriber)
+    public class NewSubscriber(SubscriberData subscriber, RequestBaseUrl requestBaseUrl) : SubscriberEvent(subscriber)
     {
+        public RequestBaseUrl RequestBaseUrl { get; } = requestBaseUrl;
         public override string ToString() => $"New Subscriber {Subscriber.ToNiceString()}";
     }
 
@@ -51,9 +53,15 @@ public class SubscriptionEvent
         public override string ToString() => $"Subscriber {Subscriber.ToNiceString()} needs reminder";
     }
 
-    public class PlanUpdated(PlanData plan) : SubscriptionEvent
+    public class PlanUpdated : SubscriptionEvent
     {
-        public PlanData Plan { get; set; } = plan;
+        public PlanUpdated(PlanData plan)
+        {
+            Plan = plan;
+            plan.AssertEntitlementsLoaded();
+        }
+
+        public PlanData Plan { get; set; }
     }
 
     public class NeedUpgrade(SubscriberData subscriber) : SubscriberEvent(subscriber)

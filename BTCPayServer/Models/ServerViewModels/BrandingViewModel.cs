@@ -32,4 +32,6 @@ public class BrandingViewModel
     public IFormFile LogoFile { get; set; }
 
     public string LogoUrl { get; set; }
+    [Display(Name = "Base URL")]
+    public string BaseUrl { get; set; }
 }

@@ -25,7 +25,7 @@ public class ServerTransformer(ISettingsAccessor<ServerSettings> serverSettings)
     {
         var serverObj = (JObject)(context.TriggerEvent.Model["Server"] ??= new JObject());
         serverObj["Name"] = serverSettings.Settings.ServerName ?? "BTCPay Server";
-        serverObj["ContactUrl"] =  HtmlEncoder.Default.Encode(serverSettings.Settings.ContactUrl);
+        serverObj["ContactUrl"] =  HtmlEncoder.Default.Encode(serverSettings.Settings.ContactUrl ?? "");
         serverObj["BaseUrl"] = HtmlEncoder.Default.Encode(serverSettings.Settings.BaseUrl ?? "");
     }
 }

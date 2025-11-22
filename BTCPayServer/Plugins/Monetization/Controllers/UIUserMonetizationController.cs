@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Plugins.Monetization.Controllers;
 
@@ -49,7 +51,7 @@ public class UIUserMonetizationController(
 
     [HttpGet("~/account/billing")]
     [Authorize(AuthenticationSchemes = $"{AuthenticationSchemes.LimitedLogin},{AuthenticationSchemes.Cookie}")]
-    public async Task<IActionResult> ManageBilling()
+    public async Task<IActionResult> ManageBilling(bool fastRedirect = false)
     {
         if (settings.OfferingId is not { } offeringId)
             return NotFound();
@@ -57,6 +59,39 @@ public class UIUserMonetizationController(
         var sub = await ctx.Subscribers.GetBySelector(offeringId, CustomerSelector.ByIdentity(SubscriberDataExtensions.IdentityType, userId));
         if (sub is null)
             return NotFound();
+
+        // With fast redirect, if we detect there is no can-access and we have only one plan change,
+        // we go straight to a hard migration. (Which reimburses the user for the unused part of his current plan)
+        if (fastRedirect)
+        {
+            if (sub is { PlanId: { } planId } &&
+                !await ctx.Plans.HasEntitlements(planId, MonetizationEntitlments.CanAccess))
+            {
+                var planChanges =
+                    await ctx.PlanChanges
+                        .Include(o => o.PlanChange)
+                        .Where(pc => pc.PlanId == planId)
+                        .ToArrayAsync();
+                if (planChanges.Length == 1)
+                {
+                    var upgradePlan = planChanges[0].PlanChange;
+                    var checkout = new PlanCheckoutData(sub, upgradePlan)
+                    {
+                        BaseUrl = Request.GetRequestBaseUrl(),
+                        IsTrial = upgradePlan.TrialDays > 0,
+                        OnPay = PlanCheckoutData.OnPayBehavior.HardMigration
+                    };
+                    ctx.PlanCheckouts.Add(checkout);
+                    await ctx.SaveChangesAsync();
+                    return Redirect(linkGenerator.PlanCheckout(checkout.Id, Request.GetRequestBaseUrl()));
+                }
+            }
+        }
+        return await CreatePortalSession(sub);
+    }
+
+    private async Task<IActionResult> CreatePortalSession(SubscriberData sub)
+    {
         var portal = new PortalSessionData()
         {
             BaseUrl = Request.GetRequestBaseUrl(),

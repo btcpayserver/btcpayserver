@@ -188,7 +188,7 @@ namespace BTCPayServer.Controllers
                             return Redirect(url);
                         else
                             TempData.SetStatusLoginResult(loginContext);
-                        return View(model);
+                        return RedirectToAction(nameof(Login));
                     }
                 }
 

@@ -31,7 +31,7 @@ public class MonetizationLoginExtension(
             {
                 var message = subscriber.SuspensionReason is {} reason ? new(reason, reason)  : context.StringLocalizer["Please contact support."];
                 context.Failures.Add(new (context.StringLocalizer["Your subscription is suspended. {0}", message]));
-                return;
+                RedirectToManageBilling(context);
             }
 
             // The subscriber is in a plan without an access feature
@@ -39,45 +39,28 @@ public class MonetizationLoginExtension(
                 !await ctx.Plans.HasEntitlements(planId, MonetizationEntitlments.CanAccess))
             {
                 context.Failures.Add(new (context.StringLocalizer["Your plan does not allow you to log in."]));
-                var upgrades = await ctx.PlanChanges
-                    .Include(o => o.PlanChange)
-                    .Where(p => p.PlanId == planId && p.Type == PlanChangeData.ChangeType.Upgrade)
-                    .ToArrayAsync();
-                if (context.BaseUrl is null)
-                    return;
-
-                //  If there is one single upgrade with access feature => Redirect to Portal checkout for upgrade (Hard migration)
-                if (upgrades.Length == 1)
-                {
-
-                    var upgradePlan = upgrades[0].PlanChange;
-                    var checkout = new PlanCheckoutData(subscriber, upgradePlan)
-                    {
-                        BaseUrl = context.BaseUrl,
-                        IsTrial = upgradePlan.TrialDays > 0,
-                        OnPay = PlanCheckoutData.OnPayBehavior.HardMigration
-                    };
-                    ctx.PlanCheckouts.Add(checkout);
-                    await ctx.SaveChangesAsync();
-                    context.FailedRedirectUrl = linkGenerator.PlanCheckout(checkout.Id, context.BaseUrl);
-                }
-                // Else => Redirect to Subscriber Portal
-                else
-                {
-                    if (context.BaseUrl is not null)
-                        context.FailedRedirectUrl = linkGenerator.UserManageBillingLink(context.BaseUrl);
-                }
-                return;
+                if (await CanChangePlan(ctx, planId))
+                    RedirectToManageBilling(context);
             }
 
             // The subscriber is not active and not suspended => Redirect to subscriber portal
             if (subscriber is { IsActive: false, IsSuspended: false })
             {
                 context.Failures.Add(new (context.StringLocalizer["Your subscription is not active."]));
-                if (context.BaseUrl is not null)
-                    context.FailedRedirectUrl = linkGenerator.UserManageBillingLink(context.BaseUrl);
+                RedirectToManageBilling(context);
             }
         }
     }
 
+    private static Task<bool> CanChangePlan(ApplicationDbContext ctx, string planId)
+    =>  ctx.PlanChanges
+        .Include(o => o.PlanChange)
+        .Where(p => p.PlanId == planId)
+        .AnyAsync();
+
+    private void RedirectToManageBilling(UserService.CanLoginContext context)
+    {
+        if (context.BaseUrl is not null)
+            context.FailedRedirectUrl = linkGenerator.UserManageBillingLink(context.BaseUrl, true);
+    }
 }

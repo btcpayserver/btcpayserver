@@ -10,10 +10,10 @@ namespace Microsoft.AspNetCore.Mvc;
 
 public static class MonetizationUrlHelperExtensions
 {
-    public static string UserManageBillingLink(this LinkGenerator linkGenerator, RequestBaseUrl baseUrl)
+    public static string UserManageBillingLink(this LinkGenerator linkGenerator, RequestBaseUrl baseUrl, bool fastRedirect = false)
         => linkGenerator.GetUriByAction(
             nameof(UIUserMonetizationController.ManageBilling),
             "UIUserMonetization",
-            new { area = MonetizationPlugin.Area },
+            new { area = MonetizationPlugin.Area, fastRedirect },
             baseUrl);
 }

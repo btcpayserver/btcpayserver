@@ -2581,6 +2581,501 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error, "The user is the last owner. Their role cannot be changed.");
         }
 
+
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        public async Task CanUseRoleManager()
+        {
+            await using var s = CreatePlaywrightTester(newDb: true);
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.GoToHome();
+            await s.GoToServer(ServerNavPages.Roles);
+            var existingServerRoles = await s.Page.Locator("table tr").AllAsync();
+            Assert.Equal(5, existingServerRoles.Count);
+            ILocator ownerRow = null;
+            ILocator managerRow = null;
+            ILocator employeeRow = null;
+            ILocator guestRow = null;
+            foreach (var roleItem in existingServerRoles)
+            {
+                var text = await roleItem.TextContentAsync();
+                if (text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    ownerRow = roleItem;
+                }
+                else if (text.Contains("manager", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    managerRow = roleItem;
+                }
+                else if (text.Contains("employee", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    employeeRow = roleItem;
+                }
+                else if (text.Contains("guest", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    guestRow = roleItem;
+                }
+            }
+
+            Assert.NotNull(ownerRow);
+            Assert.NotNull(managerRow);
+            Assert.NotNull(employeeRow);
+            Assert.NotNull(guestRow);
+
+            var ownerBadges = await ownerRow.Locator(".badge").AllAsync();
+            var ownerBadgeTexts = await Task.WhenAll(ownerBadges.Select(async element => await element.TextContentAsync()));
+            Assert.Contains(ownerBadgeTexts, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+            Assert.Contains(ownerBadgeTexts, text => text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
+
+            var managerBadges = await managerRow.Locator(".badge").AllAsync();
+            var managerBadgeTexts = await Task.WhenAll(managerBadges.Select(async element => await element.TextContentAsync()));
+            Assert.DoesNotContain(managerBadgeTexts, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+            Assert.Contains(managerBadgeTexts, text => text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
+
+            var employeeBadges = await employeeRow.Locator(".badge").AllAsync();
+            var employeeBadgeTexts = await Task.WhenAll(employeeBadges.Select(async element => await element.TextContentAsync()));
+            Assert.DoesNotContain(employeeBadgeTexts, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+            Assert.Contains(employeeBadgeTexts, text => text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
+
+            var guestBadges = await guestRow.Locator(".badge").AllAsync();
+            var guestBadgeTexts = await Task.WhenAll(guestBadges.Select(async element => await element.TextContentAsync()));
+            Assert.DoesNotContain(guestBadgeTexts, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+            Assert.Contains(guestBadgeTexts, text => text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
+            await guestRow.Locator("#SetDefault").ClickAsync();
+            await s.FindAlertMessage(partialText: "Role set default");
+
+            existingServerRoles = await s.Page.Locator("table tr").AllAsync();
+            foreach (var roleItem in existingServerRoles)
+            {
+                var text = await roleItem.TextContentAsync();
+                if (text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    ownerRow = roleItem;
+                }
+                else if (text.Contains("guest", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    guestRow = roleItem;
+                }
+            }
+            guestBadges = await guestRow.Locator(".badge").AllAsync();
+            var guestBadgeTexts2 = await Task.WhenAll(guestBadges.Select(async element => await element.TextContentAsync()));
+            Assert.Contains(guestBadgeTexts2, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+
+            ownerBadges = await ownerRow.Locator(".badge").AllAsync();
+            var ownerBadgeTexts2 = await Task.WhenAll(ownerBadges.Select(async element => await element.TextContentAsync()));
+            Assert.DoesNotContain(ownerBadgeTexts2, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+            await ownerRow.Locator("#SetDefault").ClickAsync();
+
+            await s.FindAlertMessage(partialText: "Role set default");
+
+            await s.CreateNewStore();
+            await s.GoToStore(StoreNavPages.Roles);
+            existingServerRoles = await s.Page.Locator("table tr").AllAsync();
+            Assert.Equal(5, existingServerRoles.Count);
+            var serverRoleTexts = await Task.WhenAll(existingServerRoles.Select(async element => await element.TextContentAsync()));
+            Assert.Equal(4, serverRoleTexts.Count(text => text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)));
+
+            foreach (var roleItem in existingServerRoles)
+            {
+                var text = await roleItem.TextContentAsync();
+                if (text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    ownerRow = roleItem;
+                    break;
+                }
+            }
+
+            await ownerRow.Locator("text=Remove").ClickAsync();
+            Assert.DoesNotContain("ConfirmContinue", await s.Page.ContentAsync());
+            await s.Page.GoBackAsync();
+            existingServerRoles = await s.Page.Locator("table tr").AllAsync();
+            foreach (var roleItem in existingServerRoles)
+            {
+                var text = await roleItem.TextContentAsync();
+                if (text.Contains("guest", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    guestRow = roleItem;
+                    break;
+                }
+            }
+
+            await guestRow.Locator("text=Remove").ClickAsync();
+            await s.Page.Locator("#ConfirmContinue").ClickAsync();
+            await s.FindAlertMessage();
+
+            await s.GoToStore(StoreNavPages.Roles);
+            await s.ClickPagePrimary();
+
+            Assert.Contains("Create role", await s.Page.ContentAsync());
+            await s.ClickPagePrimary();
+            await s.Page.Locator("#Role").FillAsync("store role");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage();
+
+            existingServerRoles = await s.Page.Locator("table tr").AllAsync();
+            foreach (var roleItem in existingServerRoles)
+            {
+                var text = await roleItem.TextContentAsync();
+                if (text.Contains("store role", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    guestRow = roleItem;
+                    break;
+                }
+            }
+
+            guestBadges = await guestRow.Locator(".badge").AllAsync();
+            var guestBadgeTexts3 = await Task.WhenAll(guestBadges.Select(async element => await element.TextContentAsync()));
+            Assert.DoesNotContain(guestBadgeTexts3, text => text.Equals("server-wide", StringComparison.InvariantCultureIgnoreCase));
+            await s.GoToStore(StoreNavPages.Users);
+            var options = await s.Page.Locator("#Role option").AllAsync();
+            Assert.Equal(4, options.Count);
+            var optionTexts = await Task.WhenAll(options.Select(async element => await element.TextContentAsync()));
+            Assert.Contains(optionTexts, text => text.Equals("store role", StringComparison.InvariantCultureIgnoreCase));
+            await s.CreateNewStore();
+            await s.GoToStore(StoreNavPages.Roles);
+            existingServerRoles = await s.Page.Locator("table tr").AllAsync();
+            Assert.Equal(4, existingServerRoles.Count);
+            var serverRoleTexts2 = await Task.WhenAll(existingServerRoles.Select(async element => await element.TextContentAsync()));
+            Assert.Equal(3, serverRoleTexts2.Count(text => text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)));
+            Assert.Equal(0, serverRoleTexts2.Count(text => text.Contains("store role", StringComparison.InvariantCultureIgnoreCase)));
+            await s.GoToStore(StoreNavPages.Users);
+            options = await s.Page.Locator("#Role option").AllAsync();
+            Assert.Equal(3, options.Count);
+            var optionTexts2 = await Task.WhenAll(options.Select(async element => await element.TextContentAsync()));
+            Assert.DoesNotContain(optionTexts2, text => text.Equals("store role", StringComparison.InvariantCultureIgnoreCase));
+
+            await s.Page.Locator("#Email").FillAsync(s.AsTestAccount().Email);
+            await s.Page.Locator("#Role").SelectOptionAsync("Owner");
+            await s.Page.Locator("#AddUser").ClickAsync();
+            Assert.Contains("The user already has the role Owner.", await s.Page.Locator(".validation-summary-errors").TextContentAsync());
+            await s.Page.Locator("#Role").SelectOptionAsync("Manager");
+            await s.Page.Locator("#AddUser").ClickAsync();
+            Assert.Contains("The user is the last owner. Their role cannot be changed.", await s.Page.Locator(".validation-summary-errors").TextContentAsync());
+
+            await s.GoToStore(StoreNavPages.Roles);
+            await s.ClickPagePrimary();
+            await s.Page.Locator("#Role").FillAsync("Malice");
+
+            await s.Page.EvaluateAsync($"document.getElementById('Policies')['{Policies.CanModifyServerSettings}']=new Option('{Policies.CanModifyServerSettings}', '{Policies.CanModifyServerSettings}', true,true);");
+
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage();
+            Assert.Contains("Malice", await s.Page.ContentAsync());
+            Assert.DoesNotContain(Policies.CanModifyServerSettings, await s.Page.ContentAsync());
+        }
+
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        public async Task CanSigninWithLoginCode()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            var user = await s.RegisterNewUser();
+            await s.GoToHome();
+            await s.GoToProfile(ManageNavPages.LoginCodes);
+
+            string code = null;
+            await s.Page.WaitForSelectorAsync("#LoginCode .qr-code");
+            code = await s.Page.Locator("#LoginCode .qr-code").GetAttributeAsync("alt");
+            string prevCode = code;
+            await s.Page.ReloadAsync();
+            await s.Page.WaitForSelectorAsync("#LoginCode .qr-code");
+            code = await s.Page.Locator("#LoginCode .qr-code").GetAttributeAsync("alt");
+            Assert.NotEqual(prevCode, code);
+            await s.Page.WaitForSelectorAsync("#LoginCode .qr-code");
+            code = await s.Page.Locator("#LoginCode .qr-code").GetAttributeAsync("alt");
+            await s.Logout();
+            await s.GoToLogin();
+            await s.Page.EvaluateAsync("document.getElementById('LoginCode').value = 'bad code'");
+            await s.Page.EvaluateAsync("document.getElementById('logincode-form').submit()");
+            await s.Page.WaitForLoadStateAsync();
+
+            await s.GoToLogin();
+            await s.Page.EvaluateAsync($"document.getElementById('LoginCode').value = '{code}'");
+            await s.Page.EvaluateAsync("document.getElementById('logincode-form').submit()");
+            await s.Page.WaitForLoadStateAsync();
+            await s.Page.WaitForLoadStateAsync();
+            
+            await s.CreateNewStore();
+            await s.GoToHome();
+            await s.Page.WaitForLoadStateAsync();
+            await s.Page.WaitForLoadStateAsync();
+            var content = await s.Page.ContentAsync();
+            Assert.Contains(user, content);
+        }
+
+        [Fact]
+        public async Task CanUseInvoiceReceipts()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            await s.AddDerivationScheme();
+            await s.GoToInvoices();
+            var i = await s.CreateInvoice(100);
+            await s.Server.PayTester.InvoiceRepository.MarkInvoiceStatus(i, InvoiceStatus.Settled);
+            
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                await s.Page.ReloadAsync();
+                await s.Page.Locator("#Receipt").ClickAsync();
+            });
+            
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                await s.Page.ReloadAsync();
+                var content = await s.Page.ContentAsync();
+                Assert.DoesNotContain("invoice-unsettled", content);
+                Assert.DoesNotContain("invoice-processing", content);
+            });
+
+            var content = await s.Page.ContentAsync();
+            Assert.Contains("100.00 USD", content);
+            Assert.Contains(i, content);
+
+            await s.GoToInvoices(s.StoreId);
+            i = await s.CreateInvoice();
+            await s.GoToInvoiceCheckout(i);
+            var receipturl = s.Page.Url + "/receipt";
+            await s.GoToUrl(receipturl);
+            await s.Page.Locator("#invoice-unsettled").WaitForAsync();
+
+            await s.GoToInvoices(s.StoreId);
+            await s.GoToInvoiceCheckout(i);
+            var checkouturi = s.Page.Url;
+            await s.PayInvoice(mine: true);
+            
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                await s.Page.ReloadAsync();
+                await s.Page.Locator("#ReceiptLink").ClickAsync();
+            });
+            
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                await s.Page.ReloadAsync();
+                var pageContent = await s.Page.ContentAsync();
+                Assert.DoesNotContain("invoice-unsettled", pageContent);
+                Assert.Contains("\"PaymentDetails\"", pageContent);
+            });
+            
+            await s.GoToUrl(checkouturi);
+
+            await s.Server.PayTester.InvoiceRepository.MarkInvoiceStatus(i, InvoiceStatus.Settled);
+
+            await TestUtils.EventuallyAsync(async () => await s.Page.Locator("#ReceiptLink").ClickAsync());
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                await s.Page.ReloadAsync();
+                var pageContent = await s.Page.ContentAsync();
+                Assert.DoesNotContain("invoice-unsettled", pageContent);
+                Assert.DoesNotContain("invoice-processing", pageContent);
+            });
+
+            // ensure archived invoices are not accessible for logged out users
+            await s.Server.PayTester.InvoiceRepository.ToggleInvoiceArchival(i, true);
+            await s.Logout();
+
+            await s.GoToUrl(s.Page.Url + $"/i/{i}/receipt");
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var title = await s.Page.TitleAsync();
+                Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
+            });
+
+            await s.GoToUrl(s.Page.Url + $"i/{i}");
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var title = await s.Page.TitleAsync();
+                Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
+            });
+
+            await s.GoToUrl(s.Page.Url + $"i/{i}/status");
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var title = await s.Page.TitleAsync();
+                Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
+            });
+        }
+
+        [Fact]
+        public async Task CanCreateAppPoS()
+        {
+            await using var s = CreatePlaywrightTester(newDb: true);
+            await s.StartAsync();
+            var userId = await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            await s.GenerateWallet();
+            (_, string appId) = await s.CreateApp("PointOfSale");
+            
+            await s.Page.Locator("#Title").ClearAsync();
+            await s.Page.Locator("#Title").FillAsync("Tea shop");
+            await s.Page.Locator("label[for='DefaultView_Cart']").ClickAsync();
+            await s.Page.Locator(".template-item").First.ClickAsync();
+            await s.Page.Locator("#BuyButtonText").WaitForAsync();
+            await s.Page.Locator("#BuyButtonText").FillAsync("Take my money");
+            await s.Page.Locator("#EditorCategories-ts-control").FillAsync("Drinks");
+            await s.Page.Locator(".offcanvas-header button").ClickAsync();
+            await s.Page.Locator("#CodeTabButton").WaitForAsync();
+            await s.Page.Locator("#CodeTabButton").ScrollIntoViewIfNeededAsync();
+            await s.Page.Locator("#CodeTabButton").ClickAsync();
+            
+            // Wait for the textarea to be populated by Vue.js
+            await s.Page.Locator("#TemplateConfig").WaitForAsync();
+            var template = await s.Page.Locator("#TemplateConfig").InputValueAsync();
+            Assert.Contains("\"buyButtonText\": \"Take my money\"", template);
+            Assert.Matches("\"categories\": \\[\r?\n\\s*\"Drinks\"\\s*\\]", template);
+
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage();
+
+            await s.Page.Locator("#CodeTabButton").ScrollIntoViewIfNeededAsync();
+            await s.Page.Locator("#CodeTabButton").ClickAsync();
+            template = await s.Page.Locator("#TemplateConfig").InputValueAsync();
+            await s.Page.Locator("#TemplateConfig").ClearAsync();
+            await s.Page.Locator("#TemplateConfig").FillAsync(template.Replace(@"""id"": ""green-tea"",", ""));
+
+            await s.ClickPagePrimary();
+            var errorText = await s.Page.Locator(".validation-summary-errors").TextContentAsync();
+            Assert.Contains("Invalid template: Missing ID for item \"Green Tea\".", errorText);
+
+            await s.Page.Locator("#ViewApp").ClickAsync();
+            var newPage = await s.Page.Context.WaitForPageAsync();
+            await using var pageSwitch = await s.SwitchPage(newPage);
+
+            await s.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            var posBaseUrl = s.Page.Url.Replace("/cart", "");
+            var content = await s.Page.ContentAsync();
+            Assert.Contains("Tea shop", content);
+            Assert.Contains("Cart", content);
+            Assert.Contains("Take my money", content);
+            Assert.Equal(6, await s.Page.Locator(".posItem.posItem--displayed").CountAsync());
+
+            var drinks = s.Page.Locator("label[for='Category-Drinks']");
+            Assert.Equal("Drinks", await drinks.TextContentAsync());
+            await drinks.ClickAsync();
+            Assert.Equal(1, await s.Page.Locator(".posItem.posItem--displayed").CountAsync());
+            await s.Page.Locator("label[for='Category-*']").ClickAsync();
+            Assert.Equal(6, await s.Page.Locator(".posItem.posItem--displayed").CountAsync());
+
+            await s.GoToUrl(posBaseUrl + "/static");
+            content = await s.Page.ContentAsync();
+            Assert.DoesNotContain("Cart", content);
+
+            await s.GoToUrl(posBaseUrl + "/cart");
+            content = await s.Page.ContentAsync();
+            Assert.Contains("Cart", content);
+
+            // Let's set change the root app
+            await s.GoToHome();
+            await s.GoToServer(ServerNavPages.Policies);
+            await s.Page.Locator("#RootAppId").ScrollIntoViewIfNeededAsync();
+            
+            var options = await s.Page.Locator("#RootAppId option").AllTextContentsAsync();
+            var targetOption = options.FirstOrDefault(o => o.Contains("Point of"));
+            if (targetOption != null)
+            {
+                var optionValue = await s.Page.Locator($"#RootAppId option:has-text('{targetOption}')").GetAttributeAsync("value");
+                await s.Page.EvaluateAsync($"document.getElementById('RootAppId').value = '{optionValue}';");
+                await s.Page.EvaluateAsync("document.getElementById('RootAppId').dispatchEvent(new Event('change', { bubbles: true }));");
+            }
+            else
+            {
+                throw new Exception($"Could not find Point of Sale option. Available options: {string.Join(", ", options)}");
+            }
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage();
+            
+            // Make sure after login, we are not redirected to the PoS
+            await s.Logout();
+            await s.LogIn(userId);
+            content = await s.Page.ContentAsync();
+            Assert.DoesNotContain("Tea shop", content);
+            var prevUrl = s.Page.Url;
+            
+            // We are only if explicitly going to /
+            await s.GoToUrl("/");
+            content = await s.Page.ContentAsync();
+            Assert.Contains("Tea shop", content);
+            
+            // Check redirect to canonical url
+            await s.GoToUrl(posBaseUrl);
+            Assert.Equal("/", new Uri(s.Page.Url, UriKind.Absolute).AbsolutePath);
+
+            // Let's check with domain mapping as well.
+            await s.GoToUrl(prevUrl);
+            await s.GoToServer(ServerNavPages.Policies);
+            await s.Page.Locator("#RootAppId").ScrollIntoViewIfNeededAsync();
+            await s.Page.EvaluateAsync("document.getElementById('RootAppId').value = '';");
+            await s.Page.EvaluateAsync("document.getElementById('RootAppId').dispatchEvent(new Event('change', { bubbles: true }));");
+            await s.ClickPagePrimary();
+            await s.Page.Locator("#RootAppId").ScrollIntoViewIfNeededAsync();
+            await s.Page.Locator("#AddDomainButton").ClickAsync();
+            await s.Page.Locator("#DomainToAppMapping_0__Domain").FillAsync(new Uri(s.Page.Url, UriKind.Absolute).DnsSafeHost);
+            
+            var domainOptions = await s.Page.Locator("#DomainToAppMapping_0__AppId option").AllTextContentsAsync();
+            var targetDomainOption = domainOptions.FirstOrDefault(o => o.Contains("Point of"));
+            if (targetDomainOption != null)
+            {
+                var domainOptionValue = await s.Page.Locator($"#DomainToAppMapping_0__AppId option:has-text('{targetDomainOption}')").GetAttributeAsync("value");
+                await s.Page.EvaluateAsync($"document.getElementById('DomainToAppMapping_0__AppId').value = '{domainOptionValue}';");
+                await s.Page.EvaluateAsync("document.getElementById('DomainToAppMapping_0__AppId').dispatchEvent(new Event('change', { bubbles: true }));");
+            }
+            else
+            {
+                throw new Exception($"Could not find Point of Sale option for domain mapping. Available options: {string.Join(", ", domainOptions)}");
+            }
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "Policies updated successfully");
+            
+            // Make sure after login, we are not redirected to the PoS
+            await s.Logout();
+            await s.LogIn(userId);
+            content = await s.Page.ContentAsync();
+            Assert.DoesNotContain("Tea shop", content);
+            
+            // We are only if explicitly going to /
+            await s.GoToUrl("/");
+            content = await s.Page.ContentAsync();
+            Assert.Contains("Tea shop", content);
+            
+            // Check redirect to canonical url
+            await s.GoToUrl(posBaseUrl);
+            Assert.Equal("/", new Uri(s.Page.Url, UriKind.Absolute).AbsolutePath);
+
+            // Archive
+            await s.Page.Context.Pages.First().BringToFrontAsync();
+            Assert.Equal(0, await s.Page.Locator("#Nav-ArchivedApps").CountAsync());
+            
+            // Navigate to the app settings page if not already there
+            if (!s.Page.Url.Contains("/settings/pos"))
+            {
+                await s.GoToUrl($"/apps/{appId}/settings/pos");
+            }
+            
+            await s.Page.Locator("#btn-archive-toggle").WaitForAsync();
+            await s.Page.Locator("#btn-archive-toggle").ScrollIntoViewIfNeededAsync();
+            await s.Page.Locator("#btn-archive-toggle").ClickAsync();
+            await s.FindAlertMessage(partialText: "The app has been archived and will no longer appear in the apps list by default.");
+
+            Assert.Equal(0, await s.Page.Locator("#ViewApp").CountAsync());
+            var archivedText = await s.Page.Locator("#Nav-ArchivedApps").TextContentAsync();
+            Assert.Contains("1 Archived App", archivedText);
+            
+            await s.GoToUrl(posBaseUrl);
+            var title = await s.Page.TitleAsync();
+            Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
+            await s.Page.GoBackAsync();
+            await s.Page.Locator("#Nav-ArchivedApps").ClickAsync();
+
+            // Unarchive
+            await s.Page.Locator($"#App-{appId}").ClickAsync();
+            await s.Page.Locator("#btn-archive-toggle").ClickAsync();
+            await s.FindAlertMessage(partialText: "The app has been unarchived and will appear in the apps list by default again.");
+        }
+
     }
 }
 

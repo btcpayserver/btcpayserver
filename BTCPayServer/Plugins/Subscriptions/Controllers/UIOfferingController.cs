@@ -161,21 +161,33 @@ public partial class UIOfferingController(
         return GoToOffering(storeId, offeringId, SubscriptionSection.Plans);
     }
 
+
+
+    public static string CreateOfferingCondition(string offeringId)
+        => Predicate(OfferingCondition(offeringId));
+    public static string CreateOfferingCondition(string offeringId, string phase)
+        => Predicate(OfferingCondition(offeringId) + " && " + PhaseCondition(phase));
+
+    public static string CreateOfferingCondition(string offeringId, SubscriberData.PhaseTypes phase)
+        => CreateOfferingCondition(offeringId, phase.ToString());
+
+    static string PhaseCondition(string phase) => $"@.Subscriber.Phase == \"{phase}\"";
+    static string OfferingCondition(string offeringId) => $"@.Offering.Id == \"{offeringId}\"";
+    static string Predicate(string condition) => $"$ ?({condition})";
+
     [HttpPost("stores/{storeId}/offerings/{offeringId}/Mails")]
     public async Task<IActionResult> SaveMailSettings(string storeId, string offeringId, SubscriptionsViewModel vm, string? addEmailRule = null)
     {
         await using var ctx = DbContextFactory.CreateContext();
         if (addEmailRule is not null)
         {
-            var condition = $"@.Offering.Id == \"{offeringId}\"";
+            var condition = CreateOfferingCondition(offeringId);
             if (addEmailRule.StartsWith($"{PhaseChangedTrigger}-"))
             {
-                var phase = addEmailRule.Skip($"{PhaseChangedTrigger}-".Length);
+                var phase = addEmailRule.Substring($"{PhaseChangedTrigger}-".Length);
                 addEmailRule = PhaseChangedTrigger;
-                condition += $" && @.Subscriber.Phase == \"{phase}\"";
+                condition += CreateOfferingCondition(offeringId, phase);
             }
-
-            condition = $"$ ?({condition})";
             var requestBase = Request.GetRequestBaseUrl();
             var link = LinkGenerator.CreateEmailRuleLink(storeId, requestBase, new()
             {

@@ -5,11 +5,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
+using BTCPayServer.Plugins.Emails;
 using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Plugins.Monetization.Views;
 using BTCPayServer.Plugins.Subscriptions;
+using BTCPayServer.Plugins.Subscriptions.Controllers;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Rates;
@@ -212,6 +215,37 @@ public class UIServerMonetizationController(
                 }
 
                 defaultPlanId = starterPlan.Id;
+                List<EmailRuleData> emailRules =
+                [
+                    new()
+                    {
+                        Trigger = "WH-" + WebhookSubscriptionEvent.PaymentReminder,
+                        Subject = "Payment reminder for your subscription",
+                        Body = EmailsPlugin.CreateEmail(
+                            "In order to renew your subscription, please renew before expiration.",
+                            "Go to Subscription portal", linkGenerator.UserManageBillingLink(Request.GetRequestBaseUrl())),
+                        Condition = UIOfferingController.CreateOfferingCondition(offeringId)
+                    },
+                    new()
+                    {
+                        Trigger = "WH-" + WebhookSubscriptionEvent.SubscriberPhaseChanged,
+                        Subject = "Your subscription has expired",
+                        Body =  EmailsPlugin.CreateEmail(
+                            "Your access has expired. Please renew your subscription to continue using it.",
+                            "Go to Subscription portal", linkGenerator.UserManageBillingLink(Request.GetRequestBaseUrl())),
+                        Condition = UIOfferingController.CreateOfferingCondition(offeringId, SubscriberData.PhaseTypes.Expired)
+                    }
+                ];
+
+                foreach (var rule in emailRules)
+                {
+                    rule.StoreId = store.Id;
+                    rule.OfferingId = offeringId;
+                    rule.To = ["{Subscriber.Email}"];
+                    ctx.EmailRules.Add(rule);
+                }
+                ctx.EmailRules.AddRange(emailRules);
+                await ctx.SaveChangesAsync();
 
                 if (vm.ActivateModal.MigrateExistingUsers)
                 {
@@ -274,7 +308,7 @@ public class UIServerMonetizationController(
                 // Anyway, if we do, we should do it on a separate task to not block this method.
                 TempData.SetStatusMessageModel(new()
                 {
-                    Message = StringLocalizer["{0} users migrated to the plan '{1}'.", count, v.Plan.Name ?? ""],
+                    Message = StringLocalizer["{0} users migrated to the plan '{1}'.", count, v.Plan.Name],
                     Severity = StatusMessageModel.StatusSeverity.Success
                 });
             }

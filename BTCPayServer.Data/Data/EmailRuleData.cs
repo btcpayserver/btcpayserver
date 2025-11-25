@@ -41,10 +41,10 @@ public class EmailRuleData : BaseEntityData
     public string[] To { get; set; }  = null!;
     [Required]
     [Column("cc")]
-    public string[] CC { get; set; }  = null!;
+    public string[] CC { get; set; }  = [];
     [Required]
     [Column("bcc")]
-    public string[] BCC { get; set; }  = null!;
+    public string[] BCC { get; set; }  = [];
 
     [Required]
     [Column("subject")]

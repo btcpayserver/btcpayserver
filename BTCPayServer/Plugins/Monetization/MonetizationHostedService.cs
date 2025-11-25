@@ -196,16 +196,15 @@ public class MonetizationHostedService(
         var userIds = (await ctx.Database.GetDbConnection()
             .QueryAsync<(string CustomerId, string UserId)>($"""
                                 {usersQuery},
-                                customers_to_create AS (
-                                    SELECT COALESCE(um.customer_id, 'cust_' || translate(encode(decode(md5(um.email || @salt), 'hex'), 'base64'), '/=+-', '')) AS customer_id, um.email, um.user_id FROM users_to_migrate um
-                                    LEFT JOIN customers_identities ci ON ci.type = 'Email' AND ci.value = um.email
-                                    LEFT JOIN customers c ON c.id = ci.customer_id AND c.store_id = @storeId
-                                    WHERE c.id IS NULL
-                                ),
                                 customers_already_created AS (
                                     SELECT c.id AS customer_id, um.email, um.user_id  FROM users_to_migrate um
                                     JOIN customers_identities ci ON ci.type = 'Email' AND ci.value = um.email
                                     JOIN customers c ON c.id = ci.customer_id AND c.store_id = @storeId
+                                ),
+                                customers_to_create AS (
+                                    SELECT COALESCE(um.customer_id, 'cust_' || translate(encode(decode(md5(um.email || @salt), 'hex'), 'base64'), '/=+-', '')) AS customer_id, um.email, um.user_id FROM users_to_migrate um
+                                        LEFT JOIN customers_already_created cac ON um.user_id = cac.user_id
+                                    WHERE cac.user_id IS NULL
                                 ),
                                 customers_all AS (
                                       SELECT * FROM customers_to_create UNION ALL SELECT * FROM customers_already_created

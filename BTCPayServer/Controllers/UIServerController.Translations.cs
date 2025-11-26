@@ -136,58 +136,40 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                var httpClient = HttpClientFactory.CreateClient();
-                var fileName = language.ToLowerInvariant();
-                var url = $"https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/translations/{fileName}.json";
-                var response = await httpClient.GetAsync(url);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Failed to download language pack: {0}", response.StatusCode].Value;
-                    return RedirectToAction(nameof(ListDictionaries));
-                }
-
-                var translationsJson = await response.Content.ReadAsStringAsync();
-
-                if (string.IsNullOrEmpty(translationsJson) || translationsJson == "{}")
-                {
-                    TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Translation file is empty"].Value;
-                    return RedirectToAction(nameof(ListDictionaries));
-                }
-
-                if (!Translations.TryCreateFromJson(translationsJson, out var translationsObj))
-                {
-                    TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Invalid translation format"].Value;
-                    return RedirectToAction(nameof(ListDictionaries));
-                }
-
-                var dictionaryName = language;
+                var translationsJson = await FetchLanguagePackFromRepository(language);
+                var translations = Translations.CreateFromJson(translationsJson);
                 
-                await _localizer.CreateDictionary(dictionaryName, Translations.DefaultLanguage, "Custom");
-                var dictionary = await _localizer.GetDictionary(dictionaryName);
-                if (dictionary is null)
+                try
                 {
-                    TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Failed to create dictionary"].Value;
-                    return RedirectToAction(nameof(ListDictionaries));
+                    var dictionary = await _localizer.CreateDictionary(language, Translations.DefaultLanguage, "Custom");
+                    await _localizer.Save(dictionary, translations);
+                    TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' downloaded successfully", language].Value;
                 }
-
-                await _localizer.Save(dictionary, translationsObj);
-                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' downloaded successfully", dictionaryName].Value;
-            }
-            catch (DbException)
-            {
-                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Dictionary '{0}' already exists", language].Value;
+                catch (DbException)
+                {
+                    var existingDictionary = await _localizer.GetDictionary(language);
+                    await _localizer.Save(existingDictionary, translations);
+                    TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' updated successfully", language].Value;
+                }
             }
             catch (HttpRequestException ex)
             {
                 TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Failed to download language pack: {0}", ex.Message].Value;
             }
-            catch (Exception ex)
-            {
-                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Failed to import language pack: {0}", ex.Message].Value;
-            }
 
             return RedirectToAction(nameof(ListDictionaries));
+        }
+
+        private async Task<string> FetchLanguagePackFromRepository(string language)
+        {
+            var fileName = language.ToLowerInvariant();
+            var url = $"https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/translations/{fileName}.json";
+            
+            var httpClient = HttpClientFactory.CreateClient();
+            using var response = await httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            
+            return await response.Content.ReadAsStringAsync();
         }
     }
 }

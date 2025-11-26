@@ -134,29 +134,30 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(ListDictionaries));
             }
 
+            string translationsJson;
             try
             {
-                var translationsJson = await FetchLanguagePackFromRepository(language);
-                var translations = Translations.CreateFromJson(translationsJson);
-                
-                try
-                {
-                    var dictionary = await _localizer.CreateDictionary(language, Translations.DefaultLanguage, "Custom");
-                    await _localizer.Save(dictionary, translations);
-                    TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' downloaded successfully", language].Value;
-                }
-                catch (DbException)
-                {
-                    var existingDictionary = await _localizer.GetDictionary(language);
-                    await _localizer.Save(existingDictionary, translations);
-                    TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' updated successfully", language].Value;
-                }
+                translationsJson = await FetchLanguagePackFromRepository(language);
             }
             catch (HttpRequestException ex)
             {
                 TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Failed to download language pack: {0}", ex.Message].Value;
+                return RedirectToAction(nameof(ListDictionaries));
             }
 
+            var translations = Translations.CreateFromJson(translationsJson);
+            var existingDictionary = await _localizer.GetDictionary(language);
+            if (existingDictionary is null)
+            {
+                existingDictionary = await _localizer.CreateDictionary(language, Translations.DefaultLanguage, "Custom");
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' downloaded successfully", language].Value;
+            }
+            else
+            {
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' updated successfully", language].Value;
+            }
+            
+            await _localizer.Save(existingDictionary, translations);
             return RedirectToAction(nameof(ListDictionaries));
         }
 

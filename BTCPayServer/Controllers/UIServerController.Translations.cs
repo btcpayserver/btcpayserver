@@ -1,5 +1,6 @@
 using System;
 using System.Data.Common;
+using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Models.ServerViewModels;
@@ -124,39 +125,68 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(ListDictionaries));
         }
 
-        [HttpPost("server/dictionaries/import")]
-        public async Task<IActionResult> ImportLanguagePack(string name, string translations)
+        [HttpPost("server/dictionaries/download")]
+        public async Task<IActionResult> DownloadLanguagePack(string language)
         {
-            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(translations))
+            if (string.IsNullOrEmpty(language))
             {
-                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Invalid language pack data"].Value;
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Please select a language"].Value;
                 return RedirectToAction(nameof(ListDictionaries));
             }
-            if (!Translations.TryCreateFromJson(translations, out var translationsObj))
-            {
-                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Invalid translation format"].Value;
-                return RedirectToAction(nameof(ListDictionaries));
-            }
+
             try
             {
-                await _localizer.CreateDictionary(name, Translations.DefaultLanguage, "Custom");
-                var dictionary = await _localizer.GetDictionary(name);
+                var httpClient = HttpClientFactory.CreateClient();
+                var fileName = language.ToLowerInvariant();
+                var url = $"https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/translations/{fileName}.json";
+                var response = await httpClient.GetAsync(url);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Failed to download language pack: {0}", response.StatusCode].Value;
+                    return RedirectToAction(nameof(ListDictionaries));
+                }
+
+                var translationsJson = await response.Content.ReadAsStringAsync();
+
+                if (string.IsNullOrEmpty(translationsJson) || translationsJson == "{}")
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Translation file is empty"].Value;
+                    return RedirectToAction(nameof(ListDictionaries));
+                }
+
+                if (!Translations.TryCreateFromJson(translationsJson, out var translationsObj))
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Invalid translation format"].Value;
+                    return RedirectToAction(nameof(ListDictionaries));
+                }
+
+                var dictionaryName = language;
+                
+                await _localizer.CreateDictionary(dictionaryName, Translations.DefaultLanguage, "Custom");
+                var dictionary = await _localizer.GetDictionary(dictionaryName);
                 if (dictionary is null)
                 {
                     TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Failed to create dictionary"].Value;
                     return RedirectToAction(nameof(ListDictionaries));
                 }
+
                 await _localizer.Save(dictionary, translationsObj);
-                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' imported successfully", name].Value;
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' downloaded successfully", dictionaryName].Value;
             }
             catch (DbException)
             {
-                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Dictionary '{0}' already exists", name].Value;
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Dictionary '{0}' already exists", language].Value;
+            }
+            catch (HttpRequestException ex)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Failed to download language pack: {0}", ex.Message].Value;
             }
             catch (Exception ex)
             {
                 TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Failed to import language pack: {0}", ex.Message].Value;
             }
+
             return RedirectToAction(nameof(ListDictionaries));
         }
     }

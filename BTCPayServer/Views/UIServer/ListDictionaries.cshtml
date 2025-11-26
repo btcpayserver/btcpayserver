@@ -6,9 +6,14 @@
 
 <div class="sticky-header">
 	<h2>@ViewData["Title"]</h2>
-	<a id="page-primary" asp-action="CreateDictionary" class="btn btn-primary" role="button">
-		Create
-	</a>
+	<div class="d-flex gap-2">
+		<button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#downloadLanguagePackModal" text-translate="true">
+			Download language pack
+		</button>
+		<a id="page-primary" asp-action="CreateDictionary" class="btn btn-primary" role="button">
+			Create
+		</a>
+	</div>
 </div>
 <partial name="_StatusMessage" />
 
@@ -64,4 +69,51 @@
 		</tbody>
 	</table>
 	<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete dictionary"], StringLocalizer["This dictionary will be removed from this server."], StringLocalizer["Delete"]))" />
+</div>
+
+@* Download Language Pack Modal *@
+<div class="modal fade" id="downloadLanguagePackModal" tabindex="-1" role="dialog" aria-labelledby="downloadLanguagePackModalTitle" aria-hidden="true" data-bs-backdrop="static">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<form method="post" asp-action="DownloadLanguagePack">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="downloadLanguagePackModalTitle" text-translate="true">Download Language Pack</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+						<vc:icon symbol="close" />
+					</button>
+				</div>
+				<div class="modal-body">
+					<p text-translate="true">Select a language to download from the community translation repository.</p>
+					<p class="mb-3">
+						<span text-translate="true">These translations are maintained by the community at</span>
+						<a href="https://github.com/btcpayserver/btcpayserver-translator" target="_blank" rel="noopener noreferrer">btcpayserver-translator</a>.
+					</p>
+					<div class="form-group">
+						<label for="language" class="form-label" text-translate="true">Select Language</label>
+						<select id="language" name="language" class="form-select" required>
+							<option value="" text-translate="true">Choose a language...</option>
+							<option value="Dutch">Dutch</option>
+							<option value="French">French</option>
+							<option value="German">German</option>
+							<option value="Hindi">Hindi</option>
+							<option value="Indonesian">Indonesian</option>
+							<option value="Italian">Italian</option>
+							<option value="Japanese">Japanese</option>
+							<option value="Korean">Korean</option>
+							<option value="Portuguese (Brazil)">Portuguese (Brazil)</option>
+							<option value="Russian">Russian</option>
+							<option value="Serbian">Serbian</option>
+							<option value="Spanish">Spanish</option>
+							<option value="Thai">Thai</option>
+							<option value="Turkish">Turkish</option>
+						</select>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" text-translate="true">Cancel</button>
+					<button type="submit" class="btn btn-primary" text-translate="true">Download</button>
+				</div>
+			</div>
+		</form>
+	</div>
 </div>

@@ -177,7 +177,7 @@ namespace BTCPayServer.Services
         {
             await using var ctx = _ContextFactory.CreateContext();
             var db = ctx.Database.GetDbConnection();
-            var r = await db.QueryFirstAsync("SELECT * FROM lang_dictionaries WHERE dict_id=@dict_id", new { dict_id = name });
+            var r = await db.QueryFirstOrDefaultAsync("SELECT * FROM lang_dictionaries WHERE dict_id=@dict_id", new { dict_id = name });
             if (r is null)
                 return null;
             return new Dictionary(r.dict_id, r.fallback, r.source ?? "", JObject.Parse(r.metadata ?? "{}"));

@@ -1,4 +1,6 @@
+using System;
 using System.Data.Common;
+using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Models.ServerViewModels;
@@ -121,6 +123,54 @@ namespace BTCPayServer.Controllers
             await _localizer.DeleteDictionary(dictionary);
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Dictionary {0} deleted", dictionary].Value;
             return RedirectToAction(nameof(ListDictionaries));
+        }
+
+        [HttpPost("server/dictionaries/download")]
+        public async Task<IActionResult> DownloadLanguagePack(string language)
+        {
+            if (string.IsNullOrEmpty(language))
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Please select a language"].Value;
+                return RedirectToAction(nameof(ListDictionaries));
+            }
+
+            string translationsJson;
+            try
+            {
+                translationsJson = await FetchLanguagePackFromRepository(language);
+            }
+            catch (HttpRequestException ex)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Failed to download language pack: {0}", ex.Message].Value;
+                return RedirectToAction(nameof(ListDictionaries));
+            }
+
+            var translations = Translations.CreateFromJson(translationsJson);
+            var existingDictionary = await _localizer.GetDictionary(language);
+            if (existingDictionary is null)
+            {
+                existingDictionary = await _localizer.CreateDictionary(language, Translations.DefaultLanguage, "Custom");
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' downloaded successfully", language].Value;
+            }
+            else
+            {
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' updated successfully", language].Value;
+            }
+            
+            await _localizer.Save(existingDictionary, translations);
+            return RedirectToAction(nameof(ListDictionaries));
+        }
+
+        private async Task<string> FetchLanguagePackFromRepository(string language)
+        {
+            var fileName = language.ToLowerInvariant();
+            var url = $"https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/translations/{fileName}.json";
+            
+            var httpClient = HttpClientFactory.CreateClient();
+            using var response = await httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            
+            return await response.Content.ReadAsStringAsync();
         }
     }
 }

@@ -99,36 +99,37 @@ public class UIServerMonetizationController(
                 stores
                     .Where(s => offeringsByStores.ContainsKey(s.Id))
                     .Select(s => new SelectExistingOfferingModalViewModel.Store()
-                {
-                    Id = s.Id,
-                    Name = s.StoreName,
-                    Offerings = offeringsByStores[s.Id]
-                        .Where(o => !o.App.Archived)
-                        .Select(o => new SelectExistingOfferingModalViewModel.Offering()
-                        {
-                            Id = o.Id,
-                            Name = o.App.Name,
-                            Plans = o.Plans
-                                .Where(p => p.Status == PlanData.PlanStatus.Active)
-                                .Select(p => new SelectExistingOfferingModalViewModel.Item()
-                                {
-                                    Id = p.Id,
-                                    Name = p.Name
-                                })
-                                .OrderBy(p => p.Name)
-                                .ToList()
-                        })
-                        .OrderBy(p => p.Name)
-                        .ToList()
-                })
-                .OrderBy(p => p.Name)
-                .ToList();
+                    {
+                        Id = s.Id,
+                        Name = s.StoreName,
+                        Offerings = offeringsByStores[s.Id]
+                            .Where(o => !o.App.Archived)
+                            .Select(o => new SelectExistingOfferingModalViewModel.Offering()
+                            {
+                                Id = o.Id,
+                                Name = o.App.Name,
+                                Plans = o.Plans
+                                    .Where(p => p.Status == PlanData.PlanStatus.Active)
+                                    .Select(p => new SelectExistingOfferingModalViewModel.Item()
+                                    {
+                                        Id = p.Id,
+                                        Name = p.Name
+                                    })
+                                    .OrderBy(p => p.Name)
+                                    .ToList()
+                            })
+                            .OrderBy(p => p.Name)
+                            .ToList()
+                    })
+                    .OrderBy(p => p.Name)
+                    .ToList();
 
             // Remove empty
             foreach (var store in vmSelect.Stores)
             {
                 store.Offerings = store.Offerings.Where(o => o.Plans.Count != 0).ToList();
             }
+
             vmSelect.Stores = vmSelect.Stores.Where(s => s.Offerings.Count != 0).ToList();
             if (vmSelect.Stores.Count > 0)
                 vm.SelectExistingOfferingModal = vmSelect;
@@ -148,9 +149,8 @@ public class UIServerMonetizationController(
     [HttpPost]
     public async Task<IActionResult> Monetization(MonetizationViewModel vm, string command)
     {
-        if (command == "activate-monetization")
+        if (command == "activate-monetization" && vm.ActivateModal is {} activateModal)
         {
-            var registrationLink = Url.Action(action: nameof(UIUserMonetizationController.NewUser), controller: "UIUserMonetization");
             var selectedStore = vm.ActivateModal?.SelectedStoreId ?? "";
             var store = await storeRepo.FindStore(selectedStore, userManager.GetUserId(User) ?? "");
             if (store is null)
@@ -163,111 +163,95 @@ public class UIServerMonetizationController(
                 return RedirectToAction(nameof(Monetization));
             }
 
-            string? offeringId = null;
-            string? defaultPlanId = null;
-            if (vm.ActivateModal is { })
+            if (!ModelState.IsValid)
+                return await Monetization();
+            var (_, offeringId) = await appService.CreateOffering(selectedStore, "BTCPay Server Access");
+
+            var entitlements = CreateDefaultEntitlements(offeringId);
+            foreach (var e in entitlements.Values)
             {
-                if (!ModelState.IsValid)
-                    return await Monetization();
-                (_, offeringId) = await appService.CreateOffering(selectedStore, "BTCPay Server Access");
-
-                var entitlements = CreateDefaultEntitlements(offeringId);
-                foreach (var e in entitlements.Values)
-                {
-                    ctx.Entitlements.Add(e);
-                }
-
-                var currency = store.GetStoreBlob().DefaultCurrency;
-                var price = vm.ActivateModal.StarterPlanCost;
-                price = Math.Round(price, currencyNameTable.GetNumberFormatInfo(currency)?.CurrencyDecimalDigits ?? 2);
-                PlanData starterPlan = new()
-                {
-                    Name = "Starter Plan",
-                    RecurringType = PlanData.RecurringInterval.Monthly,
-                    TrialDays = vm.ActivateModal.TrialDays,
-                    Currency = currency,
-                    Price = price,
-                    OfferingId = offeringId,
-                };
-                ctx.Plans.Add(starterPlan);
-                ctx.PlanEntitlements.AddRange(
-                    new[] { MonetizationEntitlments.CanAccess }
-                        .Select(e => new PlanEntitlementData()
-                        {
-                            Plan = starterPlan,
-                            Entitlement = entitlements[e],
-                        }));
-                var serverBase = Request.GetRequestBaseUrl().ToString();
-                if (store.StoreWebsite != serverBase)
-                    store.StoreWebsite = serverBase;
-                await ctx.SaveChangesAsync();
-
-                var policies = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new();
-                policies.RequiresConfirmedEmail = true;
-                policies.RegisterPageRedirect = registrationLink;
-                await settingsRepository.UpdateSetting(policies);
-
-                var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new();
-                if (serverSettings.BaseUrl != serverBase)
-                {
-                    serverSettings.BaseUrl = serverBase;
-                    await settingsRepository.UpdateSetting(serverSettings);
-                }
-
-                defaultPlanId = starterPlan.Id;
-                List<EmailRuleData> emailRules =
-                [
-                    new()
-                    {
-                        Trigger = "WH-" + WebhookSubscriptionEvent.PaymentReminder,
-                        Subject = "Payment reminder for your subscription",
-                        Body = EmailsPlugin.CreateEmail(
-                            "In order to renew your subscription, please renew before expiration.",
-                            "Go to Subscription portal", linkGenerator.UserManageBillingLink(Request.GetRequestBaseUrl())),
-                        Condition = UIOfferingController.CreateOfferingCondition(offeringId)
-                    },
-                    new()
-                    {
-                        Trigger = "WH-" + WebhookSubscriptionEvent.SubscriberPhaseChanged,
-                        Subject = "Your subscription has expired",
-                        Body =  EmailsPlugin.CreateEmail(
-                            "Your access has expired. Please renew your subscription to continue using it.",
-                            "Go to Subscription portal", linkGenerator.UserManageBillingLink(Request.GetRequestBaseUrl())),
-                        Condition = UIOfferingController.CreateOfferingCondition(offeringId, SubscriberData.PhaseTypes.Expired)
-                    }
-                ];
-
-                foreach (var rule in emailRules)
-                {
-                    rule.StoreId = store.Id;
-                    rule.OfferingId = offeringId;
-                    rule.To = ["{Subscriber.Email}"];
-                    ctx.EmailRules.Add(rule);
-                }
-                ctx.EmailRules.AddRange(emailRules);
-                await ctx.SaveChangesAsync();
-
-                if (vm.ActivateModal.MigrateExistingUsers)
-                {
-                    await monetizationService.MigrateUsers(offeringId, vm.MigrateUsersModal?.SelectedPlanId);
-                }
+                ctx.Entitlements.Add(e);
             }
 
-            if (offeringId is not null &&
-                defaultPlanId is not null &&
-                await ctx.Offerings.GetOfferingData(offeringId) is { } off)
+            var currency = store.GetStoreBlob().DefaultCurrency;
+            var price = activateModal.StarterPlanCost;
+            price = Math.Round(price, currencyNameTable.GetNumberFormatInfo(currency)?.CurrencyDecimalDigits ?? 2);
+            PlanData starterPlan = new()
+            {
+                Name = "Starter Plan",
+                RecurringType = PlanData.RecurringInterval.Monthly,
+                TrialDays = activateModal.TrialDays,
+                Currency = currency,
+                Price = price,
+                OfferingId = offeringId,
+            };
+            ctx.Plans.Add(starterPlan);
+            ctx.PlanEntitlements.AddRange(
+                new[] { MonetizationEntitlments.CanAccess }
+                    .Select(e => new PlanEntitlementData()
+                    {
+                        Plan = starterPlan,
+                        Entitlement = entitlements[e],
+                    }));
+            var serverBase = Request.GetRequestBaseUrl().ToString();
+            if (store.StoreWebsite != serverBase)
+                store.StoreWebsite = serverBase;
+            await ctx.SaveChangesAsync();
+
+            await UpdatePoliciesSettings(true);
+
+            var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new();
+            if (serverSettings.BaseUrl != serverBase)
+            {
+                serverSettings.BaseUrl = serverBase;
+                await settingsRepository.UpdateSetting(serverSettings);
+            }
+
+            var defaultPlanId = starterPlan.Id;
+            List<EmailRuleData> emailRules =
+            [
+                new()
+                {
+                    Trigger = "WH-" + WebhookSubscriptionEvent.PaymentReminder,
+                    Subject = "Payment reminder for your subscription",
+                    Body = EmailsPlugin.CreateEmail(
+                        "In order to renew your subscription, please renew before expiration.",
+                        "Go to Subscription portal", linkGenerator.UserManageBillingLink(Request.GetRequestBaseUrl())),
+                    Condition = UIOfferingController.CreateOfferingCondition(offeringId)
+                },
+                new()
+                {
+                    Trigger = "WH-" + WebhookSubscriptionEvent.SubscriberPhaseChanged,
+                    Subject = "Your subscription has expired",
+                    Body = EmailsPlugin.CreateEmail(
+                        "Your access has expired. Please renew your subscription to continue using it.",
+                        "Go to Subscription portal", linkGenerator.UserManageBillingLink(Request.GetRequestBaseUrl())),
+                    Condition = UIOfferingController.CreateOfferingCondition(offeringId, SubscriberData.PhaseTypes.Expired)
+                }
+            ];
+
+            foreach (var rule in emailRules)
+            {
+                rule.StoreId = store.Id;
+                rule.OfferingId = offeringId;
+                rule.To = ["{Subscriber.Email}"];
+                ctx.EmailRules.Add(rule);
+            }
+
+            ctx.EmailRules.AddRange(emailRules);
+            await ctx.SaveChangesAsync();
+
+            if (activateModal.MigrateExistingUsers)
+            {
+                await monetizationService.MigrateUsers(offeringId, vm.MigrateUsersModal?.SelectedPlanId);
+            }
+
+            if (await ctx.Offerings.GetOfferingData(offeringId) is { } off)
             {
                 var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>() ?? new();
                 settings.OfferingId = offeringId;
                 settings.DefaultPlanId = defaultPlanId;
                 await settingsRepository.UpdateSetting(settings);
-
-                var policies = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new();
-                if (policies.RegisterPageRedirect == registrationLink)
-                {
-                    policies.RegisterPageRedirect = null;
-                    await settingsRepository.UpdateSetting(policies);
-                }
 
                 var offeringUrl = linkGenerator.OfferingLink(off.App.StoreDataId, off.Id, SubscriptionSection.Plans, Request.GetRequestBaseUrl());
                 TempData.SetStatusMessageModel(new()
@@ -286,7 +270,7 @@ public class UIServerMonetizationController(
                 OfferingId = vm.SelectExistingOfferingModal?.SelectedOfferingId,
                 DefaultPlanId = vm.SelectExistingOfferingModal?.SelectedPlanId
             };
-            if (await ctx.GetOfferingAndPlan(settings) is {} v)
+            if (await ctx.GetOfferingAndPlan(settings) is { } v)
             {
                 await settingsRepository.UpdateSetting(settings);
                 TempData.SetStatusMessageModel(new()
@@ -319,6 +303,7 @@ public class UIServerMonetizationController(
             settings.DefaultPlanId = null;
             settings.OfferingId = null;
             await settingsRepository.UpdateSetting(settings);
+            await UpdatePoliciesSettings(false);
             TempData.SetStatusMessageModel(new()
             {
                 Message = StringLocalizer["Monetization deactivated, users who register to your server from now will not be subscriber of any offering."],
@@ -360,6 +345,18 @@ public class UIServerMonetizationController(
         }
 
         return RedirectToAction(nameof(Monetization));
+    }
+
+    private async Task UpdatePoliciesSettings(bool monetization)
+    {
+        var registrationLink = Url.Action(action: nameof(UIUserMonetizationController.NewUser), controller: "UIUserMonetization");
+        var policies = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new();
+        policies.RequiresConfirmedEmail = true;
+        if (monetization && policies.RegisterPageRedirect is null)
+            policies.RegisterPageRedirect = registrationLink;
+        if (!monetization && policies.RegisterPageRedirect == registrationLink)
+            policies.RegisterPageRedirect = null;
+        await settingsRepository.UpdateSetting(policies);
     }
 
     private Dictionary<string, EntitlementData> CreateDefaultEntitlements(string offeringId)

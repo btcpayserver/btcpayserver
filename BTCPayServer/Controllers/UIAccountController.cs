@@ -14,6 +14,7 @@ using BTCPayServer.Fido2;
 using BTCPayServer.Fido2.Models;
 using BTCPayServer.Filters;
 using BTCPayServer.Logging;
+using BTCPayServer.Models;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Plugins.Emails.Services;
@@ -654,36 +655,36 @@ namespace BTCPayServer.Controllers
             }
             var user = await userManager.FindByIdAsync(userId);
             if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{userId}'.");
-            }
+                return NotFound();
 
             var result = await userManager.ConfirmEmailAsync(user, code);
-            if (result.Succeeded)
-            {
-                var approvalLink = callbackGenerator.ForApproval(user);
-                eventAggregator.Publish(new UserEvent.ConfirmedEmail(user, approvalLink));
-
-                var hasPassword = await userManager.HasPasswordAsync(user);
-                if (hasPassword)
+            if (!result.Succeeded)
+                return View("Error", new ErrorViewModel()
                 {
-                    TempData.SetStatusMessageModel(new StatusMessageModel
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Success,
-                        Message = StringLocalizer["Your email has been confirmed."].Value
-                    });
-                    return RedirectToAction(nameof(Login), new { email = user.Email });
-                }
+                    Error = result.Errors.FirstOrDefault()?.Code,
+                    ErrorDescription = result.Errors.FirstOrDefault()?.Description
+                });
 
+            var approvalLink = callbackGenerator.ForApproval(user);
+            eventAggregator.Publish(new UserEvent.ConfirmedEmail(user, approvalLink));
+
+            var hasPassword = await userManager.HasPasswordAsync(user);
+            if (hasPassword)
+            {
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
-                    Severity = StatusMessageModel.StatusSeverity.Info,
-                    Message = StringLocalizer["Your email has been confirmed. Please set your password."].Value
+                    Severity = StatusMessageModel.StatusSeverity.Success,
+                    Message = StringLocalizer["Your email has been confirmed."].Value
                 });
-                return await RedirectToSetPassword(user);
+                return RedirectToAction(nameof(Login), new { email = user.Email });
             }
 
-            return View("Error");
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Severity = StatusMessageModel.StatusSeverity.Info,
+                Message = StringLocalizer["Your email has been confirmed. Please set your password."].Value
+            });
+            return await RedirectToSetPassword(user);
         }
 
         [HttpGet("/login/forgot-password")]

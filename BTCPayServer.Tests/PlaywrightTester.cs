@@ -613,8 +613,17 @@ namespace BTCPayServer.Tests
             {
                 await MineBlockOnInvoiceCheckout();
             }
-            // Don't wait for specific text like Selenium version - just wait for the cheat success message
+            if (amount is null)
+                await Page.Locator("xpath=//*[text()=\"Invoice Paid\" or text()=\"Payment Received\"]").WaitForAsync();
+            else
+                await Page.Locator("xpath=//*[text()=\"Invoice Paid\" or text()=\"Payment Received\" or text()=\"The invoice hasn't been paid in full.\"]").WaitForAsync();
+            if (clickRedirect)
+            {
+                await Page.ClickAsync("#StoreLink");
+            }
+           
         }
+
 
         /// <summary>
         /// Take a screenshot. If running in CI, it is uploaded in the artifacts (see https://github.com/btcpayserver/btcpayserver/pull/6794)

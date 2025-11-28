@@ -655,7 +655,6 @@ namespace BTCPayServer.Tests
             }
         }
 
-
         /// <summary>
         /// Take a screenshot. If running in CI, it is uploaded in the artifacts (see https://github.com/btcpayserver/btcpayserver/pull/6794)
         /// </summary>

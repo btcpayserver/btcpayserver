@@ -2811,6 +2811,7 @@ namespace BTCPayServer.Tests
             }
 
             await ownerRow.Locator("text=Remove").ClickAsync();
+            await s.Page.WaitForLoadStateAsync();
             Assert.DoesNotContain("ConfirmContinue", await s.Page.ContentAsync());
             await s.Page.GoBackAsync();
             existingServerRoles = await s.Page.Locator("table tr").AllAsync();
@@ -2825,7 +2826,7 @@ namespace BTCPayServer.Tests
             }
 
             await guestRow.Locator("text=Remove").ClickAsync();
-            await s.Page.Locator("#ConfirmContinue").ClickAsync();
+            await s.Page.ClickAsync("#ConfirmContinue");
             await s.FindAlertMessage();
 
             await s.GoToStore(StoreNavPages.Roles);
@@ -2871,10 +2872,10 @@ namespace BTCPayServer.Tests
 
             await s.Page.Locator("#Email").FillAsync(s.AsTestAccount().Email);
             await s.Page.Locator("#Role").SelectOptionAsync("Owner");
-            await s.Page.Locator("#AddUser").ClickAsync();
+            await s.Page.ClickAsync("#AddUser");
             Assert.Contains("The user already has the role Owner.", await s.Page.Locator(".validation-summary-errors").TextContentAsync());
             await s.Page.Locator("#Role").SelectOptionAsync("Manager");
-            await s.Page.Locator("#AddUser").ClickAsync();
+            await s.Page.ClickAsync("#AddUser");
             Assert.Contains("The user is the last owner. Their role cannot be changed.", await s.Page.Locator(".validation-summary-errors").TextContentAsync());
 
             await s.GoToStore(StoreNavPages.Roles);
@@ -2944,17 +2945,19 @@ namespace BTCPayServer.Tests
             await TestUtils.EventuallyAsync(async () =>
             {
                 await s.Page.ReloadAsync();
-                await s.Page.Locator("#Receipt").ClickAsync();
+                await s.Page.ClickAsync("#Receipt");
             });
             
             await TestUtils.EventuallyAsync(async () =>
             {
                 await s.Page.ReloadAsync();
+                await s.Page.WaitForLoadStateAsync();
                 var content = await s.Page.ContentAsync();
                 Assert.DoesNotContain("invoice-unsettled", content);
                 Assert.DoesNotContain("invoice-processing", content);
             });
 
+            await s.Page.WaitForLoadStateAsync();
             var content = await s.Page.ContentAsync();
             Assert.Contains("100.00 USD", content);
             Assert.Contains(i, content);
@@ -2974,12 +2977,13 @@ namespace BTCPayServer.Tests
             await TestUtils.EventuallyAsync(async () =>
             {
                 await s.Page.ReloadAsync();
-                await s.Page.Locator("#ReceiptLink").ClickAsync();
+                await s.Page.ClickAsync("#ReceiptLink");
             });
             
             await TestUtils.EventuallyAsync(async () =>
             {
                 await s.Page.ReloadAsync();
+                await s.Page.WaitForLoadStateAsync();
                 var pageContent = await s.Page.ContentAsync();
                 Assert.DoesNotContain("invoice-unsettled", pageContent);
                 Assert.Contains("\"PaymentDetails\"", pageContent);
@@ -2989,10 +2993,11 @@ namespace BTCPayServer.Tests
 
             await s.Server.PayTester.InvoiceRepository.MarkInvoiceStatus(i, InvoiceStatus.Settled);
 
-            await TestUtils.EventuallyAsync(async () => await s.Page.Locator("#ReceiptLink").ClickAsync());
+            await TestUtils.EventuallyAsync(async () => await s.Page.ClickAsync("#ReceiptLink"));
             await TestUtils.EventuallyAsync(async () =>
             {
                 await s.Page.ReloadAsync();
+                await s.Page.WaitForLoadStateAsync();
                 var pageContent = await s.Page.ContentAsync();
                 Assert.DoesNotContain("invoice-unsettled", pageContent);
                 Assert.DoesNotContain("invoice-processing", pageContent);
@@ -3000,6 +3005,7 @@ namespace BTCPayServer.Tests
 
             // ensure archived invoices are not accessible for logged out users
             await s.Server.PayTester.InvoiceRepository.ToggleInvoiceArchival(i, true);
+            await s.GoToHome();
             await s.Logout();
 
             await s.GoToUrl(s.Page.Url + $"/i/{i}/receipt");
@@ -3044,7 +3050,7 @@ namespace BTCPayServer.Tests
             await s.Page.Locator(".offcanvas-header button").ClickAsync();
             await s.Page.Locator("#CodeTabButton").WaitForAsync();
             await s.Page.Locator("#CodeTabButton").ScrollIntoViewIfNeededAsync();
-            await s.Page.Locator("#CodeTabButton").ClickAsync();
+            await s.Page.ClickAsync("#CodeTabButton");
             
             // Wait for the textarea to be populated by Vue.js
             await s.Page.Locator("#TemplateConfig").WaitForAsync();
@@ -3056,7 +3062,7 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage();
 
             await s.Page.Locator("#CodeTabButton").ScrollIntoViewIfNeededAsync();
-            await s.Page.Locator("#CodeTabButton").ClickAsync();
+            await s.Page.ClickAsync("#CodeTabButton");
             template = await s.Page.Locator("#TemplateConfig").InputValueAsync();
             await s.Page.Locator("#TemplateConfig").ClearAsync();
             await s.Page.Locator("#TemplateConfig").FillAsync(template.Replace(@"""id"": ""green-tea"",", ""));
@@ -3065,12 +3071,13 @@ namespace BTCPayServer.Tests
             var errorText = await s.Page.Locator(".validation-summary-errors").TextContentAsync();
             Assert.Contains("Invalid template: Missing ID for item \"Green Tea\".", errorText);
 
-            await s.Page.Locator("#ViewApp").ClickAsync();
+            await s.Page.ClickAsync("#ViewApp");
             var newPage = await s.Page.Context.WaitForPageAsync();
             await using var pageSwitch = await s.SwitchPage(newPage);
 
             await s.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
             var posBaseUrl = s.Page.Url.Replace("/cart", "");
+            await s.Page.WaitForLoadStateAsync();
             var content = await s.Page.ContentAsync();
             Assert.Contains("Tea shop", content);
             Assert.Contains("Cart", content);
@@ -3085,10 +3092,12 @@ namespace BTCPayServer.Tests
             Assert.Equal(6, await s.Page.Locator(".posItem.posItem--displayed").CountAsync());
 
             await s.GoToUrl(posBaseUrl + "/static");
+            await s.Page.WaitForLoadStateAsync();
             content = await s.Page.ContentAsync();
             Assert.DoesNotContain("Cart", content);
 
             await s.GoToUrl(posBaseUrl + "/cart");
+            await s.Page.WaitForLoadStateAsync();
             content = await s.Page.ContentAsync();
             Assert.Contains("Cart", content);
 
@@ -3115,12 +3124,14 @@ namespace BTCPayServer.Tests
             // Make sure after login, we are not redirected to the PoS
             await s.Logout();
             await s.LogIn(userId);
+            await s.Page.WaitForLoadStateAsync();
             content = await s.Page.ContentAsync();
             Assert.DoesNotContain("Tea shop", content);
             var prevUrl = s.Page.Url;
             
             // We are only if explicitly going to /
             await s.GoToUrl("/");
+            await s.Page.WaitForLoadStateAsync();
             content = await s.Page.ContentAsync();
             Assert.Contains("Tea shop", content);
             
@@ -3136,7 +3147,7 @@ namespace BTCPayServer.Tests
             await s.Page.EvaluateAsync("document.getElementById('RootAppId').dispatchEvent(new Event('change', { bubbles: true }));");
             await s.ClickPagePrimary();
             await s.Page.Locator("#RootAppId").ScrollIntoViewIfNeededAsync();
-            await s.Page.Locator("#AddDomainButton").ClickAsync();
+            await s.Page.ClickAsync("#AddDomainButton");
             await s.Page.Locator("#DomainToAppMapping_0__Domain").FillAsync(new Uri(s.Page.Url, UriKind.Absolute).DnsSafeHost);
             
             var domainOptions = await s.Page.Locator("#DomainToAppMapping_0__AppId option").AllTextContentsAsync();
@@ -3157,11 +3168,13 @@ namespace BTCPayServer.Tests
             // Make sure after login, we are not redirected to the PoS
             await s.Logout();
             await s.LogIn(userId);
+            await s.Page.WaitForLoadStateAsync();
             content = await s.Page.ContentAsync();
             Assert.DoesNotContain("Tea shop", content);
             
             // We are only if explicitly going to /
             await s.GoToUrl("/");
+            await s.Page.WaitForLoadStateAsync();
             content = await s.Page.ContentAsync();
             Assert.Contains("Tea shop", content);
             
@@ -3171,7 +3184,7 @@ namespace BTCPayServer.Tests
 
             // Archive
             await s.Page.Context.Pages.First().BringToFrontAsync();
-            Assert.Equal(0, await s.Page.Locator("#Nav-ArchivedApps").CountAsync());
+            Assert.Equal(0, await s.Page.Locator("text='Archived App'").CountAsync());
             
             // Navigate to the app settings page if not already there
             if (!s.Page.Url.Contains("/settings/pos"))
@@ -3181,22 +3194,26 @@ namespace BTCPayServer.Tests
             
             await s.Page.Locator("#btn-archive-toggle").WaitForAsync();
             await s.Page.Locator("#btn-archive-toggle").ScrollIntoViewIfNeededAsync();
-            await s.Page.Locator("#btn-archive-toggle").ClickAsync();
+            await s.Page.ClickAsync("#btn-archive-toggle");
             await s.FindAlertMessage(partialText: "The app has been archived and will no longer appear in the apps list by default.");
 
             Assert.Equal(0, await s.Page.Locator("#ViewApp").CountAsync());
-            var archivedText = await s.Page.Locator("#Nav-ArchivedApps").TextContentAsync();
+            
+            await s.GoToStore(s.StoreId);
+            var archivedLink = s.Page.Locator("text='1 Archived App'");
+            await archivedLink.WaitForAsync();
+            var archivedText = await archivedLink.TextContentAsync();
             Assert.Contains("1 Archived App", archivedText);
             
             await s.GoToUrl(posBaseUrl);
             var title = await s.Page.TitleAsync();
             Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
             await s.Page.GoBackAsync();
-            await s.Page.Locator("#Nav-ArchivedApps").ClickAsync();
+            await s.Page.Locator("text='1 Archived App'").ClickAsync();
 
             // Unarchive
             await s.Page.Locator($"#App-{appId}").ClickAsync();
-            await s.Page.Locator("#btn-archive-toggle").ClickAsync();
+            await s.Page.ClickAsync("#btn-archive-toggle");
             await s.FindAlertMessage(partialText: "The app has been unarchived and will appear in the apps list by default again.");
         }
 

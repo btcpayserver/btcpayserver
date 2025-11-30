@@ -24,7 +24,7 @@ public class UIStoreEmailRulesController(
     EmailSenderFactory emailSenderFactory,
     LinkGenerator linkGenerator,
     ApplicationDbContextFactory dbContextFactory,
-    IEnumerable<EmailTriggerViewModel> triggers,
+    EmailTriggerViewModels triggers,
     IStringLocalizer stringLocalizer) : UIEmailRuleControllerBase(dbContextFactory, stringLocalizer, emailSenderFactory)
 {
     [HttpGet("")]
@@ -37,7 +37,7 @@ public class UIStoreEmailRulesController(
             StoreId = storeId,
             EmailSettingsLink = linkGenerator.GetStoreEmailSettingsLink(storeId, Request.GetRequestBaseUrl()),
             Rules = (ctx) => ctx.EmailRules.GetRules(storeId).ToListAsync(),
-            Triggers = triggers.Where(t => !t.ServerTrigger).ToList(),
+            Triggers = triggers.GetViewModels().Where(t => !t.ServerTrigger).ToList(),
             ModifyViewModel = (vm) =>
             {
                 vm.ShowCustomerEmailColumn = true;

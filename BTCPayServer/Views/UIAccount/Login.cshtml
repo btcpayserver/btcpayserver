@@ -8,6 +8,7 @@
 }
 
 <form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" id="login-form" asp-action="Login">
+    <input type="hidden" asp-for="AllowLimitedLogin"></input>
     <fieldset disabled="@(ViewData.ContainsKey("disabled") ? "disabled" : null)">
         @if (!ViewContext.ModelState.IsValid)
         {

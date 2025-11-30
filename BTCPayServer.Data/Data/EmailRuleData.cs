@@ -41,10 +41,10 @@ public class EmailRuleData : BaseEntityData
     public string[] To { get; set; }  = null!;
     [Required]
     [Column("cc")]
-    public string[] CC { get; set; }  = null!;
+    public string[] CC { get; set; }  = [];
     [Required]
     [Column("bcc")]
-    public string[] BCC { get; set; }  = null!;
+    public string[] BCC { get; set; }  = [];
 
     [Required]
     [Column("subject")]
@@ -58,6 +58,7 @@ public class EmailRuleData : BaseEntityData
         public bool CustomerEmail { get; set; }
     }
     public BTCPayAdditionalData? GetBTCPayAdditionalData() => this.GetAdditionalData<BTCPayAdditionalData>("btcpay");
+    [Obsolete("Avoid using this method, if another plugin is modifying additional data at the same time, it would overwrite the changes. Only use if you can ensure that no other plugin is modifying the data at the same time to avoid race conditions.")]
     public void SetBTCPayAdditionalData(BTCPayAdditionalData? data) => this.SetAdditionalData("btcpay", data);
 
     internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)

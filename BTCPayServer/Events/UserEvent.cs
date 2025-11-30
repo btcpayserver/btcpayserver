@@ -1,6 +1,8 @@
 #nullable enable
 using System;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Http;
@@ -26,33 +28,29 @@ public class UserEvent(ApplicationUser user)
         public string ConfirmLink { get; } = confirmLink;
     }
 
-    public class Registered(ApplicationUser user, string approvalLink, string confirmationEmail) : UserEvent(user)
+    public class Registered(ApplicationUser user, RequestBaseUrl requestBaseUrl, string approvalLink, string confirmationEmail) : UserEvent(user)
     {
         public string ApprovalLink { get; } = approvalLink;
 		public string ConfirmationEmailLink { get; set; } = confirmationEmail;
-		public static async Task<Registered> Create(ApplicationUser user, CallbackGenerator callbackGenerator)
+        public RequestBaseUrl RequestBaseUrl { get; set; } = requestBaseUrl;
+		public static async Task<Registered> Create(ApplicationUser user, ApplicationUser? invitedBy, CallbackGenerator callbackGenerator, bool sendInvitationEmail = true)
 		{
 			var approvalLink = callbackGenerator.ForApproval(user);
 			var confirmationEmail = await callbackGenerator.ForEmailConfirmation(user);
-			return new Registered(user, approvalLink, confirmationEmail);
+            if (invitedBy is null)
+                return new Registered(user, callbackGenerator.GetRequestBaseUrl(), approvalLink, confirmationEmail);
+            var invitationLink = await callbackGenerator.ForInvitation(user);
+            return new Invited(user, invitedBy, callbackGenerator.GetRequestBaseUrl(), invitationLink, approvalLink, confirmationEmail)
+            {
+                SendInvitationEmail = sendInvitationEmail
+            };
 		}
 	}
-    public class Invited(ApplicationUser user, ApplicationUser invitedBy, string invitationLink, string approvalLink, string confirmationEmail) : Registered(user, approvalLink, confirmationEmail)
+    public class Invited(ApplicationUser user, ApplicationUser invitedBy, RequestBaseUrl requestBaseUrl, string invitationLink, string approvalLink, string confirmationEmail) : Registered(user, requestBaseUrl, approvalLink, confirmationEmail)
     {
         public bool SendInvitationEmail { get; set; }
         public ApplicationUser InvitedByUser { get; } = invitedBy;
         public string InvitationLink { get; } = invitationLink;
-
-        public static async Task<Invited> Create(ApplicationUser user, ApplicationUser currentUser, CallbackGenerator callbackGenerator, bool sendEmail)
-        {
-			var invitationLink = await callbackGenerator.ForInvitation(user);
-			var approvalLink = callbackGenerator.ForApproval(user);
-			var confirmationEmail = await callbackGenerator.ForEmailConfirmation(user);
-			return new Invited(user, currentUser, invitationLink, approvalLink, confirmationEmail)
-            {
-                SendInvitationEmail = sendEmail
-            };
-		}
     }
     public class Updated(ApplicationUser user) : UserEvent(user)
     {

@@ -26,6 +26,7 @@ namespace BTCPayServer.Services
     {
         public LinkGenerator LinkGenerator { get; } = linkGenerator;
         public UserManager<ApplicationUser> UserManager { get; } = userManager;
+        public RequestBaseUrl? BaseUrl { get; set; }
 
         public string ForLNUrlAuth(ApplicationUser user, byte[] r)
         => LinkGenerator.GetUriByAction(
@@ -34,8 +35,8 @@ namespace BTCPayServer.Services
             values: new { userId = user.Id, action = "login", tag = "login", k1 = Encoders.Hex.EncodeData(r) },
             GetRequestBaseUrl());
 
-        private RequestBaseUrl GetRequestBaseUrl()
-        => httpContextAccessor.HttpContext?.Request.GetRequestBaseUrl() ?? throw new InvalidOperationException($"You should be in a HttpContext to call this method");
+        public RequestBaseUrl GetRequestBaseUrl()
+        => BaseUrl ?? httpContextAccessor.HttpContext?.Request.GetRequestBaseUrl() ?? throw new InvalidOperationException($"You should be in a HttpContext to call this method");
 
         public string StoreUsersLink(string storeId)
         => LinkGenerator.GetUriByAction(nameof(UIStoresController.StoreUsers), "UIStores",

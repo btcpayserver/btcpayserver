@@ -4,7 +4,7 @@
 }
 
 <h1 class="text-danger">
-    @if (!string.IsNullOrEmpty(Model.Error)) {
+    @if (!string.IsNullOrEmpty(Model?.Error)) {
         <strong>@Model.Error</strong>
     }
     else
@@ -13,7 +13,7 @@
     }
 </h1>
 <h2 class="text-danger">
-    @if (!string.IsNullOrEmpty(Model.ErrorDescription)) {
+    @if (!string.IsNullOrEmpty(Model?.ErrorDescription)) {
         <small>@Model.ErrorDescription</small>
     }
     else
@@ -22,7 +22,7 @@
     }
 </h2>
 
-@if(Model != null && Model.ShowRequestId)
+@if(Model?.ShowRequestId is true)
 {
     <p>
         <strong>Request ID:</strong> <code>@Model.RequestId</code>

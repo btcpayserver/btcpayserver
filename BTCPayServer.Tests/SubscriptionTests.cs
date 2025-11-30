@@ -17,6 +17,7 @@ using NBXplorer;
 using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
+using static Microsoft.Playwright.Assertions;
 
 namespace BTCPayServer.Tests;
 
@@ -505,7 +506,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         }
     }
 
-    class OfferingPMO(PlaywrightTester s)
+    public class OfferingPMO(PlaywrightTester s)
     {
         public Task Configure()
             => s.Page.GetByRole(AriaRole.Link, new() { Name = "Configure" }).ClickAsync();
@@ -683,9 +684,14 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         {
             Assert.Equal(expected.PaymentRemindersDays, actual.PaymentRemindersDays);
         }
+
+        public async Task AssertActiveSubscribers(int subscribersCount)
+        {
+            await Expect(s.Page.Locator("#total-subscribers")).ToHaveTextAsync(subscribersCount.ToString());
+        }
     }
 
-    class PortalPMO(PlaywrightTester s, IAsyncDisposable disposable) : IAsyncDisposable
+    public class PortalPMO(PlaywrightTester s, IAsyncDisposable disposable) : IAsyncDisposable
     {
         public async Task ClickCallToAction()
             => await s.Page.ClickAsync("div.alert-translucent button");
@@ -852,7 +858,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         }
     }
 
-    class AddEditPlanPMO(PlaywrightTester tester)
+    public class AddEditPlanPMO(PlaywrightTester tester)
     {
         public string? PlanName { get; set; }
         public string? Price { get; set; }

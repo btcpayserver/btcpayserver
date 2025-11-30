@@ -12,9 +12,9 @@
 
 @functions {
 
-    async Task CreateNewOffering()
+    async Task CreateNewOffering(bool primary)
     {
-        <a id="page-primary"
+        <a id="@(primary ? "page-primary" : null)"
            class="btn btn-primary"
            data-bs-toggle="modal"
            data-bs-target="#activateMonetization"
@@ -42,7 +42,7 @@
     <h2 class="my-1">@ViewData["Title"]</h2>
     @if (Model.DefaultPlan is null && store is not null)
     {
-        await CreateNewOffering();
+        await CreateNewOffering(true);
     }
     else
     {
@@ -94,9 +94,11 @@
                                asp-route-section="Plans">here</a> to go to the offering page.</p>
 
                         <div class="d-flex gap-3">
-                            <a class="btn btn-outline-danger" role="button"
+                            <a id="demonetize-button"
+                               class="btn btn-outline-danger" role="button"
                                data-bs-toggle="modal" data-bs-target="#ConfirmModal" text-translate="true">Demonetize</a>
-                            <a class="btn btn-secondary"
+                            <a id="migrate-users-button"
+                               class="btn btn-secondary"
                                role="button"
                                data-bs-toggle="modal"
                                data-bs-target="#migrateUsers"
@@ -109,7 +111,7 @@
                     {
                         <p>Monetization will delegate access to your server to an offering.</p>
                         <div class="d-flex gap-3">
-                            @{ await CreateNewOffering(); }
+                            @{ await CreateNewOffering(false); }
                             @if (Model.SelectExistingOfferingModal is not null)
                             {
                                 <a class="btn btn-secondary"

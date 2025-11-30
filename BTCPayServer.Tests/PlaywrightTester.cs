@@ -44,10 +44,11 @@ namespace BTCPayServer.Tests
             await Server.StartAsync();
             var builder = new ConfigurationBuilder();
             builder.AddUserSecrets("AB0AC1DD-9D26-485B-9416-56A33F268117");
+            var conf = builder.Build();
             var playwright = await Playwright.CreateAsync();
             Browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
-                Headless = Server.PayTester.InContainer,
+                Headless = Server.PayTester.InContainer || conf["PLAYWRIGHT_HEADLESS"] == "true",
                 SlowMo = 0, // 50 if you want to slow down
                 Args = ["--disable-frame-rate-limit"] // Fix slowness on linux (https://github.com/microsoft/playwright/issues/34625#issuecomment-2822015672)
             });
@@ -366,14 +367,16 @@ namespace BTCPayServer.Tests
             }
         }
 
-        public async Task GoToServer(ServerNavPages navPages = ServerNavPages.Policies)
+        public Task GoToServer(ServerNavPages navPages = ServerNavPages.Policies)
+            => GoToServer(navPages.ToString());
+        public async Task GoToServer(string navPages)
         {
             await Page.ClickAsync("#menu-item-Policies");
-            if (navPages == ServerNavPages.Emails)
+            if (navPages == nameof(ServerNavPages.Emails))
             {
                 await Page.ClickAsync($"#menu-item-Server-{navPages}");
             }
-            else if (navPages != ServerNavPages.Policies)
+            else if (navPages != nameof(ServerNavPages.Policies))
             {
                 await Page.ClickAsync($"#menu-item-{navPages}");
             }

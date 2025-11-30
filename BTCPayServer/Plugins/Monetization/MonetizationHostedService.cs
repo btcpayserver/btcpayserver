@@ -263,7 +263,7 @@ public class MonetizationHostedService(
         {
             await SubscriptionHostedService.UpdatePlanStats(ctx, plan.Id);
             await UpdateUserLockoutStatus(ctx, plan, userIds.Select(c => c.UserId).ToArray());
-            // We expect the call to call NewSubscriberEvent.
+            // We expect the caller to call NewSubscriberEvent.
         }
 
         return userIds;

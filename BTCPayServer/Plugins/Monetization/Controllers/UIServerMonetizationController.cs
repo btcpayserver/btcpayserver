@@ -241,9 +241,10 @@ public class UIServerMonetizationController(
             ctx.EmailRules.AddRange(emailRules);
             await ctx.SaveChangesAsync();
 
+            var migratedUsers = 0;
             if (activateModal.MigrateExistingUsers)
             {
-                await monetizationService.MigrateUsers(offeringId, vm.MigrateUsersModal?.SelectedPlanId);
+                migratedUsers = (await monetizationService.MigrateUsers(offeringId, starterPlan.Id)).Length;
             }
 
             if (await ctx.Offerings.GetOfferingData(offeringId) is { } off)
@@ -253,12 +254,13 @@ public class UIServerMonetizationController(
                 settings.DefaultPlanId = defaultPlanId;
                 await settingsRepository.UpdateSetting(settings);
 
+                var migratedUserText = migratedUsers > 0 ? StringLocalizer["({0} migrated users)", migratedUsers].Value : "";
                 var offeringUrl = linkGenerator.OfferingLink(off.App.StoreDataId, off.Id, SubscriptionSection.Plans, Request.GetRequestBaseUrl());
                 TempData.SetStatusMessageModel(new()
                 {
                     LocalizedHtml = ViewLocalizer[
-                        "Monetization activated, users who register to your server from now will be subscriber of <a class=\"alert-link\" href=\"{0}\">this offering</a>.",
-                        offeringUrl],
+                        "Monetization activated, users who register to your server from now will be subscriber of <a class=\"alert-link\" href=\"{0}\">this offering</a>.{1}",
+                        offeringUrl, migratedUserText],
                     Severity = StatusMessageModel.StatusSeverity.Success
                 });
             }

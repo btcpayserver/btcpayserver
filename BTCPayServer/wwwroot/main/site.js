@@ -34,7 +34,12 @@ async function initLabelManager (elementId) {
             headers: {
                 'Content-Type': 'application/json'
             }
-        }).then(res => res.json());
+        })
+            .then(res => res.json())
+            .catch(err => {
+            delete window[commonCallId];
+            throw err;
+        });
 
         return window[commonCallId];
     };

@@ -18,7 +18,7 @@
         !string.IsNullOrEmpty(Model.SearchTerm) ||
         !string.IsNullOrEmpty(Model.LabelFilter);
 
-    var wallet = WalletId.Parse(Model.WalletId);
+    var wallet = !string.IsNullOrEmpty(Model.WalletId) ? WalletId.Parse(Model.WalletId) : null;
 }
 
 @section PageHeadContent {
@@ -326,11 +326,14 @@
                             @item.ReferenceId
                         </td>
                         <td>
-                            <vc:label-manager
-                                wallet-object-id="new WalletObjectId(wallet, WalletObjectData.Types.PaymentRequest, item.Id)"
-                                selected-labels="item.Labels?.Select(l => l.Text).ToArray()"
-                                exclude-types="true"
-                                display-inline="true" />
+                            @if (wallet != null)
+                            {
+                                <vc:label-manager
+                                    wallet-object-id="new WalletObjectId(wallet, WalletObjectData.Types.PaymentRequest, item.Id)"
+                                    selected-labels="item.Labels?.Select(l => l.Text).ToArray()"
+                                    exclude-types="true"
+                                    display-inline="true" />
+                            }
                         </td>
                         <td class="date-col">
                             @(item.ExpiryDate?.ToBrowserDate() ?? new HtmlString("<span class=\"text-muted\">No Expiry</span>"))

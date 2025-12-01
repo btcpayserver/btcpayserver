@@ -305,6 +305,25 @@ namespace BTCPayServer.Services
                 .Select(FormatToLabel).ToArray();
         }
 
+        public async Task<(string Label, string Color)[]> GetWalletLabelsByLinkedType(WalletId walletId, string linkedType)
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            var walletIdString = walletId.ToString();
+
+            var query =
+                from link in ctx.WalletObjectLinks.AsNoTracking()
+                join labelObj in ctx.WalletObjects.AsNoTracking()
+                    on new { link.WalletId, Type = link.AType, Id = link.AId }
+                    equals new { labelObj.WalletId, labelObj.Type, labelObj.Id }
+                where link.WalletId == walletIdString
+                      && link.AType == WalletObjectData.Types.Label
+                      && link.BType == linkedType
+                select labelObj;
+
+            var labelObjects = await query.Distinct().ToArrayAsync();
+            return labelObjects.Select(FormatToLabel).ToArray();
+        }
+
         public async Task<List<ReservedAddress>> GetReservedAddressesWithDetails(WalletId walletId)
         {
             await using var ctx = _ContextFactory.CreateContext();

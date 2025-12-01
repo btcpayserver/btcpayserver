@@ -14,6 +14,7 @@ using BTCPayServer.Forms;
 using BTCPayServer.Forms.Models;
 using BTCPayServer.Models;
 using BTCPayServer.Models.PaymentRequestViewModels;
+using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
@@ -46,6 +47,7 @@ namespace BTCPayServer.Controllers
         private readonly StoreRepository _storeRepository;
         private readonly UriResolver _uriResolver;
         private readonly BTCPayNetworkProvider _networkProvider;
+        private readonly WalletRepository _walletRepository;
 
         private FormComponentProviders FormProviders { get; }
         public FormDataService FormDataService { get; }
@@ -66,7 +68,8 @@ namespace BTCPayServer.Controllers
             FormDataService formDataService,
             IStringLocalizer stringLocalizer,
             ApplicationDbContextFactory dbContextFactory,
-            BTCPayNetworkProvider networkProvider)
+            BTCPayNetworkProvider networkProvider,
+            WalletRepository walletRepository)
         {
             _InvoiceController = invoiceController;
             _handlers = handlers;
@@ -83,6 +86,7 @@ namespace BTCPayServer.Controllers
             FormDataService = formDataService;
             _networkProvider = networkProvider;
             StringLocalizer = stringLocalizer;
+            _walletRepository = walletRepository;
         }
 
         [HttpGet("/stores/{storeId}/payment-requests")]
@@ -92,29 +96,65 @@ namespace BTCPayServer.Controllers
             model = this.ParseListQuery(model ?? new ListPaymentRequestsViewModel());
 
             var store = GetCurrentStore();
-            var fs = new SearchString(model.SearchTerm, model.TimezoneOffset ?? 0);
+            var defaultNetwork = _networkProvider.DefaultNetwork;
+            var walletId = new WalletId(store.Id, defaultNetwork.CryptoCode);
+            model.WalletId = walletId.ToString();
+
+            var timezoneOffset = model.TimezoneOffset ?? 0;
+            var fs = new SearchString(model.SearchTerm, timezoneOffset);
+            var textSearch = model.SearchText;
+            var startDate = fs.GetFilterDate("startdate", timezoneOffset);
+            var endDate   = fs.GetFilterDate("enddate",   timezoneOffset);
+
             var result = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery
             {
                 UserId = GetUserId(),
                 StoreId = store.Id,
+                WalletId = model.WalletId,
                 Skip = model.Skip,
                 Count = model.Count,
                 Status = fs.GetFilterArray("status")?.Select(s => Enum.Parse<Client.Models.PaymentRequestStatus>(s, true)).ToArray(),
                 IncludeArchived = fs.GetFilterBool("includearchived") ?? false,
-                SearchText = model.SearchText
+                SearchText = model.SearchText,
+                StartDate = startDate,
+                EndDate = endDate,
+                LabelFilter = model.LabelFilter
             });
 
             model.Search = fs;
-            model.SearchText = fs.TextSearch;
+            model.SearchText = textSearch;
 
-            model.Items = result.Select(data =>
+            var items = result.Select(data => new ViewPaymentRequestViewModel(data)
             {
-                return new ViewPaymentRequestViewModel(data)
-                {
-                    AmountFormatted = _displayFormatter.Currency(data.Amount, data.Currency)
-                };
+                AmountFormatted = _displayFormatter.Currency(data.Amount, data.Currency)
             }).ToList();
 
+            foreach (var item in items)
+            {
+                var objectId = new WalletObjectId(walletId, WalletObjectData.Types.PaymentRequest, item.Id);
+
+                var labelTuples = await _walletRepository.GetWalletLabels(objectId);
+
+                item.Labels = labelTuples.Select(l => new TransactionTagModel
+                {
+                    Text = l.Label,
+                    Color = l.Color,
+                    TextColor = ColorPalette.Default.TextColor(l.Color)
+                }).ToList();
+            }
+
+            var allLabels = await _walletRepository.GetWalletLabelsByLinkedType(walletId, WalletObjectData.Types.PaymentRequest);
+            model.Labels = allLabels
+                .Select(l => new TransactionTagModel
+                {
+                    Text = l.Label,
+                    Color = l.Color,
+                    TextColor = ColorPalette.Default.TextColor(l.Color)
+                })
+                .OrderBy(l => l.Text)
+                .ToList();
+
+            model.Items = items;
             return View(model);
         }
 

@@ -2,13 +2,10 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Stores;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.PaymentRequests
 {
@@ -138,17 +135,57 @@ namespace BTCPayServer.Services.PaymentRequests
         public async Task<PaymentRequestData[]> FindPaymentRequests(PaymentRequestQuery query, CancellationToken cancellationToken = default)
         {
             await using var context = _ContextFactory.CreateContext();
-            IQueryable<PaymentRequestData> queryable = context.PaymentRequests.AsQueryable();
 
-            if (!string.IsNullOrEmpty(query.StoreId))
-                queryable = queryable.Where(data => data.StoreDataId == query.StoreId);
-
+            IQueryable<PaymentRequestData> queryable;
             if (!string.IsNullOrEmpty(query.SearchText))
             {
                 if (string.IsNullOrEmpty(query.StoreId))
                     throw new InvalidOperationException("PaymentRequestQuery.StoreId should be specified");
+
+                var search = query.SearchText;
                 // We are repeating the StoreId on purpose here, so Postgres can use the index
-                queryable = context.PaymentRequests.Where(p => (p.StoreDataId == query.StoreId && p.ReferenceId == query.SearchText) || p.Id == query.SearchText);
+                queryable = context.PaymentRequests.FromSqlRaw("""
+                                                                   SELECT *
+                                                                   FROM "PaymentRequests"
+                                                                   WHERE
+                                                                       "StoreDataId" = {0}
+                                                                       AND (
+                                                                           "ReferenceId" = {1}
+                                                                           OR "Id" = {1}
+                                                                           OR jsonb_extract_path_text("Blob2", 'title') = {1}
+                                                                           OR CAST("Amount" AS TEXT) = {1}
+                                                                       )
+                                                               """, query.StoreId, search);
+            }
+            else
+            {
+                queryable = context.PaymentRequests.AsQueryable();
+
+                if (!string.IsNullOrEmpty(query.StoreId))
+                {
+                    queryable = queryable.Where(data => data.StoreDataId == query.StoreId);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(query.LabelFilter))
+            {
+                if (string.IsNullOrEmpty(query.StoreId))
+                    throw new InvalidOperationException("PaymentRequestQuery.StoreId should be specified for label filtering");
+
+                var paymentRequestsIds = await context.WalletObjectLinks
+                    .Where(l =>
+                        l.WalletId == query.WalletId &&
+                        l.AType == WalletObjectData.Types.Label &&
+                        l.BType == WalletObjectData.Types.PaymentRequest &&
+                        l.AId == query.LabelFilter)
+                    .Select(l => l.BId)
+                    .Distinct()
+                    .ToArrayAsync(cancellationToken);
+
+                if (paymentRequestsIds.Length == 0)
+                    return Array.Empty<PaymentRequestData>();
+
+                queryable = queryable.Where(paymentRequest => paymentRequestsIds.Contains(paymentRequest.Id));
             }
 
             queryable = queryable.Include(data => data.StoreData);
@@ -165,6 +202,12 @@ namespace BTCPayServer.Services.PaymentRequests
             if (!string.IsNullOrEmpty(query.UserId))
                 queryable = queryable.Where(data =>
                     data.StoreData.UserStores.Any(u => u.ApplicationUserId == query.UserId));
+
+            if (query.StartDate.HasValue)
+                queryable = queryable.Where(data => data.Created >= query.StartDate.Value);
+
+            if (query.EndDate.HasValue)
+                queryable = queryable.Where(data => data.Created <= query.EndDate.Value);
 
             queryable = queryable.OrderByDescending(u => u.Created);
 
@@ -221,12 +264,16 @@ namespace BTCPayServer.Services.PaymentRequests
     public class PaymentRequestQuery
     {
         public string StoreId { get; set; }
+        public string WalletId { get; set; }
         public bool IncludeArchived { get; set; } = true;
-        public Client.Models.PaymentRequestStatus[] Status { get; set; }
+        public PaymentRequestStatus[] Status { get; set; }
         public string UserId { get; set; }
         public int? Skip { get; set; }
         public int? Count { get; set; }
         public string[] Ids { get; set; }
         public string SearchText { get; set; }
+        public DateTimeOffset? StartDate { get; set; }
+        public DateTimeOffset? EndDate { get; set; }
+        public string LabelFilter { get; set; }
     }
 }

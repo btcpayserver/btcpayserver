@@ -4,13 +4,12 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Payments;
+using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Newtonsoft.Json.Linq;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 
 namespace BTCPayServer.Models.PaymentRequestViewModels
@@ -19,9 +18,12 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
     {
         public List<ViewPaymentRequestViewModel> Items { get; set; }
         public override int CurrentPageCount => Items.Count;
-        
+
         public SearchString Search { get; set; }
         public string SearchText { get; set; }
+        public string WalletId { get; set; }
+        public string LabelFilter { get; set; }
+        public List<TransactionTagModel> Labels { get; set; } = new();
     }
 
     public class UpdatePaymentRequestViewModel
@@ -72,10 +74,10 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         [Display(Name = "Expiration Date")]
         public DateTime? ExpiryDate { get; set; }
-        
+
         [Required]
         public string Title { get; set; }
-        
+
         [Display(Name = "Memo")]
         public string Description { get; set; }
 
@@ -84,7 +86,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         [MailboxAddress]
         public string Email { get; set; }
-        
+
         [Display(Name = "Reference Id")]
         public string ReferenceId { get; set; }
 
@@ -112,6 +114,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             Email = blob.Email;
             ReferenceId = data.ReferenceId;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
+            Created = data.Created;
             switch (data.Status)
             {
                 case Client.Models.PaymentRequestStatus.Pending:
@@ -145,10 +148,12 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public string StoreId { get; set; }
         public string Currency { get; set; }
         public DateTime? ExpiryDate { get; set; }
+        public DateTimeOffset Created { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
         public string StoreName { get; set; }
         public string StoreWebsite { get; set; }
+        public List<TransactionTagModel> Labels { get; set; }
 
 #nullable enable
         public class InvoiceList : List<PaymentRequestInvoice>

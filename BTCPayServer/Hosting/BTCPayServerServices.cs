@@ -403,6 +403,7 @@ namespace BTCPayServer.Hosting
             services.AddReportProvider<PayoutsReportProvider>();
             services.AddReportProvider<InvoicesReportProvider>();
             services.AddReportProvider<RefundsReportProvider>();
+            services.AddReportProvider<PaymentRequestsReportProvider>();
 
             services.AddSingleton<Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension>>(o =>
                 o.GetRequiredService<IEnumerable<IPaymentMethodBitpayAPIExtension>>().ToDictionary(o => o.PaymentMethodId, o => o));

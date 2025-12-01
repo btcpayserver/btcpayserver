@@ -628,7 +628,7 @@ namespace BTCPayServer.Controllers
             model.Rates = GetCurrentStore().GetStoreBlob().GetTrackedRates().ToList();
 
             model.Labels.AddRange(
-                (await WalletRepository.GetWalletLabels(walletId))
+                (await WalletRepository.GetWalletLabelsByLinkedType(walletId, WalletObjectData.Types.Tx))
                 .Select(c => (c.Label, c.Color, ColorPalette.Default.TextColor(c.Color))));
 
             IList<TransactionHistoryLine>? transactions = null;

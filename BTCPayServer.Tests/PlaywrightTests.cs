@@ -1122,7 +1122,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        public async Task CanMarkPaymentRequestAsSettled()
+        public async Task CanUsePaymentRequest()
         {
             await using var s = CreatePlaywrightTester();
             await s.StartAsync();
@@ -1134,7 +1134,8 @@ namespace BTCPayServer.Tests
             await s.GoToStore();
             await s.Page.ClickAsync("#menu-item-PaymentRequests");
             await s.ClickPagePrimary();
-            await s.Page.FillAsync("#Title", "Test Payment Request");
+            var paymentRequestTitle = "Test Payment Request";
+            await s.Page.FillAsync("#Title", paymentRequestTitle);
             await s.Page.FillAsync("#Amount", "0.1");
             await s.Page.FillAsync("#Currency", "BTC");
             await s.ClickPagePrimary();
@@ -1202,6 +1203,112 @@ namespace BTCPayServer.Tests
 
             Assert.True(isSettledInList || settledBadgeExists > 0, "Payment request should show as Settled in the list");
             Assert.False(isPendingInList && pendingBadgeExists > 0, "Payment request should not show as Pending anymore");
+
+            await s.Page.ClickAsync("#menu-item-PaymentRequests");
+            await s.Page.WaitForLoadStateAsync();
+            await s.ClickPagePrimary();
+            await s.Page.FillAsync("#Title", "Other Payment Request");
+            await s.Page.FillAsync("#Amount", "0.2");
+            await s.Page.FillAsync("#Currency", "BTC");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "Payment request");
+            await s.Page.ClickAsync("#menu-item-PaymentRequests");
+            await s.Page.WaitForLoadStateAsync();
+            var rowsBeforeSearch = await s.Page.Locator("table tbody tr").CountAsync();
+            Assert.Equal(2, rowsBeforeSearch);
+
+            // Filter by Title
+            await s.Page.FillAsync("input[name='SearchText']", paymentRequestTitle);
+            await s.Page.PressAsync("input[name='SearchText']", "Enter");
+            await s.Page.WaitForLoadStateAsync();
+            var rowsAfterTitleSearch = await s.Page.Locator("table tbody tr").CountAsync();
+            Assert.Equal(1, rowsAfterTitleSearch);
+            Assert.True(await s.Page.Locator("table tbody tr").First.InnerTextAsync()
+                    .ContinueWith(t => t.Result.Contains(paymentRequestTitle)),
+                "SearchText by title should return only the matching payment request"
+            );
+
+            // Filter by Status
+            await s.Page.ClickAsync("#StatusOptionsToggle");
+            await s.Page.ClickAsync("a:has-text('Settled')");
+            await s.Page.WaitForLoadStateAsync();
+            await Expect(s.Page.Locator("input[name='SearchText']"))
+                .ToHaveValueAsync(paymentRequestTitle);
+            var urlAfterStatusFilter = new Uri(s.Page.Url);
+            var qsAfterStatusFilter = System.Web.HttpUtility.ParseQueryString(urlAfterStatusFilter.Query);
+            Assert.Equal(paymentRequestTitle, qsAfterStatusFilter["SearchText"]);
+
+            // Filter by Amount
+            await s.Page.FillAsync("input[name='SearchText']", "0.1");
+            await s.Page.PressAsync("input[name='SearchText']", "Enter");
+            await s.Page.WaitForLoadStateAsync();
+            var rowsAfterAmountSearch = s.Page.Locator("table tbody tr");
+            Assert.Equal(1, await rowsAfterAmountSearch.CountAsync());
+            var amountRowText = await rowsAfterAmountSearch.First.InnerTextAsync();
+            Assert.Contains(paymentRequestTitle, amountRowText);
+
+            // Filter by Id
+            await s.Page.FillAsync("input[name='SearchText']", payReqId);
+            await s.Page.PressAsync("input[name='SearchText']", "Enter");
+            await s.Page.WaitForLoadStateAsync();
+            var rowsAfterIdSearch = s.Page.Locator("table tbody tr");
+            Assert.Equal(1, await rowsAfterIdSearch.CountAsync());
+            var idRowText = await rowsAfterIdSearch.First.InnerTextAsync();
+            Assert.Contains(paymentRequestTitle, idRowText);
+
+            // Clear All
+            var clearAllCount = await s.Page.Locator("#clearAllFiltersBtn").CountAsync();
+            Assert.True(clearAllCount == 1, "Clear All button should be visible when filters are applied");
+            await s.Page.ClickAsync("#clearAllFiltersBtn");
+            await s.Page.WaitForLoadStateAsync();
+            await Expect(s.Page.Locator("input[name='SearchText']")).ToHaveValueAsync(string.Empty);
+            var urlAfterClearAll = new Uri(s.Page.Url);
+            var qsAfterClearAll = System.Web.HttpUtility.ParseQueryString(urlAfterClearAll.Query);
+            Assert.True(string.IsNullOrEmpty(qsAfterClearAll["SearchText"]));
+            Assert.True(string.IsNullOrEmpty(qsAfterClearAll["SearchTerm"]));
+            var rowsAfterClearAll = await s.Page.Locator("table tbody tr").CountAsync();
+            Assert.True(rowsAfterClearAll == 2, "After clearing filters, at least one payment request should be listed again");
+
+            // Labels
+            const string labelName = "test-label";
+            var testPrRow = s.Page.Locator("table tbody tr", new PageLocatorOptions { HasText = paymentRequestTitle });
+            var labelInput = testPrRow.Locator(".ts-control input");
+            await labelInput.FillAsync(labelName);
+            await s.Page.Keyboard.PressAsync("Enter");
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var value = await testPrRow.InnerTextAsync();
+                Assert.Contains(labelName, value);
+            });
+
+            //Filter by Label
+            await s.Page.ClickAsync("#menu-item-PaymentRequests");
+            await s.Page.WaitForLoadStateAsync();
+            await s.Page.ClickAsync("#LabelOptionsToggle");
+            await s.Page.ClickAsync($".dropdown-menu a:has-text(\"{labelName}\")");
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var rowsCount = await s.Page.Locator("table tbody tr").CountAsync();
+                Assert.Equal(1, rowsCount);
+                var filteredText = await s.Page.InnerTextAsync("table tbody");
+                Assert.Contains(paymentRequestTitle, filteredText);
+                Assert.Contains(labelName, filteredText);
+            });
+
+            // Report
+            await s.Page.ClickAsync("#view-report");
+            await s.Page.WaitForLoadStateAsync();
+            Assert.Contains("/reports", s.Page.Url);
+            var requestsTabClasses = await s.Page.GetAttributeAsync("#SectionNav a[data-view='Requests']", "class");
+            Assert.NotNull(requestsTabClasses);
+            Assert.Contains("active", requestsTabClasses);
+            await Expect(s.Page.Locator("#fromDate")).ToBeVisibleAsync();
+            await Expect(s.Page.Locator("#toDate")).ToBeVisibleAsync();
+            var reportHtml = await s.Page.ContentAsync();
+            Assert.Contains("\"viewName\":\"Requests\"", reportHtml);
+            await s.Page.WaitForSelectorAsync("#app table tbody tr");
+            var allPrRows = s.Page.Locator("#app table tbody tr").Filter(new LocatorFilterOptions { HasText = "Payment Request" });
+            Assert.Equal(2, await allPrRows.CountAsync());
         }
 
         [Fact]

@@ -153,7 +153,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public string Description { get; set; }
         public string StoreName { get; set; }
         public string StoreWebsite { get; set; }
-        public List<TransactionTagModel> Labels { get; set; }
+        public List<TransactionTagModel> Labels { get; set; } = new();
 
 #nullable enable
         public class InvoiceList : List<PaymentRequestInvoice>

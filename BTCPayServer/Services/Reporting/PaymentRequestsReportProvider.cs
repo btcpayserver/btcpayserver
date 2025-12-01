@@ -33,6 +33,10 @@ public class PaymentRequestsReportProvider(
                 new StoreReportResponse.Field("ReferenceId", "string"),
                 new StoreReportResponse.Field("Title", "string"),
                 new StoreReportResponse.Field("Labels", "string"),
+                new StoreReportResponse.Field("Status", "string"),
+                new StoreReportResponse.Field("RequestedAmount", "amount"),
+                new StoreReportResponse.Field("RequestedCurrency", "string"),
+
 
                 new StoreReportResponse.Field("InvoiceId", "invoice_id"),
                 new StoreReportResponse.Field("OrderId", "string"),
@@ -67,13 +71,14 @@ public class PaymentRequestsReportProvider(
 
         await using var ctx = dbContextFactory.CreateContext();
 
-        var prs = await ctx.PaymentRequests
+        var paymentRequests = await ctx.PaymentRequests
+            .AsNoTracking()
             .Where(p => p.StoreDataId == queryContext.StoreId)
             .Where(p => p.Created >= queryContext.From && p.Created <= queryContext.To)
             .OrderBy(p => p.Created)
             .ToListAsync(cancellation);
 
-        if (!prs.Any())
+        if (!paymentRequests.Any())
             return;
 
         var network = networkProvider.DefaultNetwork;
@@ -81,7 +86,7 @@ public class PaymentRequestsReportProvider(
 
         var labelsCache = new Dictionary<string, string>();
 
-        var orderIds = prs
+        var orderIds = paymentRequests
             .Select(pr => PaymentRequestRepository.GetOrderIdForPaymentRequest(pr.Id))
             .Distinct()
             .ToArray();
@@ -98,17 +103,17 @@ public class PaymentRequestsReportProvider(
             .GroupBy(i => i.Metadata.OrderId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        foreach (var pr in prs)
+        foreach (var paymentRequest in paymentRequests)
         {
-            var prBlob = pr.GetBlob();
-            var prOrderId = PaymentRequestRepository.GetOrderIdForPaymentRequest(pr.Id);
+            var prBlob = paymentRequest.GetBlob();
+            var prOrderId = PaymentRequestRepository.GetOrderIdForPaymentRequest(paymentRequest.Id);
 
-            if (!labelsCache.TryGetValue(pr.Id, out var labelsString))
+            if (!labelsCache.TryGetValue(paymentRequest.Id, out var labelsString))
             {
                 var objectId = new WalletObjectId(
                     walletId,
                     WalletObjectData.Types.PaymentRequest,
-                    pr.Id
+                    paymentRequest.Id
                 );
 
                 var labelTuples = await walletRepository.GetWalletLabels(objectId);
@@ -116,29 +121,32 @@ public class PaymentRequestsReportProvider(
                     ? string.Join(", ", labelTuples.Select(l => l.Label))
                     : "None";
 
-                labelsCache[pr.Id] = labelsString;
+                labelsCache[paymentRequest.Id] = labelsString;
             }
 
             if (!invoicesByOrderId.TryGetValue(prOrderId, out var prInvoices) || prInvoices.Count == 0)
             {
                 var row = queryContext.CreateData();
-                row.Add(pr.Created);                   // Date
-                row.Add(pr.ReferenceId);                        // PaymentRequestId
-                row.Add(prBlob.Title);                 // Title
-                row.Add(labelsString);                 // Labels
+                row.Add(paymentRequest.Created);
+                row.Add(paymentRequest.ReferenceId);
+                row.Add(prBlob.Title);
+                row.Add(labelsString);
+                row.Add(paymentRequest.Status.ToString());
+                row.Add(displayFormatter.ToFormattedAmount(paymentRequest.Amount, paymentRequest.Currency));
+                row.Add(paymentRequest.Currency);
 
-                row.Add(null);                         // InvoiceId
-                row.Add(prOrderId);                    // OrderId
+                row.Add(null);
+                row.Add(prOrderId);
 
-                row.Add("No Payment");                 // PaymentMethod
-                row.Add("None");                       // PaymentMethodId
+                row.Add("No Payment");
+                row.Add("None");
 
-                row.Add("None");                       // PaymentCurrency
-                row.Add(displayFormatter.ToFormattedAmount(0m, pr.Currency));
+                row.Add("None");
+                row.Add(displayFormatter.ToFormattedAmount(0m, paymentRequest.Currency));
 
-                row.Add(pr.Currency);                  // InvoiceCurrency
-                row.Add(displayFormatter.ToFormattedAmount(0m, pr.Currency)); // InvoiceCurrencyAmount
-                row.Add(displayFormatter.ToFormattedAmount(0m, pr.Currency)); // Rate
+                row.Add(paymentRequest.Currency);
+                row.Add(displayFormatter.ToFormattedAmount(0m, paymentRequest.Currency));
+                row.Add(displayFormatter.ToFormattedAmount(0m, paymentRequest.Currency));
 
                 queryContext.Data.Add(row);
                 continue;
@@ -151,12 +159,15 @@ public class PaymentRequestsReportProvider(
                     var row = queryContext.CreateData();
 
                     row.Add(payment.ReceivedTime);
-                    row.Add(pr.ReferenceId);                    // PaymentRequestId
-                    row.Add(prBlob.Title);             // Title
-                    row.Add(labelsString);             // Labels
+                    row.Add(paymentRequest.ReferenceId);
+                    row.Add(prBlob.Title);
+                    row.Add(labelsString);
+                    row.Add(paymentRequest.Status.ToString());
+                    row.Add(displayFormatter.ToFormattedAmount(paymentRequest.Amount, paymentRequest.Currency));
+                    row.Add(paymentRequest.Currency);
 
-                    row.Add(invoice.Id);               // InvoiceId
-                    row.Add(invoice.Metadata.OrderId); // OrderId
+                    row.Add(invoice.Id);
+                    row.Add(invoice.Metadata.OrderId);
 
                     var paymentMethodId = payment.PaymentMethodId;
                     handlers.TryGetValue(paymentMethodId, out var handler);
@@ -167,20 +178,20 @@ public class PaymentRequestsReportProvider(
                     else if (handler is BitcoinLikePaymentHandler)
                         paymentMethodCategory = "On-Chain";
                     else
-                        paymentMethodCategory = paymentMethodId.ToString(); // plugins, stablecoins, etc.
+                        paymentMethodCategory = paymentMethodId.ToString();
 
-                    row.Add(paymentMethodCategory);         // PaymentMethod
-                    row.Add(paymentMethodId.ToString());    // PaymentMethodId
+                    row.Add(paymentMethodCategory);
+                    row.Add(paymentMethodId.ToString());
 
-                    row.Add(payment.Currency);              // PaymentCurrency
-                    row.Add(displayFormatter.ToFormattedAmount(payment.Value, payment.Currency)); // PaymentAmount
+                    row.Add(payment.Currency);
+                    row.Add(displayFormatter.ToFormattedAmount(payment.Value, payment.Currency));
 
-                    row.Add(invoice.Currency);              // InvoiceCurrency
+                    row.Add(invoice.Currency);
 
                     if (invoice.TryGetRate(payment.Currency, out var rate))
                     {
-                        row.Add(displayFormatter.ToFormattedAmount(rate * payment.Value, invoice.Currency)); // InvoiceCurrencyAmount
-                        row.Add(displayFormatter.ToFormattedAmount(rate, invoice.Currency));                  // Rate
+                        row.Add(displayFormatter.ToFormattedAmount(rate * payment.Value, invoice.Currency));
+                        row.Add(displayFormatter.ToFormattedAmount(rate, invoice.Currency));
                     }
                     else
                     {

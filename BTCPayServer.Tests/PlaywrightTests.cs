@@ -1223,10 +1223,7 @@ namespace BTCPayServer.Tests
             await s.Page.WaitForLoadStateAsync();
             var rowsAfterTitleSearch = await s.Page.Locator("table tbody tr").CountAsync();
             Assert.Equal(1, rowsAfterTitleSearch);
-            Assert.True(await s.Page.Locator("table tbody tr").First.InnerTextAsync()
-                    .ContinueWith(t => t.Result.Contains(paymentRequestTitle)),
-                "SearchText by title should return only the matching payment request"
-            );
+            Assert.Contains(paymentRequestTitle, await s.Page.Locator("table tbody tr").First.InnerTextAsync());
 
             // Filter by Status
             await s.Page.ClickAsync("#StatusOptionsToggle");
@@ -1267,7 +1264,7 @@ namespace BTCPayServer.Tests
             Assert.True(string.IsNullOrEmpty(qsAfterClearAll["SearchText"]));
             Assert.True(string.IsNullOrEmpty(qsAfterClearAll["SearchTerm"]));
             var rowsAfterClearAll = await s.Page.Locator("table tbody tr").CountAsync();
-            Assert.True(rowsAfterClearAll == 2, "After clearing filters, at least one payment request should be listed again");
+            Assert.True(rowsAfterClearAll == 2, "After clearing filters, two payment requests should be listed again");
 
             // Labels
             const string labelName = "test-label";

@@ -145,6 +145,21 @@
                 },
                 mounted() {
                     initLabelManagers();
+
+                    const labelManagerList = document.querySelectorAll("input.label-manager");
+                    labelManagerList.forEach(labelManager => {
+                        labelManager.addEventListener("labelmanager:changed", ({ detail }) => {
+                            const { walletObjectId, labels: newLabels } = detail;
+
+                            const targetAddress = this.addresses.find(addr => addr.address === walletObjectId);
+                            if (!targetAddress) return;
+
+                            const existingLabels = targetAddress.labels?.map(l => l.text) || [];
+                            const merged = Array.from(new Set([...existingLabels, ...newLabels])).map(text => ({ text }));
+
+                            this.$set(targetAddress, 'labels', merged);
+                        });
+                    });
                 },
                 methods: {
                     setPageSize(size) {

@@ -114,38 +114,38 @@ public class PlanData : BaseEntityData
         return (to, GracePeriodDays is 0 ? null : to.AddDays(GracePeriodDays));
     }
 
-    // Avoid cartesian explosion if there are lots of entitlements
-    private List<PlanEntitlementData>? _planEntitlements;
+    // Avoid cartesian explosion if there are lots of features
+    private List<PlanFeatureData>? _planFeatures;
     [NotMapped]
-    public List<PlanEntitlementData> PlanEntitlements
+    public List<PlanFeatureData> PlanFeatures
     {
-        get => _planEntitlements ?? throw EntitlementNotLoadedException();
-        set => _planEntitlements = value;
+        get => _planFeatures ?? throw FeatureNotLoadedException();
+        set => _planFeatures = value;
     }
 
-    private static InvalidOperationException EntitlementNotLoadedException()
+    private static InvalidOperationException FeatureNotLoadedException()
     {
-        return new InvalidOperationException("PlanEntitlements not loaded. Use ctx.PlanEntitlements.FetchPlanEntitlementsAsync() to load it");
+        return new InvalidOperationException("PlanFeatures not loaded. Use ctx.PlanFeatures.EnsureFeatureLoaded() to load it");
     }
     [NotMapped]
-    public bool EntitlementsLoaded => _planEntitlements is not null;
+    public bool FeaturesLoaded => _planFeatures is not null;
 
-    public Task EnsureEntitlementLoaded(ApplicationDbContext ctx) => EnsureEntitlementLoaded(ctx.Plans);
-    public async Task EnsureEntitlementLoaded(DbSet<PlanData> set)
+    public Task EnsureFeatureLoaded(ApplicationDbContext ctx) => EnsureFeatureLoaded(ctx.Plans);
+    public async Task EnsureFeatureLoaded(DbSet<PlanData> set)
     {
-        if (!EntitlementsLoaded)
-            await set.FetchPlanEntitlementsAsync(this);
+        if (!FeaturesLoaded)
+            await set.FetchPlanFeaturesAsync(this);
     }
-    public Task ReloadEntitlement(ApplicationDbContext ctx) => ReloadEntitlement(ctx.Plans);
-    public Task ReloadEntitlement(DbSet<PlanData> set) =>set.FetchPlanEntitlementsAsync(this);
+    public Task ReloadFeature(ApplicationDbContext ctx) => ReloadFeature(ctx.Plans);
+    public Task ReloadFeature(DbSet<PlanData> set) =>set.FetchPlanFeaturesAsync(this);
 
-    public void AssertEntitlementsLoaded() => _ = _planEntitlements ?? throw EntitlementNotLoadedException();
+    public void AssertFeaturesLoaded() => _ = _planFeatures ?? throw FeatureNotLoadedException();
 
-    public PlanEntitlementData? GetEntitlement(long entitlementId)
-        => PlanEntitlements.FirstOrDefault(p => p.EntitlementId == entitlementId);
-    public PlanEntitlementData? GetEntitlement(string entitlementCustomId)
-        => PlanEntitlements.FirstOrDefault(p => p.Entitlement.CustomId == entitlementCustomId);
-    public string[] GetEntitlementIds()
-        => PlanEntitlements.Select(p => p.Entitlement.CustomId).ToArray();
+    public PlanFeatureData? GetFeature(long featureId)
+        => PlanFeatures.FirstOrDefault(p => p.FeatureId == featureId);
+    public PlanFeatureData? GetFeature(string featureCustomId)
+        => PlanFeatures.FirstOrDefault(p => p.Feature.CustomId == featureCustomId);
+    public string[] GetFeatureIds()
+        => PlanFeatures.Select(p => p.Feature.CustomId).ToArray();
 
 }

@@ -53,7 +53,7 @@ public partial class UIOfferingController
                      ("Custom analytics & reporting", "analytics-dashboard-x"),
                  })
         {
-            ctx.Entitlements.Add(new()
+            ctx.Features.Add(new()
             {
                 OfferingId = offering.Id,
                 Description = e.Item1,
@@ -62,7 +62,7 @@ public partial class UIOfferingController
         }
 
         await ctx.SaveChangesAsync();
-        var entitlements = await ctx.Entitlements.Where(c => c.OfferingId == offeringId).ToDictionaryAsync(x => x.CustomId);
+        var features = await ctx.Features.Where(c => c.OfferingId == offeringId).ToDictionaryAsync(x => x.CustomId);
 
         var p = ctx.Plans.Add(new()
         {
@@ -85,10 +85,10 @@ public partial class UIOfferingController
                      "analytics-dashboard-0"
                  })
         {
-            ctx.PlanEntitlements.Add(new()
+            ctx.PlanFeatures.Add(new()
             {
                 PlanId = p.Entity.Id,
-                EntitlementId = entitlements[e].Id
+                FeatureId = features[e].Id
             });
         }
 
@@ -113,10 +113,10 @@ public partial class UIOfferingController
                      "analytics-dashboard-1"
                  })
         {
-            ctx.PlanEntitlements.Add(new()
+            ctx.PlanFeatures.Add(new()
             {
                 PlanId = p.Entity.Id,
-                EntitlementId = entitlements[e].Id
+                FeatureId = features[e].Id
             });
         }
 
@@ -142,10 +142,10 @@ public partial class UIOfferingController
                      "analytics-dashboard-x"
                  })
         {
-            ctx.PlanEntitlements.Add(new()
+            ctx.PlanFeatures.Add(new()
             {
                 PlanId = p.Entity.Id,
-                EntitlementId = entitlements[e].Id
+                FeatureId = features[e].Id
             });
         }
 

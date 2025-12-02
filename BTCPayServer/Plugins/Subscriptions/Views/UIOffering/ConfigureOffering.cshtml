@@ -56,13 +56,13 @@
     </div>
 
 
-    <section id="entitlements" class="mt-4">
+    <section id="features" class="mt-4">
         <div class="d-flex align-items-center gap-4">
-            <h4 text-translate="true">Entitlements</h4>
+            <h4 text-translate="true">Features</h4>
             <button type="submit" name="command" value="AddItem" class="btn btn-outline-secondary" id="AddPlanItem">Add item</button>
         </div>
 
-        @if (Model.Entitlements?.Any() is true)
+        @if (Model.Features?.Any() is true)
         {
             <div class="row">
                 <div class="col-xl-8 col-xxl-constrain">
@@ -76,16 +76,16 @@
                             </tr>
                             </thead>
                             <tbody>
-                            @for (int i = 0; i < Model.Entitlements.Count; i++)
+                            @for (int i = 0; i < Model.Features.Count; i++)
                             {
                                 <tr>
                                     <td>
-                                        <input asp-for="Entitlements[i].Id" class="form-control">
-                                        <span asp-validation-for="Entitlements[i].Id" class="text-danger"></span>
+                                        <input asp-for="Features[i].Id" class="form-control">
+                                        <span asp-validation-for="Features[i].Id" class="text-danger"></span>
                                     </td>
                                     <td>
-                                        <input asp-for="Entitlements[i].ShortDescription" class="form-control w-100">
-                                        <span asp-validation-for="Entitlements[i].ShortDescription" class="text-danger"></span>
+                                        <input asp-for="Features[i].ShortDescription" class="form-control w-100">
+                                        <span asp-validation-for="Features[i].ShortDescription" class="text-danger"></span>
                                     </td>
                                     <td>
                                         <button type="submit" name="removeIndex" value="@i" class="d-inline-block btn text-danger btn-link">

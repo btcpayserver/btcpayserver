@@ -175,7 +175,7 @@ public class SubscriberWebhookProvider : WebhookTriggerProvider<SubscriptionEven
                 Description = plan.Description,
                 MemberCount = plan.MemberCount,
                 OptimisticActivation = plan.OptimisticActivation,
-                Entitlements = plan.GetEntitlementIds()
+                Features = plan.GetFeatureIds()
             },
             PeriodEnd = sub.PeriodEnd,
             TrialEnd = sub.TrialEnd,

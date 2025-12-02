@@ -372,20 +372,20 @@ public partial class UIOfferingController(
         bool itemsUpdated = false;
         if (command == "AddItem")
         {
-            vm.Entitlements ??= new();
-            vm.Entitlements.Add(new());
+            vm.Features ??= new();
+            vm.Features.Add(new());
             itemsUpdated = true;
         }
         else if (removeIndex is int i)
         {
-            vm.Entitlements.RemoveAt(i);
+            vm.Features.RemoveAt(i);
             itemsUpdated = true;
         }
 
         if (itemsUpdated)
         {
             this.ModelState.Clear();
-            vm.Anchor = "entitlements";
+            vm.Anchor = "features";
         }
 
         if (!ModelState.IsValid || itemsUpdated)
@@ -394,31 +394,31 @@ public partial class UIOfferingController(
         offering.SuccessRedirectUrl = vm.SuccessRedirectUrl;
         offering.App.Name = vm.Name;
 
-        UpdateEntitlements(ctx, offering, vm);
+        UpdateFeatures(ctx, offering, vm);
 
         await ctx.SaveChangesAsync();
         this.TempData.SetStatusSuccess(StringLocalizer["Offering configuration updated"]);
         return GoToOffering(storeId, offeringId);
     }
 
-    private static void UpdateEntitlements(ApplicationDbContext ctx, OfferingData offering, ConfigureOfferingViewModel vm)
+    private static void UpdateFeatures(ApplicationDbContext ctx, OfferingData offering, ConfigureOfferingViewModel vm)
     {
-        var incomingById = vm.Entitlements
+        var incomingById = vm.Features
             .GroupBy(e => e.Id) // guard against dupes
             .ToDictionary(g => g.Key, g => g.First());
 
-        var existingById = offering.Entitlements
+        var existingById = offering.Features
             .ToDictionary(e => e.CustomId);
 
 
-        var toRemove = offering.Entitlements
+        var toRemove = offering.Features
             .Where(e => !incomingById.ContainsKey(e.CustomId))
             .ToList();
 
         foreach (var e in toRemove)
-            offering.Entitlements.Remove(e);
+            offering.Features.Remove(e);
 
-        ctx.Entitlements.RemoveRange(toRemove);
+        ctx.Features.RemoveRange(toRemove);
 
         foreach (var (id, vmEnt) in incomingById)
         {
@@ -427,7 +427,7 @@ public partial class UIOfferingController(
                 entity = new();
                 entity.CustomId = vmEnt.Id;
                 entity.OfferingId = offering.Id;
-                offering.Entitlements.Add(entity);
+                offering.Features.Add(entity);
             }
 
             entity.Description = vmEnt.ShortDescription;
@@ -500,11 +500,11 @@ public partial class UIOfferingController(
                 })
                 .OrderBy(p => p.PlanName)
                 .ToList(),
-            Entitlements = offering.Entitlements.OrderBy(e => e.CustomId).Select(e => new AddEditPlanViewModel.Entitlement()
+            Features = offering.Features.OrderBy(e => e.CustomId).Select(e => new AddEditPlanViewModel.Feature()
             {
                 CustomId = e.CustomId,
                 ShortDescription = e.Description,
-                Selected = plan?.GetEntitlement(e.Id) is not null
+                Selected = plan?.GetFeature(e.Id) is not null
             }).ToList(),
         };
 
@@ -532,7 +532,7 @@ public partial class UIOfferingController(
         plan ??= new PlanData()
         {
             CreatedAt = DateTimeOffset.UtcNow,
-            PlanEntitlements = new()
+            PlanFeatures = new()
         };
         plan.Name = vm.Name;
         plan.Description = vm.Description;
@@ -584,17 +584,17 @@ public partial class UIOfferingController(
 
         await ctx.SaveChangesAsync();
 
-        var customIdsToIds = offering.Entitlements.ToDictionary(x => x.CustomId, x => x.Id);
-        var enabled = vm.Entitlements.Where(e => e.Selected).Select(e => customIdsToIds[e.CustomId]).ToArray();
+        var customIdsToIds = offering.Features.ToDictionary(x => x.CustomId, x => x.Id);
+        var enabled = vm.Features.Where(e => e.Selected).Select(e => customIdsToIds[e.CustomId]).ToArray();
         await ctx.Database.GetDbConnection()
             .ExecuteAsync("""
-                          DELETE FROM subs_plans_entitlements
-                          WHERE plan_id = @planId AND NOT (entitlement_id = ANY(@enabled));
-                          INSERT INTO subs_plans_entitlements(plan_id, entitlement_id)
+                          DELETE FROM subs_plans_features
+                          WHERE plan_id = @planId AND NOT (feature_id = ANY(@enabled));
+                          INSERT INTO subs_plans_features(plan_id, feature_id)
                           SELECT @planId, e FROM unnest(@enabled) e
                           ON CONFLICT DO NOTHING;
                           """, new { planId = plan.Id, enabled });
-        await plan.ReloadEntitlement(ctx);
+        await plan.ReloadFeature(ctx);
         if (planId is null)
             this.TempData.SetStatusSuccess(StringLocalizer["New plan created"]);
         else

@@ -37,7 +37,7 @@ public class MonetizationLoginExtension(
 
             // The subscriber is in a plan without an access feature
             if (subscriber is { PlanId: { } planId } &&
-                !await ctx.Plans.HasEntitlements(planId, MonetizationEntitlements.CanAccess))
+                !await ctx.Plans.HasFeature(planId, MonetizationFeatures.CanAccess))
             {
                 context.Failures.Add(new (context.StringLocalizer["Your plan does not allow you to log in."]));
                 if (await CanChangePlan(ctx, planId))

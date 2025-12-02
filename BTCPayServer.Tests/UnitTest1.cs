@@ -78,6 +78,7 @@ using Microsoft.Extensions.Caching.Memory;
 using PosViewType = BTCPayServer.Client.Models.PosViewType;
 using BTCPayServer.Plugins.Emails.Controllers;
 using BTCPayServer.Views.Stores;
+using Microsoft.Playwright;
 using MimeKit;
 using NBXplorer.DerivationStrategy;
 
@@ -1424,6 +1425,7 @@ namespace BTCPayServer.Tests
 
                 await tester.Page.FillAsync("#Spread", "10");
                 await Test("BTC_JPY,BTC_CAD");
+                await tester.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
                 var rules = await tester.Page.Locator(".testresult .testresult_rule").AllAsync();
                 if (fallback)
                 {

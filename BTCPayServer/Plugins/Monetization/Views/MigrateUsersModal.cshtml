@@ -11,7 +11,7 @@
             </div>
             <form method="post">
                 <div class="modal-body">
-                    <p>@ViewLocalizer["By proceeding, all non-admin users will be migrated to the selected plan. If the plan does not include <b>can-access</b> entitlement, the user accounts will be disabled."]</p>
+                    <p>@ViewLocalizer["By proceeding, all non-admin users will be migrated to the selected plan. If the plan does not include the <b>can-access</b> feature, the user accounts will be disabled."]</p>
                     <div class="form-group">
                         <label asp-for="SelectedPlanId" class="form-label" text-translate="true">Select plan</label>
                         <select class="form-select" asp-items="Model.AvailablePlans" asp-for="SelectedPlanId"></select>

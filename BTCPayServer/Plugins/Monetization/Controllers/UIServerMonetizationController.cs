@@ -77,8 +77,8 @@ public class UIServerMonetizationController(
         if (vm.Offering is not null)
         {
             var planIds = activePlans.Select(p => p.Id).Distinct().ToArray();
-            canLogin = (await ctx.PlanEntitlements.Where(p => planIds.Contains(p.PlanId))
-                .Where(o => o.Entitlement.CustomId == MonetizationEntitlements.CanAccess)
+            canLogin = (await ctx.PlanFeatures.Where(p => planIds.Contains(p.PlanId))
+                .Where(o => o.Feature.CustomId == MonetizationFeatures.CanAccess)
                 .Select(o => o.PlanId)
                 .ToArrayAsync()).ToHashSet();
         }
@@ -167,10 +167,10 @@ public class UIServerMonetizationController(
                 return await Monetization();
             var (_, offeringId) = await appService.CreateOffering(selectedStore, "BTCPay Server Access");
 
-            var entitlements = CreateDefaultEntitlements(offeringId);
-            foreach (var e in entitlements.Values)
+            var features = CreateDefaultFeatures(offeringId);
+            foreach (var e in features.Values)
             {
-                ctx.Entitlements.Add(e);
+                ctx.Features.Add(e);
             }
 
             var currency = store.GetStoreBlob().DefaultCurrency;
@@ -186,12 +186,12 @@ public class UIServerMonetizationController(
                 OfferingId = offeringId,
             };
             ctx.Plans.Add(starterPlan);
-            ctx.PlanEntitlements.AddRange(
-                new[] { MonetizationEntitlements.CanAccess }
-                    .Select(e => new PlanEntitlementData()
+            ctx.PlanFeatures.AddRange(
+                new[] { MonetizationFeatures.CanAccess }
+                    .Select(e => new PlanFeatureData()
                     {
                         Plan = starterPlan,
-                        Entitlement = entitlements[e],
+                        Feature = features[e],
                     }));
             var serverBase = Request.GetRequestBaseUrl().ToString();
             if (store.StoreWebsite != serverBase)
@@ -361,17 +361,17 @@ public class UIServerMonetizationController(
         await settingsRepository.UpdateSetting(policies);
     }
 
-    private Dictionary<string, EntitlementData> CreateDefaultEntitlements(string offeringId)
+    private Dictionary<string, FeatureData> CreateDefaultFeatures(string offeringId)
     {
-        var entitlements = new[]
+        var features = new[]
         {
-            (MonetizationEntitlements.CanAccess, StringLocalizer["Can access BTCPay Server"].Value),
-        }.Select(e => new EntitlementData()
+            (MonetizationFeatures.CanAccess, StringLocalizer["Can access BTCPay Server"].Value),
+        }.Select(e => new FeatureData()
         {
             CustomId = e.Item1,
             Description = e.Item2,
             OfferingId = offeringId,
         }).ToDictionary(e => e.CustomId, e => e);
-        return entitlements;
+        return features;
     }
 }

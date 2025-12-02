@@ -5,8 +5,8 @@ namespace BTCPayServer.Data;
 
 public partial class ApplicationDbContext
 {
-    public DbSet<EntitlementData> Entitlements { get; set; }
-    public DbSet<PlanEntitlementData> PlanEntitlements { get; set; }
+    public DbSet<FeatureData> Features { get; set; }
+    public DbSet<PlanFeatureData> PlanFeatures { get; set; }
     public DbSet<OfferingData> Offerings { get; set; }
     public DbSet<SubscriberData> Subscribers { get; set; }
     public DbSet<SubscriberCredit> Credits { get; set; }
@@ -25,8 +25,8 @@ public partial class ApplicationDbContext
         PlanChangeData.OnModelCreating(builder, Database);
         PortalSessionData.OnModelCreating(builder, Database);
         PlanCheckoutData.OnModelCreating(builder, Database);
-        EntitlementData.OnModelCreating(builder, Database);
-        PlanEntitlementData.OnModelCreating(builder, Database);
+        FeatureData.OnModelCreating(builder, Database);
+        PlanFeatureData.OnModelCreating(builder, Database);
         OfferingData.OnModelCreating(builder, Database);
         SubscriberData.OnModelCreating(builder, Database);
         SubscriberInvoiceData.OnModelCreating(builder, Database);

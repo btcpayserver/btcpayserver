@@ -58,7 +58,7 @@ public class SubscriptionEvent
         public PlanUpdated(PlanData plan)
         {
             Plan = plan;
-            plan.AssertEntitlementsLoaded();
+            plan.AssertFeaturesLoaded();
         }
 
         public PlanData Plan { get; set; }

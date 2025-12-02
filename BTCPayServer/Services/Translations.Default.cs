@@ -617,7 +617,7 @@ namespace BTCPayServer.Services
   "Enter the wallet seed": "",
   "Enter wallet seed": "",
   "Enter your extended public key": "",
-  "Entitlements": "",
+  "Features": "",
   "Error": "",
   "Error updating profile": "",
   "Error updating user": "",

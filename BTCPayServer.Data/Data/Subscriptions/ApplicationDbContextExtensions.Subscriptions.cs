@@ -25,21 +25,21 @@ public static partial class ApplicationDbContextExtensions
         if (storeId is not null && plan?.Offering.App.StoreDataId != storeId)
             return null;
         if (plan is not null)
-            await plan.EnsureEntitlementLoaded(plans);
+            await plan.EnsureFeatureLoaded(plans);
         return plan;
     }
 
-    public static async Task<bool> HasEntitlements(this DbSet<PlanData> plans, string planId, string entitlementCustomId)
+    public static async Task<bool> HasFeature(this DbSet<PlanData> plans, string planId, string featureCustomId)
     {
         var connection = plans.GetDbConnection();
         return await connection.ExecuteScalarAsync<bool>("""
-                                              SELECT true FROM subs_plans_entitlements pe
-                                              JOIN subs_entitlements e ON e.id = pe.entitlement_id
-                                              WHERE pe.plan_id = @planId AND e.custom_id = @entitlementCustomId
-                                              """, new{ planId, entitlementCustomId });
+                                              SELECT true FROM subs_plans_features pe
+                                              JOIN subs_features e ON e.id = pe.feature_id
+                                              WHERE pe.plan_id = @planId AND e.custom_id = @featureCustomId
+                                              """, new{ planId, featureCustomId });
     }
 
-    public static async Task FetchPlanEntitlementsAsync<T>(this DbSet<T> ctx, IEnumerable<PlanData> plans) where T : class
+    public static async Task FetchPlanFeaturesAsync<T>(this DbSet<T> ctx, IEnumerable<PlanData> plans) where T : class
     {
         var planIds = plans.Select(p => p.Id).Distinct().ToArray();
         var result = await ctx.GetDbConnection()
@@ -52,48 +52,48 @@ public static partial class ApplicationDbContextExtensions
                 (
                 """
                     SELECT pId,
-                           array_agg(spe.entitlement_id),
+                           array_agg(spe.feature_id),
                            array_agg(se.custom_id),
                            array_agg(se.description)
                     FROM unnest(@planIds) pId
-                    JOIN subs_plans_entitlements spe ON spe.plan_id = pId
-                    JOIN subs_entitlements se ON se.id = spe.entitlement_id
+                    JOIN subs_plans_features spe ON spe.plan_id = pId
+                    JOIN subs_features se ON se.id = spe.feature_id
                     GROUP BY 1
                 """, new { planIds }
                 );
         var res = result.ToDictionary(x => x.Id, x => x);
         foreach (var plan in plans)
         {
-            plan.PlanEntitlements = new();
+            plan.PlanFeatures = new();
             if (res.TryGetValue(plan.Id, out var r))
             {
                 for (int i = 0; i < r.ECIds.Length; i++)
                 {
-                    var pe = new PlanEntitlementData();
+                    var pe = new PlanFeatureData();
                     pe.Plan = plan;
                     pe.PlanId = plan.Id;
-                    pe.EntitlementId = r.EIds[i];
-                    pe.Entitlement = new()
+                    pe.FeatureId = r.EIds[i];
+                    pe.Feature = new()
                     {
                         Id = r.EIds[i],
                         CustomId = r.ECIds[i],
                         Description = r.EDesc[i],
                     };
-                    plan.PlanEntitlements.Add(pe);
+                    plan.PlanFeatures.Add(pe);
                 }
             }
         }
     }
 
 
-    public static Task FetchPlanEntitlementsAsync<T>(this DbSet<T> ctx, PlanData plan) where T : class
-        => FetchPlanEntitlementsAsync(ctx, new[] { plan });
+    public static Task FetchPlanFeaturesAsync<T>(this DbSet<T> ctx, PlanData plan) where T : class
+        => FetchPlanFeaturesAsync(ctx, new[] { plan });
 
 
     public static async Task<OfferingData?> GetOfferingData(this DbSet<OfferingData> offerings, string offeringId, string? storeId = null)
     {
         var offering = offerings
-            .Include(o => o.Entitlements)
+            .Include(o => o.Features)
             .Include(o => o.Plans)
             .Include(o => o.App)
             .ThenInclude(o => o.StoreData)
@@ -118,7 +118,7 @@ public static partial class ApplicationDbContextExtensions
             .Where(c => c.Id == checkoutId)
             .FirstOrDefaultAsync();
         if (checkout is not null)
-            await FetchPlanEntitlementsAsync(checkouts, checkout.Plan);
+            await FetchPlanFeaturesAsync(checkouts, checkout.Plan);
         return checkout;
     }
 
@@ -162,7 +162,7 @@ public static partial class ApplicationDbContextExtensions
             (storeId != null && result.Plan?.Offering?.App?.StoreDataId != storeId) ||
             (planId != null && result.PlanId != planId))
             return null;
-        await FetchPlanEntitlementsAsync(dbSet, result.Plan);
+        await FetchPlanFeaturesAsync(dbSet, result.Plan);
         return result;
     }
 
@@ -177,7 +177,7 @@ public static partial class ApplicationDbContextExtensions
     {
         var sub = await subscribers.IncludeAll().Where(s => s.Id == id).FirstOrDefaultAsync();
         if (sub != null)
-            await FetchPlanEntitlementsAsync(subscribers, sub.Plan);
+            await FetchPlanFeaturesAsync(subscribers, sub.Plan);
         return sub;
     }
 

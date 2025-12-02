@@ -243,7 +243,7 @@ public class SubscriptionHostedService(
         var (now, ctx, cancellationToken) = (subCtx.Now, subCtx.Context, subCtx.CancellationToken);
         var query = ctx.Subscribers.IncludeAll();
         var members = await selector.Where(query).ToListAsync(cancellationToken);
-        await ctx.PlanEntitlements.FetchPlanEntitlementsAsync(members.Select(m => m.Plan));
+        await ctx.PlanFeatures.FetchPlanFeaturesAsync(members.Select(m => m.Plan));
         foreach (var m in members)
         {
             var newPhase = m.GetExpectedPhase(now);

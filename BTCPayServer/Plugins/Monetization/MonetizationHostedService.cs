@@ -87,7 +87,7 @@ public class MonetizationHostedService(
         if (evt is SubscriptionEvent.PlanStarted ps && ps.PreviousPlan.Id != ps.Subscriber.Plan.Id)
         {
             await using var ctx = dbContextFactory.CreateContext();
-            var canAccess = await ctx.Plans.HasEntitlements(ps.Subscriber.PlanId, MonetizationEntitlements.CanAccess);
+            var canAccess = await ctx.Plans.HasFeature(ps.Subscriber.PlanId, MonetizationFeatures.CanAccess);
             await UpdateUserLockout(ps, userManager, canAccess);
         }
 
@@ -291,7 +291,7 @@ public class MonetizationHostedService(
             userIds = await GetUserIdsInPlan(ctx, plan);
         if (userIds.Length == 0)
             return;
-        var canAccess = await ctx.Plans.HasEntitlements(plan.Id, MonetizationEntitlements.CanAccess);
+        var canAccess = await ctx.Plans.HasFeature(plan.Id, MonetizationFeatures.CanAccess);
         var updated = (await ctx.Database.GetDbConnection()
             .QueryAsync<(string UserId, bool LockoutEnabled)>("""
                           WITH

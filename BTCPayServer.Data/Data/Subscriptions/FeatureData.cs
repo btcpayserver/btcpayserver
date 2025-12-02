@@ -6,11 +6,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace BTCPayServer.Data.Subscriptions;
 
-[Table("subs_entitlements")]
-public class EntitlementData
+[Table("subs_features")]
+public class FeatureData
 {
     /// <summary>
-    /// The internal ID of the entitlement, we only really use it in
+    /// The internal ID of the feature, we only really use it in
     /// SQL queries. This should not be exposed.
     /// </summary>
     [Required]
@@ -36,10 +36,10 @@ public class EntitlementData
 
     public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
     {
-        var b = builder.Entity<EntitlementData>();
+        var b = builder.Entity<FeatureData>();
         b.HasKey(x => x.Id);
         b.Property(x => x.Id).UseIdentityAlwaysColumn();
         b.HasIndex(x => new { x.OfferingId, x.CustomId }).IsUnique();
-        b.HasOne(x => x.Offering).WithMany(x => x.Entitlements).HasForeignKey(x => x.OfferingId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne(x => x.Offering).WithMany(x => x.Features).HasForeignKey(x => x.OfferingId).OnDelete(DeleteBehavior.Cascade);
     }
 }

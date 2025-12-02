@@ -1035,7 +1035,7 @@ namespace BTCPayServer.Migrations
                     b.ToTable("Files");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.Subscriptions.EntitlementData", b =>
+            modelBuilder.Entity("BTCPayServer.Data.Subscriptions.FeatureData", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -1063,7 +1063,7 @@ namespace BTCPayServer.Migrations
                     b.HasIndex("OfferingId", "CustomId")
                         .IsUnique();
 
-                    b.ToTable("subs_entitlements");
+                    b.ToTable("subs_features");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.Subscriptions.OfferingData", b =>
@@ -1347,21 +1347,21 @@ namespace BTCPayServer.Migrations
                     b.ToTable("subs_plans");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.Subscriptions.PlanEntitlementData", b =>
+            modelBuilder.Entity("BTCPayServer.Data.Subscriptions.PlanFeatureData", b =>
                 {
                     b.Property<string>("PlanId")
                         .HasColumnType("text")
                         .HasColumnName("plan_id");
 
-                    b.Property<long>("EntitlementId")
+                    b.Property<long>("FeatureId")
                         .HasColumnType("bigint")
-                        .HasColumnName("entitlement_id");
+                        .HasColumnName("feature_id");
 
-                    b.HasKey("PlanId", "EntitlementId");
+                    b.HasKey("PlanId", "FeatureId");
 
-                    b.HasIndex("EntitlementId");
+                    b.HasIndex("FeatureId");
 
-                    b.ToTable("subs_plans_entitlements");
+                    b.ToTable("subs_plans_features");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.Subscriptions.PortalSessionData", b =>
@@ -2246,10 +2246,10 @@ namespace BTCPayServer.Migrations
                     b.Navigation("ApplicationUser");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.Subscriptions.EntitlementData", b =>
+            modelBuilder.Entity("BTCPayServer.Data.Subscriptions.FeatureData", b =>
                 {
                     b.HasOne("BTCPayServer.Data.Subscriptions.OfferingData", "Offering")
-                        .WithMany("Entitlements")
+                        .WithMany("Features")
                         .HasForeignKey("OfferingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -2323,11 +2323,11 @@ namespace BTCPayServer.Migrations
                     b.Navigation("Offering");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.Subscriptions.PlanEntitlementData", b =>
+            modelBuilder.Entity("BTCPayServer.Data.Subscriptions.PlanFeatureData", b =>
                 {
-                    b.HasOne("BTCPayServer.Data.Subscriptions.EntitlementData", "Entitlement")
+                    b.HasOne("BTCPayServer.Data.Subscriptions.FeatureData", "Feature")
                         .WithMany()
-                        .HasForeignKey("EntitlementId")
+                        .HasForeignKey("FeatureId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -2337,7 +2337,7 @@ namespace BTCPayServer.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Entitlement");
+                    b.Navigation("Feature");
 
                     b.Navigation("Plan");
                 });
@@ -2631,7 +2631,7 @@ namespace BTCPayServer.Migrations
 
             modelBuilder.Entity("BTCPayServer.Data.Subscriptions.OfferingData", b =>
                 {
-                    b.Navigation("Entitlements");
+                    b.Navigation("Features");
 
                     b.Navigation("Plans");
 

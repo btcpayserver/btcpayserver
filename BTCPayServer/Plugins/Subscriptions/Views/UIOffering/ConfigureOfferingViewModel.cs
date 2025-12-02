@@ -18,19 +18,19 @@ public class ConfigureOfferingViewModel
         Name = offeringData.App.Name;
         OriginalName = Name;
         SuccessRedirectUrl = offeringData.SuccessRedirectUrl;
-        foreach (var entitlement in offeringData.Entitlements.OrderBy(b => b.CustomId))
+        foreach (var feature in offeringData.Features.OrderBy(b => b.CustomId))
         {
-            Entitlements.Add(new EntitlementViewModel()
+            Features.Add(new FeatureViewModel()
             {
-                Id = entitlement.CustomId,
-                ShortDescription = entitlement.Description
+                Id = feature.CustomId,
+                ShortDescription = feature.Description
             });
         }
         Data = offeringData;
     }
 
     public OfferingData Data { get; set; }
-    public class EntitlementViewModel
+    public class FeatureViewModel
     {
         [StringLength(50)]
         [Required]
@@ -49,6 +49,6 @@ public class ConfigureOfferingViewModel
     [Display(Name = "Success redirect url")]
     public string SuccessRedirectUrl { get; set; }
 
-    public List<EntitlementViewModel> Entitlements { get; set; } = new();
+    public List<FeatureViewModel> Features { get; set; } = new();
     public string Anchor { get; set; }
 }

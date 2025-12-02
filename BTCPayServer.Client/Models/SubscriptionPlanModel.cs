@@ -34,5 +34,5 @@ public class SubscriptionPlanModel
     public string Description { get; set; }
     public int MemberCount { get; set; }
     public bool OptimisticActivation { get; set; }
-    public string[] Entitlements { get; set; }
+    public string[] Features { get; set; }
 }

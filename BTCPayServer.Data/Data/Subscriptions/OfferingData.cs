@@ -23,7 +23,7 @@ public class OfferingData : BaseEntityData
     [ForeignKey(nameof(AppId))]
     public AppData App { get; set; } = null!;
 
-    public List<EntitlementData> Entitlements { get; set; } = null!;
+    public List<FeatureData> Features { get; set; } = null!;
     public List<PlanData> Plans { get; set; } = null!;
     public List<SubscriberData> Subscribers { get; set; } = null!;
 

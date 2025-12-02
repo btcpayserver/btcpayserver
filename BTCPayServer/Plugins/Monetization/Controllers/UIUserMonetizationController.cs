@@ -65,7 +65,7 @@ public class UIUserMonetizationController(
         if (fastRedirect)
         {
             if (sub is { PlanId: { } planId } &&
-                !await ctx.Plans.HasEntitlements(planId, MonetizationEntitlements.CanAccess))
+                !await ctx.Plans.HasFeature(planId, MonetizationFeatures.CanAccess))
             {
                 var planChanges =
                     await ctx.PlanChanges

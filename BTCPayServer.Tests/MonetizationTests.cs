@@ -139,7 +139,7 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
         // Now, the admin decides to remove can-access form plan. This should cut off access
         await offeringPMO.GoToPlans();
         var edit = await offeringPMO.Edit("Starter Plan");
-        edit.DisableEntitlements = ["can-access"];
+        edit.DisableFeatures = ["can-access"];
 
         var lockoutUpdated = await s.Server.WaitForEvent<MonetizationHostedService.MonetizationLockoutUpdated>(async () =>
         {
@@ -163,7 +163,7 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var add = await offeringPMO.AddPlan();
         add.PlanName = "Pro Plan";
         add.Price = "100";
-        add.EnableEntitlements = ["can-access"];
+        add.EnableFeatures = ["can-access"];
         await add.Save();
         edit = await offeringPMO.Edit("Starter Plan");
         edit.PlanChanges = [SubscriptionTests.AddEditPlanPMO.PlanChangeType.Upgrade];

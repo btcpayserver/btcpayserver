@@ -103,6 +103,9 @@ namespace BTCPayServer.Services
         [Display(Name = "Default store template")]
         public JObject DefaultStoreTemplate { get; set; }
 
+        [Display(Name = "Register page redirect URL")]
+        public string RegisterPageRedirect { get; set; }
+
         public class BlockExplorerOverrideItem
         {
             [JsonConverter(typeof(PaymentMethodIdJsonConverter))]

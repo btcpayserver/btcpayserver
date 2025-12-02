@@ -1,0 +1,57 @@
+﻿@model ActivateMonetizationModelViewModel
+
+<div class="modal fade" id="activateMonetization" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" text-translate="true">Activate Monetization</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                    <vc:icon symbol="close" />
+                </button>
+            </div>
+            <form method="post">
+                <div class="modal-body">
+                    <p text-translate="true">Turning on monetization creates a paid plan for your server.
+                        All newly registered users will be added to this plan.
+                        You may also migrate your existing users.
+                        Only users with an active subscription with access feature can log in and use your server.</p>
+                    <div>
+                        <div class="form-group">
+                            <label asp-for="SelectedStoreId" class="form-label" text-translate="true">Store</label>
+                            <select asp-for="SelectedStoreId" class="form-control" asp-items="Model.Stores"></select>
+                        </div>
+                        <div class="d-flex gap-3">
+                            <div class="form-group">
+                                <label asp-for="StarterPlanCost" class="form-label" text-translate="true">Starter plan monthly cost</label>
+                                <input inputmode="decimal" asp-for="StarterPlanCost" class="form-control"></input>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="TrialDays" class="form-label"></label>
+                                <div class="input-group">
+                                    <input asp-for="TrialDays" class="form-control" min="0" placeholder="7" />
+                                    <span class="input-group-text" text-translate="true">days</span>
+                                </div>
+                                <span asp-validation-for="TrialDays" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input class="form-check-input" asp-for="MigrateExistingUsers" />
+                                <label class="form-check-label" asp-for="MigrateExistingUsers"></label>
+                            </div>
+                            <p class="text-muted" text-translate="true">Those initial settings can be modified later.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit"
+                            class="btn btn-success modal-confirm"
+                            name="command"
+                            value="activate-monetization"
+                            text-translate="true">Proceed
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

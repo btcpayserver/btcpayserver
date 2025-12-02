@@ -388,7 +388,7 @@ goodies:
             // Create users
             var user = await s.RegisterNewUser();
             var userAccount = s.AsTestAccount();
-            await s.GoToHome();
+            await s.SkipWizard();
             await s.Logout();
             await s.GoToRegister();
             await s.RegisterNewUser(true);
@@ -734,7 +734,7 @@ goodies:
             // Create users
             var user = await s.RegisterNewUser();
             var userAccount = s.AsTestAccount();
-            await s.GoToHome();
+            await s.SkipWizard();
             await s.Logout();
             await s.GoToRegister();
             await s.RegisterNewUser(true);

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mail;
+using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -21,6 +22,11 @@ public interface ITriggerOwner
 
 public record TriggerEvent(string? StoreId, string Trigger, JObject Model, ITriggerOwner? Owner)
 {
+    /// <summary>
+    /// The JSON path of properties in a model that shouldn't be HTML encoded.
+    /// </summary>
+    public HashSet<string> RawHtml { get; } = new(StringComparer.OrdinalIgnoreCase);
+
     public override string ToString()
         => $"Trigger event '{Trigger}'";
 }
@@ -41,6 +47,7 @@ public class StoreEmailRuleProcessorSender(
     ApplicationDbContextFactory dbContextFactory,
     EventAggregator eventAggregator,
     ILogger<StoreEmailRuleProcessorSender> logger,
+    IEnumerable<IEmailTriggerEventTransformer> emailTriggerBodyTransformers,
     EmailSenderFactory emailSenderFactory)
     : EventHostedServiceBase(eventAggregator, logger)
 {
@@ -54,6 +61,7 @@ public class StoreEmailRuleProcessorSender(
         if (evt is TriggerEvent triggEvent)
         {
             await using var ctx = dbContextFactory.CreateContext();
+            await Transform(ctx, triggEvent);
             var actionableRules = await ctx.EmailRules.GetMatches(triggEvent.StoreId, triggEvent.Trigger, triggEvent.Model);
 
             if (actionableRules.Length > 0)
@@ -64,6 +72,12 @@ public class StoreEmailRuleProcessorSender(
                     var matchedContext = new EmailRuleMatchContext(triggEvent, actionableRule);
 
                     var body = new TextTemplate(actionableRule.Body ?? "");
+                    body.Encode = (v) =>
+                    {
+                        if (triggEvent.RawHtml.Contains(v.Path))
+                            return v.Value;
+                        return HtmlEncoder.Default.Encode(v.Value);
+                    };
                     var subject = new TextTemplate(actionableRule.Subject ?? "");
                     AddToMatchedContext(triggEvent.Model, matchedContext.To, actionableRule.To);
                     AddToMatchedContext(triggEvent.Model, matchedContext.CC, actionableRule.CC);
@@ -77,6 +91,14 @@ public class StoreEmailRuleProcessorSender(
                 }
             }
         }
+    }
+
+    private async Task Transform(ApplicationDbContext ctx, TriggerEvent triggEvent)
+    {
+        var store = triggEvent.StoreId is null ? null : await ctx.Stores.FindAsync(triggEvent.StoreId);
+        var context = new IEmailTriggerEventTransformer.Context(triggEvent, store);
+        foreach (var transformer in emailTriggerBodyTransformers)
+            transformer.Transform(context);
     }
 
     private void AddToMatchedContext(JObject model, List<MailboxAddress> mailboxAddresses, string[] rulesAddresses)

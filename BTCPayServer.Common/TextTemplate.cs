@@ -13,6 +13,8 @@ public class TextTemplate(string template)
     public Func<string, string> NotFoundReplacement { get; set; } = path => $"[NotFound({path})]";
     public Func<string, string> ParsingErrorReplacement { get; set; } = path => $"[ParsingError({path})]";
 
+    public Func<(string Path, string Value), string> Encode { get; set; } = v => v.Value;
+
     public string Render(JObject model)
     {
         model = (JObject)ToLowerCase(model);
@@ -26,11 +28,11 @@ public class TextTemplate(string template)
             try
             {
                 var token = model.SelectToken(path);
-                return token?.ToString() ?? NotFoundReplacement(initial);
+                return Encode((initial, token?.ToString() ?? NotFoundReplacement(initial)));
             }
             catch
             {
-                return ParsingErrorReplacement(initial);
+                return Encode((initial, ParsingErrorReplacement(initial)));
             }
         });
     }

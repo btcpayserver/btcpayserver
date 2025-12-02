@@ -335,7 +335,7 @@ namespace BTCPayServer.Services.Wallets
             if (AsVersion(state?.Status?.Version ?? "") < new Version("2.5.22"))
                 return result;
             result.Support = BumpableSupport.NotSynched;
-            if (state?.Status.IsFullySynched is not true)
+            if (state?.Status?.IsFullySynched is not true)
                 return result;
             result.Support = BumpableSupport.Ok;
             await using var ctx = await NbxplorerConnectionFactory.OpenConnection();

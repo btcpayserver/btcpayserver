@@ -32,6 +32,37 @@ public class SubscriptionsPlugin : BaseBTCPayServerPlugin
         services.AddSingleton<SubscriptionHostedService>();
         services.AddSingleton<IHostedService>(s => s.GetRequiredService<SubscriptionHostedService>());
 
+        services.AddScheduledDbScript("Portal Session Cleanup",
+            """
+            WITH expired_portal_session AS (
+                SELECT * FROM subs_portal_sessions
+                WHERE expiration < @now - Interval '1 month'
+                ORDER BY expiration LIMIT 1000
+            ),
+             deleted_portal_session AS (
+                 DELETE FROM subs_portal_sessions
+                 WHERE id IN (SELECT id FROM expired_portal_session)
+                 RETURNING *
+             )
+            SELECT COUNT(*) FROM deleted_portal_session;
+            """);
+
+        services.AddScheduledDbScript("Checkout Session Cleanup",
+            """
+            WITH expired_plan_checkout AS (
+                SELECT * FROM subs_plan_checkouts
+                WHERE expiration < @now - Interval '1 month'
+                ORDER BY expiration LIMIT 1000
+            ),
+                deleted_plan_checkout AS (
+                 DELETE FROM subs_plan_checkouts
+                     WHERE id IN (SELECT id FROM expired_plan_checkout)
+                     RETURNING *
+             )
+            SELECT COUNT(*) FROM deleted_plan_checkout;
+            """);
+
+
         AddSubscriptionsWebhooks(services);
 
         base.Execute(services);

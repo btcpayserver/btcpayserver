@@ -437,6 +437,23 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, InvoiceEventSaverService>();
             services.AddSingleton<IHostedService, BitpayIPNSender>();
             services.AddSingleton<IHostedService, InvoiceWatcher>();
+            services.AddScheduledDbScript("Invoice Cleanup",
+                """
+                WITH useless_invoices AS (
+                  SELECT * FROM "Invoices"
+                  WHERE "Status" = 'Expired'
+                    AND "ExceptionStatus" = ''
+                    AND "Created" < @now - INTERVAL '6 months'
+                    ORDER BY "Created" LIMIT 1000
+                ),
+                deleted_invoices AS (
+                    DELETE FROM "Invoices"
+                    WHERE "Id" IN ( SELECT "Id" FROM useless_invoices)
+                    RETURNING *
+                )
+                SELECT COUNT(*) FROM deleted_invoices;
+                """);
+
             services.AddSingleton<RatesHostedService>();
             services.AddSingleton<IHostedService>(s => s.GetRequiredService<RatesHostedService>());
             services.AddScheduledTask<RatesHostedService>(TimeSpan.FromSeconds(30));

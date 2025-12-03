@@ -461,6 +461,12 @@ namespace BTCPayServer
             return services;
         }
 
+        public static IServiceCollection AddScheduledDbScript(this IServiceCollection services, string name, string script)
+        {
+            services.AddTransient(s => new DbPeriodicTask.PeriodicScript(name, script));
+            return services;
+        }
+
         public static IServiceCollection AddScheduledTask<T>(this IServiceCollection services, TimeSpan every)
             where T : class, IPeriodicTask
         {

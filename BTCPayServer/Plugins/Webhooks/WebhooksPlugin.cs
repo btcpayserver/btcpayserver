@@ -28,6 +28,8 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
         services.AddSingleton<WebhookSender>();
         services.AddSingleton<IHostedService, WebhookSender>(o => o.GetRequiredService<WebhookSender>());
         services.AddScheduledTask<CleanupWebhookDeliveriesTask>(TimeSpan.FromHours(6.0));
+        services.AddScheduledTask<DbPeriodicTask>(TimeSpan.FromHours(1.0));
+
         services.AddHttpClient(WebhookSender.OnionNamedClient)
             .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
         services.AddHttpClient(WebhookSender.LoopbackNamedClient)

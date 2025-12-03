@@ -9,6 +9,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Plugins.PointOfSale;
@@ -197,6 +198,15 @@ fruit tea:
             var expiredInvoice = await client.GetInvoice(s.StoreId, expiredInvoiceId);
             Assert.Equal(InvoiceStatus.Expired, expiredInvoice.Status);
             Assert.Equal(InvoiceExceptionStatus.None, expiredInvoice.AdditionalStatus);
+
+            // Check that periodic task can delete the invoice
+            var periodicTask = s.Server.PayTester.GetService<DbPeriodicTask>();
+            var deleted = await periodicTask.RunScript("Invoice Cleanup");
+            Assert.Equal(0, deleted);
+            periodicTask.Now = DateTimeOffset.UtcNow.AddMonths(8);
+            deleted = await periodicTask.RunScript("Invoice Cleanup");
+            Assert.NotEqual(0, deleted);
+            await AssertEx.AssertApiError(404, "invoice-not-found", () => client.GetInvoice(s.StoreId, expiredInvoiceId));
 
             await s.GoToStore(s.StoreId);
             await s.CreateApp("PointOfSale");

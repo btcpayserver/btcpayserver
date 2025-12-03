@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Events;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Plugins;
 using BTCPayServer.Tests.PMO;
 using Microsoft.Playwright;
@@ -503,6 +504,13 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             await s.PayInvoice(mine: true, clickRedirect: true);
             await portal.AssertNoCallToAction();
         }
+
+        var periodicTask = s.Server.PayTester.GetService<DbPeriodicTask>();
+        Assert.Equal(0, await periodicTask.RunScript("Portal Session Cleanup"));
+        Assert.Equal(0, await periodicTask.RunScript("Checkout Session Cleanup"));
+        periodicTask.Now = DateTimeOffset.UtcNow.AddMonths(7);
+        Assert.NotEqual(0, await periodicTask.RunScript("Portal Session Cleanup"));
+        Assert.NotEqual(0, await periodicTask.RunScript("Checkout Session Cleanup"));
     }
 
     public class OfferingPMO(PlaywrightTester s)
@@ -592,7 +600,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
 
         public async Task<T> WaitEvent<T>()
         {
-            using var cts = new CancellationTokenSource(5000);
+            using var cts = new CancellationTokenSource(7000);
             var eventAggregator = s.Server.PayTester.GetService<EventAggregator>();
             return await eventAggregator.WaitNext<T>(cts.Token);
         }

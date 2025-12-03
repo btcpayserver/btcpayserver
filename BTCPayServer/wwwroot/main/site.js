@@ -17,11 +17,6 @@ async function initLabelManager (elementId) {
     const element = document.getElementById(elementId);
     if (!element) return;
 
-    const labelStyle = data =>
-        data && data.color && data.textColor
-            ? `--label-bg:${data.color};--label-fg:${data.textColor}`
-            : '--label-bg:var(--btcpay-neutral-300);--label-fg:var(--btcpay-neutral-800)'
-
     const { fetchUrl, updateUrl, walletId, walletObjectType, walletObjectId, labels, selectElement } = element.dataset;
     const commonCallId = `walletLabels-${walletId}`;
     const fetchWalletLabels = async (force = false) => {
@@ -66,6 +61,17 @@ async function initLabelManager (elementId) {
 
         select.refreshItems();
     };
+    const applyLabelStyle = (el, data) => {
+        const bg = data && data.color
+            ? data.color
+            : 'var(--btcpay-neutral-300)';
+        const fg = data && data.textColor
+            ? data.textColor
+            : 'var(--btcpay-neutral-800)';
+
+        el.style.setProperty('--label-bg', bg);
+        el.style.setProperty('--label-fg', fg);
+    };
 
     const config = {
         options,
@@ -79,28 +85,74 @@ async function initLabelManager (elementId) {
         closeAfterSelect: false,
         render: {
             dropdown () {
-                return '<div class="dropdown-menu"></div>';
+                const menu = document.createElement('div');
+                menu.className = 'dropdown-menu';
+                return menu;
             },
-            option_create (data, escape) {
-                return `<div class="transaction-label create" style="${labelStyle(
-                    null
-                )}">Add <strong>${escape(data.input)}</strong>&hellip;</div>`;
+            option_create (data) {
+                const div = document.createElement('div');
+                div.className = 'transaction-label create';
+                applyLabelStyle(div, null);
+
+                div.append('Add ');
+                const strong = document.createElement('strong');
+                strong.textContent = data.input;
+                div.append(strong, '…');
+
+                return div;
             },
-            option (data, escape) {
-                return `<div class="transaction-label" style="${labelStyle(
-                    data
-                )}"><span>${escape(data.label)}</span></div>`;
+            option (data) {
+                const div = document.createElement('div');
+                div.className = 'transaction-label';
+                applyLabelStyle(div, data);
+
+                const span = document.createElement('span');
+                span.textContent = data.label;
+                div.append(span);
+
+                return div;
             },
-            item (data, escape) {
+            item (data) {
+                const div = document.createElement('div');
+                div.className = 'transaction-label';
+                applyLabelStyle(div, data);
+
+                const span = document.createElement('span');
+                span.textContent = data.label;
+                div.append(span);
+
                 const info = richInfo && richInfo[data.label];
-                const additionalInfo = info
-                    ? `<a href="${info.link}" target="_blank" rel="noreferrer noopener" class="transaction-label-info transaction-details-icon" title="${info.tooltip}" data-bs-html="true"
-                              data-bs-toggle="tooltip" data-bs-custom-class="transaction-label-tooltip"><svg role="img" class="icon icon-info"><use href="/img/icon-sprite.svg#info"></use></svg></a>`
-                    : '';
-                const inner = `<span>${escape(data.label)}</span>${additionalInfo}`;
-                return `<div class="transaction-label" style="${labelStyle(
-                    data
-                )}">${inner}</div>`;
+                if (info && typeof info.link === 'string') {
+                    const url = info.link;
+                    if (/^https?:\/\//i.test(url)) {
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.target = '_blank';
+                        a.rel = 'noreferrer noopener';
+                        a.className = 'transaction-label-info transaction-details-icon';
+
+                        if (info.tooltip) {
+                            a.title = String(info.tooltip);
+                        }
+
+                        a.dataset.bsHtml = 'false';
+                        a.dataset.bsToggle = 'tooltip';
+                        a.dataset.bsCustomClass = 'transaction-label-tooltip';
+
+                        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                        svg.setAttribute('role', 'img');
+                        svg.classList.add('icon', 'icon-info');
+
+                        const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+                        use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '/img/icon-sprite.svg#info');
+                        svg.appendChild(use);
+
+                        a.appendChild(svg);
+                        div.append(a);
+                    }
+                }
+
+                return div;
             }
         },
         onItemAdd (val) {

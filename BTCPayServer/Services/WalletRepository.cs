@@ -324,6 +324,50 @@ namespace BTCPayServer.Services
             return labelObjects.Select(FormatToLabel).ToArray();
         }
 
+        public async Task<Dictionary<string, (string Label, string Color)[]>> GetWalletLabelsForObjects(
+            WalletId walletId,
+            string linkedType,
+            string[] objectIds)
+        {
+            if (objectIds.Length == 0)
+                return new Dictionary<string, (string Label, string Color)[]>();
+
+            await using var ctx = _ContextFactory.CreateContext();
+            var walletIdString = walletId.ToString();
+
+            var targetObjectIds = objectIds.Distinct().ToArray();
+
+            var rows = await
+                (from link in ctx.WalletObjectLinks.AsNoTracking()
+                    join labelObj in ctx.WalletObjects.AsNoTracking()
+                        on new { link.WalletId, link.AId }
+                        equals new { labelObj.WalletId, AId = labelObj.Id }
+                    where
+                        link.WalletId == walletIdString &&
+                        link.AType == WalletObjectData.Types.Label &&
+                        link.BType == linkedType &&
+                        labelObj.Type == WalletObjectData.Types.Label &&
+                        targetObjectIds.Contains(link.BId)
+                    select new
+                    {
+                        ObjectId = link.BId,
+                        LabelObj = labelObj
+                    })
+                .ToListAsync();
+
+            if (rows.Count == 0)
+                return new Dictionary<string, (string Label, string Color)[]>();
+
+            return rows
+                .GroupBy(r => r.ObjectId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g
+                        .Select(r => FormatToLabel(r.LabelObj))
+                        .ToArray()
+                );
+        }
+
         public async Task<List<ReservedAddress>> GetReservedAddressesWithDetails(WalletId walletId)
         {
             await using var ctx = _ContextFactory.CreateContext();

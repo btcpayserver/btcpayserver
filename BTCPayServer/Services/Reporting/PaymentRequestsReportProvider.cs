@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -78,26 +77,37 @@ public class PaymentRequestsReportProvider(
             .OrderBy(p => p.Created)
             .ToListAsync(cancellation);
 
-        if (!paymentRequests.Any())
+        if (paymentRequests.Count == 0)
             return;
 
         var network = networkProvider.DefaultNetwork;
         var walletId = new WalletId(queryContext.StoreId, network.CryptoCode);
 
-        var labelsCache = new Dictionary<string, string>();
+        var paymentRequestIds = paymentRequests.Select(pr => pr.Id).ToArray();
 
         var orderIds = paymentRequests
             .Select(pr => PaymentRequestRepository.GetOrderIdForPaymentRequest(pr.Id))
             .Distinct()
             .ToArray();
 
-        var invoices = await invoiceRepository.GetInvoices(new InvoiceQuery
+        var labelsTask = walletRepository.GetWalletLabelsForObjects(
+            walletId,
+            WalletObjectData.Types.PaymentRequest,
+            paymentRequestIds
+        );
+
+        var invoicesTask = invoiceRepository.GetInvoices(new InvoiceQuery
         {
-            StoreId = [queryContext.StoreId],
+            StoreId = new[] { queryContext.StoreId },
             StartDate = queryContext.From,
             EndDate = queryContext.To,
             OrderId = orderIds
         }, cancellation);
+
+        await Task.WhenAll(labelsTask, invoicesTask);
+
+        var labelsByPaymentRequestId = labelsTask.Result;
+        var invoices = invoicesTask.Result;
 
         var invoicesByOrderId = invoices
             .GroupBy(i => i.Metadata.OrderId)
@@ -108,21 +118,10 @@ public class PaymentRequestsReportProvider(
             var prBlob = paymentRequest.GetBlob();
             var prOrderId = PaymentRequestRepository.GetOrderIdForPaymentRequest(paymentRequest.Id);
 
-            if (!labelsCache.TryGetValue(paymentRequest.Id, out var labelsString))
-            {
-                var objectId = new WalletObjectId(
-                    walletId,
-                    WalletObjectData.Types.PaymentRequest,
-                    paymentRequest.Id
-                );
-
-                var labelTuples = await walletRepository.GetWalletLabels(objectId);
-                labelsString = labelTuples.Any()
-                    ? string.Join(", ", labelTuples.Select(l => l.Label))
-                    : "None";
-
-                labelsCache[paymentRequest.Id] = labelsString;
-            }
+            labelsByPaymentRequestId.TryGetValue(paymentRequest.Id, out var labelTuples);
+            var labelsString = labelTuples is { Length: > 0 }
+                ? string.Join(", ", labelTuples.Select(l => l.Label))
+                : "";
 
             if (!invoicesByOrderId.TryGetValue(prOrderId, out var prInvoices) || prInvoices.Count == 0)
             {
@@ -172,13 +171,12 @@ public class PaymentRequestsReportProvider(
                     var paymentMethodId = payment.PaymentMethodId;
                     handlers.TryGetValue(paymentMethodId, out var handler);
 
-                    string paymentMethodCategory;
-                    if (handler is ILightningPaymentHandler)
-                        paymentMethodCategory = "Lightning";
-                    else if (handler is BitcoinLikePaymentHandler)
-                        paymentMethodCategory = "On-Chain";
-                    else
-                        paymentMethodCategory = paymentMethodId.ToString();
+                    var paymentMethodCategory = handler switch
+                        {
+                            ILightningPaymentHandler => "Lightning",
+                            BitcoinLikePaymentHandler => "On-Chain",
+                            _ => paymentMethodId.ToString()
+                        };
 
                     row.Add(paymentMethodCategory);
                     row.Add(paymentMethodId.ToString());

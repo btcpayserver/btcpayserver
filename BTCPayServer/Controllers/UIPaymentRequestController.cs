@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -129,18 +130,25 @@ namespace BTCPayServer.Controllers
                 AmountFormatted = _displayFormatter.Currency(data.Amount, data.Currency)
             }).ToList();
 
+            var paymentRequestIds = items.Select(i => i.Id).ToArray();
+            var labelsByPaymentRequestId =
+                await _walletRepository.GetWalletLabelsForObjects(walletId, WalletObjectData.Types.PaymentRequest, paymentRequestIds);
+
             foreach (var item in items)
             {
-                var objectId = new WalletObjectId(walletId, WalletObjectData.Types.PaymentRequest, item.Id);
-
-                var labelTuples = await _walletRepository.GetWalletLabels(objectId);
-
-                item.Labels = labelTuples.Select(l => new TransactionTagModel
+                if (labelsByPaymentRequestId.TryGetValue(item.Id, out var labelTuples))
                 {
-                    Text = l.Label,
-                    Color = l.Color,
-                    TextColor = ColorPalette.Default.TextColor(l.Color)
-                }).ToList();
+                    item.Labels = labelTuples.Select(l => new TransactionTagModel
+                    {
+                        Text = l.Label,
+                        Color = l.Color,
+                        TextColor = ColorPalette.Default.TextColor(l.Color)
+                    }).ToList();
+                }
+                else
+                {
+                    item.Labels = new List<TransactionTagModel>();
+                }
             }
 
             var allLabels = await _walletRepository.GetWalletLabelsByLinkedType(walletId, WalletObjectData.Types.PaymentRequest);

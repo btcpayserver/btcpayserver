@@ -170,6 +170,8 @@ namespace BTCPayServer.Services.PaymentRequests
             {
                 if (string.IsNullOrEmpty(query.StoreId))
                     throw new InvalidOperationException("PaymentRequestQuery.StoreId should be specified for label filtering");
+                if (string.IsNullOrEmpty(query.WalletId))
+                    throw new InvalidOperationException("PaymentRequestQuery.WalletId should be specified for label filtering");
 
                 var paymentRequestsIds = await context.WalletObjectLinks
                     .Where(l =>

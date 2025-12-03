@@ -48,10 +48,6 @@
             <vc:icon symbol="info" />
         </a>
     </h2>
-    <a id="page-primary" asp-action="EditPaymentRequest" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" permission="@Policies.CanModifyPaymentRequests"
-       >
-        Create Request
-    </a>
     <div>
         <a
             id="view-report"
@@ -297,7 +293,7 @@
                     </div>
                 </th>
                 <th text-translate="true">Title</th>
-                <th text-translate="true">Id</th>
+                <th text-translate="true">Reference Id</th>
                 <th text-translate="true">Labels</th>
                 <th class="date-col">
                     <div class="d-flex align-items-center gap-3">
@@ -407,7 +403,7 @@ else
 
             var dtpStartDate = $("#dtpStartDate").val();
             if (dtpStartDate) {
-                filterString = "startdate%3A" + dtpStartDate;
+                filterString = "startdate%3A" + encodeURIComponent(dtpStartDate);
             }
 
             var dtpEndDate = $("#dtpEndDate").val();
@@ -415,7 +411,7 @@ else
                 if (filterString !== "") {
                     filterString += ",";
                 }
-                filterString += "enddate%3A" + dtpEndDate;
+                filterString += "enddate%3A" + encodeURIComponent(dtpEndDate);
             }
 
             if (filterString) {
@@ -424,8 +420,7 @@ else
                     "?Count=" + $("#Count").val() +
                     "&timezoneoffset=" + $("#TimezoneOffset").val() +
                     "&SearchTerm=" + filterString +
-                    "&SearchText=" + $('input[name="SearchText"]').val();
-
+                    "&SearchText=" + encodeURIComponent($('input[name="SearchText"]').val() || '');
                 window.location.href = redirectUri;
             } else {
                 $("#dtpStartDate").next().trigger("focus");

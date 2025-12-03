@@ -2299,6 +2299,7 @@ namespace BTCPayServer.Tests
             // unarchive via list
             await s.Page.Locator("#StatusOptionsToggle").ClickAsync();
             await s.Page.Locator("#StatusOptionsIncludeArchived").ClickAsync();
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             Assert.Contains(invoiceId, await s.Page.ContentAsync());
             await s.Page.ClickAsync($".mass-action-select[value=\"{invoiceId}\"]");
             await s.Page.ClickAsync("#UnarchiveSelected");
@@ -2797,7 +2798,7 @@ namespace BTCPayServer.Tests
             await s.Page.EvaluateAsync("document.getElementById('logincode-form').submit()");
             await s.Page.WaitForLoadStateAsync();
             await s.Page.WaitForLoadStateAsync();
-            
+
             await s.CreateNewStore();
             await s.GoToHome();
             await s.Page.WaitForLoadStateAsync();

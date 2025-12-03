@@ -143,7 +143,6 @@ namespace BTCPayServer.Services.PaymentRequests
                     throw new InvalidOperationException("PaymentRequestQuery.StoreId should be specified");
 
                 var search = query.SearchText;
-                // We are repeating the StoreId on purpose here, so Postgres can use the index
                 queryable = context.PaymentRequests.FromSqlRaw("""
                                                                    SELECT *
                                                                    FROM "PaymentRequests"

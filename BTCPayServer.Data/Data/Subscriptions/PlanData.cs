@@ -66,7 +66,7 @@ public class PlanData : BaseEntityData
     public decimal MonthlyRevenue { get; set; }
 
     [Column("optimistic_activation")]
-    public bool OptimisticActivation { get; set; } = true;
+    public bool OptimisticActivation { get; set; }
 
     [Column("renewable")]
     public bool Renewable { get; set; } = true;
@@ -81,7 +81,7 @@ public class PlanData : BaseEntityData
             .ValueGeneratedOnAdd()
             .HasValueGenerator(ValueGenerators.WithPrefix("plan"));
         b.Property(x => x.Status).HasConversion<string>();
-        b.Property(x => x.OptimisticActivation).HasDefaultValue(true);
+        b.Property(x => x.OptimisticActivation).HasDefaultValue(false);
         b.Property(x => x.RecurringType).HasConversion<string>();
         b.Property(x => x.Renewable).HasDefaultValue(true);
         b.HasOne(x => x.Offering).WithMany(x => x.Plans).HasForeignKey(x => x.OfferingId).OnDelete(DeleteBehavior.Cascade);

@@ -1313,7 +1313,7 @@ namespace BTCPayServer.Migrations
                     b.Property<bool>("OptimisticActivation")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
-                        .HasDefaultValue(true)
+                        .HasDefaultValue(false)
                         .HasColumnName("optimistic_activation");
 
                     b.Property<decimal>("Price")

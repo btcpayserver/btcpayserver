@@ -315,6 +315,9 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             AddEditPlanPMO.PlanChangeType.None,
         ];
         await addPlan.Save();
+        var edit = await offering.Edit("Basic Plan");
+        edit.OptimisticActivation = true;
+        await edit.Save();
 
         await offering.NewSubscriber("Free Plan", "free@example.com", false, hasInvoice: false);
         await offering.GoToSubscribers();

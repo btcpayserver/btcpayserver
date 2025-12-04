@@ -184,6 +184,7 @@ public class UIServerMonetizationController(
                 Currency = currency,
                 Price = price,
                 OfferingId = offeringId,
+                OptimisticActivation = false
             };
             ctx.Plans.Add(starterPlan);
             ctx.PlanFeatures.AddRange(

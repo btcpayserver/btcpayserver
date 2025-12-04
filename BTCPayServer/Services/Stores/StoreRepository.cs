@@ -474,14 +474,17 @@ namespace BTCPayServer.Services.Stores
         {
             using var ctx = _ContextFactory.CreateContext();
             ctx.WebhookDeliveries.Add(delivery);
-            var invoiceWebhookDelivery = delivery.GetBlob().ReadRequestAs<InvoiceWebhookDeliveryData>();
-            if (invoiceWebhookDelivery.InvoiceId != null)
+            if (delivery.GetBlob() is { } blob)
             {
-                ctx.InvoiceWebhookDeliveries.Add(new InvoiceWebhookDeliveryData()
+                var invoiceWebhookDelivery = blob.ReadRequestAs<InvoiceWebhookDeliveryData>();
+                if (invoiceWebhookDelivery.InvoiceId != null)
                 {
-                    InvoiceId = invoiceWebhookDelivery.InvoiceId,
-                    DeliveryId = delivery.Id
-                });
+                    ctx.InvoiceWebhookDeliveries.Add(new InvoiceWebhookDeliveryData()
+                    {
+                        InvoiceId = invoiceWebhookDelivery.InvoiceId,
+                        DeliveryId = delivery.Id
+                    });
+                }
             }
             await ctx.SaveChangesAsync();
         }

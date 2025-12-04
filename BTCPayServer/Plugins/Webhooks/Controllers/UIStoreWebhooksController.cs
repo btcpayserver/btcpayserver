@@ -50,7 +50,7 @@ public class UIStoreWebhooksController(
                         Url = w.GetBlob().Url,
                         LastDeliveryErrorMessage = lastDeliveryBlob?.ErrorMessage,
                         LastDeliveryTimeStamp = lastDelivery?.Timestamp,
-                        LastDeliverySuccessful = lastDeliveryBlob == null ? true : lastDeliveryBlob.Status == WebhookDeliveryStatus.HttpSuccess,
+                        LastDeliverySuccessful = lastDeliveryBlob == null || lastDeliveryBlob.Status == WebhookDeliveryStatus.HttpSuccess,
                     };
                 }
             ).Select(t => t.Result).ToArray()
@@ -103,9 +103,8 @@ public class UIStoreWebhooksController(
         if (webhook is null)
             return NotFound();
 
-        var blob = webhook.GetBlob();
         var deliveries = await storeRepo.GetWebhookDeliveries(CurrentStore.Id, webhookId, 20);
-        return View(nameof(ModifyWebhook), new EditWebhookViewModel(blob)
+        return View(nameof(ModifyWebhook), new EditWebhookViewModel(webhook.GetBlob())
         {
             Deliveries = deliveries
                 .Select(s => new DeliveryViewModel(s)).ToList()
@@ -153,9 +152,8 @@ public class UIStoreWebhooksController(
     public async Task<IActionResult> WebhookDelivery(string webhookId, string deliveryId)
     {
         var delivery = await storeRepo.GetWebhookDelivery(CurrentStore.Id, webhookId, deliveryId);
-        if (delivery is null)
-            return NotFound();
-
-        return File(delivery.GetBlob().Request, "application/json");
+        if (delivery?.GetBlob()?.Request is { } request)
+            return File(request, "application/json");
+        return NotFound();
     }
 }

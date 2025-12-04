@@ -64,9 +64,9 @@ namespace BTCPayServer.Controllers
             if (invoice is null)
                 return NotFound();
             var delivery = await _InvoiceRepository.GetWebhookDelivery(invoiceId, deliveryId);
-            if (delivery is null)
-                return NotFound();
-            return File(delivery.GetBlob().Request, "application/json");
+            if (delivery?.GetBlob()?.Request is {} request)
+                return File(request, "application/json");
+            return NotFound();
         }
 
         [HttpPost("invoices/{invoiceId}/deliveries/{deliveryId}/redeliver")]

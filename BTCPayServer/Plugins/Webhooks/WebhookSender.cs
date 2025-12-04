@@ -90,10 +90,10 @@ public class WebhookSender(
         var oldDeliveryBlob = webhookDelivery.Delivery.GetBlob();
         var newDelivery = WebhookDeliveryData.Create(webhookDelivery.Webhook.Id);
         WebhookDeliveryBlob newDeliveryBlob = new();
-        newDeliveryBlob.Request = oldDeliveryBlob.Request;
-        var webhookEvent = newDeliveryBlob.ReadRequestAs<WebhookEvent>();
-        if (webhookEvent.IsPruned())
+        newDeliveryBlob.Request = oldDeliveryBlob?.Request;
+        if (newDeliveryBlob.IsPruned())
             return null;
+        var webhookEvent = newDeliveryBlob.ReadRequestAs<WebhookEvent>();
         webhookEvent.DeliveryId = newDelivery.Id;
         webhookEvent.WebhookId = webhookDelivery.Webhook.Id;
         // if we redelivered a redelivery, we still want the initial delivery here

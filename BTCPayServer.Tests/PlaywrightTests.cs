@@ -1928,6 +1928,7 @@ namespace BTCPayServer.Tests
                 await s.ClickPagePrimary();
             }
 
+            await s.FindAlertMessage();
             TestLogs.LogInformation("Let's delete one of them");
             var deleteLinks = await s.Page.Locator("a:has-text('Delete')").AllAsync();
             Assert.Equal(2, deleteLinks.Count);
@@ -1949,14 +1950,13 @@ namespace BTCPayServer.Tests
             await s.Page.ClickAsync("text=Modify");
 
             // Check which events are selected
-            var pageContent = await s.Page.ContentAsync();
-            Assert.Contains("value=\"InvoiceProcessing\" checked", pageContent);
-            Assert.Contains("value=\"InvoiceCreated\" checked", pageContent);
-            Assert.DoesNotContain("value=\"InvoiceReceivedPayment\" checked", pageContent);
+            await Expect(s.Page.Locator("input[value='InvoiceProcessing']")).ToBeCheckedAsync();
+            await Expect(s.Page.Locator("input[value='InvoiceCreated']")).ToBeCheckedAsync();
+            await Expect(s.Page.Locator("input[value='InvoiceReceivedPayment']")).Not.ToBeCheckedAsync();
 
             await s.Page.ClickAsync("[name='update']");
             await s.FindAlertMessage();
-            pageContent = await s.Page.ContentAsync();
+            var pageContent = await s.Page.ContentAsync();
             Assert.Contains(server.ServerUri.AbsoluteUri, pageContent);
 
             TestLogs.LogInformation("Let's see if we can generate an event");

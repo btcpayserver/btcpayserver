@@ -123,7 +123,7 @@ namespace BTCPayServer.Migrations
                     description = table.Column<string>(type: "text", nullable: true),
                     members_count = table.Column<int>(type: "integer", nullable: false),
                     monthly_revenue = table.Column<decimal>(type: "numeric", nullable: false),
-                    optimistic_activation = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
+                    optimistic_activation = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
                     renewable = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
                     metadata = table.Column<string>(type: "jsonb", nullable: false, defaultValueSql: "'{}'::jsonb"),
                     additional_data = table.Column<string>(type: "jsonb", nullable: false, defaultValueSql: "'{}'::jsonb"),

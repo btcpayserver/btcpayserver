@@ -61,9 +61,8 @@
                 void ModalContent()
                 {
                     <div class="modal-body pt-0" id="@Html.Id("ConfirmText")" hidden>
-                        <label for="@Html.Id("ConfirmInput")" class="form-label">Confirm the action by typing <strong
-                                id="@Html.Id("ConfirmInputText")"></strong>:</label>
-                        <input id="@Html.Id("ConfirmInput")" class="form-control" />
+                        <label for="@Html.Id("ConfirmInput")" class="form-label">Confirm the action by typing <strong id="@Html.Id("ConfirmInputText")"></strong>:</label>
+                        <input id="@Html.Id("ConfirmInput")" class="form-control"/>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary only-for-js" data-bs-dismiss="modal" id="@Html.Id("ConfirmCancel")">Cancel</button>

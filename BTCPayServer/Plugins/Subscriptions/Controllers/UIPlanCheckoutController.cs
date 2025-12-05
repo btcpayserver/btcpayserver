@@ -1,22 +1,15 @@
 ﻿#nullable enable
-
-using System;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Models;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Invoices;
 using BTCPayServer.Views.UIStoreMembership;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 
@@ -41,9 +34,11 @@ public class UIPlanCheckoutController(
         var plan = checkout?.Plan;
         if (plan is null || checkout is null)
             return NotFound();
-        var prefilledEmail = GetInvoiceMetadata(checkout).BuyerEmail;
+        string? prefilledEmail = null;
         if (checkout.Subscriber is not null)
             prefilledEmail = checkout.Subscriber.Customer.Email.Get();
+        else if (checkout.NewSubscriberEmail is not null)
+            prefilledEmail = checkout.NewSubscriberEmail;
         var vm = new PlanCheckoutViewModel()
         {
             Id = plan.Id,
@@ -56,11 +51,6 @@ public class UIPlanCheckoutController(
             IsTrial = checkout.IsTrial
         };
         return View(vm);
-    }
-
-    private static InvoiceMetadata GetInvoiceMetadata(PlanCheckoutData checkout)
-    {
-        return InvoiceMetadata.FromJObject(JObject.Parse(checkout.InvoiceMetadata));
     }
 
     [HttpGet("~/plan-checkout/default-redirect")]
@@ -100,17 +90,21 @@ public class UIPlanCheckoutController(
         }
 
         var subscriber = checkout.Subscriber;
-        CustomerSelector customerSelector;
+        CustomerSelector? customerSelector = null;
         if (subscriber is null)
         {
-            var invoiceMetadata = GetInvoiceMetadata(checkout);
-            if (invoiceMetadata.BuyerEmail is not null)
-                vm.Email = invoiceMetadata.BuyerEmail;
-            customerSelector = CustomerSelector.ByEmail(vm.Email);
-            if (!vm.Email.IsValidEmail())
-                ModelState.AddModelError(nameof(vm.Email), "Invalid email format");
-            if (!ModelState.IsValid)
-                return await PlanCheckout(checkoutId);
+            if (checkout.NewSubscriberEmail is null)
+            {
+                if (!vm.Email.IsValidEmail())
+                    ModelState.AddModelError(nameof(vm.Email), "Invalid email format");
+                if (!ModelState.IsValid)
+                    return await PlanCheckout(checkoutId);
+
+                checkout.NewSubscriberEmail = vm.Email;
+                await ctx.SaveChangesAsync();
+            }
+
+            customerSelector = CustomerSelector.ByEmail(checkout.NewSubscriberEmail);
             if (checkout.NewSubscriber)
             {
                 var sub = await ctx.Subscribers.GetBySelector(checkout.Plan.OfferingId, customerSelector);
@@ -120,19 +114,11 @@ public class UIPlanCheckoutController(
                     return await PlanCheckout(checkoutId);
                 }
             }
-
-            if (invoiceMetadata.BuyerEmail is null)
-            {
-                invoiceMetadata.BuyerEmail = vm.Email;
-                checkout.InvoiceMetadata = invoiceMetadata.ToJObject().ToString();
-                await ctx.SaveChangesAsync(cancellationToken);
-            }
         }
         else
         {
-            customerSelector = subscriber.CustomerSelector;
             ModelState.Remove(nameof(vm.Email));
         }
-        return await RedirectToPlanCheckoutPayment(checkoutId, customerSelector, cancellationToken);
+        return await RedirectToPlanCheckoutPayment(checkoutId, cancellationToken);
     }
 }

@@ -42,6 +42,8 @@ namespace BTCPayServer.Client
         public const string CanViewPullPayments = "btcpay.store.canviewpullpayments";
         public const string CanViewOfferings = "btcpay.store.canviewofferings";
         public const string CanModifyOfferings = "btcpay.store.canmodifyofferings";
+        public const string CanManageSubscribers = "btcpay.store.canmanagesubscribers";
+        public const string CanCreditSubscribers = "btcpay.store.cancreditsubscribers";
         public const string CanCreateNonApprovedPullPayments = "btcpay.store.cancreatenonapprovedpullpayments";
         public const string Unrestricted = "unrestricted";
         public static IEnumerable<string> AllPolicies
@@ -78,6 +80,8 @@ namespace BTCPayServer.Client
                 yield return CanViewPullPayments;
                 yield return CanViewOfferings;
                 yield return CanModifyOfferings;
+                yield return CanManageSubscribers;
+                yield return CanCreditSubscribers;
                 yield return CanCreateNonApprovedPullPayments;
                 yield return CanManageUsers;
                 yield return CanManagePayouts;
@@ -274,7 +278,7 @@ namespace BTCPayServer.Client
             PolicyHasChild(policyMap, Policies.CanCreateNonApprovedPullPayments, Policies.CanViewPullPayments);
             PolicyHasChild(policyMap,Policies.CanModifyPaymentRequests, Policies.CanViewPaymentRequests);
             PolicyHasChild(policyMap,Policies.CanModifyProfile, Policies.CanViewProfile);
-            PolicyHasChild(policyMap,Policies.CanModifyOfferings, Policies.CanViewOfferings);
+            PolicyHasChild(policyMap,Policies.CanModifyOfferings, Policies.CanViewOfferings, Policies.CanManageSubscribers, Policies.CanCreditSubscribers);
             PolicyHasChild(policyMap,Policies.CanUseLightningNodeInStore, Policies.CanViewLightningInvoiceInStore, Policies.CanCreateLightningInvoiceInStore);
             PolicyHasChild(policyMap,Policies.CanManageNotificationsForUser, Policies.CanViewNotificationsForUser);
             PolicyHasChild(policyMap,Policies.CanModifyServerSettings,

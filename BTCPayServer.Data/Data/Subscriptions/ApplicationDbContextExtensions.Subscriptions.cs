@@ -92,12 +92,7 @@ public static partial class ApplicationDbContextExtensions
 
     public static async Task<OfferingData?> GetOfferingData(this DbSet<OfferingData> offerings, string offeringId, string? storeId = null)
     {
-        var offering = offerings
-            .Include(o => o.Features)
-            .Include(o => o.Plans)
-            .Include(o => o.App)
-            .ThenInclude(o => o.StoreData)
-            .AsSplitQuery();
+        var offering = offerings.IncludeAll();
 
         var o = await offering
                 .Where(o => o.Id == offeringId)
@@ -106,6 +101,14 @@ public static partial class ApplicationDbContextExtensions
             return null;
         return o;
     }
+
+    public static IQueryable<OfferingData> IncludeAll(this DbSet<OfferingData> offerings)
+    => offerings
+        .Include(o => o.Features)
+        .Include(o => o.Plans)
+        .Include(o => o.App)
+        .ThenInclude(o => o.StoreData)
+        .AsSplitQuery();
 
     public static async Task<PlanCheckoutData?> GetCheckout(this DbSet<PlanCheckoutData> checkouts, string checkoutId)
     {
@@ -238,10 +241,10 @@ public static partial class ApplicationDbContextExtensions
     private static Task<CustomerData?> GetById(this IQueryable<CustomerData> customers, string storeId, string custId)
         => GetBySelector(customers, storeId, CustomerSelector.ById(custId));
 
-    public static async Task<SubscriberData?> GetBySelector(this DbSet<SubscriberData> subscribers, string offeringId, CustomerSelector selector)
+    public static async Task<SubscriberData?> GetBySelector(this DbSet<SubscriberData> subscribers, string offeringId, CustomerSelector selector, string? storeId = null)
     {
         var ctx = (ApplicationDbContext)subscribers.GetDbContext();
-        var storeId = await ctx.Offerings
+        storeId ??= await ctx.Offerings
             .Where(o => o.Id == offeringId)
             .Select(o => o.App.StoreDataId)
             .FirstOrDefaultAsync();
@@ -253,7 +256,7 @@ public static partial class ApplicationDbContextExtensions
                         : (await ctx.Customers.GetBySelector(storeId, selector))?.Id;
         if (customerId is null)
             return null;
-        return await subscribers.Where(s => s.OfferingId == offeringId && s.CustomerId == customerId).FirstOrDefaultAsync();
+        return await subscribers.IncludeAll().Where(s => s.OfferingId == offeringId && s.CustomerId == customerId).FirstOrDefaultAsync();
     }
 
     public static Task<CustomerData?> GetBySelector(this IQueryable<CustomerData> customers, string storeId, CustomerSelector selector)

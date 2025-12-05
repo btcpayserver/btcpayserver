@@ -12,45 +12,6 @@ using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Security.Greenfield
 {
-    public class LocalGreenfieldAuthorizationHandler : AuthorizationHandler<PolicyRequirement>
-    {
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly StoreRepository _storeRepository;
-        private readonly IPluginHookService _pluginHookService;
-
-        public LocalGreenfieldAuthorizationHandler(IHttpContextAccessor httpContextAccessor,
-            UserManager<ApplicationUser> userManager,
-            StoreRepository storeRepository,
-            IPluginHookService pluginHookService)
-        {
-            _httpContextAccessor = httpContextAccessor;
-            _userManager = userManager;
-            _storeRepository = storeRepository;
-            _pluginHookService = pluginHookService;
-        }
-        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, PolicyRequirement requirement)
-        {
-            var withuser = context.User.Identity?.AuthenticationType == $"Local{GreenfieldConstants.AuthenticationType}WithUser";
-            if (withuser)
-            {
-                var newUser = new ClaimsPrincipal(new ClaimsIdentity(context.User.Claims,
-                    $"{GreenfieldConstants.AuthenticationType}"));
-                var newContext = new AuthorizationHandlerContext(context.Requirements, newUser, null);
-                return new GreenfieldAuthorizationHandler(
-                    _httpContextAccessor, _userManager, _storeRepository, _pluginHookService).HandleAsync(newContext);
-            }
-
-            var succeed = context.User.Identity.AuthenticationType == $"Local{GreenfieldConstants.AuthenticationType}";
-
-            if (succeed)
-            {
-                context.Succeed(requirement);
-            }
-            return Task.CompletedTask;
-        }
-    }
-
     public class GreenfieldAuthorizationHandler : AuthorizationHandler<PolicyRequirement>
     {
         private readonly HttpContext _httpContext;
@@ -72,7 +33,7 @@ namespace BTCPayServer.Security.Greenfield
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context,
             PolicyRequirement requirement)
         {
-            if (context.User.Identity.AuthenticationType != GreenfieldConstants.AuthenticationType)
+            if (context.User.Identity?.AuthenticationType != GreenfieldConstants.AuthenticationType)
                 return;
             var userid = _userManager.GetUserId(context.User);
             bool success = false;
@@ -87,7 +48,7 @@ namespace BTCPayServer.Security.Greenfield
             switch (policy)
             {
                 case { } when Policies.IsStorePolicy(policy):
-                    var storeId = requiredUnscoped ? null : _httpContext.GetImplicitStoreId();
+                    var storeId = requiredUnscoped ? null : (context.Resource as string ?? _httpContext.GetImplicitStoreId());
                     // Specific store action
                     if (storeId != null)
                     {

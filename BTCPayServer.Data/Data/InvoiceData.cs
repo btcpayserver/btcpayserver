@@ -41,6 +41,7 @@ namespace BTCPayServer.Data
         public const string Processing = nameof(Processing);
         public const string Settled = nameof(Settled);
         public const string Invalid = nameof(Invalid);
+        public const string Expired = nameof(Expired);
 
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {

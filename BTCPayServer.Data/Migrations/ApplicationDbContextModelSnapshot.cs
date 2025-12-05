@@ -1162,7 +1162,11 @@ namespace BTCPayServer.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("now()");
 
-                    b.Property<decimal>("Credited")
+                    b.Property<decimal?>("CreditPurchase")
+                        .HasColumnType("numeric")
+                        .HasColumnName("credit_purchase");
+
+                    b.Property<decimal>("CreditedByInvoice")
                         .HasColumnType("numeric")
                         .HasColumnName("credited");
 
@@ -1199,6 +1203,10 @@ namespace BTCPayServer.Migrations
                     b.Property<bool>("NewSubscriber")
                         .HasColumnType("boolean")
                         .HasColumnName("new_subscriber");
+
+                    b.Property<string>("NewSubscriberEmail")
+                        .HasColumnType("text")
+                        .HasColumnName("new_subscriber_email");
 
                     b.Property<string>("NewSubscriberMetadata")
                         .IsRequired()

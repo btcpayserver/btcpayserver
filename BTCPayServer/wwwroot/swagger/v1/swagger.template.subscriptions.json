@@ -1,0 +1,1417 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/offerings/{offeringId}": {
+            "get": {
+                "summary": "Get an offering",
+                "description": "Returns a specific offering for a store.",
+                "operationId": "GetOffering",
+                "tags": [
+                    "Subscriptions"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewofferings"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OfferingId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Offering retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OfferingModel"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Offering not found."
+                    }
+                }
+            }
+        },
+        "/api/v1/stores/{storeId}/offerings": {
+            "get": {
+                "summary": "List offerings for a store",
+                "description": "Retrieves all offerings associated with the specified store.",
+                "operationId": "GetOfferings",
+                "tags": ["Subscriptions"],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewofferings"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of offerings retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": { "$ref": "#/components/schemas/OfferingModel" }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create an offering",
+                "description": "Creates a new offering for the specified store.",
+                "operationId": "CreateOffering",
+                "tags": [
+                    "Subscriptions"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifyofferings"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "description": "Offering data to create.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateOfferingModel"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Offering created successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OfferingModel"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request data."
+                    }
+                }
+            }
+        },
+        "/api/v1/stores/{storeId}/offerings/{offeringId}/plans": {
+            "post": {
+                "summary": "Create an offering plan",
+                "description": "Creates a new plan for a specific offering.",
+                "operationId": "CreateOfferingPlan",
+                "tags": [
+                    "Subscriptions"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifyofferings"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OfferingId"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "description": "Plan data to create for the offering.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreatePlanRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Plan created successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OfferingPlanModel"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request data."
+                    }
+                }
+            }
+        },
+        "/api/v1/stores/{storeId}/offerings/{offeringId}/plans/{planId}": {
+            "get": {
+                "summary": "Get an offering plan",
+                "description": "Returns a specific plan for a given offering.",
+                "operationId": "GetOfferingPlan",
+                "tags": [
+                    "Subscriptions"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewofferings"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OfferingId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/PlanId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Plan retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OfferingPlanModel"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Plan not found."
+                    }
+                }
+            }
+        },
+        "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}": {
+            "get": {
+                "summary": "Get a subscriber",
+                "description": "Retrieves a subscriber for a specific offering by customer selector.",
+                "operationId": "GetSubscriber",
+                "tags": [
+                    "Subscriptions"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewofferings"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OfferingId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/CustomerSelector"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subscriber retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubscriberModel"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Subscriber not found."
+                    }
+                }
+            }
+        },
+        "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/credits/{currency}": {
+            "get": {
+                "summary": "Get subscriber credit balance",
+                "description": "Retrieves the credit balance for a subscriber in the specified currency.",
+                "operationId": "GetCredit",
+                "tags": ["Subscriptions"],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmanagesubscribers"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OfferingId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/CustomerSelector"
+                    },
+                    {
+                        "$ref": "#/components/parameters/Subscriptions/Currency"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Credit retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/CreditModel" }
+                            }
+                        }
+                    },
+                    "404": { "description": "Credit record not found." }
+                }
+            },
+
+            "post": {
+                "summary": "Update subscriber credit balance",
+                "description": "Adds credit or charges credit for a subscriber in a given currency.",
+                "operationId": "UpdateCredit",
+                "tags": ["Subscriptions"],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.cancreditsubscribers"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OfferingId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/CustomerSelector"
+                    },
+                    {
+                        "$ref": "#/components/parameters/Subscriptions/Currency"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "description": "Details for modifying subscriber credit.",
+                    "content": {
+                        "application/json": {
+                            "schema": { "$ref": "#/components/schemas/UpdateCreditRequest" }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Credit updated successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/CreditModel" }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error code: `overdraft`. The subscriber's balance would be overdrawn. Use `allowOverdraft` to allow this.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/suspend": {
+            "post": {
+                "summary": "Suspend a subscriber",
+                "description": "Suspends a subscriber for the specified offering.",
+                "operationId": "SuspendSubscriber",
+                "tags": ["Subscriptions"],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmanagesubscribers"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OfferingId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/CustomerSelector"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "description": "Details about why the subscriber is being suspended.",
+                    "content": {
+                        "application/json": {
+                            "schema": { "$ref": "#/components/schemas/SuspendSubscriberRequest" }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Subscriber suspended successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/SubscriberModel" }
+                            }
+                        }
+                    },
+                    "400": { "description": "Invalid request data." }
+                }
+            }
+        },
+        "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/unsuspend": {
+            "post": {
+                "summary": "Unsuspend a subscriber",
+                "description": "Removes suspension from a subscriber for the specified offering.",
+                "operationId": "UnsuspendSubscriber",
+                "tags": ["Subscriptions"],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmanagesubscribers"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OfferingId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/CustomerSelector"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subscriber unsuspended successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/SubscriberModel" }
+                            }
+                        }
+                    },
+                    "400": { "description": "Invalid request data." }
+                }
+            }
+        },
+        "/api/v1/plan-checkout/{checkoutId}": {
+            "get": {
+                "summary": "Get a plan checkout",
+                "description": "Retrieves the details of a plan checkout session.",
+                "operationId": "GetPlanCheckout",
+                "tags": ["Subscriptions"],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/PlanCheckoutId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Checkout retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/PlanCheckoutModel" }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Checkout session not found."
+                    }
+                }
+            },
+            "post": {
+                "summary": "Proceed with a plan checkout",
+                "description": "Continues a plan checkout session.\n\n**Behavior:**\n- If payment is required, the checkout assigns a BTCPay Server invoice and `invoiceId` will be set.\n- If no payment is required (for example, the subscriber already has enough credit or no credit purchase is needed), the plan will start immediately and `planStarted` will be `true`.",
+                "operationId": "ProceedPlanCheckout",
+                "tags": ["Subscriptions"],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/PlanCheckoutId"
+                    },
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "required": false,
+                        "description": "Optional customer email used when proceeding with the checkout.",
+                        "schema": { "type": "string" },
+                        "example": "user@example.com"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Checkout processed successfully.\n\n**Behavior:**\n- If payment is required, `invoiceId` contains the BTCPay Server invoice the user must pay.\n- If no payment is required, the subscription is activated immediately and `planStarted` will be `true`.",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/PlanCheckoutModel" }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error code: `invoice-creation-error`. Error during the creation of the invoice.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Checkout session not found."
+                    }
+                }
+            }
+        },
+
+        "/api/v1/plan-checkout": {
+            "post": {
+                "summary": "Create a plan checkout session",
+                "description": "Creates a checkout session for purchasing or activating a plan.",
+                "operationId": "CreatePlanCheckout",
+                "tags": ["Subscriptions"],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmanagesubscribers"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "description": "Details required to create a checkout session.",
+                    "content": {
+                        "application/json": {
+                            "schema": { "$ref": "#/components/schemas/CreatePlanCheckoutRequest" }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Checkout created successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/PlanCheckoutModel" }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request data."
+                    }
+                }
+            }
+        },
+        "/api/v1/subscriber-portal": {
+            "post": {
+                "summary": "Create a subscriber portal session",
+                "description": "Creates a portal session that allows a subscriber to manage their subscriptions, view billing details, or update account information.",
+                "operationId": "CreatePortalSession",
+                "tags": ["Subscriptions"],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmanagesubscribers"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "description": "Information required to create a subscriber portal session.",
+                    "content": {
+                        "application/json": {
+                            "schema": { "$ref": "#/components/schemas/CreatePortalSessionRequest" }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Portal session created successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/PortalSessionModel" }
+                            }
+                        }
+                    },
+                    "400": { "description": "Invalid request data." }
+                }
+            }
+        },
+
+        "/api/v1/subscriber-portal/{portalSessionId}": {
+            "get": {
+                "summary": "Get a subscriber portal session",
+                "description": "Retrieves the details of an existing subscriber portal session.",
+                "operationId": "GetPortalSession",
+                "tags": ["Subscriptions"],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/PortalSessionId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Portal session retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/PortalSessionModel" }
+                            }
+                        }
+                    },
+                    "404": { "description": "Portal session not found." }
+                }
+            }
+        }
+    },
+    "components": {
+        "parameters": {
+            "PortalSessionId": {
+                "name": "portalSessionId",
+                "in": "path",
+                "required": true,
+                "example": "ps_665afQ23ExGouiY4EZ",
+                "description": "Identifier of the portal session.",
+                "schema": { "$ref": "#/components/schemas/PortalSessionId" }
+            },
+            "PlanCheckoutId": {
+                "name": "checkoutId",
+                "in": "path",
+                "required": true,
+                "example": "plancheckout_Hpm59L1NPCMUj477Q5",
+                "description": "Unique identifier of the plan checkout session.",
+                "schema": { "$ref": "#/components/schemas/PlanCheckoutId" }
+            },
+            "Subscriptions/Currency": {
+                "name": "currency",
+                "in": "path",
+                "required": true,
+                "description": "Currency code for the credit balance. Use `current` to retrieve the current balance in the currency of the current plan.",
+                "schema": { "type": "string" },
+                "example": "current"
+            },
+            "CustomerSelector": {
+                "name": "customerSelector",
+                "in": "path",
+                "required": true,
+                "description": "Flexible customer selector. Supports: a customer ID (e.g., `cust_GUGnpx3311fkaqGk7f`), an email (e.g., `subscriber@example.com`), or a key/value identity (e.g., `Email:subscriber@example.com`).",
+                "schema": {
+                    "$ref": "#/components/schemas/CustomerSelector"
+                }
+            },
+            "PlanId": {
+                "name": "planId",
+                "in": "path",
+                "required": true,
+                "description": "Plan's ID",
+                "example": "plan_KZMVyuQp3v2vFWnEUM",
+                "schema": {
+                    "$ref": "#/components/schemas/PlanId"
+                }
+            },
+            "OfferingId": {
+                "name": "offeringId",
+                "in": "path",
+                "required": true,
+                "description": "Offering's ID",
+                "example": "offering_DKWhZGB6PZsgTcPwpf",
+                "schema": {
+                    "$ref": "#/components/schemas/OfferingId"
+                }
+            }
+        },
+        "schemas": {
+            "PortalSessionId": {
+                "type": "string",
+                "example": "ps_665afQ23ExGouiY4EZ",
+                "description": "Identifier of the portal session."
+            },
+            "PlanCheckoutId": {
+                "type": "string",
+                "description": "Unique identifier of the plan checkout session.",
+                "example": "plancheckout_Hpm59L1NPCMUj477Q5"
+            },
+            "OnPayBehavior": {
+                "type": "string",
+                "description": "Defines how the system should behave when payment is processed during a plan checkout or migration.\n* `SoftMigration`: Starts the plan only if payment is due. If no payment is due yet, the amount is added as credit instead of starting the plan.\n* `HardMigration`: Starts the plan immediately, even if payment is not due. If the user already paid for unused time, the unused portion is refunded before starting the plan.",
+                "enum": [
+                    "SoftMigration",
+                    "HardMigration"
+                ],
+                "example": "SoftMigration",
+                "x-enumDescriptions": {
+                    "SoftMigration": "Starts the plan only if payment is due. If no payment is due yet, the amount is added as credit instead of starting the plan.",
+                    "HardMigration": "Starts the plan immediately, even if payment is not due. If the user already paid for unused time, the unused portion is refunded before starting the plan."
+                }
+            },
+            "PlanCheckoutModel": {
+                "type": "object",
+                "description": "Represents a checkout session for activating or purchasing a subscription plan.",
+                "properties": {
+                    "subscriber": {
+                        "$ref": "#/components/schemas/SubscriberModel",
+                        "description": "Subscriber associated with the checkout."
+                    },
+                    "plan": {
+                        "$ref": "#/components/schemas/OfferingPlanModel",
+                        "description": "Plan being purchased or activated."
+                    },
+                    "baseUrl": {
+                        "$ref": "#/components/schemas/BaseUrl"
+                    },
+                    "id": {
+                        "$ref": "#/components/schemas/PlanCheckoutId"
+                    },
+                    "invoiceId": {
+                        "$ref": "#/components/schemas/InvoiceId"
+                    },
+                    "successRedirectUrl": {
+                        "type": "string",
+                        "description": "URL to redirect the user after checkout success. (The `checkoutPlanId` query parameter will be added to the URL.)",
+                        "example": "https://example.com/success"
+                    },
+                    "expiration": {
+                        "type": "integer",
+                        "format": "unix-time",
+                        "description": "Checkout expiration timestamp.",
+                        "example": 1710602000
+                    },
+                    "redirectUrl": {
+                        "type": "string",
+                        "description": "URL where the user is redirected to proceed with payment.",
+                        "example": "https://pay.example.com/plancheckout_Hpm59L1NPCMUj477Q5"
+                    },
+                    "invoiceMetadata": {
+                        "type": "object",
+                        "description": "Custom metadata that will be attached to the invoice when it is created.",
+                        "additionalProperties": true,
+                        "example": { "segment": "gold" }
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "description": "Custom metadata for the checkout.",
+                        "additionalProperties": true,
+                        "example": { "flow": "upgrade" }
+                    },
+                    "newSubscriber": {
+                        "type": "boolean",
+                        "description": "Indicates whether the checkout is for a new subscriber.",
+                        "example": false
+                    },
+                    "isTrial": {
+                        "type": "boolean",
+                        "description": "Indicates if the checkout activates a trial.",
+                        "example": false
+                    },
+                    "created": {
+                        "type": "integer",
+                        "format": "unix-time",
+                        "description": "Timestamp when checkout was created.",
+                        "example": 1710500000
+                    },
+                    "planStarted": {
+                        "type": "boolean",
+                        "description": "Indicates if the plan has already been activated.",
+                        "example": false
+                    },
+                    "newSubscriberMetadata": {
+                        "type": "object",
+                        "description": "Metadata for creating a new subscriber.",
+                        "additionalProperties": true,
+                        "example": { "welcomeTier": "starter" }
+                    },
+                    "refundAmount": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Refund amount applied during migration.",
+                        "example": "3.50"
+                    },
+                    "creditedByInvoice": {
+                        "type": "string",
+                        "description": "Amount credited due to invoice settlement.",
+                        "example": "12.00"
+                    },
+                    "onPayBehavior": {
+                        "$ref": "#/components/schemas/OnPayBehavior",
+                        "description": "Defines how to apply payment behavior."
+                    },
+                    "isExpired": {
+                        "type": "boolean",
+                        "description": "Indicates whether the checkout session has expired.",
+                        "example": false
+                    },
+                    "url": {
+                        "type": "string",
+                        "description": "Public URL for accessing the checkout session.",
+                        "example": "https://btcpay.example.com/plan-checkout/plancheckout_Hpm59L1NPCMUj477Q5"
+                    },
+                    "creditPurchase": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Credit amount to purchase to top-up the account.",
+                        "example": "10.00"
+                    }
+                }
+            },
+            "CreatePlanCheckoutRequest": {
+                "type": "object",
+                "description": "Request payload for initiating a plan checkout session.",
+                "properties": {
+                    "storeId": {
+                        "$ref": "#/components/schemas/StoreId"
+                    },
+                    "offeringId": {
+                        "$ref": "#/components/schemas/OfferingId"
+                    },
+                    "planId": {
+                        "$ref": "#/components/schemas/PlanId"
+                    },
+                    "customerSelector": {
+                        "$ref": "#/components/schemas/CustomerSelector"
+                    },
+                    "durationMinutes": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "How long the checkout session is valid, in minutes.",
+                        "example": 30
+                    },
+                    "onPayBehavior": {
+                        "$ref": "#/components/schemas/OnPayBehavior",
+                        "nullable": true,
+                        "default": "SoftMigration"
+                    },
+                    "newSubscriberMetadata": {
+                        "type": "object",
+                        "description": "Metadata used when creating a new subscriber.",
+                        "additionalProperties": true,
+                        "example": { "locale": "en-US" }
+                    },
+                    "invoiceMetadata": {
+                        "type": "object",
+                        "description": "Metadata attached to the created invoice.",
+                        "additionalProperties": true,
+                        "example": { "campaign": "winter-sale" }
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "description": "Custom metadata for the checkout session.",
+                        "additionalProperties": true,
+                        "example": { "flow": "upgrade" }
+                    },
+                    "isTrial": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "description": "Indicates if the checkout starts a trial.",
+                        "example": false
+                    },
+                    "creditPurchase": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Amount of credit to purchase.",
+                        "example": "20.00"
+                    },
+                    "successRedirectLink": {
+                        "type": "string",
+                        "description": "URL to redirect the user after checkout success. (This default to offering's successRedirectLink, also, the `checkoutPlanId` query parameter will be added to the URL.)",
+                        "example": "https://example.com/thank-you"
+                    },
+                    "newSubscriberEmail": {
+                        "type": "string",
+                        "description": "Email address for creating a new subscriber. Keep `null` to let the user choose an email address in the checkout page.",
+                        "nullable": true,
+                        "example": "user@example.com"
+                    }
+                }
+            },
+            "SuspendSubscriberRequest": {
+                "type": "object",
+                "description": "Request payload for suspending a subscriber.",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "description": "Reason for the suspension.",
+                        "example": "Suspicious behavior detected"
+                    }
+                }
+            },
+            "CustomerSelector": {
+                "type": "string",
+                "description": "Flexible identifier for selecting a customer. Supports: customer ID (e.g., `cust_abc123`), an email (e.g., `user@example.com`), or a key/value identity (e.g., `Email:user@example.com`).",
+                "example": "cust_GUGnpx3311fkaqGk7f"
+            },
+            "PlanId": {
+                "type": "string",
+                "description": "Plan's ID",
+                "example": "plan_KZMVyuQp3v2vFWnEUM"
+            },
+            "OfferingId": {
+                "type": "string",
+                "description": "Offering's ID",
+                "example": "offering_DKWhZGB6PZsgTcPwpf"
+            },
+            "CreateOfferingModel": {
+                "type": "object",
+                "description": "New offering data to create.",
+                "required": [
+                    "appName"
+                ],
+                "properties": {
+                    "appName": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Display name of the related application.",
+                        "example": "Example App"
+                    },
+                    "successRedirectUrl": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The default URL to redirect to after a plan checkout is successful.",
+                        "example": "https://example.com/success"
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "description": "Custom metadata for the offering.",
+                        "additionalProperties": true,
+                        "example": {
+                            "category": "saas",
+                            "region": "us"
+                        }
+                    },
+                    "features": {
+                        "type": "array",
+                        "nullable": true,
+                        "description": "List of features included in this offering.",
+                        "items": {
+                            "$ref": "#/components/schemas/FeatureModel"
+                        }
+                    }
+                }
+            },
+            "CustomerId": {
+                "type": "string",
+                "description": "Unique identifier of the customer.",
+                "example": "cust_GUGnpx3311fkaqGk7f"
+            },
+            "CustomerModel": {
+                "type": "object",
+                "description": "Represents a customer associated with a store.",
+                "properties": {
+                    "storeId": {
+                        "$ref": "#/components/schemas/StoreId"
+                    },
+                    "id": {
+                        "$ref": "#/components/schemas/CustomerId"
+                    },
+                    "externalId": {
+                        "type": "string",
+                        "description": "External system identifier for the customer.",
+                        "example": "ext_4455"
+                    },
+                    "identities": {
+                        "type": "object",
+                        "description": "Identity attributes for matching and lookup (e.g., email, username).",
+                        "additionalProperties": true,
+                        "example": {
+                            "Email": "subscriber@example.com"
+                        }
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "description": "Custom metadata associated with the customer.",
+                        "additionalProperties": true,
+                        "example": {
+                            "segment": "premium",
+                            "locale": "en-US"
+                        }
+                    }
+                }
+            },
+            "SubscriberModel": {
+                "type": "object",
+                "description": "Represents a subscriber of an offering.",
+                "properties": {
+                    "created": {
+                        "type": "integer",
+                        "format": "unix-time",
+                        "description": "Timestamp when the subscription was created.",
+                        "example": 1710598234
+                    },
+                    "customer": {
+                        "$ref": "#/components/schemas/CustomerModel",
+                        "description": "Customer associated with the subscription."
+                    },
+                    "offering": {
+                        "$ref": "#/components/schemas/OfferingModel",
+                        "description": "Offering associated with the subscription."
+                    },
+                    "plan": {
+                        "$ref": "#/components/schemas/OfferingPlanModel",
+                        "description": "Current active plan of the subscriber."
+                    },
+                    "periodEnd": {
+                        "type": "integer",
+                        "format": "unix-time",
+                        "nullable": true,
+                        "description": "End of the current billing period.",
+                        "example": 1713200000
+                    },
+                    "trialEnd": {
+                        "type": "integer",
+                        "format": "unix-time",
+                        "nullable": true,
+                        "description": "End of the subscriber's trial period.",
+                        "example": 1711000000
+                    },
+                    "gracePeriodEnd": {
+                        "type": "integer",
+                        "format": "unix-time",
+                        "nullable": true,
+                        "description": "End of the grace period.",
+                        "example": 1711500000
+                    },
+                    "isActive": {
+                        "type": "boolean",
+                        "description": "Indicates if the subscription is active. (Phase is not `Expired`, and not suspended)",
+                        "example": true
+                    },
+                    "isSuspended": {
+                        "type": "boolean",
+                        "description": "Indicates if the subscription is suspended.",
+                        "example": false
+                    },
+                    "suspensionReason": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Reason for suspension, if applicable.",
+                        "example": "Suspicious activity detected"
+                    },
+                    "autoRenew": {
+                        "type": "boolean",
+                        "description": "Indicates if the subscription renews automatically.",
+                        "example": true
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "description": "Custom metadata for the subscription.",
+                        "additionalProperties": true,
+                        "example": {
+                            "segment": "beta"
+                        }
+                    },
+                    "processingInvoiceId": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "ID of the invoice being processed.",
+                        "example": "inv_88443"
+                    },
+                    "nextPlan": {
+                        "$ref": "#/components/schemas/OfferingPlanModel",
+                        "nullable": true,
+                        "description": "Plan scheduled for next billing cycle."
+                    },
+                    "phase": {
+                        "type": "string",
+                        "description": "Lifecycle phase of the subscription.",
+                        "enum": [
+                            "Trial",
+                            "Normal",
+                            "Grace",
+                            "Expired"
+                        ],
+                        "example": "Normal"
+                    }
+                }
+            },
+            "OfferingModel": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "description": "Represents an offering available in a store.",
+                        "required": [
+                            "appName"
+                        ],
+                        "properties": {
+                            "id": {
+                                "$ref": "#/components/schemas/OfferingId"
+                            },
+                            "storeId": {
+                                "$ref": "#/components/schemas/StoreId"
+                            },
+                            "appId": {
+                                "type": "string",
+                                "description": "Identifier of the related application.",
+                                "example": "app-001"
+                            },
+                            "plans": {
+                                "type": "array",
+                                "nullable": true,
+                                "description": "List of plans available for this offering.",
+                                "items": {
+                                    "$ref": "#/components/schemas/OfferingPlanModel"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "$ref": "#/components/schemas/CreateOfferingModel"
+                    }
+                ]
+            },
+            "UpdateCreditRequest": {
+                "type": "object",
+                "description": "Request payload for updating subscriber credit.",
+                "properties": {
+                    "credit": {
+                        "type": "string",
+                        "description": "Amount of credit to add as a numeric string.",
+                        "example": "25.00"
+                    },
+                    "charge": {
+                        "type": "string",
+                        "description": "Amount to deduct as a numeric string.",
+                        "example": "10.00"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Short description explaining the credit change.",
+                        "example": "Monthly reward bonus"
+                    },
+                    "allowOverdraft": {
+                        "type": "boolean",
+                        "description": "Indicates if the credit balance is allowed to go negative.",
+                        "example": false
+                    }
+                }
+            },
+            "CreditModel": {
+                "type": "object",
+                "description": "Represents a subscriber's credit balance in a specific currency.",
+                "properties": {
+                    "currency": {
+                        "type": "string",
+                        "description": "Currency code of the credit balance.",
+                        "example": "USD"
+                    },
+                    "value": {
+                        "type": "string",
+                        "description": "Current credit value as a numeric string.",
+                        "example": "150.00"
+                    }
+                }
+            },
+            "CreatePlanRequest": {
+                "type": "object",
+                "description": "Request payload for creating a new offering plan.",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": "Short description of the plan.",
+                        "example": "Standard monthly subscription."
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "Currency code for the plan price.",
+                        "example": "USD"
+                    },
+                    "gracePeriodDays": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "Number of grace period days after expiry.",
+                        "example": 7
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Display name of the plan.",
+                        "example": "Monthly Plan"
+                    },
+                    "optimisticActivation": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "description": "Indicates if the plan is activated before payment confirmation.",
+                        "example": true
+                    },
+                    "price": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Price of the plan as a numeric string.",
+                        "pattern": "^[0-9]+(\\.[0-9]+)?$",
+                        "example": "19.99"
+                    },
+                    "renewable": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "description": "Indicates if the plan can be renewed.",
+                        "example": true
+                    },
+                    "trialDays": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "Number of trial days before billing.",
+                        "example": 14
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "description": "Custom metadata for the plan.",
+                        "additionalProperties": true,
+                        "example": {
+                            "tier": "standard"
+                        }
+                    },
+                    "recurringType": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Recurring interval for billing.",
+                        "enum": [
+                            "Monthly",
+                            "Quarterly",
+                            "Yearly",
+                            "Lifetime"
+                        ],
+                        "example": "Monthly"
+                    }
+                }
+            },
+            "CreatePortalSessionRequest": {
+                "type": "object",
+                "description": "Request payload for creating a subscriber portal session.",
+                "properties": {
+                    "storeId": {
+                        "$ref": "#/components/schemas/StoreId"
+                    },
+                    "offeringId": {
+                        "$ref": "#/components/schemas/OfferingId"
+                    },
+                    "customerSelector": {
+                        "$ref": "#/components/schemas/CustomerSelector"
+                    },
+                    "durationMinutes": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "Duration in minutes before the portal session expires.",
+                        "example": 30
+                    }
+                }
+            },
+            "PortalSessionModel": {
+                "type": "object",
+                "description": "Represents a subscriber portal session used for managing subscriptions, billing, and account details.",
+                "properties": {
+                    "baseUrl": {
+                        "$ref": "#/components/schemas/BaseUrl"
+                    },
+                    "id": {
+                        "$ref": "#/components/schemas/PortalSessionId"
+                    },
+                    "subscriber": {
+                        "$ref": "#/components/schemas/SubscriberModel",
+                        "description": "The subscriber associated with this portal session."
+                    },
+                    "expiration": {
+                        "type": "integer",
+                        "format": "unix-time",
+                        "nullable": true,
+                        "description": "Expiration timestamp for the portal session.",
+                        "example": 1710602000
+                    },
+                    "isExpired": {
+                        "type": "boolean",
+                        "description": "Indicates whether the portal session is expired.",
+                        "example": false
+                    },
+                    "url": {
+                        "type": "string",
+                        "description": "Public URL where the subscriber can access the portal session.",
+                        "example": "https://btcpay.example.com/subscriber-portal/ps_665afQ23ExGouiY4EZ"
+                    }
+                }
+            },
+            "FeatureModel": {
+                "type": "object",
+                "description": "Represents a feature that can be included in an offering or plan.",
+                "required": [
+                    "id",
+                    "description"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Unique identifier of the feature.",
+                        "example": "feature-analytics"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Short description of the feature.",
+                        "example": "Access to analytics dashboard."
+                    }
+                }
+            },
+            "OfferingPlanModel": {
+                "type": "object",
+                "description": "Represents a pricing plan for an offering.",
+                "required": [
+                    "id",
+                    "name",
+                    "status",
+                    "price",
+                    "currency",
+                    "recurringType",
+                    "gracePeriodDays",
+                    "trialDays",
+                    "description",
+                    "memberCount",
+                    "optimisticActivation",
+                    "features",
+                    "renewable"
+                ],
+                "properties": {
+                    "id": {
+                        "$ref": "#/components/schemas/PlanId"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Display name of the plan.",
+                        "example": "Starter Plan"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Current status of the plan.",
+                        "enum": [
+                            "Active",
+                            "Retired"
+                        ],
+                        "example": "Active"
+                    },
+                    "price": {
+                        "type": "string",
+                        "description": "Price of the plan as a numeric string.",
+                        "pattern": "^[0-9]+(\\.[0-9]+)?$",
+                        "example": "19.99"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "Currency code for the price.",
+                        "example": "USD"
+                    },
+                    "recurringType": {
+                        "type": "string",
+                        "description": "Recurring interval for billing.",
+                        "enum": [
+                            "Monthly",
+                            "Quarterly",
+                            "Yearly",
+                            "Lifetime"
+                        ],
+                        "example": "Monthly"
+                    },
+                    "gracePeriodDays": {
+                        "type": "integer",
+                        "description": "Number of grace period days after expiry.",
+                        "example": 7
+                    },
+                    "trialDays": {
+                        "type": "integer",
+                        "description": "Number of trial days before billing.",
+                        "example": 14
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Short description of the plan.",
+                        "example": "Standard monthly subscription."
+                    },
+                    "memberCount": {
+                        "type": "integer",
+                        "description": "Maximum number of members allowed under this plan.",
+                        "example": 10
+                    },
+                    "optimisticActivation": {
+                        "type": "boolean",
+                        "description": "Indicates if the plan is activated before payment confirmation.",
+                        "example": true
+                    },
+                    "features": {
+                        "type": "array",
+                        "description": "List of feature identifiers included in this plan.",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "feature-analytics",
+                            "feature-support"
+                        ]
+                    },
+                    "renewable": {
+                        "type": "boolean",
+                        "description": "Indicates if the plan can be renewed.",
+                        "example": true
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "description": "Custom metadata for the plan.",
+                        "additionalProperties": true,
+                        "example": {
+                            "tier": "standard"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Subscriptions",
+            "description": "Subscription operations"
+        }
+    ]
+}
+

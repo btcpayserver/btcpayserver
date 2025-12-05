@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using BTCPayServer.Abstractions.Extensions;
 using Microsoft.AspNetCore.Http;
 
 namespace BTCPayServer.Abstractions;
@@ -7,7 +8,7 @@ namespace BTCPayServer.Abstractions;
 public record RequestBaseUrl(string Scheme, HostString Host, PathString PathBase)
 {
     public static RequestBaseUrl FromUrl(Uri url)
-    => new RequestBaseUrl(url.Scheme, new HostString(url.Authority), new PathString(url.AbsolutePath));
+    => new RequestBaseUrl(url.Scheme, new HostString(url.Authority), new PathString(url.AbsolutePath == "" ? "/" : url.AbsolutePath));
 
     public static RequestBaseUrl FromUrl(string url)
     {
@@ -29,6 +30,9 @@ public record RequestBaseUrl(string Scheme, HostString Host, PathString PathBase
     {
 
     }
+
+    public string GetUrl(string relativePath)
+    => ToString().WithoutEndingSlash() + relativePath.WithStartingSlash();
 
     public override string ToString()
     => string.Concat(

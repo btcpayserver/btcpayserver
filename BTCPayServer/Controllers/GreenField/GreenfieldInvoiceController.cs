@@ -639,7 +639,8 @@ namespace BTCPayServer.Controllers.Greenfield
             };
         }
 
-        private InvoiceData ToModel(InvoiceEntity entity)
+        [NonAction]
+        public InvoiceData ToModel(InvoiceEntity entity)
         {
             return ToModel(entity, _linkGenerator, _currencyNameTable, Request);
         }

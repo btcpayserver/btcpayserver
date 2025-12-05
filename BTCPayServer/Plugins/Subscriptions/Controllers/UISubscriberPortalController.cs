@@ -214,7 +214,7 @@ public class UISubscriberPortalController(
             }
 
             var checkoutId = await SubsService.CreatePlanMigrationCheckout(session.Id, changedPlanId, onPay, Request.GetRequestBaseUrl());
-            return await RedirectToPlanCheckoutPayment(checkoutId, session.Subscriber.CustomerSelector, cancellationToken);
+            return await RedirectToPlanCheckoutPayment(checkoutId, cancellationToken);
         }
         else if (command == "update-auto-renewal")
         {

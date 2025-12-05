@@ -32,7 +32,8 @@ public class CustomerData : BaseEntityData
 
     public List<CustomerIdentityData> CustomerIdentities { get; set; } = null!;
 
-    public new static string GenerateId() => ValueGenerators.WithPrefix("cust")(null, null).Next(null!) as string ?? throw new InvalidOperationException("Bug, shouldn't happen");
+    public const string IdPrefix = "cust";
+    public new static string GenerateId() => ValueGenerators.WithPrefix(IdPrefix)(null, null).Next(null!) as string ?? throw new InvalidOperationException("Bug, shouldn't happen");
 
     public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
     {
@@ -45,7 +46,7 @@ public class CustomerData : BaseEntityData
         b.HasIndex(x => new { x.StoreId, x.ExternalRef }).IsUnique();
         b.Property(x => x.Id)
             .ValueGeneratedOnAdd()
-            .HasValueGenerator(ValueGenerators.WithPrefix("cust"));
+            .HasValueGenerator(ValueGenerators.WithPrefix(IdPrefix));
     }
 
     public string? GetContact(string type)

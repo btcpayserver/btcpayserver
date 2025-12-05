@@ -51,7 +51,7 @@ public class SubscriberData : BaseEntityData
     public decimal? PaidAmount { get; set; }
 
     public decimal GetCredit(string? currency = null)
-        => Credits.FirstOrDefault(c => (currency ?? c.Currency) == Plan.Currency)?.Amount ?? 0m;
+        => Credits.FirstOrDefault(c => (currency ?? c.Currency).Equals(Plan.Currency, StringComparison.OrdinalIgnoreCase))?.Amount ?? 0m;
 
     public decimal MissingCredit()
     => Math.Max(0m, NextPlan.Price - GetCredit(NextPlan.Currency));

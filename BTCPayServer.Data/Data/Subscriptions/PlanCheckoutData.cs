@@ -52,6 +52,9 @@ public class PlanCheckoutData : BaseEntityData
     [Column("new_subscriber")]
     public bool NewSubscriber { get; set; }
 
+    [Column("new_subscriber_email")]
+    public string? NewSubscriberEmail { get; set; }
+
     /// <summary>
     /// Internal ID of the subscriber, do not expose outside, only use for querying.
     /// </summary>
@@ -71,7 +74,7 @@ public class PlanCheckoutData : BaseEntityData
     public bool TestAccount { get; set; }
 
     [Column("credited")]
-    public decimal Credited { get; set; } = 0m;
+    public decimal CreditedByInvoice { get; set; } = 0m;
 
     [Column("plan_started")]
     public bool PlanStarted { get; set; }
@@ -90,10 +93,13 @@ public class PlanCheckoutData : BaseEntityData
     [Column("expiration")]
     public DateTimeOffset Expiration { get; set; }
 
+    [Column("credit_purchase")]
+    public decimal? CreditPurchase { get; set; }
+
     public enum OnPayBehavior
     {
         /// <summary>
-        /// Starts the plan if payment is due, else, do not and add the funds to the credit.
+        /// Starts the plan if the phase is expired or grace, else, add to credit.
         /// </summary>
         SoftMigration,
         /// <summary>
@@ -142,4 +148,11 @@ public class PlanCheckoutData : BaseEntityData
 
     [NotMapped]
     public bool IsExpired => DateTimeOffset.UtcNow > Expiration;
+
+    public string? GetEmail()
+    {
+        if (NewSubscriber)
+            return NewSubscriberEmail;
+        return Subscriber?.Customer.Email.Get();
+    }
 }

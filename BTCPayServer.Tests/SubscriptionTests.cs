@@ -3,15 +3,21 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
-using BTCPayServer.Plugins;
+using BTCPayServer.Plugins.Subscriptions;
 using BTCPayServer.Tests.PMO;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Playwright;
 using NBitcoin;
 using NBXplorer;
@@ -25,7 +31,6 @@ namespace BTCPayServer.Tests;
 [Collection(nameof(NonParallelizableCollectionDefinition))]
 public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testOutputHelper)
 {
-
     [Fact]
     [Trait("Playwright", "Playwright")]
     public async Task CanChangeOfferingEmailsSettings()
@@ -289,8 +294,228 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         return DateTime.DaysInMonth(DateTimeOffset.UtcNow.Year, DateTimeOffset.UtcNow.Month);
     }
 
-    private string USD(decimal val)
-        => $"${val.ToString("F2", CultureInfo.InvariantCulture)}";
+
+    [Fact]
+    [Trait("Integration", "Integration")]
+    public async Task CanUseSubscriptionAPI()
+    {
+        using var s = CreateServerTester();
+        await s.StartAsync();
+        var user = s.NewAccount();
+        await user.RegisterAsync(true);
+        await user.CreateStoreAsync();
+
+        var client = await user.CreateClient();
+        var offering = await client.CreateOffering(user.StoreId, new OfferingModel()
+        {
+            AppName = "Test",
+            SuccessRedirectUrl = "https://google.com",
+            Features = new()
+            {
+                new() { Id = "can-access", Description = "Can access the subscription API" }
+            }
+        });
+        Assert.Equal("Test", offering.AppName);
+        Assert.Equal("https://google.com", offering.SuccessRedirectUrl);
+        Assert.Single(offering.Features);
+        Assert.Equal("can-access", offering.Features[0].Id);
+
+        var plan = await client.CreateOfferingPlan(user.StoreId, offering.Id, new()
+        {
+            Name = "NewPlan",
+            Price = 10m
+        });
+        Assert.Equal(("NewPlan", 10m, "USD"), (plan.Name, plan.Price, plan.Currency));
+        plan = await client.GetOfferingPlan(user.StoreId, offering.Id, plan.Id);
+        Assert.Equal(("NewPlan", 10m, "USD"), (plan.Name, plan.Price, plan.Currency));
+
+        offering = await client.GetOffering(offering.StoreId, offering.Id);
+        var offering2 = (await client.GetOfferings(offering.StoreId))[0];
+        Assert.Equal(offering.Id, offering2.Id);
+        Assert.Equal(offering.AppName, offering2.AppName);
+        Assert.Equal(offering.SuccessRedirectUrl, offering2.SuccessRedirectUrl);
+        Assert.Single(offering2.Features);
+        Assert.Equal("can-access", offering2.Features[0].Id);
+        Assert.Equal("can-access", offering.Features[0].Id);
+
+        var planCheckout = await client.CreatePlanCheckout(new CreatePlanCheckoutRequest()
+        {
+            StoreId = user.StoreId,
+            OfferingId = offering.Id,
+            NewSubscriberEmail = "test@gmail.com",
+            NewSubscriberMetadata = new JObject() { ["sub"] = "test" },
+            InvoiceMetadata = new JObject() { ["inv"] = "invtest" },
+            Metadata = new JObject() { ["checkout"] = "metatest" },
+            PlanId = plan.Id,
+        });
+
+        var planCheckout2 = await client.GetPlanCheckout(planCheckout.Id);
+        Assert.Equal(planCheckout.Id, planCheckout2.Id);
+        Assert.Equal("metatest", planCheckout2.Metadata["checkout"]?.ToString());
+        Assert.Null(planCheckout.InvoiceId);
+
+        await CanAccessUrl(planCheckout.Url);
+
+        await AssertEx.AssertApiError(400, "invoice-creation-error", () => client.ProceedPlanCheckout(planCheckout.Id));
+        await user.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true);
+        planCheckout = await client.ProceedPlanCheckout(planCheckout.Id);
+        var invoice = await client.GetInvoice(user.StoreId, planCheckout.InvoiceId);
+        Assert.NotNull(invoice);
+        Assert.Equal("test@gmail.com", invoice.Metadata["buyerEmail"]?.ToString());
+        Assert.Equal("invtest", invoice.Metadata["inv"]?.ToString());
+
+        planCheckout = await client.GetPlanCheckout(planCheckout.Id);
+        Assert.Equal(planCheckout.InvoiceId, invoice.Id);
+
+        var oldInvoiceId = invoice.Id;
+        planCheckout = await client.ProceedPlanCheckout(planCheckout.Id);
+        Assert.Equal(oldInvoiceId, planCheckout.InvoiceId);
+        invoice = await client.GetInvoice(user.StoreId, planCheckout.InvoiceId);
+        Assert.Null(planCheckout.Subscriber);
+
+        await s.ExplorerNode.GenerateAsync(1);
+        await user.ReceiveUTXO(Money.Coins(1.0m));
+        await s.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await user.PayOnChain(invoice.Id);
+            await s.ExplorerNode.GenerateAsync(1);
+        });
+
+        planCheckout = await client.GetPlanCheckout(planCheckout.Id);
+        Assert.NotNull(planCheckout.Subscriber);
+        Assert.Equal("test", planCheckout.Subscriber.Metadata["sub"]?.ToString());
+
+        var subscriber = await client.GetSubscriber(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id);
+        Assert.Equal(planCheckout.Subscriber.Customer.Id, subscriber.Customer.Id);
+        subscriber = await client.GetSubscriber(user.StoreId, offering.Id, "test@gmail.com");
+        Assert.Equal(planCheckout.Subscriber.Customer.Id, subscriber.Customer.Id);
+        subscriber = await client.GetSubscriber(user.StoreId, offering.Id, "Email:test@gmail.com");
+        Assert.Equal(planCheckout.Subscriber.Customer.Id, subscriber.Customer.Id);
+        Assert.False(planCheckout.IsExpired);
+
+        Assert.True(subscriber.IsActive);
+
+        subscriber = await client.SuspendSubscriber(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "booh");
+        Assert.False(subscriber.IsActive);
+        Assert.True(subscriber.IsSuspended);
+        Assert.Equal("booh", subscriber.SuspensionReason);
+
+        subscriber = await client.UnsuspendSubscriber(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id);
+        Assert.True(subscriber.IsActive);
+        Assert.False(subscriber.IsSuspended);
+        Assert.Null(subscriber.SuspensionReason);
+
+        var session = await client.CreatePortalSession(new()
+        {
+            StoreId = user.StoreId,
+            OfferingId = offering.Id,
+            CustomerSelector = "test@gmail.com",
+            DurationMinutes = TimeSpan.FromMinutes(3.0)
+        });
+
+        session = await client.GetPortalSession(session.Id);
+        Assert.True(session.Expiration < DateTimeOffset.UtcNow + TimeSpan.FromMinutes(5.0));
+        Assert.True(session.Expiration > DateTimeOffset.UtcNow + TimeSpan.FromMinutes(2.0));
+        Assert.NotNull(session.Subscriber);
+        Assert.False(session.IsExpired);
+
+        await CanAccessUrl(session.Url);
+
+        var result = await client.GetCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "USD");
+        Assert.Equal(0m, result.Value);
+
+        await AssertEx.AssertApiError(400, "overdraft", () => client.UpdateCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "USD",
+            new()
+            {
+                Description = "Hello",
+                Charge = 5m,
+                AllowOverdraft = false
+            }));
+        await client.UpdateCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "USD",
+            new()
+            {
+                Description = "Hello",
+                Charge = 5m,
+                AllowOverdraft = true
+            });
+        result = await client.GetCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "current");
+        Assert.Equal(-5m, result.Value);
+        await client.UpdateCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "current",
+            new()
+            {
+                Description = "Hello",
+                Credit = 2m,
+                AllowOverdraft = false
+            });
+        await client.UpdateCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "current",
+            new()
+            {
+                Description = "Hello",
+                Credit = 30m,
+                AllowOverdraft = false
+            });
+        result = await client.GetCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "current");
+        Assert.Equal(-5m + 2m + 30m, result.Value);
+
+        await MoveToExpiration(s, offering);
+
+        subscriber = await client.GetSubscriber(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id);
+        Assert.False(subscriber.IsActive);
+
+        planCheckout = await client.CreatePlanCheckout(new()
+        {
+            StoreId = user.StoreId,
+            PlanId = plan.Id,
+            OfferingId = offering.Id,
+            CustomerSelector = "test@gmail.com"
+        });
+        await client.ProceedPlanCheckout(planCheckout.Id);
+        subscriber = await client.GetSubscriber(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id);
+        Assert.True(subscriber.IsActive);
+    }
+
+    private static async Task MoveToExpiration(ServerTester s, OfferingModel offering)
+    {
+        var dbFactory = s.PayTester.GetService<ApplicationDbContextFactory>();
+        await using var ctx = dbFactory.CreateContext();
+        var sub = await ctx.Subscribers.GetBySelector(offering.Id, CustomerSelector.ByEmail("test@gmail.com"));
+        var subsService = s.PayTester.GetService<SubscriptionHostedService>();
+        await subsService.MoveTime(sub!.Id, SubscriberData.PhaseTypes.Expired);
+    }
+
+    private static async Task CanAccessUrl(string url)
+    {
+        using (var http = new HttpClient())
+        {
+            using var resp = await http.GetAsync(url);
+            resp.EnsureSuccessStatusCode();
+        }
+    }
+
+    [Fact]
+    [Trait("Fast", "Fast")]
+    public void CanParseSelectors()
+    {
+        CanParseSelectorCore("[test]", typeof(CustomerSelector.ExternalRef));
+        CanParseSelectorCore("[test]]", typeof(CustomerSelector.ExternalRef));
+        CanParseSelectorCore("cust_test", typeof(CustomerSelector.Id));
+        CanParseSelectorCore("Email:test@ggwg.com", typeof(CustomerSelector.Identity));
+
+        Assert.True(CustomerSelector.TryParse("test@ggwg.com", out var selector));
+        Assert.IsType<CustomerSelector.Identity>(selector);
+        Assert.Equal("Email:test@ggwg.com", selector.ToString());
+
+        Assert.True(CustomerSelector.TryParse("cust_test@ggwg.com", out selector));
+        Assert.IsType<CustomerSelector.Identity>(selector);
+        Assert.Equal("Email:cust_test@ggwg.com", selector.ToString());
+    }
+
+    private void CanParseSelectorCore(string str, Type expectedType)
+    {
+        Assert.True(CustomerSelector.TryParse(str, out var selector));
+        Assert.Equal(expectedType, selector.GetType());
+        Assert.Equal(str, selector.ToString());
+    }
 
     [Fact]
     [Trait("Playwright", "Playwright")]
@@ -367,7 +592,8 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         await edit.Save();
 
         // basic2@example.com is a basic plan subscriber (optimistic activation), so he is immediately activated
-        await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () => {
+        await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
             await offering.NewSubscriber("Basic Plan", "basic2@example.com", false);
         });
 
@@ -554,8 +780,10 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
 
         public Task GoToSubscribers()
             => s.Page.GetByRole(AriaRole.Link, new() { Name = "Subscribers" }).ClickAsync();
+
         public Task GoToPlans()
             => s.Page.GetByRole(AriaRole.Link, new() { Name = "Plans" }).ClickAsync();
+
         public Task GoToMails()
             => s.Page.GetByRole(AriaRole.Link, new() { Name = "Mails" }).ClickAsync();
 
@@ -679,6 +907,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             {
                 await s.Page.FillAsync("input[name='PaymentRemindersDays']", settings.PaymentRemindersDays.Value.ToString());
             }
+
             await s.ClickPagePrimary();
             await s.FindAlertMessage();
         }
@@ -802,6 +1031,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             {
                 Assert.Fail($"Expected {refunded} USD, but got {v} USD");
             }
+
             return v;
         }
 

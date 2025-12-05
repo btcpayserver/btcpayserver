@@ -75,7 +75,7 @@
     {
         <div class="d-flex justify-content-between align-items-center">
             <h4>Plans</h4>
-            <a id="page-primary" permission="@Policies.CanModifyMembership" asp-route-storeId="@storeId" asp-route-offeringId="@offeringId" asp-action="AddPlan"
+            <a id="page-primary" permission="@Policies.CanModifyOfferings" asp-route-storeId="@storeId" asp-route-offeringId="@offeringId" asp-action="AddPlan"
                class="btn btn-primary"
                role="button"
                text-translate="true">Add Plan</a>
@@ -180,7 +180,7 @@
             {
                 <a
                     href="#"
-                    permission="@Policies.CanModifyMembership"
+                    permission="@Policies.CanModifyOfferings"
                     text-translate="true"
                     role="button"
                     id="page-primary"

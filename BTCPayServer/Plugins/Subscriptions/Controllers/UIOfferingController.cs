@@ -1,6 +1,5 @@
 ﻿#nullable enable
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -28,7 +27,7 @@ using DisplayFormatter = BTCPayServer.Services.DisplayFormatter;
 
 namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 
-[Authorize(Policy = Policies.CanViewMembership, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+[Authorize(Policy = Policies.CanViewOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [AutoValidateAntiforgeryToken]
 [Area(SubscriptionsPlugin.Area)]
 public partial class UIOfferingController(
@@ -45,7 +44,7 @@ public partial class UIOfferingController(
 ) : UISubscriptionControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
 {
     [HttpPost("stores/{storeId}/offerings/{offeringId}/new-subscriber")]
-    [Authorize(Policy = Policies.CanModifyMembership, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanModifyOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> NewSubscriber(
         string storeId, string offeringId,
         string planId,
@@ -97,7 +96,7 @@ public partial class UIOfferingController(
         => displayFormatter.Currency(req?.Amount ?? 0m, req?.Currency ?? "USD", DisplayFormatter.CurrencyFormat.CodeAndSymbol);
 
     [HttpPost("stores/{storeId}/offerings/{offeringId}/Subscribers")]
-    [Authorize(Policy = Policies.CanModifyMembership, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanModifyOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> SubscriberSuspend(string storeId, string offeringId, string customerId, string? command = null,
         string? suspensionReason = null, decimal? amount = null, string? description = null)
     {
@@ -346,7 +345,7 @@ public partial class UIOfferingController(
     }
 
     [HttpGet("stores/{storeId}/offerings/{offeringId}/configure")]
-    [Authorize(Policy = Policies.CanModifyMembership, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanModifyOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> ConfigureOffering(string storeId, string offeringId)
     {
         await using var ctx = DbContextFactory.CreateContext();
@@ -435,7 +434,7 @@ public partial class UIOfferingController(
     }
 
     [HttpPost("stores/{storeId}/offerings/{offeringId}/plans/{planId}/delete-plan")]
-    [Authorize(Policy = Policies.CanModifyMembership, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanModifyOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> DeletePlan(string storeId, string offeringId, string planId)
     {
         await using var ctx = DbContextFactory.CreateContext();
@@ -463,7 +462,7 @@ public partial class UIOfferingController(
 
     [HttpGet("stores/{storeId}/offerings/{offeringId}/add-plan")]
     [HttpGet("stores/{storeId}/offerings/{offeringId}/plans/{planId}/edit")]
-    [Authorize(Policy = Policies.CanModifyMembership, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanModifyOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> AddPlan(string storeId, string offeringId, string? planId = null)
     {
         await using var ctx = DbContextFactory.CreateContext();
@@ -513,7 +512,7 @@ public partial class UIOfferingController(
 
     [HttpPost("stores/{storeId}/offerings/{offeringId}/add-plan")]
     [HttpPost("stores/{storeId}/offerings/{offeringId}/plans/{planId}/edit")]
-    [Authorize(Policy = Policies.CanModifyMembership, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanModifyOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> AddPlan(string storeId, string offeringId, AddEditPlanViewModel vm, string? planId = null, string? command = null,
         int? removeIndex = null)
     {
@@ -604,7 +603,7 @@ public partial class UIOfferingController(
     }
 
     [HttpGet("stores/{storeId}/offerings/{offeringId}/subscribers/{customerId}/create-portal")]
-    [Authorize(Policy = Policies.CanModifyMembership, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanModifyOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> CreatePortalSession(string storeId, string offeringId, string customerId)
     {
         await using var ctx = DbContextFactory.CreateContext();

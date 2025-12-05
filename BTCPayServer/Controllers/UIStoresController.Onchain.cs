@@ -31,7 +31,7 @@ public partial class UIStoresController
 {
     [HttpGet("{storeId}/onchain/{cryptoCode}")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public ActionResult SetupWallet(WalletSetupViewModel vm)
+    public async Task<ActionResult> SetupWallet(WalletSetupViewModel vm)
     {
         var checkResult = IsAvailable(vm.CryptoCode, out var store, out _);
         if (checkResult != null)
@@ -41,6 +41,9 @@ public partial class UIStoresController
 
         var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
         vm.DerivationScheme = derivation?.AccountDerivation.ToString();
+
+        var perm = await CanUseHotWallet();
+        vm.SetPermission(perm);
 
         return View(vm);
     }

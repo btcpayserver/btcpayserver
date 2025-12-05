@@ -3068,12 +3068,11 @@ namespace BTCPayServer.Tests
             await s.Page.Locator("#TemplateConfig").FillAsync(template.Replace(@"""id"": ""green-tea"",", ""));
 
             await s.ClickPagePrimary();
-            var errorText = await s.Page.Locator(".validation-summary-errors").TextContentAsync();
-            Assert.Contains("Invalid template: Missing ID for item \"Green Tea\".", errorText);
+            await Expect(s.Page.Locator(".validation-summary-errors")).ToContainTextAsync("Invalid template: Missing ID for item \"Green Tea\".");
 
+            var o = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("#ViewApp");
-            var newPage = await s.Page.Context.WaitForPageAsync();
-            await using var pageSwitch = await s.SwitchPage(newPage);
+            await using var pageSwitch = await s.SwitchPage(o);
 
             await s.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
             var posBaseUrl = s.Page.Url.Replace("/cart", "");
@@ -3110,9 +3109,7 @@ namespace BTCPayServer.Tests
             var targetOption = options.FirstOrDefault(o => o.Contains("Point of"));
             if (targetOption != null)
             {
-                var optionValue = await s.Page.Locator($"#RootAppId option:has-text('{targetOption}')").GetAttributeAsync("value");
-                await s.Page.EvaluateAsync($"document.getElementById('RootAppId').value = '{optionValue}';");
-                await s.Page.EvaluateAsync("document.getElementById('RootAppId').dispatchEvent(new Event('change', { bubbles: true }));");
+                await s.Page.Locator("#RootAppId").SelectOptionAsync(new[] { new SelectOptionValue { Label = targetOption } });
             }
             else
             {
@@ -3143,8 +3140,7 @@ namespace BTCPayServer.Tests
             await s.GoToUrl(prevUrl);
             await s.GoToServer(ServerNavPages.Policies);
             await s.Page.Locator("#RootAppId").ScrollIntoViewIfNeededAsync();
-            await s.Page.EvaluateAsync("document.getElementById('RootAppId').value = '';");
-            await s.Page.EvaluateAsync("document.getElementById('RootAppId').dispatchEvent(new Event('change', { bubbles: true }));");
+            await s.Page.Locator("#RootAppId").SelectOptionAsync("");
             await s.ClickPagePrimary();
             await s.Page.Locator("#RootAppId").ScrollIntoViewIfNeededAsync();
             await s.Page.ClickAsync("#AddDomainButton");
@@ -3154,9 +3150,7 @@ namespace BTCPayServer.Tests
             var targetDomainOption = domainOptions.FirstOrDefault(o => o.Contains("Point of"));
             if (targetDomainOption != null)
             {
-                var domainOptionValue = await s.Page.Locator($"#DomainToAppMapping_0__AppId option:has-text('{targetDomainOption}')").GetAttributeAsync("value");
-                await s.Page.EvaluateAsync($"document.getElementById('DomainToAppMapping_0__AppId').value = '{domainOptionValue}';");
-                await s.Page.EvaluateAsync("document.getElementById('DomainToAppMapping_0__AppId').dispatchEvent(new Event('change', { bubbles: true }));");
+                await s.Page.Locator("#DomainToAppMapping_0__AppId").SelectOptionAsync(new[] { new SelectOptionValue { Label = targetDomainOption } });
             }
             else
             {

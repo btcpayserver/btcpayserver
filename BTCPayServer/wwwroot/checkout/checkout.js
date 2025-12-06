@@ -208,6 +208,20 @@ function initApp() {
             },
             displayedPaymentMethods: function () {
                 return this.srvModel?.availablePaymentMethods?.filter(pm => pm.displayed) ?? [];
+            },
+            shouldShowPaymentMethodSelector() {
+                
+                if (this.displayedPaymentMethods.length === 1) {
+                    return false;
+                }
+                
+                
+                if (this.srvModel.onChainWithLnInvoiceFallback) {
+                    return false;
+                }
+
+                // Show for multiple payment methods without unified QR
+                return true;
             }
         },
         watch: {

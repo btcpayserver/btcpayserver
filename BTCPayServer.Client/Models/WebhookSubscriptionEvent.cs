@@ -42,16 +42,6 @@ public class WebhookSubscriptionEvent : StoreWebhookEvent
         public SubscriberModel Subscriber { get; set; }
     }
 
-    // Subscription phases carried by subscriber-related webhook events
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum SubscriptionPhase
-    {
-        Normal,
-        Expired,
-        Grace,
-        Trial
-    }
-
     public class NewSubscriberEvent : WebhookSubscriptionEvent.SubscriberEvent
     {
         public NewSubscriberEvent()

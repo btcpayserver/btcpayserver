@@ -28,11 +28,11 @@ public class UISubscriptionControllerBase(
     public IActionResult RedirectToPlanCheckout(string checkoutId)
         => RedirectToAction(nameof(UIPlanCheckoutController.PlanCheckout), "UIPlanCheckout", new { checkoutId });
 
-    public async Task<IActionResult> RedirectToPlanCheckoutPayment(string checkoutId, CustomerSelector customerSelector, CancellationToken cancellationToken)
+    public async Task<IActionResult> RedirectToPlanCheckoutPayment(string checkoutId, CancellationToken cancellationToken)
     {
         try
         {
-            await SubsService.ProceedToSubscribe(checkoutId, customerSelector, cancellationToken);
+            await SubsService.ProceedToSubscribe(checkoutId, cancellationToken);
         }
         catch (InvalidOperationException) { }
         catch (BitpayHttpException ex)

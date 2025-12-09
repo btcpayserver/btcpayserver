@@ -34,8 +34,8 @@ public class SubscriptionContext(ApplicationDbContext ctx, EventAggregator aggre
     public async Task<decimal> CreditSubscriber(SubscriberData sub, string description, decimal credit)
     => (await TryCreditDebitSubscriber(sub, description, credit, 0m, true))!.Value;
 
-    public async Task<bool> TryChargeSubscriber(SubscriberData sub, string description, decimal charge, bool force = false)
-    => (await TryCreditDebitSubscriber(sub, description, 0m, charge, force)) is not null;
+    public async Task<bool> TryChargeSubscriber(SubscriberData sub, string description, decimal charge, bool allowOverdraft = false)
+    => (await TryCreditDebitSubscriber(sub, description, 0m, charge, allowOverdraft)) is not null;
 
     private static async Task<decimal?> UpdateCredit(BalanceTransaction tx, bool force, ApplicationDbContext ctx)
     {
@@ -84,19 +84,21 @@ public class SubscriptionContext(ApplicationDbContext ctx, EventAggregator aggre
         await ctx.Entry(sub).Collection(c => c.Credits).Query().LoadAsync();
     }
 
-    public async Task<decimal?> TryCreditDebitSubscriber(SubscriberData sub, string description, decimal credit, decimal charge, bool force = false)
+    public async Task<decimal?> TryCreditDebitSubscriber(SubscriberData sub, string description, decimal credit, decimal charge, bool allowOverdraft = false, string? currency = null)
     {
-        charge = RoundAmount(charge, sub.Plan.Currency);
-        credit = RoundAmount(credit, sub.Plan.Currency);
-        var tx = new BalanceTransaction(sub.Id, sub.Plan.Currency, credit, charge, description);
-        var amount = await UpdateCredit(tx, force, ctx);
+        currency ??= sub.Plan.Currency;
+        currency = currency.ToUpperInvariant().Trim();
+        charge = RoundAmount(charge, currency);
+        credit = RoundAmount(credit, currency);
+        var tx = new BalanceTransaction(sub.Id, currency, credit, charge, description);
+        var amount = await UpdateCredit(tx, allowOverdraft, ctx);
         await ReloadCredits(sub, ctx);
         if (amount is { } newTotal)
         {
             if (tx.Credit != 0)
-                AddEvent(new SubscriptionEvent.SubscriberCredited(sub, newTotal + tx.Debit, tx.Credit, sub.Plan.Currency));
+                AddEvent(new SubscriptionEvent.SubscriberCredited(sub, newTotal + tx.Debit, tx.Credit, currency));
             if (tx.Debit != 0)
-                AddEvent(new SubscriptionEvent.SubscriberDebited(sub, newTotal, tx.Debit, sub.Plan.Currency));
+                AddEvent(new SubscriptionEvent.SubscriberDebited(sub, newTotal, tx.Debit, currency));
         }
         return amount;
     }

@@ -2,7 +2,6 @@
 using System;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Events;
 using BTCPayServer.Plugins.Webhooks;
 using Newtonsoft.Json.Linq;
@@ -19,7 +18,7 @@ public class SubscriberWebhookProvider : WebhookTriggerProvider<SubscriptionEven
         model["Plan"] = new JObject()
         {
             ["Id"] = evt.Subscriber.PlanId,
-            ["Name"] = evt.Subscriber.Plan.Name ?? "",
+            ["Name"] = evt.Subscriber.Plan.Name,
         };
         model["Offering"] = new JObject()
         {
@@ -37,7 +36,7 @@ public class SubscriberWebhookProvider : WebhookTriggerProvider<SubscriptionEven
         model["Customer"] = new JObject()
         {
             ["ExternalRef"] = evt.Subscriber.Customer.ExternalRef ?? "",
-            ["Name"] = evt.Subscriber.Customer.Name ?? "",
+            ["Name"] = evt.Subscriber.Customer.Name,
             ["Metadata"] = evt.Subscriber.Customer.Metadata
         };
         return model;
@@ -48,7 +47,7 @@ public class SubscriberWebhookProvider : WebhookTriggerProvider<SubscriptionEven
         if (evt is null) throw new ArgumentNullException(nameof(evt));
         var sub = evt.Subscriber;
         var storeId = sub.Customer.StoreId;
-        var model = MapToSubscriberModel(sub);
+        var model = Mapper.MapToSubscriberModel(sub);
 
         switch (evt)
         {
@@ -86,8 +85,8 @@ public class SubscriberWebhookProvider : WebhookTriggerProvider<SubscriptionEven
                 return new WebhookSubscriptionEvent.SubscriberPhaseChangedEvent(storeId)
                 {
                     Subscriber = model,
-                    PreviousPhase = MapPhase(phaseChanged.PreviousPhase),
-                    CurrentPhase = MapPhase(sub.Phase)
+                    PreviousPhase = Mapper.Map(phaseChanged.PreviousPhase),
+                    CurrentPhase = Mapper.Map(sub.Phase)
                 };
 
             case SubscriptionEvent.SubscriberDisabled:
@@ -116,73 +115,5 @@ public class SubscriberWebhookProvider : WebhookTriggerProvider<SubscriptionEven
             default:
                 throw new ArgumentOutOfRangeException(nameof(evt), evt.GetType(), "Unsupported subscription event type");
         }
-
-        static WebhookSubscriptionEvent.SubscriptionPhase MapPhase(SubscriberData.PhaseTypes p) =>
-            p switch
-            {
-                SubscriberData.PhaseTypes.Normal => WebhookSubscriptionEvent.SubscriptionPhase.Normal,
-                SubscriberData.PhaseTypes.Expired => WebhookSubscriptionEvent.SubscriptionPhase.Expired,
-                SubscriberData.PhaseTypes.Grace => WebhookSubscriptionEvent.SubscriptionPhase.Grace,
-                SubscriberData.PhaseTypes.Trial => WebhookSubscriptionEvent.SubscriptionPhase.Trial,
-                _ => WebhookSubscriptionEvent.SubscriptionPhase.Expired
-            };
-    }
-
-    private static SubscriberModel MapToSubscriberModel(SubscriberData sub)
-    {
-        if (sub is null) throw new ArgumentNullException(nameof(sub));
-
-        var customer = sub.Customer;
-        var offering = sub.Offering;
-        var plan = sub.Plan;
-
-        return new SubscriberModel
-        {
-            Customer = new CustomerModel
-            {
-                StoreId = customer.StoreId,
-                Id = sub.CustomerId,
-                ExternalId = customer.ExternalRef
-            },
-            Offer = new OfferingModel
-            {
-                Id = sub.OfferingId,
-                AppName = offering.App?.Name,
-                AppId = offering.AppId,
-                SuccessRedirectUrl = offering.SuccessRedirectUrl
-            },
-            Plan = new SubscriptionPlanModel
-            {
-                Id = sub.PlanId,
-                Name = plan.Name,
-                Status = plan.Status switch
-                {
-                    PlanData.PlanStatus.Active => SubscriptionPlanModel.PlanStatus.Active,
-                    PlanData.PlanStatus.Retired => SubscriptionPlanModel.PlanStatus.Retired,
-                    _ => SubscriptionPlanModel.PlanStatus.Retired
-                },
-                Price = plan.Price,
-                Currency = plan.Currency,
-                RecurringType = plan.RecurringType switch
-                {
-                    PlanData.RecurringInterval.Monthly => SubscriptionPlanModel.RecurringInterval.Monthly,
-                    PlanData.RecurringInterval.Quarterly => SubscriptionPlanModel.RecurringInterval.Quarterly,
-                    PlanData.RecurringInterval.Yearly => SubscriptionPlanModel.RecurringInterval.Yearly,
-                    _ => SubscriptionPlanModel.RecurringInterval.Lifetime
-                },
-                GracePeriodDays = plan.GracePeriodDays,
-                TrialDays = plan.TrialDays,
-                Description = plan.Description,
-                MemberCount = plan.MemberCount,
-                OptimisticActivation = plan.OptimisticActivation,
-                Features = plan.GetFeatureIds()
-            },
-            PeriodEnd = sub.PeriodEnd,
-            TrialEnd = sub.TrialEnd,
-            GracePeriodEnd = sub.GracePeriodEnd,
-            IsActive = sub.IsActive,
-            IsSuspended = sub.IsSuspended,
-            SuspensionReason = sub.SuspensionReason
-        };
     }
 }

@@ -129,7 +129,15 @@ public partial class UIOfferingController(
             var message = command is "credit"
                 ? StringLocalizer["Subscriber {0} has been credited", subName]
                 : StringLocalizer["Subscriber {0} has been charged", subName];
-            await SubsService.UpdateCredit(sub.Id, description ?? "Manual adjustment", command is "credit" ? amount.Value : -amount.Value);
+            await SubsService.UpdateCredit(
+                new SubscriptionHostedService.UpdateCreditParameters()
+                {
+                    SubscriberId = sub.Id,
+                    Description = description ?? "Manual adjustment",
+                    Credit = command is "credit" ? amount.Value : 0.0m,
+                    Charge = command is "charge" ? amount.Value : 0.0m,
+                    AllowOverdraft = true
+                });
             TempData.SetStatusSuccess(message);
         }
 
@@ -400,7 +408,7 @@ public partial class UIOfferingController(
         return GoToOffering(storeId, offeringId);
     }
 
-    private static void UpdateFeatures(ApplicationDbContext ctx, OfferingData offering, ConfigureOfferingViewModel vm)
+    internal static void UpdateFeatures(ApplicationDbContext ctx, OfferingData offering, ConfigureOfferingViewModel vm)
     {
         var incomingById = vm.Features
             .GroupBy(e => e.Id) // guard against dupes

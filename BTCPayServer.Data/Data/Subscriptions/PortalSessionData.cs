@@ -31,6 +31,9 @@ public class PortalSessionData
     [Column("base_url", TypeName = "text")]
     public RequestBaseUrl BaseUrl { get; set; }
 
+    [NotMapped]
+    public bool IsExpired => DateTimeOffset.UtcNow > Expiration;
+
     public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
     {
         var b = builder.Entity<PortalSessionData>();

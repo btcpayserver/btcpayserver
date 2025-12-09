@@ -827,8 +827,7 @@
                         "additionalProperties": false,
                         "properties": {
                             "id": {
-                                "type": "string",
-                                "description": "The identifier of the invoice"
+                                "$ref": "#/components/schemas/InvoiceId"
                             },
                             "storeId": {
                                 "description": "The store identifier that the invoice belongs to",

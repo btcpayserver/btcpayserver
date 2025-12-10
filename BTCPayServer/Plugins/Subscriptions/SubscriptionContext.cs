@@ -1,6 +1,7 @@
 ﻿#nullable  enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
@@ -105,8 +106,17 @@ public class SubscriptionContext(ApplicationDbContext ctx, EventAggregator aggre
 
     public async ValueTask DisposeAsync()
     {
+        var plans =
+            _evts.OfType<SubscriptionEvent.SubscriberEvent>()
+                .SelectMany(s => s.Subscriber.Offering.Plans)
+                .Where(p => !p.FeaturesLoaded)
+                .ToList();
+        await ctx.Plans.FetchPlanFeaturesAsync(plans);
         foreach (var evt in _evts)
+        {
             aggregator.Publish(evt, evt.GetType());
+        }
+
         await ctx.DisposeAsync();
     }
 }

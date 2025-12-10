@@ -6,6 +6,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Plugins.Monetization;
 using BTCPayServer.Services;
 using BTCPayServer.Views.Manage;
+using Microsoft.Playwright;
 using Xunit;
 using Xunit.Abstractions;
 using static Microsoft.Playwright.Assertions;
@@ -126,8 +127,14 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
                 await s.LogIn("normal-guest@gmail.com");
                 await portal.AssertCallToAction(SubscriptionTests.PortalPMO.CallToAction.Danger);
                 await portal.ClickCallToAction();
-                await s.PayInvoice(mine: true, clickRedirect: true);
-                await s.FindAlertMessage();
+
+                await s.Server.WaitForEvent<SubscriptionEvent.SubscriberActivated>(async () =>
+                {
+                    await s.PayInvoice(mine: true, clickRedirect: true);
+                    await s.FindAlertMessage();
+                });
+                await s.FastReloadAsync();
+                await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
                 await portal.AssertNoCallToAction();
 
                 await s.GoToUrl("/");

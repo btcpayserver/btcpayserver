@@ -420,11 +420,7 @@ public class SubscriptionHostedService(
                 {
                     checkout.CreditedByInvoice += diff;
                     await subCtx.CreditSubscriber(sub, $"Credit purchase (Inv: {invoice.Id})", diff);
-
-                    if (!checkout.PlanStarted)
-                    {
-                        await TryStartPlan(subCtx, checkout, sub);
-                    }
+                    await TryStartPlan(subCtx, checkout, sub);
                 }
                 else
                 {

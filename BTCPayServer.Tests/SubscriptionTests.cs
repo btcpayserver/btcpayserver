@@ -13,7 +13,9 @@ using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Plugins.Subscriptions;
+using BTCPayServer.Plugins.Webhooks;
 using BTCPayServer.Tests.PMO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -440,13 +442,15 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             });
         result = await client.GetCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "current");
         Assert.Equal(-5m, result.Value);
-        await client.UpdateCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "current",
+
+        await s.WaitForEvent<TriggerEvent>(() =>
+            client.UpdateCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "current",
             new()
             {
                 Description = "Hello",
                 Credit = 2m,
                 AllowOverdraft = false
-            });
+            }), d => d.Trigger == "WH-" + WebhookSubscriptionEvent.SubscriberCredited);
         await client.UpdateCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "current",
             new()
             {

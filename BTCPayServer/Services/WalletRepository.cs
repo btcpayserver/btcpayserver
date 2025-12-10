@@ -308,19 +308,25 @@ namespace BTCPayServer.Services
         public async Task<(string Label, string Color)[]> GetWalletLabelsByLinkedType(WalletId walletId, string linkedType)
         {
             await using var ctx = _ContextFactory.CreateContext();
-            var walletIdString = walletId.ToString();
 
-            var query =
-                from link in ctx.WalletObjectLinks.AsNoTracking()
-                join labelObj in ctx.WalletObjects.AsNoTracking()
-                    on new { link.WalletId, Type = link.AType, Id = link.AId }
-                    equals new { labelObj.WalletId, labelObj.Type, labelObj.Id }
-                where link.WalletId == walletIdString
-                      && link.AType == WalletObjectData.Types.Label
-                      && link.BType == linkedType
-                select labelObj;
+            const string sql = """
+                               SELECT DISTINCT
+                                   wo.*,
+                                   wo.xmin AS "xmin"
+                               FROM "WalletObjectLinks" AS wol
+                               INNER JOIN "WalletObjects" AS wo
+                                   ON wol."WalletId" = wo."WalletId"
+                                  AND wol."AType" = wo."Type"
+                                  AND wol."AId" = wo."Id"
+                               WHERE wol."WalletId" = {0}
+                                 AND wol."AType" = {2}
+                                 AND wol."BType" = {1};
+                               """;
 
-            var labelObjects = await query.Distinct().ToArrayAsync();
+            var labelObjects = await ctx.WalletObjects
+                .FromSqlRaw(sql, walletId.ToString(), linkedType, WalletObjectData.Types.Label)
+                .AsNoTracking()
+                .ToArrayAsync();
             return labelObjects.Select(FormatToLabel).ToArray();
         }
 

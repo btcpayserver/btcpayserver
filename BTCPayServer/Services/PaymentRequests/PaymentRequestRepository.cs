@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -143,18 +144,35 @@ namespace BTCPayServer.Services.PaymentRequests
                     throw new InvalidOperationException("PaymentRequestQuery.StoreId should be specified");
 
                 var search = query.SearchText;
-                queryable = context.PaymentRequests.FromSqlRaw("""
-                                                                   SELECT *
-                                                                   FROM "PaymentRequests"
-                                                                   WHERE
-                                                                       "StoreDataId" = {0}
-                                                                       AND (
-                                                                           "ReferenceId" = {1}
-                                                                           OR "Id" = {1}
-                                                                           OR jsonb_extract_path_text("Blob2", 'title') = {1}
-                                                                           OR CAST("Amount" AS TEXT) = {1}
-                                                                       )
-                                                               """, query.StoreId, search);
+                if (decimal.TryParse(search, NumberStyles.Number, CultureInfo.InvariantCulture, out var amount))
+                {
+                    queryable = context.PaymentRequests.FromSqlRaw("""
+                                                                       SELECT *
+                                                                       FROM "PaymentRequests"
+                                                                       WHERE
+                                                                           "StoreDataId" = {0}
+                                                                           AND (
+                                                                               "ReferenceId" = {1}
+                                                                               OR "Id" = {1}
+                                                                               OR jsonb_extract_path_text("Blob2", 'title') = {1}
+                                                                               OR "Amount" = {2}
+                                                                           )
+                                                                   """, query.StoreId, search, amount);
+                }
+                else
+                {
+                    queryable = context.PaymentRequests.FromSqlRaw("""
+                                                                       SELECT *
+                                                                       FROM "PaymentRequests"
+                                                                       WHERE
+                                                                           "StoreDataId" = {0}
+                                                                           AND (
+                                                                               "ReferenceId" = {1}
+                                                                               OR "Id" = {1}
+                                                                               OR jsonb_extract_path_text("Blob2", 'title') = {1}
+                                                                           )
+                                                                   """, query.StoreId, search);
+                }
             }
             else
             {

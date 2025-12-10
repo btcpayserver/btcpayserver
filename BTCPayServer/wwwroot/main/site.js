@@ -144,7 +144,7 @@ async function initLabelManager (elementId) {
                         svg.classList.add('icon', 'icon-info');
 
                         const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-                        use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '/img/icon-sprite.svg#info');
+                        use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `${baseUrl}/img/icon-sprite.svg#info`);
                         svg.appendChild(use);
 
                         a.appendChild(svg);
@@ -184,7 +184,6 @@ async function initLabelManager (elementId) {
             try {
                 const response = await fetch(updateUrl, {
                     method: 'POST',
-                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json'
                     },

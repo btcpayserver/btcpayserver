@@ -57,27 +57,7 @@ function updateLanguage(lang) {
 }
 
 function asNumber(val) {
-    if (!val) return null;
-    let str = val.toString();
-    
-    // Remove leading non-numeric characters (e.g. currency symbols like $, €, £)
-    str = str.replace(/^[^\d-]+/, '');
-    
-    // Detect decimal separator: the last occurrence of . or , is the decimal separator
-    // Everything before it is thousands separators
-    const lastComma = str.lastIndexOf(',');
-    const lastDot = str.lastIndexOf('.');
-    
-    if (lastComma > lastDot) {
-        // European format: 91.121,60 - comma is decimal, dots/spaces are thousands
-        str = str.replace(/[\s.]/g, '').replace(',', '.');
-    } else {
-        // US/UK format: 91,121.60 - dot is decimal, commas/spaces are thousands
-        str = str.replace(/[\s,]/g, '');
-    }
-    
-    const num = parseFloat(str);
-    return isNaN(num) ? null : num;
+    return val && parseFloat(val.toString().replace(/\s/g, '')); // e.g. sats are formatted with spaces: 1 000 000
 }
 
 Vue.use(VueI18next);

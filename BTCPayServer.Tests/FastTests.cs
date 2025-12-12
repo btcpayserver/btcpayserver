@@ -1724,7 +1724,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
                 jobs[2] = true;
                 throw new Exception("Job[2]");
             }, TimeSpan.FromSeconds(6.0));
-            TestLogs.LogInformation("Start Job[3] starts in in 7 sec");
+            TestLogs.LogInformation("Start Job[3] in 7 sec");
             client.Schedule((_) =>
             {
                 TestLogs.LogInformation("Job[3]");

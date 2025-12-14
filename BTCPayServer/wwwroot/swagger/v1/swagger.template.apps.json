@@ -269,7 +269,7 @@
                 ],
                 "operationId": "Apps_DeleteApp",
                 "summary": "Delete app",
-                "description": "Deletes apps with specified ID",
+                "description": "Deletes app with specified ID",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/AppId"
@@ -298,8 +298,8 @@
                 "tags": [
                     "Apps"
                 ],
-                "summary": "Uploads an image for a app item",
-                "description": "Uploads an image for a app item",
+                "summary": "Uploads an image for an app item",
+                "description": "Uploads an image for an app item",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/AppId"
@@ -325,7 +325,7 @@
                 "operationId": "Apps_UploadAppItemImage",
                 "responses": {
                     "200": {
-                        "description": "Uploads an image for a app item",
+                        "description": "Uploads an image for an app item",
                         "content": {
                             "application/json": {
                                 "schema": {

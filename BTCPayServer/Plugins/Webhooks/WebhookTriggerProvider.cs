@@ -12,7 +12,7 @@ namespace BTCPayServer.Plugins.Webhooks;
 
 public abstract class WebhookTriggerProvider
 {
-    public abstract StoreWebhookEvent? GetWebhookEvent(object evt);
+    public abstract Task<StoreWebhookEvent?> GetWebhookEventAsync(object evt);
 
     public virtual Task<JObject> GetEmailModel(WebhookTriggerContext webhookTriggerContext)
     {
@@ -36,9 +36,14 @@ public abstract class WebhookTriggerProvider
 
 public abstract class WebhookTriggerProvider<T> : WebhookTriggerProvider where T : class
 {
-    public sealed override StoreWebhookEvent? GetWebhookEvent(object evt)
-        => evt is T t ? GetWebhookEvent(t) : null;
-    protected abstract StoreWebhookEvent? GetWebhookEvent(T evt);
+    public sealed override async Task<StoreWebhookEvent?> GetWebhookEventAsync(object evt)
+        => evt is T t ? await GetWebhookEventAsync(t) : null;
+
+    protected virtual Task<StoreWebhookEvent?> GetWebhookEventAsync(T evt)
+    => Task.FromResult<StoreWebhookEvent?>(GetWebhookEvent(evt));
+
+    protected virtual StoreWebhookEvent? GetWebhookEvent(T evt) => null;
+
     public sealed override Task<JObject> GetEmailModel(WebhookTriggerContext webhookTriggerContext)
     => GetEmailModel((WebhookTriggerContext<T>)webhookTriggerContext);
     protected virtual Task<JObject> GetEmailModel(WebhookTriggerContext<T> webhookTriggerContext)

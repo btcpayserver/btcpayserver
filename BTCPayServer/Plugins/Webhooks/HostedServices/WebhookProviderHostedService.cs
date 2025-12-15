@@ -38,9 +38,7 @@ public class WebhookProviderHostedService(
 
     protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
     {
-        var (provider, webhookEvent) = webhookTriggerProviders
-            .Select(o => (o, o.GetWebhookEvent(evt)))
-            .FirstOrDefault(o => o.Item2 is not null);
+        var (provider, webhookEvent) = await GetWebhookEvent(evt);
         if (webhookEvent is null || provider is null)
             return;
 
@@ -64,6 +62,17 @@ public class WebhookProviderHostedService(
                 await provider.GetEmailModel(ctx), new WebhookTriggerOwner(provider, ctx));
             EventAggregator.Publish(triggerEvent);
         }
+    }
+
+    private async Task<(WebhookTriggerProvider?, StoreWebhookEvent?)> GetWebhookEvent(object evt)
+    {
+        foreach (var provider in webhookTriggerProviders)
+        {
+            var webhookEvent = await provider.GetWebhookEventAsync(evt);
+            if (webhookEvent is not null)
+                return (provider, webhookEvent);
+        }
+        return (null, null);
     }
 
     private StoreWebhookEvent Clone(StoreWebhookEvent webhookEvent)

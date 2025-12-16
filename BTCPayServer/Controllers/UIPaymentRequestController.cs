@@ -198,6 +198,17 @@ namespace BTCPayServer.Controllers
             vm.Currency ??= storeBlob.DefaultCurrency;
             vm.HasEmailRules = await HasEmailRules(store.Id);
 
+            if (!string.IsNullOrEmpty(payReqId))
+            {
+                var defaultNetwork = _networkProvider.DefaultNetwork;
+                var walletId = new WalletId(store.Id, defaultNetwork.CryptoCode);
+                var labels = await _walletRepository.GetWalletLabelsForObjects(walletId, WalletObjectData.Types.PaymentRequest, new[] { payReqId });
+                if (labels.TryGetValue(payReqId, out var labelTuples))
+                {
+                    vm.Labels = labelTuples.Select(l => l.Label).ToList();
+                }
+            }
+
             return View(nameof(EditPaymentRequest), vm);
         }
 
@@ -292,6 +303,29 @@ namespace BTCPayServer.Controllers
                 data.Created = DateTimeOffset.UtcNow;
 
             data = await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(data);
+
+            var defaultNetwork = _networkProvider.DefaultNetwork;
+            var walletId = new WalletId(store.Id, defaultNetwork.CryptoCode);
+            var walletObjectId = new WalletObjectId(walletId, WalletObjectData.Types.PaymentRequest, data.Id);
+            
+            if (!isNewPaymentRequest)
+            {
+                var existingLabels = await _walletRepository.GetWalletLabelsForObjects(walletId, WalletObjectData.Types.PaymentRequest, new[] { data.Id });
+                if (existingLabels.TryGetValue(data.Id, out var labelTuples))
+                {
+                    var currentLabels = labelTuples.Select(l => l.Label).ToArray();
+                    var toRemove = currentLabels.Where(label => !viewModel.Labels.Contains(label)).ToArray();
+                    if (toRemove.Any())
+                    {
+                        await _walletRepository.RemoveWalletObjectLabels(walletObjectId, toRemove);
+                    }
+                }
+            }
+            
+            if (viewModel.Labels.Any())
+            {
+                await _walletRepository.AddWalletObjectLabels(walletObjectId, viewModel.Labels.ToArray());
+            }
 
             TempData[WellKnownTempData.SuccessMessage] = isNewPaymentRequest
                 ? StringLocalizer["Payment request \"{0}\" created successfully", viewModel.Title].Value

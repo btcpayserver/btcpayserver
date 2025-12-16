@@ -259,18 +259,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
     private static void AddInvoiceWebhooks(IServiceCollection services)
     {
         services.AddWebhookTriggerProvider<InvoiceTriggerProvider>();
-        var invoicePlaceholders = new List<EmailTriggerViewModel.PlaceHolder>()
-        {
-            new("{Invoice.Id}", "The id of the invoice"),
-            new("{Invoice.StoreId}", "The id of the store"),
-            new("{Invoice.Price}", "The price of the invoice"),
-            new("{Invoice.Currency}", "The currency of the invoice"),
-            new("{Invoice.Status}", "The current status of the invoice"),
-            new("{Invoice.Link}", "The backend link to the invoice"),
-            new("{Invoice.AdditionalStatus}", "Additional status information of the invoice"),
-            new("{Invoice.OrderId}", "The order id associated with the invoice"),
-            new("{Invoice.Metadata}*", "The metadata associated with the invoice")
-        };
+        var invoicePlaceholders = InvoiceTriggerProvider.GetInvoicePlaceholders();
         var emailTriggers = new List<EmailTriggerViewModel>()
         {
             new()

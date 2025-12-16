@@ -35,7 +35,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="GetPaymentRequests" asp-route-storeId="@Model.StoreId" text-translate="true">Requests</a>
+                    <a asp-action="GetPaymentRequests" asp-route-storeId="@Model.StoreId" text-translate="true">Payment Requests</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>
@@ -106,18 +106,25 @@
             </div>
             <div class="form-group">
                 <label class="form-label" text-translate="true">Labels</label>
-                <select asp-for="Labels" class="d-none">
-                    @foreach (var t in Model.Labels)
-                    {
-                        <option value="@t" selected></option>
-                    }
-                </select>
-                <vc:label-manager
-                    selected-labels="Model.Labels.ToArray()"
-                    exclude-types="true"
-                    select-element="Labels"
-                    wallet-object-id="new WalletObjectId(wallet, WalletObjectData.Types.PaymentRequest, Model.Id ?? string.Empty)"
-                    auto-update="false" />
+                <div class="input-group">
+                    <select asp-for="Labels" class="d-none">
+                        @foreach (var t in Model.Labels)
+                        {
+                            <option value="@t" selected></option>
+                        }
+                    </select>
+                    <vc:label-manager
+                        selected-labels="Model.Labels.ToArray()"
+                        exclude-types="true"
+                        select-element="Labels"
+                        wallet-object-id="new WalletObjectId(wallet, WalletObjectData.Types.PaymentRequest, Model.Id ?? string.Empty)"
+                        auto-update="false" />
+                    <a asp-action="PaymentRequestLabels" asp-controller="UIPaymentRequest" asp-route-storeId="@Model.StoreId"
+                       class="btn btn-secondary input-group-clear"
+                       title="@StringLocalizer["Manage Labels"]">
+                        <vc:icon symbol="settings" />
+                    </a>
+                </div>
             </div>
             <div class="form-group">
                 <label asp-for="ExpiryDate" class="form-label"></label>

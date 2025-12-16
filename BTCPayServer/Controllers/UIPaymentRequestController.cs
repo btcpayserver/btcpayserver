@@ -19,6 +19,7 @@ using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -604,6 +605,53 @@ namespace BTCPayServer.Controllers
             await _PaymentRequestRepository.UpdatePaymentRequestStatus(payReqId, PaymentRequestStatus.Completed);
 
             return RedirectToAction("GetPaymentRequests", new { storeId = paymentRequest.StoreDataId });
+        }
+
+        [HttpGet("/stores/{storeId}/payment-requests/labels")]
+        [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public async Task<IActionResult> PaymentRequestLabels(string storeId)
+        {
+            var store = GetCurrentStore();
+            var defaultNetwork = _networkProvider.DefaultNetwork;
+            var walletId = new WalletId(store.Id, defaultNetwork.CryptoCode);
+            
+            var labels = await _walletRepository.GetWalletLabelsByLinkedType(walletId, WalletObjectData.Types.PaymentRequest);
+
+            var vm = new PaymentRequestLabelsViewModel
+            {
+                StoreId = storeId,
+                Labels = labels
+                    .Where(l => !WalletObjectData.Types.AllTypes.Contains(l.Label))
+                    .Select(tuple => new PaymentRequestLabelViewModel
+                    {
+                        Label = tuple.Label,
+                        Color = tuple.Color,
+                        TextColor = ColorPalette.Default.TextColor(tuple.Color)
+                    })
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost("/stores/{storeId}/payment-requests/labels/{id}/delete")]
+        [Authorize(Policy = Policies.CanModifyPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public async Task<IActionResult> DeletePaymentRequestLabel(string storeId, string id)
+        {
+            var store = GetCurrentStore();
+            var defaultNetwork = _networkProvider.DefaultNetwork;
+            var walletId = new WalletId(store.Id, defaultNetwork.CryptoCode);
+            var labels = new[] { id };
+            
+            if (await _walletRepository.RemoveWalletLabels(walletId, labels))
+            {
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The label has been successfully deleted."].Value;
+            }
+            else
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["The label could not be deleted."].Value;
+            }
+
+            return RedirectToAction(nameof(PaymentRequestLabels), new { storeId });
         }
 
         private string GetUserId() => _UserManager.GetUserId(User);

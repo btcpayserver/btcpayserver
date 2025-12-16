@@ -1,0 +1,78 @@
+@model BTCPayServer.Models.PaymentRequestViewModels.PaymentRequestLabelsViewModel
+@{
+    ViewData.SetLayoutModel(new LayoutModel("PaymentRequests", StringLocalizer["Payment Request Labels"]));
+}
+
+@section PageFootContent {
+    <script>
+        delegate('click', '.btn-delete', event => {
+            event.preventDefault()
+        })
+    </script>
+}
+
+<div class="sticky-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="GetPaymentRequests" asp-controller="UIPaymentRequest" asp-route-storeId="@Model.StoreId" text-translate="true">Payment Requests</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Labels</li>
+        </ol>
+        <h2>@ViewData["Title"]</h2>
+    </nav>
+</div>
+
+<partial name="_StatusMessage" />
+
+@if (Model.Labels.Any())
+{
+    <div class="table-responsive-md">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th text-translate="true">Label</th>
+                <th text-translate="true" class="text-end">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var label in Model.Labels)
+            {
+                <tr>
+                    <td>
+                        <div class="transaction-label" style="--label-bg:@label.Color;--label-fg:@label.TextColor">
+                            <span>@label.Label</span>
+                        </div>
+                    </td>
+
+                    <td class="text-end">
+                        <a class="btn btn-link p-0 me-3"
+                           href="@Url.Action("GetPaymentRequests", "UIPaymentRequest", new { storeId = Model.StoreId, labelFilter = label.Label })"
+                           title="View Payment Requests with this label">
+                            Payment Requests
+                        </a>
+                        <form method="post" asp-action="DeletePaymentRequestLabel" asp-route-storeId="@Model.StoreId" asp-route-id="@label.Label"
+                              class="d-inline">
+                            <button class="btn btn-link btn-delete p-0 me-3" type="submit" data-bs-toggle="modal" data-bs-target="#ConfirmModal"
+                                    data-description="@StringLocalizer["The label {0} will be deleted from all payment requests.", Html.Encode(label.Label)]"
+                                    data-confirm-input="@StringLocalizer["DELETE"]" text-translate="true">Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Confirm"
+             model="@(new ConfirmModel(StringLocalizer["Delete label"],
+    StringLocalizer["This label will be deleted from all payment requests."], StringLocalizer["Delete"]))" />
+}
+else
+{
+    <p class="text-secondary mt-3">
+        @ViewLocalizer["There are no custom labels yet. You can create custom labels by assigning them to your {0}.",
+            Html.ActionLink(StringLocalizer["payment requests"],
+                "GetPaymentRequests", "UIPaymentRequest", new { storeId = Model.StoreId })]
+    </p>
+}

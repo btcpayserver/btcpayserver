@@ -1917,20 +1917,20 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        [HttpPost("{walletId}/labels/{id}/remove")]
-        public async Task<IActionResult> RemoveWalletLabel(
+        [HttpPost("{walletId}/labels/{id}/delete")]
+        public async Task<IActionResult> DeleteWalletLabel(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, string id)
         {
             var labels = new[] { id };
-            ;
+            
             if (await WalletRepository.RemoveWalletLabels(walletId, labels))
             {
-                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The label has been successfully removed."].Value;
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The label has been successfully deleted."].Value;
             }
             else
             {
-                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["The label could not be removed."].Value;
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["The label could not be deleted."].Value;
             }
 
             return RedirectToAction(nameof(WalletLabels), new { walletId });

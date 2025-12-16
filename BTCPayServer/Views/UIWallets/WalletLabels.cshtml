@@ -8,11 +8,24 @@
 
 @section PageFootContent {
     <script>
-        delegate('click', '.btn-delete', event => { event.preventDefault() })
+        delegate('click', '.btn-delete', event => {
+            event.preventDefault()
+        })
     </script>
 }
 
-<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<div class="sticky-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="WalletTransactions" asp-controller="UIWallets" asp-route-walletId="@walletId" text-translate="true">Transactions</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Labels</li>
+        </ol>
+        <h2>@ViewData["Title"]</h2>
+    </nav>
+</div>
+
 <partial name="_StatusMessage" />
 
 @if (Model.Labels.Any())
@@ -28,35 +41,41 @@
             <tbody>
             @foreach (var label in Model.Labels)
             {
-            <tr>
-                <td>
-                    <div class="transaction-label" style="--label-bg:@label.Color;--label-fg:@label.TextColor">
-                        <span>@label.Label</span>
-                    </div>
-                </td>
+                <tr>
+                    <td>
+                        <div class="transaction-label" style="--label-bg:@label.Color;--label-fg:@label.TextColor">
+                            <span>@label.Label</span>
+                        </div>
+                    </td>
 
-                <td class="text-end">
-                    <a class="btn btn-link p-0 me-3"
-                       href="@Url.Action("ReservedAddresses", "UIWallets", new { walletId = Model.WalletId.ToString(), filter = label.Label })"
-                       title="View Reserved Addresses with this label">
-                        Addresses
-                    </a>
-                    <form method="post" asp-action="RemoveWalletLabel" asp-route-walletId="@Model.WalletId" asp-route-id="@label.Label" class="d-inline">
-                        <button class="btn btn-link btn-delete p-0 me-3" type="submit" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@StringLocalizer["The label {0} will be removed from this wallet and its associated transactions.", Html.Encode(label.Label)]" data-confirm-input="@StringLocalizer["DELETE"]" text-translate="true">Remove</button>
-                    </form>
-                </td>
-            </tr>
+                    <td class="text-end">
+                        <a class="btn btn-link p-0 me-3"
+                           href="@Url.Action("ReservedAddresses", "UIWallets", new { walletId = Model.WalletId.ToString(), filter = label.Label })"
+                           title="View Reserved Addresses with this label">
+                            Addresses
+                        </a>
+                        <form method="post" asp-action="DeleteWalletLabel" asp-route-walletId="@Model.WalletId" asp-route-id="@label.Label"
+                              class="d-inline">
+                            <button class="btn btn-link btn-delete p-0 me-3" type="submit" data-bs-toggle="modal" data-bs-target="#ConfirmModal"
+                                    data-description="@StringLocalizer["The label {0} will be deleted from this wallet and its associated transactions.", Html.Encode(label.Label)]"
+                                    data-confirm-input="@StringLocalizer["DELETE"]" text-translate="true">Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
             }
             </tbody>
         </table>
     </div>
-    <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Remove label"], StringLocalizer["This label will be removed from this wallet and its associated transactions."], StringLocalizer["Delete"]))" />
+    <partial name="_Confirm"
+             model="@(new ConfirmModel(StringLocalizer["Delete label"],
+    StringLocalizer["This label will be deleted from this wallet and its associated transactions."], StringLocalizer["Delete"]))" />
 }
 else
 {
     <p class="text-secondary mt-3">
         @ViewLocalizer["There are no custom labels yet. You can create custom labels by assigning them to your {0}.",
-            Html.ActionLink(StringLocalizer["transactions"], "WalletTransactions", "UIWallets", new { walletId })]
+            Html.ActionLink(StringLocalizer["transactions"],
+                "WalletTransactions", "UIWallets", new { walletId })]
     </p>
 }
-

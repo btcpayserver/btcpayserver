@@ -2965,8 +2965,7 @@ namespace BTCPayServer.Tests
             await s.GoToInvoices(s.StoreId);
             i = await s.CreateInvoice();
             await s.GoToInvoiceCheckout(i);
-            var receipturl = s.Page.Url + "/receipt";
-            await s.GoToUrl(receipturl);
+            await s.GoToUrl($"/i/{i}/receipt");
             await s.Page.Locator("#invoice-unsettled").WaitForAsync();
 
             await s.GoToInvoices(s.StoreId);
@@ -3008,21 +3007,21 @@ namespace BTCPayServer.Tests
             await s.GoToHome();
             await s.Logout();
 
-            await s.GoToUrl(s.Page.Url + $"/i/{i}/receipt");
+            await s.GoToUrl($"/i/{i}/receipt");
             await TestUtils.EventuallyAsync(async () =>
             {
                 var title = await s.Page.TitleAsync();
                 Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
             });
 
-            await s.GoToUrl(s.Page.Url + $"i/{i}");
+            await s.GoToUrl($"/i/{i}");
             await TestUtils.EventuallyAsync(async () =>
             {
                 var title = await s.Page.TitleAsync();
                 Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
             });
 
-            await s.GoToUrl(s.Page.Url + $"i/{i}/status");
+            await s.GoToUrl($"/i/{i}/status");
             await TestUtils.EventuallyAsync(async () =>
             {
                 var title = await s.Page.TitleAsync();
@@ -3041,11 +3040,11 @@ namespace BTCPayServer.Tests
             (_, string appId) = await s.CreateApp("PointOfSale");
             
             await s.Page.Locator("#Title").ClearAsync();
-            await s.Page.Locator("#Title").FillAsync("Tea shop");
-            await s.Page.Locator("label[for='DefaultView_Cart']").ClickAsync();
+            await s.Page.FillAsync("#Title", "Tea shop");
+            await s.Page.ClickAsync("label[for='DefaultView_Cart']");
             await s.Page.Locator(".template-item").First.ClickAsync();
             await s.Page.Locator("#BuyButtonText").WaitForAsync();
-            await s.Page.Locator("#BuyButtonText").FillAsync("Take my money");
+            await s.Page.FillAsync("#BuyButtonText", "Take my money");
             await s.Page.Locator("#EditorCategories-ts-control").FillAsync("Drinks");
             await s.Page.Locator(".offcanvas-header button").ClickAsync();
             await s.Page.Locator("#CodeTabButton").WaitForAsync();

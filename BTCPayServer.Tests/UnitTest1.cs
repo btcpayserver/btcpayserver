@@ -1398,6 +1398,7 @@ namespace BTCPayServer.Tests
             {
                 await tester.Page.FillAsync("#ScriptTest", pairs);
                 await tester.Page.ClickAsync("button[value='Test']");
+                await tester.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             }
 
             foreach (var fallback in new[] { false, true })

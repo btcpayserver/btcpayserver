@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -89,6 +90,21 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
                 ModelState.AddModelError(nameof(request.Price), "Price cannot be negative");
             if (request?.Name is null)
                 ModelState.AddModelError(nameof(request.Name), "Name is required");
+
+            var features = new List<FeatureData>();
+            if (request?.Features is not null)
+            {
+                foreach (var feature in request.Features.Distinct())
+                {
+                    var offeringFeature = offering.Features.FirstOrDefault(f => f.CustomId == feature);
+                    if (offeringFeature is null)
+                    {
+                        ModelState.AddModelError(nameof(request.Features), "A feature with id '" + feature + "' does not exist on the offering.");
+                        break;
+                    }
+                    features.Add(offeringFeature);
+                }
+            }
             if (!ModelState.IsValid || request?.Name is null)
                 return this.CreateValidationError(ModelState);
 
@@ -104,11 +120,24 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
                 Metadata = request.Metadata?.ToString() ?? "{}",
                 RecurringType = Mapper.Map(request.RecurringType ?? OfferingPlanModel.RecurringInterval.Monthly),
             };
+
             if (request.OptimisticActivation is {} o)
                 data.OptimisticActivation = o;
             if (request.Renewable is {} r)
                 data.Renewable = r;
             ctx.Plans.Add(data);
+            if (features.Count > 0)
+            {
+                foreach (var f in features)
+                {
+                    ctx.PlanFeatures.Add(new()
+                    {
+                        PlanId = data.Id,
+                        FeatureId = f.Id
+                    });
+                }
+            }
+
             await ctx.SaveChangesAsync();
             ctx.ChangeTracker.Clear();
             return await GetOfferingPlan(storeId, offeringId, data.Id);

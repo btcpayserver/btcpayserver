@@ -325,11 +325,13 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         var plan = await client.CreateOfferingPlan(user.StoreId, offering.Id, new()
         {
             Name = "NewPlan",
-            Price = 10m
+            Price = 10m,
+            Features = ["can-access"]
         });
         Assert.Equal(("NewPlan", 10m, "USD"), (plan.Name, plan.Price, plan.Currency));
         plan = await client.GetOfferingPlan(user.StoreId, offering.Id, plan.Id);
         Assert.Equal(("NewPlan", 10m, "USD"), (plan.Name, plan.Price, plan.Currency));
+        Assert.Contains("can-access", plan.Features);
 
         offering = await client.GetOffering(offering.StoreId, offering.Id);
         var offering2 = (await client.GetOfferings(offering.StoreId))[0];

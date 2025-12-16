@@ -19,4 +19,6 @@ public class CreatePlanRequest
     public JObject Metadata { get; set; }
     [JsonConverter(typeof(StringEnumConverter))]
     public OfferingPlanModel.RecurringInterval? RecurringType { get; set; }
+
+    public string[] Features { get; set; }
 }

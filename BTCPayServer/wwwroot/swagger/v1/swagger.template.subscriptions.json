@@ -701,7 +701,7 @@
                 "properties": {
                     "subscriber": {
                         "$ref": "#/components/schemas/SubscriberModel",
-                        "description": "Subscriber associated with the checkout."
+                        "description": "Subscriber associated with the checkout. (It can be null if the checkout is for a new subscriber, and the users didn't [proceed with the checkout](#operation/ProceedPlanCheckout))"
                     },
                     "plan": {
                         "$ref": "#/components/schemas/OfferingPlanModel",
@@ -799,7 +799,7 @@
                     "creditPurchase": {
                         "type": "string",
                         "nullable": true,
-                        "description": "Credit amount to purchase to top-up the account.",
+                        "description": "Credit amount to purchase to top-up the account. Used when the user wants to top-up his credits. This will not automatically renew the plan.",
                         "example": "10.00"
                     }
                 }
@@ -910,7 +910,7 @@
                     "appName": {
                         "type": "string",
                         "nullable": true,
-                        "description": "Display name of the related application.",
+                        "description": "Display name of the related [application](#tag/Apps).",
                         "example": "Example App"
                     },
                     "successRedirectUrl": {
@@ -1090,7 +1090,7 @@
                             },
                             "appId": {
                                 "type": "string",
-                                "description": "Identifier of the related application.",
+                                "description": "Identifier of the related [application](#tag/Apps).",
                                 "example": "app-001"
                             },
                             "plans": {
@@ -1154,6 +1154,11 @@
                 "type": "object",
                 "description": "Request payload for creating a new offering plan.",
                 "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Display name of the plan.",
+                        "example": "Monthly Plan"
+                    },
                     "description": {
                         "type": "string",
                         "description": "Short description of the plan.",
@@ -1169,11 +1174,6 @@
                         "nullable": true,
                         "description": "Number of grace period days after expiry.",
                         "example": 7
-                    },
-                    "name": {
-                        "type": "string",
-                        "description": "Display name of the plan.",
-                        "example": "Monthly Plan"
                     },
                     "optimisticActivation": {
                         "type": "boolean",
@@ -1219,6 +1219,15 @@
                             "Lifetime"
                         ],
                         "example": "Monthly"
+                    },
+                    "features": {
+                        "type": "array",
+                        "nullable": true,
+                        "description": "List of features from the offering included in this plan.",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [ "feature-analytics" ]
                     }
                 }
             },
@@ -1299,21 +1308,6 @@
             "OfferingPlanModel": {
                 "type": "object",
                 "description": "Represents a pricing plan for an offering.",
-                "required": [
-                    "id",
-                    "name",
-                    "status",
-                    "price",
-                    "currency",
-                    "recurringType",
-                    "gracePeriodDays",
-                    "trialDays",
-                    "description",
-                    "memberCount",
-                    "optimisticActivation",
-                    "features",
-                    "renewable"
-                ],
                 "properties": {
                     "id": {
                         "$ref": "#/components/schemas/PlanId"
@@ -1385,10 +1379,7 @@
                         "items": {
                             "type": "string"
                         },
-                        "example": [
-                            "feature-analytics",
-                            "feature-support"
-                        ]
+                        "example": [ "feature-analytics" ]
                     },
                     "renewable": {
                         "type": "boolean",

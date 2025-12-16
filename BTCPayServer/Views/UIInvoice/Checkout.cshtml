@@ -88,7 +88,7 @@
                         :show-recommended-fee="showRecommendedFee"
                         class="pb-4" />
                 </div>
-                <div v-if="displayedPaymentMethods.length > 1 || @Safe.Json(hasPaymentPlugins)" class="mt-3 mb-2">
+                <div v-if="shouldShowPaymentMethodSelector" class="mt-3 mb-2">
                     <h6 class="text-center mb-3" v-t="'pay_with'"></h6>
                     <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2 pb-2">
                         <a v-for="crypto in displayedPaymentMethods"

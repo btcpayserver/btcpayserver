@@ -11,6 +11,22 @@
         delegate('click', '.btn-delete', event => {
             event.preventDefault()
         })
+        
+        delegate('click', '.btn-edit', event => {
+            const button = event.target.closest('.btn-edit')
+            const label = button.dataset.label
+            const modal = document.getElementById('EditLabelModal')
+            const input = modal.querySelector('#EditLabelInput')
+            const form = modal.querySelector('form')
+            const oldLabelInput = modal.querySelector('#OldLabel')
+            const walletId = '@walletId'
+            
+            input.value = label
+            oldLabelInput.value = label
+            form.action = `/wallets/${walletId}/labels/${encodeURIComponent(label)}/edit`
+            
+            new bootstrap.Modal(modal).show()
+        })
     </script>
 }
 
@@ -54,6 +70,9 @@
                            title="View Reserved Addresses with this label">
                             Addresses
                         </a>
+                        <button class="btn btn-link btn-edit p-0 me-3" type="button"
+                                data-label="@label.Label" text-translate="true">Edit
+                        </button>
                         <form method="post" asp-action="DeleteWalletLabel" asp-route-walletId="@Model.WalletId" asp-route-id="@label.Label"
                               class="d-inline">
                             <button class="btn btn-link btn-delete p-0 me-3" type="submit" data-bs-toggle="modal" data-bs-target="#ConfirmModal"
@@ -70,6 +89,30 @@
     <partial name="_Confirm"
              model="@(new ConfirmModel(StringLocalizer["Delete label"],
     StringLocalizer["This label will be deleted from this wallet and its associated transactions."], StringLocalizer["Delete"]))" />
+    
+    <div class="modal fade" id="EditLabelModal" tabindex="-1" aria-labelledby="EditLabelModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="post" asp-action="EditWalletLabel" asp-route-walletId="@Model.WalletId">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="EditLabelModalLabel" text-translate="true">Edit Label</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="OldLabel" name="id" />
+                        <div class="form-group">
+                            <label for="EditLabelInput" class="form-label" text-translate="true">Label Name</label>
+                            <input type="text" class="form-control" id="EditLabelInput" name="newLabel" required maxlength="50" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" text-translate="true">Cancel</button>
+                        <button type="submit" class="btn btn-primary" text-translate="true">Save</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 }
 else
 {

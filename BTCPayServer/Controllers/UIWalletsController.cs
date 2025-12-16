@@ -1936,6 +1936,35 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(WalletLabels), new { walletId });
         }
 
+        [HttpPost("{walletId}/labels/{id}/edit")]
+        public async Task<IActionResult> EditWalletLabel(
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, string id, string newLabel)
+        {
+            if (string.IsNullOrWhiteSpace(newLabel))
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Label name cannot be empty."].Value;
+                return RedirectToAction(nameof(WalletLabels), new { walletId });
+            }
+
+            newLabel = newLabel.Trim();
+            if (newLabel == id)
+            {
+                return RedirectToAction(nameof(WalletLabels), new { walletId });
+            }
+
+            if (await WalletRepository.RenameWalletLabel(walletId, id, newLabel))
+            {
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The label has been successfully renamed."].Value;
+            }
+            else
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["The label could not be renamed."].Value;
+            }
+
+            return RedirectToAction(nameof(WalletLabels), new { walletId });
+        }
+
         private string? GetImage(BTCPayNetwork network)
         {
             var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);

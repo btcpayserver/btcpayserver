@@ -726,6 +726,43 @@ namespace BTCPayServer.Services
             return count > 0;
         }
 
+        public async Task<bool> RenameWalletLabel(WalletId id, string oldLabel, string newLabel)
+        {
+            ArgumentNullException.ThrowIfNull(id);
+            oldLabel = oldLabel.Trim();
+            newLabel = newLabel.Trim().Truncate(MaxLabelSize);
+            
+            if (oldLabel == newLabel)
+                return true;
+
+            // First, ensure the new label object exists (required for foreign key constraint)
+            var newLabelObjId = new WalletObjectId(id, WalletObjectData.Types.Label, newLabel);
+            await EnsureWalletObject(newLabelObjId);
+
+            await using var ctx = _ContextFactory.CreateContext();
+            var connection = ctx.Database.GetDbConnection();
+            
+            // Update all links from old label to new label
+            var updated = await connection.ExecuteAsync(
+                """
+                UPDATE "WalletObjectLinks" 
+                SET "AId" = @NewLabel 
+                WHERE "WalletId" = @WalletId 
+                AND "AType" = @LabelType 
+                AND "AId" = @OldLabel
+                """,
+                new { WalletId = id.ToString(), LabelType = WalletObjectData.Types.Label, OldLabel = oldLabel, NewLabel = newLabel });
+
+            // If any links were updated, remove the old label object
+            if (updated > 0)
+            {
+                var oldLabelObjId = new WalletObjectId(id, WalletObjectData.Types.Label, oldLabel);
+                await RemoveWalletObjects(oldLabelObjId);
+            }
+
+            return updated > 0;
+        }
+
         public async Task SetWalletObject(WalletObjectId id, JObject? data)
         {
             ArgumentNullException.ThrowIfNull(id);

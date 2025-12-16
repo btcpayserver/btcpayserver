@@ -654,6 +654,38 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(PaymentRequestLabels), new { storeId });
         }
 
+        [HttpPost("/stores/{storeId}/payment-requests/labels/{id}/edit")]
+        [Authorize(Policy = Policies.CanModifyPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public async Task<IActionResult> EditPaymentRequestLabel(string storeId, string id, string newLabel)
+        {
+            if (string.IsNullOrWhiteSpace(newLabel))
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Label name cannot be empty."].Value;
+                return RedirectToAction(nameof(PaymentRequestLabels), new { storeId });
+            }
+
+            newLabel = newLabel.Trim();
+            if (newLabel == id)
+            {
+                return RedirectToAction(nameof(PaymentRequestLabels), new { storeId });
+            }
+
+            var store = GetCurrentStore();
+            var defaultNetwork = _networkProvider.DefaultNetwork;
+            var walletId = new WalletId(store.Id, defaultNetwork.CryptoCode);
+
+            if (await _walletRepository.RenameWalletLabel(walletId, id, newLabel))
+            {
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The label has been successfully renamed."].Value;
+            }
+            else
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["The label could not be renamed."].Value;
+            }
+
+            return RedirectToAction(nameof(PaymentRequestLabels), new { storeId });
+        }
+
         private string GetUserId() => _UserManager.GetUserId(User);
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();

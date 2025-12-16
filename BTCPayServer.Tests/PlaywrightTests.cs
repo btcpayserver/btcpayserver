@@ -1150,7 +1150,7 @@ namespace BTCPayServer.Tests
             var markAsSettledExists = await s.Page.Locator("button:has-text('Mark as settled')").CountAsync();
             Assert.Equal(0, markAsSettledExists);
             var opening = s.Page.Context.WaitForPageAsync();
-            await s.Page.ClickAsync("a:has-text('View')");
+            await s.Page.ClickAsync($"#PaymentRequest-{payReqId}");
             string invoiceId;
             await using (_ = await s.SwitchPage(opening))
             {
@@ -1179,7 +1179,7 @@ namespace BTCPayServer.Tests
             await s.Page.WaitForLoadStateAsync();
 
             var opening2 = s.Page.Context.WaitForPageAsync();
-            await s.Page.ClickAsync("a:has-text('View')");
+            await s.Page.ClickAsync($"#PaymentRequest-{payReqId}");
             await using (_ = await s.SwitchPage(opening2))
             {
                 await s.Page.WaitForLoadStateAsync();

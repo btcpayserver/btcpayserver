@@ -18,7 +18,7 @@ namespace BTCPayServer.Data
         public bool TryMigrate()
         {
 #pragma warning disable CS0618 // Type or member is obsolete
-            if (Blob is (null or { Length: 0 }) && Blob2 is not null && Currency is not null && Title is not null)
+            if (Blob is (null or { Length: 0 }) && Blob2 is not null && Currency is not null)
                 return false;
             if (Blob2 is null)
             {
@@ -41,51 +41,21 @@ namespace BTCPayServer.Data
                 jobj.Remove("expiryDate");
                 Expiry = date;
             }
-			if (jobj["currency"] is not null)
+			Currency = jobj["currency"].Value<string>();
+			Amount = jobj["amount"] switch
 			{
-				Currency = jobj["currency"].Value<string>();
-				jobj.Remove("currency");
-			}
-			if (jobj["amount"] is not null)
-			{
-				Amount = jobj["amount"] switch
-				{
-					JValue jv when jv.Type == JTokenType.Float => jv.Value<decimal>(),
-					JValue jv when jv.Type == JTokenType.Integer => jv.Value<long>(),
-					JValue jv when jv.Type == JTokenType.String && decimal.TryParse(jv.Value<string>(), CultureInfo.InvariantCulture, out var d) => d,
-					_ => 0m
-				};
-				jobj.Remove("amount");
-			}
-			Blob2 = jobj.ToString(Newtonsoft.Json.Formatting.None);
-            
-            // Run Title migration separately (only if Title column exists)
-            try
+				JValue jv when jv.Type == JTokenType.Float => jv.Value<decimal>(),
+				JValue jv when jv.Type == JTokenType.Integer => jv.Value<long>(),
+				JValue jv when jv.Type == JTokenType.String && decimal.TryParse(jv.Value<string>(), CultureInfo.InvariantCulture, out var d) => d,
+				_ => 0m
+			};
+            if (jobj["title"] is not null)
             {
-                TryMigrateTitle();
-            }
-            catch
-            {
-                // Title column doesn't exist yet - will be migrated later
-            }
-            
-            return true;
-        }
-
-        public bool TryMigrateTitle()
-        {
-            if (Blob2 is null || Title is not null)
-                return false;
-            
-            var jobj = JObject.Parse(Blob2);
-            Title = jobj["title"]?.Value<string>();
-            if (Title is not null)
-            {
+                Title = jobj["title"].ToString();
                 jobj.Remove("title");
-                Blob2 = jobj.ToString(Newtonsoft.Json.Formatting.None);
-                return true;
             }
-            return false;
+			Blob2 = jobj.ToString(Newtonsoft.Json.Formatting.None);
+            return true;
         }
     }
 }

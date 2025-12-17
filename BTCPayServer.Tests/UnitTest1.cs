@@ -3275,8 +3275,8 @@ namespace BTCPayServer.Tests
                 SELECT "Title", "Blob2" FROM "PaymentRequests"
                 WHERE "Id" = 'test-pr-with-title'
                 """));
-            Assert.Null((string)titleBeforeMigration.Title);
-            Assert.Contains("\"title\"", (string)titleBeforeMigration.Blob2);
+            Assert.NotNull((string)titleBeforeMigration.Title);
+            Assert.DoesNotContain("\"title\"", (string)titleBeforeMigration.Blob2);
 
             // Load entity through EF - this triggers TryMigrate() which calls TryMigrateTitle()
             var pr = ctx.PaymentRequests.First(r => r.Id == "test-pr-with-title");

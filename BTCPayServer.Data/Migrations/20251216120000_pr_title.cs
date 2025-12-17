@@ -14,22 +14,17 @@ namespace BTCPayServer.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "Title",
-                table: "PaymentRequests",
-                type: "text",
-                nullable: true);
-
-            // Create case-insensitive index for Title searches
-            migrationBuilder.Sql(@"CREATE INDEX ""IX_PaymentRequests_Title"" ON ""PaymentRequests"" (LOWER(""Title""));");
+            migrationBuilder.Sql("""
+                                 ALTER TABLE "PaymentRequests"
+                                     ADD COLUMN "Title" TEXT DEFAULT NULL;
+                                 UPDATE "PaymentRequests" SET "Title" = "Blob2" ->> 'title', "Blob2" = "Blob2" - 'title'
+                                 WHERE "Blob2" ->> 'title' IS NOT NULL;
+                                 """);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "Title",
-                table: "PaymentRequests");
         }
     }
 }

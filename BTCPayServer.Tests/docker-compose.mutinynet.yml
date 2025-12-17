@@ -178,13 +178,15 @@ services:
       - bitcoind
 
   postgres:
-    image:  postgres:13.13
+    image: postgres:18.1
     environment:
-        POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_HOST_AUTH_METHOD: trust
     ports:
       - "39372:5432"
     expose:
       - "5432"
+    volumes:
+      - "postgres_test_datadir:/var/lib/postgresql"
 
   merchant_lnd:
     image: btcpayserver/lnd:v0.19.3-beta
@@ -284,6 +286,7 @@ volumes:
     lightning_charge_datadir:
     customer_lnd_datadir:
     merchant_lnd_datadir:
+    postgres_test_datadir:
     tor_datadir:
     torrcdir:
     tor_servicesdir:

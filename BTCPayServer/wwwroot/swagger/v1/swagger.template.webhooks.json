@@ -285,7 +285,7 @@
                         }
                     },
                     "404": {
-                        "description": "The delivery does not exists."
+                        "description": "The delivery does not exist."
                     }
                 },
                 "security": [
@@ -330,7 +330,7 @@
                         }
                     },
                     "404": {
-                        "description": "The delivery does not exists."
+                        "description": "The delivery does not exist."
                     },
                     "409": {
                         "description": "`webhookdelivery-pruned`: This webhook delivery has been pruned, so it can't be redelivered."
@@ -367,7 +367,7 @@
                 "description": "Redeliver the delivery",
                 "responses": {
                     "200": {
-                        "description": "The new delivery id being broadcasted. (Broadcast happen asynchronously with this call)",
+                        "description": "The new delivery id being broadcasted. (Broadcast happens asynchronously with this call)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -377,7 +377,7 @@
                         }
                     },
                     "404": {
-                        "description": "The delivery does not exists."
+                        "description": "The delivery does not exist."
                     },
                     "409": {
                         "description": "`webhookdelivery-pruned`: This webhook delivery has been pruned, so it can't be redelivered."
@@ -654,7 +654,7 @@
                         "properties": {
                             "manuallyMarked": {
                                 "type": "boolean",
-                                "description": "Whether the invoice have been manually marked as confirmed",
+                                "description": "Whether the invoice has been manually marked as confirmed",
                                 "nullable": false
                             }
                         }
@@ -682,7 +682,7 @@
                         "properties": {
                             "manuallyMarked": {
                                 "type": "boolean",
-                                "description": "Whether the invoice have been manually marked as confirmed. If false, this invoice has received payments which could not confirm in time.",
+                                "description": "Whether the invoice has been manually marked as confirmed. If false, this invoice has received payments which could not confirm in time.",
                                 "nullable": false
                             }
                         }
@@ -905,7 +905,7 @@
             "post": {
                 "operationId": "Webhook_InvoicePaymentSettled",
                 "summary": "InvoicePaymentSettled",
-                "description": "An payment relating to an invoice has settled",
+                "description": "A payment relating to an invoice has settled",
                 "parameters": [
                     {
                         "in": "header",

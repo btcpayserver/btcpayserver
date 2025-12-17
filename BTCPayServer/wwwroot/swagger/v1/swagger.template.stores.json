@@ -305,7 +305,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Store logo deleted successfully"
+                        "description": "Store logo deleted successfuly"
                     },
                     "404": {
                         "description": "The store could not be found"
@@ -614,7 +614,7 @@
                     "redirectAutomatically": {
                         "type": "boolean",
                         "default": false,
-                        "description": "After successfull payment, should the checkout page redirect the user automatically to the redirect URL of the invoice?"
+                        "description": "After successful payment, should the checkout page redirect the user automatically to the redirect URL of the invoice?"
                     },
                     "showRecommendedFee": {
                         "type": "boolean",

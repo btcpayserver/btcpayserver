@@ -29,7 +29,7 @@
                 "properties": {
                     "amount": {
                         "type": "string",
-                        "description": "Amount wrapped in a string, represented in a millistatoshi string. (1000 millisatoshi = 1 satoshi)",
+                        "description": "Amount wrapped in a string, represented in a millisatoshi string. (1000 millisatoshi = 1 satoshi)",
                         "nullable": false
                     },
                     "description": {

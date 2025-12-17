@@ -54,7 +54,11 @@ namespace BTCPayServer
                     {
                         l.AddFilter("Microsoft", LogLevel.Error);
                         if (!conf.GetOrDefault<bool>("verbose", false))
+                        {
                             l.AddFilter("Events", LogLevel.Warning);
+                            l.AddFilter("BTCPayServer.HostedServices", LogLevel.Warning);
+                        }
+
                         // Uncomment this to see EF queries
                         //l.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Trace);
                         l.AddFilter("Microsoft.EntityFrameworkCore.Migrations", LogLevel.Information);

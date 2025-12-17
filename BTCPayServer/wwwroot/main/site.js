@@ -15,131 +15,211 @@ const switchTimeFormat = event => {
 
 async function initLabelManager (elementId) {
     const element = document.getElementById(elementId);
+    if (!element) return;
 
-    const labelStyle = data =>
-        data && data.color && data.textColor
-            ? `--label-bg:${data.color};--label-fg:${data.textColor}`
-            : '--label-bg:var(--btcpay-neutral-300);--label-fg:var(--btcpay-neutral-800)'
+    const { fetchUrl, updateUrl, walletId, walletObjectType, walletObjectId, labels, selectElement } = element.dataset;
+    const commonCallId = `walletLabels-${walletId}`;
+    const fetchWalletLabels = async (force = false) => {
+        if (!force && window[commonCallId])
+            return window[commonCallId];
 
-    if (element) {
-        const { fetchUrl, updateUrl, walletId, walletObjectType, walletObjectId, labels, selectElement } = element.dataset;
-        const commonCallId = `walletLabels-${walletId}`;
-        if (!window[commonCallId]) {
-            window[commonCallId] = fetch(fetchUrl, {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-            }).then(res => res.json());
-        }
-        const items = element.value.split(',').filter(x => !!x);
-        const options = await window[commonCallId].then(labels => {
-            const newItems = items.filter(item => !labels.find(label => label.label === item));
-            labels = [...labels, ...newItems.map(item => ({ label: item }))];
-            return labels;
+        window[commonCallId] = fetch(fetchUrl, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(res => res.json())
+            .catch(err => {
+            delete window[commonCallId];
+            throw err;
         });
-        const richInfo = labels ? JSON.parse(labels) : {};
-        const config = {
-            options,
-            items,
-            valueField: "label",
-            labelField: "label",
-            searchField: "label",
-            create: true,
-            persist: true,
-            allowEmptyOption: false,
-            closeAfterSelect: false,
-            render: {
-                dropdown (){
-                    return '<div class="dropdown-menu"></div>';
-                },
-                option_create: function(data, escape) {
-                    return `<div class="transaction-label create" style="${labelStyle(null)}">Add <strong>${escape(data.input)}</strong>&hellip;</div>`;
-                },
-                option (data, escape) {
-                    return `<div class="transaction-label" style="${labelStyle(data)}"><span>${escape(data.label)}</span></div>`;
-                },
-                item (data, escape) {
-                    const info = richInfo && richInfo[data.label];
-                    const additionalInfo = info
-                        ? `<a href="${info.link}" target="_blank" rel="noreferrer noopener" class="transaction-label-info transaction-details-icon" title="${info.tooltip}" data-bs-html="true"
-                              data-bs-toggle="tooltip" data-bs-custom-class="transaction-label-tooltip"><svg role="img" class="icon icon-info"><use href="/img/icon-sprite.svg#info"></use></svg></a>`
-                        : '';
-                    const inner = `<span>${escape(data.label)}</span>${additionalInfo}`;
-                    return `<div class="transaction-label" style="${labelStyle(data)}">${inner}</div>`;
-                }
-            },
-            onItemAdd (val) {
-                window[commonCallId] = window[commonCallId].then(labels => {
-                    return [...labels, { label: val }]
-                });
 
-                document.dispatchEvent(new CustomEvent(`${commonCallId}-option-added`, {
+        return window[commonCallId];
+    };
+
+    const items = element.value.split(',').filter(x => !!x);
+    const options = await fetchWalletLabels().then(serverLabels => {
+        const newItems = items.filter(item => !serverLabels.find(label => label.label === item));
+        return [...serverLabels, ...newItems.map(item => ({ label: item }))];
+    });
+    const richInfo = labels ? JSON.parse(labels) : {};
+    let select;
+    const refreshLabelOptions = async () => {
+        if (!fetchUrl || !select) return;
+
+        const updatedLabels = await fetchWalletLabels(true);
+
+        updatedLabels.forEach(lbl => {
+            if (select.options[lbl.label]) {
+                select.updateOption(lbl.label, lbl);
+            } else {
+                select.addOption(lbl);
+            }
+        });
+
+        select.refreshItems();
+    };
+    const applyLabelStyle = (el, data) => {
+        const bg = data && data.color
+            ? data.color
+            : 'var(--btcpay-neutral-300)';
+        const fg = data && data.textColor
+            ? data.textColor
+            : 'var(--btcpay-neutral-800)';
+
+        el.style.setProperty('--label-bg', bg);
+        el.style.setProperty('--label-fg', fg);
+    };
+
+    const config = {
+        options,
+        items,
+        valueField: 'label',
+        labelField: 'label',
+        searchField: 'label',
+        create: true,
+        persist: true,
+        allowEmptyOption: false,
+        closeAfterSelect: false,
+        render: {
+            dropdown () {
+                const menu = document.createElement('div');
+                menu.className = 'dropdown-menu';
+                return menu;
+            },
+            option_create (data) {
+                const div = document.createElement('div');
+                div.className = 'transaction-label create';
+                applyLabelStyle(div, null);
+
+                div.append('Add ');
+                const strong = document.createElement('strong');
+                strong.textContent = data.input;
+                div.append(strong, '…');
+
+                return div;
+            },
+            option (data) {
+                const div = document.createElement('div');
+                div.className = 'transaction-label';
+                applyLabelStyle(div, data);
+
+                const span = document.createElement('span');
+                span.textContent = data.label;
+                div.append(span);
+
+                return div;
+            },
+            item (data) {
+                const div = document.createElement('div');
+                div.className = 'transaction-label';
+                applyLabelStyle(div, data);
+
+                const span = document.createElement('span');
+                span.textContent = data.label;
+                div.append(span);
+
+                const info = richInfo && richInfo[data.label];
+                if (info && typeof info.link === 'string') {
+                    const url = info.link;
+                    if (/^https?:\/\//i.test(url)) {
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.target = '_blank';
+                        a.rel = 'noreferrer noopener';
+                        a.className = 'transaction-label-info transaction-details-icon';
+
+                        if (info.tooltip) {
+                            a.title = String(info.tooltip);
+                        }
+
+                        a.dataset.bsHtml = 'false';
+                        a.dataset.bsToggle = 'tooltip';
+                        a.dataset.bsCustomClass = 'transaction-label-tooltip';
+
+                        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                        svg.setAttribute('role', 'img');
+                        svg.classList.add('icon', 'icon-info');
+
+                        const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+                        use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `${baseUrl}/img/icon-sprite.svg#info`);
+                        svg.appendChild(use);
+
+                        a.appendChild(svg);
+                        div.append(a);
+                    }
+                }
+
+                return div;
+            }
+        },
+        onItemAdd (val) {
+            document.dispatchEvent(
+                new CustomEvent(`${commonCallId}-option-added`, {
                     detail: val
                 }));
-            },
-            async onChange (values) {
-                const labels = Array.isArray(values) ? values : values.split(',');
+        },
+        async onChange (values) {
+            const labels = Array.isArray(values) ? values : values.split(',');
+            element.dispatchEvent(new CustomEvent("labelmanager:changed", {
+                detail: {
+                    walletObjectId,
+                    labels: labels
+                }
+            }));
 
-                element.dispatchEvent(new CustomEvent("labelmanager:changed", {
-                    detail: {
-                        walletObjectId,
-                        labels: labels
-                    }
-                }));
-
-                const selectElementI = selectElement ? document.getElementById(selectElement) : null;
-                if (selectElementI){
-                    while (selectElementI.options.length > 0) {
-                        selectElementI.remove(0);
-                    }
-                    select.items.forEach((item) => {
-                        selectElementI.add(new Option(item, item, true, true));
+            const selectElementI = selectElement ? document.getElementById(selectElement) : null;
+            if (selectElementI) {
+                while (selectElementI.options.length > 0) {
+                    selectElementI.remove(0);
+                }
+                select.items.forEach(item => {
+                    selectElementI.add(new Option(item, item, true, true));
+                });
+            }
+            if (!updateUrl) return;
+            select.lock();
+            try {
+                const response = await fetch(updateUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: walletObjectId,
+                        type: walletObjectType,
+                        labels: select.items
                     })
+                });
+                if (!response.ok) {
+                    throw new Error('Network response was not OK');
                 }
-                if(!updateUrl)
-                    return;
-                select.lock();
-                try {
-                    const response = await fetch(updateUrl, {
-                        method: "POST",
-                        credentials: "include",
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            id: walletObjectId,
-                            type: walletObjectType,
-                            labels: select.items
-                        })
-                    });
-                    if (!response.ok) {
-                        throw new Error('Network response was not OK');
-                    }
-                } catch (error) {
-                    console.error('There has been a problem with your fetch operation:', error);
-                } finally {
-                    select.unlock();
-                }
-            }
-        };
-        const select = new TomSelect(element, config);
 
-        element.parentElement.querySelectorAll('.ts-control .transaction-label a').forEach(lbl => {
-            lbl.addEventListener('click', e => {
-                e.stopPropagation()
+                await refreshLabelOptions();
+            } catch (error) {
+                console.error('There has been a problem with your fetch operation:', error);
+            } finally {
+                select.unlock();
+            }
+        }
+    };
+    select = new TomSelect(element, config);
+
+    element.parentElement.querySelectorAll('.ts-control .transaction-label a').forEach(lbl => {
+        lbl.addEventListener('click', e => {
+            e.stopPropagation()
+        })
+    })
+
+    document.addEventListener(`${commonCallId}-option-added`, evt => {
+        if (!(evt.detail in select.options)) {
+            select.addOption({
+                label: evt.detail
             })
-        })
-
-        document.addEventListener(`${commonCallId}-option-added`, evt => {
-            if (!(evt.detail in select.options)) {
-                select.addOption({
-                    label: evt.detail
-                })
-            }
-        })
-    }
+        }
+    })
 }
 
 const initLabelManagers = () => {

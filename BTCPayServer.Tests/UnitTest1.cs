@@ -3115,7 +3115,7 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
-        public async Task CanMigratePaymentRequests()
+        public async Task CanMigratePaymentRequestsAmountCurrency()
         {
             var tester = CreateDBTester();
             await tester.MigrateUntil("20250407133937_pr_expiry");
@@ -3160,7 +3160,7 @@ namespace BTCPayServer.Tests
                 );
 
                 """);
-            await tester.ContinueMigration();
+            await tester.CompleteMigrations();
             // The blob isn't cleaned yet, this is the migrator who does that
             await conn.QuerySingleAsync("""
                 SELECT * FROM "PaymentRequests"
@@ -3180,6 +3180,8 @@ namespace BTCPayServer.Tests
                 WHERE "Id"= 'expired-bug'
                 AND "Status" = 'Processing'
                 """);
+
+
 
             var pr = ctx.PaymentRequests.First(r => r.Id == "03463aab-844e-4d60-872f-26310b856131");
             Assert.Equal("USD", pr.Currency);
@@ -3204,8 +3206,8 @@ namespace BTCPayServer.Tests
                 """)).Blob2;
             var expectedBlob2 = new JObject()
             {
-                ["email"] = "f.f@gmail.com",
-                ["title"] = "Online"
+                ["email"] = "f.f@gmail.com"
+                //,["title"] = "Online"
             };
             Assert.Equal(JObject.Parse(actualBlob2), expectedBlob2);
 
@@ -3216,8 +3218,8 @@ namespace BTCPayServer.Tests
                 """)).Blob2;
             expectedBlob2 = new JObject()
             {
-                ["email"] = "f.f@gmail.com",
-                ["title"] = "Online"
+                ["email"] = "f.f@gmail.com"
+                //,["title"] = "Online"
             };
             Assert.Equal(JObject.Parse(actualBlob2), expectedBlob2);
 
@@ -3232,6 +3234,78 @@ namespace BTCPayServer.Tests
                 """);
                 Assert.NotNull(r);
             });
+        }
+
+        [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanMigratePaymentRequestsTitles()
+        {
+            var tester = CreateDBTester();
+            await tester.MigrateUntil("20251216120000_pr_title");
+            using var ctx = tester.CreateContext();
+            var conn = ctx.Database.GetDbConnection();
+
+            // Insert test data - this payment request already has Currency/Amount migrated
+            // but Title is still in Blob2 (simulating a PR that went through first migration)
+            await conn.ExecuteAsync("""
+                INSERT INTO "Stores" ("Id", "SpeedPolicy") VALUES ('TestStore123', 0);
+                INSERT INTO "PaymentRequests" (
+                    "Id", "StoreDataId", "Status", "Blob", "Created", "Archived",
+                    "Blob2", "Currency", "Amount", "Expiry"
+                ) VALUES (
+                    'test-pr-with-title',
+                    'TestStore123',
+                    'Pending',
+                    NULL,
+                    '2024-03-21 23:15:26.356677+00',
+                    FALSE,
+                    '{"email": "test@example.com", "title": "Test Payment Request", "description": "Test description"}',
+                    'USD',
+                    100.50,
+                    NULL
+                );
+                """);
+
+            await tester.CompleteMigrations();
+
+            // The Title column exists but isn't populated yet - it's still in Blob2
+            // This simulates a payment request that went through the Currency/Amount migration
+            // but hasn't had the Title migration run yet
+            var titleBeforeMigration = (await conn.QuerySingleAsync("""
+                SELECT "Title", "Blob2" FROM "PaymentRequests"
+                WHERE "Id" = 'test-pr-with-title'
+                """));
+            Assert.NotNull((string)titleBeforeMigration.Title);
+            Assert.DoesNotContain("\"title\"", (string)titleBeforeMigration.Blob2);
+
+            // Load entity through EF - this triggers TryMigrate() which calls TryMigrateTitle()
+            var pr = ctx.PaymentRequests.First(r => r.Id == "test-pr-with-title");
+            Assert.Equal("Test Payment Request", pr.Title);
+            Assert.Equal("USD", pr.Currency);
+            Assert.Equal(100.50m, pr.Amount);
+
+            // Start server to run background migrator
+            using var serverTester = CreateServerTester();
+            serverTester.PayTester.Postgres = serverTester.PayTester.Postgres.Replace("btcpayserver", tester.dbname);
+            await serverTester.StartAsync();
+            var migrator = serverTester.PayTester.GetService<PaymentRequestsMigratorHostedService>();
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                Assert.True(await migrator.IsComplete());
+            });
+
+            // Verify title removed from Blob2 after background migration
+            var actualBlob2 = (string)(await conn.QuerySingleAsync("""
+                SELECT "Blob2" FROM "PaymentRequests"
+                WHERE "Id" = 'test-pr-with-title'
+                """)).Blob2;
+
+            var expectedBlob2 = new JObject()
+            {
+                ["email"] = "test@example.com",
+                ["description"] = "Test description"
+            };
+            Assert.Equal(JObject.Parse(actualBlob2), expectedBlob2);
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]

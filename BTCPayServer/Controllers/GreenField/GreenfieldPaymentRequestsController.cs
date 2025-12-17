@@ -218,10 +218,10 @@ namespace BTCPayServer.Controllers.Greenfield
 			if (!ModelState.IsValid)
 				return this.CreateValidationError(ModelState);
 
+			pr.Title = request.Title;
 			var blob = pr.GetBlob();
 			pr.SetBlob(new()
 			{
-				Title = request.Title,
 				AllowCustomPaymentAmounts = request.AllowCustomPaymentAmounts,
 				Description = request.Description,
 				Email = request.Email,
@@ -251,7 +251,7 @@ namespace BTCPayServer.Controllers.Greenfield
 				Amount = data.Amount,
 				Currency = data.Currency,
 				Description = blob.Description,
-				Title = blob.Title,
+				Title = data.Title,
 				ExpiryDate = data.Expiry,
 				Email = blob.Email,
 				ReferenceId = data.ReferenceId,

@@ -6,16 +6,23 @@
 @using BTCPayServer.Plugins.Emails
 @using BTCPayServer.TagHelpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Data
+@using BTCPayServer.Services
 @inject FormDataService FormDataService
 @inject LinkGenerator LinkGenerator
+@inject BTCPayNetworkProvider BTCPayNetworkProvider
 @model BTCPayServer.Models.PaymentRequestViewModels.UpdatePaymentRequestViewModel
 @{
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
     ViewData.SetLayoutModel(new LayoutModel("PaymentRequests", string.IsNullOrEmpty(Model.Id) ? StringLocalizer["Create Payment Request"] : StringLocalizer["Edit Payment Request"]));
+    var defaultNetwork = BTCPayNetworkProvider.DefaultNetwork;
+    var wallet = new WalletId(Model.StoreId, defaultNetwork.CryptoCode);
 }
 
 @section PageHeadContent {
     <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
+    <script src="~/vendor/tom-select/tom-select.complete.min.js" asp-append-version="true"></script>
+    <link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" asp-append-version="true" rel="stylesheet">
 }
 
 @section PageFootContent {
@@ -28,7 +35,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="GetPaymentRequests" asp-route-storeId="@Model.StoreId" text-translate="true">Requests</a>
+                    <a asp-action="GetPaymentRequests" asp-route-storeId="@Model.StoreId" text-translate="true">Payment Requests</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>
@@ -64,6 +71,10 @@
                 <div class="form-group flex-fill me-4">
                     <label asp-for="Amount" class="form-label" data-required></label>
                     <input type="number" inputmode="decimal" step="any" asp-for="Amount" class="form-control" required disabled="@(!Model.AmountAndCurrencyEditable)" />
+                    @if (!Model.AmountAndCurrencyEditable)
+                    {
+                        <input type="hidden" asp-for="Amount" />
+                    }
                     <span asp-validation-for="Amount" class="text-danger"></span>
                     @if (!Model.AmountAndCurrencyEditable)
                     {
@@ -76,6 +87,10 @@
                 <div class="form-group">
                     <label asp-for="Currency" class="form-label"></label>
                     <input asp-for="Currency" class="form-control w-auto" currency-selection disabled="@(!Model.AmountAndCurrencyEditable)" />
+                    @if (!Model.AmountAndCurrencyEditable)
+                    {
+                        <input type="hidden" asp-for="Currency" />
+                    }
                     <span asp-validation-for="Currency" class="text-danger"></span>
                 </div>
             </div>
@@ -88,6 +103,28 @@
                 <label asp-for="ReferenceId" class="form-label"></label>
                 <input asp-for="ReferenceId" class="form-control" />
                 <span asp-validation-for="ReferenceId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label class="form-label" text-translate="true">Labels</label>
+                <div class="input-group">
+                    <select asp-for="Labels" class="d-none">
+                        @foreach (var t in Model.Labels)
+                        {
+                            <option value="@t" selected></option>
+                        }
+                    </select>
+                    <vc:label-manager
+                        selected-labels="Model.Labels.ToArray()"
+                        exclude-types="true"
+                        select-element="Labels"
+                        wallet-object-id="new WalletObjectId(wallet, WalletObjectData.Types.PaymentRequest, Model.Id ?? string.Empty)"
+                        auto-update="false" />
+                    <a asp-action="PaymentRequestLabels" asp-controller="UIPaymentRequest" asp-route-storeId="@Model.StoreId"
+                       class="btn btn-secondary input-group-clear"
+                       title="@StringLocalizer["Manage Labels"]">
+                        <vc:icon symbol="settings" />
+                    </a>
+                </div>
             </div>
             <div class="form-group">
                 <label asp-for="ExpiryDate" class="form-label"></label>

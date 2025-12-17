@@ -49,6 +49,11 @@ namespace BTCPayServer.Data
 				JValue jv when jv.Type == JTokenType.String && decimal.TryParse(jv.Value<string>(), CultureInfo.InvariantCulture, out var d) => d,
 				_ => 0m
 			};
+            if (jobj["title"] is not null)
+            {
+                Title = jobj["title"].ToString();
+                jobj.Remove("title");
+            }
 			Blob2 = jobj.ToString(Newtonsoft.Json.Formatting.None);
             return true;
         }

@@ -1,9 +1,6 @@
-@model WalletLabelsModel
+@model BTCPayServer.Models.PaymentRequestViewModels.PaymentRequestLabelsViewModel
 @{
-    var walletId = Context.GetRouteValue("walletId").ToString();
-    var cryptoCode = Model.WalletId.CryptoCode;
-    ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Settings)}-{cryptoCode}", StringLocalizer["{0} Wallet Labels", Model.WalletId.CryptoCode])
-        .SetCategory(WellKnownCategories.ForWallet(cryptoCode)));
+    ViewData.SetLayoutModel(new LayoutModel("PaymentRequests", StringLocalizer["Payment Request Labels"]));
 }
 
 @section PageFootContent {
@@ -19,11 +16,11 @@
             const input = modal.querySelector('#EditLabelInput')
             const form = modal.querySelector('form')
             const oldLabelInput = modal.querySelector('#OldLabel')
-            const walletId = '@walletId'
+            const storeId = '@Model.StoreId'
             
             input.value = label
             oldLabelInput.value = label
-            form.action = `/wallets/${walletId}/labels/${encodeURIComponent(label)}/edit`
+            form.action = `/stores/${storeId}/payment-requests/labels/${encodeURIComponent(label)}/edit`
             
             new bootstrap.Modal(modal).show()
         })
@@ -34,7 +31,7 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a asp-action="WalletTransactions" asp-controller="UIWallets" asp-route-walletId="@walletId" text-translate="true">Transactions</a>
+                <a asp-action="GetPaymentRequests" asp-controller="UIPaymentRequest" asp-route-storeId="@Model.StoreId" text-translate="true">Payment Requests</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">Labels</li>
         </ol>
@@ -66,17 +63,17 @@
 
                     <td class="text-end">
                         <a class="btn btn-link p-0 me-3"
-                           href="@Url.Action("ReservedAddresses", "UIWallets", new { walletId = Model.WalletId.ToString(), filter = label.Label })"
-                           title="View Reserved Addresses with this label">
-                            Addresses
+                           href="@Url.Action("GetPaymentRequests", "UIPaymentRequest", new { storeId = Model.StoreId, labelFilter = label.Label })"
+                           title="View Payment Requests with this label">
+                            Payment Requests
                         </a>
                         <button class="btn btn-link btn-edit p-0 me-3" type="button"
                                 data-label="@label.Label" text-translate="true">Edit
                         </button>
-                        <form method="post" asp-action="DeleteWalletLabel" asp-route-walletId="@Model.WalletId" asp-route-id="@label.Label"
+                        <form method="post" asp-action="DeletePaymentRequestLabel" asp-route-storeId="@Model.StoreId" asp-route-id="@label.Label"
                               class="d-inline">
                             <button class="btn btn-link btn-delete p-0 me-3" type="submit" data-bs-toggle="modal" data-bs-target="#ConfirmModal"
-                                    data-description="@StringLocalizer["The label {0} will be deleted from this wallet and its associated transactions.", Html.Encode(label.Label)]"
+                                    data-description="@StringLocalizer["The label {0} will be deleted from all payment requests.", Html.Encode(label.Label)]"
                                     data-confirm-input="@StringLocalizer["DELETE"]" text-translate="true">Delete
                             </button>
                         </form>
@@ -88,11 +85,11 @@
     </div>
     <partial name="_Confirm"
              model="@(new ConfirmModel(StringLocalizer["Delete label"],
-    StringLocalizer["This label will be deleted from this wallet and its associated transactions."], StringLocalizer["Delete"]))" />
+    StringLocalizer["This label will be deleted from all payment requests."], StringLocalizer["Delete"]))" />
     
     <div class="modal fade" id="EditLabelModal" tabindex="-1" aria-labelledby="EditLabelModalLabel" aria-hidden="true">
         <div class="modal-dialog">
-            <form method="post" asp-action="EditWalletLabel" asp-route-walletId="@Model.WalletId">
+            <form method="post" asp-action="EditPaymentRequestLabel" asp-route-storeId="@Model.StoreId">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="EditLabelModalLabel" text-translate="true">Edit Label</h5>
@@ -118,7 +115,7 @@ else
 {
     <p class="text-secondary mt-3">
         @ViewLocalizer["There are no custom labels yet. You can create custom labels by assigning them to your {0}.",
-            Html.ActionLink(StringLocalizer["transactions"],
-                "WalletTransactions", "UIWallets", new { walletId })]
+            Html.ActionLink(StringLocalizer["payment requests"],
+                "GetPaymentRequests", "UIPaymentRequest", new { storeId = Model.StoreId })]
     </p>
 }

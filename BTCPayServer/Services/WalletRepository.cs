@@ -305,6 +305,75 @@ namespace BTCPayServer.Services
                 .Select(FormatToLabel).ToArray();
         }
 
+        public async Task<(string Label, string Color)[]> GetWalletLabelsByLinkedType(WalletId walletId, string linkedType)
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+
+            const string sql = """
+                               SELECT DISTINCT
+                                   wo.*,
+                                   wo.xmin AS "xmin"
+                               FROM "WalletObjectLinks" AS wol
+                               INNER JOIN "WalletObjects" AS wo
+                                   ON wol."WalletId" = wo."WalletId"
+                                  AND wol."AType" = wo."Type"
+                                  AND wol."AId" = wo."Id"
+                               WHERE wol."WalletId" = {0}
+                                 AND wol."AType" = {2}
+                                 AND wol."BType" = {1};
+                               """;
+
+            var labelObjects = await ctx.WalletObjects
+                .FromSqlRaw(sql, walletId.ToString(), linkedType, WalletObjectData.Types.Label)
+                .AsNoTracking()
+                .ToArrayAsync();
+            return labelObjects.Select(FormatToLabel).ToArray();
+        }
+
+        public async Task<Dictionary<string, (string Label, string Color)[]>> GetWalletLabelsForObjects(
+            WalletId walletId,
+            string linkedType,
+            string[] objectIds)
+        {
+            if (objectIds.Length == 0)
+                return new Dictionary<string, (string Label, string Color)[]>();
+
+            await using var ctx = _ContextFactory.CreateContext();
+            var walletIdString = walletId.ToString();
+
+            var targetObjectIds = objectIds.Distinct().ToArray();
+
+            var rows = await
+                (from link in ctx.WalletObjectLinks.AsNoTracking()
+                    join labelObj in ctx.WalletObjects.AsNoTracking()
+                        on new { link.WalletId, link.AId }
+                        equals new { labelObj.WalletId, AId = labelObj.Id }
+                    where
+                        link.WalletId == walletIdString &&
+                        link.AType == WalletObjectData.Types.Label &&
+                        link.BType == linkedType &&
+                        labelObj.Type == WalletObjectData.Types.Label &&
+                        targetObjectIds.Contains(link.BId)
+                    select new
+                    {
+                        ObjectId = link.BId,
+                        LabelObj = labelObj
+                    })
+                .ToListAsync();
+
+            if (rows.Count == 0)
+                return new Dictionary<string, (string Label, string Color)[]>();
+
+            return rows
+                .GroupBy(r => r.ObjectId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g
+                        .Select(r => FormatToLabel(r.LabelObj))
+                        .ToArray()
+                );
+        }
+
         public async Task<List<ReservedAddress>> GetReservedAddressesWithDetails(WalletId walletId)
         {
             await using var ctx = _ContextFactory.CreateContext();
@@ -655,6 +724,43 @@ namespace BTCPayServer.Services
                 count += await RemoveWalletObjects(labelObjId) ? 1 : 0;
             }
             return count > 0;
+        }
+
+        public async Task<bool> RenameWalletLabel(WalletId id, string oldLabel, string newLabel)
+        {
+            ArgumentNullException.ThrowIfNull(id);
+            oldLabel = oldLabel.Trim();
+            newLabel = newLabel.Trim().Truncate(MaxLabelSize);
+            
+            if (oldLabel == newLabel)
+                return true;
+
+            // First, ensure the new label object exists (required for foreign key constraint)
+            var newLabelObjId = new WalletObjectId(id, WalletObjectData.Types.Label, newLabel);
+            await EnsureWalletObject(newLabelObjId);
+
+            await using var ctx = _ContextFactory.CreateContext();
+            var connection = ctx.Database.GetDbConnection();
+            
+            // Update all links from old label to new label
+            var updated = await connection.ExecuteAsync(
+                """
+                UPDATE "WalletObjectLinks" 
+                SET "AId" = @NewLabel 
+                WHERE "WalletId" = @WalletId 
+                AND "AType" = @LabelType 
+                AND "AId" = @OldLabel
+                """,
+                new { WalletId = id.ToString(), LabelType = WalletObjectData.Types.Label, OldLabel = oldLabel, NewLabel = newLabel });
+
+            // If any links were updated, remove the old label object
+            if (updated > 0)
+            {
+                var oldLabelObjId = new WalletObjectId(id, WalletObjectData.Types.Label, oldLabel);
+                await RemoveWalletObjects(oldLabelObjId);
+            }
+
+            return updated > 0;
         }
 
         public async Task SetWalletObject(WalletObjectId id, JObject? data)

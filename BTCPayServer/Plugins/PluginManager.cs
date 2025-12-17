@@ -231,7 +231,7 @@ namespace BTCPayServer.Plugins
                         mvcBuilder.AddPluginLoader(preloadedPlugin.Loader);
                     _pluginAssemblies.Add(preloadedPlugin.Assembly);
 
-                    logger.LogInformation(
+                    logger.Log(plugin.SystemPlugin ? LogLevel.Debug : LogLevel.Information,
                         $"Adding and executing plugin {plugin.Identifier} - {plugin.Version}");
                     var pluginServiceCollection = new PluginServiceCollection(serviceCollection, bootstrapServiceProvider);
                     plugin.Execute(pluginServiceCollection);

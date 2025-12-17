@@ -22,11 +22,18 @@ public class DbPeriodicTask(
 
     public async Task Do(CancellationToken cancellationToken)
     {
-        await using var ctx = dbContextFactory.CreateContext(o => o.CommandTimeout((int)TimeSpan.FromMinutes(5).TotalSeconds));
+        await using var ctx = dbContextFactory.CreateContext();
         var conn = ctx.Database.GetDbConnection();
         foreach (var script in scripts)
         {
-            await RunScript(script, conn, cancellationToken);
+            try
+            {
+                await RunScript(script, conn, cancellationToken);
+            }
+            catch(Exception ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                logger.LogError(ex, "Error while executing DB Periodic Task {0}", script.Name);
+            }
         }
     }
 
@@ -42,7 +49,7 @@ public class DbPeriodicTask(
         logger.LogInformation($"Executing {script.Name}");
         DynamicParameters parameters = new();
         parameters.Add("now", Now ?? DateTimeOffset.UtcNow);
-        var command = new CommandDefinition(script.Script, parameters, cancellationToken: cancellationToken);
+        var command = new CommandDefinition(script.Script, parameters, commandTimeout: (int)TimeSpan.FromMinutes(5).TotalSeconds, cancellationToken: cancellationToken);
         var count = await conn.ExecuteScalarAsync<int>(command);
         logger.LogInformation($"Executed {script.Name} (Returned: {count})");
         return count;

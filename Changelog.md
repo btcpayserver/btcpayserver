@@ -6,6 +6,8 @@
 
 * Subscriptions: Allow merchants to accept recurring payments from customers. (#6922) @NicolasDorier
 * Greenfield: Subscriptions API (#7022) @NicolasDorier
+* Report: Add payment requests reports (#7015) @thgO-O @rockstardev
+* Add better filtering capabilities to in the payment requests list (#7015) @thgO-O @rockstardev
 * Ambassadors can monetize access to their server. (#6986) @NicolasDorier
 * Ability to install [language packs](https://github.com/btcpayserver/btcpayserver-translator/tree/main/translations) for the backend UI. (#6943) @Abhijay007
 * Email rules

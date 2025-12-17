@@ -222,7 +222,7 @@ services:
       - bitcoind
 
   postgres:
-    image: postgres:13.23
+    image: postgres:18.1
     environment:
         POSTGRES_HOST_AUTH_METHOD: trust
     ports:
@@ -230,7 +230,7 @@ services:
     expose:
       - "5432"
     volumes:
-      - "postgres_test_datadir:/var/lib/postgresql/data"
+      - "postgres_test_datadir:/var/lib/postgresql"
 
   merchant_lnd:
     image: btcpayserver/lnd:v0.19.3-beta

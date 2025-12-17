@@ -144,35 +144,21 @@ namespace BTCPayServer.Services.PaymentRequests
                     throw new InvalidOperationException("PaymentRequestQuery.StoreId should be specified");
 
                 var search = query.SearchText;
-                if (decimal.TryParse(search, NumberStyles.Number, CultureInfo.InvariantCulture, out var amount))
-                {
-                    queryable = context.PaymentRequests.FromSqlRaw("""
-                                                                       SELECT *
-                                                                       FROM "PaymentRequests"
-                                                                       WHERE
-                                                                           "StoreDataId" = {0}
-                                                                           AND (
-                                                                               "ReferenceId" = {1}
-                                                                               OR "Id" = {1}
-                                                                               OR jsonb_extract_path_text("Blob2", 'title') = {1}
-                                                                               OR "Amount" = {2}
-                                                                           )
-                                                                   """, query.StoreId, search, amount);
-                }
-                else
-                {
-                    queryable = context.PaymentRequests.FromSqlRaw("""
-                                                                       SELECT *
-                                                                       FROM "PaymentRequests"
-                                                                       WHERE
-                                                                           "StoreDataId" = {0}
-                                                                           AND (
-                                                                               "ReferenceId" = {1}
-                                                                               OR "Id" = {1}
-                                                                               OR jsonb_extract_path_text("Blob2", 'title') = {1}
-                                                                           )
-                                                                   """, query.StoreId, search);
-                }
+                // Escape LIKE wildcards to prevent SQL injection
+                var escapedSearch = search.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
+                var likePattern = $"%{escapedSearch}%";
+                var amountOrNull = decimal.TryParse(search, NumberStyles.Number, CultureInfo.InvariantCulture, out var amount) 
+                    ? amount 
+                    : (decimal?)null;
+                
+                queryable = context.PaymentRequests
+                    .Where(a => a.StoreDataId == query.StoreId)
+                    .Where(a =>
+                        a.ReferenceId == search
+                        || a.Id == search
+                        || EF.Functions.ILike(a.Title, likePattern, "\\")
+                        || (amountOrNull.HasValue && a.Amount == amountOrNull.Value)
+                    );
             }
             else
             {

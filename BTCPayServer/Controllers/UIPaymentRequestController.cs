@@ -286,7 +286,7 @@ namespace BTCPayServer.Controllers
                 viewModel.Currency = data.Currency;
             }
 
-            blob.Title = viewModel.Title;
+            data.Title = viewModel.Title;
             blob.Email = viewModel.Email;
             blob.Description = viewModel.Description;
             data.Amount = viewModel.Amount;

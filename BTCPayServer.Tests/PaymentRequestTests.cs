@@ -54,12 +54,12 @@ namespace BTCPayServer.Tests
             var repo = tester.PayTester.GetService<PaymentRequestRepository>();
             var prData = await repo.FindPaymentRequest(id, user.UserId);
             Assert.NotNull(prData);
-            Assert.Equal("original juice", prData.GetBlob().Title);
+            Assert.Equal("original juice", prData.Title);
             Assert.Equal("custom-id-1", prData.ReferenceId);
 
             paymentRequestController.HttpContext.SetPaymentRequestData(new PaymentRequestData { Id = id, StoreDataId = request.StoreId });
 
-            // Permission guard for guests editing 
+            // Permission guard for guests editing
             Assert
                 .IsType<NotFoundResult>(await guestpaymentRequestController.EditPaymentRequest(user.StoreId, id));
 
@@ -70,7 +70,7 @@ namespace BTCPayServer.Tests
             // Assert updated Title and ReferenceId
             prData = await repo.FindPaymentRequest(id, user.UserId);
             Assert.NotNull(prData);
-            Assert.Equal("update", prData.GetBlob().Title);
+            Assert.Equal("update", prData.Title);
             Assert.Equal("custom-id-2", prData.ReferenceId);
 
             Assert.Equal(request.Title,

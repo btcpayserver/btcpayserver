@@ -44,7 +44,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             Archived = data.Archived;
             var blob = data.GetBlob();
             FormId = blob.FormId;
-            Title = blob.Title;
+            Title = data.Title;
             Amount = data.Amount;
             Currency = data.Currency;
             Description = blob.Description;
@@ -107,7 +107,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             StoreId = data.StoreDataId;
             var blob = data.GetBlob();
             Archived = data.Archived;
-            Title = blob.Title;
+            Title = data.Title;
             Amount = data.Amount;
             Currency = data.Currency;
             Description = blob.Description;

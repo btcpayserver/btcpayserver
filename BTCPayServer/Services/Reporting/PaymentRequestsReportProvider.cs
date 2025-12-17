@@ -128,7 +128,7 @@ public class PaymentRequestsReportProvider(
                 var row = queryContext.CreateData();
                 row.Add(paymentRequest.Created);
                 row.Add(paymentRequest.ReferenceId);
-                row.Add(prBlob.Title);
+                row.Add(paymentRequest.Title);
                 row.Add(labelsString);
                 row.Add(paymentRequest.Status.ToString());
                 row.Add(displayFormatter.ToFormattedAmount(paymentRequest.Amount, paymentRequest.Currency));
@@ -159,7 +159,7 @@ public class PaymentRequestsReportProvider(
 
                     row.Add(payment.ReceivedTime);
                     row.Add(paymentRequest.ReferenceId);
-                    row.Add(prBlob.Title);
+                    row.Add(paymentRequest.Title);
                     row.Add(labelsString);
                     row.Add(paymentRequest.Status.ToString());
                     row.Add(displayFormatter.ToFormattedAmount(paymentRequest.Amount, paymentRequest.Currency));

@@ -704,11 +704,16 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("StoreDataId")
                         .HasColumnType("text");
 
+                    b.Property<string>("Title")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Status");
 
                     b.HasIndex("StoreDataId");
+
+                    b.HasIndex("Title");
 
                     b.ToTable("PaymentRequests");
                 });

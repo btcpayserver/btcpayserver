@@ -3115,7 +3115,7 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
-        public async Task CanMigratePaymentRequests()
+        public async Task CanMigratePaymentRequestsAmountCurrency()
         {
             var tester = CreateDBTester();
             await tester.MigrateUntil("20250407133937_pr_expiry");
@@ -3160,7 +3160,7 @@ namespace BTCPayServer.Tests
                 );
 
                 """);
-            await tester.ContinueMigration();
+            await tester.CompleteMigrations();
             // The blob isn't cleaned yet, this is the migrator who does that
             await conn.QuerySingleAsync("""
                 SELECT * FROM "PaymentRequests"
@@ -3180,6 +3180,8 @@ namespace BTCPayServer.Tests
                 WHERE "Id"= 'expired-bug'
                 AND "Status" = 'Processing'
                 """);
+
+
 
             var pr = ctx.PaymentRequests.First(r => r.Id == "03463aab-844e-4d60-872f-26310b856131");
             Assert.Equal("USD", pr.Currency);
@@ -3204,8 +3206,8 @@ namespace BTCPayServer.Tests
                 """)).Blob2;
             var expectedBlob2 = new JObject()
             {
-                ["email"] = "f.f@gmail.com",
-                ["title"] = "Online"
+                ["email"] = "f.f@gmail.com"
+                //,["title"] = "Online"
             };
             Assert.Equal(JObject.Parse(actualBlob2), expectedBlob2);
 
@@ -3216,8 +3218,8 @@ namespace BTCPayServer.Tests
                 """)).Blob2;
             expectedBlob2 = new JObject()
             {
-                ["email"] = "f.f@gmail.com",
-                ["title"] = "Online"
+                ["email"] = "f.f@gmail.com"
+                //,["title"] = "Online"
             };
             Assert.Equal(JObject.Parse(actualBlob2), expectedBlob2);
 
@@ -3264,7 +3266,7 @@ namespace BTCPayServer.Tests
                 );
                 """);
 
-            await tester.ContinueMigration();
+            await tester.CompleteMigrations();
 
             // The Title column exists but isn't populated yet - it's still in Blob2
             // This simulates a payment request that went through the Currency/Amount migration

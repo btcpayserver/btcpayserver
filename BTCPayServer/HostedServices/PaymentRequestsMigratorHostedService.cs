@@ -32,8 +32,8 @@ namespace BTCPayServer.HostedServices
         {
 #pragma warning disable CS0618 // Type or member is obsolete
             var query = progress is DateTimeOffset last2 ?
-            ctx.PaymentRequests.Where(i => i.Created < last2 && !((i.Blob == null || i.Blob.Length == 0) && i.Blob2 != null && i.Currency != null && i.Title != null)) :
-            ctx.PaymentRequests.Where(i => !((i.Blob == null || i.Blob.Length == 0) && i.Blob2 != null && i.Currency != null && i.Title != null));
+            ctx.PaymentRequests.Where(i => i.Created < last2 && !((i.Blob == null || i.Blob.Length == 0) && i.Blob2 != null && i.Currency != null)) :
+            ctx.PaymentRequests.Where(i => !((i.Blob == null || i.Blob.Length == 0) && i.Blob2 != null && i.Currency != null));
             return query.OrderByDescending(i => i.Created);
 #pragma warning restore CS0618 // Type or member is obsolete
         }

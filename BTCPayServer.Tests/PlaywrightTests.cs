@@ -1853,6 +1853,7 @@ namespace BTCPayServer.Tests
             var description = s.Page.Locator(".card-block");
             await description.FillAsync("Description Edit");
             await s.ClickPagePrimary();
+            await s.FindAlertMessage();
 
             opening = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("text=View");

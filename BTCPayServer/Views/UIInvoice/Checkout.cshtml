@@ -255,7 +255,7 @@
             </div>
             <div v-if="orderAmount > 0 && srvModel.orderAmountFiat" id="PaymentDetails-TotalFiat" key="TotalFiat">
                 <dt v-t="'total_fiat'"></dt>
-                <dd id="total_fiat" class="clipboard-button clipboard-button-hover" :data-clipboard="asNumber(srvModel.orderAmountFiat)" data-clipboard-hover="start">{{srvModel.orderAmountFiat}}</dd>
+                <dd id="total_fiat" class="clipboard-button clipboard-button-hover" :data-clipboard="srvModel.orderAmountFiat" data-clipboard-hover="start">{{srvModel.orderAmountFiat}}</dd>
             </div>
              <div v-if="srvModel.taxIncluded.value > 0 && srvModel.taxIncluded.formatted" id="PaymentDetails-TaxIncluded" key="TaxIncluded">
                 <dt v-t="'tax_included'"></dt>
@@ -263,7 +263,7 @@
             </div>
             <div v-if="srvModel.rate && srvModel.paymentMethodCurrency" id="PaymentDetails-ExchangeRate" key="ExchangeRate">
                 <dt v-t="'exchange_rate'"></dt>
-                <dd class="clipboard-button clipboard-button-hover" :data-clipboard="asNumber(srvModel.rate)" data-clipboard-hover="start">
+                <dd class="clipboard-button clipboard-button-hover" :data-clipboard="srvModel.rate" data-clipboard-hover="start">
                     <template v-if="srvModel.paymentMethodCurrency === 'sats'">1 sat = {{ srvModel.rate }}</template>
                     <template v-else>1 {{ srvModel.paymentMethodCurrency }} = {{ srvModel.rate }}</template>
                 </dd>

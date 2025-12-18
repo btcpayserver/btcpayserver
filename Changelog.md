@@ -22,10 +22,11 @@
 
 * Fix: In Server Email, the rich text box (Summernote) was not saving changes in code view. (#6979) @NicolasDorier
 * Work around a browser bug where SVG icons stop displaying when served from cache. (#7003) @NicolasDorier
-* Fix: Denied 403 page if denied access to the default store (#6976) @NicolasDorier
-* Fix: Wallet report was showing a negative balance change in green (#6974) @NicolasDorier
+* Fix: Denied 403 pages if denied access to the default store (#6976) @NicolasDorier
+* Fix: A wallet report was showing a negative balance change in green (#6974) @NicolasDorier
 * Log out users immediately when it is disabled (#6971) @NicolasDorier
 * Fix: Unable to reset email settings (#6963) @NicolasDorier
+* Fix: Unable to copy fiat amount in Invoice Checkout (#6933 #7036) @rockstardev
 
 ### Improvements
 

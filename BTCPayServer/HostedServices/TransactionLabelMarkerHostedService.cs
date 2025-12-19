@@ -181,23 +181,23 @@ namespace BTCPayServer.HostedServices
                     {
                         Attachment.Invoice(invoiceEvent.Invoice.Id)
                     };
-                        
+
                         var paymentRequestIds = PaymentRequestRepository.GetPaymentIdsFromInternalTags(invoiceEvent.Invoice).ToArray();
                         if (paymentRequestIds.Length > 0)
                         {
                             var paymentRequests = await _paymentRequestRepository.FindPaymentRequests(
                                 new PaymentRequestQuery { Ids = paymentRequestIds });
                             var paymentRequestsById = paymentRequests.ToDictionary(pr => pr.Id);
-                            
+
                             foreach (var prId in paymentRequestIds)
                             {
-                                var data = paymentRequestsById.TryGetValue(prId, out var pr) && pr.GetBlob()?.Title is { } title
+                                var data = paymentRequestsById.TryGetValue(prId, out var pr) && pr.Title is { } title
                                     ? new JObject { ["title"] = title }
                                     : null;
                                 labels.Add(Attachment.PaymentRequest(prId, data));
                             }
                         }
-                        
+
                         labels.AddRange(AppService.GetAppInternalTags(invoiceEvent.Invoice).Select(Attachment.App));
 
                         await _walletRepository.AddWalletTransactionAttachment(walletId, transactionId, labels);

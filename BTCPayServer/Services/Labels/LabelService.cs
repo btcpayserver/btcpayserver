@@ -109,7 +109,8 @@ public class LabelService
             }
             else if (tag.Type == WalletObjectData.Types.PaymentRequest)
             {
-                model.Tooltip = $"Received through a payment request {tag.Id}";
+                var title = tag.Data?["title"]?.ToString() ?? tag.Id;
+                model.Tooltip = $"Payment request: {title}";
                 model.Link = _linkGenerator.PaymentRequestLink(tag.Id, req.Scheme, req.Host, req.PathBase);
             }
             else if (tag.Type == WalletObjectData.Types.App)

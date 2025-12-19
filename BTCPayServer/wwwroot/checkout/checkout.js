@@ -188,6 +188,20 @@ function initApp() {
             },
             displayedPaymentMethods: function () {
                 return this.srvModel?.availablePaymentMethods?.filter(pm => pm.displayed) ?? [];
+            },
+            shouldShowPaymentMethodSelector() {
+                // Hide for single payment method
+                if (this.displayedPaymentMethods.length === 1) {
+                    return false;
+                }
+                
+                // Hide when unified QR is enabled (treats BTC + Lightning as single method)
+                if (this.srvModel.onChainWithLnInvoiceFallback) {
+                    return false;
+                }
+
+                // Show for multiple payment methods without unified QR
+                return true;
             }
         },
         watch: {

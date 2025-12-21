@@ -77,5 +77,8 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Consider the invoice settled when the payment transaction …")]
         public SpeedPolicy SpeedPolicy { get; set; }
+
+        [Display(Name = "Store Time Zone")]
+        public string StoreTimeZone { get; set; }
     }
 }

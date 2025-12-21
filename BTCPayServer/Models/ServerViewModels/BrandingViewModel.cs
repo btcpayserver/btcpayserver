@@ -14,6 +14,9 @@ public class BrandingViewModel
     [Display(Name = "Contact URL")]
     public string ContactUrl { get; set; }
 
+    [Display(Name = "Server Time Zone")]
+    public string ServerTimeZone { get; set; }
+
     // Theme
     [Display(Name = "Use custom theme")]
     public bool CustomTheme { get; set; }

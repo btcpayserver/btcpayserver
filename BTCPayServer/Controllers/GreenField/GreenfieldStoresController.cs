@@ -231,6 +231,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 ShowStoreHeader = storeBlob.ShowStoreHeader,
                 CelebratePayment = storeBlob.CelebratePayment,
                 PlaySoundOnPayment = storeBlob.PlaySoundOnPayment,
+                StoreTimeZone = storeBlob.StoreTimeZone,
                 PaymentMethodCriteria = storeBlob.PaymentMethodCriteria?.Where(criteria => criteria.Value is not null).Select(criteria => new PaymentMethodCriteriaData
                 {
                     Above = criteria.Above,
@@ -295,6 +296,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 blob.CelebratePayment = restModel.CelebratePayment.Value;
             if (restModel.PlaySoundOnPayment.HasValue)
                 blob.PlaySoundOnPayment = restModel.PlaySoundOnPayment.Value;
+            if (restModel.StoreTimeZone != null)
+                blob.StoreTimeZone = restModel.StoreTimeZone;
             blob.PaymentMethodCriteria = restModel.PaymentMethodCriteria?.Select(criteria =>
                 new PaymentMethodCriteria
                 {

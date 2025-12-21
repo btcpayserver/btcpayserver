@@ -46,7 +46,8 @@ public partial class UIStoresController
             MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes,
             SpeedPolicy = store.SpeedPolicy,
             ShowRecommendedFee = storeBlob.ShowRecommendedFee,
-            RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget
+            RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget,
+            StoreTimeZone = storeBlob.StoreTimeZone
         };
 
         return View(vm);
@@ -89,6 +90,21 @@ public partial class UIStoresController
         blob.InvoiceExpiration = TimeSpan.FromMinutes(model.InvoiceExpiration);
         blob.RefundBOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration);
         blob.MonitoringExpiration = TimeSpan.FromMinutes(model.MonitoringExpiration);
+        
+        if (!string.IsNullOrEmpty(model.StoreTimeZone))
+        {
+            try
+            {
+                TimeZoneInfo.FindSystemTimeZoneById(model.StoreTimeZone);
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                ModelState.AddModelError(nameof(model.StoreTimeZone), StringLocalizer["Invalid time zone"]);
+                return View(model);
+            }
+        }
+        
+        blob.StoreTimeZone = model.StoreTimeZone;
         if (!string.IsNullOrEmpty(model.BrandColor) && !ColorPalette.IsValid(model.BrandColor))
         {
             ModelState.AddModelError(nameof(model.BrandColor), StringLocalizer["The brand color needs to be a valid hex color code"]);

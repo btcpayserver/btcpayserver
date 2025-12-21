@@ -119,6 +119,18 @@
                 <span asp-validation-for="DefaultCurrency" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="StoreTimeZone" class="form-label"></label>
+                <select asp-for="StoreTimeZone" class="form-select w-auto">
+                    <option value="">@StringLocalizer["Use Server Time Zone"]</option>
+                    @foreach (var tz in TimeZoneInfo.GetSystemTimeZones())
+                    {
+                        <option value="@tz.Id">@tz.DisplayName</option>
+                    }
+                </select>
+                <div class="form-text" text-translate="true">The time zone used for displaying dates in the store. If not set, the server time zone will be used.</div>
+                <span asp-validation-for="StoreTimeZone" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <label asp-for="AdditionalTrackedRates" class="form-label"></label>
                 <input asp-for="AdditionalTrackedRates" class="form-control" placeholder="@StringLocalizer["Comma-separated list of currencies (eg. USD,EUR,JPY)"]" />
                 <div class="form-text" text-translate="true">The rates of those currencies, in addition to the default currency, will be recorded when a new invoice is created. The rates will then be accessible through reports.</div>
@@ -217,6 +229,20 @@
 					<span class="input-group-text" text-translate="true">blocks</span>
                 </div>
                 <span asp-validation-for="RecommendedFeeBlockTarget" class="text-danger"></span>
+            </div>
+
+            <h3 class="mt-5 mb-3" text-translate="true">Regional Settings</h3>
+            <div class="form-group">
+                <label asp-for="StoreTimeZone" class="form-label"></label>
+                <select asp-for="StoreTimeZone" class="form-select w-auto">
+                    <option value="">@StringLocalizer["Use Server Time Zone"]</option>
+                    @foreach (var tz in TimeZoneInfo.GetSystemTimeZones())
+                    {
+                        <option value="@tz.Id">@tz.DisplayName</option>
+                    }
+                </select>
+                <div class="form-text" text-translate="true">The time zone for displaying dates in this store. If not set, the server's default time zone will be used.</div>
+                <span asp-validation-for="StoreTimeZone" class="text-danger"></span>
             </div>
         </div>
     </div>

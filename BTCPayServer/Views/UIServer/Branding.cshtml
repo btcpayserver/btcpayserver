@@ -47,6 +47,18 @@
                 <span asp-validation-for="BaseUrl" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="ServerTimeZone" class="form-label"></label>
+                <select asp-for="ServerTimeZone" class="form-select w-auto">
+                    <option value="">@StringLocalizer["Server Default (UTC)"]</option>
+                    @foreach (var tz in TimeZoneInfo.GetSystemTimeZones())
+                    {
+                        <option value="@tz.Id">@tz.DisplayName</option>
+                    }
+                </select>
+                <div class="form-text" text-translate="true">The default time zone for displaying dates across the server. Stores can override this with their own time zone.</div>
+                <span asp-validation-for="ServerTimeZone" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <div class="d-flex align-items-center justify-content-between gap-2">
                     <label asp-for="LogoFile" class="form-label"></label>
                     @if (!string.IsNullOrEmpty(Model.LogoUrl))

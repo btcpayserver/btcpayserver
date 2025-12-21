@@ -219,6 +219,7 @@ namespace BTCPayServer.Data
 
         public string BrandColor { get; set; }
         public bool ApplyBrandColorToBackend { get; set; }
+        public string StoreTimeZone { get; set; }
 
         [JsonConverter(typeof(UnresolvedUriJsonConverter))]
         public UnresolvedUri LogoUrl { get; set; }

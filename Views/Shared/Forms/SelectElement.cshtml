@@ -1,0 +1,26 @@
+@using BTCPayServer.Forms
+@using Newtonsoft.Json.Linq
+@model BTCPayServer.Abstractions.Form.Field
+
+@{
+    var selectField = (SelectField) (Model is not SelectField ? JObject.FromObject(Model).ToObject<SelectField>() : Model);
+    selectField.Options ??= new List<SelectListItem>();
+    selectField.Options.ForEach(item => { item.Selected = item.Value == Model.Value; });
+
+    var isInvalid = ViewContext.ModelState[Model.Name]?.ValidationState is Microsoft.AspNetCore.Mvc.ModelBinding.ModelValidationState.Invalid;
+    var errors = isInvalid ? ViewContext.ModelState[Model.Name].Errors : null;
+}
+<div class="form-group">
+    <label class="form-label" for="@Model.Name"@(Model.Required ? " data-required" : "")>
+        @Safe.Raw(Model.Label)
+    </label>
+    <select id="@selectField.Name" asp-items="selectField.Options" class="form-select @(errors is null ? "" : "is-invalid")"
+            name="@selectField.Name" data-val="true" aria-describedby="HelpText-@selectField.Name" required="@selectField.Required"
+            data-val-required="@selectField.Label is required.">
+    </select>
+    <span class="text-danger" data-valmsg-for="@selectField.Name" data-valmsg-replace="true">@(isInvalid && errors.Any() ? errors.First().ErrorMessage : string.Empty)</span>
+    @if (!string.IsNullOrEmpty(selectField.HelpText))
+    {
+        <div id="@($"HelpText-{selectField.Name}")" class="form-text">@Safe.Raw(selectField.HelpText)</div>
+    }
+</div>

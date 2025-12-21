@@ -1,0 +1,16 @@
+<script src="~/vendor/jquery-validate/jquery.validate.js" asp-append-version="true"></script>
+<script src="~/vendor/jquery-validate-unobtrusive/jquery.validate.unobtrusive.js" asp-append-version="true"></script>
+<script>
+    $.validator.setDefaults({
+        errorClass: '',
+        validClass: '',
+        highlight: function (element) {
+            $(element).addClass('is-invalid').removeClass('is-valid');
+            $(element.form).find(`[data-valmsg-for="${element.id}"]`).addClass('invalid-feedback');
+        },
+        unhighlight: function (element) {
+            $(element).removeClass("is-invalid");
+            $(element.form).find(`[data-valmsg-for="${element.id}"]`).removeClass('invalid-feedback');
+        }
+    });
+</script>

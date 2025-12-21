@@ -1,0 +1,48 @@
+﻿@using BTCPayServer.Client
+@using BTCPayServer.Components.MainNav
+@using BTCPayServer.Plugins.PointOfSale
+@using BTCPayServer.Plugins.Subscriptions
+@using BTCPayServer.Services.Apps
+@using BTCPayServer.Views.Apps
+@using Microsoft.AspNetCore.Mvc.Razor
+@model BTCPayServer.Components.MainNav.MainNavViewModel
+
+@{
+    var store = Context.GetStoreData();
+}
+
+@if (store != null)
+{
+    var appType = SubscriptionsAppType.AppType;
+    var apps = Model.Apps.Where(app => app.AppType == appType).ToList();
+    <li class="nav-item" permission="@Policies.CanModifyOfferings">
+        <a layout-menu-item="@nameof(SubscriptionsPlugin)" asp-area="Subscriptions" asp- asp-controller="UIOffering" asp-action="CreateOffering" asp-route-storeId="@store.Id">
+            <vc:icon symbol="nav-reporting" />
+            <span text-translate="true">Subscriptions</span>
+        </a>
+    </li>
+    @if (apps.Any())
+    {
+        <li layout-menu-item="@nameof(SubscriptionsPlugin)" not-permission="@Policies.CanModifyOfferings" permission="@Policies.CanViewStoreSettings">
+            <span class="nav-link">
+                <vc:icon symbol="nav-reporting" />
+                <span text-translate="true">Subscriptions</span>
+            </span>
+        </li>
+    }
+    @foreach (var app in apps)
+    {
+        var offeringId = app.Data.GetSettings<SubscriptionsAppType.AppConfig>().OfferingId ?? "";
+
+        <li class="nav-item nav-item-sub" permission="@Policies.CanViewOfferings">
+            <a layout-menu-item="@nameof(SubscriptionsPlugin)-@offeringId" asp-area="Subscriptions" asp-controller="UIOffering" asp-action="Offering" asp-route-storeId="@Model.Store.Id" asp-route-offeringId="@offeringId" asp-route-section="Plans">
+                <span>@app.AppName</span>
+            </a>
+        </li>
+        <li class="nav-item nav-item-sub" not-permission="@Policies.CanViewOfferings">
+            <a layout-menu-item="@nameof(SubscriptionsPlugin)-@offeringId" asp-area="Subscriptions" asp-controller="UIOffering" asp-action="Offering" asp-route-storeId="@Model.Store.Id" asp-route-offeringId="@offeringId" asp-route-section="Plans" class="nav-link">
+                <span>@app.AppName</span>
+            </a>
+        </li>
+    }
+}

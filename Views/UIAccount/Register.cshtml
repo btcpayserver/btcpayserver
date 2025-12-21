@@ -1,0 +1,45 @@
+@model RegisterViewModel
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
+@{
+    ViewData["Title"] = ViewLocalizer["Create account"];
+    ViewBag.ShowLeadText = true;
+    Layout = "_LayoutSignedOut";
+}
+
+<form asp-route-returnUrl="@ViewData["ReturnUrl"]" asp-route-logon="true" method="post">
+    <fieldset disabled="@(ViewData.ContainsKey("disabled") ? "disabled" : null)" >
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="ModelOnly" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
+        }
+        <div class="form-group">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" required autofocus />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Password" class="form-label"></label>
+            <input asp-for="Password" class="form-control" required />
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="ConfirmPassword" class="form-label"></label>
+            <input asp-for="ConfirmPassword" class="form-control" required />
+            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+        </div>
+        @if (env.CheatMode)
+        {
+            <div class="form-group form-check">
+                <input asp-for="IsAdmin" type="checkbox" class="form-check-input"/>
+                <label asp-for="IsAdmin" class="form-check-label"></label>
+                <span asp-validation-for="IsAdmin" class="text-danger"></span>
+            </div>
+        }
+        <div class="form-group mt-4">
+            <button type="submit" class="btn btn-primary btn-lg w-100" id="RegisterButton" text-translate="true">Create account</button>
+        </div>
+    </fieldset>
+</form>
+<p class="text-center mt-2 mb-0">
+    <a id="Login" style="font-size:1.15rem" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]" text-translate="true">Log in</a>
+</p>

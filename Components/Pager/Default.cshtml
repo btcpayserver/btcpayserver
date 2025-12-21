@@ -1,0 +1,112 @@
+@using System.Web
+@using BTCPayServer.TagHelpers
+@model BasePagingViewModel
+
+@{
+	var pageSizeOptions = new[] { 50, 100, 250, 500 };
+}
+
+@if (Model.Total is null || Model.Total.Value > pageSizeOptions.Min())
+{
+    <nav aria-label="..." class="d-flex flex-wrap gap-3 justify-content-between">
+        @if (Model.Total is null || Model.Total.Value > Model.Count)
+        {
+            <ul class="pagination me-auto">
+                @if (Model.Skip > 0)
+                {
+                    <li class="page-item">
+                        <a class="page-link" tabindex="-1" href="@NavigatePages(-1, Model.Count)" text-translate="true">Prev</a>
+                    </li>
+                }
+                <li class="page-item disabled">
+                    <span class="page-link @(Model.Total is null ? "px-0" : (Model.Skip == 0 ? "ps-0" : null))">
+                    @if (Model.Total is null)
+                    {
+                        @($"{Model.Skip + 1} – {Model.Skip + Model.Count}")
+                    }
+                    else if (Model.Total.Value <= Model.Count)
+                    {
+                        @($"1 – {Model.Total.Value}")
+                    }
+                    else
+                    {
+                        @($"{Model.Skip + 1} – {Model.Skip + Model.Count}, Total: {Model.Total.Value}")
+                    }
+                    </span>
+                </li>
+                @if ((Model.Total is null && Model.CurrentPageCount >= Model.Count) || (Model.Total is not null && Model.Total.Value > Model.Skip + Model.Count))
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="@NavigatePages(1, Model.Count)" text-translate="true">Next</a>
+                    </li>
+                }
+            </ul>
+        }
+
+        @if (Model.Total is null || Model.Total.Value >= pageSizeOptions.Min())
+        {
+            <ul class="pagination ms-auto">
+                <li class="page-item disabled">
+                    <span class="page-link" text-translate="true">Page Size</span>
+                </li>
+                @foreach (var pageSize in pageSizeOptions)
+                {
+                    if (Model.Total is null || Model.Total.Value >= pageSize)
+                    {
+                        <li class="page-item @(Model.Count == pageSize ? "active" : null)">
+                            <a class="page-link @(Model.Count != pageSize && pageSize == pageSizeOptions.Max() ? "pe-0" : null)" href="@NavigatePages(0, pageSize)">@pageSize</a>
+                        </li>
+                    }
+                }
+            </ul>
+        }
+    </nav>
+}
+@{
+    string NavigatePages(int prevNext, int count)
+    {
+        var skip = Model.Skip;
+        if (prevNext == -1)
+        {
+            skip = Math.Max(0, Model.Skip - Model.Count);
+        }
+        else if (prevNext == 1)
+        {
+            skip = Model.Skip + count;
+        }
+
+        var query = new Dictionary<string, object>
+        {
+            { "searchTerm", Model.SearchTerm },
+            { "timezoneOffset", Model.TimezoneOffset },
+            { "skip", skip },
+            { "count", count }
+        };
+
+        if (Model.PaginationQuery != null)
+        {
+            // merge both, preferring the `query` properties in case of duplicate keys
+            query = query.Concat(Model.PaginationQuery)
+                .Where(e => e.Value != null)
+                .GroupBy(e => e.Key)
+                .ToDictionary(g => g.Key, g => g.First().Value);
+        }
+
+        return ReplaceQueryParameters(query);
+    }
+    
+    string ReplaceQueryParameters(Dictionary<string, object> query)
+    {
+        var uri = new Uri(ViewContext.HttpContext.Request.GetCurrentUrlWithQueryString());
+        var queryParams = HttpUtility.ParseQueryString(uri.Query);
+        foreach (var (key, value) in query)
+        {
+            if (value != null) queryParams[key] = value?.ToString();
+        }
+        var uriBuilder = new UriBuilder(uri)
+        {
+            Query = queryParams.ToString()!
+        };
+        return uriBuilder.ToString();
+    }
+}

@@ -1,0 +1,51 @@
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Blazor
+@using BTCPayServer.Blazor.VaultBridge
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model WalletSetupViewModel
+
+@{
+    Layout = "_LayoutWalletSetup";
+    ViewData.SetTitle(StringLocalizer["Connect your hardware wallet"]);
+    this.ViewData.SetBlazorAllowed(true);
+}
+
+@section Navbar {
+    <a asp-controller="UIStores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
+        <vc:icon symbol="back" />
+    </a>
+}
+
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3" text-translate="true">In order to securely connect to your hardware wallet you must first download, install, and run the BTCPay Server Vault.</p>
+</header>
+
+<div class="row mt-5 mb-4">
+    <div class="col-md-8 mx-auto">
+        <component type="typeof(VaultBridgeUI)"
+                   param-Controller=@(new GetXPubController()
+                                      {
+                                          CryptoCode = Context.GetRouteValue("cryptoCode")?.ToString(),
+                                      })
+                   render-mode="Server"/>
+    </div>
+</div>
+
+<form id="walletInfo" method="post" asp-controller="UIStores" asp-action="UpdateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+    <input asp-for="Config" type="hidden" />
+    <input asp-for="Confirmation" type="hidden" value="true" />
+</form>
+
+@section PageFootContent {
+    <script src="~/js/vaultbridge.js" asp-append-version="true"></script>
+    <script>
+        vault.setXPub = function (xpub)
+        {
+            $("#Config").val(xpub.config);
+            $("#walletInfo").submit();
+        }
+    </script>
+}
+

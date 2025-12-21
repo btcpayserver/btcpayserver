@@ -1,0 +1,81 @@
+@inject BTCPayServer.HostedServices.NBXplorerDashboard dashboard;
+@functions {
+    private void Title(string name, string status)
+    {
+        <h5 class="d-flex align-items-center fw-semibold">
+            <span class="me-2 btcpay-status btcpay-status--@status"></span>
+            @name
+        </h5>
+    }
+}
+@foreach (var line in dashboard.GetAll().Where(summary => summary.Network.ShowSyncSummary))
+{
+    @if (line.Status == null)
+    {
+        Title(line.Network.CryptoCode, "disabled");
+        <ul>
+            <li text-translate="true">The node is offline</li>
+            @if (line.Error != null)
+            {
+                <li>@StringLocalizer["Last error:"] @line.Error</li>
+            }
+        </ul>
+    }
+    else
+    {
+        @if (line.Status.BitcoinStatus == null)
+        {
+            if (line.State == BTCPayServer.HostedServices.NBXplorerState.Synching)
+            {
+                Title(line.Network.CryptoCode, "pending");
+                <ul>
+                    <li>@StringLocalizer["NBXplorer headers height: {0}", line.Status.ChainHeight]</li>
+                    <li text-translate="true">The node is starting...</li>
+                </ul>
+            }
+            else
+            {
+                Title(line.Network.CryptoCode, "disabled");
+                <ul>
+                    <li>@StringLocalizer["NBXplorer headers height: {0}", line.Status.ChainHeight]</li>
+                    <li text-translate="true">The node is offline</li>
+                    @if (line.Error != null)
+                    {
+                        <li>@StringLocalizer["Last error:"] line.Error</li>
+                    }
+                </ul>
+            }
+        }
+        else if (line.Status.BitcoinStatus.IsSynched)
+        {
+            Title(line.Network.CryptoCode, "enabled");
+            <ul>
+                <li>@StringLocalizer["The node is synchronized (Height: {0})", line.Status.BitcoinStatus.Headers]</li>
+                @if (line.Status.BitcoinStatus.IsSynched &&
+                     line.Status.SyncHeight.HasValue &&
+                     line.Status.SyncHeight.Value < line.Status.BitcoinStatus.Headers)
+                {
+                    <li>@StringLocalizer["NBXplorer is synchronizing... (Height: {0})", line.Status.SyncHeight.Value]</li>
+                }
+            </ul>
+        }
+        else
+        {
+            Title(line.Network.CryptoCode, "enabled");
+            <ul>
+                <li>@StringLocalizer["Node headers height: {0}", line.Status.BitcoinStatus.Headers]</li>
+                <li>@StringLocalizer["Validated blocks: {0}", line.Status.BitcoinStatus.Blocks]</li>
+            </ul>
+        }
+        @if (!line.Status.IsFullySynched && line.Status.BitcoinStatus != null)
+        {
+            var percent = (int)(line.Status.BitcoinStatus.VerificationProgress * 100);
+            <div class="progress mb-3">
+                <div class="progress-bar" role="progressbar" aria-valuenow="@percent"
+                     aria-valuemin="0" aria-valuemax="100" style="width:@(percent)%">
+                    @percent %
+                </div>
+            </div>
+        }
+    }
+}

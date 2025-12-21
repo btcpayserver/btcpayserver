@@ -1,0 +1,237 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/email": {
+            "get": {
+                "tags": [
+                    "Stores (Email)"
+                ],
+                "summary": "Get store email settings",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "description": "Retrieve the email settings configured for specific store. The password field will be masked if present.",
+                "operationId": "Stores_GetStoreEmailSettings",
+                "responses": {
+                    "200": {
+                        "description": "specified store email settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetEmailSettings"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Stores (Email)"
+                ],
+                "summary": "Update store email settings",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "description": "Update a store's email settings",
+                "operationId": "Stores_UpdateStoreEmailSettings",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateEmailSettings"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "The settings were updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetEmailSettings"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to modify the store"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/email/send": {
+            "post": {
+                "operationId": "Stores_SendStoreEmail",
+                "tags": [
+                    "Stores (Email)"
+                ],
+                "summary": "Send an email for a store",
+                "description": "Send an email using the store's SMTP server",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "description": "Email of the recipient"
+                                    },
+                                    "subject": {
+                                        "type": "string",
+                                        "description": "Subject of the email"
+                                    },
+                                    "body": {
+                                        "type": "string",
+                                        "description": "Body of the email to send as plain text."
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "The email was sent (scheduled) successfully"
+                    },
+                    "400": {
+                        "description": "The store's SMTP is not configured"
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to add new stores"
+                    },
+                    "404": {
+                        "description": "The store was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "UpdateEmailSettings": {
+                "allOf": [
+                    { "$ref": "#/components/schemas/EmailSettingsBase" },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "password": {
+                                "type": "string",
+                                "description": "SMTP password. Keep null or empty to not update it.",
+                                "nullable": true,
+                                "example": "MyS3cr3t"
+                            }
+                        }
+                    }
+                ]
+            },
+            "GetEmailSettings": {
+                "allOf": [
+                    { "$ref": "#/components/schemas/EmailSettingsBase" },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "passwordSet": {
+                                "type": "boolean",
+                                "description": "`true` if the password has been set."
+                            }
+                        }
+                    }
+                ]
+            },
+            "EmailSettingsBase": {
+                "type": "object",
+                "properties": {
+                    "from": {
+                        "type": "string",
+                        "description": "The sender email address",
+                        "example": "sender@gmail.com"
+                    },
+                    "server": {
+                        "type": "string",
+                        "description": "SMTP server host",
+                        "example": "smtp.gmail.com"
+                    },
+                    "port": {
+                        "type": "integer",
+                        "description": "SMTP server port",
+                        "example": 587
+                    },
+                    "login": {
+                        "type": "string",
+                        "description": "SMTP username",
+                        "example": "John.Smith"
+                    },
+                    "disableCertificateCheck": {
+                        "type": "boolean",
+                        "description": "Disable TLS certificate security checks",
+                        "example": false
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Stores (Email)",
+            "description": "Store Emails operations"
+        }
+    ]
+}

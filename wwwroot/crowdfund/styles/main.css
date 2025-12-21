@@ -1,0 +1,90 @@
+canvas#fireworks {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+}
+
+.perk-zoom {
+    display: none;
+    opacity: 0;
+}
+
+.perk-zoom-bg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    opacity: 0.9;
+}
+
+.perk-zoom-text {
+    left: 50%;
+    top: 50%;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    position: absolute;
+}
+
+.perk:hover .perk-zoom {
+    cursor: pointer;
+    opacity: 1;
+    display: block;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+}
+
+.perk-badge {
+    width: 33px;
+    height: 33px;
+    position: absolute;
+    left: -15px;
+    top: -15px;
+    padding-top: 5px;
+    z-index: 1
+}
+
+.crowdfund-stats .col-sm:last-child {
+    border-right: none !important;
+}
+
+.modal-body .perks-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-gap: .5rem;
+}
+
+.modal-body .perks-container .card:only-of-type {
+    min-width: 240px;
+    max-width: 480px;
+    margin: auto;
+}
+
+/* Constrain image width in description */
+div#crowdfund-body-description img,
+div#crowdfund-body-description embed,
+div#crowdfund-body-description object,
+div#crowdfund-body-description iframe {
+    max-width: 100% !important;
+}
+
+/* HEADER: PROGRESS */
+div#crowdfund-progress-bar {
+    height: 2rem;
+}
+
+#crowdfund-body-header + hr {
+    height: 1px;
+    opacity: 1;
+    margin-top: 0;
+    background: var(--btcpay-body-border-medium);
+}
+
+/* PERKS: HOVER */
+.perks-container .perk-zoom-bg {
+    background-color: var(--btcpay-bg-tile) !important;
+    border-radius: .5rem;
+}

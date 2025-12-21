@@ -1,0 +1,130 @@
+﻿@model RefundModel
+
+@{
+    Layout = null;
+}
+
+<form method="post" asp-action="Refund" asp-route-invoiceId="@Context.GetRouteValue("invoiceId")" id="RefundForm">
+    <input type="hidden" asp-for="RefundStep" value="@Model.RefundStep"/>
+    <input type="hidden" asp-for="Title" value="@Model.Title"/>
+    <input type="hidden" asp-for="RateThenText" value="@Model.RateThenText"/>
+    <input type="hidden" asp-for="CurrentRateText" value="@Model.CurrentRateText"/>
+    <input type="hidden" asp-for="FiatText" value="@Model.FiatText"/>
+    
+    <h5 class="mb-3">@Model.Title</h5>
+
+    <partial name="_StatusMessage" />
+    
+    @if (!ViewContext.ModelState.IsValid)
+    {
+        <div asp-validation-summary="All"></div>
+    }
+
+    @switch (Model.RefundStep)
+    {
+        case RefundSteps.SelectPaymentMethod:
+            if (Model.AvailablePaymentMethods != null && Model.AvailablePaymentMethods.Any())
+            {
+                <div class="form-group">
+                    <label asp-for="SelectedPayoutMethod" class="form-label"></label>
+                    <select asp-items="Model.AvailablePaymentMethods" asp-for="SelectedPayoutMethod" class="form-select"></select>
+                    <span asp-validation-for="SelectedPayoutMethod" class="text-danger"></span>
+                </div>
+            
+                <button id="ok" type="submit" class="btn btn-primary w-100" text-translate="true">Next</button>
+            }
+            break;
+            
+        case RefundSteps.SelectRate:
+            <input type="hidden" asp-for="SelectedPayoutMethod"/>
+            <input type="hidden" asp-for="CryptoAmountThen"/>
+            <input type="hidden" asp-for="FiatAmount"/>        
+            <input type="hidden" asp-for="OverpaidAmount"/>
+            <input type="hidden" asp-for="CryptoAmountNow"/>            
+            <input type="hidden" asp-for="CryptoDivisibility"/>
+            <input type="hidden" asp-for="CryptoCode"/>
+            <input type="hidden" asp-for="InvoiceCurrency"/>
+            <input type="hidden" asp-for="InvoiceDivisibility"/>
+            <style>
+                .additional-options { display: none; }
+                [name="SelectedRefundOption"]:checked ~ .additional-options { display: block; }
+            </style>
+                           
+            <span asp-validation-for="SelectedRefundOption" class="text-danger w-100"></span>
+            @if (Model.OverpaidAmount is not null)
+            {
+                <div class="form-group">
+                    <div class="form-check">
+                        <input id="OverpaidAmountOption" asp-for="SelectedRefundOption" type="radio" value="OverpaidAmount" class="form-check-input"/>
+                        <label for="OverpaidAmountOption" class="form-check-label d-flex align-items-center gap-2">@Model.OverpaidAmountText <span class="badge bg-info" text-translate="true">Overpaid amount</span></label>
+                        <div class="form-text" text-translate="true">The crypto currency amount that was overpaid.</div>
+                    </div>
+                </div>
+                <hr class="border" />
+            }
+            @if (Model.CryptoAmountThen > 0)
+            {
+                <div class="form-group">
+                    <div class="form-check">
+                        <input id="RateThenOption" asp-for="SelectedRefundOption" type="radio" value="RateThen" class="form-check-input" />
+                        <label for="RateThenOption" class="form-check-label">@Model.RateThenText</label>
+                        <div class="form-text" text-translate="true">The crypto currency price, at the rate the invoice got paid.</div>
+                    </div>
+                </div>
+            }
+            @if (Model.CryptoAmountNow > 0)
+            {
+                <div class="form-group">
+                    <div class="form-check">
+                        <input id="CurrentRateOption" asp-for="SelectedRefundOption" type="radio" value="CurrentRate" class="form-check-input" />
+                        <label for="CurrentRateOption" class="form-check-label">@Model.CurrentRateText</label>
+                        <div class="form-text" text-translate="true">The crypto currency price, at the current rate.</div>
+                    </div>
+                </div>
+            }
+            @if (Model.FiatAmount > 0)
+            {
+                <div class="form-group">
+                    <div class="form-check">
+                        <input id="FiatOption" asp-for="SelectedRefundOption" type="radio" value="Fiat" class="form-check-input" />
+                        <label for="FiatOption" class="form-check-label">@Model.FiatText</label>
+                        <div class="form-text" text-translate="true">The invoice currency, at the rate when the refund will be sent.</div>
+                    </div>
+                </div>
+            }
+            <div class="form-group">
+                <div class="form-check">
+                    <input id="CustomOption" asp-for="SelectedRefundOption" type="radio" value="Custom" class="form-check-input"/>
+                    <label for="CustomOption" class="form-check-label">Custom amount</label>
+                    <div class="form-text" text-translate="true">The specified amount with the specified currency, at the rate when the refund will be sent.</div>
+                    <div class="form-group pt-2 additional-options">
+                        <label asp-for="CustomAmount" class="form-label"></label>
+                        <div class="input-group">
+                            <input asp-for="CustomAmount" type="number" step="any" asp-format="{0}" class="form-control"/>
+                            <input asp-for="CustomCurrency" type="text" class="form-control w-auto" currency-selection />
+                        </div>
+                        <div class="alert alert-warning my-2" hidden id="CustomAmountWarning" role="alert" text-translate="true">
+                            This is an overpayment of the initial amount.
+                        </div>
+                        <span asp-validation-for="CustomAmount" class="text-danger w-100"></span>
+                        <span asp-validation-for="CustomCurrency" class="text-danger w-100"></span>
+                    </div>
+                </div>
+            </div>
+            <hr class="border" />
+            <div class="form-group form-check">
+                <label asp-for="SubtractPercentage" class="form-label" text-translate="true">
+                    Optional: Specify the percentage by which to reduce the refund, e.g. as processing charge or to compensate for the mining fee.
+                </label>
+                <div class="input-group">
+                    <input asp-for="SubtractPercentage" type="number" step=".01" min="0" class="form-control" style="flex: 0 0 10ch;" />
+                    <span class="input-group-text">%</span>
+                    <span class="input-group-text" id="SubtractPercentageResult" hidden></span>
+                </div>
+                <span asp-validation-for="SubtractPercentage" class="text-danger w-100"></span>
+            </div>
+            
+            <button id="ok" type="submit" class="btn btn-primary w-100" text-translate="true">Create refund</button>
+            break;
+    }
+</form>

@@ -1,0 +1,28 @@
+@model BTCPayServer.Abstractions.Form.Field
+@{
+	var isInvalid = ViewContext.ModelState[Model.Name]?.ValidationState is Microsoft.AspNetCore.Mvc.ModelBinding.ModelValidationState.Invalid;
+	var errors = isInvalid ? ViewContext.ModelState[Model.Name].Errors : null;
+}
+<div class="form-group">
+    <label class="form-label" for="@Model.Name"@(Model.Required ? " data-required" : "")>
+        @Safe.Raw(Model.Label)
+    </label>
+    <textarea id="@Model.Name" class="form-control @(errors is null ? "" : "is-invalid")"
+           name="@Model.Name" data-val="true"
+           @if (!string.IsNullOrEmpty(Model.HelpText))
+           {
+               @Safe.Raw($" aria-describedby=\"HelpText-{Model.Name}\"")
+           }
+           @if (Model.Required)
+           {
+               @Safe.Raw($" data-val-required=\"{Model.Label} is required.\" required")
+           }
+    >@Model.Value</textarea>
+    <span class="text-danger" data-valmsg-for="@Model.Name" data-valmsg-replace="true">@(isInvalid && errors.Any() ? errors.First().ErrorMessage : string.Empty)</span>
+    @if (!string.IsNullOrEmpty(Model.HelpText))
+    {
+        <div id="@($"HelpText-{Model.Name}")" class="form-text">
+            @Safe.Raw(Model.HelpText)
+        </div>
+    }
+</div>

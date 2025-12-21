@@ -1,0 +1,32 @@
+﻿@model BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration.FileSystemStorageConfiguration
+@{
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Files), StringLocalizer["Local Filesystem Storage"])
+        .SetCategory(WellKnownCategories.Server));
+}
+
+<div class="sticky-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Files" text-translate="true">Files</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a asp-action="Storage" text-translate="true">Storage Provider</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page" text-translate="true">Provider</li>
+        </ol>
+        <h2>@ViewData["Title"]</h2>
+    </nav>
+</div>
+<partial name="_StatusMessage" />
+
+<p text-translate="true">Any uploaded files are being saved on the same machine that hosts BTCPay; please pay attention to your storage space.</p>
+<div class="row">
+    <div class="col-xl-10 col-xxl-constrain">
+        <a asp-action="Storage" asp-route-forceChoice="true" text-translate="true">Change Storage provider</a>
+    </div>
+</div>
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+}

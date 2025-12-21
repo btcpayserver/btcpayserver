@@ -1,0 +1,25 @@
+@{
+    Layout = "_LayoutSimple";
+}
+
+<style>
+    .main-logo { height: 4.5rem; max-width: 18rem; }
+    .main-logo-btcpay .main-logo-btcpay--small { display: none; }
+    .lead img { max-width: 100%; }
+</style>
+
+<div class="text-center">
+    <a asp-controller="UIHome" asp-action="Index" class="d-inline-block navbar-brand mx-0 mb-5">
+        <vc:main-logo />
+    </a>
+
+    <h1 class="text-uppercase my-3">@ViewData["Title"]</h1>
+
+    <div class="lead text-center">
+        @RenderBody()
+    </div>
+
+    <hr class="primary my-5" />
+
+    <partial name="_BTCPaySupporters" />    
+</div>

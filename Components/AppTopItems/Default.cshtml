@@ -1,0 +1,98 @@
+@using BTCPayServer.Plugins.Crowdfund
+@model BTCPayServer.Components.AppTopItems.AppTopItemsViewModel
+
+<div id="AppTopItems-@Model.Id" class="widget app-top-items">
+    <header class="mb-3">
+        <h3>
+            @if (Model.AppType == CrowdfundAppType.AppType)
+            {
+                <span text-translate="true">Top Perks</span>
+            }
+            else
+            {
+                <span text-translate="true">Top Items</span>
+            }
+        </h3>
+    </header>
+    @if (Model.InitialRendering)
+    {
+        <div class="loading d-flex justify-content-center p-3">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden" text-translate="true">Loading...</span>
+            </div>
+        </div>
+        <script src="~/Components/AppTopItems/Default.cshtml.js" asp-append-version="true"></script>
+        <script>
+		(async () => {
+			const url = @Safe.Json(Model.DataUrl);
+			const appId = @Safe.Json(Model.Id);
+			const response = await fetch(url);
+			if (response.ok) {
+				document.getElementById(`AppTopItems-${appId}`).outerHTML = await response.text();
+				const data = document.querySelector(`#AppTopItems-${appId} template`);
+				if (data) window.appTopItems.dataLoaded(JSON.parse(data.innerHTML));
+			}
+		})();
+	    </script>
+    }
+    else if (Model.Entries.Any())
+    {
+        <div class="ct-chart mb-3"></div>
+        <template>
+            @Safe.Json(Model)
+        </template>
+        <div class="app-items">
+            @for (var i = 0; i < Model.Entries.Count; i++)
+            {
+                var entry = Model.Entries[i];
+                <div class="app-item ct-series-@i">
+                    <span class="app-item-name">
+                        <span class="app-item-point ct-point"></span>
+                        @entry.Title
+                    </span>
+                    <span class="app-item-value" data-sensitive>
+                        <span class="text-muted">
+                            @entry.SalesCount
+                            @if (Model.AppType == CrowdfundAppType.AppType)
+                            {
+                                if (entry.SalesCount == 1)
+                                {
+                                    <span text-translate="true">contribution</span>
+                                }
+                                else
+                                {
+                                    <span text-translate="true">contributions</span>
+                                }
+                            }
+                            else
+                            {
+                                if (entry.SalesCount == 1)
+                                {
+                                    <span text-translate="true">sale</span>
+                                }
+                                else
+                                {
+                                    <span text-translate="true">sales</span>
+                                }
+                            },
+                        </span>
+                        @entry.TotalFormatted
+                    </span>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <p class="text-secondary mt-3">
+            @if (Model.AppType == CrowdfundAppType.AppType)
+            {
+                <span text-translate="true">No contributions have been made yet.</span>
+            }
+            else
+            {
+                <span text-translate="true">No sales have been made yet.</span>
+            }
+        </p>
+    }
+</div>

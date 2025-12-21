@@ -1,0 +1,620 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/payout-processors": {
+            "get": {
+                "tags": [
+                    "Stores (Payout Processors)"
+                ],
+                "summary": "Get store configured payout processors",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "description": "Get store configured payout processors",
+                "operationId": "StorePayoutProcessors_GetStorePayoutProcessors",
+                "responses": {
+                    "200": {
+                        "description": "configured payout processors",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PayoutProcessorData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/payout-processors/{processor}/{paymentMethodId}": {
+            "delete": {
+                "tags": [
+                    "Stores (Payout Processors)"
+                ],
+                "summary": "Remove store configured payout processor",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "name": "processor",
+                        "in": "path",
+                        "required": true,
+                        "description": "The processor",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/PaymentMethodId"
+                    }
+                ],
+                "description": "Remove store configured payout processor",
+                "operationId": "StorePayoutProcessors_RemoveStorePayoutProcessor",
+                "responses": {
+                    "200": {
+                        "description": "removed"
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/payout-processors": {
+            "get": {
+                "tags": [
+                    "Payout Processors"
+                ],
+                "summary": "Get payout processors",
+                "description": "Get payout processors available in this instance",
+                "operationId": "PayoutProcessors_GetPayoutProcessors",
+                "responses": {
+                    "200": {
+                        "description": "available payout processors",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PayoutProcessorData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the data"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/payout-processors/OnChainAutomatedPayoutSenderFactory/{paymentMethodId}": {
+            "get": {
+                "tags": [
+                    "Stores (Payout Processors)"
+                ],
+                "summary": "Get configured store onchain automated payout processors",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/PaymentMethodId"
+                    }
+                ],
+                "description": "Get configured store onchain automated payout processors",
+                "operationId": "GreenfieldStoreAutomatedOnChainPayoutProcessorsController_GetStoreOnChainAutomatedPayoutProcessorsForPaymentMethod",
+                "responses": {
+                    "200": {
+                        "description": "configured processors",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OnChainAutomatedTransferSettings"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Stores (Payout Processors)"
+                ],
+                "summary": "Update configured store onchain automated payout processors",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/PaymentMethodId"
+                    }
+                ],
+                "description": "Update configured store onchain automated payout processors",
+                "operationId": "GreenfieldStoreAutomatedOnChainPayoutProcessorsController_UpdateStoreOnChainAutomatedPayoutProcessorForPaymentMethod",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateOnChainAutomatedTransferSettings"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "configured processor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OnChainAutomatedTransferSettings"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{payoutMethodId}": {
+            "get": {
+                "tags": [
+                    "Stores (Payout Processors)"
+                ],
+                "summary": "Get configured store Lightning automated payout processors",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/PayoutMethodId"
+                    }
+                ],
+                "description": "Get configured store Lightning automated payout processors",
+                "operationId": "GreenfieldStoreAutomatedLightningPayoutProcessorsController_GetStoreLightningAutomatedPayoutProcessorsForPaymentMethod",
+                "responses": {
+                    "200": {
+                        "description": "configured processors",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LightningAutomatedTransferSettings"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Stores (Payout Processors)"
+                ],
+                "summary": "Update configured store Lightning automated payout processors",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/PayoutMethodId"
+                    }
+                ],
+                "description": "Update configured store Lightning automated payout processors",
+                "operationId": "GreenfieldStoreAutomatedLightningPayoutProcessorsController_UpdateStoreLightningAutomatedPayoutProcessor",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateLightningAutomatedTransferSettings"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "configured processor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LightningAutomatedTransferSettings"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/payout-processors/OnChainAutomatedTransferSenderFactory": {
+            "get": {
+                "tags": [
+                    "Stores (Payout Processors)"
+                ],
+                "summary": "Get configured store onchain automated payout processors",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "description": "Get configured store onchain automated payout processors",
+                "operationId": "GreenfieldStoreAutomatedOnChainPayoutProcessorsController_GetStoreOnChainAutomatedTransferSenderFactory",
+                "responses": {
+                    "200": {
+                        "description": "configured processors",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OnChainAutomatedTransferSettings"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Stores (Payout Processors)"
+                ],
+                "summary": "Update configured store onchain automated payout processors",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "description": "Update configured store onchain automated payout processors",
+                "operationId": "GreenfieldStoreAutomatedOnChainPayoutProcessorsController_UpdateStoreOnChainAutomatedTransferSenderFactory",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateOnChainAutomatedTransferSettings"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "configured processor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OnChainAutomatedTransferSettings"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory": {
+            "get": {
+                "tags": [
+                    "Stores (Payout Processors)"
+                ],
+                "summary": "Get configured store Lightning automated payout processors",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "description": "Get configured store Lightning automated payout processors",
+                "operationId": "GreenfieldStoreAutomatedLightningPayoutProcessorsController_GetStoreLightningAutomatedPayoutSenderFactory",
+                "responses": {
+                    "200": {
+                        "description": "configured processors",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LightningAutomatedTransferSettings"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "PayoutProcessorData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "name": {
+                        "description": "unique identifier of the payout processor",
+                        "type": "string"
+                    },
+                    "friendlyName": {
+                        "description": "Human name of the payout processor",
+                        "type": "string"
+                    },
+                    "payoutMethods": {
+                        "nullable": true,
+                        "description": "Supported, payment methods by this processor",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "UpdateLightningAutomatedTransferSettings": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "intervalSeconds": {
+                        "description": "How often should the processor run",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanSeconds"
+                            }
+                        ]
+                    },
+                    "cancelPayoutAfterFailures": {
+                        "description": "How many failures should the processor tolerate before cancelling the payout",
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "processNewPayoutsInstantly": {
+                        "description": "Skip the interval when ane eligible payout has been approved (or created with pre-approval)",
+                        "type": "boolean",
+                        "default": false
+                    }
+                }
+            },
+            "LightningAutomatedTransferSettings": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "payoutMethodId": {
+                        "$ref": "#/components/schemas/PayoutMethodId"
+                    },
+                    "intervalSeconds": {
+                        "description": "How often should the processor run",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanSeconds"
+                            }
+                        ]
+                    },
+                    "cancelPayoutAfterFailures": {
+                        "description": "How many failures should the processor tolerate before cancelling the payout",
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "processNewPayoutsInstantly": {
+                        "description": "Skip the interval when ane eligible payout has been approved (or created with pre-approval)",
+                        "type": "boolean",
+                        "default": false
+                    }
+                }
+            },
+            "UpdateOnChainAutomatedTransferSettings": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "feeTargetBlock": {
+                        "type": "number",
+                        "description": "How many blocks should the fee rate calculation target to confirm in. Set to 1 if not provided",
+                        "nullable": true
+                    },
+                    "intervalSeconds": {
+                        "description": "How often should the processor run",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanSeconds"
+                            }
+                        ]
+                    },
+                    "threshold": {
+                        "type": "string",
+                        "format": "decimal",
+                        "minimum": 0,
+                        "description": "Only process payouts when this payout sum is reached.",
+                        "example": "0.1"
+                    },
+                    "processNewPayoutsInstantly": {
+                        "description": "Skip the interval when ane eligible payout has been approved (or created with pre-approval)",
+                        "type": "boolean",
+                        "default": false
+                    }
+                }
+            },
+            "OnChainAutomatedTransferSettings": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "payoutMethodId": {
+                        "$ref": "#/components/schemas/PayoutMethodId"
+                    },
+                    "feeTargetBlock": {
+                        "type": "number",
+                        "description": "How many blocks should the fee rate calculation target to confirm in."
+                    },
+                    "intervalSeconds": {
+                        "description": "How often should the processor run",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanSeconds"
+                            }
+                        ]
+                    },
+                    "threshold": {
+                        "type": "string",
+                        "format": "decimal",
+                        "minimum": 0,
+                        "description": "Only process payouts when this payout sum is reached.",
+                        "example": "0.1"
+                    },
+                    "processNewPayoutsInstantly": {
+                        "description": "Skip the interval when ane eligible payout has been approved (or created with pre-approval)",
+                        "type": "boolean",
+                        "default": false
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Stores (Payout Processors)",
+            "description": "Stores (Payout Processors) operations"
+        },
+        {
+            "name": "Payout Processors",
+            "description": "Payout Processors operations"
+        }
+    ]
+}

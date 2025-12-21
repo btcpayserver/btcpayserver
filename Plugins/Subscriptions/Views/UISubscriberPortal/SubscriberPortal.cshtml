@@ -1,0 +1,733 @@
+﻿@using BTCPayServer.Client.Models
+@using BTCPayServer.Services
+@using BTCPayServer.Services.Invoices
+@using NBXplorer
+@model SubscriberPortalViewModel
+@inject DisplayFormatter DisplayFormatter
+@inject LinkGenerator linkGenerator;
+
+@functions
+{
+    int CountDays(DateTimeOffset date)
+    {
+        var days = (int)double.Ceiling((date - DateTimeOffset.UtcNow).TotalDays);
+        return days < 0 ? 0 : days;
+    }
+
+    string FormatDays(int days)
+        => days is 1 or 0 ? StringLocalizer["{0} day", days] : StringLocalizer["{0} days", days];
+
+    private static string RecurringToString(PlanData.RecurringInterval type)
+    {
+        return type switch
+        {
+            PlanData.RecurringInterval.Lifetime => "Lifetime",
+            PlanData.RecurringInterval.Monthly => "per month",
+            PlanData.RecurringInterval.Quarterly => "per quarter",
+            PlanData.RecurringInterval.Yearly => "per year",
+            _ => throw new NotSupportedException()
+        };
+    }
+}
+
+@{
+    Layout = null;
+    var creditBalance = DisplayFormatter.Currency(Model.Credit.CurrentBalance, Model.Credit.Currency, DisplayFormatter.CurrencyFormat.Symbol);
+    var daysRemaining = Model.Subscriber.NextPaymentDue is null ? 0 : CountDays(Model.Subscriber.NextPaymentDue.Value);
+    var date = Model.Subscriber.NextPaymentDue is null ? "" : Model.Subscriber.NextPaymentDue.Value.ToString("D");
+
+    var graceRemaining = Model.Subscriber.GracePeriodEnd is null ? 0 : CountDays(Model.Subscriber.GracePeriodEnd.Value);
+    var currency = Model.Subscriber.Plan.Currency;
+    SubscriberData.PhaseTypes? nextPhase = Model.Subscriber switch
+    {
+        { Phase: SubscriberData.PhaseTypes.Trial, PeriodEnd: { } pe } => SubscriberData.PhaseTypes.Normal,
+        { Phase: SubscriberData.PhaseTypes.Trial } => SubscriberData.PhaseTypes.Expired,
+        { Phase: SubscriberData.PhaseTypes.Normal, GracePeriodEnd: { } gpe } => SubscriberData.PhaseTypes.Grace,
+        { Phase: SubscriberData.PhaseTypes.Normal } => SubscriberData.PhaseTypes.Expired,
+        { Phase: SubscriberData.PhaseTypes.Grace } => SubscriberData.PhaseTypes.Expired,
+        _ => null
+    };
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <partial name="LayoutHead" />
+    <link href="~/vendor/font-awesome/css/font-awesome.min.css" asp-append-version="true" rel="stylesheet" />
+    <link href="~/main/site.css" asp-append-version="true" rel="stylesheet" />
+    <style>
+        :root {
+            --warning-bg: #fef3c7;
+            --warning-text: #92400e;
+            --danger-bg: #f8d7da;
+            --danger-text: #dc3545;
+            --info-bg: #cff4fc;
+        }
+
+        .company-logo {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .company-logo img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+
+        .navbar {
+            border-bottom: 1px solid var(--btcpay-body-border-light);
+            padding: 1rem 0;
+        }
+
+        .main-content {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            border-radius: 8px;
+            box-shadow: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            font-weight: 600;
+            padding: 1rem 1.5rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .alert-translucent {
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .alert-translucent.alert-warning {
+            background: var(--warning-bg);
+            border: 1px solid var(--btcpay-warning-border);
+        }
+
+        .alert-translucent.alert-info {
+            background: var(--info-bg);
+            border: 1px solid var(--btcpay-info-border);
+        }
+
+        .alert-translucent.alert-danger {
+            background: var(--danger-bg);
+            border: 1px solid var(--btcpay-danger-border);
+        }
+
+        .alert-translucent .alert-icon {
+            margin-right: 0.75rem;
+            font-size: 1.125rem;
+        }
+
+        .alert-translucent.alert-warning .alert-icon {
+            color: var(--btcpay-warning-border);
+        }
+
+        .alert-translucent.alert-danger .alert-icon {
+            color: var(--btcpay-danger-border);
+        }
+
+        .alert-translucent.alert-info .alert-icon {
+            color: var(--btcpay-info-border);
+        }
+
+        .alert-translucent.alert-warning .alert-text {
+            color: var(--warning-text);
+        }
+
+        .alert-translucent.alert-danger .alert-text {
+            color: var(--btcpay-danger);
+        }
+
+        .alert-translucent.alert-info .alert-text {
+            color: var(--btcpay-info);
+        }
+
+
+        .notice-content {
+            display: flex;
+            align-items: center;
+        }
+
+        .notice-title {
+            font-weight: 600;
+            margin-bottom: 0.125rem;
+        }
+
+        .notice-subtitle {
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table th {
+            border-top: none;
+            font-weight: 600;
+        }
+
+        .table td {
+            vertical-align: middle;
+        }
+
+        .plan-comparison {
+            background-color: var(--btcpay-neutral-100);
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .current-plan {
+            border-left: 3px solid #0066cc;
+            padding-left: 1rem;
+        }
+
+        .text-muted {
+            color: #6c757d !important;
+        }
+    </style>
+</head>
+<body>
+<!-- Navigation -->
+<nav class="navbar btcpay-header">
+    <div class="container-fluid">
+        <div class="d-flex align-items-center">
+            <div class="company-logo me-3">
+                <a href="@Model.Url" class="text-decoration-none" target="_blank">
+                    <img src="@Model.Logo" alt="@Model.StoreName" />
+                </a>
+            </div>
+            <a href="@Model.Url" target="_blank" class="navbar-brand mb-0 h1 text-decoration-none">@Model.StoreName</a>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            @if (Model.Subscriber.TestAccount)
+            {
+                @if (Model.Subscriber.GetReminderDate() is var o && DateTimeOffset.UtcNow < o)
+                {
+                    <form id="MoveToReminder"
+                          asp-action="MoveTime"
+                          asp-route-portalSessionId="@Model.Data.Id" method="post">
+                        <button type="submit" class="btn btn-outline-info" name="command" value="reminder">Move to payment reminder</button>
+                    </form>
+                }
+
+                @if (nextPhase is not null)
+                {
+                    <form id="MovePhase"
+                          asp-action="MoveTime"
+                          asp-route-portalSessionId="@Model.Data.Id" method="post">
+                        <button type="submit" class="btn btn-outline-info">Move to @nextPhase.Value</button>
+                    </form>
+                }
+                <form id="Move7days"
+                      asp-action="MoveTime"
+                      asp-route-portalSessionId="@Model.Data.Id" method="post">
+                    <button type="submit" class="btn btn-outline-info" name="command" value="move7days">Move to 7 days</button>
+                </form>
+            }
+            <span class="me-3 text-muted">@Model.Subscriber.Customer.GetPrimaryIdentity()</span>
+        </div>
+    </div>
+</nav>
+
+<div class="main-content">
+    <partial name="_StatusMessage" />
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Subscription Management</h2>
+        @if (@Model.Subscriber.Customer.ExternalRef is not null)
+        {
+            <span class="text-muted">Customer Reference: @Model.Subscriber.Customer.ExternalRef</span>
+        }
+    </div>
+
+    <!-- Current Subscription -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fa fa-address-book me-2"></i>Current Subscription
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <h5 class="d-flex align-items-center gap-3 mb-2">
+                        <span data-testid="plan-name">@Model.Subscriber.Plan.Name</span>
+                        @if (Model.Subscriber.Phase == SubscriberData.PhaseTypes.Trial)
+                        {
+                            <span class="badge badge-translucent rounded-pill text-bg-info">Trial</span>
+                        }
+                        else if (Model.Subscriber.Phase == SubscriberData.PhaseTypes.Grace)
+                        {
+                            <span class="badge badge-translucent rounded-pill text-bg-warning">Grace</span>
+                        }
+                        @if (Model.Data.Subscriber is { ProcessingInvoiceId: {} pendingInvoiceId, OptimisticActivation: false })
+                        {
+                            <span class="badge badge-translucent rounded-pill text-bg-warning" title="@pendingInvoiceId">Pending invoice</span>
+                        }
+                    </h5>
+                    @if (Model.Subscriber.Plan.Description is not null)
+                    {
+                        <p class="text-muted mb-3">@Model.Subscriber.Plan.Description</p>
+                    }
+
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="me-3"><vc:subscriber-status subscriber="@Model.Subscriber" /></span>
+                        @if (!string.IsNullOrEmpty(date))
+                        {
+                            @if (Model.Subscriber.Phase is SubscriberData.PhaseTypes.Normal)
+                            {
+                                <span class="text-muted">Next billing: @date</span>
+                            }
+                            else if (Model.Subscriber.Phase is SubscriberData.PhaseTypes.Trial)
+                            {
+                                <span class="text-muted">Trial expires: @date</span>
+                            }
+                            else if (Model.Subscriber.Phase is SubscriberData.PhaseTypes.Grace)
+                            {
+                                <span class="text-muted">The subscription has already expired and will soon be inactivated</span>
+                            }
+                        }
+                    </div>
+                </div>
+                @if (Model.Subscriber.Plan.RecurringType != PlanData.RecurringInterval.Lifetime)
+                {
+                    <div class="col-md-4 text-md-end">
+                        <h4 class="mb-1">@DisplayFormatter.Currency(Model.Plan.Price, Model.Plan.Currency, DisplayFormatter.CurrencyFormat.Symbol)</h4>
+                        <p class="text-muted mb-0">@RecurringToString(Model.Plan.RecurringType)</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Subscriber.IsSuspended)
+    {
+        <div class="alert-translucent alert-danger">
+            <div class="notice-content">
+                <i class="fa fa-warning alert-icon"></i>
+                <div class="alert-text">
+                    <div class="notice-title"><span>Access suspended</span></div>
+                    <p class="notice-subtitle">Your access to this subscription has been suspended.</p>
+                    @if (!String.IsNullOrEmpty(Model.Subscriber.SuspensionReason))
+                    {
+                        <p class="notice-subtitle">Reason: @Model.Subscriber.SuspensionReason</p>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    else if (Model.Subscriber.Phase == SubscriberData.PhaseTypes.Expired)
+    {
+        <div class="alert-translucent alert-danger">
+            <div class="notice-content">
+                <i class="fa fa-warning alert-icon"></i>
+                <div class="alert-text">
+                    <div class="notice-title"><span>Access expired</span></div>
+                    <p class="notice-subtitle">Your access to this subscription has been expired.</p>
+                </div>
+            </div>
+            <partial name="NextAction" model="@("btn btn-danger", Model.Subscriber)" />
+        </div>
+    }
+    else if (Model.Subscriber.Phase == SubscriberData.PhaseTypes.Trial)
+    {
+        <div class="alert-translucent alert-info">
+            <div class="notice-content">
+                <i class="fa fa-warning alert-icon"></i>
+                <div class="alert-text">
+                    <div class="notice-title"><span>You are in trial</span></div>
+                    <p class="notice-subtitle">You access will be revoked in <span>@FormatDays(daysRemaining)</span></p>
+                </div>
+            </div>
+            <partial name="NextAction" model="@("btn btn-info", Model.Subscriber)" />
+        </div>
+    }
+    else if (Model.Subscriber.GetReminderDate() is { } reminderDate2 &&
+             reminderDate2 < DateTimeOffset.UtcNow &&
+             !Model.Subscriber.IsNextPlanRenewable)
+    {
+        <div class="alert-translucent alert-warning">
+            <div class="notice-content">
+                <i class="fa fa-warning alert-icon"></i>
+                <div class="alert-text">
+                    <div class="notice-title">Upgrade needed in <span>@FormatDays(daysRemaining)</span></div>
+                    <div class="notice-subtitle">You access will be revoked in <span>@FormatDays(daysRemaining)</span>, you need to subscribe to a new plan.</div>
+                </div>
+            </div>
+            <partial name="NextAction" model="@("btn btn-warning", Model.Subscriber)" />
+        </div>
+    }
+    else if (Model.Subscriber.GetReminderDate() is { } reminderDate &&
+             reminderDate < DateTimeOffset.UtcNow &&
+             Model.Subscriber.MissingCredit() != 0)
+    {
+        @if (daysRemaining == 0)
+        {
+            <div class="alert-translucent alert-danger">
+                <div class="notice-content">
+                    <i class="fa fa-warning alert-icon"></i>
+                    <div class="alert-text">
+                        <div class="notice-title">Payment due</div>
+                        <div class="notice-subtitle">You access will be revoked in <span>@FormatDays(graceRemaining)</span></div>
+                    </div>
+                </div>
+                <partial name="NextAction" model="@("btn btn-danger", Model.Subscriber)" />
+            </div>
+        }
+        else
+        {
+            <div class="alert-translucent alert-warning">
+                <div class="notice-content">
+                    <i class="fa fa-clock-o alert-icon"></i>
+                    <div class="alert-text">
+                        <div class="notice-title">Payment due in <span>@FormatDays(daysRemaining)</span></div>
+                        <p class="notice-subtitle">Next billing
+                            date: @date • @DisplayFormatter.Currency(Model.Subscriber.Plan.Price, Model.Subscriber.Plan.Currency, DisplayFormatter.CurrencyFormat.Symbol)</p>
+                    </div>
+                </div>
+                <partial name="NextAction" model="@("btn btn-warning", Model.Subscriber)" />
+            </div>
+        }
+    }
+    <!-- Billing Information -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fa fa-credit-card me-2"></i>Billing Information
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="mb-2">Payment Method</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-light text-dark border">Credit balance</span>
+                            <span
+                                class="ms-2 fw-semibold credit-balance">@creditBalance</span>
+                        </div>
+                        <button id="add-credit" class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#credit-input"
+                                aria-expanded="false"
+                                aria-controls="credit-input">
+                            <i class="fa fa-credit-card"></i>
+                            Add credit
+                        </button>
+                    </div>
+                    <div class="collapse" id="credit-input">
+                        <form method="post">
+                            <div class="input-group">
+                                <button type="submit" name="command" value="add-credit" class="btn btn-primary">Proceed to payment</button>
+                                <input inputmode="decimal" class="form-control" placeholder="Enter credit amount" asp-for="Credit.InputAmount" min="0"
+                                       required />
+                            </div>
+                            <span asp-validation-for="Credit.InputAmount" class="text-danger"></span>
+                        </form>
+                    </div>
+                    @if (Model.Subscriber.Plan.RecurringType is not PlanData.RecurringInterval.Lifetime)
+                    {
+                        <hr>
+                        <div class="d-flex justify-content-between credit-plan-price">
+                            <div class="text-muted">Plan price</div>
+                            <div>@DisplayFormatter.Currency(Model.Subscriber.Plan.Price, Model.Subscriber.Plan.Currency, DisplayFormatter.CurrencyFormat.Symbol)</div>
+                        </div>
+                        @if (Model.Credit.CreditApplied > 0m)
+                        {
+                            <div class="d-flex justify-content-between credit-applied">
+                                <div class="text-muted">Credit applied</div>
+                                <div class="text-success">
+                                    - @DisplayFormatter.Currency(Model.Credit.CreditApplied, Model.Credit.Currency, DisplayFormatter.CurrencyFormat.Symbol)</div>
+                            </div>
+                        }
+                        @if (Model.Credit.CreditApplied < 0m)
+                        {
+                            <div class="d-flex justify-content-between credit-past-due">
+                                <div class="text-muted">Past due</div>
+                                <div class="text-danger">
+                                    - @DisplayFormatter.Currency((-Model.Credit.CreditApplied), Model.Credit.Currency, DisplayFormatter.CurrencyFormat.Symbol)</div>
+                            </div>
+                        }
+                        <div class="d-flex justify-content-between fw-semibold credit-next-charge">
+                            <div>Next charge on @date</div>
+                            <div>@DisplayFormatter.Currency(Model.Credit.NextCharge, Model.Credit.Currency, DisplayFormatter.CurrencyFormat.Symbol)</div>
+                        </div>
+                        <form method="post" class="d-flex mt-3">
+                            <input type="hidden" name="command" value="update-auto-renewal" />
+                            <input type="checkbox" class="btcpay-toggle me-2" id="autoRenewal" asp-for="Subscriber.AutoRenew">
+                            <label class="form-check-label" for="autoRenewal">Auto renewal</label>
+                        </form>
+                    }
+                </div>
+                @if (Model.Subscriber.Plan.RecurringType is not PlanData.RecurringInterval.Lifetime)
+                {
+                    <div class="col-md-6">
+                        <h6 class="mb-2">Notification</h6>
+                        <p class="text-muted mb-0">
+                            @foreach (var identity in Model.Subscriber.Customer.CustomerIdentities)
+                            {
+                                <vc:contact type="@identity.Type" value="@identity.Value"></vc:contact>
+                            }
+                        </p>
+                        <p class="form-text mb-0">Payment reminder will be sent <span class="fw-bold">@Model.Subscriber.PaymentReminderDaysOrDefault days</span> before
+                            expiration.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Plan.PlanChanges.Any())
+    {
+        <!-- Plan Management -->
+        <div class="card">
+            <div class="card-header" id="plans">
+                <i class="fa fa-arrow-up me-2"></i>Plan Management
+            </div>
+            <div class="card-body">
+                <div class="plan-comparison">
+                    @foreach (var batch in Model.PlanChanges.Batch(3))
+                    {
+                        <div class="row">
+                            @foreach (var plan in batch)
+                            {
+                                if (plan.Current)
+                                {
+                                    <div class="col-md-4" data-plan-name="@plan.Name">
+                                        <div class="current-plan">
+                                            <h6 class="mb-1 changeplan-title">@plan.Name</h6>
+                                            <p class="text-muted mb-2"><span>@DisplayFormatter.Currency(plan.Price, plan.Currency, DisplayFormatter.CurrencyFormat.Symbol)</span> <span>@RecurringToString(plan.RecurringType)</span></p>
+                                            <span class="badge bg-primary">Current</span>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="col-md-4 changeplan-container"
+                                         data-plan-name="@plan.Name"
+                                         data-plan-id="@plan.PlanId">
+                                        <h6 class="mb-1 changeplan-title">@plan.Name</h6>
+                                        <p class="text-muted mb-2"><span>@DisplayFormatter.Currency(plan.Price, plan.Currency, DisplayFormatter.CurrencyFormat.Symbol)</span> <span>@RecurringToString(plan.RecurringType)</span></p>
+
+                                            <input type="hidden" name="changedPlanId" value="@plan.PlanId" />
+                                            @if (plan.ChangeType == PlanChangeData.ChangeType.Upgrade)
+                                            {
+                                                <a
+                                                    href="#"
+                                                    class="btn btn-outline-primary btn-sm"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#changePlanModal"
+                                                    data-action="upgrade">
+                                                    Upgrade
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <a
+                                                    href="#"
+                                                    class="btn btn-outline-secondary btn-sm"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#changePlanModal"
+                                                    data-action="downgrade">
+                                                    Downgrade
+                                                </a>
+                                            }
+
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (Model.Transactions.Count != 0)
+    {
+        <div class="card credit-history">
+            <div class="card-header">
+                <i class="fa fa-file me-2"></i> History
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                        <tr>
+                            <th class="text-nowrap">Date</th>
+                            <th>Description</th>
+                            <th class="text-nowrap text-end">Amount</th>
+                            <th class="text-nowrap text-end">Total Balance</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var tx in Model.Transactions)
+                        {
+                            var color = tx.Amount >= 0 ? "text-success" : "text-danger";
+                            <tr>
+                                <td>@tx.Date.ToString("D")</td>
+                                <td>@tx.Description</td>
+                                <td class="@color text-end">
+                                    @DisplayFormatter.Currency(tx.Amount, currency, DisplayFormatter.CurrencyFormat.Symbol)
+                                </td>
+                                <td class="text-end">
+                                    @DisplayFormatter.Currency(tx.TotalBalance, currency, DisplayFormatter.CurrencyFormat.Symbol)
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+
+     <div class="modal fade" id="changePlanModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title upgrade-mode">Upgrade</h4>
+                    <h4 class="modal-title downgrade-mode">Downgrade</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                        <vc:icon symbol="close" />
+                    </button>
+                </div>
+                <form method="post">
+                    <div class="modal-body">
+                        <div html-translate="true" class="upgrade-mode">Would you like to upgrade <span class="subscriber-name fw-semibold"></span> to <b class="changePlanName"></b>?</div>
+                        <div html-translate="true" class="downgrade-mode">Would you like to downgrade <span class="subscriber-name fw-semibold"></span> to <b class="changePlanName"></b> ?</div>
+                    </div>
+                    <div class="modal-body pt-0 pb-0">
+                        <input name="changePlanId" type="hidden" />
+
+                        <div id="changePlanCost" class="d-flex justify-content-between align-items-center pl">
+                            <div class="text-muted">New plan cost</div>
+                            <div></div>
+                        </div>
+
+                        @if (Model.Refund.Value != 0)
+                        {
+                            <div class="d-flex justify-content-between align-items-center pl">
+                                <div class="text-muted">Current plan refund</div>
+                                <div>-@Model.Refund.Display</div>
+                            </div>
+                        }
+
+                        <div id="changePlanUsedCredits" class="d-flex justify-content-between align-items-center pl">
+                            <div class="text-muted">Used credits</div>
+                            <div></div>
+                        </div>
+                        <hr />
+                        <div id="changePlanRemainingToPay" class="d-flex justify-content-between align-items-center pl">
+                            <div class="text-muted">Amount due</div>
+                            <div class="fw-bold"></div>
+                        </div>
+                        <div id="changePlanCreditBalance" class="d-flex justify-content-between align-items-center pl">
+                            <div class="text-muted">Credit balance adjustment</div>
+                            <div></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <input type="hidden" name="changedPlanId" />
+                        <button type="submit" class="btn btn-success upgrade-mode" text-translate="true" name="command" value="migrate">Upgrade</button>
+                        <button type="submit" class="btn btn-danger downgrade-mode" text-translate="true" name="command" value="migrate">Downgrade</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script>
+    var migrationPopups = @Safe.Json(Model.MigratePopups);
+
+    @if (!string.IsNullOrEmpty(Model.Anchor))
+    {
+        <text>
+            document.addEventListener("DOMContentLoaded", function () {
+                const element = document.getElementById(@Safe.Json(Model.Anchor));
+                if (element) {
+                    element.scrollIntoView();
+                }
+            });
+        </text>
+    }
+
+    document.querySelector("#autoRenewal").addEventListener('change', function (e) {
+        e.preventDefault();
+        fetch(this.form.action, {
+            method: 'POST',
+            body: new FormData(this.form)
+        });
+    });
+
+    (function () {
+        const changePlanModal = document.getElementById('changePlanModal');
+        var changedPlanId = changePlanModal.querySelector('[name="changedPlanId"]');
+        var changePlanName = document.querySelectorAll('.changePlanName');
+        var changePlanCost = document.querySelector('#changePlanCost');
+        var changePlanUsedCredits = document.querySelector('#changePlanUsedCredits');
+        var changePlanCreditBalance = document.querySelector('#changePlanCreditBalance');
+        var changePlanUpgradeMode = document.querySelectorAll('.upgrade-mode');
+        var changePlanDowngradeMode = document.querySelectorAll('.downgrade-mode');
+
+        function setField(el, value) {
+            var div = el.children[1];
+            if (value === null || value === undefined) {
+                el.style.cssText = 'display: none !important';
+                div.innerText = '';
+            } else {
+                el.style.display = '';
+                div.innerText = value;
+            }
+        }
+
+        changePlanModal.addEventListener('show.bs.modal', function (event) {
+            const trigger = event.relatedTarget;
+            if (!trigger) return;
+            var container = trigger.closest('.changeplan-container');
+            var action = trigger.getAttribute('data-action');
+            var name = container.getAttribute('data-plan-name');
+            var id = container.getAttribute('data-plan-id');
+            changedPlanId.value = id;
+            changePlanName.forEach(el => el.innerText = name);
+
+            var m = migrationPopups[id];
+            setField(changePlanCost, m.cost);
+            setField(changePlanUsedCredits, m.usedCredit);
+            setField(changePlanRemainingToPay, m.amountDue);
+            setField(changePlanCreditBalance, m.creditBalanceAdjustment.text);
+            if (m.creditBalanceAdjustment.value > 0) {
+                changePlanCreditBalance.children[1].classList.add('text-success');
+                changePlanCreditBalance.children[1].classList.remove('text-danger');
+            } else {
+                changePlanCreditBalance.children[1].classList.add('text-danger');
+                changePlanCreditBalance.children[1].classList.remove('text-success');
+            }
+
+            if (action === "upgrade") {
+                changePlanDowngradeMode.forEach(el => el.style.display = 'none');
+                changePlanUpgradeMode.forEach(el => el.style.display = '');
+            } else {
+                changePlanDowngradeMode.forEach(el => el.style.display = '');
+                changePlanUpgradeMode.forEach(el => el.style.display = 'none');
+            }
+
+        });
+    })();
+</script>
+<script src="~/vendor/bootstrap/bootstrap.bundle.min.js" asp-append-version="true"></script>
+</body>
+</html>

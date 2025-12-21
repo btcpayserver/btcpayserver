@@ -97,7 +97,7 @@ public partial class UIStoresController
             {
                 TimeZoneInfo.FindSystemTimeZoneById(model.StoreTimeZone);
             }
-            catch (TimeZoneNotFoundException)
+            catch (Exception ex) when (ex is TimeZoneNotFoundException || ex is InvalidTimeZoneException)
             {
                 ModelState.AddModelError(nameof(model.StoreTimeZone), StringLocalizer["Invalid time zone"]);
                 return View(model);

@@ -1,0 +1,70 @@
+@using BTCPayServer.Services
+@using BTCPayServer.Components.LabelManager
+@model ListTransactionsViewModel
+@{
+    var walletId = Context.GetRouteValue("walletId").ToString();
+}
+@foreach (var transaction in Model.Transactions)
+{
+    <tr class="mass-action-row transaction-row" data-value="@transaction.Id">
+        <td class="align-middle only-for-js mass-action-select-col">
+            <input name="selectedTransactions" type="checkbox" class="form-check-input mass-action-select" form="WalletActions" value="@transaction.Id" />
+        </td>
+        <td class="align-middle date-col">
+            @transaction.Timestamp.ToBrowserDate()
+        </td>
+        <td class="align-middle text-start">
+            <vc:label-manager
+                wallet-object-id="new WalletObjectId(WalletId.Parse(walletId), WalletObjectData.Types.Tx, transaction.Id)"
+                selected-labels="transaction.Tags.Select(t => t.Text).ToArray()"
+                rich-label-info="transaction.Tags.Where(t=> !string.IsNullOrEmpty(t.Link)).ToDictionary(t => t.Text, t => new RichLabelInfo { Link = t.Link, Tooltip = t.Tooltip })"
+                exclude-types="false"
+                display-inline="true"/>
+        </td>
+        <td>
+            <vc:truncate-center text="@transaction.Id" link="@transaction.Link" classes="truncate-center-id" />
+        </td>
+        <td class="align-middle amount-col">
+            <span data-sensitive class="text-@(transaction.Positive ? "success" : "danger")@(transaction.IsConfirmed ? "" : " opacity-50")">@transaction.Balance</span>
+        </td>
+        <td class="align-middle fee-col">
+            <span data-sensitive class="@(transaction.IsConfirmed ? "" : " opacity-50")">
+                @if (transaction.HistoryLine is { Fee: { } fee, FeeRate: { } fr })
+                {
+                    <span><span>@fee</span> <span class="text-muted">(@fr)</span></span>
+                }
+            </span>
+        </td>
+        @foreach (var rate in transaction.Rates)
+        {
+            <td class="align-middle rate-col">
+                <span>@rate</span>
+            </td>
+        }
+        <td class="align-middle text-end">
+            <div class="d-inline-flex gap-3 align-items-center">
+				@if (transaction.CanBumpFee)
+				{
+					<a asp-action="WalletBumpFee" asp-route-walletId="@Context.GetRouteValue("walletId")" asp-route-transactionId="@transaction.Id" class="btn btn-link p-0 bumpFee-btn">
+						<vc:icon symbol="actions-send" />
+						<span text-translate="true">Bump fee</span>
+					</a>
+				}
+                <button class="btn btn-link p-0 @(!string.IsNullOrEmpty(transaction.Comment) ? "text-primary" : "text-secondary")" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <vc:icon symbol="actions-comment" />
+                </button>
+                <div class="dropdown-menu">
+                    <form asp-action="ModifyTransaction" method="post" style="width:260px;" asp-route-walletId="@Context.GetRouteValue("walletId")">
+                        <input type="hidden" name="transactionId" value="@transaction.Id" />
+                        <div class="input-group p-2">
+                            <textarea name="addcomment" maxlength="200" rows="2" cols="20" class="form-control form-control-sm p-1">@transaction.Comment</textarea>
+                        </div>
+                        <div class="p-2">
+                            <button type="submit" class="btn btn-primary btn-sm w-100" text-translate="true">Save comment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </td>
+    </tr>
+}

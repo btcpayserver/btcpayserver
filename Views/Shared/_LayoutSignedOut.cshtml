@@ -1,0 +1,95 @@
+@using BTCPayServer.Services
+@using BTCPayServer.Components.MainLogo
+@using System.Text
+@inject SettingsRepository SettingsRepository
+@{
+    Layout = "_LayoutSimple";
+    ViewBag.ShowTitle ??= true;
+    ViewBag.ShowLeadText ??= false;
+    // obfuscate email on public page, decode via JS (see below)
+    var settings = await SettingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+    var contactUrl = settings.ContactUrl;
+    if (contactUrl?.StartsWith("mailto:") is true)
+    {
+        contactUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(contactUrl));
+    }
+}
+
+@section PageHeadContent {
+    <style>
+        .alert {
+            max-width: 35em;
+            margin: var(--btcpay-space-l) auto;
+        }
+        .account-form {
+            max-width: 35em;
+            margin: 0 auto var(--btcpay-space-xl);
+            padding: 2rem;
+            background: var(--btcpay-bg-tile);
+            border-radius: var(--btcpay-border-radius);
+        }
+        .account-form h4 {
+            margin-bottom: 1.5rem;
+        }
+        .main-logo { height: 4.5rem; max-width: 18rem; }
+        .main-logo-btcpay .main-logo-btcpay--large { display: none; }
+    </style>
+    @await RenderSectionAsync("PageHeadContent", false)
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    @await RenderSectionAsync("PageFootContent", false)
+}
+
+<div class="row justify-content-center mb-2">
+    <div class="col text-center">
+        <a asp-controller="UIHome" asp-action="Index" tabindex="-1" class="d-inline-block navbar-brand mx-0 mb-4">
+            <vc:main-logo />
+        </a>
+
+		<h1 class="h2 mb-3">@ViewLocalizer["Welcome to {0}", string.IsNullOrWhiteSpace(settings.ServerName) ? "BTCPay Server" : settings.ServerName]</h1>
+        @if (ViewBag.ShowLeadText)
+        {
+            <p class="lead">
+                <span class="d-sm-block" text-translate="true">A self-hosted, open-source bitcoin payment processor.</span>
+                <span class="d-sm-block" text-translate="true">It is secure, private, censorship-resistant and free.</span>
+            </p>
+        }
+
+        <partial name="_StatusMessage"/>
+    </div>
+</div>
+
+<div class="account-form">
+    @if (ViewBag.ShowTitle)
+    {
+        <h4>@ViewData["Title"]</h4>
+    }
+    @RenderBody()
+</div>
+
+@if (!string.IsNullOrWhiteSpace(contactUrl))
+{
+    <p class="text-center mt-n5 mb-5 pt-2">
+        <a class="text-secondary" href="@contactUrl" id="ContactLink">Contact Us</a>
+    </p>
+    @if (contactUrl != settings.ContactUrl)
+    {
+        <script>
+            (function() {
+                const link = document.getElementById('ContactLink')
+                link.setAttribute('href', atob(link.getAttribute('href')))
+            })()
+        </script>
+    }
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col">
+        <partial name="_BTCPaySupporters"/>
+    </div>
+</div>
+
+
+

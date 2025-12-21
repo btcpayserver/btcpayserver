@@ -1,0 +1,276 @@
+@inject BTCPayServer.Security.ContentSecurityPolicies csp
+@{
+    csp.Add("worker-src", "blob:");
+}
+
+<template id="camera-qr-scanner-wrap">
+	<div v-if="modalId" :id="modalId" class="modal fade" data-bs-backdrop="static">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+                    <h5 class="modal-title">
+                        {{title}}
+                    </h5>
+                    <button type="button" class="btn-close" aria-label="@StringLocalizer["Close"]" v-on:click="close">
+                        <vc:icon symbol="close"/>
+                    </button>
+				</div>
+				<div class="modal-body">
+					<slot/>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div v-else>
+		<slot></slot>
+	</div>
+</template>
+
+<div id="camera-qr-scanner-modal-app" v-cloak class="only-for-js">
+    <scanner-wrap v-bind="$data" v-on:close="close">
+        <div class="d-flex justify-content-center align-items-center" :class="{'border border-secondary': !isModal}">
+            <div class="spinner-border text-secondary position-absolute" role="status"></div>
+            <qrcode-drop-zone v-on:decode="onDecode" v-on:init="logErrors">
+                <qrcode-stream v-on:decode="onDecode" v-on:init="onInit" :camera="cameraOff? 'off': cameras[camera]" :device-id="cameras[camera]" :track="paint"/>
+            </qrcode-drop-zone>
+            <qrcode-capture v-if="noStreamApiSupport" v-on:decode="onDecode" :camera="cameraOff? 'off': cameras[camera]" :device-id="cameras[camera]"/>
+        </div>
+        <div v-if="isLoaded">
+            <div v-if="errorMessage" class="alert alert-danger mt-3" role="alert">
+                {{errorMessage}}
+            </div>
+            <div v-if="successMessage" class="alert alert-success mt-3" role="alert">
+                {{successMessage}}
+            </div>
+            <div v-else-if="qrData" class="alert alert-info font-monospace text-truncate mt-3">
+                {{qrData}}
+            </div>
+            <div v-else-if="decoder">
+                <div class="my-3">BC UR: {{decoder.expectedPartCount()}} parts, {{decoder.getProgress() * 100}}% completed</div>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" :style="{width: `${decoder.getProgress() * 100}%`}" id="progressbar"></div>
+                </div>
+            </div>
+            <div v-else-if="bbqrDecoder">
+                <div class="my-3">BBQR: {{bbqrDecoder.total}} parts, {{bbqrDecoder.progress * 100}}% completed</div>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" :style="{width: `${bbqrDecoder.progress * 100}%`}" id="progressbar"></div>
+                </div>
+            </div>
+            <div class="mt-3 text-center">
+                <button type="button" class="btn btn-primary me-1" v-if="qrData" v-on:click="submitData">Submit</button>
+                <button type="button" class="btn btn-secondary me-1" v-if="qrData" v-on:click="retry">Retry</button>
+                <button type="button" class="btn btn-secondary" v-if="requestInput && cameras.length > 2" v-on:click="nextCamera">Switch camera</button>
+            </div>
+        </div>
+    </scanner-wrap>
+</div>
+
+<script>
+function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = false) {
+	const isModal = !!modalId;
+
+	Vue.component('scanner-wrap', {
+		props: ["modalId", "title", "decoder"],
+		template: "#camera-qr-scanner-wrap",
+		methods: {
+			close() {
+				this.$emit('close');
+			}
+		}
+  	});
+
+    const app = new Vue({
+		el: '#camera-qr-scanner-modal-app',
+		data() {
+			return {
+				isModal,
+				isLoaded: !isModal,
+				title: title,
+				modalId: modalId,
+				noStreamApiSupport: false,
+				qrData: null,
+				decoder: null,
+				bbqrDecoder: null,
+				errorMessage: null,
+				successMessage: null,
+				camera: 0,
+				cameraOff: true,
+				cameras: ["auto"],
+				submitOnScan
+			}
+		},
+		mounted() {
+			if (this.isModal) {
+				const modal = document.getElementById(this.modalId);
+				modal.addEventListener('shown.bs.modal', () => { this.isLoaded = true; this.cameraOff = false; });
+				modal.addEventListener('hide.bs.modal', () => { this.isLoaded = false; this.cameraOff = true; });
+			} else {
+				this.isLoaded = true;
+				this.cameraOff = false;
+			}
+		},
+		computed: {
+			requestInput() {
+				return !this.cameraOff && !this.errorMessage && !this.successMessage && !this.qrData;
+			}
+		},
+		methods: {
+		    nextCamera() {
+		        if (this.camera === 0){
+		            this.camera++;
+		        } else if (this.camera === this.cameras.length - 1) {
+		            this.camera = 0;
+		        } else {
+		            this.camera++;
+		        }
+		    },
+			setQrData(qrData) {
+				this.qrData = qrData;
+				this.cameraOff = !!qrData;
+
+                if (this.qrData && this.submitOnScan) {
+                    this.submitData();
+                }
+			},
+			retry() {
+				this.cameraOff = true;
+                this.reset()
+				this.$nextTick(() => {this.cameraOff = false;});
+			},
+			reset() {
+                this.qrData = null;
+                this.successMessage = null;
+				this.errorMessage = null;
+                this.decoder = null;
+                this.bbqrDecoder = null;
+			},
+			close() {
+                this.reset();
+                if (this.modalId) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById(this.modalId));
+                    modal.hide();
+                }
+			},
+			onDecode(content) {
+				if (this.qrData) return;
+                const isUR = content.toLowerCase().startsWith("ur:");
+                const isBBQr = content.startsWith("B$");
+                console.debug(content);
+                try {
+                    if (isBBQr){
+                        this.decoder = null;
+                        const total = parseInt(content.substr(4, 2), 36);
+                        const current = parseInt(content.substr(6, 2), 36);
+                        const format = content.substr(2,1);
+                        const type = content.substr(3, 1);
+
+                        if (!this.bbqrDecoder ||
+                                this.bbqrDecoder.total !== total ||
+                                this.bbqrDecoder.format !== format ||
+                                this.bbqrDecoder.type !== type) {
+                            this.bbqrDecoder = {
+                                total,
+                                format,
+                                type,
+                                data: new Array(total),
+                                progress: 1/total
+                            };
+                        }
+                        this.bbqrDecoder.data[current] = content;
+
+                        const progress = this.bbqrDecoder.data.filter(value => value !== undefined).length / total;
+                        this.bbqrDecoder.progress = progress;
+                        if (progress >= 1) {
+                            try {
+                                const joinResult = BBQr.joinQRs(this.bbqrDecoder.data);
+                                function buf2hex(buffer) { // buffer is an ArrayBuffer
+                                  return [...new Uint8Array(buffer)]
+                                      .map(x => x.toString(16).padStart(2, '0'))
+                                      .join('');
+                                }
+                                const result = buf2hex(joinResult.raw);
+                                this.setQrData(result);
+                                this.successMessage = `BBQr ${type} decoded`;
+                            }catch (error){
+                                this.errorMessage = error.message;
+                            }
+                        }
+                    } else if (!isUR) {
+                        this.setQrData(content);
+                    } else {
+                        this.bbqrDecoder = null;
+                        this.decoder = this.decoder || new window.URlib.URRegistryDecoder();
+                        if (this.decoder.receivePart(content)) {
+                            if (this.decoder.isComplete()) {
+                                if (this.decoder.isSuccess()) {
+                                    const ur = this.decoder.resultUR();
+                                    this.setQrData(ur);
+                                    this.successMessage = `UR ${ur.type} decoded`;
+                                } else if (this.decoder.isError()) {
+                                    this.errorMessage = this.decoder.resultError();
+                                }
+                            }
+                        }
+				    }
+                } catch (error) {
+                    console.error(error);
+                    this.errorMessage = error.message;
+                }
+			},
+			submitData() {
+                if (onDataSubmit) {
+                    onDataSubmit(this.qrData);
+                }
+                this.close();
+            },
+			logErrors(promise) {
+				promise.catch(console.error)
+			},
+			paint(detectedCodes, ctx) {
+				for (const detectedCode of detectedCodes) {
+                    const [ firstPoint, ...otherPoints ] = detectedCode.cornerPoints
+                    ctx.strokeStyle = "#51b13e";
+                    ctx.beginPath();
+                    ctx.moveTo(firstPoint.x, firstPoint.y);
+                    for (const { x, y } of otherPoints) {
+                      ctx.lineTo(x, y);
+                    }
+                    ctx.lineTo(firstPoint.x, firstPoint.y);
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+			},
+			onInit(promise) {
+				promise.then(() => {
+					if (app.cameras.length === 1) {
+                        navigator.mediaDevices.enumerateDevices().then(devices => {
+                            for (const device of devices) {
+                                if (device.kind === "videoinput"){
+                                   app.cameras.push(device.deviceId)
+                                }
+                            }
+                        });
+                    }
+				}).catch(error => {
+					if (error.name === 'StreamApiNotSupportedError') {
+						this.noStreamApiSupport = true;
+					} else if (error.name === 'NotAllowedError') {
+						this.errorMessage = @Safe.Json(StringLocalizer["A permission to the camera is needed to scan the QR code. Please grant the browser access and then retry."])
+					} else if (error.name === 'NotFoundError') {
+						this.errorMessage = @Safe.Json(StringLocalizer["A camera was not detected on your device."])
+					} else if (error.name === 'NotSupportedError') {
+						this.errorMessage = @Safe.Json(StringLocalizer["This page is served in non-secure context (HTTPS, localhost or file://)"])
+					} else if (error.name === 'NotReadableError') {
+						this.errorMessage = @Safe.Json(StringLocalizer["Could not access your camera. Is it already in use?"])
+					} else if (error.name === 'OverconstrainedError') {
+						this.errorMessage = @Safe.Json(StringLocalizer["Constraints do not match any installed camera."])
+					} else {
+						this.errorMessage = 'UNKNOWN ERROR: ' + error.message
+					}
+				})
+			}
+		}
+	});
+}
+</script>

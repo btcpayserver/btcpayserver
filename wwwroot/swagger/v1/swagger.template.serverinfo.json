@@ -1,0 +1,177 @@
+{
+    "paths": {
+        "/api/v1/server/info": {
+            "get": {
+                "tags": [
+                    "ServerInfo"
+                ],
+                "summary": "Get server info",
+                "description": "Information about the server, chains and sync states",
+                "operationId": "ServerInfo_GetServerInfo",
+                "responses": {
+                    "200": {
+                        "description": "Server information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApplicationServerInfoData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/server/roles": {
+            "get": {
+                "tags": [
+                    "ServerInfo"
+                ],
+                "summary": "Get store's roles",
+                "description": "View information about the store's roles at the server's scope",
+                "operationId": "Server_GetStoreRoles",
+                "responses": {
+                    "200": {
+                        "description": "The user roles available at the server's scope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoleData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the store's roles"
+                    },
+                    "404": {
+                        "description": "Store not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canmodifyserversettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ApplicationServerInfoData": {
+                "type": "object",
+                "properties": {
+                    "version": {
+                        "type": "string",
+                        "description": "BTCPay Server version"
+                    },
+                    "onion": {
+                        "type": "string",
+                        "description": "The Tor hostname"
+                    },
+                    "supportedPaymentMethods": {
+                        "type": "array",
+                        "description": "The payment methods this server supports",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "fullySynched": {
+                        "type": "boolean",
+                        "description": "True if the instance is fully synchronized, according to NBXplorer"
+                    },
+                    "syncStatus": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ApplicationServerInfoSyncStatusData"
+                        }
+                    }
+                }
+            },
+            "ApplicationServerInfoNodeStatusData": {
+                "type": "object",
+                "nullable": true,
+                "description": "Detailed sync status of the internal full node",
+                "properties": {
+                    "headers": {
+                        "type": "integer",
+                        "description": "The height of the chain of header of the internal full node"
+                    },
+                    "blocks": {
+                        "type": "integer",
+                        "description": "The height of the latest validated block of the internal full node"
+                    },
+                    "verificationProgress": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0.0,
+                        "maximum": 1.0,
+                        "description": "The current synchronization progress"
+                    }
+                }
+            },
+            "ApplicationServerInfoSyncStatusData": {
+                "type": "object",
+                "description": "Detailed sync status",
+                "properties": {
+                    "paymentMethodId": {
+                        "$ref": "#/components/schemas/PaymentMethodId"
+                    },
+                    "nodeInformation": {
+                        "$ref": "#/components/schemas/ApplicationServerInfoNodeStatusData"
+                    },
+                    "chainHeight": {
+                        "type": "integer",
+                        "description": "The height of the chain of header of the internal indexer"
+                    },
+                    "syncHeight": {
+                        "type": "number",
+                        "format": "integer",
+                        "nullable": true,
+                        "description": "The height of the latest indexed block of the internal indexer"
+                    },
+                    "available": {
+                        "type": "boolean",
+                        "description": "True if the full node and the indexer are fully synchronized",
+                        "nullable": false
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "ServerInfo",
+            "description": "Server Info operations"
+        }
+    ]
+}

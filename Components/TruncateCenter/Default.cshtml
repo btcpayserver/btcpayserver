@@ -1,0 +1,44 @@
+@model BTCPayServer.Components.TruncateCenter.TruncateCenterViewModel
+@{
+    var classes = string.IsNullOrEmpty(Model.Classes) ? string.Empty : Model.Classes.Trim();
+    @if (Model.Copy) classes += " truncate-center--copy";
+    @if (Model.Elastic) classes += " truncate-center--elastic";
+    var prefix = Model.IsVue ? ":" : "";
+}
+<span class="truncate-center @classes" id="@Model.Id" @(prefix)data-text="@Model.Text">
+    @if (Model.IsVue)
+    {
+        <span class="truncate-center-truncated" data-bs-toggle="tooltip" :title="@Model.Text">
+            @if (Model.Elastic)
+            {
+                <span class="truncate-center-start" v-text="@(Model.Text).slice(0, @(Model.Text).length - @(Model.Padding))"></span>
+            }
+            else
+            {
+                <span class="truncate-center-start" v-text="@(Model.Text).length > 2 * @(Model.Padding) ? @(Model.Text).slice(0, @(Model.Padding)) + '…' : ''"></span>
+            }
+            <span class="truncate-center-end" v-text="@(Model.Text).slice(-@(Model.Padding))" v-if="@(Model.Text).length > 2 * @(Model.Padding)"></span>
+        </span>
+        <span class="truncate-center-text" v-text="@Model.Text"></span>
+    }
+    else
+    {
+        <span class="truncate-center-truncated" @(Model.IsTruncated ? $"data-bs-toggle=tooltip title={Model.Text}" : "")>
+            <span class="truncate-center-start">@Model.Start</span>
+            <span class="truncate-center-end">@Model.End</span>
+        </span>
+        <span class="truncate-center-text">@Model.Text</span>
+    }
+    @if (Model.Copy)
+    {
+        <button type="button" class="btn btn-link p-0 clipboard-button" @(prefix)data-clipboard="@Model.Text">
+            <vc:icon symbol="actions-copy" />
+        </button>
+    }
+    @if (!string.IsNullOrEmpty(Model.Link))
+    {
+		<a @(prefix)href="@Model.Link" rel="noreferrer noopener" target="_blank">
+            <vc:icon symbol="info" />
+        </a>
+    }
+</span>

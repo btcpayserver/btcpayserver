@@ -1,0 +1,49 @@
+@using BTCPayServer.Client
+@model BTCPayServer.Components.StoreNumbers.StoreNumbersViewModel
+
+<div class="widget store-numbers" id="StoreNumbers-@Model.StoreId">
+    @if (Model.InitialRendering)
+    {
+        <div class="loading d-flex justify-content-center p-3">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden" text-translate="true">Loading...</span>
+            </div>
+        </div>
+        <script>
+            (async () => {
+                const url = @Safe.Json(Url.Action("StoreNumbers", "UIStores", new { storeId = Model.StoreId, cryptoCode = Model.CryptoCode }));
+                const storeId = @Safe.Json(Model.StoreId);
+                const response = await fetch(url);
+                if (response.ok) {
+                    document.getElementById(`StoreNumbers-${storeId}`).outerHTML = await response.text();
+                }
+            })();
+        </script>
+    }
+    else
+    {
+        <div class="store-number">
+            <header>
+                <h6>@ViewLocalizer["Paid invoices in the last {0} days", Model.TimeframeDays]</h6>
+                @if (Model.PaidInvoices > 0)
+                {
+                    <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId"  permission="@Policies.CanViewInvoices" text-translate="true">View All</a>
+                }
+            </header>
+            <div class="h3">@Model.PaidInvoices</div>
+        </div>
+        <div class="store-number">
+            <header>
+                <h6 text-translate="true">Payouts Pending</h6>
+                <a asp-controller="UIStorePullPayments" asp-action="Payouts" asp-route-storeId="@Model.StoreId" permission="@Policies.CanManagePullPayments" text-translate="true">Manage</a>
+            </header>
+            <div class="h3">@Model.PayoutsPending</div>
+        </div>
+        <div class="store-number">
+            <header>
+                <h6 text-translate="true">Refunds Issued</h6>
+            </header>
+            <div class="h3">@Model.RefundsIssued</div>
+        </div>
+    }
+</div>

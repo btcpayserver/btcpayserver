@@ -1,0 +1,246 @@
+@using BTCPayServer.Payments
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Client
+@using BTCPayServer.TagHelpers
+@inject IFileService FileService
+@model CheckoutAppearanceViewModel
+@{
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.CheckoutAppearance), StringLocalizer["Checkout Experience"]).SetCategory(WellKnownCategories.Store));
+    var canUpload = await FileService.IsAvailable();
+}
+@functions {
+    private string CriteriaTypeDisplayName(PaymentMethodCriteriaViewModel.CriteriaType type)
+    {
+        return type switch
+        {
+            PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan => StringLocalizer["Greater than"],
+            PaymentMethodCriteriaViewModel.CriteriaType.LessThan => StringLocalizer["Less than"],
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
+    }
+}
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        delegate('click', '.setTheme', e => {
+            e.preventDefault();
+            const { theme } = e.target.dataset;
+            document.getElementById('CustomCSS').value = ['dark', 'legacy'].includes(theme)
+                ? `/checkout/css/themes/${theme}.css`
+                : ''
+        });
+		delegate('click', '#Presets_InStore', e => {
+			$("#CheckNFC").removeClass('d-none');
+			$("#PlaySoundOnPayment").prop('checked', true);
+			$("#ShowPayInWalletButton").prop('checked', false);
+			$("#ShowStoreHeader").prop('checked', false);
+		});
+		delegate('click', '#Presets_Online', e => {
+			$("#CheckNFC").addClass('d-none');
+			$("#PlaySoundOnPayment").prop('checked', false);
+			$("#ShowPayInWalletButton").prop('checked', true);
+			$("#ShowStoreHeader").prop('checked', true);
+		});
+
+		delegate('click', '#CheckNFC button', async e => {
+			if ('NDEFReader' in window) {
+                const ndef = new NDEFReader();
+                try {
+                    await ndef.scan();
+                    e.target.classList = 'btn btn-outline-success';
+                    e.target.innerText = 'NFC access granted';
+                } catch (error) {
+                    e.target.classList = 'btn btn-outline-warning';
+                    e.target.innerText = 'Please allow NFC access in your browser settings';
+                }
+            } else {
+                e.target.classList = 'btn btn-outline-danger';
+                e.target.innerText = 'NFC is not supported by this browser';
+            }
+        });
+    </script>
+}
+
+<form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">
+    <div class="sticky-header">
+        <h2>@ViewData["Title"]</h2>
+		<button id="page-primary" type="submit" class="btn btn-primary" text-translate="true">Save</button>
+    </div>
+    <partial name="_StatusMessage" />
+
+    <div class="row">
+        <div class="col-xxl-constrain col-xl-8">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All"></div>
+            }
+            @if (Model.PaymentMethods.Any())
+            {
+                <div class="form-group mb-4">
+                    <label asp-for="DefaultPaymentMethod" class="form-label"></label>
+                    <select asp-for="DefaultPaymentMethod" asp-items="Model.PaymentMethods" class="form-select w-auto"></select>
+                </div>
+                <div class="form-group mb-4">
+                    <div class="form-label mb-1" text-translate="true">Enable payment methods only when amount is …</div>
+                    <table class="table table-sm mt-0 mx-0">
+                        @for (var index = 0; index < Model.PaymentMethodCriteria.Count; index++)
+                        {
+                            var criteria = Model.PaymentMethodCriteria[index];
+                            <tr>
+                                <td class="border-0 ps-0 align-middle">
+                                    <input type="hidden" asp-for="PaymentMethodCriteria[index].PaymentMethod" />
+                                    @PaymentMethodId.Parse(criteria.PaymentMethod).ToString()
+                                </td>
+                                <td class="border-0">
+                                    <select asp-for="PaymentMethodCriteria[index].Type" class="form-select"
+                                            asp-items="@((PaymentMethodCriteriaViewModel.CriteriaType[]) Enum.GetValues(typeof(PaymentMethodCriteriaViewModel.CriteriaType))).Select(s => new SelectListItem(CriteriaTypeDisplayName(s), s.ToString()))">
+                                    </select>
+                                </td>
+                                <td class="border-0">
+                                    <input placeholder="6.15 USD" asp-for="PaymentMethodCriteria[index].Value" class="form-control my-0" style="max-width: 20ch;" />
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+            }
+
+			<h3 class="mb-3 d-flex gap-3 align-items-center">
+				<span text-translate="true">Checkout</span>
+				<div id="Presets" name="Presets" class="dropdown">
+					<button class="btn btn-secondary dropdown-toggle btn-sm px-3" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" text-translate="true">
+						Select a preset
+					</button>
+					<div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
+						<div id="Presets_Online" class="btcpay-list-select-item dropdown-item">
+							<vc:icon symbol="pos-cart" />
+							<span text-translate="true">Online</span>
+							<span class="note" text-translate="true"  html-translate="true">Enhance the checkout process for online purchases.<br />This assumes the payment page will be displayed on the customer's device.</span>
+						</div>
+						<div id="Presets_InStore" class="btcpay-list-select-item dropdown-item">
+							<vc:icon symbol="nav-store" />
+							<span text-translate="true">In-store</span>
+							<span class="note" text-translate="true" html-translate="true">Enhance the checkout process for in-store purchases.<br />This assumes the payment page will be displayed on the merchant's device.</span>
+						</div>
+					</div>
+				</div>
+			</h3>
+            <div id="CheckNFC" class="form-group d-none">
+                <button type="button" class="btn btn-outline-secondary" text-translate="true">Check if NFC is supported and enabled on this device</button>
+            </div>
+			<div class="checkout-settings">
+                <div class="form-group">
+                    <label asp-for="DisplayExpirationTimer" class="form-label"></label>
+                    <div class="input-group">
+                        <input inputmode="numeric" asp-for="DisplayExpirationTimer" class="form-control" style="max-width:12ch;" />
+                        <span class="input-group-text" text-translate="true">minutes</span>
+                    </div>
+                    <span asp-validation-for="DisplayExpirationTimer" class="text-danger"></span>
+                </div>
+                <div class="my-3">
+                    <div class="d-flex">
+                        <input asp-for="CelebratePayment" type="checkbox" class="btcpay-toggle me-3" />
+                        <label asp-for="CelebratePayment" class="form-check-label"></label>
+                    </div>
+                </div>
+                <div class="my-3">
+                    <div class="d-flex">
+                        <input asp-for="PlaySoundOnPayment" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#PlaySoundOnPaymentOptions" aria-expanded="@Model.PlaySoundOnPayment" aria-controls="PlaySoundOnPaymentOptions" />
+                        <label asp-for="PlaySoundOnPayment" class="form-check-label"></label>
+                    </div>
+                    <div class="collapse @(Model.PlaySoundOnPayment ? "show" : "")" id="PlaySoundOnPaymentOptions">
+                        <div class="form-group mb-0 py-3">
+                            <div class="d-flex align-items-center justify-content-between gap-2">
+                                <label asp-for="SoundFile" class="form-label"></label>
+                                @if (!string.IsNullOrEmpty(Model.PaymentSoundUrl))
+                                {
+                                    <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveSoundFile" value="true" permission="@Policies.CanModifyStoreSettings">
+                                        <vc:icon symbol="cross" />
+                                        <span text-translate="true">Remove</span>
+                                    </button>
+                                }
+                            </div>
+                            @if (canUpload)
+                            {
+                                <div class="d-flex align-items-center gap-3">
+                                    <input asp-for="SoundFile" type="file" class="form-control flex-grow">
+                                    <audio controls src="@Model.PaymentSoundUrl" style="height:2.1rem;max-width:10.5rem;"></audio>
+                                </div>
+                                <span asp-validation-for="SoundFile" class="text-danger"></span>
+                            }
+                            else
+                            {
+                                <input asp-for="SoundFile" type="file" class="form-control" disabled>
+                                <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex">
+                    <input asp-for="ShowStoreHeader" type="checkbox" class="btcpay-toggle me-3" />
+					<label asp-for="ShowStoreHeader" class="form-check-label"></label>
+				</div>
+            </div>
+            <div class="d-flex my-3">
+                <input asp-for="ShowPayInWalletButton" type="checkbox" class="btcpay-toggle me-3" />
+				<label asp-for="ShowPayInWalletButton" class="form-check-label"></label>
+			</div>
+            <div class="d-flex my-3">
+                <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="btcpay-toggle me-3" />
+                <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>
+                <a href="https://bitcoinqr.dev/" target="_blank" rel="noreferrer noopener">
+                    <vc:icon symbol="info" />
+                </a>
+            </div>
+            <div class="d-flex my-3">
+                <input asp-for="LightningAmountInSatoshi" type="checkbox" class="btcpay-toggle me-3" />
+                <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
+            </div>
+            <div class="form-group d-flex align-items-center">
+                <input asp-for="AutoDetectLanguage" type="checkbox" class="btcpay-toggle me-3" />
+                <div>
+                    <label asp-for="AutoDetectLanguage" class="form-check-label"></label>
+                    <div class="form-text" text-translate="true">Detects the language of the customer's browser.</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="DefaultLang" class="form-label"></label>
+                <select asp-for="DefaultLang" asp-items="Model.Languages" class="form-select w-auto"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="HtmlTitle" class="form-label"></label>
+                <input asp-for="HtmlTitle" class="form-control" />
+                <span asp-validation-for="HtmlTitle" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="SupportUrl" class="form-label"></label>
+                <input asp-for="SupportUrl" class="form-control" />
+                <span asp-validation-for="SupportUrl" class="text-danger"></span>
+                <div class="form-text" html-translate="true">A "Contact Us" button with this link will be shown on the checkout page. Can contain the placeholders <code>{OrderId}</code> and <code>{InvoiceId}</code>. Can be any valid URI, such as a website, email, and Nostr.</div>
+            </div>
+            <div class="d-flex my-3">
+                <input asp-for="LazyPaymentMethods" type="checkbox" class="btcpay-toggle me-3" />
+                <label asp-for="LazyPaymentMethods" class="form-check-label"></label>
+            </div>
+            <div class="d-flex my-2">
+                <input asp-for="RedirectAutomatically" type="checkbox" class="btcpay-toggle me-3" />
+                <label asp-for="RedirectAutomatically" class="form-check-label"></label>
+            </div>
+            <h3 class="mt-5 mb-3" text-translate="true">Receipt</h3>
+            <div class="d-flex my-3">
+                <input asp-for="ReceiptOptions.Enabled" type="checkbox" class="btcpay-toggle me-3" />
+                <label asp-for="ReceiptOptions.Enabled" class="form-check-label"></label>
+            </div>
+            <div class="d-flex my-3">
+                <input asp-for="ReceiptOptions.ShowPayments" type="checkbox" class="btcpay-toggle me-3" />
+                <label asp-for="ReceiptOptions.ShowPayments" class="form-check-label"></label>
+            </div>
+            <div class="d-flex my-3">
+                <input asp-for="ReceiptOptions.ShowQR" type="checkbox" class="btcpay-toggle me-3" />
+                <label asp-for="ReceiptOptions.ShowQR" class="form-check-label"></label>
+            </div>
+        </div>
+    </div>
+</form>

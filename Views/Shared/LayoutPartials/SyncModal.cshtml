@@ -1,0 +1,70 @@
+@using BTCPayServer.Abstractions.Contracts
+@inject IEnumerable<ISyncSummaryProvider> SyncSummaryProviders;
+@if (SyncSummaryProviders.Any(provider => !provider.AllAvailable()))
+{
+    <div id="syncModal" class="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <a class="modal-header btn-link border-0 text-decoration-none cursor-pointer align-items-center" data-bs-toggle="collapse" data-bs-target="#syncModalContent">
+                    <h4 class="modal-title h5 fw-semibold">Your nodes are synching …</h4>
+                    <vc:icon symbol="caret-down"/>
+                </a>
+                <div id="syncModalContent" class="collapse show">
+                    <div class="modal-body pt-0">
+                        <p>Your node is synching the entire blockchain and validating the consensus rules.</p>
+                        @foreach (var provider in SyncSummaryProviders)
+                        {
+                            <partial name="@provider.Partial"/>
+                        }
+                        <p class="mb-0">
+                            <a href="https://www.youtube.com/watch?v=OrYDehC-8TU" target="_blank" rel="noreferrer noopener">Watch this video</a>
+                            to understand the importance of blockchain synchronization.
+                            If you really don't want to sync and you are familiar with the command line, check
+                            <a href="https://docs.btcpayserver.org/Docker/fastsync/" target="_blank" rel="noreferrer noopener">FastSync</a>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #syncModal {
+            --btcpay-modal-border-color: var(--btcpay-body-border-light);
+            --outer-margin-horizontal: var(--content-padding-horizontal);
+            --outer-margin-vertical: 50px;
+            display: unset;
+            z-index: 1040;
+            height: auto;
+            top: auto;
+            left: auto;
+            bottom: 0;
+            right: 0;
+            margin: var(--outer-margin-vertical) var(--outer-margin-horizontal);
+            width: 500px;
+            overflow: hidden;
+            max-width: calc(100% - var(--outer-margin-horizontal) * 2);
+        }
+        #syncModal .modal-dialog {
+            margin: 0;
+        }
+        #syncModal .modal-body {
+            /* 92px is so that the header is still displayed */
+            max-height: min(360px, calc(100vh - 92px - var(--outer-margin-vertical) * 2));
+            overflow-y: scroll;
+        }
+        #syncModal .modal-body ul {
+            padding-left: 2em;
+        }
+    </style>
+
+    <script>
+        const $syncModalContent = document.getElementById('syncModalContent');
+        const $syncModal = document.getElementById('syncModal');
+        if (localStorage.getItem('sync-collapsed')) {
+            $syncModalContent.classList.remove('show');
+        }
+        delegate('hidden.bs.collapse', '#syncModalContent', () => { localStorage.setItem('sync-collapsed', 'true'); });
+        delegate('shown.bs.collapse', '#syncModalContent', () => { localStorage.removeItem('sync-collapsed') });
+    </script>
+}

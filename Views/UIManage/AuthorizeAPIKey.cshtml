@@ -1,0 +1,145 @@
+@using BTCPayServer.Client
+@model BTCPayServer.Controllers.UIManageController.AuthorizeApiKeysViewModel
+
+@{
+    var displayName = Model.ApplicationName ?? Model.ApplicationIdentifier;
+    var store = string.IsNullOrEmpty(Model.StoreId) ? null : Model.Stores.FirstOrDefault(s => s.Id == Model.StoreId);
+    var permissions = Model.Permissions?.Split(';') ?? Array.Empty<string>();
+    var groupedPermissions = Permission.ToPermissions(permissions).GroupBy(permission => permission.Policy);
+    ViewData.SetTitle($"Authorize {displayName ?? "Application"}");
+    Layout = "_LayoutWizard";
+}
+
+@section Navbar {
+    @if (Model.NeedsStorePermission && store != null)
+    {
+        <form method="post" asp-action="AuthorizeAPIKey" class="back">
+            <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl"/>
+            <input type="hidden" asp-for="Permissions" value="@Model.Permissions"/>
+            <input type="hidden" asp-for="Strict" value="@Model.Strict"/>
+            <input type="hidden" asp-for="ApplicationName" value="@Model.ApplicationName"/>
+            <input type="hidden" asp-for="SelectiveStores" value="@Model.SelectiveStores"/>
+            <input type="hidden" asp-for="ApplicationIdentifier" value="@Model.ApplicationIdentifier"/>
+            <button name="command" type="submit" value="SelectStores" id="back">
+                <vc:icon symbol="back"/>
+            </button>
+        </form>
+    }
+    <form method="post" asp-action="AuthorizeAPIKey" class="cancel">
+        <button name="command" type="submit" value="Cancel" id="cancel">
+            <vc:icon symbol="cross"/>
+        </button>
+    </form>
+}
+
+<form method="post" asp-action="AuthorizeAPIKey">
+    <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl"/>
+    <input type="hidden" asp-for="Permissions" value="@Model.Permissions"/>
+    <input type="hidden" asp-for="Strict" value="@Model.Strict"/>
+    <input type="hidden" asp-for="ApplicationName" value="@Model.ApplicationName"/>
+    <input type="hidden" asp-for="SelectiveStores" value="@Model.SelectiveStores"/>
+    <input type="hidden" asp-for="ApplicationIdentifier" value="@Model.ApplicationIdentifier"/>
+    <header class="text-center">
+        <h1>@ViewData["Title"]</h1>
+        <p class="lead text-secondary mt-3">@(displayName ?? "An application") is requesting access to your BTCPay Server account.</p>
+    </header>
+    @if (!ViewContext.ModelState.IsValid)
+    {
+        <div asp-validation-summary="All"></div>
+    }
+
+    @if (Model.NeedsStorePermission && store == null)
+    {
+        @if (!Model.Stores.Any())
+        {
+            <div class="alert alert-warning mb-4" text-translate="true">
+                You currently have no stores configured.
+            </div>
+            <button class="btn btn-secondary" name="command" id="consent-no" type="submit" value="Cancel" text-translate="true">Cancel</button>
+        }
+        else
+        {
+            <div class="form-group">
+                <label asp-for="StoreId" class="form-label" text-translate="true">Select the store to grant permission for</label>
+                <select asp-for="StoreId" class="form-select" asp-items="@(new SelectList(Model.Stores, nameof(StoreData.Id), nameof(StoreData.StoreName)))" required></select>
+                <span asp-validation-for="StoreId" class="text-danger"></span>
+            </div>
+            <div class="d-flex gap-3">
+                <button class="btn btn-primary" name="command" id="continue" type="submit" value="SelectStores" text-translate="true">Continue</button>
+                <button class="btn btn-secondary" name="command" id="consent-no" type="submit" value="Cancel" text-translate="true">Cancel</button>
+            </div>
+        }
+    }
+    else
+    {
+        <input type="hidden" asp-for="StoreId" class="form-select"/>
+
+        @if (Model.RedirectUrl != null)
+        {
+            <p class="alert alert-info mb-4">
+                <span text-translate="true">If authorized, the generated API key will be provided to</span> <strong>@Model.RedirectUrl.AbsoluteUri</strong>
+            </p>
+        }
+
+        <div class="form-group">
+            <label asp-for="Label" class="form-label"></label>
+            <input asp-for="Label" class="form-control"/>
+            <span asp-validation-for="Label" class="text-danger"></span>
+        </div>
+
+        <h2 class="h5 fw-semibold mt-4" text-translate="true">Permissions</h2>
+        @if (!groupedPermissions.Any())
+        {
+            <p text-translate="true">There are no associated permissions to the API key being requested by the application. The application cannot do anything with your BTCPay Server account other than validating your account exists.</p>
+        }
+        else
+        {
+            if (Model.NeedsStorePermission)
+            {
+                <p class="mb-2">
+                    <span text-translate="true">Store-based permissions will be applied for</span>
+                    <strong>@store.StoreName</strong>
+                </p>
+            }
+            <div class="list-group list-group-flush mt-3">
+                @for (var i = 0; i < Model.PermissionValues.Count; i++)
+                {
+                    <input type="hidden" asp-for="PermissionValues[i].Forbidden"/>
+                    <input type="hidden" asp-for="PermissionValues[i].Permission"/>
+                    <input type="hidden" asp-for="PermissionValues[i].StoreMode" value="@Model.PermissionValues[i].StoreMode"/>
+                    @if (Model.PermissionValues[i].Forbidden && !Model.Strict)
+                    {
+                        continue;
+                    }
+                    <div class="list-group-item form-group">
+                        <div class="form-check">
+                            @if (Model.Strict || Model.PermissionValues[i].Forbidden)
+                            {
+                                <input id="@Model.PermissionValues[i].Permission" type="hidden" asp-for="PermissionValues[i].Value"/>
+                                <input id="@Model.PermissionValues[i].Permission" type="checkbox" checked="@Model.PermissionValues[i].Value" class="form-check-input" disabled />
+                            }
+                            else
+                            {
+                                <input id="@Model.PermissionValues[i].Permission" type="checkbox" asp-for="PermissionValues[i].Value" class="form-check-input"/>
+                            }
+                            @* Wrapper div prevents the label to be muted in case of disabled checkbox (strict mode) *@
+                            <div>
+                                <label for="@Model.PermissionValues[i].Permission" class="form-check-label">@Model.PermissionValues[i].Title</label>
+                            </div>
+                            <div class="form-text">@Model.PermissionValues[i].Description</div>
+                            <span asp-validation-for="PermissionValues[i].Value" class="text-danger"></span>
+                            @if (Model.PermissionValues[i].Forbidden)
+                            {
+                                <div class="text-danger" text-translate="true">This permission is not available for your account.</div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        <div class="d-flex gap-3">
+            <button class="btn btn-primary" name="command" id="consent-yes" type="submit" value="Authorize" text-translate="true">Authorize app</button>
+            <button class="btn btn-secondary" name="command" id="consent-no" type="submit" value="Cancel" text-translate="true">Cancel</button>
+        </div>
+    }
+</form>

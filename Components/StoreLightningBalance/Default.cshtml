@@ -1,0 +1,181 @@
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Client.Models
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model BTCPayServer.Components.StoreLightningBalance.StoreLightningBalanceViewModel
+@if (!Model.InitialRendering && Model.Balance == null)
+{
+    return;
+}
+<div id="StoreLightningBalance-@Model.StoreId" class="widget store-lightning-balance">
+    <div class="d-flex gap-3 align-items-center justify-content-between mb-2">
+        <h6 text-translate="true">Lightning Balance</h6>
+        @if (Model.CryptoCode != Model.DefaultCurrency && Model.Balance != null)
+        {
+            <div class="btn-group btn-group-sm gap-0 currency-toggle" role="group">
+                <input type="radio" class="btn-check" name="StoreLightningBalance-currency" id="StoreLightningBalance-currency_@Model.CryptoCode" value="@Model.CryptoCode" autocomplete="off" checked>
+                <label class="btn btn-outline-secondary px-2 py-1" for="StoreLightningBalance-currency_@Model.CryptoCode">@Model.CryptoCode</label>
+                <input type="radio" class="btn-check" name="StoreLightningBalance-currency" id="StoreLightningBalance-currency_@Model.DefaultCurrency" value="@Model.DefaultCurrency" autocomplete="off">
+                <label class="btn btn-outline-secondary px-2 py-1" for="StoreLightningBalance-currency_@Model.DefaultCurrency">@Model.DefaultCurrency</label>
+            </div>
+        }
+    </div>
+    @if (!string.IsNullOrEmpty(Model.ProblemDescription))
+    {
+        <p>@Model.ProblemDescription</p>
+    }
+    else if (Model.Balance != null)
+    {
+        <div class="balances d-flex flex-wrap">
+            @if (Model.Balance.OffchainBalance != null)
+            {
+                <div class="balance">
+                    <div class="d-flex align-items-baseline gap-1">
+                        <h3 class="d-inline-block me-1" data-balance="@Model.TotalOffchain" data-sensitive>@Model.TotalOffchain</h3>
+                        <span class="text-secondary fw-semibold text-nowrap">
+                            @ViewLocalizer["<span class=\"currency\">{0}</span> in channels", Model.CryptoCode]
+                        </span>
+                    </div>
+
+                    <div class="balance-details collapse" id="balanceDetailsOffchain">
+                        @if (Model.Balance.OffchainBalance.Opening != null)
+                        {
+                            <div class="mt-2 d-flex align-items-baseline gap-1">
+                                <span class="fw-semibold" data-balance="@Model.Balance.OffchainBalance.Opening" data-sensitive>
+                                    @Model.Balance.OffchainBalance.Opening
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    @ViewLocalizer["<span class=\"currency\">{0}</span> opening channels", Model.CryptoCode]
+                                </span>
+                            </div>
+                        }
+                        @if (Model.Balance.OffchainBalance.Local != null)
+                        {
+                            <div class="mt-2 d-flex align-items-baseline gap-1">
+                                <span class="fw-semibold" data-balance="@Model.Balance.OffchainBalance.Local" data-sensitive>
+                                    @Model.Balance.OffchainBalance.Local
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    @ViewLocalizer["<span class=\"currency\">{0}</span> local balance", Model.CryptoCode]
+                                </span>
+                            </div>
+                        }
+                        @if (Model.Balance.OffchainBalance.Remote != null)
+                        {
+                            <div class="mt-2 d-flex align-items-baseline gap-1">
+                                <span class="fw-semibold" data-balance="@Model.Balance.OffchainBalance.Remote" data-sensitive>
+                                    @Model.Balance.OffchainBalance.Remote
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    @ViewLocalizer["<span class=\"currency\">{0}</span> remote balance", Model.CryptoCode]
+                                </span>
+                            </div>
+                        }
+                        @if (Model.Balance.OffchainBalance.Closing != null)
+                        {
+                            <div class="mt-2 d-flex align-items-baseline gap-1">
+                                <span class="fw-semibold" data-balance="@Model.Balance.OffchainBalance.Closing" data-sensitive>
+                                    @Model.Balance.OffchainBalance.Closing
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    @ViewLocalizer["<span class=\"currency\">{0}</span> closing channels", Model.CryptoCode]
+                                </span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            @if (Model.Balance.OnchainBalance != null)
+            {
+                <div class="balance">
+                    <div class="d-flex align-items-baseline gap-1">
+                        <h3 class="d-inline-block me-1" data-balance="@Model.TotalOnchain" data-sensitive>@Model.TotalOnchain</h3>
+                        <span class="text-secondary fw-semibold text-nowrap">
+                            @ViewLocalizer["<span class=\"currency\">{0}</span> on-chain", Model.CryptoCode]
+                        </span>
+                    </div>
+                    <div class="balance-details collapse" id="balanceDetailsOnchain">
+                        @if (Model.Balance.OnchainBalance.Confirmed != null)
+                        {
+                            <div class="mt-2 d-flex align-items-baseline gap-1">
+                                <span class="fw-semibold" data-balance="@Model.Balance.OnchainBalance.Confirmed" data-sensitive>
+                                    @Model.Balance.OnchainBalance.Confirmed
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    @ViewLocalizer["<span class=\"currency\">{0}</span> confirmed", Model.CryptoCode]
+                                </span>
+                            </div>
+                        }
+                        @if (Model.Balance.OnchainBalance.Unconfirmed != null)
+                        {
+                            <div class="mt-2 d-flex align-items-baseline gap-1">
+                                <span class="fw-semibold" data-balance="@Model.Balance.OnchainBalance.Unconfirmed" data-sensitive>
+                                    @Model.Balance.OnchainBalance.Unconfirmed
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    @ViewLocalizer["<span class=\"currency\">{0}</span> unconfirmed", Model.CryptoCode]
+                                </span>
+                            </div>
+                        }
+                        @if (Model.Balance.OnchainBalance.Reserved != null)
+                        {
+                            <div class="mt-2 d-flex align-items-baseline gap-1">
+                                <span class="fw-semibold" data-balance="@Model.Balance.OnchainBalance.Reserved" data-sensitive>
+                                    @Model.Balance.OnchainBalance.Reserved
+                                </span>
+                                <span class="text-secondary text-nowrap">
+                                    @ViewLocalizer["<span class=\"currency\">{0}</span> reserved", Model.CryptoCode]
+                                </span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 @(Model.Series != null ? "my-3" : "mt-3")">
+            @if (Model.Balance.OffchainBalance != null && Model.Balance.OnchainBalance != null)
+            {
+                <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0 ms-n1" type="button" data-bs-toggle="collapse" data-bs-target=".balance-details" aria-expanded="false" aria-controls="balanceDetailsOffchain balanceDetailsOnchain">
+                    <vc:icon symbol="caret-down" />
+                    <span class="ms-1" text-translate="true">Details</span>
+                </button>
+            }
+            @if (Model.Series != null)
+            {
+                <div class="btn-group only-for-js mt-1" role="group" aria-label="Period">
+                    <input type="radio" class="btn-check" name="StoreLightningBalancePeriod-@Model.StoreId" id="StoreLightningBalancePeriodWeek-@Model.StoreId" value="@HistogramType.Week" @(Model.Type == HistogramType.Week ? "checked" : "")>
+                    <label class="btn btn-link" for="StoreLightningBalancePeriodWeek-@Model.StoreId">1W</label>
+                    <input type="radio" class="btn-check" name="StoreLightningBalancePeriod-@Model.StoreId" id="StoreLightningBalancePeriodMonth-@Model.StoreId" value="@HistogramType.Month" @(Model.Type == HistogramType.Month ? "checked" : "")>
+                    <label class="btn btn-link" for="StoreLightningBalancePeriodMonth-@Model.StoreId">1M</label>
+                    <input type="radio" class="btn-check" name="StoreLightningBalancePeriod-@Model.StoreId" id="StoreLightningBalancePeriodYear-@Model.StoreId" value="@HistogramType.Year" @(Model.Type == HistogramType.Year ? "checked" : "")>
+                    <label class="btn btn-link" for="StoreLightningBalancePeriodYear-@Model.StoreId">1Y</label>
+                </div>
+            }
+        </div>
+        <div class="ct-chart"></div>
+        <template>
+            @Safe.Json(Model)
+        </template>
+    }
+    else
+    {
+        <div class="loading d-flex justify-content-center p-3">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden" text-translate="true">Loading...</span>
+            </div>
+        </div>
+        <script src="~/Components/StoreLightningBalance/Default.cshtml.js" asp-append-version="true"></script>
+        <script>
+            (async () => {
+                const url = @Safe.Json(Model.DataUrl);
+                const storeId = @Safe.Json(Model.StoreId);
+                const response = await fetch(url);
+                if (response.ok) {
+                    document.getElementById(`StoreLightningBalance-${storeId}`).outerHTML = await response.text();
+                    const data = document.querySelector(`#StoreLightningBalance-${storeId} template`);
+                    if (data) window.storeLightningBalance.dataLoaded(JSON.parse(data.innerHTML));
+                }
+            })();
+        </script>
+    }
+</div>

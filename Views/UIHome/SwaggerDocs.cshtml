@@ -1,0 +1,33 @@
+@inject BTCPayServer.Security.ContentSecurityPolicies csp
+@{
+    Layout = null;
+    csp.Add("script-src", "https://cdn.jsdelivr.net");
+    csp.Add("worker-src", "blob:");
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BTCPay Server Greenfield API</title>
+    <!-- needed for adaptive design -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="~/main/fonts/Roboto.css" rel="stylesheet" asp-append-version="true">
+    <link href="~/main/fonts/Montserrat.css" rel="stylesheet" asp-append-version="true">
+
+    <!--
+    ReDoc doesn't change outer page styles
+    -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    @*Ignore this, this is for making the test ClickOnAllSideMenus happy*@
+    <div class="navbar-brand" style="visibility:collapse;"></div>
+    <redoc spec-url="@Url.ActionLink("Swagger")"></redoc>
+    <script src="https://cdn.jsdelivr.net/npm/redoc@2.0.0-rc.54/bundles/redoc.standalone.js" integrity="sha384-pxWFJkxrlfignEDb+sJ8XrdnJQ+V2bsiRqgPnfmOk1i3KKSubbydbolVZJeKisNY" crossorigin="anonymous"></script>
+</body>
+</html>

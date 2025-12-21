@@ -1,0 +1,66 @@
+@using BTCPayServer.Views.Stores
+@model BTCPayServer.Models.WalletViewModels.UpdatePullPaymentModel
+@{
+    var storeId = Context.GetStoreData().Id;
+    ViewData.SetLayoutModel(new(nameof(StoreNavPages.Create), StringLocalizer["Edit Pull Payment"]));
+}
+
+@section PageHeadContent {
+    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
+}
+
+<form method="post" asp-action="EditPullPayment" asp-route-storeId="@storeId" asp-route-pullPaymentId="@Model.Id">
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-controller="UIStorePullPayments" asp-action="PullPayments" asp-route-storeId="@storeId" text-translate="true">Pull Payments</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>@ViewData["Title"]</h2>
+        </nav>
+        <div>
+            @if (string.IsNullOrEmpty(Model.Id))
+            {
+				<button id="page-primary" type="submit" class="btn btn-primary" text-translate="true">Create</button>
+            }
+            else
+            {
+				<button id="page-primary" type="submit" class="btn btn-primary order-sm-1" text-translate="true">Save</button>
+                <a class="btn btn-secondary" asp-action="ViewPullPayment" asp-route-pullPaymentId="@Model.Id" id="ViewPullPayment" target="_blank" text-translate="true">View</a>
+            }
+        </div>
+    </div>
+
+    <partial name="_StatusMessage" />
+
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly"></div>
+            }
+            <div class="form-group">
+                <label asp-for="Name" class="form-label" data-required></label>
+                <input asp-for="Name" class="form-control" required />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-10 col-xxl-constrain">
+            <div class="form-group">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control richtext"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+</form>

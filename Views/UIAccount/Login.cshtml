@@ -1,0 +1,74 @@
+@model LoginViewModel
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
+@inject BTCPayServer.Services.PoliciesSettings PoliciesSettings
+@{
+	ViewData["Title"] = ViewLocalizer["Sign in"];
+	Layout = "_LayoutSignedOut";
+	Csp.UnsafeEval();
+}
+
+<form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" id="login-form" asp-action="Login">
+    <input type="hidden" asp-for="AllowLimitedLogin"></input>
+    <fieldset disabled="@(ViewData.ContainsKey("disabled") ? "disabled" : null)">
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="ModelOnly" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
+        }
+        <div class="form-group">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" required autofocus />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <div class="d-flex justify-content-between">
+                <label asp-for="Password" class="form-label"></label>
+                <a asp-action="ForgotPassword" text-translate="true" tabindex="-1" text-translate="true">Forgot password?</a>
+            </div>
+            <div class="input-group d-flex">
+                <input asp-for="Password" class="form-control" required />
+            </div>
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+        <div class="form-check">
+            <input asp-for="RememberMe" type="checkbox" class="form-check-input" />
+            <label asp-for="RememberMe" class="form-check-label"></label>
+            <span asp-validation-for="RememberMe" class="text-danger"></span>
+        </div>
+        <div class="form-group mt-4">
+            <div class="btn-group w-100">
+                <button type="submit" class="btn btn-primary btn-lg w-100" id="LoginButton"><span class="ps-3" text-translate="true" text-translate="true">Sign in</span></button>
+                <button type="button" class="btn btn-outline-primary btn-lg w-auto only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="@StringLocalizer["Scan Login code with camera"]">
+                    <vc:icon symbol="scan-qr" />
+                </button>
+            </div>
+        </div>
+    </fieldset>
+</form>
+<form asp-action="LoginWithCode" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" id="logincode-form">
+    <input asp-for="LoginCode" type="hidden" class="form-control"/>
+</form>
+@if (!PoliciesSettings.LockSubscription)
+{
+    <p class="text-center mt-2 mb-0">
+		<a id="Register" style="font-size:1.15rem" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]" text-translate="true" text-translate="true">Create your account</a>
+    </p>
+}
+
+@section PageFootContent {
+    <partial name="CameraScanner"/>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
+
+    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
+
+    <script type="text/javascript">
+        window.addEventListener("load", async () => {
+            initCameraScanningApp("Scan login code", data => {
+                document.getElementById("LoginCode").value = data;
+                document.getElementById("logincode-form").submit();
+            }, "scanModal", true);
+        });
+    </script>
+}

@@ -49,7 +49,7 @@
             <div class="form-group">
                 <label asp-for="ServerTimeZone" class="form-label"></label>
                 <select asp-for="ServerTimeZone" class="form-select w-auto">
-                    <option value="">@StringLocalizer["Server Default (UTC)"]</option>
+                    <option value="">@StringLocalizer["Default (UTC)"]</option>
                     @foreach (var tz in TimeZoneInfo.GetSystemTimeZones())
                     {
                         <option value="@tz.Id">@tz.DisplayName</option>

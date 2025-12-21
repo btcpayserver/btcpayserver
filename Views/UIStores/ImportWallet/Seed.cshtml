@@ -1,0 +1,32 @@
+@model WalletSetupViewModel
+@{
+    Layout = "_LayoutWalletSetup";
+    ViewData.SetTitle(StringLocalizer["Enter the wallet seed"]);
+}
+
+@section Navbar {
+    <a asp-controller="UIStores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
+        <vc:icon symbol="back" />
+    </a>
+}
+
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3" text-translate="true">Manually enter your 12 or 24 word recovery seed.</p>
+</header>
+
+<div class="my-5">
+    @if (Model.CanUseHotWallet)
+    {
+		Model.SetViewData(ViewData);
+        <partial name="_GenerateWalletForm" model="Model.SetupRequest" />
+    }
+    else
+    {
+        <p class="mb-0" text-translate="true">Please note that creating a wallet is not supported by your instance.</p>
+    }
+</div>
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+}

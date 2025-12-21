@@ -1,0 +1,49 @@
+@using BTCPayServer.Controllers
+@model SignWithSeedViewModel
+@{
+	var walletId = Context.GetRouteValue("walletId").ToString();
+	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
+    Layout = "_LayoutWizard";
+    ViewData.SetTitle(StringLocalizer["Sign PSBT"]);
+}
+
+@section Navbar {
+	<partial name="_BackAndReturn" model="Model" />
+}
+
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3" text-translate="true">Using an HD private key or mnemonic seed</p>
+</header>
+
+<div class="alert alert-warning alert-dismissible my-4" role="alert">
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
+        <vc:icon symbol="close" />
+    </button>
+    <p text-translate="true">Before you proceed, please understand the following:</p>
+    <ol>
+        <li text-translate="true">Make sure this BTCPay Server instance belongs to you.</li>
+        <li text-translate="true">Use Incognito mode or the Tor Browser to ensure no malicious browser plugins are running that could steal your key.</li>
+    </ol>
+    <p class="mb-0" text-translate="true">Otherwise you are exposing yourself to malicious site owners, or to malicious plugins installed in your browser.</p>
+</div>
+
+@if (!ViewContext.ModelState.IsValid)
+{
+    <div asp-validation-summary="All"></div>
+}
+
+<form method="post" asp-action="SignWithSeed" asp-route-walletId="@walletId">
+    <partial name="SigningContext" for="SigningContext"/>
+    <input type="hidden" asp-for="ReturnUrl" />
+    <input type="hidden" asp-for="BackUrl" />
+    <div class="form-group">
+        <label asp-for="SeedOrKey" class="form-label"></label>
+        <input asp-for="SeedOrKey" class="form-control" autocomplete="off" autocorrect="off" autocapitalize="off"/>
+    </div>
+    <div class="form-group">
+        <label asp-for="Passphrase" class="form-label"></label>
+        <input asp-for="Passphrase" class="form-control"/>
+    </div>
+    <button id="Submit" type="submit" class="btn btn-primary" text-translate="true">Sign</button>
+</form>

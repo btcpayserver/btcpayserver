@@ -1,0 +1,68 @@
+@model BTCPayServer.Abstractions.Models.ConfirmModel
+<div class="modal fade" id="@Html.Id("ConfirmModal")" tabindex="-1" aria-labelledby="@Html.Id("ConfirmTitle")" aria-hidden="true">
+    <partial name="ConfirmModal" model="Model" />
+</div>
+
+<script>
+    (function () {
+        function fullId(componentName) {
+            var id = @Safe.Json(Html.Id(null));
+            if (id)
+                return id + '_' + componentName;
+            return componentName;
+        }
+        const modal = document.getElementById(fullId('ConfirmModal'))
+        modal.addEventListener('show.bs.modal', event => {
+            const $target = event.relatedTarget
+            const $form = document.getElementById(fullId('ConfirmForm'))
+            const $text = document.getElementById(fullId('ConfirmText'))
+            const $title = document.getElementById(fullId('ConfirmTitle'))
+            const $description = document.getElementById(fullId('ConfirmDescription'))
+            const $input = document.getElementById(fullId('ConfirmInput'))
+            const $inputText = document.getElementById(fullId('ConfirmInputText'))
+            const $continue = document.getElementById(fullId('ConfirmContinue'))
+            if ($target.name)
+                $continue.name = $target.name;
+            if ($target.value)
+                $continue.value = $target.value;
+
+
+            const { title, description, confirm, confirmInput } = $target.dataset
+            const action = $target.dataset.action || ($target.nodeName === 'A'
+                ? $target.getAttribute('href')
+                : $target.form.getAttribute('action'))
+
+            if ($form && !$form.hasAttribute('action')) $form.setAttribute('action', action)
+            if (title) $title.textContent = title
+            if (description) $description.innerHTML = description
+            if (confirm) $continue.textContent = confirm
+            if (confirmInput) {
+                $text.removeAttribute('hidden')
+                $continue.setAttribute('disabled', 'disabled')
+                $inputText.textContent = confirmInput.toUpperCase()
+                $input.setAttribute("autocomplete", "off")
+                $input.addEventListener('input', event => {
+                    event.target.value.trim().toLowerCase() === confirmInput.toLowerCase()
+                        ? $continue.removeAttribute('disabled')
+                        : $continue.setAttribute('disabled', 'disabled')
+                })
+                $form.addEventListener('submit', event => {
+                    if ($input.value.trim().toLowerCase() !== confirmInput.toLowerCase()) {
+                        event.preventDefault()
+                    }
+                })
+            } else {
+                $text.setAttribute('hidden', 'hidden')
+                $continue.removeAttribute('disabled')
+            }
+        })
+        modal.addEventListener('shown.bs.modal', event => {
+            const $target = event.relatedTarget
+            const $input = document.getElementById(fullId('ConfirmInput'))
+            const { confirmInput } = $target.dataset
+            if (confirmInput) {
+                $input.focus()
+            }
+        })
+    })()
+</script>

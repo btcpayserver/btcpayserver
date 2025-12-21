@@ -1,0 +1,32 @@
+@using BTCPayServer.Controllers
+@model WalletPSBTCombineViewModel
+@{
+    var walletId = Context.GetRouteValue("walletId").ToString();
+	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
+    Layout = "_LayoutWizard";
+    ViewData.SetTitle(StringLocalizer["Combine PSBT"]);
+}
+
+@section Navbar {
+	<partial name="_BackAndReturn" model="Model" />
+}
+
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+</header>
+
+<form class="form-group" method="post" asp-action="WalletPSBTCombine" asp-route-walletId="@Context.GetRouteValue("walletId")" enctype="multipart/form-data">
+    <input type="hidden" asp-for="OtherPSBT"/>
+    <input type="hidden" asp-for="ReturnUrl" />
+        <input type="hidden" asp-for="BackUrl" />
+    <div class="form-group">
+        <label asp-for="PSBT" class="form-label"></label>
+        <textarea class="form-control" rows="5" asp-for="PSBT"></textarea>
+        <span asp-validation-for="PSBT" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="UploadedPSBTFile" class="form-label"></label>
+        <input type="file" class="form-control" asp-for="UploadedPSBTFile">
+    </div>
+    <button id="Submit" type="submit" class="btn btn-primary" text-translate="true">Combine</button>
+</form>

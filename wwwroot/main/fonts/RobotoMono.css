@@ -1,0 +1,9 @@
+/* generated using https://google-webfonts-helper.herokuapp.com/fonts/roboto-mono?subsets=cyrillic,cyrillic-ext,greek,latin,latin-ext,vietnamese */
+@font-face {
+    font-family: 'Roboto Mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../../fonts/roboto-mono-v12-vietnamese_latin-ext_latin_greek_cyrillic-ext_cyrillic-regular.woff2') format('woff2'),
+         url('../../fonts/roboto-mono-v12-vietnamese_latin-ext_latin_greek_cyrillic-ext_cyrillic-regular.woff') format('woff');
+}

@@ -1,0 +1,52 @@
+@using Microsoft.AspNetCore.Hosting
+@using Newtonsoft.Json.Linq
+@using System.IO
+@using BTCPayServer.Services
+@inject IWebHostEnvironment WebHostEnvironment
+@inject SettingsRepository SettingsRepository
+@inject BTCPayServerEnvironment Env
+
+@model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
+@{
+    ViewData["Title"] = string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title;
+    ViewData["StoreBranding"] = Model.StoreBranding;
+    Layout = null;
+    
+    async Task<string> GetDynamicManifest(string title)
+    {
+        var settings = await SettingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+        var manifest = WebHostEnvironment.WebRootFileProvider.GetFileInfo("manifest.json");
+        if (!manifest.Exists)
+        {
+            return null;
+        }
+        using var reader = new StreamReader(manifest.CreateReadStream());
+        var jObject = JObject.Parse(await reader.ReadToEndAsync());
+        var serverName = string.IsNullOrWhiteSpace(settings.ServerName) ? "BTCPay Server" : settings.ServerName;
+        jObject["short_name"] = title;
+        jObject["name"] = $"{serverName}: {title}";
+        foreach (var jToken in jObject["icons"]!)
+        {
+            var icon = (JObject)jToken;
+            icon["src"] = $"{Context.Request.GetAbsoluteRoot()}/{icon["src"]}";
+        }
+        return $"data:application/manifest+json,{Safe.Json(jObject)}";
+    }
+}
+<!DOCTYPE html>
+<html class="h-100" lang="@Model.HtmlLang" @(Env.IsDeveloping ? " data-devenv" : "") id="POS-@Model.AppId">
+<head>
+    <partial name="LayoutHead" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-startup-image" href="~/img/splash.png">
+    <link rel="manifest" href="@(await GetDynamicManifest(ViewData["Title"]!.ToString()))">
+    <link href="~/pos/common.css" asp-append-version="true" rel="stylesheet" />
+    @this.Safe.Meta(Model.HtmlMetaTags)
+    @await RenderSectionAsync("PageHeadContent", false)
+</head>
+<body class="min-vh-100">
+    @RenderBody()
+    <partial name="LayoutFoot"/>
+    @await RenderSectionAsync("PageFootContent", false)
+</body>
+</html>

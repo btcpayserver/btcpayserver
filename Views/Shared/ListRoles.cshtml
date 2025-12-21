@@ -1,0 +1,129 @@
+@using BTCPayServer.Views.Server
+@using BTCPayServer.Views.Stores
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Client
+@model BTCPayServer.Models.ServerViewModels.RolesViewModel
+@{
+    var storeId = Context.GetRouteValue("storeId") as string;
+    var controller = ViewContext.RouteData.Values["controller"].ToString().TrimEnd("Controller", StringComparison.InvariantCultureIgnoreCase);
+    var category = string.IsNullOrEmpty(storeId) ? WellKnownCategories.Server : WellKnownCategories.Store;
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Roles), StringLocalizer["Roles"]).SetCategory(category));
+
+    var permission = string.IsNullOrEmpty(storeId) ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings;
+    var nextRoleSortOrder = (string) ViewData["NextRoleSortOrder"];
+    var roleSortOrder = nextRoleSortOrder switch
+    {
+        "asc" => "desc",
+        "desc" => "asc",
+        _ => null
+    };
+
+    var sortByDesc = StringLocalizer["Sort by name descending..."];
+    var sortByAsc = StringLocalizer["Sort by name ascending..."];
+    var showInUseColumn = !Model.Roles.Any(r => r.IsUsed is null);
+}
+
+<div class="sticky-header">
+    <h2>@ViewData["Title"]</h2>
+	<a id="page-primary" text-translate="true" class="btn btn-primary" role="button" asp-controller="@controller" asp-action="CreateOrEditRole" asp-route-role="create" asp-route-storeId="@storeId" permission="@permission">Add Role</a>
+</div>
+<partial name="_StatusMessage" />
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>
+                <a
+                    asp-controller="@controller"
+                    asp-action="ListRoles"
+                    asp-route-storeId="@storeId"
+                    asp-route-sortOrder="@(nextRoleSortOrder ?? "asc")"
+                    class="text-nowrap"
+                    title="@(nextRoleSortOrder == "desc" ? sortByAsc : sortByDesc)">
+                    <span text-translate="true">Role</span>
+                    <vc:icon symbol="actions-sort-alpha-@(roleSortOrder ?? nextRoleSortOrder ?? "desc")" />
+                </a>
+            </th>
+            <th text-translate="true">Scope</th>
+            <th text-translate="true">Permissions</th>
+            @if (showInUseColumn)
+            {
+                <th class="text-center w-75px" text-translate="true">In use</th>
+            }
+            <th class="actions-col" permission="@permission" text-translate="true">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var role in Model.Roles)
+        {
+            <tr>
+                <td>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <span>@role.Role</span>
+                        @if (Model.DefaultRole == role.Id)
+                        {
+                            <span class="badge bg-info" text-translate="true">
+                                Default
+                            </span>
+                        }
+                    </div>
+                </td>
+                <td>
+                    @if (role.IsServerRole)
+                    {
+                        <span class="badge bg-dark" text-translate="true">
+                            Server-wide
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-light" text-translate="true">
+                            Store-level
+                        </span>
+                    }
+                </td>
+                <td>
+                    @if (!role.Permissions.Any())
+                    {
+                        <span class="info-note text-warning">
+                            <vc:icon symbol="warning"/>
+                            <span text-translate="true">No policies</span>
+                        </span>
+                    }
+                    else
+                    {
+                        @foreach (var policy in role.Permissions)
+                        {
+                            <code class="d-block text-break">@Policies.DisplayName(policy)</code>
+                        }
+                    }
+                </td>
+                @if (showInUseColumn)
+                {
+                    <td class="text-center">
+                        @if (role.IsUsed is true)
+                        {
+                            <vc:icon symbol="checkmark" css-class="text-success"/>
+                        }
+                        else
+                        {
+                            <vc:icon symbol="cross" css-class="text-danger"/>
+                        }
+                    </td>
+                }
+                <td class="actions-col" permission="@permission">
+                    <div class="d-inline-flex align-items-center gap-3">
+                        @if (role.IsServerRole && Model.DefaultRole != role.Id)
+                        {
+                            <a permission="@Policies.CanModifyServerSettings" asp-action="SetDefaultRole" asp-route-role="@role.Role" asp-controller="UIServer" id="SetDefault" text-translate="true">Set as default</a>
+                        }
+                        <a permission="@(role.IsServerRole && string.IsNullOrEmpty(storeId) ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="CreateOrEditRole" asp-route-storeId="@storeId" asp-route-role="@role.Role" asp-controller="@(role.IsServerRole && string.IsNullOrEmpty(storeId) ? "UIServer" : "UIStores")" text-translate="true">Edit</a>
+                        <a permission="@(role.IsServerRole && string.IsNullOrEmpty(storeId) ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="DeleteRole" asp-route-storeId="@storeId" asp-route-role="@role.Role" asp-controller="@(role.IsServerRole && string.IsNullOrEmpty(storeId) ? "UIServer" : "UIStores")" text-translate="true">Remove</a>
+                    </div>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

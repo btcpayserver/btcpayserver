@@ -1,0 +1,121 @@
+﻿
+@using BTCPayServer.Client
+@using BTCPayServer.Controllers
+@using BTCPayServer.Plugins.Subscriptions
+@model ConfigureOfferingViewModel
+
+@{
+    string offeringId = (string)this.Context.GetRouteValue("offeringId");
+    ViewData.SetLayoutModel(new LayoutModel($"{nameof(SubscriptionsPlugin)}-{offeringId}", StringLocalizer["Configure offering"]));
+    string storeId = (string)this.Context.GetRouteValue("storeId");
+    var deleteModal = new ConfirmModel(StringLocalizer["Delete offering"], StringLocalizer["This offering will be removed from this store."], StringLocalizer["Delete"])
+    {
+        ControllerName = "UIApps",
+        ActionName = nameof(UIAppsController.DeleteApp),
+        ActionValues = new { appId = Model.Data.AppId },
+        GenerateForm = true,
+        Antiforgery = true
+    };
+}
+
+<form method="post">
+    <input type="hidden" asp-for="OriginalName" />
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Offering"
+                       asp-route-storeId="@storeId"
+                       asp-route-offeringId="@offeringId"
+                       asp-route-section="Plans">@StringLocalizer["Offering ({0})", Model.Name]</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>@ViewData["Title"]</h2>
+        </nav>
+        <input id="page-primary" type="submit" value="Save" class="btn btn-primary" />
+    </div>
+    <partial name="_StatusMessage" />
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly"></div>
+            }
+            <div class="form-group">
+                <label asp-for="Name" class="form-label" data-required></label>
+                <input asp-for="Name" class="form-control" required />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="SuccessRedirectUrl" class="form-label"></label>
+                <input asp-for="SuccessRedirectUrl" class="form-control" placeholder="https://example.com/success" />
+                <span asp-validation-for="SuccessRedirectUrl" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+
+    <section id="features" class="mt-4">
+        <div class="d-flex align-items-center gap-4">
+            <h4 text-translate="true">Features</h4>
+            <button type="submit" name="command" value="AddItem" class="btn btn-outline-secondary" id="AddPlanItem">Add item</button>
+        </div>
+
+        @if (Model.Features?.Any() is true)
+        {
+            <div class="row">
+                <div class="col-xl-8 col-xxl-constrain">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                            <tr>
+                                <th style="width: 30%" text-translate="true">ID</th>
+                                <th text-translate="true">Description</th>
+                                <th style="width: 1%" text-translate="true"></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @for (int i = 0; i < Model.Features.Count; i++)
+                            {
+                                <tr>
+                                    <td>
+                                        <input asp-for="Features[i].Id" class="form-control">
+                                        <span asp-validation-for="Features[i].Id" class="text-danger"></span>
+                                    </td>
+                                    <td>
+                                        <input asp-for="Features[i].ShortDescription" class="form-control w-100">
+                                        <span asp-validation-for="Features[i].ShortDescription" class="text-danger"></span>
+                                    </td>
+                                    <td>
+                                        <button type="submit" name="removeIndex" value="@i" class="d-inline-block btn text-danger btn-link">
+                                            <vc:icon symbol="cross" />
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="d-grid d-sm-flex flex-wrap gap-3 mt-3">
+            <a id="DeleteApp" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal"
+               data-description="The app <strong>@Html.Encode(Model.Name)</strong> and its settings will be permanently deleted."
+               data-confirm-input="@StringLocalizer["Delete"]"
+               permission="@Policies.CanModifyStoreSettings">Delete this offering</a>
+        </div>
+    </section>
+</form>
+<partial name="_Confirm" model="@deleteModal" permission="@Policies.CanModifyStoreSettings" />
+
+@section PageFootContent {
+    @if (Model.Anchor != null)
+    {
+        <script>
+            document.getElementById(@Safe.Json(Model.Anchor)).scrollIntoView();
+        </script>
+    }
+}

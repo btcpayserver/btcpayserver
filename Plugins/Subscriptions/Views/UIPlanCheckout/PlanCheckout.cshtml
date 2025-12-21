@@ -1,0 +1,306 @@
+﻿@inject BTCPayServer.Services.BTCPayServerEnvironment Env
+@inject DisplayFormatter DisplayFormatter
+@inject LinkGenerator LinkGenerator
+@using BTCPayServer.Plugins.Subscriptions
+@using BTCPayServer.Services
+@model PlanCheckoutViewModel
+
+@{
+    ViewData["Title"] = Model.Title;
+    ViewData["StoreBranding"] = Model.StoreBranding;
+    Layout = null;
+    ViewData.SetBlazorAllowed(false);
+}
+
+<!DOCTYPE html>
+<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "") id="PlanCheckout-@Model.Id">
+<head>
+    <partial name="LayoutHead" />
+    <link href="~/vendor/font-awesome/css/font-awesome.min.css" asp-append-version="true" rel="stylesheet" />
+    <link href="~/main/site.css" asp-append-version="true" rel="stylesheet" />
+
+    <style>
+        body {
+            background-color: var(--btcpay-body-bg-medium);
+            color: var(--btcpay-body-text);
+        }
+
+        .checkout-container {
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+
+        .subscription-details {
+            background: var(--btcpay-body-bg-light);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+
+        .checkout-form {
+            background: var(--btcpay-body-bg-light);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 2rem;
+        }
+
+        .company-logo {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .company-logo img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+
+
+        .subscription-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .subscription-description {
+            margin-bottom: 2rem;
+        }
+
+        .feature-list li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            color: var(--btcpay-body-text-muted);
+        }
+
+        .feature-list li i {
+            margin-right: 0.75rem;
+            width: 16px;
+        }
+
+        .feature-icon {
+            color: var(--btcpay-primary);
+            margin-right: 0.75rem;
+            width: 20px;
+        }
+
+        .price-display {
+            background: var(--btcpay-body-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .price-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--btcpay-primary);
+        }
+
+        .price-period {
+            font-size: 1rem;
+        }
+
+        .form-control:focus {
+            border-color: var(--btcpay-primary);
+            box-shadow: 0 0 0 0.2rem rgba(5, 150, 105, 0.25);
+        }
+
+        .btn-checkout {
+            padding: 0.875rem 2rem;
+            width: 100%;
+        }
+
+        .checkout-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .checkout-title {
+            color: var(--btcpay-primary-text);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .checkout-subtitle {
+            font-size: 0.95rem;
+        }
+
+        @@media (max-width: 768px) {
+            .checkout-container {
+                padding: 1rem 0;
+            }
+
+            .subscription-details,
+            .checkout-form {
+                margin-bottom: 1.5rem;
+                padding: 1.5rem;
+            }
+
+            .checkout-form {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="checkout-container">
+    <div class="container">
+        <partial name="_StatusMessage" />
+        <div class="row">
+            <!-- Left Column - Subscription Details -->
+            <div class="col-lg-7 col-md-6">
+                <div class="subscription-details">
+                    @if (Model.StoreBranding.LogoUrl is not null || Model.StoreName is not null)
+                    {
+                        <div class="d-flex align-items-center mb-4">
+
+                            <div class="company-logo me-3">
+                                @if (Model.StoreBranding.LogoUrl is null)
+                                {
+                                    <img src="~/img/btcpay-logo.svg" alt="@Model.StoreName" />
+                                }
+                                else
+                                {
+                                    <img src="@Model.StoreBranding.LogoUrl" alt="@Model.StoreName" />
+                                }
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-semibold">@Model.StoreName</h6>
+                            </div>
+                        </div>
+                    }
+
+                    <h3 class="subscription-title d-inline-flex align-items-center gap-2">
+                        <span>@Model.Title</span>
+                        <a type="button" class="btn-link"
+                                href="#"
+                                data-bs-toggle="modal"
+                                data-bs-target="#OpenQrModal">
+                            <vc:icon symbol="qr-code" />
+                        </a>
+                    </h3>
+                    <p class="subscription-description">@Model.Data.Description</p>
+
+                    <div class="price-display">
+                        <div
+                            class="price-amount">@DisplayFormatter.Currency(Model.Data.Price, Model.Data.Currency, DisplayFormatter.CurrencyFormat.Symbol)</div>
+                        <div class="price-period">per month</div>
+                    </div>
+
+                    @if (Model.Data.PlanFeatures.Count(i => !string.IsNullOrWhiteSpace(i.Feature.Description)) != 0)
+                    {
+                        <h5 class="mb-3">What's included:</h5>
+                        <ul class="feature-list">
+                            @foreach (var item in Model.Data.PlanFeatures.Where(i => !string.IsNullOrWhiteSpace(i.Feature.Description)))
+                            {
+                                <li class="feature-item">
+                                    <i class="fas fa fa-check feature-icon"></i>
+                                    <span>@item.Feature.Description</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+
+            <!-- Right Column - Checkout Form -->
+            <div class="col-lg-5 col-md-6">
+                <div class="checkout-form">
+                    <div class="checkout-header">
+                        <h4 class="checkout-title">Complete Your Order</h4>
+                        <p class="checkout-subtitle">Enter your email to proceed to secure payment</p>
+                    </div>
+
+                    <form id="checkoutForm" method="post">
+                        <div class="mb-4">
+                            <label for="customerEmail" class="form-label fw-semibold">Email Address</label>
+                            <input
+                                asp-for="Email"
+                                type="email"
+                                class="form-control form-control-lg"
+                                id="emailInput"
+                                placeholder="Enter your email address"
+                                required
+                                disabled="@Model.IsPrefilled">
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="fas fa fa-info-circle me-1"></i>
+                                We'll send your receipt and account details here
+                            </div>
+                        </div>
+                        @if (Model.IsTrial)
+                        {
+                            <button type="submit" name="command" value="start-trial" class="btn btn-primary btn-checkout btn-lg" id="page-primary">
+                                <i class="fas fa fa-lock me-2"></i>
+                                <span text-translate="true">Proceed to free trial</span>
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="submit" name="command" value="pay" class="btn btn-primary btn-checkout btn-lg" id="page-primary">
+                                <i class="fas fa fa-lock me-2"></i>
+                                <span text-translate="true">Proceed to Secure Payment</span>
+                            </button>
+                        }
+                    </form>
+                    <!-- Security Badges -->
+                    <div class="security-badges">
+                        <div class="security-badge store-footer">
+                            <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
+                                Powered by
+                                <partial name="_StoreFooterLogo" />
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="OpenQrModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" text-translate="true">Scan the QR code to open this page on a mobile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                    <vc:icon symbol="close" />
+                </button>
+            </div>
+            <div class="modal-body pt-0 text-center">
+                <component type="typeof(BTCPayServer.Blazor.QrCode)"
+                           param-Data="@LinkGenerator.PlanCheckout(Model.Id, Context.Request.GetRequestBaseUrl())"
+                           render-mode="Static"
+                />
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/vendor/bootstrap/bootstrap.bundle.min.js" asp-append-version="true"></script>
+<script>
+    const emailInput = document.getElementById('emailInput');
+    const proceedBtn = document.getElementById('page-primary');
+    const checkoutForm = document.getElementById('checkoutForm');
+
+    emailInput.addEventListener('input', function () {
+        const isValid = this.checkValidity() && this.value.length > 0;
+        proceedBtn.disabled = !isValid;
+    });
+
+    checkoutForm.addEventListener('submit', function (e) {
+        const email = emailInput.value;
+        if (!email || !emailInput.checkValidity()) {
+            e.preventDefault();
+        }
+    });
+</script>
+</body>
+</html>

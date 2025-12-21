@@ -1,0 +1,74 @@
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Services
+@inject DisplayFormatter DisplayFormatter
+@model BTCPayServer.Components.StoreRecentInvoices.StoreRecentInvoicesViewModel
+
+<div class="widget store-recent-invoices" id="StoreRecentInvoices-@Model.StoreId">
+    <header>
+        <h3 text-translate="true">Recent Invoices</h3>
+        @if (Model.Invoices.Any())
+        {
+            <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" text-translate="true">View All</a>
+        }
+    </header>
+    @if (Model.InitialRendering)
+    {
+        <div class="loading d-flex justify-content-center p-3">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden" text-translate="true">Loading...</span>
+            </div>
+        </div>
+        <script>
+            (async () => {
+                const url = @Safe.Json(Url.Action("RecentInvoices", "UIStores", new { storeId = Model.StoreId, cryptoCode = Model.CryptoCode }));
+                const storeId = @Safe.Json(Model.StoreId);
+                const response = await fetch(url);
+                if (response.ok) {
+                    document.getElementById(`StoreRecentInvoices-${storeId}`).outerHTML = await response.text();
+                }
+            })();
+        </script>
+    }
+    else if (Model.Invoices.Any())
+    {
+        <div class="table-responsive mt-3 mb-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th class="w-125px" text-translate="true">Date</th>
+                    <th class="text-nowrap" text-translate="true">Invoice Id</th>
+                    <th text-translate="true">Status</th>
+                    <th class="text-end" text-translate="true">Amount</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var invoice in Model.Invoices)
+                {
+                    <tr>
+                        <td>@invoice.Date.ToTimeAgo()</td>
+                        <td>
+                            <a asp-controller="UIInvoice" asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId" class="text-break">@invoice.InvoiceId</a>
+                        </td>
+                        <td>
+                            <vc:invoice-status state="invoice.Status" payments="invoice.Details.Payments" invoice-id="@invoice.InvoiceId"
+                               is-archived="invoice.Details.Archived" has-refund="invoice.HasRefund" />
+                        </td>
+                        <td class="text-end">
+                            <span data-sensitive>@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</span>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <p class="text-secondary my-3" text-translate="true">
+            There are no recent invoices.
+        </p>
+        <a asp-controller="UIInvoice" asp-action="CreateInvoice" asp-route-storeId="@Model.StoreId" class="fw-semibold" text-translate="true">
+            Create Invoice
+        </a>
+    }
+</div>

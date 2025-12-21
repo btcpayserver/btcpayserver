@@ -1,0 +1,50 @@
+@model WalletSetupViewModel
+@{
+    Layout = "_LayoutWalletSetup";
+    ViewData.SetTitle(StringLocalizer["Confirm addresses"]);
+}
+
+@section Navbar {
+    <a asp-controller="UIStores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="@Model.Method">
+        <vc:icon symbol="back" />
+    </a>
+}
+
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3" text-translate="true">Please check that your wallet is generating the same addresses as below.</p>
+</header>
+
+<form method="post" asp-controller="UIStores" asp-action="UpdateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+    <input asp-for="Config" type="hidden"/>
+    <input asp-for="Confirmation" type="hidden"/>
+    <input asp-for="AccountKey" type="hidden" />
+    <input asp-for="RootFingerprint" type="hidden" />
+    <input asp-for="KeyPath" type="hidden" />
+
+    <div class="table-responsive-sm">
+        <table class="table table-hover w-auto mx-auto">
+            <thead>
+            <tr>
+                <th text-translate="true">Key path</th>
+                <th text-translate="true">Address</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var sample in Model.AddressSamples)
+            {
+                <tr>
+                    <td>@sample.KeyPath</td>
+                    <td><code>@sample.Address</code></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-center">
+        <button name="command" type="submit" class="btn btn-primary" value="save" id="Confirm" text-translate="true">Confirm</button>
+    </div>
+</form>
+
+

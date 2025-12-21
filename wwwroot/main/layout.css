@@ -1,0 +1,718 @@
+/* Breakpoints:
+   XS <576px
+   SM ≥576px
+   MD ≥768px
+   LG ≥992px
+   XL ≥1200px */
+
+:root {
+    --mobile-header-height: 4rem;
+    --desktop-header-height: 8rem;
+    --sidebar-width: 280px;
+    --sticky-header-height: 0; /* gets dynamically set via JavaScript */
+
+    scroll-padding-top: calc(var(--sticky-header-height) + var(--btcpay-space-m));
+}
+
+/* Main Menu */
+#mainMenu {
+    --button-width: 40px;
+    --button-height: 40px;
+    --button-padding: 7px;
+    --icon-size: 1.5rem;
+    --menu-border: 1px solid var(--btcpay-body-border-light);
+    height: var(--header-height);
+    z-index: 1031; /* needs a value between fixed and the offcanvas backdrop, see https://getbootstrap.com/docs/5.1/layout/z-index/ */
+}
+
+#mainMenuHead  {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#mainMenuHead .mainMenuButton {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--button-width);
+    height: var(--button-height);
+    padding: var(--button-padding);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    color: var(--btcpay-body-text-muted);
+}
+
+#mainNav {
+    --btcpay-scrollbar-color: var(--btcpay-neutral-400);
+    height: calc(100vh - var(--mobile-header-height));
+    overflow-y: auto;
+    padding-top: var(--btcpay-space-m);
+}
+
+#mainNav .nav-item .icon {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    margin-right: var(--btcpay-space-xs);
+}
+
+#mainNav .accordion-button {
+    padding: var(--btcpay-space-s) 0;
+    text-transform: uppercase;
+    color: var(--btcpay-body-text-muted);
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+
+#mainNav .accordion-item {
+    border: none !important;
+}
+
+#mainNav .navbar-nav > li.nav-item .nav-link {
+    display: inline-flex;
+    align-items: center;
+    font-weight: var(--btcpay-font-weight-semibold);
+    color: var(--btcpay-header-link);
+    transition-property: color;
+    transition-duration: var(--btcpay-transition-duration-fast);
+}
+
+#mainNav .navbar-nav > li.nav-item .nav-link .icon {
+    flex-shrink: 0;
+}
+
+#mainNav .navbar-nav > li.nav-item-sub {
+    padding-left:calc(1.5rem + var(--btcpay-space-xs))
+}
+
+#mainNav .navbar-nav > li.nav-item .nav-link span {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#mainNav .navbar-nav > li.nav-item a.nav-link:focus,
+#mainNav .navbar-nav > li.nav-item a.nav-link:hover {
+    color: var(--btcpay-header-link-accent);
+}
+
+#mainNav .navbar-nav > li.nav-item a.nav-link.active,
+#mainNav .navbar-nav > li.nav-item a.nav-link.active:focus,
+#mainNav .navbar-nav > li.nav-item a.nav-link.active:hover {
+    color: var(--btcpay-header-link-active);
+}
+
+#mainNavSettings {
+    margin-top: auto;
+}
+
+.navbar-brand,
+.navbar-brand:hover,
+.navbar-brand:focus {
+    color: inherit;
+}
+
+.btcpay-header {
+    color: var(--btcpay-header-text);
+    background: var(--btcpay-header-bg);
+}
+
+#mainContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#mainContent > section {
+    flex: 1;
+    padding: var(--content-padding-top) var(--content-padding-horizontal) var(--content-padding-bottom);
+}
+
+#StoreSelector {
+    display: flex;
+    align-items: center;
+    z-index: 2000;
+    flex: 1;
+}
+
+#StoreSelector hr {
+    height: 1px;
+}
+
+#StoreSelectorHome {
+    position: relative;
+}
+
+#StoreSelectorHome .badge {
+    position: absolute;
+    top: .25rem;
+    left: 100%;
+    font-size: 9px;
+}
+
+#StoreSelectorDropdown,
+#StoreSelectorToggle {
+    width: 100%;
+}
+
+#StoreSelectorToggle {
+    display: flex;
+    align-items: center;
+    color: var(--btcpay-header-link);
+    background-color: var(--btcpay-header-bg);
+}
+
+#StoreSelectorToggle.empty-state {
+    color: var(--btcpay-body-text-muted);
+}
+
+#StoreSelectorToggle::after {
+    content: none;
+}
+
+#StoreSelectorToggle,
+#StoreSelectorToggle .logo,
+#StoreSelectorToggle .icon {
+    transition: unset;
+    transition-property: color, border-color;
+    transition-timing-function: ease, ease;
+    transition-duration: var(--btcpay-transition-duration-fast), var(--btcpay-transition-duration-fast);
+}
+
+#StoreSelectorToggle .logo,
+#StoreSelectorToggle .icon {
+    --icon-size: 1.5rem;
+    max-width: var(--icon-size);
+    max-height: var(--icon-size);
+    /* Fixes seemingly delayed icon animation */
+    -webkit-transition-duration: 0.05s, var(--btcpay-transition-duration-fast);
+}
+
+#StoreSelectorToggle .logo,
+#StoreSelectorToggle .icon.icon-nav-store {
+    margin-right: var(--btcpay-space-s);
+}
+
+#StoreSelectorToggle .icon.icon-caret-down {
+    margin-left: auto;
+    color: var(--btcpay-body-text-muted);
+}
+
+#StoreSelectorToggle span {
+    margin-right: var(--btcpay-space-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#StoreSelectorToggle:hover,
+#StoreSelectorToggle:focus,
+#StoreSelectorToggle:hover .icon,
+#StoreSelectorToggle:focus .icon {
+    color: var(--btcpay-header-link-accent);
+}
+
+#StoreSelectorMenu {
+    min-width: 100%;
+    overflow-y: auto;
+    /* gradually try to set better but less supported values and units */
+    max-height: calc(100vh - var(--header-height) - var(--btcpay-space-xxl));
+    max-height: calc(100dvh - var(--header-height));
+}
+
+/* Logo */
+#mainMenuHead .main-logo {
+    display: inline-block;
+    height: 2rem;
+}
+
+@media (max-width: 575px) {
+    #mainMenuHead .main-logo-custom {
+        max-width: 25vw;
+    }
+
+    #mainMenuHead .main-logo-btcpay {
+        width: 1.125rem;
+    }
+
+    #mainMenuHead .main-logo-btcpay .main-logo-btcpay--large {
+        display: none;
+    }
+}
+
+@media (min-width: 576px) {
+    #mainMenuHead .main-logo-custom {
+        max-width: 10.5rem;
+    }
+
+    #mainMenuHead .main-logo-btcpay {
+        width: 4.625rem;
+    }
+
+    #mainMenuHead .main-logo-btcpay .main-logo-btcpay--small {
+        display: none;
+    }
+}
+
+/* Theme Switch */
+.btcpay-theme-switch {
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.btcpay-theme-switch-label {
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+
+.btcpay-theme-switch-themes {
+    display: inline-flex;
+    gap: var(--btcpay-space-m);
+    align-items: center;
+}
+
+.btcpay-theme-switch-themes button {
+    --icon-size: 1.25rem !important;
+    background: none;
+    padding: 0;
+    border: 0;
+    color: var(--btcpay-body-text-muted);
+}
+
+.btcpay-theme-switch-themes button:hover {
+    color: var(--btcpay-body-link);
+}
+
+.btcpay-theme-switch-themes button svg {
+    margin: 0 !important;
+}
+
+.btcpay-theme-switch:hover .btcpay-theme-switch-light,
+.btcpay-theme-switch:hover .btcpay-theme-switch-dark {
+    fill: currentColor;
+}
+
+:root:not([data-btcpay-theme]) .btcpay-theme-switch [data-theme="system"],
+:root[data-btcpay-theme="light"] .btcpay-theme-switch [data-theme="light"],
+:root[data-btcpay-theme="dark"] .btcpay-theme-switch [data-theme="dark"] {
+    color: var(--btcpay-body-link);
+}
+
+/* Notifications */
+#Notifications {
+    flex: 0 0 var(--button-width);
+}
+
+#NotificationsBadge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 1.75em;
+}
+
+#NotificationsHandle .icon {
+    --icon-size: 1.625rem;
+    color: var(--btcpay-header-link);
+}
+
+#NotificationsHandle:hover .icon {
+    color: var(--btcpay-header-link-accent);
+}
+
+#NotificationsDropdown {
+    border: 0;
+    border-radius: var(--btcpay-border-radius-l);
+    background-color: var(--btcpay-body-bg);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 16%);
+    padding: 0;
+    z-index: 2000;
+    top: var(--btcpay-space-xs) !important;
+    border: 1px solid var(--btcpay-body-border-medium);
+}
+
+#NotificationsList .icon {
+    --icon-size: 1.5rem;
+}
+
+/* Section Navigation / Subnav */
+#SectionNav {
+    --border-size: 2px;
+    margin-bottom: var(--btcpay-space-l);
+    border-bottom: var(--border-size) solid var(--btcpay-body-border-light);
+}
+
+#SectionNav .nav {
+    margin-bottom: calc(var(--border-size) * -1);
+}
+
+#SectionNav .nav-link {
+    color: var(--btcpay-nav-link);
+    border-bottom: var(--border-size) solid transparent;
+    padding: var(--btcpay-space-m) 0;
+    font-weight: var(--btcpay-font-weight-semibold);
+    white-space: nowrap;
+}
+
+#SectionNav .nav-link:last-child {
+    margin-right: 0;
+}
+
+#SectionNav .nav-link:hover {
+    color: var(--btcpay-nav-link-accent);
+}
+
+#SectionNav .nav-link.active {
+    color: var(--btcpay-nav-link-active);
+    border-bottom-color: var(--btcpay-nav-border-active);
+    background: var(--btcpay-nav-bg-active);
+}
+
+.sticky-header {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 1021;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--btcpay-space-m);
+    align-items: center;
+    justify-content: space-between;
+    background: var(--btcpay-body-bg);
+    margin-top: calc(var(--content-padding-top) * -1);
+    /* pull it out of the content padding and adjust its inner padding to make up for that space */
+    margin-left: calc(var(--content-padding-horizontal) * -1);
+    margin-right: calc(var(--content-padding-horizontal) * -1);
+    padding: var(--content-padding-top) var(--content-padding-horizontal) var(--btcpay-space-l);
+}
+
+.sticky-header h2 {
+    margin-bottom: 0;
+}
+
+.sticky-header > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--btcpay-space-m);
+}
+
+.sticky-header > nav + :last-child {
+    align-self: flex-start;
+}
+
+/* Footer */
+.btcpay-footer {
+    font-size: var(--btcpay-font-size-s);
+    overflow: hidden;
+    padding: 0 var(--content-padding-horizontal) 1rem;
+    color: var(--btcpay-footer-text);
+    background: var(--btcpay-footer-bg);
+}
+
+.btcpay-footer a,
+.btcpay-footer button {
+    display: flex;
+    align-items: center;
+    gap: var(--btcpay-space-s);
+    color: var(--btcpay-footer-link);
+    font-size: var(--btcpay-font-size-s);
+    text-decoration: none;
+    padding: 0;
+}
+
+.btcpay-footer a:focus,
+.btcpay-footer a:hover,
+.btcpay-footer button:focus,
+.btcpay-footer button:hover {
+    color: var(--btcpay-footer-link-accent);
+}
+
+.btcpay-footer [data-clipboard-hover]::before {
+    top: .125rem;
+}
+
+#StatusUpdates {
+    position: fixed;
+    top: var(--content-padding-top);
+    right: var(--content-padding-horizontal);
+}
+#StatusUpdates .blazor-status {
+    width: 16rem;
+    border-color: var(--btcpay-border-color);
+}
+#StatusUpdates .blazor-status__title {
+    color: var(--btcpay-body-text);
+}
+#StatusUpdates .blazor-status__body {
+    padding-left: 2.45rem;
+}
+
+@media (max-width: 991px) {
+    :root {
+        --header-height: var(--mobile-header-height);
+        --content-padding-top: calc(var(--header-height) + var(--btcpay-space-m));
+        --content-padding-bottom: var(--btcpay-space-xl);
+        --content-padding-horizontal: var(--btcpay-space-m);
+
+        /* Prevent anchors from disappearing underneath the fixed header */
+        scroll-padding: var(--content-padding-top);
+    }
+
+    #mainMenu {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        border-bottom: var(--menu-border);
+    }
+
+    #mainMenuHead  {
+        padding: var(--btcpay-space-s) var(--btcpay-space-m);
+    }
+
+    #mainNav {
+        position: fixed;
+        top: var(--mobile-header-height);
+        bottom: 0;
+        left: 0;
+        width: var(--sidebar-width);
+        z-index: 1045;
+        border-right: var(--menu-border);
+        color: var(--btcpay-body-text);
+        background-color: inherit;
+        background-clip: padding-box;
+        outline: 0;
+        transform: translateX(-100%);
+        transition: transform var(--btcpay-transition-duration-fast) ease-in-out;
+        /* Fixes https://github.com/btcpayserver/btcpayserver/issues/3807 */
+        height: calc(100vh - var(--mobile-header-height)); /* This line is a fallback for browsers which don't support "fill-available" */
+        height: -webkit-fill-available;
+        height: fill-available;
+        /* Since we can't do "calc(fill-available - var(--mobile-header-height));" I'm using "padding-bottom" instead */
+        padding-bottom: var(--mobile-header-height);
+        /* END FIX */
+    }
+
+    #mainNav.show {
+        transform: none;
+    }
+
+    #mainMenu .offcanvas-backdrop {
+        top: var(--mobile-header-height);
+        transition-duration: var(--btcpay-transition-duration-fast);
+    }
+
+    #StoreSelector {
+        margin: 0 auto;
+        max-width: 60vw;
+    }
+
+    #Notifications {
+        margin-left: var(--btcpay-space-s);
+    }
+
+    #mainMenuToggle {
+        --line-thickness: 2px;
+        --transition-easing: ease-in-out;
+        --transition-duration: var(--btcpay-transition-duration-fast);
+
+        flex: 0 0 var(--button-width);
+        margin-right: var(--btcpay-space-s);
+        margin-left: calc(var(--button-padding) * -1);
+    }
+
+    #mainMenuToggle span {
+        position: relative;
+        display: inline-block;
+        width: calc(var(--button-width) - var(--button-padding) * 2);
+        height: calc(var(--button-height) - (var(--button-padding) * 2) - (var(--line-thickness) * 4));
+        border-top: var(--line-thickness) solid;
+        border-bottom: var(--line-thickness) solid;
+        color: var(--btcpay-body-text-muted);
+        font-size: 0;
+        transition: all var(--transition-duration) var(--transition-easing);
+    }
+
+    #mainMenuToggle span:before,
+    #mainMenuToggle span:after {
+        position: absolute;
+        display: block;
+        content: '';
+        width: 100%;
+        height: var(--line-thickness);
+        top: 50%;
+        left: 50%;
+        background: currentColor;
+        transform: translate(-50%, -50%);
+        transition: transform var(--transition-duration) var(--transition-easing);
+    }
+
+    #mainMenuToggle:hover span {
+        color: var(--btcpay-header-text);
+    }
+
+    #mainMenuToggle[aria-expanded="true"] span {
+        border-color: transparent;
+    }
+
+    #mainMenuToggle[aria-expanded="true"] span:before {
+        transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    #mainMenuToggle[aria-expanded="true"] span:after {
+        transform: translate(-50%, -50%) rotate(-45deg);
+    }
+
+    #SectionNav {
+        --scroll-indicator-spacing: var(--btcpay-space-m);
+        position: relative;
+    }
+
+    #SectionNav .nav {
+        --btcpay-scrollbar-width: none;
+        --btcpay-scrollbar-color: transparent;
+
+        flex-wrap: nowrap;
+        overflow: auto visible;
+        -webkit-overflow-scrolling: touch;
+        margin-left: calc(var(--scroll-indicator-spacing) * -1);
+        margin-right: calc(var(--scroll-indicator-spacing) * -1);
+        padding: 0 var(--scroll-indicator-spacing);
+    }
+
+    #SectionNav .nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Horizontal scroll indicators */
+    #SectionNav:before,
+    #SectionNav:after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: calc(var(--border-size) * -1);
+        width: var(--btcpay-space-m);
+    }
+
+    #SectionNav:before {
+        background-image: linear-gradient(to right, var(--btcpay-body-bg), rgba(var(--btcpay-body-bg-rgb), 0));
+        left: calc(var(--scroll-indicator-spacing) * -1);
+    }
+
+    #SectionNav:after {
+        background-image: linear-gradient(to left, var(--btcpay-body-bg), rgba(var(--btcpay-body-bg-rgb), 0));
+        right: calc(var(--scroll-indicator-spacing) * -1);
+    }
+
+    #SectionNav .nav-link {
+        margin-right: 1.5rem;
+        border-bottom-color: var(--btcpay-body-border-light);
+    }
+}
+
+@media (min-width: 992px) {
+    :root {
+        --header-height: var(--desktop-header-height);
+        --content-padding-top: 5rem;
+        --content-padding-bottom: 5rem;
+        --content-padding-horizontal: 5rem;
+    }
+
+    #mainMenu {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: var(--sidebar-width);
+        height: 100vh;
+        border-right: var(--menu-border);
+    }
+
+    #mainMenuHead {
+        flex-wrap: wrap;
+        padding: var(--btcpay-space-m) 1.5rem;
+    }
+
+    #Notifications {
+        order: 1;
+        margin-left: auto;
+    }
+
+    #StoreSelector {
+        order: 2;
+        margin-top: var(--btcpay-space-m);
+        /* Make sure we are actually taking up all of the space or else you end up with this: https://github.com/btcpayserver/btcpayserver/issues/3972 */
+        min-width: 100%;
+    }
+
+    #mainMenuToggle,
+    #mainMenu .offcanvas-backdrop {
+        display: none !important;
+    }
+
+    #NotificationsDropdown {
+        inset: calc(var(--button-height) * -1 - var(--btcpay-space-s)) auto auto calc(var(--button-width) + var(--btcpay-space-s)) !important;
+        width: 400px;
+    }
+
+    #mainContent {
+        margin-left: var(--sidebar-width);
+    }
+
+    #mainContent pre {
+        max-width: calc(100vw - var(--sidebar-width) - (2 * var(--btcpay-space-xl)) - 1rem); /* 1rem for scrollbar */
+    }
+
+    #mainContent > section {
+        margin: 0;
+        max-width: none;
+    }
+
+    #mainContent > section .w-100-fixed {
+        /* constrains the content to respect the maximum width and enable responsive tables */
+        width: calc(100vw - var(--sidebar-width) - var(--btcpay-scrollbar-width) - var(--content-padding-horizontal) * 2);
+    }
+
+    #mainContent > section > h2 {
+        margin-top: var(--btcpay-space-xs);
+    }
+
+    #SectionNav .nav {
+        margin-top: calc(var(--btcpay-space-m) * -1);
+    }
+
+    #SectionNav .nav {
+        border-bottom: var(--border-size) solid var(--btcpay-body-border-light);
+    }
+
+    #SectionNav .nav-link {
+        margin-top: var(--btcpay-space-s);
+        margin-right: var(--btcpay-space-l);
+        margin-bottom: calc(var(--border-size) * -1);
+    }
+}
+
+@media (min-width: 992px) and (max-height: 799px) {
+    :root {
+        --content-padding-top: 1.25rem;
+    }
+}
+
+@media (min-width: 992px) and (min-height: 800px) {
+    #StatusUpdates {
+        top: 1.25rem;
+    }
+}
+
+@media (max-width: 449px) {
+    #StoreSelector {
+        max-width: 40vw;
+        flex-shrink: 1;
+    }
+
+    #StoreSelectorToggle .icon.icon-store {
+        display: none;
+    }
+}

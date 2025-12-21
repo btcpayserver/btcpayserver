@@ -1,0 +1,192 @@
+@using BTCPayServer.Views.Server
+@model EmailsViewModel
+@{
+    if (Model.StoreId is null)
+    {
+        ViewData.SetLayoutModel(new LayoutModel("Server-" + nameof(ServerNavPages.Emails), StringLocalizer["Emails"]).SetCategory(WellKnownCategories.Server));
+    }
+    else
+    {
+        ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Emails), StringLocalizer["Email Rules"])
+            .SetCategory(WellKnownCategories.Store));
+    }
+}
+
+<form method="post" autocomplete="off">
+    <div class="sticky-header">
+        <h2>@ViewData.GetTitle()</h2>
+        <div class="d-flex justify-content-end">
+            <button cheat-mode="true" id="mailpit" type="submit" class="btn btn-info" name="command" value="mailpit">Use mailpit</button>
+            @if (Model.StoreId is null)
+            {
+                <a id="ConfigureEmailRules" class="btn btn-secondary" asp-area="@EmailsPlugin.Area" asp-controller="UIServerEmailRules"
+                   asp-action="ServerEmailRulesList"
+                   permission="@Model.ModifyPermission" text-translate="true">
+                    Go to email rules
+                </a>
+            }
+            else
+            {
+                <a id="ConfigureEmailRules" class="btn btn-secondary" asp-area="@EmailsPlugin.Area" asp-controller="UIStoreEmailRules"
+                   asp-action="StoreEmailRulesList"
+                   asp-route-storeId="@Model.StoreId"
+                   permission="@Model.ViewPermission" text-translate="true">
+                    Go to email rules
+                </a>
+            }
+            <button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save" permission="@Model.ModifyPermission" text-translate="true">Save</button>
+        </div>
+    </div>
+    <partial name="_StatusMessage" />
+    <div class="row">
+        <div class="col-xl-10 col-xxl-constrain">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All"></div>
+            }
+            @if (Model.StoreId is null)
+            {
+                <div class="form-group mb-4">
+                    <div class="d-flex align-items-center">
+                        <input asp-for="EnableStoresToUseServerEmailSettings" type="checkbox" class="btcpay-toggle me-3" />
+                        <div>
+                            <label asp-for="EnableStoresToUseServerEmailSettings" class="form-check-label"></label>
+                            <div class="text-muted">
+                                <span text-translate="true">This can be overridden at the Store level.</span>
+                                <a href="https://docs.btcpayserver.org/Notifications/#server-emails" target="_blank" rel="noreferrer noopener">
+                                    <vc:icon symbol="info" />
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                @if (Model.IsFallbackSetup)
+                {
+                    <label class="d-flex align-items-center mb-4">
+                        <input type="checkbox" asp-for="IsCustomSMTP" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#SmtpSettings"
+                               aria-expanded="@Model.IsCustomSMTP" aria-controls="SmtpSettings" />
+                        <div>
+                            <span text-translate="true">Use custom SMTP settings for this store</span>
+                            <div class="form-text" text-translate="true">Otherwise, the server's SMTP settings will be used to send emails.</div>
+                        </div>
+                    </label>
+                }
+                else
+                {
+                    <input type="hidden" id="IsCustomSMTPHidden" asp-for="IsCustomSMTP" />
+                }
+            }
+
+            <div class="collapse @(Model.IsCustomSMTP || Model.StoreId is null ? "show" : "")" id="SmtpSettings">
+                <div class="form-group">
+                    <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                        <label asp-for="Settings.Server" class="form-label" text-translate="true">SMTP Server</label>
+                        <div class="dropdown only-for-js mt-n2" id="quick-fill">
+                            <button class="btn btn-link p-0 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                    id="QuickFillDropdownToggle" text-translate="true">
+                                Quick Fill
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="QuickFillDropdownToggle">
+                                <a class="dropdown-item" href="" data-server="smtp.gmail.com" data-port="587">Gmail.com</a>
+                                <a class="dropdown-item" href="" data-server="mail.yahoo.com" data-port="587">Yahoo.com</a>
+                                <a class="dropdown-item" href="" data-server="smtp.mailgun.org" data-port="587">Mailgun</a>
+                                <a class="dropdown-item" href="" data-server="smtp.office365.com" data-port="587">Office365</a>
+                                <a class="dropdown-item" href="" data-server="smtp.sendgrid.net" data-port="587">SendGrid</a>
+                            </div>
+                        </div>
+                    </div>
+                    <input asp-for="Settings.Server" data-fill="server" class="form-control" />
+                    <span asp-validation-for="Settings.Server" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Settings.Port" class="form-label" text-translate="true">Port</label>
+                    <input asp-for="Settings.Port" data-fill="port" class="form-control" />
+                    <span asp-validation-for="Settings.Port" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Settings.From" class="form-label" text-translate="true">Sender's Email Address</label>
+                    <input asp-for="Settings.From" class="form-control" placeholder="@StringLocalizer["Firstname Lastname <email@example.com>"]" />
+                    <span asp-validation-for="Settings.From" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Settings.Login" class="form-label" text-translate="true">Login</label>
+                    <input asp-for="Settings.Login" class="form-control" />
+                    <div class="form-text" text-translate="true">For many email providers (like Gmail) your login is your email address.</div>
+                    <span asp-validation-for="Settings.Login" class="text-danger"></span>
+                </div>
+                <div class="form-group" permission="@Model.ModifyPermission">
+                    <label asp-for="Settings.Password" class="form-label" text-translate="true">Password</label>
+                    @if (!Model.PasswordSet)
+                    {
+                        <input asp-for="Settings.Password" type="password" value="@Model.Settings.Password" class="form-control" />
+                        <span asp-validation-for="Settings.Password" class="text-danger"></span>
+                    }
+                    else
+                    {
+                        <div class="input-group">
+                            <input value="@StringLocalizer["Configured"]" type="text" readonly class="form-control" />
+                            <button type="submit" class="btn btn-danger" name="command" value="ResetPassword" id="ResetPassword" text-translate="true">Reset
+                            </button>
+                        </div>
+                    }
+                </div>
+                <input asp-for="PasswordSet" type="hidden" />
+                <div class="my-4">
+                    <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0" type="button" id="AdvancedSettingsButton"
+                            data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
+                        <vc:icon symbol="caret-down" />
+                        <span class="ms-1" text-translate="true">Advanced settings</span>
+                    </button>
+                    <div id="AdvancedSettings" class="collapse">
+                        <div class="pt-3 pb-1">
+                            <div class="d-flex">
+                                <input asp-for="Settings.EnabledCertificateCheck" type="checkbox" class="btcpay-toggle me-3" />
+                                <label asp-for="Settings.EnabledCertificateCheck" class="form-check-label" text-translate="true">TLS certificate security
+                                    checks</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <h3 class="my-3" text-translate="true">Testing</h3>
+    <div class="row">
+        <div class="col-xl-10 col-xxl-constrain">
+            <div class="form-group">
+                <label asp-for="TestEmail" class="form-label" text-translate="true">To test your settings, enter an email address</label>
+                <input asp-for="TestEmail" placeholder="@StringLocalizer["Firstname Lastname <email@example.com>"]" class="form-control" />
+                <span asp-validation-for="TestEmail" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-secondary mt-2" name="command" value="Test" id="Test" text-translate="true">Send Test Email</button>
+        </div>
+    </div>
+</form>
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            delegate('click', '#quick-fill .dropdown-menu a', function (e) {
+                e.preventDefault();
+
+                const data = e.target.dataset;
+                Object.keys(data).forEach(function (key) {
+                    const value = data[key];
+                    const input = document.querySelector('input[data-fill="' + key + '"]');
+                    if (input) {
+                        const type = input.getAttribute('type');
+                        if (type === 'checkbox') {
+                            input.checked = value;
+                        } else {
+                            input.value = value;
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}

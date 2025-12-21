@@ -1,0 +1,108 @@
+@model CheckoutModel
+
+<style>
+    #checkout-cheating form + form { margin-top: var(--btcpay-space-l); }
+</style>
+<main id="checkout-cheating" class="tile" v-cloak v-if="display">
+    <section>
+        <p id="CheatSuccessMessage" class="alert alert-success text-break" v-if="successMessage" v-text="successMessage"></p>
+        <p id="CheatErrorMessage" class="alert alert-danger text-break" v-if="errorMessage" v-text="errorMessage"></p>
+        <form id="test-payment" :action="`/i/${invoiceId}/test-payment`" method="post" v-on:submit.prevent="handleFormSubmit($event, 'paying')" v-if="displayPayment">
+            <input name="CryptoCode" type="hidden" :value="cryptoCode">
+            <input name="PaymentMethodId" type="hidden" :value="paymentMethodId">
+			<label for="test-payment-amount" class="control-label form-label">Fake a {{cryptoCode}} payment for testing</label>
+            <div class="d-flex gap-2 mb-2">
+                <div class="input-group">
+					<input id="test-payment-amount" name="Amount" class="form-control" placeholder="@StringLocalizer["Amount"]" v-model="amount" :readonly="paying || paymentMethodId === 'BTC-LN'" />
+                    <div id="test-payment-crypto-code" class="input-group-addon input-group-text" v-text="cryptoCode"></div>
+                </div>
+				<button class="btn btn-secondary flex-shrink-0 px-3 w-100px" type="submit" :disabled="paying" id="FakePayment">Pay</button>
+            </div>
+        </form>
+        <form id="mine-block" :action="`/i/${invoiceId}/mine-blocks`" method="post" v-on:submit.prevent="handleFormSubmit($event, 'mining')">
+            <label for="BlockCount" class="control-label form-label" text-translate="true">Mine to test processing and settlement</label>
+            <div class="d-flex gap-2">
+				<input name="PaymentMethodId" type="hidden" :value="paymentMethodId">
+                <div class="input-group">
+                    <input id="BlockCount" name="BlockCount" type="number" step="1" min="1" class="form-control" value="1"/>
+                    <div class="input-group-addon input-group-text" text-translate="true">blocks</div>
+                </div>
+				<button class="btn btn-secondary flex-shrink-0 px-3 w-100px" type="submit" :disabled="mining" id="mine-block" text-translate="true">Mine</button>
+            </div>
+        </form>
+        <form id="expire-invoice" :action="`/i/${invoiceId}/expire`" method="post" v-on:submit.prevent="handleFormSubmit($event, 'expiring')" v-if="displayExpire">
+            <label for="ExpirySeconds" class="control-label form-label" text-translate="true">Expire invoice in …</label>
+            <div class="d-flex gap-2">
+                <div class="input-group">
+                    <input id="ExpirySeconds" name="Seconds" type="number" step="1" min="0" class="form-control" value="20" />
+                    <div class="input-group-addon input-group-text" text-translate="true">seconds</div>
+                </div>
+                <button class="btn btn-secondary flex-shrink-0 px-3 w-100px" type="submit" :disabled="expiring" id="Expire" text-translate="true">Expire</button>
+            </div>
+        </form>
+    </section>
+</main>
+
+<script>
+    Vue.component('checkout-cheating', {
+        el: '#checkout-cheating',
+        data () {
+            return {
+                successMessage: null,
+                errorMessage: null,
+                paying: false,
+                mining: false,
+                expiring: false,
+                amountRemaining: this.due
+            }
+        },
+        props: {
+            invoiceId: String,
+            paymentMethodId: String,
+            cryptoCode: String,
+            due: Number,
+            isProcessing: Boolean,
+            isSettled: Boolean
+        },
+        computed: {
+            display() {
+                return this.successMessage || this.errorMessage || this.displayPayment || this.displayExpire;
+            },
+            displayPayment () {
+                return !this.isSettled && !this.isProcessing;
+            },
+            displayExpire () {
+                return !this.isSettled && !this.isProcessing;
+            },
+            isSats () {
+                return this.cryptoCode === 'sats';
+            },
+            amount () {
+                const amount = this.isSats && this.amountRemaining < 1
+                    ? this.amountRemaining * 100000000
+                    : this.amountRemaining;
+                return amount < 0 ? 0 : amount;
+            }
+        },
+        methods: {
+            async handleFormSubmit (e, processing) {
+                const form = e.target;
+                const url = form.getAttribute('action');
+                const method = form.getAttribute('method');
+                const body = new FormData(form);
+                const headers = { 'Accept': 'application/json' }
+                
+                this[processing] = true;
+                this.successMessage = null;
+                this.errorMessage = null;
+                
+                const response = await fetch(url, { method, body, headers });
+                const data = await response.json();
+                this.successMessage = data.successMessage;
+                this.errorMessage = data.errorMessage;
+                if (data.amountRemaining) this.amountRemaining = data.amountRemaining;
+                this[processing] = false;
+            }
+        }
+    })
+</script>

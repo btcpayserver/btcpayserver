@@ -1,0 +1,71 @@
+@using BTCPayServer.Blazor.VaultBridge
+@using BTCPayServer.Hosting
+@model WalletSendVaultModel
+@{
+    var walletId = Context.GetRouteValue("walletId")?.ToString() ?? "";
+	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
+    Layout = "_LayoutWizard";
+    ViewData.SetTitle(StringLocalizer["Sign the transaction"]);
+    this.ViewData.SetBlazorAllowed(true);
+
+    // Calculate maximum PSBT size accounting for SignalR message overhead
+    var blazorMax = Startup.BlazorMaximumReceiveMessageSize;
+    var otherDataSize = 500; // Estimated overhead for other SignalR message data
+    decimal waste = 1.35m; // Base64 re-encoding overhead factor (approximately 35%)
+    long maxPSBTSize = (long)((blazorMax - otherDataSize) / waste);
+}
+
+@section Navbar {
+	<partial name="_BackAndReturn" model="Model" />
+}
+
+<header class="text-center">
+    <h1>@ViewData.GetTitle()</h1>
+    <p class="lead text-secondary mt-3" text-translate="true">Using BTCPay Server Vault</p>
+</header>
+
+<partial name="_StatusMessage" />
+
+@if (maxPSBTSize >= Model.SigningContext.PSBT.Length)
+{
+    <div class="row mt-5 mb-4">
+        <div class="col-md-8 mx-auto">
+            <component type="typeof(VaultBridgeUI)"
+                       param-Controller="@(new SignHWIController()
+                                         {
+                                             StoreId = WalletId.Parse(walletId).StoreId,
+                                             CryptoCode = WalletId.Parse(walletId).CryptoCode,
+                                             PSBT = Convert.FromBase64String(Model.SigningContext.PSBT)
+                                         })"
+                       render-mode="Server" />
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-danger my-4" role="alert">
+        <span>@StringLocalizer["PSBT too large to be signed by Vault. (Max: {0} bytes)", maxPSBTSize]</span>
+    </div>
+}
+
+<div id="body" class="my-4">
+    <form id="broadcastForm" asp-action="WalletSendVault" asp-route-walletId="@walletId" method="post" style="display:none;">
+        <input type="hidden" id="WalletId" asp-for="WalletId" />
+        <input type="hidden" asp-for="ReturnUrl" />
+        <input type="hidden" asp-for="BackUrl" />
+        <partial name="SigningContext" for="SigningContext" />
+    </form>
+</div>
+
+
+@section PageFootContent
+{
+    <script src="~/js/vaultbridge.js" asp-append-version="true"></script>
+    <script>
+        vault.setSignedPSBT = function (data)
+        {
+            $("#SigningContext_PSBT").val(data.psbt);
+            $("#broadcastForm").submit();
+        }
+    </script>
+}

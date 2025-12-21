@@ -1,0 +1,30 @@
+﻿@model MigrateUsersModalViewModel
+
+<div class="modal fade" id="migrateUsers" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" text-translate="true">Migrate existing users</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                    <vc:icon symbol="close" />
+                </button>
+            </div>
+            <form method="post">
+                <div class="modal-body">
+                    <p>@ViewLocalizer["By proceeding, all non-admin users will be migrated to the selected plan. If the plan does not include the <b>can-access</b> feature, the user accounts will be disabled."]</p>
+                    <div class="form-group">
+                        <label asp-for="SelectedPlanId" class="form-label" text-translate="true">Select plan</label>
+                        <select class="form-select" asp-items="Model.AvailablePlans" asp-for="SelectedPlanId"></select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit"
+                            class="btn btn-success modal-confirm"
+                            name="command"
+                            value="migrate-users"
+                            text-translate="true">Proceed</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

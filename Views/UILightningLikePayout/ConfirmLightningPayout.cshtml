@@ -1,0 +1,44 @@
+@model System.Collections.Generic.List<BTCPayServer.Data.Payouts.LightningLike.UILightningLikePayoutController.ConfirmVM>
+@{
+    Layout = "../Shared/_Layout.cshtml";
+    ViewData["Title"] = StringLocalizer["Confirm Lightning Payout"];
+    var cryptoCode = Context.GetRouteValue("cryptoCode");
+}
+
+<h2 class="mt-1 mb-2">@ViewData["Title"]</h2>
+<div class="row">
+    <div class="col-md-12">
+        <ul class="list-group list-group-flush">
+            @foreach (var item in Model)
+            {
+                <li class="list-group-item py-4 px-0">
+                    <div class="text-break">@item.Destination</div>
+                    <form method="post" class="mt-4 mb-1" id="pay-invoices-form">
+                        <button type="submit" class="btn btn-primary" id="Pay">Pay @item.Amount @cryptoCode</button>
+                        <a asp-controller="UIStorePullPayments" asp-action="Payouts" asp-route-storeId="@Context.GetStoreData().Id" class="btn btn-secondary mx-2 px-4" text-translate="true">Cancel</a>
+                    </form>
+                </li>
+            }
+        </ul>
+    </div>
+</div>
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            $("#pay-invoices-form").on("submit", function() {
+                $(this).find("input[type='submit']").prop('disabled', true);
+            });
+            $("#pay-invoices-form input").on("input", function() {
+                // Give it a timeout to make sure all form validation has completed by the time we run our callback
+                setTimeout(function() {
+                    var validationErrors = $('.field-validation-error');
+                    if (validationErrors.length === 0) {
+                        $("input[type='submit']#Create").removeAttr('disabled');
+                    }
+                }, 100);
+            });
+        });
+    </script>
+}

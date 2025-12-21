@@ -1,0 +1,17 @@
+{
+    "components": {
+        "schemas": {
+            "LightningNetworkPaymentMethodBaseData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "connectionString": {
+                        "type": "string",
+                        "description": "The lightning connection string. Set to 'Internal Node' to use the internal node. (See [this doc](https://github.com/btcpayserver/BTCPayServer.Lightning/blob/master/README.md#examples) for some example)",
+                        "example": "type=clightning;server=..."
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,34 @@
+@using Newtonsoft.Json.Linq
+@model BTCPayServer.Fido2.Models.LoginWithFido2ViewModel
+
+<div class="twoFaBox">
+    <form id="fidoForm" asp-action="LoginWithFido2" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
+        <input type="hidden" asp-for="Data"/>
+        <input type="hidden" asp-for="Response"/>
+        <input type="hidden" asp-for="UserId"/>
+        <input type="hidden" asp-for="RememberMe"/>
+    </form>
+    <h2 class="h3 mb-3" text-translate="true">FIDO2 Authentication</h2>
+    <p text-translate="true">Insert your security device and proceed.</p>
+    <div id="info-message" class="alert alert-info mb-0 d-none">
+        <div class="d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm me-2 fido-running" role="status">
+                <span class="visually-hidden" text-translate="true">Loading...</span>
+            </div>
+            <span text-translate="true">If your security device has a button, tap on it.</span>
+        </div>
+    </div>
+    <button id="btn-start" class="btn btn-primary d-none" type="button" text-translate="true">Start</button>
+    <p id="error-message" class="d-none alert alert-danger mb-4"></p>
+    <button id="btn-retry" class="btn btn-secondary d-none" type="button" text-translate="true">Retry</button>
+    
+    <script>
+        document.getElementById('btn-retry').addEventListener('click', () => window.location.reload())
+        // send to server for registering
+        window.makeAssertionOptions = @Safe.Json(JObject.Parse(Model.Data));
+    </script>
+    <script src="~/js/webauthn/helpers.js" asp-append-version="true"></script>
+    <script src="~/js/webauthn/login.js" asp-append-version="true"></script>
+</div>
+
+

@@ -1151,7 +1151,7 @@ namespace BTCPayServer.Controllers
                 {
                     TimeZoneInfo.FindSystemTimeZoneById(vm.ServerTimeZone);
                 }
-                catch (TimeZoneNotFoundException)
+                catch (Exception ex) when (ex is TimeZoneNotFoundException || ex is InvalidTimeZoneException)
                 {
                     ModelState.AddModelError(nameof(vm.ServerTimeZone), StringLocalizer["Invalid time zone"]);
                     return View(vm);

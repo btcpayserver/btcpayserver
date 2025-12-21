@@ -1,0 +1,180 @@
+@using BTCPayServer.Components.LabelManager
+@using BTCPayServer.Services
+@model ReservedAddressesViewModel
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
+
+@{
+    var walletId = Context.GetRouteValue("walletId")?.ToString();
+    var storeId = Context.GetRouteValue("storeId")?.ToString();
+    var cryptoCode = Context.GetRouteValue("cryptoCode")?.ToString();
+    var wallet = walletId != null ? WalletId.Parse(walletId) : new WalletId(storeId, cryptoCode);
+}
+
+@{
+    ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Settings)}-{wallet.CryptoCode}", StringLocalizer["Reserved Addresses"])
+        .SetCategory(WellKnownCategories.ForWallet(wallet.CryptoCode)));
+    Csp.Add("worker-src", "blob:");
+    Csp.UnsafeEval();
+}
+
+
+<div id="reserved-addresses">
+    <div class="sticky-header">
+        <vc:wallet-nav wallet-id="wallet"/>
+        <input id="filter-reserved-addresses" type="text" v-model="filter" class="form-control my-3" placeholder="@StringLocalizer["Filter by address, label or date"]" />
+    </div>
+
+    <div v-if="filteredItems.length > 0" class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th text-translate="true">Address</th>
+                <th text-translate="true">Label</th>
+                <th text-translate="true">Reserved At</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var address in Model.Addresses)
+            {
+                <tr v-show='filteredItemsSet.has(@Safe.Json(address.Address))'>
+                    <td>@address.Address</td>
+                    <td>
+                        <vc:label-manager
+                            wallet-object-id="new WalletObjectId(wallet, WalletObjectData.Types.Address, address.Address)"
+                            selected-labels="address.Labels.Select(l => l.Text).ToArray()"
+                            rich-label-info="address.Labels.Where(l => !string.IsNullOrEmpty(l.Link)).ToDictionary(l => l.Text, l => new RichLabelInfo { Link = l.Link, Tooltip = l.Tooltip })"
+                            exclude-types="false"
+                            display-inline="true" />
+                    </td>
+                    <td>@address.ReservedAt?.ToString("g")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <div class="d-flex flex-wrap gap-3 justify-content-between mt-3 align-items-center">
+            <ul class="pagination mb-0">
+                <li class="page-item" :class="{ disabled: pageStart === 0 }">
+                    <a class="page-link p-0" href="#" v-on:click.prevent="page = page - 1">«</a>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link p-0">@ViewLocalizer["Showing {0} – {1} of {2}", "{{ pageStart + 1 }}", "{{ pageEnd }}" , @Model.Addresses.Count.ToString()]</span>
+                </li>
+                <li class="page-item" :class="{ disabled: pageEnd >= @Model.Addresses.Count }">
+                    <a class="page-link p-0" href="#" v-on:click.prevent="page = page + 1">»</a>
+                </li>
+            </ul>
+
+            <div class="d-flex gap-2 align-items-center">
+                <span class="text-muted" text-translate="true">Page Size:</span>
+                <div class="btn-group gap-2" role="group">
+                    <button type="button" class="btn btn-link p-0" :class="{active: pageSize === 10}" v-on:click="setPageSize(10)">10</button>
+                    <button type="button" class="btn btn-link p-0" :class="{active: pageSize === 25}" v-on:click="setPageSize(25)">25</button>
+                    <button type="button" class="btn btn-link p-0" :class="{active: pageSize === 50}" v-on:click="setPageSize(50)">50</button>
+                    <button type="button" class="btn btn-link p-0" :class="{active: pageSize === 100}" v-on:click="setPageSize(100)">100</button>
+                    <button type="button" class="btn btn-link p-0" :class="{active: pageSize === 250}" v-on:click="setPageSize(250)">250</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div v-else>
+        <p text-translate="true">No reserved addresses found.</p>
+    </div>
+</div>
+
+@section PageHeadContent {
+    <script src="~/vendor/tom-select/tom-select.complete.min.js" asp-append-version="true"></script>
+    <link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" asp-append-version="true" rel="stylesheet">
+    <style>
+        .table td, .table th {
+            vertical-align: middle;
+        }
+    </style>
+
+    <style>
+        .btn-link.active {
+            --btcpay-btn-active-color: var(--btcpay-body-link);
+        }
+        .btn-link {
+            --btcpay-btn-color: var(--btcpay-body-text-muted);
+        }
+        .btn-link:hover {
+            --btcpay-btn-color: var(--btcpay-body-link-accent);
+        }
+    </style>
+}
+
+@section PageFootContent {
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            new Vue({
+                el: '#reserved-addresses',
+                data: {
+                    addresses: @Safe.Json(Model.Addresses),
+                    page: 0,
+                    pageSize: 10,
+                    filter: "@Context.Request.Query["filter"]".toLowerCase(),
+                },
+                computed: {
+                    pageStart() {
+                        return this.page * this.pageSize;
+                    },
+                    pageEnd() {
+                        return Math.min(this.pageStart + this.pageSize, this.addresses.length);
+                    },
+                    filteredItems() {
+                        const search = this.filter.toLowerCase();
+                        const result = [];
+
+                        for (const addr of this.addresses) {
+                            const matchesAddress = addr.address.toLowerCase().includes(search);
+                            const matchesLabel = addr.labels?.some(l => l.text.toLowerCase().includes(search));
+                            const matchesDate = addr.reservedAt?.toLowerCase().includes(search);
+
+                            if (matchesAddress || matchesLabel || matchesDate) result.push(addr);
+                        }
+
+                        return result.slice(this.pageStart, this.pageEnd);
+                    },
+                    filteredItemsSet() {
+                        return new Set(this.filteredItems.map(x => x.address));
+                    }
+                },
+                mounted() {
+                    initLabelManagers();
+
+                    const labelManagerList = document.querySelectorAll("input.label-manager");
+                    labelManagerList.forEach(labelManager => {
+                        labelManager.addEventListener("labelmanager:changed", ({ detail }) => {
+                            const { walletObjectId, labels: newLabels } = detail;
+
+                            const targetAddress = this.addresses.find(addr => addr.address === walletObjectId);
+                            if (!targetAddress) return;
+
+                            const existingLabels = targetAddress.labels?.map(l => l.text) || [];
+                            const merged = Array.from(new Set([...existingLabels, ...newLabels])).map(text => ({ text }));
+
+                            this.$set(targetAddress, 'labels', merged);
+                        });
+                    });
+                },
+                methods: {
+                    setPageSize(size) {
+                        this.pageSize = size;
+                        this.page = 0;
+                    }
+                },
+                watch: {
+                    filter() {
+                        this.$nextTick(() => {
+                            initLabelManagers();
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,118 @@
+@inject BTCPayServerEnvironment env
+@using BTCPayServer.Controllers
+@using BTCPayServer.Components.QRCode
+@using BTCPayServer.Services
+@model BTCPayServer.Controllers.WalletReceiveViewModel
+@{
+    var walletId = Context.GetRouteValue("walletId")!.ToString();
+    var returnUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
+    Layout = "_LayoutWizard";
+    ViewData.SetTitle(StringLocalizer["Receive {0}", Model!.CryptoCode]);
+}
+
+@section PageHeadContent
+{
+    <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true"/>
+    <link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" asp-append-version="true" rel="stylesheet">
+    <script src="~/vendor/tom-select/tom-select.complete.min.js" asp-append-version="true"></script>
+}
+
+@section Navbar {
+	<a href="@Url.EnsureLocal(returnUrl, Context.Request)" id="CancelWizard" class="cancel">
+        <vc:icon symbol="cross" />
+    </a>
+}
+
+<header class="text-center">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+</header>
+
+<form method="post" asp-action="WalletReceive">
+    <input type="hidden" asp-for="ReturnUrl" />
+    @if (string.IsNullOrEmpty(Model.Address))
+    {
+        <div class="payment-box mb-3">
+            <button id="generateButton" class="btn btn-primary w-100" type="submit" name="command" value="generate-new-address">Generate next available @Model.CryptoCode address</button>
+        </div>
+    }
+    else
+    {
+        <noscript>
+            <div class="form-group">
+                <input type="text" class="form-control " readonly="readonly" asp-for="Address" id="address"/>
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-control" readonly="readonly" asp-for="PaymentLink" id="payment-link"/>
+            </div>
+            <div class="row mt-4">
+                <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100" text-translate="true">Generate another address</button>
+            </div>
+        </noscript>
+        <div class="nav flex-wrap align-items-center justify-content-center gap-2 mb-4">
+            <a class="btcpay-pill active" data-bs-toggle="tab" href="#address-tab" text-translate="true">Address</a>
+            <a class="btcpay-pill " data-bs-toggle="tab" href="#link-tab" text-translate="true">Link</a>
+        </div>
+        <div class="only-for-js col-sm-10 col-xxl-8 mx-auto" id="app">
+            <div class="tab-content text-center">
+                <div class="tab-pane payment-box" id="link-tab" role="tabpanel">
+                    <div class="qr-container clipboard-button" data-clipboard="@Model.PaymentLink">
+                        <vc:qr-code data="@Model.PaymentLink"/>
+						@if (Model.CryptoImage is not null)
+						{
+							<img src="@Model.CryptoImage" class="qr-icon" alt="@Model.CryptoCode"/>
+						}
+					</div>
+                    <div class="input-group mt-3">
+                        <div class="form-floating">
+                            <vc:truncate-center text="@Model.PaymentLink" padding="15" elastic="true" classes="form-control-plaintext" id="PaymentLink" />
+                            <label for="PaymentLink" text-translate="true">Payment Link</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane payment-box show active" id="address-tab" role="tabpanel">
+                    <div class="qr-container clipboard-button" data-clipboard="@Model.Address">
+                        <vc:qr-code data="@Model.Address"/>
+						@if (Model.CryptoImage is not null)
+						{
+							<img src="@Model.CryptoImage" class="qr-icon" alt="@Model.CryptoCode"/>
+						}
+					</div>
+                    <div class="input-group mt-3">
+                        <div class="form-floating">
+                            <vc:truncate-center text="@Model.Address" padding="15" elastic="true" classes="form-control-plaintext" id="Address" />
+                            <label for="Address" text-translate="true">Address</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="payment-box">
+            <div class="my-3">
+                <div class="input-group">
+                    <div class="form-floating">
+                        <vc:label-manager selected-labels="Model.SelectedLabels" wallet-object-id="new WalletObjectId(WalletId.Parse(walletId), WalletObjectData.Types.Address, Model.Address)" />
+                        <label text-translate="true">Labels</label>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100" text-translate="true">Generate another address</button>
+            </div>
+            <div class="payment-box mt-3">
+                <a class="btn btn-outline-info w-100"
+                   id="reserved-addresses-button"
+                   asp-controller="UIWallets" asp-action="ReservedAddresses" asp-route-walletId="@walletId">
+                    Reserved Addresses
+                </a>
+            </div>
+
+
+        </div>
+    }
+    @if (env.CheatMode)
+    {
+        <div class="payment-box mt-3">
+            <button type="submit" name="command" value="fill-wallet" class="btn btn-outline-info w-100" text-translate="true">Cheat Mode: Send funds to this wallet</button>
+        </div>
+    }
+</form>

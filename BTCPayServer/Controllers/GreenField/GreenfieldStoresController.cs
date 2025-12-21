@@ -327,6 +327,18 @@ namespace BTCPayServer.Controllers.Greenfield
             if (request.RefundBOLT11Expiration < TimeSpan.FromDays(0) ||
                 request.RefundBOLT11Expiration > TimeSpan.FromDays(365 * 10))
                 ModelState.AddModelError(nameof(request.RefundBOLT11Expiration), "refundBOLT11Expiration should be between 0 and 36500");
+            
+            if (!string.IsNullOrEmpty(request.StoreTimeZone))
+            {
+                try
+                {
+                    TimeZoneInfo.FindSystemTimeZoneById(request.StoreTimeZone);
+                }
+                catch (Exception ex) when (ex is TimeZoneNotFoundException || ex is InvalidTimeZoneException)
+                {
+                    ModelState.AddModelError(nameof(request.StoreTimeZone), "Invalid time zone");
+                }
+            }
 
             if (string.IsNullOrEmpty(request.Name))
                 ModelState.AddModelError(nameof(request.Name), "Name is missing");

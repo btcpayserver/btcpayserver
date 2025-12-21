@@ -1,0 +1,749 @@
+{
+    "paths": {
+        "/api/v1/server/lightning/{cryptoCode}/info": {
+            "get": {
+                "tags": [
+                    "Lightning (Internal Node)"
+                ],
+                "summary": "Get node information",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/CryptoCode"
+                    }
+                ],
+                "description": "View information about the lightning node",
+                "operationId": "InternalLightningNodeApi_GetInfo",
+                "responses": {
+                    "200": {
+                        "description": "Lightning node information such as reachable nodeinfos",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LightningNodeInformationData"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unable to access the lightning node"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canuseinternallightningnode"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/server/lightning/{cryptoCode}/balance": {
+            "get": {
+                "tags": [
+                    "Lightning (Internal Node)"
+                ],
+                "summary": "Get node balance",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/CryptoCode"
+                    }
+                ],
+                "description": "View balance of the lightning node",
+                "operationId": "InternalLightningNodeApi_GetBalance",
+                "responses": {
+                    "200": {
+                        "description": "Lightning node balance for on-chain and off-chain funds",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LightningNodeBalanceData"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unable to access the lightning node"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canuseinternallightningnode"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/server/lightning/{cryptoCode}/histogram": {
+            "get": {
+                "tags": [
+                    "Lightning (Internal Node)"
+                ],
+                "summary": "Get node balance histogram",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/CryptoCode"
+                    }
+                ],
+                "description": "View balance histogram of the lightning node",
+                "operationId": "InternalLightningNodeApi_GetHistogram",
+                "responses": {
+                    "200": {
+                        "description": "Lightning node balance histogram for off-chain funds",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HistogramData"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unable to access the lightning node"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canuseinternallightningnode"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/server/lightning/{cryptoCode}/connect": {
+            "post": {
+                "tags": [
+                    "Lightning (Internal Node)"
+                ],
+                "summary": "Connect to lightning node",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/CryptoCode"
+                    }
+                ],
+                "description": "Connect to another lightning node.",
+                "operationId": "InternalLightningNodeApi_ConnectToNode",
+                "responses": {
+                    "200": {
+                        "description": "Successfully connected"
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Wellknown error codes are: `could-not-connect`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unable to access the lightning node"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ConnectToNodeRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canuseinternallightningnode"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/server/lightning/{cryptoCode}/channels": {
+            "get": {
+                "tags": [
+                    "Lightning (Internal Node)"
+                ],
+                "summary": "Get channels",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/CryptoCode"
+                    }
+                ],
+                "description": "View information about the current channels of the lightning node",
+                "operationId": "InternalLightningNodeApi_GetChannels",
+                "responses": {
+                    "200": {
+                        "description": "list of channels",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LightningChannelData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canuseinternallightningnode"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Lightning (Internal Node)"
+                ],
+                "summary": "Open channel",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/CryptoCode"
+                    }
+                ],
+                "description": "Open a channel with another lightning node. You should connect to that node first.",
+                "operationId": "InternalLightningNodeApi_OpenChannel",
+                "responses": {
+                    "200": {
+                        "description": "Successfully opened"
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Wellknown error codes are: `channel-already-exists`, `cannot-afford-funding`, `need-more-confirmations`, `peer-not-connected`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OpenLightningChannelRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canuseinternallightningnode"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/server/lightning/{cryptoCode}/address": {
+            "post": {
+                "tags": [
+                    "Lightning (Internal Node)"
+                ],
+                "summary": "Get deposit address",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/CryptoCode"
+                    }
+                ],
+                "description": "Get an on-chain deposit address for the lightning node ",
+                "operationId": "InternalLightningNodeApi_GetDepositAddress",
+                "responses": {
+                    "200": {
+                        "description": "deposit address",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string",
+                                    "description": "A bitcoin address belonging to the lightning node"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unable to access the lightning node"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canuseinternallightningnode"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+
+        "/api/v1/server/lightning/{cryptoCode}/payments/{paymentHash}": {
+            "get": {
+                "tags": [
+                    "Lightning (Internal Node)"
+                ],
+                "summary": "Get payment",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/CryptoCode"
+                    },
+                    {
+                        "name": "paymentHash",
+                        "in": "path",
+                        "required": true,
+                        "description": "The payment hash of the lightning payment.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "View information about the requested lightning payment",
+                "operationId": "InternalLightningNodeApi_GetPayment",
+                "responses": {
+                    "200": {
+                        "description": "Lightning payment data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LightningPaymentData"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unable to access the lightning node"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration or the specified invoice was not found "
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canuseinternallightningnode"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+
+        "/api/v1/server/lightning/{cryptoCode}/invoices/{id}": {
+            "get": {
+                "tags": [
+                    "Lightning (Internal Node)"
+                ],
+                "summary": "Get invoice",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/CryptoCode"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id of the lightning invoice.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "View information about the requested lightning invoice",
+                "operationId": "InternalLightningNodeApi_GetInvoice",
+                "responses": {
+                    "200": {
+                        "description": "Lightning invoice data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LightningInvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unable to access the lightning node"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration or the specified invoice was not found "
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canviewlightninginvoiceinternalnode"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+
+        "/api/v1/server/lightning/{cryptoCode}/invoices/pay": {
+            "post": {
+                "tags": [
+                    "Lightning (Internal Node)"
+                ],
+                "summary": "Pay Lightning Invoice",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/CryptoCode"
+                    }
+                ],
+                "description": "Pay a lightning invoice. In case the payment response times out, the status will be reported as pending and the final status can be resolved using the [Get payment](#operation/InternalLightningNodeApi_GetPayment) endpoint. The default wait time for payment responses is 30 seconds — it might take longer if multiple routes are tried or a hold invoice is getting paid.",
+                "operationId": "InternalLightningNodeApi_PayInvoice",
+                "responses": {
+                    "200": {
+                        "description": "Successfully paid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LightningPaymentData"
+                                }
+                            }
+                        }
+                    },
+                    "202": {
+                        "description": "Payment initiated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LightningPaymentData"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Wellknown error codes are: `could-not-find-route`, `generic-error`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unable to access the lightning node"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PayLightningInvoiceRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canuseinternallightningnode"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+
+        "/api/v1/server/lightning/{cryptoCode}/invoices": {
+            "get": {
+                "tags": [
+                    "Lightning (Internal Node)"
+                ],
+                "summary": "Get invoices",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/CryptoCode"
+                    },
+                    {
+                        "name": "pendingOnly",
+                        "in": "query",
+                        "required": false,
+                        "description": "Limit to pending invoices only",
+                        "schema": {
+                            "type": "boolean",
+                            "nullable": true,
+                            "default": false
+                        }
+                    },
+                    {
+                        "name": "offsetIndex",
+                        "in": "query",
+                        "required": false,
+                        "description": "The index of an invoice that will be used as the start of the list",
+                        "schema": {
+                            "type": "number",
+                            "nullable": true,
+                            "default": 0
+                        }
+                    }
+                ],
+                "description": "View information about the lightning invoices",
+                "operationId": "InternalLightningNodeApi_GetInvoices",
+                "responses": {
+                    "200": {
+                        "description": "Lightning invoice data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LightningInvoiceData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unable to access the lightning node"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canviewlightninginvoiceinternalnode"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Lightning (Internal Node)"
+                ],
+                "summary": "Create lightning invoice",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/CryptoCode"
+                    }
+                ],
+                "description": "Create a lightning invoice.",
+                "operationId": "InternalLightningNodeApi_CreateInvoice",
+                "responses": {
+                    "200": {
+                        "description": "Successfully created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LightningInvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Wellknown error codes are: `invoice-error`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unable to access the lightning node"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateLightningInvoiceRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.cancreatelightninginvoiceinternalnode"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/server/lightning/{cryptoCode}/payments": {
+            "get": {
+                "tags": [
+                    "Lightning (Internal Node)"
+                ],
+                "summary": "Get payments",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/CryptoCode"
+                    },
+                    {
+                        "name": "includePending",
+                        "in": "query",
+                        "required": false,
+                        "description": "Also include pending payments",
+                        "schema": {
+                            "type": "boolean",
+                            "nullable": true,
+                            "default": false
+                        }
+                    },
+                    {
+                        "name": "offsetIndex",
+                        "in": "query",
+                        "required": false,
+                        "description": "The index of a payment that will be used as the start of the list",
+                        "schema": {
+                            "type": "number",
+                            "nullable": true,
+                            "default": 0
+                        }
+                    }
+                ],
+                "description": "View information about the lightning payments",
+                "operationId": "InternalLightningNodeApi_GetPayments",
+                "responses": {
+                    "200": {
+                        "description": "Lightning payment data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LightningPaymentData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unable to access the lightning node"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canuseinternallightningnode"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Lightning (Internal Node)",
+            "description": "Lightning (Internal Node) operations"
+        }
+    ]
+}

@@ -1,0 +1,28 @@
+﻿@{
+    Layout = "_LayoutWizard";
+}
+
+@section PageHeadContent {
+    @await RenderSectionAsync("PageHeadContent", false)
+}
+
+@section PageFootContent {
+    @await RenderSectionAsync("PageFootContent", false)
+}
+
+@section Navbar {
+    @await RenderSectionAsync("Navbar", false)
+
+    <a asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@Context.GetRouteValue("storeId")" class="cancel">
+        <vc:icon symbol="cross" />
+    </a>
+}
+
+@RenderBody()
+
+<vc:ui-extension-point location="onchain-wallet-setup-post-body" model="@Model"/>
+
+@if (User.Identity.IsAuthenticated && ViewData.IsBlazorAllowed())
+{
+    <script src="~/_framework/blazor.server.js" autostart="false" asp-append-version="true"></script>
+}

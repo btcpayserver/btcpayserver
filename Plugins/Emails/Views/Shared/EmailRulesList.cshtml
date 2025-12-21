@@ -1,0 +1,120 @@
+@using BTCPayServer.Views.Server
+@model EmailRulesListViewModel
+
+@{
+    var storeId = Model.StoreId;
+
+    if (storeId is null)
+    {
+        ViewData.SetLayoutModel(new LayoutModel("Server-" + nameof(ServerNavPages.Emails), StringLocalizer["Email Rules"])
+            .SetCategory(WellKnownCategories.Server));
+    }
+    else
+    {
+        ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Emails), StringLocalizer["Email Rules"])
+            .SetCategory(WellKnownCategories.Store));
+    }
+}
+<div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    @if (storeId is not null)
+                    {
+                        <a asp-controller="UIStoresEmail" asp-action="StoreEmailSettings" asp-route-storeId="@storeId" text-translate="true">Emails</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="UIServerEmail" asp-action="ServerEmailSettings" text-translate="true">Server Emails</a>
+                    }
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData.GetTitle()</li>
+            </ol>
+            <h2>@ViewData.GetTitle()</h2>
+        </nav>
+        @if (storeId is not null)
+        {
+            <a id="CreateEmailRule" permission="@Model.ModifyPermission" asp-action="StoreEmailRulesCreate" asp-route-storeId="@storeId"
+               class="btn btn-primary" role="button" text-translate="true">
+                Create Email Rule
+            </a>
+        }
+        else
+        {
+            <a id="CreateEmailRule" permission="@Model.ModifyPermission" asp-action="ServerEmailRulesCreate"
+               class="btn btn-primary" role="button" text-translate="true">
+                Create Email Rule
+            </a>
+        }
+</div>
+
+<partial name="_StatusMessage" />
+@if (storeId is not null)
+{
+    <p text-translate="true">
+        Email rules allow BTCPay Server to send customized emails from your store based on events.
+    </p>
+}
+else
+{
+    <p text-translate="true">
+        Email rules allow BTCPay Server to send customized emails from your server based on events.
+    </p>
+}
+
+@if (Model.Rules.Any())
+{
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th text-translate="true">Trigger</th>
+                @if (Model.ShowCustomerEmailColumn)
+                {
+                    <th text-translate="true">Customer Email</th>
+                }
+                <th text-translate="true">To</th>
+                <th text-translate="true">Subject</th>
+                <th class="actions-col" permission="@Model.ModifyPermission"></th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var rule in Model.Rules)
+            {
+                <tr data-trigger="@rule.Trigger">
+                    <td>@rule.Trigger</td>
+                @if (Model.ShowCustomerEmailColumn)
+                    {
+                        <td>@(rule.AdditionalData.CustomerEmail is true ? StringLocalizer["Yes"] : StringLocalizer["No"])</td>
+                    }
+                    <td>@string.Join(", ", rule.To)</td>
+                    <td>@rule.Subject</td>
+                    <td class="actions-col" permission="@Model.ModifyPermission">
+                        <div class="d-inline-flex align-items-center gap-3">
+                        @if (storeId is not null)
+                        {
+
+                            <a asp-action="StoreEmailRulesEdit" asp-route-storeId="@storeId" asp-route-ruleId="@rule.Data.Id" text-translate="true">Edit</a>
+                            <a asp-action="StoreEmailRulesDelete" asp-route-storeId="@storeId" asp-route-ruleId="@rule.Data.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@ViewLocalizer["This action will remove the rule with the trigger <b>{0}</b>.", Html.Encode(rule.Trigger)]" data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Remove</a>
+                        }
+                        else
+                        {
+                            <a asp-action="ServerEmailRulesEdit" asp-route-ruleId="@rule.Data.Id" text-translate="true">Edit</a>
+                            <a asp-action="ServerEmailRulesDelete" asp-route-ruleId="@rule.Data.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@ViewLocalizer["This action will remove the rule with the trigger <b>{0}</b>.", Html.Encode(rule.Trigger)]" data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Remove</a>
+                        }
+                        </div >
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p class="text-secondary" text-translate="true">
+        There are no rules yet.
+    </p>
+}
+
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Remove email rule"], StringLocalizer["This action will remove this rule. Are you sure?"], StringLocalizer["Delete"]))" permission="@Model.ModifyPermission" />

@@ -1,0 +1,29 @@
+@using BTCPayServer.Services
+@inject ThemeSettings Theme
+@inject UriResolver UriResolver
+
+<script>
+    if (window.localStorage.getItem('btcpay-hide-sensitive-info') === 'true') { document.documentElement.setAttribute('data-hide-sensitive-info', 'true')}
+    if (window.location !== window.parent.location) { window.addEventListener('message', function(event) { try { const data = JSON.parse(event.data); if (data.context) { document.documentElement.setAttribute('data-context', data.context) } } catch {} }, false); }
+</script>
+@if (Theme.CustomTheme && Theme.CustomThemeCssUrl is not null)
+{   // new customization uses theme file id provided by upload
+    @if (Theme.CustomThemeExtension != ThemeExtension.Custom)
+    {   // needs to be added for light and dark, because dark extends light
+        <link href="~/main/themes/default.css" rel="stylesheet" asp-append-version="true" />
+    }
+    @if (Theme.CustomThemeExtension == ThemeExtension.Dark)
+    {
+        <link href="~/main/themes/default-dark.css" rel="stylesheet" asp-append-version="true" />
+	}
+	var themeUrl = await UriResolver.Resolve(this.Context.Request.GetAbsoluteRootUri(), Theme.CustomThemeCssUrl);
+	<link href="@themeUrl" rel="stylesheet" asp-append-version="true" />
+}
+else
+{
+    <link href="~/main/themes/default.css" asp-append-version="true" rel="stylesheet" />
+    <link href="~/main/themes/default-dark.css" asp-append-version="true" rel="stylesheet" id="DarkThemeLinkTag" />
+    <script src="~/js/theme-switch.js" asp-append-version="true"></script>
+    <noscript><style>.btcpay-theme-switch { display: none !important; }</style></noscript>
+}
+

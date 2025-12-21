@@ -1,0 +1,44 @@
+@model BTCPayServer.Components.StoreLightningServices.StoreLightningServicesViewModel
+
+@if (Model.Services != null && Model.Services.Any())
+{
+    <div id="StoreLightningServices-@Model.StoreId" class="widget store-lightning-services">
+        <header class="mb-4">
+            <h6 text-translate="true">Lightning Services</h6>
+            <a
+                asp-controller="UIPublicLightningNodeInfo"
+                asp-action="ShowLightningNodeInfo"app-top-items
+                asp-route-cryptoCode="@Model.CryptoCode"
+                asp-route-storeId="@Model.StoreId"
+                target="_blank"
+                id="PublicNodeInfo"
+                text-translate="true">
+                Node Info
+            </a>
+        </header>
+        <div id="Services" class="services-list">
+            @foreach (var service in Model.Services)
+            {
+                @if (!string.IsNullOrEmpty(service.Error))
+                {
+                    <div class="service" id="@($"Service-{service.ServiceName}")">
+                        <img src="@($"~/img/{service.Type.ToLower()}.png")" asp-append-version="true" alt="@service.DisplayName" />
+                        <small class="d-block mt-3 lh-sm fw-semibold text-danger">@service.Error</small>
+                    </div>
+                }
+                else if (string.IsNullOrEmpty(service.Link))
+                {
+                    <a title="@service.DisplayName" asp-controller="UIServer" asp-action="Service" asp-route-serviceName="@service.ServiceName" asp-route-cryptoCode="@service.CryptoCode" class="service" id="@($"Service-{service.ServiceName}")">
+                        <img src="@($"~/img/{service.Type.ToLower()}.png")" asp-append-version="true" alt="@service.DisplayName" />
+                    </a>
+                }
+                else
+                {
+                    <a title="@service.DisplayName" href="@service.Link" target="_blank" rel="noreferrer noopener" class="service" id="@($"Service-{service.ServiceName}")">
+                        <img src="@($"~/img/{service.Type.ToLower()}.png")" asp-append-version="true" alt="@service.DisplayName" />
+                    </a>
+                }
+            }
+        </div>
+    </div>
+}

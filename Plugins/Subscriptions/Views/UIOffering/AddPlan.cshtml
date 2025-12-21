@@ -1,0 +1,171 @@
+﻿@using BTCPayServer.Plugins.Subscriptions
+@model AddEditPlanViewModel
+
+@{
+    string storeId = (string)this.Context.GetRouteValue("storeId");
+    string offeringId = (string)this.Context.GetRouteValue("offeringId");
+    var title = Model.PlanId is null ? StringLocalizer["Add plan"] : StringLocalizer["Edit plan"];
+    var submitLabel = Model.PlanId is null ? StringLocalizer["Create"] : StringLocalizer["Save"];
+    ViewData.SetLayoutModel(new LayoutModel($"{nameof(SubscriptionsPlugin)}-{offeringId}", title));
+}
+
+<form method="post">
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Offering"
+                       asp-route-storeId="@storeId"
+                       asp-route-offeringId="@Model.OfferingId"
+                       asp-route-section="Plans"
+                       data-testid="offering-link"
+                    >@StringLocalizer["Offering ({0})", Model.OfferingName]</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    @if (Model.PlanId is null)
+                    {
+                        <span>@StringLocalizer["Add plan"]</span>
+                    }
+                    else
+                    {
+                        <span>@StringLocalizer["Edit plan ({0})", Model.Name]</span>
+                    }
+
+                </li>
+            </ol>
+            <h2>@ViewData["Title"]</h2>
+        </nav>
+        <input id="page-primary" type="submit" name="command" value="@submitLabel" class="btn btn-primary" />
+    </div>
+    <partial name="_StatusMessage" />
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
+            <div class="form-group">
+                <label asp-for="Name" class="form-label" data-required></label>
+                <input asp-for="Name" class="form-control" placeholder="e.g., Premium" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <div class="form-group flex-fill me-4">
+                    <label asp-for="Price" class="form-label" data-required></label>
+                    <input inputmode="decimal" asp-for="Price" class="form-control" />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Currency" class="form-label" data-required></label>
+                    <input asp-for="Currency" class="form-control w-auto" currency-selection />
+                    <span asp-validation-for="Currency" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="RecurringType" class="form-label"></label>
+                <select asp-for="RecurringType" class="form-select" asp-items="Html.GetEnumSelectList<PlanData.RecurringInterval>()"></select>
+                <span asp-validation-for="RecurringType" class="text-danger"></span>
+            </div>
+            <div class="d-flex justify-content-between">
+                <div class="form-group flex-fill me-4">
+                    <label asp-for="TrialDays" class="form-label"></label>
+                    <div class="input-group">
+                        <input asp-for="TrialDays" class="form-control" min="0" placeholder="7" />
+                        <span class="input-group-text">days</span>
+                    </div>
+                    <span asp-validation-for="TrialDays" class="text-danger"></span>
+                </div>
+                <div class="form-group flex-fill">
+                    <label asp-for="GracePeriodDays" class="form-label"></label>
+                    <div class="input-group">
+                        <input asp-for="GracePeriodDays" class="form-control" min="0" placeholder="15" />
+                        <span class="input-group-text">days</span>
+                    </div>
+                    <span asp-validation-for="GracePeriodDays" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="3" placeholder="Brief description of the plan features..."></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" asp-for="OptimisticActivation" />
+                    <label class="form-check-label" asp-for="OptimisticActivation"></label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" asp-for="Renewable" />
+                    <label class="form-check-label" asp-for="Renewable"></label>
+                </div>
+            </div>
+            @if (Model.PlanChanges?.Any() is true)
+            {
+                <section id="plan-changes" class="mt-4">
+                    <h4 class="mb-4">Plan changes</h4>
+                    <p>Allow the subscriber to downgrade or upgrade to a different plan.</p>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                            <th>Plan</th>
+                            <th>Change type</th>
+                            </thead>
+                            <tbody>
+                            @for (int i = 0; i < Model.PlanChanges.Count; i++)
+                            {
+                                var planChange = Model.PlanChanges[i];
+                                <tr>
+                                    <td class="align-middle">@planChange.PlanName</td>
+                                    <input type="hidden" asp-for="PlanChanges[i].PlanId"></input>
+                                    <td><select
+                                            class="form-select plan-change-select w-auto"
+                                            asp-for="PlanChanges[i].SelectedType">
+                                        <option value="Downgrade">Downgrade</option>
+                                        <option value="Upgrade">Upgrade</option>
+                                        <option value="None">None</option>
+                                    </select></td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            }
+
+            @if (Model.Features?.Any() is true)
+            {
+                <section id="features" class="mt-4">
+                    <h4 class="mb-4" text-translate="true">Features</h4>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                            <tr>
+                                <th style="width:1%"></th>
+                                <th text-translate="true">ID</th>
+                                <th text-translate="true">Description</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @for (int i = 0; i < Model.Features.Count(); i++)
+                            {
+                                <tr>
+                                    <td>
+                                        <input asp-for="Features[i].Selected" class="form-check-input feature-checkbox"
+                                               data-testid="check_@Model.Features[i].CustomId" type="checkbox">
+                                        <input asp-for="Features[i].CustomId" type="hidden">
+                                        <input asp-for="Features[i].ShortDescription" type="hidden">
+                                    </td>
+                                    <td>@Model.Features[i].CustomId</td>
+                                    <td>@Model.Features[i].ShortDescription</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            }
+        </div>
+    </div>
+</form>
+

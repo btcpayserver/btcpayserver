@@ -1,0 +1,13 @@
+﻿@model (string ButtonClass, SubscriberData Subscriber)
+
+<form method="post">
+    @if (Model.Subscriber.NextPlan.Renewable)
+    {
+        <button type="submit" name="command" value="pay" class="@Model.ButtonClass">Pay Now</button>
+    }
+    else
+    {
+        <button type="submit" name="command" value="migrate" class="@Model.ButtonClass">Upgrade</button>
+    }
+</form>
+

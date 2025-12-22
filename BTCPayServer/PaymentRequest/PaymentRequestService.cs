@@ -51,8 +51,9 @@ namespace BTCPayServer.PaymentRequest
 
         public async Task UpdatePaymentRequestStateIfNeeded(PaymentRequestData pr)
         {
-            var newStatus = pr.Status;
-            newStatus = pr switch
+            if (pr is null)
+                return;
+            var newStatus = pr switch
             {
                 { Expirable: true, Expiry: { } e }
                     when e <= DateTimeOffset.UtcNow => PaymentRequestStatus.Expired,

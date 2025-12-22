@@ -517,20 +517,6 @@ namespace BTCPayServer.Hosting
                 options.AddPolicy(CorsPolicies.All, p => p.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
             });
             services.AddRateLimits();
-            services.AddLogging(logBuilder =>
-            {
-                var debugLogFile = BTCPayServerOptions.GetDebugLog(configuration);
-                if (!string.IsNullOrEmpty(debugLogFile))
-                {
-                    Serilog.Log.Logger = new LoggerConfiguration()
-                        .Enrich.FromLogContext()
-                        .MinimumLevel.Is(BTCPayServerOptions.GetDebugLogLevel(configuration))
-                        .WriteTo.File(debugLogFile, rollingInterval: RollingInterval.Day, fileSizeLimitBytes: MAX_DEBUG_LOG_FILE_SIZE,
-                            rollOnFileSizeLimit: true, retainedFileCountLimit: 1)
-                        .CreateLogger();
-                    logBuilder.AddProvider(new Serilog.Extensions.Logging.SerilogLoggerProvider(Log.Logger));
-                }
-            });
 
             services.AddSingleton<IObjectModelValidator, SkippableObjectValidatorProvider>();
             services.SkipModelValidation<RootedKeyPath>();
@@ -767,8 +753,6 @@ namespace BTCPayServer.Hosting
         {
             services.AddSingleton<SkippableObjectValidatorProvider.ISkipValidation, SkippableObjectValidatorProvider.SkipValidationType<T>>();
         }
-
-        private const long MAX_DEBUG_LOG_FILE_SIZE = 2000000; // If debug log is in use roll it every N MB.
 
         private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services)
         {

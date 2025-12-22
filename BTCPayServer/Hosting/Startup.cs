@@ -45,20 +45,35 @@ namespace BTCPayServer.Hosting
 {
     public class Startup
     {
-        public Startup(IConfiguration conf, ILoggerFactory loggerFactory)
+        public Startup(IConfiguration conf)
         {
             Configuration = conf;
-            LoggerFactory = loggerFactory;
+            SetLoggerFactory(new NullLoggerFactory());
+        }
+
+        private void SetLoggerFactory(ILoggerFactory factory)
+        {
+            LoggerFactory = factory ?? new NullLoggerFactory();
             Logs = new Logs();
-            Logs.Configure(loggerFactory);
+            Logs.Configure(LoggerFactory);
         }
 
         public IConfiguration Configuration
         {
             get; set;
         }
-        public ILoggerFactory LoggerFactory { get; }
-        public Logs Logs { get; }
+
+        private void EnsureLogging(IServiceCollection services)
+        {
+            if (LoggerFactory is NullLoggerFactory)
+            {
+                var service = services.BuildServiceProvider().GetService<ILoggerFactory>();
+                SetLoggerFactory(service);
+            }
+        }
+
+        public ILoggerFactory LoggerFactory { get; set; }
+        public Logs Logs { get; set; }
 
         public static ServiceProvider CreateBootstrap(IConfiguration conf)
         {
@@ -78,6 +93,7 @@ namespace BTCPayServer.Hosting
 
         public void ConfigureServices(IServiceCollection services)
         {
+            EnsureLogging(services);
             var bootstrapServiceProvider = CreateBootstrap(Configuration, Logs, LoggerFactory);
             services.AddSingleton(bootstrapServiceProvider.GetRequiredService<SelectedChains>());
             services.AddSingleton(bootstrapServiceProvider.GetRequiredService<NBXplorerNetworkProvider>());
@@ -258,7 +274,8 @@ namespace BTCPayServer.Hosting
             ILoggerFactory loggerFactory,
             IRateLimitService rateLimits)
         {
-            Logs.Configure(loggerFactory);
+            SetLoggerFactory(loggerFactory);
+
             Logs.Configuration.LogInformation($"Root Path: {options.RootPath}");
             if (options.RootPath.Equals("/", StringComparison.OrdinalIgnoreCase))
             {
@@ -310,7 +327,7 @@ namespace BTCPayServer.Hosting
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
             };
-            forwardingOptions.KnownNetworks.Clear();
+            forwardingOptions.KnownIPNetworks.Clear();
             forwardingOptions.KnownProxies.Clear();
             forwardingOptions.ForwardedHeaders = ForwardedHeaders.All;
             app.UseForwardedHeaders(forwardingOptions);

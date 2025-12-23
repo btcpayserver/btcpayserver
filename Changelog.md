@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.3.1
+
+Some plugins such as Ecwid plugin would crash BTCPay Server at startup in a loop. (See [this issue](https://github.com/Nisaba/btcpayserver-plugins/issues/7))
+
+This release fixes that issue.
+If you experience this issue after upgradding to 2.3.0, you need to update through command line. You can contact us on chat.btcpayserver.org, if you need some support.
+
+### Bug fixes
+
+* Fix: Lost server email settings after update to 2.3.0 (#7047 #7038) @NicolasDorier
+* Disable all plugins when BTCPay Server crash during startup (#7046) @NicolasDorier
+* Fix: When a user is deleted, the monetized subscriber should also be deleted (#7044 #7048) @NicolasDorier
+
+### Improvements
+
+* Hide payment method selector for single payment method invoices (#6980) @AshwinGajbhiye
+* Show payment request title in wallet transaction tooltip (#6982) @AshwinGajbhiye
+
 ## 2.3.0
 
 ### New features

@@ -283,11 +283,7 @@ namespace BTCPayServer.Services
             var res = await userManager.DeleteAsync(user);
             if (res.Succeeded)
             {
-                _logger.LogInformation("User {Email} was successfully deleted", user.Email);
-            }
-            else
-            {
-                _logger.LogError("Failed to delete user {Email}", user.Email);
+                _eventAggregator.Publish(new UserEvent.Deleted(user));
             }
         }
 

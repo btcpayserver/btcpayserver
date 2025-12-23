@@ -6,6 +6,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Plugins.Monetization;
 using BTCPayServer.Services;
 using BTCPayServer.Views.Manage;
+using BTCPayServer.Views.Server;
 using Microsoft.Playwright;
 using Xunit;
 using Xunit.Abstractions;
@@ -130,9 +131,11 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
                 await s.Server.WaitForEvent<SubscriptionEvent.SubscriberActivated>(async () =>
                 {
-                    await s.PayInvoice(mine: true, clickRedirect: true);
-                    await s.FindAlertMessage();
+                    await s.PayInvoice(mine: true, clickRedirect: false);
                 });
+                await s.Page.ClickAsync("#StoreLink");
+                await s.FindAlertMessage();
+
                 await s.FastReloadAsync();
                 await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
                 await portal.AssertNoCallToAction();
@@ -210,6 +213,16 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
             var portal = new SubscriptionTests.PortalPMO(s, null);
             await portal.AssertCallToAction(SubscriptionTests.PortalPMO.CallToAction.Danger, noticeTitle: "Access suspended");
         }
+
+        // Now, the admin deletes a user; this should delete the subscriber too
+        await s.GoToServer(ServerNavPages.Users);
+        var users = new PMO.UsersPMO(s);
+        await users.DeleteUser("normal-guest@gmail.com");
+
+        await GoToMonetization(s);
+        await GoToOffering(s);
+        await offeringPMO.GoToSubscribers();
+        await offeringPMO.AssertHasNotSubscriber("normal-guest@gmail.com");
     }
 
     private async Task<SubscriptionTests.OfferingPMO> GoToOffering(PlaywrightTester s)

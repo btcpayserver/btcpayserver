@@ -5,7 +5,7 @@
 Some plugins such as Ecwid plugin would crash BTCPay Server at startup in a loop. (See [this issue](https://github.com/Nisaba/btcpayserver-plugins/issues/7))
 
 This release fixes that issue.
-If you experience this issue after upgradding to 2.3.0, you need to update through command line. You can contact us on chat.btcpayserver.org, if you need some support.
+If you experience this issue after upgrading to 2.3.0, you need to update through command line. You can contact us on chat.btcpayserver.org, if you need some support.
 
 ### Bug fixes
 

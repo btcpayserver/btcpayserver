@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Emails.Views;
 
-namespace BTCPayServer.Plugins.Emails;
+namespace BTCPayServer.Plugins.Emails.Migrations;
 
 public class DefaultServerEmailRulesMigration(IEnumerable<EmailTriggerViewModel> vms) : MigrationBase<ApplicationDbContext>("20251109_defaultserverrules")
 {

@@ -1,0 +1,29 @@
+@using QRCoder
+
+@if (!string.IsNullOrEmpty(Data))
+{
+    <img @attributes="Attrs" style="image-rendering:pixelated;image-rendering:-moz-crisp-edges;min-width:@(Size)px;min-height:@(Size)px" src="data:image/png;base64,@(GetBase64(Data))" class="@CssClass" alt="@Data" />
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public string Data { get; set; }
+
+    [Parameter]
+    public int Size { get; set; } = 256;
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object> Attrs { get; set; }
+
+    private static readonly QRCodeGenerator QrGenerator = new();
+
+    private string GetBase64(string data)
+    {
+        var qrCodeData = QrGenerator.CreateQrCode(data, QRCodeGenerator.ECCLevel.Q);
+        var qrCode = new PngByteQRCode(qrCodeData);
+        var bytes = qrCode.GetGraphic(5, [0, 0, 0, 255], [0xf5, 0xf5, 0xf7, 255]);
+        return Convert.ToBase64String(bytes);
+    }
+
+    private string CssClass => $"qr-code {(Attrs?.ContainsKey("class") is true ? Attrs["class"] : "")}".Trim();
+}

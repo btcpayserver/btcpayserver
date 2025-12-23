@@ -1,0 +1,230 @@
+@using BTCPayServer.Plugins.Subscriptions
+@inject Security.ContentSecurityPolicies Csp
+
+@model MonetizationViewModel
+
+@{
+    ViewData.SetLayoutModel(new LayoutModel(nameof(MonetizationPlugin), StringLocalizer["Monetization"])
+        .SetCategory(WellKnownCategories.Server));
+    Csp.UnsafeEval();
+}
+
+@functions {
+
+    async Task CreateNewOffering(bool primary)
+    {
+        <a id="@(primary ? "page-primary" : null)"
+           class="btn btn-primary"
+           data-bs-toggle="modal"
+           data-bs-target="#activateMonetization"
+           data-is-new="true"
+           role="button" text-translate="true">
+            Create a new offering
+        </a>
+    }
+
+    async Task PrintStatus(bool checkmark)
+    {
+        if (checkmark)
+        {
+            <vc:icon symbol="checkmark" css-class="text-success mr-1"></vc:icon>
+        }
+        else
+        {
+            <vc:icon symbol="cross" css-class="text-danger mr-1"></vc:icon>
+        }
+    }
+
+}
+
+<div class="sticky-header">
+    <h2 class="my-1">@ViewData["Title"]</h2>
+    @if (Model.DefaultPlan is null)
+    {
+        await CreateNewOffering(true);
+    }
+    else
+    {
+        <a id="go-to-offering"
+           asp-area="@SubscriptionsPlugin.Area"
+           asp-controller="UIOffering"
+           asp-action="Offering"
+           asp-route-storeId="@Model.DefaultPlan.Offering.App.StoreDataId"
+           asp-route-offeringId="@Model.Settings.OfferingId"
+           asp-route-section="Plans"
+           class="btn btn-secondary"
+           role="button">
+            Go to offering
+        </a>
+    }
+</div>
+<partial name="_StatusMessage" />
+
+
+<p class="mb-0" text-translate="true">Monetization allows you to get paid for sharing your BTCPay Server instance with other users.</p>
+
+<div class="col-xxl-constrain col-xl-8">
+    <div class="accordion" id="accordion">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="activate-header">
+                <button class="accordion-button @(Model.Step == MonetizationViewModel.InstallStatus.SetOffering ? "" : "collapsed")"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#activate-collapse"
+                        aria-expanded="@(Model.Step == MonetizationViewModel.InstallStatus.SetOffering)" aria-controls="activate-collapse">
+                    <h5 class="d-flex content-center gap-3">
+                        @{ await PrintStatus(Model.Step != MonetizationViewModel.InstallStatus.SetOffering); }
+                        <span>Set up the offering</span>
+                    </h5>
+                    <vc:icon symbol="caret-down" />
+                </button>
+            </h2>
+            <div id="activate-collapse" class="accordion-collapse collapse @(Model.Step == MonetizationViewModel.InstallStatus.SetOffering ? "show" : "")"
+                 aria-labelledby="activate-header" data-bs-parent="#accordion">
+                <div class="accordion-body">
+                    @if (Model is { Offering: not null, DefaultPlan: not null })
+                    {
+                        <p>The offering has been set to <b>@Model.Offering.App.Name</b> with default plan <b>@Model.DefaultPlan.Name</b>.</p>
+                        <p>Click
+                            <a id="go-to-offering"
+                               asp-area="@SubscriptionsPlugin.Area"
+                               asp-controller="UIOffering"
+                               asp-action="Offering"
+                               asp-route-storeId="@Model.DefaultPlan.Offering.App.StoreDataId"
+                               asp-route-offeringId="@Model.Offering.Id"
+                               asp-route-section="Plans">here</a> to go to the offering page.</p>
+
+                        <div class="d-flex gap-3">
+                            <a id="demonetize-button"
+                               class="btn btn-outline-danger" role="button"
+                               data-bs-toggle="modal" data-bs-target="#ConfirmModal" text-translate="true">Demonetize</a>
+                            <a id="migrate-users-button"
+                               class="btn btn-secondary"
+                               role="button"
+                               data-bs-toggle="modal"
+                               data-bs-target="#migrateUsers"
+                               text-translate="true">
+                                Migrate existing non-admin users
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <p>Monetization will delegate access to your server to an offering.</p>
+                        <div class="d-flex gap-3">
+                            @{ await CreateNewOffering(false); }
+                            @if (Model.SelectExistingOfferingModal is not null)
+                            {
+                                <a class="btn btn-secondary"
+                                   role="button"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#selectExistingOffering"
+                                   text-translate="true">
+                                    Select existing offering
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="server-email-header">
+                <button class="accordion-button @(Model.Step == MonetizationViewModel.InstallStatus.ConfigureServerEmail ? "" : "collapsed")"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#server-email-collapse"
+                        aria-expanded="@(Model.Step == MonetizationViewModel.InstallStatus.ConfigureServerEmail)" aria-controls="server-email-collapse">
+                    <h5 class="d-flex content-center gap-3">
+                        @{ await PrintStatus(Model.EmailServerConfigured); }
+                        <span>Configure server email settings</span>
+                    </h5>
+                    <vc:icon symbol="caret-down" />
+                </button>
+            </h2>
+            <div id="server-email-collapse"
+                 class="accordion-collapse collapse @(Model.Step == MonetizationViewModel.InstallStatus.ConfigureServerEmail ? "show" : "")"
+                 aria-labelledby="server-email-header" data-bs-parent="#accordion">
+                <div class="accordion-body">
+                    <p>When a new user registers without password or has been invited, an email will be sent using those settings.</p>
+                    @if (Model.EmailServerConfigured)
+                    {
+                        <p>Server email settings are properly configured. Click <a asp-area="@EmailsPlugin.Area" asp-controller="UIServerEmail"
+                                                                                   asp-action="ServerEmailSettings">here</a> to modify the configuration.</p>
+                    }
+                    else
+                    {
+                        <a class="btn btn-success" asp-area="@EmailsPlugin.Area" asp-controller="UIServerEmail" asp-action="ServerEmailSettings">Configure
+                            server email</a>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="store-email-header">
+                <button class="accordion-button @(Model.Step == MonetizationViewModel.InstallStatus.ConfigureStoreEmail ? "" : "collapsed")"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#store-email-collapse"
+                        aria-expanded="@(Model.Step == MonetizationViewModel.InstallStatus.ConfigureStoreEmail)" aria-controls="store-email-collapse">
+                    <h5 class="d-flex content-center gap-3">
+                        @{ await PrintStatus(Model.EmailStoreConfigured); }
+                        <span>Configure store email settings</span>
+                    </h5>
+                    <vc:icon symbol="caret-down" />
+                </button>
+            </h2>
+            <div id="store-email-collapse"
+                 class="accordion-collapse collapse @(Model.Step == MonetizationViewModel.InstallStatus.ConfigureStoreEmail ? "show" : "")"
+                 aria-labelledby="store-email-header" data-bs-parent="#accordion">
+                <div class="accordion-body">
+                    <p>Events related to the subscription such as payment reminder or subscription state changes will be using the store email settings.</p>
+                    @if (Model.Offering is not null)
+                    {
+                        @if (Model.EmailStoreConfigured)
+                        {
+                            <p>Store email settings are properly configured. Click <a asp-area="@EmailsPlugin.Area" asp-controller="UIStoresEmail"
+                                                                                      asp-route-storeId="@Model.Offering.App.StoreDataId"
+                                                                                      asp-action="StoreEmailSettings">here</a> to modify the configuration.</p>
+                        }
+                        else
+                        {
+                            <div class="d-flex gap-3">
+                                <a class="btn btn-success" role="button" asp-area="@EmailsPlugin.Area" asp-controller="UIStoresEmail"
+                                   asp-route-storeId="@Model.Offering.App.StoreDataId" asp-action="StoreEmailSettings">Go to store email settings</a>
+                                <form method="post">
+                                    <button type="submit" name="command" value="copy-server-email-settings" class="btn btn-secondary">Copy from server email
+                                        settings
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p>You need to setup the offering first.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@if (Model.Offering is not null)
+{
+    <form method="post">
+        <input type="hidden" name="command" value="demonetize" />
+        <partial name="_Confirm" model="@(new ConfirmModel()
+                                        {
+                                            Title = StringLocalizer["Demonetize"],
+                                            Description = StringLocalizer["By confirming, you will deactivate the monetization feature, user access will not be dependent on subscriptions anymore."],
+                                            Action = StringLocalizer["Demonetize"],
+                                            GenerateForm = false,
+                                        })" />
+    </form>
+}
+@if (Model.SelectExistingOfferingModal is not null)
+{
+    <partial name="SelectExistingOfferingModal" for="SelectExistingOfferingModal" />
+}
+<partial name="MigrateUsersModal" for="MigrateUsersModal" />
+<partial name="ActivateMonetizationModal" for="ActivateModal" />
+
+@section PageFootContent {
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+}

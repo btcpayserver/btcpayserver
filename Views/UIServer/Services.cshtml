@@ -1,0 +1,136 @@
+@model BTCPayServer.Models.ServerViewModels.ServicesViewModel
+@{
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Services), StringLocalizer["Services"])
+        .SetCategory(WellKnownCategories.Server));
+}
+
+<div class="sticky-header">
+	<h2 class="my-1">@ViewData["Title"]</h2>
+</div>
+<partial name="_StatusMessage" />
+
+<div class="mb-5">
+    <h4 class="mb-3" text-translate="true">Crypto services exposed by your server</h4>
+    <table class="table table-hover mt-2">
+        <thead>
+            <tr>
+                <th text-translate="true">Crypto</th>
+                <th text-translate="true">Access Type</th>
+                <th text-translate="true" style="text-align: right">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var s in Model.ExternalServices.Where(service => !string.IsNullOrEmpty(service.CryptoCode)))
+        {
+            <tr>
+                <td>@s.CryptoCode</td>
+                <td>
+                    <span>@s.DisplayName</span>
+                    @if (s.ConnectionString.IsOnion() == true ||
+                        (s.ConnectionString.IsOnion() == false && Context.Request.IsOnion()))
+                    {
+                        <img style="display:inline; margin-top:-8px;" src="~/img/icons/Onion_Color.svg" height="20" asp-append-version="true" alt="Tor Hidden Service" />
+                    }
+                </td>
+                <td style="text-align: right">
+                    <a asp-action="Service" asp-route-serviceName="@s.ServiceName" asp-route-cryptoCode="@s.CryptoCode">See information</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@if (Model.OtherExternalServices.Count != 0 || Model.ExternalServices.Any(service => string.IsNullOrEmpty(service.CryptoCode)))
+{
+    <div class="mb-5">
+        <h4 class="mb-3" text-translate="true">Other external services</h4>
+
+        <table class="table table-hover mt-2">
+            <thead>
+                <tr>
+                    <th text-translate="true">Name</th>
+                    <th text-translate="true" style="text-align: right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var s in Model.ExternalServices.Where(service => string.IsNullOrEmpty(service.CryptoCode)))
+            {
+                <tr>
+                    <td>@s.DisplayName</td>
+                    <td style="text-align: right">
+                        <a asp-action="Service" asp-route-serviceName="@s.ServiceName" text-translate="true">See information</a>
+                    </td>
+                </tr>
+            }
+            @foreach (var s in Model.OtherExternalServices)
+            {
+                <tr>
+                    <td>@s.Name</td>
+                    <td style="text-align: right">
+                        <a href="@s.Link" rel="noreferrer noopener" text-translate="true">See information</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (Model.TorHttpServices.Count != 0)
+{
+    <div class="mb-5">
+        <h4 class="mb-3" text-translate="true">HTTP-based Tor hidden services</h4>
+
+        <table class="table table-hover mt-2">
+            <thead>
+                <tr>
+                    <th text-translate="true">Name</th>
+                    <th text-translate="true" style="text-align: right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var s in Model.TorHttpServices)
+            {
+                <tr>
+                    <td>@s.Name</td>
+                    <td style="text-align: right">
+                        <a href="@s.Link" target="_blank" rel="noreferrer noopener" text-translate="true">See information</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (Model.TorOtherServices.Count != 0)
+{
+    <div class="mb-5">
+        <h4 class="mb-3" text-translate="true">Other Tor hidden services</h4>
+
+        <table class="table table-hover mt-2">
+            <thead>
+                <tr>
+                    <th text-translate="true">Name</th>
+                    <th text-translate="true">URL</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var s in Model.TorOtherServices)
+            {
+                <tr>
+                    <td>@s.Name</td>
+                    <td style="word-break: break-all;">
+                        <code>@s.Link</code>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+}

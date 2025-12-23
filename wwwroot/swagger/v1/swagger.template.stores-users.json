@@ -1,0 +1,268 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/users": {
+            "get": {
+                "tags": [
+                    "Stores (Users)"
+                ],
+                "summary": "Get store users",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "description": "View users of the specified store",
+                "operationId": "Stores_GetStoreUsers",
+                "responses": {
+                    "200": {
+                        "description": "specified store users",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StoreUserDataList"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store's users"
+                    },
+                    "404": {
+                        "description": "The store could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Stores (Users)"
+                ],
+                "summary": "Add a store user",
+                "description": "Add a store user",
+                "operationId": "Stores_AddStoreUser",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreUserData"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "The user was added"
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when adding the store user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to add new store users"
+                    },
+                    "404": {
+                        "description": "The store or user could not be found"
+                    },
+                    "409": {
+                        "description": "Error code: `duplicate-store-user-role`. Removing this user would result in the store having no owner.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/users/{idOrEmail}": {
+            "put": {
+                "tags": [
+                    "Stores (Users)"
+                ],
+                "summary": "Updates a store user",
+                "description": "Updates a store user",
+                "operationId": "Stores_UpdateStoreUser",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/UserIdOrEmail"
+                    }
+                ],
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreUserData"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "The user was updated"
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the store user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update store users"
+                    },
+                    "404": {
+                        "description": "The store or user could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Stores (Users)"
+                ],
+                "summary": "Remove Store User",
+                "operationId": "Stores_RemoveStoreUser",
+                "description": "Removes the specified store user. If there is no other owner, this endpoint will fail.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/UserIdOrEmail"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The user has been removed"
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when removing the store user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Error code: `store-user-role-orphaned`. Removing this user would result in the store having no owner.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to remove the specified store user"
+                    },
+                    "404": {
+                        "description": "The store or user could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "StoreUserDataList": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/StoreUserData"
+                }
+            },
+            "StoreUserData": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "userId": {
+                                "type": "string",
+                                "description": "The id of the user (Deprecated, use `id` instead)",
+                                "nullable": false,
+                                "deprecated": true
+                            },
+                            "role": {
+                                "type": "string",
+                                "description": "The role of the user. Default roles are `Owner`, `Manager`, `Employee` and `Guest` (Deprecated, use `storeRole` instead)",
+                                "nullable": false,
+                                "deprecated": true
+                            },
+                            "storeRole": {
+                                "type": "string",
+                                "description": "The role of the user. Default roles are `Owner`, `Manager`, `Employee` and `Guest`",
+                                "nullable": false
+                            }
+                        }
+                    },
+                    {
+                        "$ref": "#/components/schemas/ApplicationUserData"
+                    }
+                ]
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Stores (Users)",
+            "description": "Store Users operations"
+        }
+    ]
+}

@@ -1,0 +1,9 @@
+@using BTCPayServer.Services
+@inject ISettingsAccessor<MonetizationSettings> Settings
+
+@if (Settings.Settings is { OfferingId: not null, DefaultPlanId: not null })
+{
+    <li class="nav-item nav-item-sub">
+        <a layout-menu-item="ManageBilling" asp-area="@MonetizationPlugin.Area" asp-controller="UIUserMonetization" asp-action="ManageBilling" text-translate="true">Manage billing</a>
+    </li>
+}

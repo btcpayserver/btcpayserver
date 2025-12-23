@@ -1,0 +1,64 @@
+@using LNURL
+@model Uri
+@{
+    ViewData.SetLayoutModel(new(nameof(ManageNavPages.TwoFactorAuthentication), StringLocalizer["Register your Lightning node for LNURL Auth"]));
+    var formats = new Dictionary<string, string>
+    {
+        { "Bech32", LNURL.EncodeUri(Model, "login", true).ToString().ToUpperInvariant() },
+        { "URI", LNURL.EncodeUri(Model, "login", false).ToString().ToUpperInvariant() }
+    };
+}
+
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
+
+<p text-translate="true">Scan the QR code with your Lightning wallet to link it to your user account.</p>
+
+<div id="info-message" class="d-inline-block">
+    <ul class="nav justify-content-center btcpay-pills align-items-center gap-2 my-2">
+        @for (var i = 0; i < formats.Count; i++)
+        {
+            var mode = formats.ElementAt(i);
+            <li class="nav-item">
+                <a class="btcpay-pill @(i == 0 ? "active" : "")"
+                   data-bs-toggle="tab" data-bs-target="#@mode.Key" role="tab"
+                   href="#">
+                    @mode.Key
+                </a>
+            </li>
+        }
+    </ul>
+    <div class="tab-content">
+        @for (var i = 0; i < formats.Count; i++)
+        {
+            var mode = formats.ElementAt(i);
+            <div class="tab-pane text-center @(i == 0 ? "active" : "")" id="@mode.Key" role="tabpanel">
+                <div class="qr-container" style="min-height: 256px;">
+                    <vc:qr-code data="@mode.Value" />
+                </div>
+                <a href="@mode.Value" class="btn btn-primary mt-3" rel="noreferrer noopener" text-translate="true">
+                    Open in wallet
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@section PageFootContent {
+    <script>
+        function check(){
+            const request = new XMLHttpRequest();
+            request.onload  = function() {
+              if (request.readyState === 4 && request.status === 200) {
+                setTimeout(check, 1000);
+              } else if (request.readyState === 4 ){
+                  window.location.href = @Safe.Json(Url.Action("RedirectToList", new { successMessage = "The lightning node will now act as a security device for your account" }));
+              }
+            }
+
+            request.open("GET", window.location.pathname + "/check", true);
+            request.send(new FormData());
+        }
+        check();
+    </script>
+}

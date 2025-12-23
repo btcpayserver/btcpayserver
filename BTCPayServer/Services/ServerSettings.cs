@@ -9,6 +9,10 @@ public class ServerSettings
 
     [Display(Name = "Contact URL")]
     public string ContactUrl { get; set; }
+    
     [Display(Name = "Base URL")]
     public string BaseUrl { get; set; }
+
+    [Display(Name = "Server Time Zone")]
+    public string ServerTimeZone { get; set; }
 }

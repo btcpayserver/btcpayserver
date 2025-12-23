@@ -1,0 +1,339 @@
+@using BTCPayServer.Services.Invoices
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Client
+@model BTCPayServer.Models.PaymentRequestViewModels.ViewPaymentRequestViewModel
+@inject BTCPayServer.Services.BTCPayServerEnvironment Env
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
+@{
+	ViewData["Title"] = Model.Title;
+    ViewData["StoreBranding"] = Model.StoreBranding;
+	Csp.UnsafeEval();
+	Layout = null;
+    string StatusClass(InvoiceState state)
+    {
+        var status = state.Status;
+        switch (status)
+        {
+            case InvoiceStatus.Expired:
+                switch (state.ExceptionStatus)
+                {
+                    case InvoiceExceptionStatus.PaidLate:
+                    case InvoiceExceptionStatus.PaidPartial:
+                    case InvoiceExceptionStatus.PaidOver:
+                        return "unusual";
+                    default:
+                        return "expired";
+                }
+            default:
+                return status.ToString().ToLowerInvariant();
+        }
+    }
+	ViewData.SetBlazorAllowed(false);
+}
+
+<!DOCTYPE html>
+<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "") id="PaymentRequest-@Model.Id">
+<head>
+    <partial name="LayoutHead"/>
+    <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true" rel="stylesheet"/>
+    <script>var srvModel = @Safe.Json(Model);</script>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-toasted/vue-toasted.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/bootstrap-vue/bootstrap-vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/signalr/signalr.js" asp-append-version="true"></script>
+    <script src="~/vendor/animejs/anime.min.js" asp-append-version="true"></script>
+    <script src="~/js/vue-utils.js" asp-append-version="true"></script>
+    <script src="~/payment-request/app.js" asp-append-version="true"></script>
+    <script src="~/payment-request/services/listener.js" asp-append-version="true"></script>
+    <script src="~/modal/btcpay.js" asp-append-version="true"></script>
+    <style>
+        .invoice { margin-top: var(--btcpay-space-s); }
+        .invoice + .invoice { margin-top: var(--btcpay-space-m); }
+        .invoice .badge { font-size: var(--btcpay-font-size-s); }
+        #app { --wrap-max-width: 720px; }
+        #InvoiceDescription > :last-child { margin-bottom: 0; }
+
+        @@media print {
+            @* This is to avoid table header showing up twice: https://github.com/btcpayserver/btcpayserver/issues/4341 *@
+            thead { display: table-row-group; }
+        }
+    </style>
+</head>
+<body class="min-vh-100">
+    <div id="app" class="public-page-wrap">
+        <main class="flex-grow-1">
+            <div class="d-flex flex-column justify-content-center gap-4">
+                <partial name="_StoreHeader" model="(Model.Title, Model.StoreBranding)" />
+                <div class="text-center mt-n3">
+                    Invoice from
+                    @if (!string.IsNullOrEmpty(Model.StoreWebsite))
+                    {
+                        <a href="@Model.StoreWebsite" target="_blank" rel="noreferrer noopener">@Model.StoreName</a>
+                    }
+                    else
+                    {
+                        @Model.StoreName
+                    }
+                </div>
+                <partial name="_StatusMessage" />
+                <section class="tile">
+                    <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between mb-2">
+                        <h2 class="mb-0" v-text="srvModel.amountDue > 0 ? srvModel.amountDueFormatted : srvModel.amountCollectedFormatted">
+                            @if (Model.AmountDue > 0)
+                            {
+                                @Model.AmountDueFormatted
+                            }
+                            else
+                            {
+                                @Model.AmountCollectedFormatted
+                            }
+                        </h2>
+                        <span class="badge only-for-js" :class="`badge-${srvModel.status.toLowerCase()}`" data-test="status" style="font-size:.9rem" v-if="srvModel.status.toLowerCase() !== 'pending'">
+                            {{srvModel.status}}
+                            <span v-if="srvModel.archived">(archived)</span>
+                        </span>
+                        @if (Model.Status.ToLowerInvariant() != "pending")
+                        {
+                            <noscript>
+                                <span class="badge badge-@Model.Status.ToLowerInvariant()" data-test="status" style="font-size:.9rem">
+                                    @Model.Status
+                                    @if (Model.Archived)
+                                    {
+                                        <span>(archived)</span>
+                                    }
+                                </span>
+                            </noscript>
+                        }
+                    </div>
+                    <p>
+                        @if (Model.IsPending && Model.ExpiryDate.HasValue)
+                        {
+                            <span class="text-muted">Due</span>
+                            <span>@Model.ExpiryDate.Value.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative)</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No due date</span>
+                        }
+                    </p>
+                    <dl class="mt-n1 mb-4" v-if="srvModel.amountCollected > 0 && srvModel.amountDue > 0">
+                        <div class="progress bg-light d-flex mb-3 d-print-none" style="height:5px">
+                            @{
+                                var prcnt = Model.Amount == 0? 100:  Model.AmountCollected / Model.Amount * 100;
+                            }
+                            <div class="progress-bar bg-primary" role="progressbar" style="width:@prcnt%" v-bind:style="{ width: (srvModel.amountCollected/srvModel.amount*100) + '%' }"></div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
+                            <div class="d-flex d-print-inline-block flex-column gap-1">
+                                <dd class="text-secondary mb-0">Amount paid</dd>
+                                <dt class="h4 fw-semibold text-nowrap" v-text="srvModel.amountCollectedFormatted">@Model.AmountCollectedFormatted</dt>
+                            </div>
+                            <div class="d-flex d-print-inline-block flex-column gap-1">
+                                <dd class="text-secondary mb-0 text-sm-end">Total requested</dd>
+                                <dt class="h4 fw-semibold text-nowrap text-sm-end" v-text="srvModel.amountFormatted">@Model.AmountFormatted</dt>
+                            </div>
+                        </div>
+                    </dl>
+
+                    <div class="buttons mt-3">
+                        <template v-if="srvModel.formId && srvModel.formId !== 'None' && !srvModel.formSubmitted">
+                            <a asp-action="ViewPaymentRequestForm" asp-route-payReqId="@Model.Id" class="btn btn-primary btn-lg" data-test="form-button">
+                                Pay Invoice
+                            </a>
+                        </template>
+                        <template v-else-if="srvModel.isPending && !srvModel.archived">
+                            <template v-if="srvModel.allowCustomPaymentAmounts && !srvModel.anyPendingInvoice">
+                                <form v-on:submit="submitCustomAmountForm">
+                                    <div class="input-group mb-3">
+                                        <input type="number" class="form-control text-end hide-number-spin" v-model="customAmount" :readonly="!srvModel.allowCustomPaymentAmounts" :max="srvModel.amountDue" placeholder="@StringLocalizer["Amount"]" step="any" required />
+                                        <span class="input-group-text">{{currency}}</span>
+                                    </div>
+                                    <button class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center text-nowrap" v-bind:class="{ 'btn-disabled': loading }" :disabled="loading" type="submit" id="PayInvoice">
+                                        <div v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
+                                            <span class="visually-hidden" text-translate="true">Loading...</span>
+                                        </div>
+                                        <span text-translate="true">Pay Invoice</span>
+                                    </button>
+                                </form>
+                            </template>
+                            <template v-else>
+                                <button class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center text-nowrap" v-on:click="pay(null)" :disabled="loading" id="PayInvoice">
+                                    <div v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
+                                        <span class="visually-hidden" text-translate="true">Loading...</span>
+                                    </div>
+                                    <span text-translate="true">Pay Invoice</span>
+                                </button>
+                                @if (Model.AllowCustomPaymentAmounts) {
+                                    <button class="btn btn-outline-secondary btn-lg w-100 d-flex align-items-center justify-content-center text-nowrap" v-if="srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments" v-on:click="cancelPayment()" :disabled="loading">
+                                        <span v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
+                                            <span class="visually-hidden" text-translate="true">Loading...</span>
+                                        </span>
+                                        <span text-translate="true">Cancel Invoice</span>
+                                    </button>
+                                }
+                            </template>
+                        </template>
+                        <div class="d-flex flex-column flex-sm-row gap-3 align-items-center justify-content-between">
+                            <button type="button" class="btn btn-secondary only-for-js w-100" v-on:click="window.print" text-translate="true">
+                                Print
+                            </button>
+                            <button type="button" class="btn btn-secondary only-for-js w-100" v-on:click="window.copyUrlToClipboard" text-translate="true">
+                                Copy Link
+                            </button>
+                        </div>
+                    </div>
+                    <noscript>
+                        @if (Model.IsPending && !Model.Archived)
+                        {
+                            @if (Model.AllowCustomPaymentAmounts && !Model.AnyPendingInvoice)
+                            {
+                                <form method="get" asp-action="PayPaymentRequest" asp-route-payReqId="@Model.Id">
+                                    <div class="input-group mb-3">
+                                        <input type="number" class="form-control text-end hide-number-spin" name="amount" value="@Model.AmountDue" @if (!Model.AllowCustomPaymentAmounts) { @("readonly") } max="@Model.AmountDue" step="any" placeholder="@StringLocalizer["Amount"]" required />
+                                        <span class="input-group-text">@Model.Currency.ToUpper()</span>
+                                    </div>
+                                    <button class="btn btn-primary btn-lg w-100 text-nowrap" type="submit" id="PayInvoice" text-translate="true">Pay Invoice</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <a class="btn btn-primary btn-lg w-100 text-nowrap" asp-action="PayPaymentRequest" asp-route-payReqId="@Model.Id" id="PayInvoice" text-translate="true">
+                                    Pay Invoice
+                                </a>
+                                if (Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments && Model.AllowCustomPaymentAmounts)
+                                {
+                                    <form method="get" asp-action="CancelUnpaidPendingInvoice" asp-route-payReqId="@Model.Id" class="mt-2 d-print-none">
+                                        <button class="btn btn-outline-secondary btn-lg w-100 text-nowrap" type="submit" text-translate="true">Cancel Invoice</button>
+                                    </form>
+                                }
+                            }
+                        }
+                    </noscript>
+                </section>
+
+                @if (!string.IsNullOrEmpty(Model.Description) && Model.Description != "<br>")
+                {
+                    <section class="tile">
+                        <h2 class="h4 mb-3" text-translate="true">Memo</h2>
+                        <div id="InvoiceDescription" v-html="srvModel.description">@Safe.Raw(Model.Description)</div>
+                    </section>
+                }
+
+                <section class="tile">
+                    <h2 class="h4 mb-3" text-translate="true">Payment History</h2>
+                    <template v-if="!srvModel.invoices || srvModel.invoices.length == 0">
+                        <p class="text-muted mb-0" text-translate="true">No payments have been made yet.</p>
+                    </template>
+                    <template v-else>
+                        <div class="table-responsive my-0">
+                            <table v-for="invoice of srvModel.invoices" :key="invoice.id" class="invoice table table-borderless">
+                                <thead>
+                                <tr>
+                                    <th class="fw-normal text-secondary" scope="col" text-translate="true">Invoice Id</th>
+                                    <th class="fw-normal text-secondary amount-col w-125px" text-translate="true">Amount</th>
+                                    <th class="fw-normal text-secondary text-end w-225px" text-translate="true">Status</th>
+                                    <th class="w-50px actions-col"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="align-middle"><vc:truncate-center is-vue="true" text="invoice.id" padding="7" classes="truncate-center-id" /></td>
+                                        <td class="align-middle amount-col">{{invoice.amountFormatted}}</td>
+                                        <td class="align-middle text-end text-print-default">
+                                            <span class="badge" :class="`badge-${statusClass(invoice.stateFormatted)}`">{{invoice.stateFormatted}}</span>
+                                        </td>
+                                        <td class="align-middle actions-col">
+                                            <div class="d-inline-flex align-items-center gap-2">
+                                                <button class="accordion-button collapsed only-for-js ms-0 d-inline-block" type="button" :aria-controls="`invoice_details_${invoice.id}`" :aria-expanded="showDetails(invoice.id) ? 'true' : 'false'" v-if="invoice.payments && invoice.payments.length > 0" v-on:click="toggleDetails(invoice.id)">
+                                                    <vc:icon symbol="caret-down" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr v-collapsible="showDetails(invoice.id)" :id="`invoice_details_${invoice.id}`" v-if="invoice.payments && invoice.payments.length > 0">
+                                        <th class="fw-normal text-secondary" text-translate="true">Transaction</th>
+                                        <th class="fw-normal text-secondary amount-col" text-translate="true">Paid</th>
+                                        <th class="fw-normal text-secondary text-end" text-translate="true">Payment</th>
+                                    </tr>
+                                    <tr v-collapsible="showDetails(invoice.id)" v-for="payment of invoice.payments" :key="`invoice_payment_${payment.id}`">
+                                        <td class="text-break"><vc:truncate-center is-vue="true" text="payment.id" link="payment.link" padding="7" classes="truncate-center-id" /></td>
+                                        <td class="amount-col">{{payment.paidFormatted}}</td>
+                                        <td class="amount-col">{{payment.amountFormatted}} {{payment.paymentMethod}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                    <noscript>
+                        @if (Model.Invoices == null || !Model.Invoices.Any())
+                        {
+                            <p class="text-muted mb-0" text-translate="true">No payments have been made yet.</p>
+                        }
+                        else
+                        {
+                            @foreach (var invoice in Model.Invoices)
+                            {
+                                <div class="table-responsive my-0">
+                                    <table class="invoice table table-borderless">
+                                        <thead>
+                                        <tr>
+                                            <th class="fw-normal text-secondary" scope="col" text-translate="true">Invoice Id</th>
+                                            <th class="fw-normal text-secondary amount-col w-125px" text-translate="true">Amount</th>
+                                            <th class="fw-normal text-secondary text-end" text-translate="true">Status</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td><vc:truncate-center text="@invoice.Id" padding="7" classes="truncate-center-id" /></td>
+                                            <td class="amount-col">@invoice.AmountFormatted</td>
+                                            <td class="text-end text-print-default">
+                                                <span class="badge badge-@StatusClass(invoice.State)">@invoice.StateFormatted</span>
+                                            </td>
+                                        </tr>
+                                        @if (invoice.Payments != null && invoice.Payments.Any())
+                                        {
+                                            <tr>
+                                                <th class="fw-normal text-secondary" text-translate="true">Transaction</th>
+                                                <th class="fw-normal text-secondary amount-col" text-translate="true">Paid</th>
+                                                <th class="fw-normal text-secondary text-end" text-translate="true">Payment</th>
+                                            </tr>
+                                            @foreach (var payment in invoice.Payments)
+                                            {
+                                                <tr>
+                                                    <td class="text-break"><vc:truncate-center text="@payment.Id" link="@payment.Link" padding="7" classes="truncate-center-id" /></td>
+                                                    <td class="amount-col">@payment.PaidFormatted</td>
+                                                    <td class="text-end text-nowrap">@payment.AmountFormatted</td>
+                                                </tr>
+                                            }
+                                        }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        }
+                    </noscript>
+                </section>
+            </div>
+        </main>
+        <footer class="store-footer">
+            <div permission="@Policies.CanModifyStoreSettings" class="d-print-none">
+                <form asp-action="EditPaymentRequest" asp-route-storeId="@Model.StoreId" asp-route-payReqId="@Model.Id" method="get">
+                    <button type="submit" class="btn btn-link" text-translate="true">Edit payment request</button>
+                </form>
+            </div>
+            @if (Model.IsPending && Model.AmountCollected > 0)
+            {
+                <div permission="@Policies.CanModifyPaymentRequests" class="d-print-none">
+                    <form asp-action="TogglePaymentRequestCompleted" asp-route-payReqId="@Model.Id" asp-route-storeId="@Model.StoreId" method="post">
+                        <button type="submit" class="btn btn-link" text-translate="true">Mark as settled</button>
+                    </form>
+                </div>
+            }
+            <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
+                <span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" />
+            </a>
+        </footer>
+    </div>
+    <partial name="LayoutFoot"/>
+</body>
+</html>

@@ -1,0 +1,59 @@
+﻿@using BTCPayServer.Client
+@model BTCPayServer.Models.StoreViewModels.RatesViewModel.Source
+
+ @if (Model.ShowScripting)
+{
+    <input type="hidden" asp-for="ShowScripting" />
+    <div class="form-group">
+        <label asp-for="Script" class="form-label"></label>
+        <a href="#help" data-bs-toggle="collapse" title="@StringLocalizer["More information..."]">
+            <vc:icon symbol="info" />
+        </a>
+        <textarea asp-for="Script" rows="20" cols="80" class="form-control"></textarea>
+        <span asp-validation-for="Script" class="text-danger"></span>
+        <p>
+            <button id="@Html.IdFor(o => o.DefaultScript)" type="button" class="btn btn-link text-secondary px-0 ResetDefaults" text-translate="true" data-defaultScript="@Model.DefaultScript" data-target="#@Html.IdFor(o => o.Script)">Set to default settings</button>
+        </p>
+    </div>
+}
+else
+{
+    <div class="form-group">
+        <label asp-for="PreferredExchange" class="form-label"></label>
+        <select asp-for="PreferredExchange" asp-items="Model.Exchanges" class="form-select"></select>
+        <span asp-validation-for="PreferredExchange" class="text-danger"></span>
+        <div id="PreferredExchangeHelpBlock" class="form-text">
+            <span text-translate="true">Current Rates source is</span> <a href="@Model.RateSource" target="_blank" rel="noreferrer noopener">@Model.PreferredResolvedExchange</a>.
+        </div>
+    </div>
+}
+@if (Model.ScriptingConfirm is not null)
+{
+    <partial name="_Confirm" for="ScriptingConfirm" permission="@Policies.CanModifyStoreSettings" />
+}
+<div class="form-group">
+    <label class="d-flex align-items-center">
+        @if (Model.ShowScripting)
+        {
+            <button type="submit" id="@Html.IdFor(o => o.ShowScripting)_submit" class="btcpay-toggle me-3 btcpay-toggle--active" value="scripting-toggle-@(Model.IsFallback ? "fallback" : "primary")" name="command" data-bs-toggle="modal" data-bs-target="#@Html.Id("ScriptingConfirm_ConfirmModal")" permission="@Policies.CanModifyStoreSettings" text-translate="true">Enable advanced rate rule scripting</button>
+        }
+        else
+        {
+            <button type="submit" id="@Html.IdFor(o => o.ShowScripting)_submit" class="btcpay-toggle me-3" value="scripting-toggle-@(Model.IsFallback ? "fallback" : "primary")" name="command" data-bs-toggle="modal" permission="@Policies.CanModifyStoreSettings" text-translate="true">Enable advanced rate rule scripting</button>
+        }
+
+        <div>
+            <span text-translate="true">Advanced rate rule scripting</span>
+            @if (Model.ShowScripting)
+            {
+                <div class="form-text" text-translate="true">Disabling will delete your rate script.</div>
+            }
+            else
+            {
+                <div class="form-text" text-translate="true">Enabling will modify your current rate sources. This is a feature for advanced users.</div>
+            }
+        </div>
+    </label>
+</div>
+
+

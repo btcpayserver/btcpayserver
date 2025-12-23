@@ -1,0 +1,94 @@
+@using BTCPayServer.Payments
+@using BTCPayServer.Payments.Lightning
+@using BTCPayServer.Services
+@using BTCPayServer.Components.TruncateCenter
+@using BTCPayServer.Lightning
+@using BTCPayServer.Services.Invoices
+@inject DisplayFormatter DisplayFormatter
+@inject PaymentMethodHandlerDictionary handlers
+@inject PrettyNameProvider prettyName
+@model InvoiceDetailsModel
+
+@{
+	string providedComment = null;
+	string consumedLightningAddress = null;
+	var payments = Model
+		.Payments
+		.Select(payment =>
+			{
+
+				if (handlers.TryGet(payment.PaymentMethodId) is not ILightningPaymentHandler handler)
+					return null;
+				var offChainPaymentData = handler.ParsePaymentDetails(payment.Details);
+
+				if (handler.ParsePaymentPromptDetails(Model.Entity.GetPaymentPrompt(payment.PaymentMethodId)?.Details) is LNURLPayPaymentMethodDetails lnurlPrompt)
+				{
+					if (lnurlPrompt.ConsumedLightningAddress is string consumed)
+					{
+						consumedLightningAddress = consumed;
+					}
+					if (lnurlPrompt.ProvidedComment is string comment)
+					{
+						providedComment = comment;
+					}
+				}
+				return new OffChainPaymentViewModel
+				{
+					Type = prettyName.PrettyName(payment.PaymentMethodId),
+					BOLT11 = offChainPaymentData.BOLT11,
+					PaymentProof = offChainPaymentData.Preimage,
+					Amount = DisplayFormatter.Currency(payment.Value, handler.Network.CryptoCode, divisibility: payment.Divisibility)
+				};
+			})
+		.Where(model => model != null)
+		.ToList();
+}
+
+@if (payments.Any())
+{
+    <section>
+        <h5>Off-Chain Payments</h5>
+        <div class="invoice-payments table-responsive mt-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+						<th class="w-175px">Type</th>
+                        <th class="w-175px">Destination</th>
+                        <th class="text-nowrap">Payment Proof</th>
+                        <th class="w-150px text-end">Paid</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var payment in payments)
+                    {
+                        <tr>
+							<td>@payment.Type</td>
+                            <td>
+                                <vc:truncate-center text="@payment.BOLT11" classes="truncate-center-id" />
+                            </td>
+                            <td>
+                                <vc:truncate-center text="@payment.PaymentProof" classes="truncate-center-id" />
+                            </td>
+                            <td class="payment-value text-end text-nowrap">
+                                <span data-sensitive class="text-success">@payment.Amount</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+			@if (!string.IsNullOrEmpty(providedComment))
+			{
+				<div class="p-2">
+					<b>LNURL Comment</b>: @providedComment
+				</div>
+			}
+			@if (!string.IsNullOrEmpty(consumedLightningAddress))
+			{
+				<div class="p-2">
+					<b>Lightning address used</b>: @consumedLightningAddress
+				</div>
+			}
+
+        </div>
+    </section>
+}

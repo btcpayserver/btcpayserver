@@ -1,0 +1,195 @@
+@model WalletPSBTReadyViewModel
+
+@if (Model.CanCalculateBalance)
+{
+    <p class="lead text-center text-secondary">
+        <span text-translate="true">This transaction will change your balance:</span>
+        <br>
+        <span id="balance-toggle" class="text-@(Model.Positive ? "success" : "danger") cursor-pointer">
+            @Model.BalanceChange.CryptoAmount
+            @if (Model.BalanceChange.FiatAmount != null)
+            {
+                <small style="text-decoration: underline dotted;">(@Model.BalanceChange.FiatAmount)</small>
+            }
+        </span>
+    </p>
+}
+@if (Model.ReplacementBalanceChange is not null)
+{
+    <div id="replacements">
+        <h4 class="mb-n3" text-translate="true">Replacements</h4>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th text-translate="true" class="text-end">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-end text-@(Model.ReplacementBalanceChange.Positive ? "success" : "danger")">
+						<span class="amount-toggle cursor-pointer"
+							  data-btc="@Model.ReplacementBalanceChange.BalanceChange.CryptoAmount"
+							  data-fiat="@Model.ReplacementBalanceChange.BalanceChange.FiatAmount">
+							@Model.ReplacementBalanceChange.BalanceChange.CryptoAmount
+						</span>
+					</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+}
+<div id="inputs">
+    <h4 class="mb-n3" text-translate="true">Inputs</h4>
+    <table class="table">
+        <thead>
+        <tr>
+            <th text-translate="true">Index</th>
+            <th text-translate="true">Labels</th>
+            <th text-translate="true" class="text-end">Amount</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var input in Model.Inputs)
+        {
+            <tr>
+                @if (input.Error != null)
+                {
+                    <td>@input.Index <span class="text-danger" title="@input.Error"><vc:icon symbol="warning"/></span></td>
+                }
+                else
+                {
+                    <td>@input.Index</td>
+                }
+                <td>
+                    @if (input.Labels.Any())
+                    {
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            @foreach (var label in input.Labels)
+                            {
+                                <div class="transaction-label" style="--label-bg:@label.Color;--label-fg:@label.TextColor">
+                                    <span>@label.Text</span>
+                                    @if (!string.IsNullOrEmpty(label.Link))
+                                    {
+                                        <a class="transaction-label-info transaction-details-icon" href="@label.Link"
+                                           target="_blank" rel="noreferrer noopener" title="@label.Tooltip"
+                                           data-bs-html="true" data-bs-toggle="tooltip"
+                                           data-bs-custom-class="transaction-label-tooltip">
+                                            <vc:icon symbol="info" />
+                                        </a>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </td>
+                <td class="text-end text-@(input.Positive ? "success" : "danger")">
+                    <span class="amount-toggle cursor-pointer"
+                          data-btc="@input.BalanceChange.CryptoAmount"
+                          data-fiat="@input.BalanceChange.FiatAmount">
+                        @input.BalanceChange.CryptoAmount
+                    </span>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<div id="outputs" class="mt-4">
+    <h4 class="mb-n3" text-translate="true">Outputs</h4>
+    <table class="table">
+        <thead>
+        <tr>
+            <th text-translate="true">Destination</th>
+            <th text-translate="true">Labels</th>
+            <th text-translate="true" class="text-end">Amount</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var destination in Model.Destinations)
+        {
+            <tr>
+                <td class="text-break">@destination.Destination</td>
+                <td>
+                    @if (destination.Labels.Any())
+                    {
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            @foreach (var label in destination.Labels)
+                            {
+                                <div class="transaction-label" style="--label-bg:@label.Color;--label-fg:@label.TextColor">
+                                    <span>@label.Text</span>
+                                    @if (!string.IsNullOrEmpty(label.Link))
+                                    {
+                                        <a class="transaction-label-info transaction-details-icon" href="@label.Link"
+                                           target="_blank" rel="noreferrer noopener" title="@label.Tooltip"
+                                           data-bs-html="true" data-bs-toggle="tooltip"
+                                           data-bs-custom-class="transaction-label-tooltip">
+                                            <vc:icon symbol="info"/>
+                                        </a>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </td>
+                <td class="text-end text-@(destination.Positive ? "success" : "danger")">
+                    <span class="amount-toggle cursor-pointer"
+                          data-btc="@destination.Balance.CryptoAmount"
+                          data-fiat="@destination.Balance.FiatAmount">
+                        @destination.Balance.CryptoAmount
+                    </span>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@if (Model.FeeRate != null)
+{
+    <p class="text-muted text-end">
+        <span text-translate="true">Transaction fee rate:</span>
+        <b>@Model.FeeRate</b>
+    </p>
+}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const balanceElement = document.getElementById("balance-toggle");
+        const amounts = document.querySelectorAll(".amount-toggle");
+
+        let showFiat = false;
+
+        // Toggle all amounts when clicking balance header
+        balanceElement.addEventListener("click", function () {
+            // Check if all elements have a non-empty data-fiat
+            const allHaveValidFiat = Array.from(amounts).every(el => {
+                const fiatAmount = el.getAttribute("data-fiat");
+                return fiatAmount !== null && fiatAmount.trim() !== "";
+            });
+
+            if (!allHaveValidFiat) return; // If any is missing or empty, do nothing
+
+            showFiat = !showFiat;
+            amounts.forEach(el => {
+                const btcAmount = el.getAttribute("data-btc");
+                const fiatAmount = el.getAttribute("data-fiat");
+                el.innerText = showFiat ? fiatAmount : btcAmount;
+            });
+        });
+
+        // Toggle individual amounts
+        amounts.forEach(el => {
+            el.addEventListener("click", function (event) {
+                event.stopPropagation();
+                const btcAmount = el.getAttribute("data-btc");
+                const fiatAmount = el.getAttribute("data-fiat");
+                if (fiatAmount !== null && fiatAmount.trim() !== "") {
+                    el.innerText = el.innerText === btcAmount ? fiatAmount : btcAmount;
+                }
+            });
+        });
+    });
+</script>
+
+

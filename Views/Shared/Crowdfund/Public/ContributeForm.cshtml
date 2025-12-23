@@ -1,0 +1,98 @@
+@using BTCPayServer.Client.Models
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model BTCPayServer.Plugins.Crowdfund.Models.ContributeToCrowdfund
+
+@{ var vm = Model.ViewCrowdfundViewModel; }
+
+<form method="post">
+    @foreach (var item in vm.Perks)
+    {
+        var hasCount = vm.PerkCount.ContainsKey(item.Id);
+        var hasValue = vm.PerkValue.ContainsKey(item.Id);
+        <div class="card mb-4 perk expanded" id="@item.Id">
+            @if (vm.DisplayPerksRanking && hasCount)
+            {
+                <span class="btn btn-sm rounded-circle px-0 btn-primary perk-badge">#@(Array.IndexOf(vm.Perks, item) + 1)</span>
+            }
+            @if (!string.IsNullOrEmpty(item.Image))
+            {
+                <img class="card-img-top" src="@item.Image" alt="@item.Title" asp-append-version="true" />
+            }
+            <div class="card-body">
+                <div class="card-title d-flex align-items-center justify-content-between mb-1">
+                    <label class="h5 d-flex align-items-center">
+                        @if (vm.Started && !vm.Ended )
+                        {
+                            <input type="radio" asp-for="ChoiceKey" value="@item.Id" class="form-check-input mt-0 me-2"/>
+                        }
+                        @(string.IsNullOrEmpty(item.Title) ? item.Id : item.Title)
+                    </label>
+                    <span class="text-muted">
+                        @if (item.Price is > 0)
+                        {
+                            <span>@item.Price.Value</span>
+                            <span>@vm.TargetCurrency</span>
+
+                            if (item.PriceType == AppItemPriceType.Minimum)
+                            {
+                                @Safe.Raw(StringLocalizer["or more"])
+                            }
+                        }
+                        else if (item.PriceType == AppItemPriceType.Topup)
+                        {
+                            @Safe.Raw(StringLocalizer["Any amount"])
+                        }
+                        else if (item.PriceType == AppItemPriceType.Fixed)
+                        {
+                            @Safe.Raw(StringLocalizer["Free"])
+                        }
+                    </span>
+                </div>
+                <p class="card-text overflow-hidden">@Safe.Raw(item.Description)</p>
+            </div>
+            @if (hasCount || hasValue || item.Inventory.HasValue)
+            {
+                <div class="card-footer d-flex flex-wrap justify-content-between">
+                    @switch (item.Inventory)
+                    {
+                        case null:
+                            break;
+                        case <= 0:
+                            <span text-translate="true">Sold out</span>
+                            break;
+                        default:
+                            <span>@StringLocalizer["{0} left", item.Inventory]</span>
+                            break;
+                    }
+                    @if (hasCount)
+                    {
+                        var count = vm.PerkCount[item.Id];
+                        <span>@count Contributor@(count == 1 ? "" : "s")</span>
+                    }
+                    @if (hasValue)
+                    {
+                        <span>@vm.PerkValue[item.Id] @vm.TargetCurrency total</span>
+                    }
+                </div>
+            }
+        </div> 
+    }
+    @if (vm.Started && !vm.Ended)
+    {
+        <div class="form-group">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" type="email" class="form-control"/>
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Amount" class="form-label"></label>
+            <div class="input-group mb-3">
+                <input inputmode="decimal" asp-for="Amount" type="number" step="any" class="form-control"/>
+                <span class="input-group-text">@vm.TargetCurrency.ToUpperInvariant()</span>
+            </div>
+            <span asp-validation-for="Amount" class="text-danger"></span>
+        </div>
+        <input type="hidden" asp-for="RedirectToCheckout"/>
+        <button type="submit" class="btn btn-primary" text-translate="true">Contribute</button>
+    }
+</form>

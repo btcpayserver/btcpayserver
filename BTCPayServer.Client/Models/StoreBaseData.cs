@@ -91,6 +91,8 @@ namespace BTCPayServer.Client.Models
 
         public InvoiceData.ReceiptOptions Receipt { get; set; }
 
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string StoreTimeZone { get; set; }
 
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; }

@@ -22,7 +22,8 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
         services.AddSingleton<IHostedService, StoreEmailRuleProcessorSender>();
         services.AddTransient<EmailTriggerViewModels>();
         services.AddSingleton<IHostedService, UserEventHostedService>();
-        services.AddMigration<ApplicationDbContext, DefaultServerEmailRulesMigration>();
+        services.AddMigration<ApplicationDbContext, Migrations.DefaultServerEmailRulesMigration>();
+        services.AddMigration<ApplicationDbContext, Migrations.ServerEmailSettingsMigration>();
 
         services.AddSingleton<IEmailTriggerViewModelTransformer, ServerTransformer>();
         services.AddSingleton<IEmailTriggerEventTransformer, ServerTransformer>();

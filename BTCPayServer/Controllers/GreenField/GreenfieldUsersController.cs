@@ -444,7 +444,6 @@ namespace BTCPayServer.Controllers.Greenfield
 
             // Ok, this user is an admin but there are other admins as well so safe to delete
             await _userService.DeleteUserAndAssociatedData(user);
-            _eventAggregator.Publish(new UserEvent.Deleted(user));
 
             return Ok();
         }

@@ -42,6 +42,7 @@ public class MonetizationHostedService(
         this.Subscribe<SubscriptionEvent.PlanUpdated>();
         this.Subscribe<SubscriptionEvent.PlanStarted>();
         this.SubscribeAny<UserEvent.Registered>();
+        this.SubscribeAny<UserEvent.Deleted>();
     }
 
     protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
@@ -121,6 +122,18 @@ public class MonetizationHostedService(
                 if (s is not null)
                     EventAggregator.Publish(new SubscriptionEvent.NewSubscriber(s, reg.RequestBaseUrl));
             }
+        }
+        else if (evt is UserEvent.Deleted deleted)
+        {
+            await using var ctx = dbContextFactory.CreateContext();
+            await ctx.Database.GetDbConnection()
+                .ExecuteAsync("""
+                              DELETE FROM subs_subscribers s
+                                  USING customers_identities ci
+                              WHERE ci.customer_id = s.customer_id
+                                AND ci.type = @type
+                                AND ci.value = @id;
+                              """, new { type = Monetization.SubscriberDataExtensions.IdentityType, id = deleted.User.Id });
         }
     }
 

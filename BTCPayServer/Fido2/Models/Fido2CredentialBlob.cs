@@ -1,4 +1,7 @@
 using System;
+using System.Buffers.Text;
+using System.Text;
+using System.Text.Json.Serialization;
 using Fido2NetLib;
 using Fido2NetLib.Objects;
 using Newtonsoft.Json;
@@ -7,7 +10,7 @@ namespace BTCPayServer.Fido2.Models
 {
     public class Fido2CredentialBlob
     {
-        public class Base64UrlConverter : JsonConverter<byte[]>
+        public class Base64UrlConverter : Newtonsoft.Json.JsonConverter<byte[]>
         {
             private readonly Required _requirement = Required.DisallowNull;
 
@@ -22,15 +25,15 @@ namespace BTCPayServer.Fido2.Models
 
             public override void WriteJson(JsonWriter writer, byte[] value, JsonSerializer serializer)
             {
-                writer.WriteValue(Base64Url.Encode(value));
+                writer.WriteValue(Base64Url.EncodeToUtf8(value));
             }
 
             public override byte[] ReadJson(JsonReader reader, Type objectType, byte[] existingValue, bool hasExistingValue, JsonSerializer serializer)
             {
-                byte[] ret = null;
+                byte[] ret;
 
                 if (null == reader.Value && _requirement == Required.AllowNull)
-                    return ret;
+                    return null;
 
                 if (null == reader.Value)
                     throw new Fido2VerificationException("json value must not be null");
@@ -38,7 +41,17 @@ namespace BTCPayServer.Fido2.Models
                     throw new Fido2VerificationException("json valuetype must be string");
                 try
                 {
-                    ret = Base64Url.Decode((string)reader.Value);
+                    var base64Url = (string)reader.Value;
+                    var utf8 = Encoding.UTF8.GetBytes(base64Url);
+
+                    var output = new byte[utf8.Length];
+                    Base64Url.DecodeFromUtf8(
+                        utf8,
+                        output,
+                        out _,
+                        out var written
+                    );
+                    ret = output[..written];
                 }
                 catch (FormatException ex)
                 {
@@ -68,7 +81,7 @@ namespace BTCPayServer.Fido2.Models
             /// <summary>
             /// This member contains the credential ID of the public key credential the caller is referring to.
             /// </summary>
-            [JsonConverter(typeof(Base64UrlConverter))]
+            [Newtonsoft.Json.JsonConverter(typeof(Base64UrlConverter))]
             [JsonProperty("id")]
             public byte[] Id { get; set; }
 
@@ -85,12 +98,11 @@ namespace BTCPayServer.Fido2.Models
             }
         }
         public DescriptorClass Descriptor { get; set; }
-        [JsonConverter(typeof(Base64UrlConverter))]
+        [Newtonsoft.Json.JsonConverter(typeof(Base64UrlConverter))]
         public byte[] PublicKey { get; set; }
-        [JsonConverter(typeof(Base64UrlConverter))]
+        [Newtonsoft.Json.JsonConverter(typeof(Base64UrlConverter))]
         public byte[] UserHandle { get; set; }
         public uint SignatureCounter { get; set; }
-        public string CredType { get; set; }
         public string AaGuid { get; set; }
     }
 }

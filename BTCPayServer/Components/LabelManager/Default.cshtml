@@ -5,7 +5,8 @@
     var elementId = "a" + Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
     var fetchUrl = Url.Action("LabelsJson", "UIWallets", new {
         walletId = Model.WalletObjectId.WalletId,
-        excludeTypes = Safe.Json(Model.ExcludeTypes)
+        excludeTypes = Safe.Json(Model.ExcludeTypes),
+        linkedType = Model.LinkedType
     });
     var updateUrl = Model.AutoUpdate? Url.Action("UpdateLabels", "UIWallets", new {
         walletId = Model.WalletObjectId.WalletId

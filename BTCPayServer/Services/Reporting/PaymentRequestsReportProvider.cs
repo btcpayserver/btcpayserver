@@ -115,13 +115,12 @@ public class PaymentRequestsReportProvider(
 
         foreach (var paymentRequest in paymentRequests)
         {
-            var prBlob = paymentRequest.GetBlob();
             var prOrderId = PaymentRequestRepository.GetOrderIdForPaymentRequest(paymentRequest.Id);
 
             labelsByPaymentRequestId.TryGetValue(paymentRequest.Id, out var labelTuples);
             var labelsString = labelTuples is { Length: > 0 }
                 ? string.Join(", ", labelTuples.Select(l => l.Label))
-                : "";
+                : "Unlabeled";
 
             if (!invoicesByOrderId.TryGetValue(prOrderId, out var prInvoices) || prInvoices.Count == 0)
             {

@@ -13,7 +13,7 @@
 }
 
 <!DOCTYPE html>
-<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "") id="PlanCheckout-@Model.Id">
+<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "") id="PlanCheckout-@Model.CheckoutId">
 <head>
     <partial name="LayoutHead" />
     <link href="~/vendor/font-awesome/css/font-awesome.min.css" asp-append-version="true" rel="stylesheet" />
@@ -276,7 +276,7 @@
             </div>
             <div class="modal-body pt-0 text-center">
                 <component type="typeof(BTCPayServer.Blazor.QrCode)"
-                           param-Data="@LinkGenerator.PlanCheckout(Model.Id, Context.Request.GetRequestBaseUrl())"
+                           param-Data="@LinkGenerator.PlanCheckout(Model.CheckoutId, Context.Request.GetRequestBaseUrl())"
                            render-mode="Static"
                 />
             </div>

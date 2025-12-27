@@ -42,6 +42,7 @@ public class UIPlanCheckoutController(
         var vm = new PlanCheckoutViewModel()
         {
             Id = plan.Id,
+            CheckoutId = checkoutId,
             StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, plan.Offering.App.StoreData.GetStoreBlob()),
             StoreName = plan.Offering.App.StoreData.StoreName,
             Title = plan.Name,

@@ -2,7 +2,6 @@
 @using BTCPayServer.Abstractions.Contracts
 @inject LanguageService LangService
 @inject BTCPayServerEnvironment Env
-@inject IEnumerable<IUIExtension> UiExtensions
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model CheckoutModel
 @{
@@ -10,7 +9,6 @@
 	ViewData["Title"] = Model.HtmlTitle;
     ViewData["StoreBranding"] = Model.StoreBranding;
 	Csp.UnsafeEval();
-	var hasPaymentPlugins = UiExtensions.Any(extension => extension.Location == "checkout-payment-method");
 }
 @functions {
     private string ToJsValue(object value)
@@ -88,7 +86,7 @@
                         :show-recommended-fee="showRecommendedFee"
                         class="pb-4" />
                 </div>
-                <div v-if="displayedPaymentMethods.length > 1 || @Safe.Json(hasPaymentPlugins)" class="mt-3 mb-2">
+                <div class="mt-3 mb-2 payment-methods-wrapper">
                     <h6 class="text-center mb-3" v-t="'pay_with'"></h6>
                     <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2 pb-2">
                         <a v-for="crypto in displayedPaymentMethods"

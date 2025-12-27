@@ -117,6 +117,13 @@ section dl > div dd {
 #payment .btcpay-pills .btcpay-pill {
     padding: var(--btcpay-space-xs) var(--btcpay-space-m);
 }
+
+/* Do not show payments methods selector if there is only one */
+#payment .payment-methods-wrapper:not(:has(.btcpay-pills>*:nth-child(2)))
+{
+    display: none;
+}
+
 #form > form,
 #result > div {
     display: flex;

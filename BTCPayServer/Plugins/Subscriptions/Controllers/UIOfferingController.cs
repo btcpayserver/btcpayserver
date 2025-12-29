@@ -304,7 +304,7 @@ public partial class UIOfferingController(
         else if (section == SubscriptionSection.Mails)
         {
             var settings = await emailSenderFactory.GetSettings(storeId);
-            vm.EmailConfigured = settings is not null;
+            vm.EmailConfigured = settings?.IsComplete() is true;
             vm.PaymentRemindersDays = offering.DefaultPaymentRemindersDays;
             vm.EmailRules = new();
 

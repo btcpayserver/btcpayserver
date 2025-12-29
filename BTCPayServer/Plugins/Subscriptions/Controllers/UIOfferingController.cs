@@ -69,7 +69,11 @@ public partial class UIOfferingController(
         };
 
         if (prefilledEmail != null && prefilledEmail.IsValidEmail())
+        {
+            checkoutData.NewSubscriberEmail = prefilledEmail;
             checkoutData.InvoiceMetadata = new InvoiceMetadata() { BuyerEmail = prefilledEmail }.ToJObject().ToString();
+        }
+
         ctx.PlanCheckouts.Add(checkoutData);
         await ctx.SaveChangesAsync();
         return RedirectToPlanCheckout(checkoutData.Id);

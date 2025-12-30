@@ -130,7 +130,8 @@ public class SubscriptionHostedService(
             }
 
             await ctx.SaveChangesAsync();
-            await UpdateSubscriptionStates(subCtx, move.MemberSelector);
+            // await UpdateSubscriptionStates(subCtx, move.MemberSelector);
+            this.PushEvent(new Poll());
         }
     }
 

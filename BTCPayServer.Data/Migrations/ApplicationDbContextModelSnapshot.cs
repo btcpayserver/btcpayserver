@@ -713,8 +713,6 @@ namespace BTCPayServer.Migrations
 
                     b.HasIndex("StoreDataId");
 
-                    b.HasIndex("Title");
-
                     b.ToTable("PaymentRequests");
                 });
 
@@ -1585,6 +1583,10 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("ProcessingInvoiceId")
                         .HasColumnType("text")
                         .HasColumnName("processing_invoice_id");
+
+                    b.Property<DateTimeOffset?>("ReminderDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reminder_date");
 
                     b.Property<string>("SuspensionReason")
                         .HasColumnType("text")

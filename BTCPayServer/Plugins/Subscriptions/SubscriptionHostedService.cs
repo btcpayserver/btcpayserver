@@ -126,6 +126,8 @@ public class SubscriptionHostedService(
                     member.TrialEnd -= move.Period;
                 if (member.GracePeriodEnd is not null)
                     member.GracePeriodEnd -= move.Period;
+                if (member.ReminderDate is not null)
+                    member.ReminderDate -= move.Period;
                 member.PlanStarted -= move.Period;
             }
 
@@ -221,10 +223,10 @@ public class SubscriptionHostedService(
         {
             public override IQueryable<SubscriberData> Where(IQueryable<SubscriberData> query)
                 => From is null
-                    ? query.Where(q => (q.PeriodEnd < To || q.GracePeriodEnd < To || q.TrialEnd < To))
+                    ? query.Where(q => (q.PeriodEnd < To || q.GracePeriodEnd < To || q.TrialEnd < To || q.ReminderDate < To))
                     : query.Where(q =>
                         (q.PeriodEnd >= From && q.PeriodEnd < To) || (q.GracePeriodEnd >= From && q.GracePeriodEnd < To) ||
-                        (q.TrialEnd >= From && q.TrialEnd < To));
+                        (q.TrialEnd >= From && q.TrialEnd < To) || (q.ReminderDate >= From && q.ReminderDate < To));
         }
 
         public abstract IQueryable<SubscriberData> Where(IQueryable<SubscriberData> query);
@@ -288,7 +290,7 @@ public class SubscriptionHostedService(
                 }
             }
 
-            var needReminder = m.GetReminderDate() <= now &&
+            var needReminder = m.ReminderDate <= now &&
                                !m.PaymentReminded &&
                                m.MissingCredit() >= 0m;
             if (needReminder)

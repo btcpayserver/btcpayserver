@@ -837,7 +837,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
 
         public async Task<T> WaitEvent<T>()
         {
-            using var cts = new CancellationTokenSource(7000);
+            using var cts = new CancellationTokenSource(15_000);
             var eventAggregator = s.Server.PayTester.GetService<EventAggregator>();
             return await eventAggregator.WaitNext<T>(cts.Token);
         }

@@ -69,6 +69,9 @@ public class SubscriberData : BaseEntityData
     [Column("period_end")]
     public DateTimeOffset? PeriodEnd { get; set; }
 
+    [Column("reminder_date")]
+    public DateTimeOffset? ReminderDate { get; set; }
+
     public decimal? GetUnusedPeriodAmount() => GetUnusedPeriodAmount(DateTimeOffset.UtcNow);
 
     public decimal? GetUnusedPeriodAmount(DateTimeOffset now)
@@ -197,6 +200,7 @@ public class SubscriberData : BaseEntityData
             PlanStarted = now;
             PeriodEnd = null;
             TrialEnd = now.AddDays(plan.TrialDays);
+            ReminderDate = TrialEnd - TimeSpan.FromDays(PaymentReminderDaysOrDefault);
             GracePeriodEnd = null;
             PaidAmount = null;
         }
@@ -212,26 +216,12 @@ public class SubscriberData : BaseEntityData
             };
 
             (PeriodEnd, GracePeriodEnd) = plan.GetPeriodEnd(startDate);
+            ReminderDate = PeriodEnd - TimeSpan.FromDays(PaymentReminderDaysOrDefault);
             PlanStarted = now;
             TrialEnd = null;
             PaidAmount = plan.Price;
         }
     }
-
-    public DateTimeOffset? GetReminderDate()
-    {
-        DateTimeOffset? date = this switch
-        {
-            { Phase: PhaseTypes.Normal or PhaseTypes.Grace, PeriodEnd: { } pe } => pe,
-            { Phase: PhaseTypes.Trial, TrialEnd: { } te } => te,
-            _ => null
-        };
-        if (date is null)
-            return null;
-
-        return date - TimeSpan.FromDays(PaymentReminderDaysOrDefault);
-    }
-
 
     [NotMapped]
     public int PaymentReminderDaysOrDefault => PaymentReminderDays ?? Plan.Offering.DefaultPaymentRemindersDays;

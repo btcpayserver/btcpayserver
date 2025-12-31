@@ -218,7 +218,7 @@
         <div class="d-flex align-items-center gap-3">
             @if (Model.Subscriber.TestAccount)
             {
-                @if (Model.Subscriber.GetReminderDate() is var o && DateTimeOffset.UtcNow < o)
+                @if (DateTimeOffset.UtcNow < Model.Subscriber.ReminderDate)
                 {
                     <form id="MoveToReminder"
                           asp-action="MoveTime"
@@ -357,8 +357,7 @@
             <partial name="NextAction" model="@("btn btn-info", Model.Subscriber)" />
         </div>
     }
-    else if (Model.Subscriber.GetReminderDate() is { } reminderDate2 &&
-             reminderDate2 < DateTimeOffset.UtcNow &&
+    else if (Model.Subscriber.ReminderDate < DateTimeOffset.UtcNow &&
              !Model.Subscriber.IsNextPlanRenewable)
     {
         <div class="alert-translucent alert-warning">
@@ -372,8 +371,7 @@
             <partial name="NextAction" model="@("btn btn-warning", Model.Subscriber)" />
         </div>
     }
-    else if (Model.Subscriber.GetReminderDate() is { } reminderDate &&
-             reminderDate < DateTimeOffset.UtcNow &&
+    else if (Model.Subscriber.ReminderDate < DateTimeOffset.UtcNow &&
              Model.Subscriber.MissingCredit() != 0)
     {
         @if (daysRemaining == 0)

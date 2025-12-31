@@ -235,7 +235,7 @@ public class UISubscriberPortalController(
 
 
         var selector = new SubscriptionHostedService.MemberSelector.Single(portal.SubscriberId);
-        if (command == "reminder" && portal.Subscriber.GetReminderDate() is { } reminderDate)
+        if (command == "reminder" && portal.Subscriber.ReminderDate is { } reminderDate)
         {
             await SubsService.MoveTime(selector, reminderDate - DateTimeOffset.UtcNow);
             TempData.SetStatusSuccess("Moved to reminder");

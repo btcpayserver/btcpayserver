@@ -17,7 +17,7 @@ namespace BTCPayServer.HostedServices
     public enum NBXplorerState
     {
         NotConnected,
-        Synching,
+        Syncing,
         Ready
     }
 
@@ -156,11 +156,11 @@ namespace BTCPayServer.HostedServices
                             }
                             else
                             {
-                                State = NBXplorerState.Synching;
+                                State = NBXplorerState.Syncing;
                             }
                         }
                         break;
-                    case NBXplorerState.Synching:
+                    case NBXplorerState.Syncing:
                         status = await _Client.GetStatusAsync(cancellation);
                         if (status == null)
                         {
@@ -179,7 +179,7 @@ namespace BTCPayServer.HostedServices
                         }
                         else if (!status.IsFullySynched)
                         {
-                            State = NBXplorerState.Synching;
+                            State = NBXplorerState.Syncing;
                         }
                         break;
                 }
@@ -216,7 +216,7 @@ namespace BTCPayServer.HostedServices
             _Dashboard.Publish(_Network, State, status, mempoolInfo, error);
             if (oldState != State)
             {
-                if (State == NBXplorerState.Synching)
+                if (State == NBXplorerState.Syncing)
                 {
                     PollInterval = TimeSpan.FromSeconds(10);
                 }

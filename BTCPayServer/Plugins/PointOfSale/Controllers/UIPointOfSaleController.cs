@@ -330,6 +330,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                           selectedChoices.Any(c => c.PriceType == AppItemPriceType.Topup);
 
             var receiptData = PosReceiptData.Create(isTopup, selectedChoices, jposData, order, summary, settings.Currency, _displayFormatter);
+            if (!isTopup && summary.PriceTaxIncludedWithTips <= 0m && settings.DisableZeroAmountInvoice is true)
+                return Error(StringLocalizer["Zero amount invoices are disabled"].Value);
+
             try
             {
                 var invoice = await _invoiceController.CreateInvoiceCoreRaw(new CreateInvoiceRequest
@@ -566,6 +569,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 Description = settings.Description,
                 NotificationUrl = settings.NotificationUrl,
                 RedirectUrl = settings.RedirectUrl,
+                DisableZeroAmountInvoice = settings.DisableZeroAmountInvoice is true,
                 SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"appid:{app.Id}",
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : "",
                 FormId = settings.FormId
@@ -661,6 +665,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 HtmlLang = vm.HtmlLang,
                 HtmlMetaTags = _safe.RawMeta(vm.HtmlMetaTags, out bool wasHtmlModified),
                 Description = vm.Description,
+                DisableZeroAmountInvoice = vm.DisableZeroAmountInvoice,
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? null : bool.Parse(vm.RedirectAutomatically),
                 FormId = vm.FormId
             };

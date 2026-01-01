@@ -203,6 +203,10 @@
                         <span asp-validation-for="CustomButtonText" class="text-danger"></span>
                     </div>
                 </div>
+                <div class="form-group d-flex align-items-center">
+                    <input asp-for="DisableZeroAmountInvoice" type="checkbox" class="btcpay-toggle me-3"/>
+                    <label asp-for="DisableZeroAmountInvoice" class="form-check-label"></label>
+                </div>
             </fieldset>
         </div>
     </div>

@@ -21,6 +21,7 @@ namespace BTCPayServer.Client.Models
         public FeeRate FeeRate { get; set; }
         public bool ProceedWithPayjoin { get; set; } = true;
         public bool ProceedWithBroadcast { get; set; } = true;
+        public bool SignWithSeed { get; set; } = true;
         public bool NoChange { get; set; } = false;
         [JsonProperty(ItemConverterType = typeof(SaneOutpointJsonConverter))]
         public List<OutPoint> SelectedInputs { get; set; } = null;

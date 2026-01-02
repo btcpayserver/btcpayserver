@@ -101,5 +101,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public string FormId { get; set; }
 
         public bool Archived { get; set; }
+
+        [Display(Name = "Disable zero amount invoices")]
+        public bool DisableZeroAmountInvoice { get; set; }
     }
 }

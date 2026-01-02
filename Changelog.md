@@ -1,11 +1,28 @@
 # Changelog
 
+## 2.3.2
+
+This release fixes an important regression from `2.3.1` affecting support for payment methods other than BTC and Lightning.
+It also fixes several bugs in the new subscriptions feature that have been reported since the last release.
+
+### Bug fixes
+
+* Fix: Alternative payment methods would not show on the invoice checkout when the BTC Unified QR code was enabled (#7053) @NicolasDorier
+* Fix: Payment reminders were not sent to subscribers (#7055 #7064) @NicolasDorier
+* Fix: In the UI, the prefilled email set when creating a new subscriber was ignored (#7059) @NicolasDorier
+* Fix: The Subscriptions Mail tab did not always warn about unconfigured emails @NicolasDorier
+* Fix: The QR code on the subscription plan checkout did not redirect to the correct page (#7054 #7058) @yemmyharry
+
+### New features
+
+* PoS: Ability to disable zero-amount invoices (#7035 #7066) @NicolasDorier
+
 ## 2.3.1
 
 Some plugins such as Ecwid plugin would crash BTCPay Server at startup in a loop. (See [this issue](https://github.com/Nisaba/btcpayserver-plugins/issues/7))
 
 This release fixes that issue.
-If you experience this issue after upgrading to 2.3.0, you need to update through command line. You can contact us on chat.btcpayserver.org, if you need some support.
+If you experience this issue after upgrading to 2.3.0, you ne6772ed to update through command line. You can contact us on chat.btcpayserver.org, if you need some support.
 
 ### Bug fixes
 

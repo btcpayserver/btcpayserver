@@ -40,15 +40,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
-    <PackageReference Include="Microsoft.Playwright" Version="1.52.0" />
-    <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.16" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.11" />
-    <PackageReference Include="Selenium.Support" Version="4.1.1" />
-    <PackageReference Include="Selenium.WebDriver" Version="4.22.0" />
-    <PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="133.0.6943.5300" />
-    <PackageReference Include="xunit" Version="2.9.2" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.57.0" />
+    <PackageReference Include="Newtonsoft.Json.Schema" Version="4.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="10.0.1" />
+    <PackageReference Include="Selenium.Support" Version="4.39.0" />
+    <PackageReference Include="Selenium.WebDriver" Version="4.39.0" />
+    <PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="143.0.7499.16900" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>

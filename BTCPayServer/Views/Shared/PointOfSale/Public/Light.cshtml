@@ -14,8 +14,9 @@
     <script src="~/pos/keypad.js" asp-append-version="true"></script>
 }
 <div id="PosKeypad" class="public-page-wrap">
-    <partial name="_StatusMessage" />
+	<partial name="_StatusMessage" />
     <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.StoreBranding)" />
+	@await Component.InvokeAsync("UiExtensionPoint", new { location = "pos-header", model = Model })
     @if (Context.Request.Query.ContainsKey("simple"))
     {
         <partial name="PointOfSale/Public/MinimalLight" model="Model" />

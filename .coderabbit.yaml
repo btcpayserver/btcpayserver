@@ -40,7 +40,7 @@ reviews:
     base_branches: []
   finishing_touches:
     docstrings:
-      enabled: true
+      enabled: false
   tools:
     ast-grep:
       rule_dirs: []

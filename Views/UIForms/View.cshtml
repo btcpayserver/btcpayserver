@@ -1,0 +1,58 @@
+@inject BTCPayServer.Services.BTCPayServerEnvironment Env
+@model BTCPayServer.Forms.Models.FormViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = Model.FormName;
+    ViewData["StoreBranding"] = Model.StoreBranding;
+}
+<!DOCTYPE html>
+<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
+<head>
+    <partial name="LayoutHead" />
+    <meta name="robots" content="noindex,nofollow">
+    <style>#FormView { --wrap-max-width: 576px; }</style>
+</head>
+<body class="min-vh-100">
+    <div id="FormView" class="public-page-wrap">
+        <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData) { { "Margin", "mb-4" } })" />
+        @if (!string.IsNullOrEmpty(Model.StoreName) || !string.IsNullOrEmpty(Model.StoreBranding.LogoUrl))
+        {
+            <partial name="_StoreHeader" model="(Model.StoreName, Model.StoreBranding)" />
+        }
+        else
+        {
+            <h1 class="h3 text-center mt-3">@ViewData["Title"]</h1>
+        }
+        <main class="flex-grow-1">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly"></div>
+            }
+            <partial name="_FormTopMessages" model="@Model.Form" />
+            <div class="d-flex flex-column justify-content-center gap-4">
+                <div class="tile">
+                    @if (string.IsNullOrEmpty(Model.AspAction))
+                    {
+                        <form method="post" novalidate="novalidate">
+                            <partial name="_FormWrap" model="@Model" />
+                        </form>
+                    }
+                    else
+                    {
+                        <form method="post" asp-action="@Model.AspAction" asp-controller="@Model.AspController" asp-all-route-data="Model.RouteParameters">
+                            <partial name="_FormWrap" model="@Model" />
+                        </form>
+                    }
+                </div>
+            </div>
+        </main>
+        <footer class="store-footer">
+            <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
+                <span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" />
+            </a>
+        </footer>
+    </div>
+    <partial name="LayoutFoot" />
+    <partial name="_ValidationScriptsPartial"/>
+</body>
+</html>

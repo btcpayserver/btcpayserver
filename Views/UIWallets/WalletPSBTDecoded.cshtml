@@ -1,0 +1,255 @@
+@using BTCPayServer.Controllers
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
+@model WalletPSBTViewModel
+@{
+	var walletId = Context.GetRouteValue("walletId").ToString();
+	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
+	var isReady = !Model.HasErrors;
+    var isSignable = !isReady;
+    var needsExport = !isSignable && !isReady;
+    Layout = "_LayoutWizard";
+	ViewData.SetTitle(StringLocalizer["Confirm broadcasting this transaction"]);
+    Csp.UnsafeEval();
+}
+
+@section PageHeadContent {
+    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">
+    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true" />
+    <style>
+        .nav-pills .nav-link.active {
+            color: var(--btcpay-secondary-text-active);
+            background-color: var(--btcpay-secondary-bg-active);
+        }
+    </style>
+}
+
+@section PageFootContent {
+    <script src="~/vendor/highlightjs/highlight.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/bbqr/bbqr.iife.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
+
+    <script>
+        hljs.initHighlightingOnLoad();
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const psbtHex = @Json.Serialize(Model.PSBTHex);
+            const buffer = new window.URlib.Buffer.from(psbtHex, "hex");
+            const cryptoPSBT = new window.URlib.CryptoPSBT(buffer);
+            const encoder = cryptoPSBT.toUREncoder();
+            const bbqrSplitResult = BBQr.splitQRs(buffer, 'P', { maxVersion: 10});
+            const modes = {
+                ur: { title: "UR", fragments: encoder.encodeWhole() },
+                static: { title: "Static", fragments: [psbtHex] },
+                bbqr: { title: "BBQr", fragments: bbqrSplitResult.parts}
+            };
+            const continueCallback = () => {
+                document.querySelector("#PSBTOptionsImportHeader button").click()
+                document.getElementById("scanqrcode").click()
+            };
+
+            initQRShow({
+                title: "Scan the PSBT with your wallet",
+                modes,
+                continueTitle: "Continue with signed PSBT",
+                continueCallback
+            });
+
+            initCameraScanningApp("Scan the PSBT from your wallet", data => {
+                let hex = data;
+                if (typeof(data) === "object") {
+                    if (data.type === "crypto-psbt") {
+                        const psbt = window.URlib.CryptoPSBT.fromCBOR(data.cbor);
+                        hex = psbt.getPSBT().toString('hex');
+                    } else {
+                        console.error('Unexpected UR type', data.type)
+                    }
+                } else if (typeof(data) === 'string') {
+                    hex = data;
+                }
+                document.getElementById("ImportedPSBT").value = hex;
+                document.getElementById("Decode").click();
+            }, "scanModal");
+        });
+    </script>
+}
+
+@section Navbar {
+	<partial name="_BackAndReturn" model="Model" />
+}
+
+<header class="text-center mb-3">
+    <h1>@ViewData["Title"]</h1>
+</header>
+
+<partial name="_PSBTInfo" model="Model" />
+
+@if (isSignable)
+{
+    <form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" class="my-5">
+        <input type="hidden" asp-for="CryptoCode" />
+        <input type="hidden" asp-for="NBXSeedAvailable" />
+        <input type="hidden" asp-for="PSBT" />
+        <input type="hidden" asp-for="FileName" />
+        <input type="hidden" asp-for="ReturnUrl" />
+        <input type="hidden" asp-for="BackUrl" />
+
+        <partial name="SigningContext" for="SigningContext" />
+        <div class="d-flex flex-column flex-sm-row flex-wrap justify-content-center align-items-sm-center gap-2">
+            <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" text-translate="true">Sign transaction</button>
+            @if (Model.SigningContext.PendingTransactionId is null && !Model.NBXSeedAvailable)
+            {
+                <button type="submit" id="CreatePendingTransaction" name="command" value="createpending"
+                        class="btn btn-primary">Create pending transaction</button>
+            }
+            else if (Model.SigningContext.PendingTransactionId is not null)
+            {
+                <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId"
+                   asp-route-pendingTransactionId="@Model.SigningContext.PendingTransactionId" class="btn btn-danger">Cancel</a>
+            }
+        </div>
+    </form>
+}
+else if (isReady)
+{
+    <form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@walletId" class="my-5">
+        <input type="hidden" asp-for="SigningKey" />
+        <input type="hidden" asp-for="SigningKeyPath" />
+        <partial name="SigningContext" for="SigningContext" />
+        <input type="hidden" asp-for="ReturnUrl" />
+        <input type="hidden" asp-for="BackUrl" />
+        <div class="d-flex flex-column flex-sm-row flex-wrap justify-content-center align-items-sm-center">
+            @if (!string.IsNullOrEmpty(Model.SigningContext?.PayJoinBIP21))
+            {
+                <button type="submit" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" name="command" value="payjoin" text-translate="true">Broadcast (Payjoin)</button>
+                <span class="mx-2">or</span>
+                <button type="submit" class="btn btn-secondary" name="command" value="broadcast" text-translate="true">Broadcast (Simple)</button>
+            }
+            else
+            {
+                <button id="BroadcastTransaction" type="submit" class="btn btn-primary" name="command" value="broadcast" text-translate="true">Broadcast transaction</button>
+            }
+        </div>
+    </form>
+}
+else
+{
+    <p class="lead text-secondary mt-5" text-translate="true">Export the PSBT for your wallet. Sign it with your wallet and import the signed PSBT version here for finalization and broadcasting.</p>
+}
+
+<div class="accordion" id="PSBTOptions">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="PSBTOptionsExportHeader">
+            <button type="button" class="accordion-button @(needsExport ? "" : "collapsed")" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsExportContent" aria-controls="PSBTOptionsExportContent" aria-expanded="@(needsExport ? "true" : "false")">
+                <span class="h5">Export PSBT @(isReady ? "" : "for signing")</span>
+                <vc:icon symbol="caret-down" />
+            </button>
+        </h2>
+        <div id="PSBTOptionsExportContent" class="accordion-collapse collapse @(needsExport ? "show" : "")" aria-labelledby="PSBTOptionsExportHeader" data-bs-parent="#PSBTOptions">
+            <div class="accordion-body">
+                <form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" class="mb-2">
+                    <input type="hidden" asp-for="CryptoCode" />
+                    <input type="hidden" asp-for="PSBT" />
+                    <input type="hidden" asp-for="ReturnUrl" />
+                    <input type="hidden" asp-for="BackUrl" />
+                    <div class="d-flex flex-column flex-sm-row flex-wrap align-items-sm-center">
+                        <button name="command" type="submit" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" value="save-psbt" text-translate="true">Download PSBT file</button>
+                        <button name="command" type="button" class="btn btn-primary mb-3 mb-sm-0 me-sm-2 only-for-js" data-bs-toggle="modal" data-bs-target="#scan-qr-modal" text-translate="true">Show QR for wallet camera</button>
+                        <a id="ShowRawVersion" href="#ExportOptions" data-bs-toggle="collapse" class="btn btn-link text-secondary" text-translate="true">Show raw versions</a>
+                    </div>
+                </form>
+                <div id="ExportOptions" class="collapse">
+                    <div class="pt-4">
+                        <ul class="nav mb-3" id="export-tab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="btcpay-pill active" id="export-base64-tab" data-bs-toggle="pill" data-bs-target="#export-base64" type="button" role="tab" aria-controls="export-base64" aria-selected="true">Base64</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="btcpay-pill" id="export-hex-tab" data-bs-toggle="pill" data-bs-target="#export-hex" type="button" role="tab" aria-controls="export-hex" aria-selected="false">HEX</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="btcpay-pill" id="export-json-tab" data-bs-toggle="pill" data-bs-target="#export-json" type="button" role="tab" aria-controls="export-json" aria-selected="false">JSON</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content" id="export-tabContent">
+                            <div class="tab-pane fade show active" id="export-base64" role="tabpanel" aria-labelledby="export-base64-tab">
+                                <pre class="mb-4 text-wrap"><code class="text" id="psbt-base64">@Model.PSBT</code></pre>
+                            </div>
+                            <div class="tab-pane fade" id="export-hex" role="tabpanel" aria-labelledby="export-hex-tab">
+                                <pre class="mb-4 text-wrap"><code class="text">@Model.PSBTHex</code></pre>
+                            </div>
+                            <div class="tab-pane fade" id="export-json" role="tabpanel" aria-labelledby="export-json-tab">
+                                <pre class="mb-0"><code class="json">@Model.Decoded</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @if (!isReady)
+    {
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="PSBTOptionsImportHeader">
+                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsImportContent" aria-controls="PSBTOptionsImportContent" aria-expanded="false">
+                    <span class="h5" text-translate="true">Provide updated PSBT</span>
+                    <vc:icon symbol="caret-down" />
+                </button>
+            </h2>
+            <div id="PSBTOptionsImportContent" class="accordion-collapse collapse" aria-labelledby="PSBTOptionsImportHeader" data-bs-parent="#PSBTOptions">
+                <div class="accordion-body">
+                    <form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" enctype="multipart/form-data" class="mb-2">
+                        <input type="hidden" asp-for="ReturnUrl" />
+                        <input type="hidden" asp-for="BackUrl" />
+                        <partial name="SigningContext" for="SigningContext" />
+                        <div class="form-group">
+                            <label for="ImportedPSBT" class="form-label" text-translate="true">PSBT content</label>
+                            <textarea id="ImportedPSBT" name="PSBT" class="form-control" rows="5"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="UploadedPSBTFile" class="form-label"></label>
+                            <input asp-for="UploadedPSBTFile" type="file" class="form-control">
+                        </div>
+                        <div class="d-flex flex-column flex-sm-row flex-wrap align-items-sm-center">
+                            @if (this.Model.SigningContext.PendingTransactionId is not null)
+                            {
+                                <button type="submit" name="command" value="collect" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" id="Collect" text-translate="true">Collect signatures</button>
+                            }
+                            else
+                            {
+                                <button type="submit" name="command" value="decode" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" id="Decode" text-translate="true">Decode PSBT</button>
+                            }
+                            <button type="button" id="scanqrcode" class="btn btn-primary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" text-translate="true">Scan wallet QR with camera</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="PSBTOptionsAdvancedHeader">
+            <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsAdvancedContent" aria-controls="PSBTOptionsAdvancedContent" aria-expanded="false">
+                <span class="h5">Add metadata to PSBT (advanced)</span>
+                <vc:icon symbol="caret-down" />
+            </button>
+        </h2>
+        <div id="PSBTOptionsAdvancedContent" class="accordion-collapse collapse" aria-labelledby="PSBTOptionsAdvancedHeader" data-bs-parent="#PSBTOptions">
+            <div class="accordion-body">
+                <form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" class="mb-2">
+                    <input type="hidden" asp-for="PSBT" />
+                    <input type="hidden" asp-for="ReturnUrl" />
+                    <input type="hidden" asp-for="BackUrl" />
+                    <p class="mb-2">For exporting the signed PSBT and transaction information to a wallet, update the PSBT.</p>
+                    <button id="update-psbt" type="submit" name="command" value="update" class="btn btn-secondary">Update PSBT</button>
+                    <p class="mt-4 mb-2">For batching transactions, you can combine this PSBT with another one.</p>
+                    <button id="combine-psbt" type="submit" name="command" value="combine" class="btn btn-secondary">Combine PSBT</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<partial name="ShowQR" />
+<partial name="CameraScanner" />

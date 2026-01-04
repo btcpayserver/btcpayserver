@@ -1,0 +1,65 @@
+@inject BTCPayServer.Services.BTCPayServerEnvironment _env
+
+<footer class="btcpay-footer d-print-none">
+    <div class="d-flex flex-wrap flex-column justify-content-between flex-xl-row gap-3">
+        <div class="d-flex flex-wrap justify-content-center justify-content-xl-start gap-4">
+            <a href="https://github.com/btcpayserver/btcpayserver" target="_blank" rel="noreferrer noopener">
+                <vc:icon symbol="social-github"/>
+                <span>Github</span>
+            </a>
+            <a href="https://chat.btcpayserver.org/" target="_blank" rel="noreferrer noopener">
+                <vc:icon symbol="social-mattermost"/>
+                <span>Mattermost</span>
+            </a>
+            <a href="https://twitter.com/BtcpayServer" target="_blank" rel="noreferrer noopener">
+                <vc:icon symbol="social-twitter"/>
+                <span>Twitter</span>
+            </a>
+            <a href="https://t.me/btcpayserver" target="_blank" rel="noreferrer noopener">
+                <vc:icon symbol="social-telegram"/>
+                <span>Telegram</span>
+            </a>
+            <a href="https://btcpayserver.org/donate/" target="_blank" rel="noreferrer noopener">
+                <vc:icon symbol="donate"/>
+                <span text-translate="true">Donate</span>
+            </a>
+            <a asp-controller="UIHome" asp-action="SwaggerDocs" target="_blank">
+                <vc:icon symbol="api"/>
+                <span text-translate="true">API</span>
+            </a>
+            <a href="https://docs.btcpayserver.org/" target="_blank" rel="noreferrer noopener">
+                <vc:icon symbol="docs"/>
+                <span text-translate="true">Docs</span>
+            </a>
+            @if (!string.IsNullOrEmpty(_env.OnionUrl) && !Context.Request.IsOnion())
+            {
+                <button type="button" class="d-flex align-items-center btn btn-link clipboard-button clipboard-button-hover" data-clipboard="@_env.OnionUrl" data-clipboard-hover>
+                    <vc:icon symbol="logo-tor"/>
+                    <span text-translate="true">Copy Tor URL</span>
+                </button>
+            }
+        </div>
+        @if (User.Identity.IsAuthenticated)
+        {
+            <div class="text-center">
+                @_env.ToString()
+            </div>
+        }
+    </div>
+</footer>
+@if (User.Identity.IsAuthenticated)
+{
+    <div id="StatusUpdates" class="toast-container">
+        <div id="BlazorStatus" class="toast blazor-status" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <span class="blazor-status__state btcpay-status"></span>
+                <h6 class="blazor-status__title ms-2 mb-0 me-auto"></h6>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="@StringLocalizer["Close"]">
+                    <vc:icon symbol="close" />
+                </button>
+            </div>
+            <div class="toast-body blazor-status__body text-secondary pt-0"></div>
+        </div>
+    </div>
+
+}

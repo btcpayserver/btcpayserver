@@ -1,0 +1,60 @@
+@model LoginWithLNURLAuthViewModel
+@{
+    Dictionary<string, string> formats = new Dictionary<string, string>()
+    {
+        { "Bech32", LNURL.LNURL.EncodeUri(Model.LNURLEndpoint, "login", true).ToString().ToUpperInvariant() },
+        { "URI", LNURL.LNURL.EncodeUri(Model.LNURLEndpoint, "login", false).ToString().ToUpperInvariant() }
+    };
+}
+
+<div id="lnurlauth-section" class="twoFaBox">
+    <form id="authform" asp-action="LoginWithLNURLAuth" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
+        <input type="hidden" asp-for="LNURLEndpoint"/>
+        <input type="hidden" asp-for="UserId"/>
+    </form>
+    <h2 class="h3 mb-3" text-translate="true">LNURL Authentication</h2>
+    <p text-translate="true">Scan the QR code with your Lightning wallet to sign in.</p>
+    <div class="align-items-center" style="width:256px">
+        <ul class="nav my-3 btcpay-pills align-items-center gap-2">
+            @for (var i = 0; i < formats.Count; i++)
+            {
+                var mode = formats.ElementAt(i);
+                <li class="nav-item">
+                    <a class="btcpay-pill @(i == 0 ? "active" : "")" data-bs-toggle="tab" data-bs-target="#@mode.Key" role="tab" href="#">
+                        @mode.Key
+                    </a>
+                </li>
+            }
+        </ul>
+        <div class="tab-content">
+            @for (var i = 0; i < formats.Count; i++)
+            {
+                var mode = formats.ElementAt(i);
+                <div class="tab-pane @(i == 0 ? "active" : "")" id="@mode.Key" role="tabpanel">
+                    <div class="qr-container" style="min-height:256px">
+                        <vc:qr-code data="@mode.Value" />
+                    </div>
+                    <a href="@mode.Value" class="btn btn-primary mt-3" rel="noreferrer noopener" text-translate="true">
+                        Open in wallet
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function check() {
+        const request = new XMLHttpRequest();
+        request.onload  = function() {
+          if (request.readyState === 4 && request.status === 200) {
+            setTimeout(check, 1000);
+          } else if (request.readyState === 4 ){
+              document.getElementById("authform").submit();
+          }
+        }
+        request.open("GET", @Safe.Json(Url.Action("LoginCheck", "UILNURLAuth", new { userId = Model.UserId })), true);
+        request.send(new FormData());
+    }
+    check();
+</script>

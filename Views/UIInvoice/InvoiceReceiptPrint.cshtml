@@ -1,0 +1,273 @@
+@model BTCPayServer.Models.InvoicingModels.InvoiceReceiptViewModel
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Components.QRCode
+@using BTCPayServer.Services
+@inject DisplayFormatter DisplayFormatter
+@{
+    Layout = null;
+    ViewData["Title"] = $"Receipt from {Model.StoreName}";
+    var isProcessing = Model.Status == InvoiceStatus.Processing;
+    var isFreeInvoice = (Model.Status == InvoiceStatus.New && Model.Amount == 0);
+    var isSettled = Model.Status == InvoiceStatus.Settled;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="~/favicon.ico" type="image/x-icon">
+    <meta name="robots" content="noindex">
+    <title>@ViewData["Title"]</title>
+    @* CSS *@
+    <link href="~/main/bootstrap/bootstrap.css" asp-append-version="true" rel="stylesheet" />
+    <link href="~/main/fonts/OpenSans.css" asp-append-version="true" rel="stylesheet" />
+    <link href="~/main/layout.css" asp-append-version="true" rel="stylesheet" />
+    <link href="~/main/site.css" asp-append-version="true" rel="stylesheet" />
+    <link href="~/main/themes/default.css" asp-append-version="true" rel="stylesheet" />
+    <meta name="robots" content="noindex,nofollow">
+    @if (isProcessing)
+    {
+        <script type="text/javascript">
+            setTimeout(() => { window.location.reload(); }, 10000);
+        </script>
+    }
+    else if (isFreeInvoice)
+    {
+        <script type="text/javascript">
+            setTimeout(() => { window.location.reload(); }, 2000);
+        </script>
+    }
+    <style>
+        h1 {
+            margin: 0;
+        }
+
+        .qr-code {
+            width: 128px;
+        }
+
+        /* change height as you like */
+        @@media print {
+            body {
+                width: 58mm;
+                margin: 0;
+                padding: 0;
+            }
+
+            .p-1 {
+                padding: 1mm !important;
+            }
+
+            .m-1 {
+                margin: 1mm !important;
+            }
+        }
+        /* this line is needed for fixing Chrome's bug */
+        @@page {
+            margin-left: 0px;
+            margin-right: 0px;
+            margin-top: 0px;
+            margin-bottom: 0px;
+        }
+    </style>
+</head>
+
+<body class="m-0 p-0 bg-white">
+<center>
+    <partial name="_StoreHeader" model="(Model.StoreName, Model.StoreBranding)" />
+    <div id="InvoiceSummary" style="max-width:600px">
+        @if (isProcessing)
+        {
+            <div class="lead text-center fw-semibold" id="invoice-processing">
+                The invoice has detected a payment but is still waiting to be settled.
+            </div>
+        }
+        else if (!isSettled)
+        {
+            <div class="lead text-center fw-semibold" id="invoice-unsettled">
+                The invoice is not settled.
+            </div>
+        }
+        else
+        {
+            var hasCart = Model.CartData?.Any() is true;
+            <div id="PaymentDetails">
+                <div class="my-2 text-center small">
+                    @if (!string.IsNullOrEmpty(Model.OrderId))
+                    {
+                        <div>Order ID: @Model.OrderId</div>
+                    }
+                    @Model.Timestamp.ToBrowserDate()
+                </div>
+                <table class="table table-borderless table-sm small my-0">
+                    @if (Model.AdditionalData?.Any() is true)
+                    {
+                        @foreach (var (key, value) in Model.AdditionalData)
+                        {
+                            <tr class="additional-data">
+                                <td class="text-secondary">@key</td>
+                                <td class="text-end">@value</td>
+                            </tr>
+                        }
+                        <tr>
+                            <td colspan="2"><hr class="w-100 my-0"/></td>
+                        </tr>
+                    }
+					@if (hasCart)
+                    {
+                        _ = Model.CartData.TryGetValue("cart", out var cart) || Model.CartData.TryGetValue("Cart", out cart);
+                        var posData = WellKnownPosData.TryParse(Model.CartData) ?? new();
+                        if (cart is Dictionary<string, object> { Keys.Count: > 0 } cartDict)
+                        {
+                            @foreach (var (key, value) in cartDict)
+                            {
+                                <tr class="cart-data">
+                                    <td class="key text-secondary">@key</td>
+                                    <td class="val text-end">@value</td>
+                                </tr>
+                            }
+                        }
+                        else if (cart is ICollection<object> { Count: > 0 } cartCollection)
+                        {
+                            @foreach (var value in cartCollection)
+                            {
+                                <tr>
+                                    <td class="val text-end">@value</td>
+                                </tr>
+                            }
+                        }
+
+                        @if (posData.ItemsTotal != null)
+                        {
+                            <tr class="sums-data">
+                                <td class="key text-secondary">Items total</td>
+                                <td class="val text-end">@posData.ItemsTotal</td>
+                            </tr>
+                        }
+                        @if (posData.Discount != null)
+                        {
+                            <tr class="sums-data">
+                                <td class="key text-secondary">Discount</td>
+                                <td class="val text-end">@posData.Discount</td>
+                            </tr>
+                        }
+                        @if (posData.Subtotal != null)
+                        {
+                            <tr class="sums-data">
+                                <td class="key text-secondary">Subtotal</td>
+                                <td class="val text-end">@posData.Subtotal</td>
+                            </tr>
+                        }
+                        @if (posData.Tax != null)
+                        {
+                            <tr class="sums-data">
+                                <td class="key text-secondary">Tax</td>
+                                <td class="val text-end">@posData.Tax</td>
+                            </tr>
+                        }
+                        @if (posData.Tip != null)
+                        {
+                            <tr class="sums-data">
+                                <td class="key text-secondary">Tip</td>
+                                <td class="val text-end">@posData.Tip</td>
+                            </tr>
+                        }
+                        @if (posData.Total != null)
+                        {
+                            <tr>
+                                <td colspan="2"><hr class="w-100 my-0"/></td>
+                            </tr>
+                            <tr class="sums-data">
+                                <td class="key text-secondary">Total</td>
+                                <td class="val text-end fw-semibold">@posData.Total</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr class="sums-data">
+                            <td class="key text-nowrap text-secondary">Total</td>
+                            <td class="val text-end fw-semibold">@DisplayFormatter.Currency(Model.Amount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</td>
+                        </tr>
+                    }
+                    @if (Model.Payments?.Any() is true)
+                    {
+                        <tr>
+                            <td colspan="2"><hr class="w-100 my-0"/></td>
+                        </tr>
+                        @for (var i = 0; i < Model.Payments.Count; i++)
+                        {
+                            var payment = Model.Payments[i];
+                            @if (Model.Payments.Count > 1)
+                            {
+                                <tr>
+                                    <td colspan="2" class="text-nowrap text-secondary">Payment @(i + 1)</td>
+                                </tr>
+                                <tr class="payment-data">
+                                    <td class="text-nowrap">Received</td>
+                                    <td>@payment.ReceivedDate.ToBrowserDate()</td>
+                                </tr>
+                            }
+                            <tr class="payment-data">
+                                <td class="text-nowrap text-secondary">@(Model.Payments.Count == 1 ? "Paid" : "")</td>
+                                <td class="text-end">@payment.AmountFormatted</td>
+                            </tr>
+                            <tr class="payment-data">
+                                <td colspan="2" class="text-end">@payment.PaidFormatted</td>
+                            </tr>
+                            <tr class="payment-data">
+                                <td class="text-nowrap text-secondary">Rate</td>
+                                <td class="text-end">@payment.RateFormatted</td>
+                            </tr>
+                            @if (!string.IsNullOrEmpty(payment.Destination))
+                            {
+                                <tr class="payment-data">
+                                    <td class="text-nowrap text-secondary">Destination</td>
+                                    <td class="text-break">
+                                        @if (payment.Destination.Length > 69)
+                                        {
+                                            <span>
+                                                <span>@payment.Destination[..19]</span>
+                                                <span>...</span>
+                                                <span>@payment.Destination.Substring(payment.Destination.Length - 20, 20)</span>
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            @payment.Destination
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                            @if (!string.IsNullOrEmpty(payment.PaymentProof))
+                            {
+                                <tr class="payment-data">
+                                    <td class="text-nowrap text-secondary">Pay Proof</td>
+                                    <td class="text-break">@payment.PaymentProof</td>
+                                </tr>
+                            }
+                        }
+                        <tr>
+                            <td colspan="2"><hr class="w-100 my-0"/></td>
+                        </tr>
+                    }
+                </table>
+            </div>
+            if (Model.ReceiptOptions.ShowQR is true)
+            {
+                <vc:qr-code data="@Context.Request.GetCurrentUrl()" size="128" />
+            }
+        }
+    </div>
+    <div class="store-footer p-3">
+        <a class="store-powered-by" style="color:#000;"><span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" /></a>
+    </div>
+    <hr class="w-100 my-0 bg-none"/>
+</center>
+</body>
+<script src="~/main/utils.js" asp-append-version="true"></script>
+<script>
+    formatDateTimes();
+    window.print();
+</script>
+</html>

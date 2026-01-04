@@ -1,0 +1,103 @@
+body {
+    color: var(--btcpay-wizard-text);
+    background-color: var(--btcpay-wizard-bg);
+}
+
+#wizard-navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: -2rem;
+}
+
+#wizard-navbar a,
+#wizard-navbar button {
+    position: relative;
+    color: var(--btcpay-body-text);
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: none;
+}
+
+#wizard-navbar a::after,
+#wizard-navbar button::after {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    content: "";
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    transition: background-color .2s, transform .2s;
+    background-color: transparent;
+}
+
+#wizard-navbar a .icon,
+#wizard-navbar button .icon {
+    --icon-size: 1.75rem;
+}
+
+#wizard-navbar a:hover::after,
+#wizard-navbar button:hover::after{
+    background-color: var(--btcpay-body-bg-hover);
+}
+
+#wizard-navbar a:active::after,
+#wizard-navbar button:active::after {
+    transform: scale(.825);
+}
+
+#wizard-navbar .cancel {
+    margin-left: auto;
+}
+
+.list-group-item {
+    display: flex;
+    padding: 0;
+}
+
+.list-group-item.hide-when-js {
+    display: flex !important;
+}
+
+.list-group-item:active,
+.list-group-item.active {
+    background-color: transparent;
+}
+
+.list-group-item .image {
+    display: flex;
+    flex: 0 0 90px;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+
+.list-group-item .image .icon {
+    --icon-size: 2rem;
+}
+
+.list-group-item .content {
+    flex: 1;
+    padding: 1.5rem;
+}
+
+.list-group-item .content small {
+    font-size: 90%;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.list-group-item .image + .content {
+    padding-left: .5rem;
+}
+
+.list-group-item .icon-caret-right {
+    margin-right: 1.5rem;
+}

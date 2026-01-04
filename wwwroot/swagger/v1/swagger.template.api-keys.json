@@ -1,0 +1,351 @@
+{
+    "paths": {
+        "/api/v1/api-keys/{apikey}": {
+            "delete": {
+                "operationId": "ApiKeys_DeleteApiKey",
+                "tags": [
+                    "API Keys"
+                ],
+                "summary": "Revoke an API Key",
+                "description": "Revoke the current API key so that it cannot be used anymore",
+                "parameters": [
+                    {
+                        "name": "apikey",
+                        "in": "path",
+                        "required": true,
+                        "description": "The API Key to revoke",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The key has been deleted"
+                    },
+                    "404": {
+                        "description": "The key is not found for this user"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "unrestricted"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/{idOrEmail}/api-keys/{apikey}": {
+            "delete": {
+                "operationId": "ApiKeys_DeleteUserApiKey",
+                "tags": [
+                    "API Keys"
+                ],
+                "summary": "Revoke an API Key of target user",
+                "description": "Revoke the API key of a target user so that it cannot be used anymore",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/UserIdOrEmail"
+                    },
+                    {
+                        "name": "apikey",
+                        "in": "path",
+                        "required": true,
+                        "description": "The API Key to revoke",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The key has been deleted"
+                    },
+                    "404": {
+                        "description": "The key is not found for this user"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "unrestricted"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/api-keys/current": {
+            "get": {
+                "operationId": "ApiKeys_GetCurrentApiKey",
+                "tags": [
+                    "API Keys"
+                ],
+                "summary": "Get the current API Key information",
+                "description": "View information about the current API key",
+                "responses": {
+                    "200": {
+                        "description": "Information about the current api key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiKeyData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canmanageusers"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "operationId": "ApiKeys_DeleteCurrentApiKey",
+                "tags": [
+                    "API Keys"
+                ],
+                "summary": "Revoke the current API Key",
+                "description": "Revoke the current API key so that it cannot be used anymore",
+                "responses": {
+                    "200": {
+                        "description": "The key was revoked and is no longer usable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiKeyData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/api-keys": {
+            "post": {
+                "operationId": "ApiKeys_CreateApiKey",
+                "tags": [
+                    "API Keys"
+                ],
+                "summary": "Create a new API Key",
+                "description": "Create a new API Key",
+                "responses": {
+                    "200": {
+                        "description": "Information about the new api key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiKeyData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "label": {
+                                        "type": "string",
+                                        "description": "The label of the new API Key",
+                                        "nullable": true
+                                    },
+                                    "permissions": {
+                                        "type": "array",
+                                        "description": "The permissions granted to this API Key (See API Key Authentication)",
+                                        "nullable": true,
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "unrestricted"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/{idOrEmail}/api-keys": {
+            "post": {
+                "operationId": "ApiKeys_CreateUserApiKey",
+                "tags": [
+                    "API Keys"
+                ],
+                "summary": "Create a new API Key for a user",
+                "description": "Create a new API Key for a user",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/UserIdOrEmail"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Information about the new api key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiKeyData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "label": {
+                                        "type": "string",
+                                        "description": "The label of the new API Key",
+                                        "nullable": true
+                                    },
+                                    "permissions": {
+                                        "type": "array",
+                                        "description": "The permissions granted to this API Key (See API Key Authentication)",
+                                        "nullable": true,
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canmanageusers"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ApiKeyData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "apiKey": {
+                        "type": "string",
+                        "description": "The API Key to use for API Key Authentication",
+                        "nullable": false
+                    },
+                    "label": {
+                        "type": "string",
+                        "description": "The label given by the user to this API Key",
+                        "nullable": false
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "description": "The permissions associated to this API Key (can be scoped to a specific store)",
+                        "nullable": false,
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "btcpay.server.canmanageusers",
+                            "btcpay.server.canmanageusers:2KxSpc9V5zDWfUbvgYiZuAfka4wUhGF96F75Ao8y4zHP"
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "API Keys",
+            "description": "API Key operations"
+        }
+    ]
+}

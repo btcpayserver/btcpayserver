@@ -1,0 +1,432 @@
+@using BTCPayServer.Client
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Services
+@using SetPasswordViewModel = BTCPayServer.Models.ManageViewModels.SetPasswordViewModel
+@inject DisplayFormatter DisplayFormatter
+@model InvoicesModel
+@{
+    ViewData.SetLayoutModel(new("Invoices", StringLocalizer["Invoices"]));
+    var statusFilterCount = CountArrayFilter("status") + CountArrayFilter("exceptionstatus") + (HasBooleanFilter("includearchived") ? 1 : 0) + (HasBooleanFilter("unusual") ? 1 : 0);
+    var hasDateFilter = HasArrayFilter("startdate") || HasArrayFilter("enddate");
+    var appFilterCount = Model.Apps.Count(app => HasArrayFilter("appid", app.Id));
+}
+
+@functions
+{
+    private int CountArrayFilter(string type) =>
+        Model.Search.ContainsFilter(type) ? Model.Search.GetFilterArray(type).Length : 0;
+
+    private bool HasArrayFilter(string type, string key = null) =>
+        Model.Search.ContainsFilter(type) && (key is null || Model.Search.GetFilterArray(type).Contains(key));
+
+    private bool HasBooleanFilter(string key) =>
+        Model.Search.ContainsFilter(key) && Model.Search.GetFilterBool(key) is true;
+
+    private bool HasCustomDateFilter() =>
+        Model.Search.ContainsFilter("startdate") && Model.Search.ContainsFilter("enddate");
+}
+
+@section PageHeadContent
+{
+    <style>
+        .invoiceId-col {
+            min-width: 8rem;
+        }
+        .invoice-details-row > td {
+            padding: 1.5rem 1rem 0 2.65rem;
+        }
+        .dropdown > .btn {
+            min-width: 7rem;
+            padding-left: 1rem;
+            text-align: left;
+        }
+        #SearchText {
+            flex-shrink: 0;
+            min-width: 200px;
+            max-width: 300px;
+        }
+        @@media (max-width: 568px) {
+            #SearchText {
+                width: 100%;
+            }
+        }
+    </style>
+}
+
+@section PageFootContent {
+    @*Without async, somehow selenium do not manage to click on links in this page*@
+    <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
+
+    @* Custom Range Modal *@
+    <script>
+        const timezoneOffset = new Date().getTimezoneOffset();
+
+        delegate('click', '.showInvoice', e => {
+            e.preventDefault();
+            const { invoiceId } = e.target.dataset;
+            btcpay.appendInvoiceFrame(invoiceId);
+        })
+
+        $('#btnCustomRangeDate').on('click', function (sender) {
+            var filterString = "";
+
+            var dtpStartDate = $("#dtpStartDate").val();
+            if (dtpStartDate !== null && dtpStartDate !== "") {
+                filterString = "startdate%3A" + dtpStartDate;
+            }
+
+            var dtpEndDate = $("#dtpEndDate").val();
+            if (dtpEndDate !== null && dtpEndDate !== "") {
+                if (filterString !== "") {
+                    filterString += ",";
+                }
+                filterString += "enddate%3A" + dtpEndDate;
+            }
+
+            if (filterString !== "") {
+                var redirectUri = "/invoices?Count=" + $("#Count").val() +
+                    "&timezoneoffset=" + $("#TimezoneOffset").val() +
+                    "&SearchTerm=" + filterString;
+
+                window.location.href = redirectUri;
+            } else {
+                $("#dtpStartDate").next().trigger("focus");
+            }
+        })
+
+        function getDateStringWithOffset(hoursDiff) {
+            var datenow = new Date();
+            var newDate = new Date(datenow.getTime() - (hoursDiff * 60 * 60 * 1000));
+            var str = newDate.toLocaleDateString() + " " + newDate.toLocaleTimeString();
+            return str;
+        }
+    </script>
+}
+
+@Html.HiddenFor(a => a.Count)
+
+<div class="sticky-header">
+    <h2>
+        <span>@ViewData["Title"]</span>
+        <a href="#descriptor" data-bs-toggle="collapse">
+            <vc:icon symbol="info" />
+        </a>
+    </h2>
+    <div>
+        <a
+            id="view-report"
+            permission="@Policies.CanViewReports"
+            asp-controller="UIReports"
+            asp-action="StoreReports"
+            asp-route-storeId="@Model.StoreId"
+            asp-route-viewName="Invoices"
+            class="btn btn-secondary">
+            <vc:icon symbol="nav-reporting" />
+            <span text-translate="true">Reporting</span>
+        </a>
+        <a id="page-primary"
+           permission="@Policies.CanCreateInvoice"
+           asp-action="CreateInvoice"
+           asp-route-storeId="@Model.StoreId"
+           asp-route-searchTerm="@Model.SearchTerm"
+           class="btn btn-primary"
+           text-translate="true">
+            Create Invoice
+        </a>
+    </div>
+</div>
+
+<div id="descriptor" class="collapse">
+    <div class="d-flex px-4 py-4 mb-4 bg-tile rounded">
+        <div class="flex-fill">
+            <p text-translate="true" class="mb-2">Invoices are documents issued by the seller to a buyer to collect payment.</p>
+            <p text-translate="true" class="mb-3">An invoice must be paid within a defined time interval at a fixed exchange rate to protect the issuer from price fluctuations.</p>
+            <p class="mb-3" html-translate="true">You can also apply filters to your search by searching for <code>filtername:value</code>. Be sure to split your search parameters with comma. Supported filters are:</p>
+            <ul>
+                <li html-translate="true"><code>orderid:id</code> for filtering a specific order</li>
+                <li html-translate="true"><code>itemcode:code</code> for filtering a specific type of item purchased through the pos or crowdfund apps</li>
+            </ul>
+            <a href="https://docs.btcpayserver.org/Invoices/" target="_blank" rel="noreferrer noopener" text-translate="true">Learn More</a>
+        </div>
+        <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="@StringLocalizer["Close"]">
+            <vc:icon symbol="close" />
+        </button>
+    </div>
+</div>
+
+<partial name="_StatusMessage" />
+
+@* Custom Range Modal *@
+<div class="modal fade" id="customRangeModal" tabindex="-1" role="dialog" aria-labelledby="customRangeModalTitle" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 550px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="customRangeModalTitle" text-translate="true">Filter invoices by Custom Range</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                    <vc:icon symbol="close" />
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row">
+                    <label for="dtpStartDate" class="col-sm-3 col-form-label">Start Date</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
+                                   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
+                                   placeholder="@StringLocalizer["Start Date"]" />
+                            <button type="button" class="btn btn-secondary input-group-clear" title="@StringLocalizer["Clear"]">
+                                <vc:icon symbol="close" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" text-translate="true">End Date</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input id="dtpEndDate" class="form-control flatdtpicker" type="datetime-local"
+                                   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
+                                   placeholder="@StringLocalizer["End Date"]" />
+                            <button type="button" class="btn btn-secondary input-group-clear" title="@StringLocalizer["Clear"]">
+                                <vc:icon symbol="close" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btnCustomRangeDate" type="button" class="btn btn-primary" text-translate="true">Filter</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
+    <input asp-for="Count" type="hidden" />
+    <input asp-for="TimezoneOffset" type="hidden" />
+    <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
+    <input asp-for="SearchText" class="form-control" placeholder="@StringLocalizer["Search…"]" />
+    <div class="dropdown">
+        <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (statusFilterCount > 0)
+            {
+                <span>@StringLocalizer["{0} Status", statusFilterCount]</span>
+            }
+            else
+            {
+                <span text-translate="true">All Status</span>
+            }
+        </button>
+        <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "settled")" class="dropdown-item @(HasArrayFilter("status", "settled") ? "custom-active" : "")" text-translate="true">Settled</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "processing")" class="dropdown-item @(HasArrayFilter("status", "processing") ? "custom-active" : "")" text-translate="true">Processing</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "expired")" class="dropdown-item @(HasArrayFilter("status", "expired") ? "custom-active" : "")" text-translate="true">Expired</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "invalid")" class="dropdown-item @(HasArrayFilter("status", "invalid") ? "custom-active" : "")" text-translate="true">Invalid</a>
+            <hr class="dropdown-divider">
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidLate")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidLate") ? "custom-active" : "")" text-translate="true">Settled Late</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidPartial")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidPartial") ? "custom-active" : "")" text-translate="true">Settled Partial</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidOver")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidOver") ? "custom-active" : "")" text-translate="true">Settled Over</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("unusual", "true")" class="dropdown-item @(HasBooleanFilter("unusual") ? "custom-active" : "")" text-translate="true">Unusual</a>
+            <hr class="dropdown-divider">
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("includearchived", "true")" class="dropdown-item @(HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived" text-translate="true">Include archived</a>
+        </div>
+    </div>
+    @if (Model.Apps.Any())
+    {
+        <div class="dropdown">
+            <button id="AppOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                @if (appFilterCount > 0)
+                {
+                    <span>@appFilterCount Plugin@(appFilterCount > 1 ? "s" : "")</span>
+                }
+                else
+                {
+                    <span text-translate="true">All Plugins</span>
+                }
+            </button>
+            <div class="dropdown-menu" aria-labelledby="AppOptionsToggle">
+                @foreach (var app in Model.Apps)
+                {
+                    <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("appid", app.Id)" class="dropdown-item @(HasArrayFilter("appid", app.Id) ? "custom-active" : "")">@app.AppName</a>
+                }
+            </div>
+        </div>
+    }
+    <div class="dropdown">
+        <button id="DateOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (hasDateFilter)
+            {
+                if (HasArrayFilter("startdate", "-1d"))
+                {
+                    <span text-translate="true">24 Hours</span>
+                }
+                else if (HasArrayFilter("startdate", "-3d"))
+                {
+                    <span text-translate="true">3 Days</span>
+                }
+                else if (HasArrayFilter("startdate", "-7d"))
+                {
+                    <span text-translate="true">7 Days</span>
+                }
+                else
+                {
+                    <span text-translate="true">Custom</span>
+                }
+            }
+            else
+            {
+                <span text-translate="true">All Time</span>
+            }
+        </button>
+        <div class="dropdown-menu" aria-labelledby="DateOptionsToggle">
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-1d")" class="dropdown-item @(HasArrayFilter("startdate", "-1d") ? "custom-active" : "")" text-translate="true">Last 24 hours</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-3d")" class="dropdown-item @(HasArrayFilter("startdate", "-3d") ? "custom-active" : "")" text-translate="true">Last 3 days</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-7d")" class="dropdown-item @(HasArrayFilter("startdate", "-7d") ? "custom-active" : "")" text-translate="true">Last 7 days</a>
+            <button type="button" class="dropdown-item @(HasCustomDateFilter() ? "custom-active" : "")" data-bs-toggle="modal" data-bs-target="#customRangeModal" text-translate="true">Custom Range</button>
+        </div>
+    </div>
+    @if (statusFilterCount > 0 || appFilterCount > 0 || hasDateFilter || !string.IsNullOrEmpty(Model.SearchText))
+    {
+        <button id="clearAllFiltersBtn" type="button" class="btn btn-secondary" style="min-width: 7rem;" title="@StringLocalizer["Clear all filters"]">
+            <span class="align-middle" text-translate="true">Clear All</span>
+        </button>
+    }
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const clearBtn = document.getElementById('clearAllFiltersBtn');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function () {
+                const form = clearBtn.closest('form');
+                if (!form) return;
+                // Reset search text
+                const searchText = form.querySelector('[name="SearchText"]');
+                if (searchText) searchText.value = '';
+                // Reset SearchTerm (filters)
+                const searchTerm = form.querySelector('[name="SearchTerm"]');
+                if (searchTerm) searchTerm.value = '';
+                // Optionally reset other hidden fields if needed
+                // Submit the form
+                form.submit();
+            });
+        }
+    });
+</script>
+
+@if (Model.Invoices.Any())
+{
+    <form method="post" asp-action="MassAction">
+        <input type="hidden" name="storeId" value="@Model.StoreId" />
+        <div class="table-responsive">
+            <table id="invoices" class="table table-hover mass-action">
+                <thead class="mass-action-head">
+                    <tr>
+                        <th class="mass-action-select-col only-for-js">
+                            <input type="checkbox" class="form-check-input mass-action-select-all" />
+                        </th>
+                        <th class="date-col">
+                            <div class="d-flex align-items-center gap-3">
+                                <span text-translate="true">Date</span>
+                                <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="@StringLocalizer["Switch date format"]">
+                                    <vc:icon symbol="time" />
+                                </button>
+                            </div>
+                        </th>
+                        <th text-translate="true" class="text-nowrap">Invoice Id</th>
+                        <th text-translate="true" class="text-nowrap">Order Id</th>
+                        <th text-translate="true">Status</th>
+                        <th text-translate="true" class="amount-col">Amount</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <thead class="mass-action-actions">
+                    <tr>
+                        <th class="mass-action-select-col only-for-js">
+                            <input type="checkbox" class="form-check-input mass-action-select-all" />
+                        </th>
+                        <th colspan="6">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                                <div>
+                                    <strong class="mass-action-selected-count">0</strong>
+                                    <span text-translate="true">selected</span>
+                                </div>
+                                <div class="d-inline-flex align-items-center gap-3">
+                                    <button type="submit" name="command" value="archive" id="ArchiveSelected" class="btn btn-link">
+                                        <vc:icon symbol="actions-archive" />
+                                        <span text-translate="true">Archive</span>
+                                    </button>
+                                    @if (HasBooleanFilter("includearchived"))
+                                    {
+                                        <button type="submit" name="command" value="unarchive" id="UnarchiveSelected" class="btn btn-link">
+                                            <vc:icon symbol="actions-archive" />
+                                            <span text-translate="true">Unarchive</span>
+                                        </button>
+                                    }
+                                    <button type="submit" name="command" value="cpfp" id="BumpFee" class="btn btn-link">
+                                        <vc:icon symbol="actions-send" />
+                                        <span text-translate="true">Bump fee</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var invoice in Model.Invoices)
+                    {
+                        var detailsId = $"invoice_details_{invoice.InvoiceId}";
+                        <tr id="invoice_@invoice.InvoiceId" class="mass-action-row">
+                            <td class="only-for-js align-middle">
+                                <input name="selectedItems" type="checkbox" class="form-check-input mass-action-select" value="@invoice.InvoiceId" />
+                            </td>
+                            <td class="align-middle date-col">@invoice.Date.ToBrowserDate()</td>
+                            <td class="text-break align-middle invoiceId-col">
+                                <a asp-action="Invoice" class="invoice-details-link" asp-route-invoiceId="@invoice.InvoiceId">@invoice.InvoiceId</a>
+                            </td>
+                            <td class="align-middle">
+                                <vc:truncate-center text="@invoice.OrderId" link="@invoice.RedirectUrl" classes="truncate-center-id" />
+                            </td>
+                            <td class="align-middle">
+                                <div class="d-inline-flex align-items-center gap-2">
+                                    <vc:invoice-status state="invoice.Status" payments="invoice.Details.Payments" invoice-id="@invoice.InvoiceId"
+                                       is-archived="invoice.Details.Archived" has-refund="invoice.HasRefund" />
+                                    @if (invoice.ShowCheckout)
+                                    {
+                                        <span>&nbsp;</span>
+                                        <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId" class="invoice-checkout-link" id="invoice-checkout-@invoice.InvoiceId">Checkout</a>
+                                        <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId" class="showInvoice only-for-js" data-invoice-id="@invoice.InvoiceId">[^]</a>
+                                    }
+                                </div>
+                            </td>
+                            <td class="align-middle amount-col">
+                                <span data-sensitive>@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</span>
+                            </td>
+                            <td class="align-middle text-end">
+                                <div class="d-inline-flex align-items-center gap-2">
+                                    <button class="accordion-button collapsed only-for-js ms-0 d-inline-block" type="button" data-bs-toggle="collapse" data-bs-target="#@detailsId" aria-expanded="false" aria-controls="@detailsId">
+                                        <vc:icon symbol="caret-down" />
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="@detailsId" class="invoice-details-row collapse">
+                            <td colspan="7" class="border-top-0">
+                                @* Leaving this as partial because it abstracts complexity of Invoice Payments *@
+                                <partial name="ListInvoicesPaymentsPartial" model="(invoice.Details, true)" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <vc:pager view-model="Model" />
+    </form>
+}
+else
+{
+    <p class="text-secondary mt-3" text-translate="true">
+        There are no invoices matching your criteria.
+    </p>
+}

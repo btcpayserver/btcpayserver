@@ -1,0 +1,72 @@
+@model PostRedirectViewModel
+@{
+	Layout = null;
+}
+
+<html lang="en">
+<head>
+	<partial name="LayoutHead" />
+	<title>Post Redirect</title>
+</head>
+<body>
+	@if (Model.FormUrl is null)
+	{
+		<form method="post" id="postform" asp-action="@Model.AspAction" asp-controller="@Model.AspController" asp-all-route-data="Model.RouteParameters">
+			@Html.AntiForgeryToken()
+			@foreach (var o in Model.FormParameters)
+			{
+				foreach (var v in o.Value)
+				{
+					<input type="hidden" name="@o.Key" value="@v" />
+				}
+			}
+			<noscript>
+				<div class="modal-dialog modal-dialog-centered min-vh-100">
+					<div class="modal-content">
+						<div class="modal-body text-center my-3">
+							<p>
+								This redirection page is supposed to be submitted automatically.
+								<br>
+								Since you have not enabled JavaScript, please submit manually.
+							</p>
+							<button class="btn btn-primary" type="submit">Submit</button>
+						</div>
+					</div>
+				</div>
+			</noscript>
+		</form>
+	}
+	else
+	{
+	    var url = Model.AllowExternal ? Model.FormUrl : Url.EnsureLocal(Model.FormUrl, this.Context.Request);
+		<form method="post" id="postform" action="@url" rel="noreferrer noopener">
+			@Html.AntiForgeryToken()
+			@foreach (var o in Model.FormParameters)
+			{
+				foreach (var v in o.Value)
+				{
+					<input type="hidden" name="@o.Key" value="@v" />
+				}
+			}
+			<noscript>
+				<div class="modal-dialog modal-dialog-centered min-vh-100">
+					<div class="modal-content">
+						<div class="modal-body text-center my-3">
+							<p>
+								This redirection page is supposed to be submitted automatically.
+								<br>
+								Since you have not enabled JavaScript, please submit manually.
+							</p>
+							<button class="btn btn-primary" type="submit">Submit</button>
+						</div>
+					</div>
+				</div>
+			</noscript>
+		</form>
+	}
+	<script type="text/javascript">
+        HTMLFormElement.prototype.submit.call(document.forms.item(0));
+	</script>
+	<partial name="LayoutFoot" />
+</body>
+</html>

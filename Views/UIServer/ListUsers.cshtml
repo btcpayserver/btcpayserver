@@ -1,0 +1,170 @@
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
+@model UsersViewModel
+@{
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Users), StringLocalizer["Users"])
+        .SetCategory(WellKnownCategories.Server));
+    var nextUserEmailSortOrder = (string)ViewData["NextUserEmailSortOrder"];
+    var userEmailSortOrder = nextUserEmailSortOrder switch
+    {
+        "asc" => "desc",
+        "desc" => "asc",
+        _ => null
+    };
+    Csp.UnsafeEval();
+    const string sortByDesc = "Sort by email descending...";
+    const string sortByAsc = "Sort by email ascending...";
+}
+
+@section PageFootContent {
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+    <script>
+        const qrApp = initQRShow({ title: "Invitation" });
+        delegate('click', '.view-invite', e => {
+            e.preventDefault();
+            const { invitationUrl, user } = e.target.dataset;
+            if (invitationUrl) qrApp.showData(invitationUrl, `Invitation for ${user}`);
+        });
+    </script>
+}
+
+<div class="sticky-header">
+    <h2>@ViewData["Title"]</h2>
+	<a id="page-primary" asp-action="CreateUser" class="btn btn-primary" role="button" text-translate="true">
+        Add User
+    </a>
+</div>
+<partial name="_StatusMessage" />
+
+<form asp-action="ListUsers" asp-route-sortOrder="@(userEmailSortOrder)" style="max-width:640px" method="get">
+    <input asp-for="SearchTerm" class="form-control" placeholder="@StringLocalizer["Search by email..."]" />
+</form>
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>
+                <a
+                    asp-action="ListUsers"
+                    asp-route-sortOrder="@(nextUserEmailSortOrder ?? "asc")"
+                    class="text-nowrap"
+                    title="@(nextUserEmailSortOrder == "desc" ? sortByAsc : sortByDesc)"
+                >
+                    <span text-translate="true">Email</span>
+                    <vc:icon symbol="actions-sort-alpha-@(userEmailSortOrder ?? nextUserEmailSortOrder ?? "desc")" />
+                </a>
+            </th>
+            <th text-translate="true">Stores</th>
+            <th text-translate="true">Created</th>
+            <th text-translate="true">Status</th>
+            <th class="actions-col"></th>
+            <th class="w-75px"></th>
+        </tr>
+        </thead>
+        <tbody id="UsersList">
+        @foreach (var user in Model.Users)
+        {
+            var status = user switch
+            {
+                { Disabled: true } => (StringLocalizer["Disabled"], "danger"),
+                { Approved: false } => (StringLocalizer["Pending Approval"], "warning"),
+                { EmailConfirmed: false } => (StringLocalizer["Pending Email Verification"], "warning"),
+                { InvitationUrl: not null } => (StringLocalizer["Pending Invitation"], "warning"),
+                _ => (StringLocalizer["Active"], "success")
+            };
+            var storesCount = user.Stores.Count();
+            var pendingInvite = !string.IsNullOrEmpty(user.InvitationUrl);
+            var detailsId = user.Stores.Any() ? $"user_details_{user.Id}" : null;
+            <tr id="user_@user.Id" class="user-overview-row mass-action-row">
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="user-email">@user.Email</span>
+                        @foreach (var role in user.Roles)
+                        {
+                            <span class="badge bg-info">@Model.Roles[role]</span>
+                        }
+                    </div>
+                </td>
+                <td class="@(storesCount > 0 ? null : "text-muted")">@(storesCount == 1 ? StringLocalizer["{0} Store", storesCount] : StringLocalizer["{0} Stores", storesCount])</td>
+                <td>@user.Created?.ToBrowserDate()</td>
+                <td>
+                    <span class="user-status badge bg-@status.Item2" text-translate="true">@status.Item1</span>
+                </td>
+                <td class="actions-col">
+                    <div class="d-inline-flex align-items-center gap-3">
+                        @if (user is { EmailConfirmed: false, Disabled: false }) {
+                            <a asp-action="SendVerificationEmail" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="@StringLocalizer["Send verification email"]" data-description="@ViewLocalizer["This will send a verification email to <strong>{0}</strong>.", Html.Encode(user.Email)]" data-confirm="@StringLocalizer["Send"]" class="text-nowrap" text-translate="true">Resend email</a>
+                        }
+                        @if (user is { Approved: false, Disabled: false })
+                        {
+                            <a asp-action="ApproveUser" asp-route-userId="@user.Id" asp-route-approved="true" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="@StringLocalizer["Approve user"]" data-description="@ViewLocalizer["This will approve the user <strong>{0}</strong>.", Html.Encode(user.Email)]" data-confirm="@StringLocalizer["Approve"]" text-translate="true">Approve</a>
+                        }
+                        @if (pendingInvite)
+                        {
+                            <a asp-action="User" asp-route-userId="@user.Id" class="view-invite text-nowrap" data-invitation-url="@user.InvitationUrl" data-user="@user.Email" text-translate="true">View Invite</a>
+                        }
+                        else if(status.Item2 != "warning")
+                        {
+                            <a asp-action="ToggleUser" asp-route-userId="@user.Id" asp-route-enable="@user.Disabled" class="@(user.Disabled ? "enable-user" : "disable-user")">
+                                @if (user.Disabled)
+                                {
+                                    <span text-translate="true">Enable</span>
+                                }
+                                else
+                                {
+                                    <span text-translate="true">Disable</span>
+                                }
+                            </a>
+                        }
+                        <a asp-action="User" asp-route-userId="@user.Id" class="user-edit" text-translate="true">Edit</a>
+                        <a asp-action="ResetUserPassword" asp-route-userId="@user.Id" class="reset-password text-nowrap" text-translate="true">Password Reset</a>
+                        <a asp-action="DeleteUser" asp-route-userId="@user.Id" class="delete-user" text-translate="true">Remove</a>
+                    </div>
+                </td>
+                <td class="text-end">
+                    @if (detailsId != null)
+                    {
+                        <button class="accordion-button w-auto collapsed only-for-js ms-0 d-inline-flex align-items-center gap-1" type="button" data-bs-toggle="collapse" data-bs-target="#@detailsId" aria-expanded="false" aria-controls="@detailsId">
+                            <span text-translate="true">Details</span>
+                            <vc:icon symbol="caret-down" css-class="ms-0" />
+                        </button>
+                    }
+                </td>
+            </tr>
+            @if (detailsId != null)
+            {
+                <tr id="@detailsId" class="user-details-row collapse">
+                    <td colspan="6" class="border-top-0">
+                        @if (user.Stores.Any())
+                        {
+                            <ul class="mb-0 p-0">
+                                @foreach (var store in user.Stores)
+                                {
+                                    <li class="py-1 d-flex gap-2">
+                                        <a asp-controller="UIStores" asp-action="Index" asp-route-storeId="@store.StoreData.Id">@store.StoreData.StoreName</a>
+                                        <span class="badge bg-light">@store.StoreRoleId</span>
+                                        @if (store.StoreData.Archived)
+                                        {
+                                            <span class="badge bg-info" text-translate="true">archived</span>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <span class="text-secondary" text-translate="true">No stores</span>
+                        }
+                    </td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+</div>
+
+<vc:pager view-model="Model"></vc:pager>
+
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Send verification email"], StringLocalizer["This will send a verification email to the user."], StringLocalizer["Send"]))" />
+<partial name="ShowQR" />

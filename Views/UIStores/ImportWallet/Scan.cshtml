@@ -1,0 +1,106 @@
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
+@model WalletSetupViewModel
+@{
+	Layout = "_LayoutWalletSetup";
+    ViewData.SetTitle(StringLocalizer["Scan QR code"]);
+	Csp.UnsafeEval();
+}
+
+@section Navbar {
+    <a asp-controller="UIStores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
+        <vc:icon symbol="back" />
+    </a>
+}
+
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3" text-translate="true">Scan the extended public key, also called "xpub", shown on your wallet's display.</p>
+</header>
+
+@if (!ViewContext.ModelState.IsValid)
+{
+    <div asp-validation-summary="All"></div>
+}
+
+<div class="my-5">
+    <partial name="CameraScanner"/>
+    <form id="qr-import-form" method="post">
+        <input asp-for="WalletFileContent" type="hidden" />
+    </form>
+</div>
+
+<p class="mt-5" text-translate="true">
+    Generate a QR code of the extended public key in your wallet (see instructions for supported wallets below).
+    Allow the browser access to your camera and hold the code to the camera when the scan prompt appears.
+</p>
+
+<table class="table table-hover">
+    <thead>
+    <tr>
+        <th text-translate="true">Wallet</th>
+        <th text-translate="true">Instructions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>BlueWallet</td>
+        <td>Open Wallet Settings ❯ Show Wallet XPUB</td>
+    </tr>
+    <tr>
+        <td class="text-nowrap">Cobo Vault</td>
+        <td>Open Wallet Settings ❯ Show/Export XPUB</td>
+    </tr>
+    <tr>
+        <td class="text-nowrap">Keystone Vault</td>
+        <td>Open Wallet Settings ❯ Show/Export XPUB</td>
+    </tr>
+    <tr>
+        <td>Passport</td>
+        <td>Wallet ❯ Connect Wallet ❯ BTCPay ❯ QR Code</td>
+    </tr>
+    <tr>
+        <td>Specter DIY</td>
+        <td>Master public keys ❯ Select key</td>
+    </tr>
+    <tr>
+        <td>SeedSigner</td>
+        <td>Seeds ❯ Select seed ❯ Export XPUB ❯ BlueWallet</td>
+    </tr>
+    </tbody>
+</table>
+
+@section PageHeadContent {
+    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial"/>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/bbqr/bbqr.iife.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
+
+    <script>
+        window.coinName = "@Model.Network.DisplayName.ToLowerInvariant()";
+        document.addEventListener("DOMContentLoaded", function () {
+            initCameraScanningApp("Scan wallet QR", data => {
+                let xpub = "";
+                if (typeof(data) === "object") {
+                    if (data.type === "crypto-account") {
+                        const account = window.URlib.CryptoAccount.fromCBOR(data.cbor);
+                        const [descriptor] = account.getOutputDescriptors();
+                        xpub = descriptor.getHDKey().getBip32Key();
+                    } else {
+                        console.error('Unexpected UR type', data.type)
+                    }
+                } else if (typeof(data) === 'string') {
+                    xpub = data;
+                }
+                // submit
+                document.getElementById("WalletFileContent").value = xpub;
+                document.getElementById("qr-import-form").submit();
+            });
+        });
+    </script>
+}

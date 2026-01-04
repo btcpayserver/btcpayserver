@@ -1,0 +1,17 @@
+﻿@using System.Net
+@using System.Text.RegularExpressions
+@model int?
+@{
+    Layout = "_LayoutError";
+    ViewData["Title"] = "Generic Error occurred";
+    if (Model.HasValue)
+    {
+        var httpCode = (HttpStatusCode)Model.Value;
+        var name = Regex.Replace(httpCode.ToString(), @"(\B[A-Z])", @" $1");
+        ViewData["Title"] = $"{(int)httpCode} - {name}";
+    }
+}
+
+<p class="mt-4">A generic error occurred (HTTP Code: @Model)</p>
+<p text-translate="true">Please consult the server log for more details.</p>
+<a href="/" text-translate="true">Navigate back to home</a>

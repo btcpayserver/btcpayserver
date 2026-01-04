@@ -1,0 +1,69 @@
+@model BTCPayServer.Models.StoreViewModels.CreateStoreViewModel
+@inject DefaultRulesCollection DefaultRules
+@{
+    Layout = Model.IsFirstStore ? "_LayoutWizard" : "_Layout";
+    //ViewData.SetLayoutModel(new("CreateStore", Model.IsFirstStore ? StringLocalizer["Create your first store"] : StringLocalizer["Create a new store"]));
+    ViewData.SetTitle(Model.IsFirstStore ? StringLocalizer["Create your first store"] : StringLocalizer["Create a new store"]);
+    ViewData["CreateStore"] = true;
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+	  const exchanges = @Safe.Json(DefaultRules.RecommendedExchanges);
+	  const recommended = document.querySelector("#PreferredExchange option[value='']")
+	  const updateRecommended = currency => {
+		  const source = exchanges[currency] || 'coingecko'
+		  const name = source.charAt(0).toUpperCase() + source.slice(1)
+		  recommended.innerText = @Safe.Json(StringLocalizer["Recommendation ({0})"].Value)
+            .replace(`{0}`, name)
+	  }
+	  updateRecommended(@Safe.Json(Model.DefaultCurrency))
+	  delegate('change', '#DefaultCurrency', e => updateRecommended(e.target.value))
+	</script>
+}
+
+@if (Model.IsFirstStore)
+{
+    @section Navbar {
+        <a asp-route-skipWizard="true" class="cancel" id="SkipWizard">
+            <vc:icon symbol="cross" />
+        </a>
+    }
+    @section PageHeadContent {
+        <style>
+            #FirstStore, .alert { max-width: 26.5rem; margin: var(--btcpay-space-l) auto; text-align: center; }
+            #FirstStore .main-logo { height: 4.5rem; max-width: 18rem; }
+            #FirstStore .main-logo-btcpay .main-logo-btcpay--large { display: none; }
+            #FirstStore .form-control, #FirstStore .form-select { width: 100%; }
+            #FirstStore .form-text { font-size: var(--btcpay-font-size-s); }
+            #FirstStore .form-group:last-of-type { text-align: center; }
+        </style>
+    }
+    <div id="FirstStore">
+        <a asp-controller="UIHome" asp-action="Index" tabindex="-1" class="d-inline-block mb-4">
+            <vc:main-logo />
+        </a>
+
+        <h1 class="h2 mb-3">@ViewData["Title"]</h1>
+        <p class="lead text-secondary" text-translate="true">Create a store to begin accepting payments.</p>
+
+        <div class="text-start">
+            <partial name="_CreateStoreForm" model="Model" />
+        </div>
+    </div>
+}
+else
+{
+	<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+    <partial name="_StatusMessage" />
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
+            <partial name="_CreateStoreForm" model="Model" />
+        </div>
+    </div>
+}
+
+
+
+

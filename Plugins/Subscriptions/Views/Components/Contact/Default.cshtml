@@ -1,0 +1,13 @@
+﻿@model (string type, string value)
+
+@if (Model.type == "Email")
+{
+    <span class="customer-contact-@Model.type"><i class="fa fa-envelope me-2"></i><span>@Model.value</span></span>
+}
+else if (Model.type == "Nostr")
+{
+    <span class="customer-contact-@Model.type">
+        <span class="me-1 align-baseline" style="color: mediumpurple"><vc:icon symbol="social-nostr"></vc:icon></span>
+        <span class="align-baseline">@Model.value</span>
+    </span>
+}

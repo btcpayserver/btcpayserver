@@ -1,0 +1,81 @@
+/**
+ * Chartist.js plugin to display a tooltip on top of a chart.
+ * @author  Antonia Ciocodeica
+ * @version 0.1 22 Nov 2016
+ */
+
+.chartist-tooltip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+    visibility: hidden;
+    transform: translateY(3em);
+    opacity: 0;
+    transition: transform 50ms ease-in-out;
+    pointer-events: none;
+}
+.chartist-tooltip:not([hidden]) {
+    margin: 0;
+    visibility: visible;
+    transform: none;
+    opacity: 1;
+}
+
+.chartist-tooltip .chartist-tooltip-inner {
+    display: block;
+    padding: var(--btcpay-space-xs) var(--btcpay-space-s);
+    border-radius: var(--btcpay-border-radius);
+    border: 1px solid var(--btcpay-body-border-light);
+    color: var(--btcpay-body-text);
+    background-color: var(--btcpay-bg-tile);
+}
+.chartist-tooltip .chartist-tooltip-value {
+    color: var(--btcpay-body-text-muted);
+    background-color: var(--btcpay-bg-tile);
+    border-radius: var(--btcpay-border-radius);
+    padding: 0 var(--btcpay-space-s);
+    font-size: var(--btcpay-font-size-s);
+}
+.chartist-tooltip .chartist-tooltip-line {
+    width: 1px;
+    height: 100%;
+    background: var(--btcpay-body-text);
+    opacity: .8;
+}
+
+/* Tooltip arrow */
+.chartist-tooltip-inner::before {
+    content: '\25BC';
+    position: absolute;
+    left: calc(50% - .5em);
+    top: 90%;
+    z-index: -1;
+    font-size: 1.3em;
+    line-height: .5em;
+    font-family: Arial, sans-serif;
+    color: var(--btcpay-body-border-light);
+    transform: scaleY(0.7);
+    text-shadow: 0 0.25em 0.35em rgba(0, 0, 0, 0.1);
+}
+.chartist-tooltip--left .chartist-tooltip-inner::before {
+    left: 0.75em;
+}
+.chartist-tooltip--right .chartist-tooltip-inner::before {
+    left: auto;
+    right: 0.75em;
+}
+
+/* Adds a small point transition (line charts) when the point is active */
+.ct-chart[data-charttooltip-id] .ct-point {
+    border: 16px solid transparent;
+    transition: all 0.2s ease-in-out;
+}
+/* Increased specificity intended to overwrite the default chartist style */
+.ct-chart-line.ct-chart-line .ct-point--hover {
+    stroke-width: 8px;
+}

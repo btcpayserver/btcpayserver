@@ -1,0 +1,251 @@
+@model LightningNodeViewModel
+@{
+    Layout = "_LayoutWalletSetup.cshtml";
+    ViewData.SetTitle(StringLocalizer["Connect to a Lightning node"]);
+}
+
+@section PageHeadContent {
+    <style>
+        #save {
+            min-width: 7rem;
+        }
+
+        #LightningNodeTypeTabs ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        #LightningNodeTypeTabs ul li code,
+        #LightningNodeTypeTabs pre {
+            display: block;
+            color: var(--btcpay-code-text);
+            background: var(--btcpay-bg-tile);
+            margin: .25rem 0;
+            padding: .75rem 1rem;
+            border-radius: 4px;
+        }
+    </style>
+}
+
+<h1 class="text-center mb-5">@ViewData["Title"]</h1>
+
+<form method="post" class="mt-n2 text-center">
+    <div id="LightningNodeTypeTablist" class="nav btcpay-pills align-items-center justify-content-center mb-3" role="tablist">
+        <input asp-for="LightningNodeType" value="@LightningNodeType.Internal" type="radio" id="LightningNodeType-@LightningNodeType.Internal"
+               data-bs-toggle="pill" data-bs-target="#InternalSetup" role="tab" aria-controls="InternalSetup"
+               aria-selected="@(Model.LightningNodeType == LightningNodeType.Internal ? "true" : "false")"
+               class="@(Model.LightningNodeType == LightningNodeType.Internal ? "active" : "")" disabled="@(!Model.CanUseInternalNode)">
+        <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Internal}")" text-translate="true">Use internal node</label>
+
+        <input asp-for="LightningNodeType" value="@LightningNodeType.Custom" type="radio" id="LightningNodeType-@LightningNodeType.Custom" data-bs-toggle="pill"
+               data-bs-target="#CustomSetup" role="tab" aria-controls="CustomSetup"
+               aria-selected="@(Model.LightningNodeType == LightningNodeType.Custom ? "true" : "false")"
+               class="@(Model.LightningNodeType == LightningNodeType.Custom ? "active" : "")">
+        <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Custom}")" text-translate="true">Use custom node</label>
+
+        <vc:ui-extension-point location="ln-payment-method-setup-tabhead" model="@Model" />
+    </div>
+
+    <div id="LightningNodeTypeTabs" class="tab-content text-start">
+        <div id="InternalSetup" class="pt-3 tab-pane fade @(Model.LightningNodeType == LightningNodeType.Internal ? "show active" : "")" role="tabpanel"
+             aria-labelledby="LightningNodeType-@LightningNodeType.Internal">
+            @if (Model.CanUseInternalNode)
+            {
+                <p class="mb-4" text-translate="true">Using the BTCPay Server internal node for this store requires no further configuration. Click the save
+                    button below to start accepting Bitcoin through the Lightning Network.</p>
+            }
+            else
+            {
+                <p class="mb-4" text-translate="true">Your instance administrator has disabled the use of the Internal node for non-admin users.</p>
+            }
+        </div>
+        <div id="CustomSetup" class="pt-3 tab-pane fade @(Model.LightningNodeType == LightningNodeType.Custom ? "show active" : "")" role="tabpanel"
+             aria-labelledby="LightningNodeType-@LightningNodeType.Custom">
+            <div class="form-group">
+                <label asp-for="ConnectionString" class="form-label" text-translate="true">Connection configuration for your custom Lightning node:</label>
+                <div class="d-sm-flex">
+                    <textarea asp-for="ConnectionString" class="form-control mb-2 me-2" placeholder="type=…;server=…;"
+                              rows="4">@(Model.LightningNodeType == LightningNodeType.Internal ? "" : Model.ConnectionString)</textarea>
+                </div>
+                <div class="d-sm-flex">
+                    <button id="test" name="command" type="submit" value="test" class="btn btn-secondary text-nowrap mb-2" text-translate="true">
+                        Test connection
+                    </button>
+                </div>
+                <span asp-validation-for="ConnectionString" class="text-danger"></span>
+            </div>
+            <vc:ui-extension-point location="ln-payment-method-setup-custom" model="@Model" />
+            <p class="mt-4 mb-2" text-translate="true">BTCPay Server currently supports:</p>
+            <div class="accordion" id="CustomNodeSupport">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="CustomNodeCLightningHeader">
+                        <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeCLightningContent"
+                                aria-controls="CustomNodeCLightningContent" aria-expanded="false">
+                            <span><strong>Core Lightning</strong> <span text-translate="true">via TCP or unix domain socket connection</span></span>
+                            <vc:icon symbol="caret-down" />
+                        </button>
+                    </h2>
+                    <div id="CustomNodeCLightningContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeCLightningHeader"
+                         data-bs-parent="#CustomNodeSupport">
+                        <div class="accordion-body">
+                            <ul class="mb-0">
+                                <li>
+                                    <code><b>type=</b>clightning;<b>server=</b>unix://root/.lightning/lightning-rpc</code>
+                                </li>
+                                <li>
+                                    <code><b>type=</b>clightning;<b>server=</b>tcp://1.1.1.1:27743/</code>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="CustomNodeChargeHeader">
+                        <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeChargeContent"
+                                aria-controls="CustomNodeChargeContent" aria-expanded="false">
+                            <span><strong>Lightning Charge</strong> <span text-translate="true">via HTTPS</span></span>
+                            <vc:icon symbol="caret-down" />
+                        </button>
+                    </h2>
+                    <div id="CustomNodeChargeContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeChargeHeader"
+                         data-bs-parent="#CustomNodeSupport">
+                        <div class="accordion-body">
+                            <ul class="mb-0">
+                                <li>
+                                    <code><b>type=</b>charge;<b>server=</b>https://charge:8080/;<b>api-token=</b>myapitoken...</code>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="CustomNodeEclairHeader">
+                        <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeEclairContent"
+                                aria-controls="CustomNodeEclairContent" aria-expanded="false">
+                            <span><strong>Eclair</strong> <span text-translate="true">via HTTPS</span></span>
+                            <vc:icon symbol="caret-down" />
+                        </button>
+                    </h2>
+                    <div id="CustomNodeEclairContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeEclairHeader"
+                         data-bs-parent="#CustomNodeSupport">
+                        <div class="accordion-body">
+                            <ul class="pb-3">
+                                <li>
+                                    <code><b>type=</b>eclair;<b>server=</b>https://eclair:8080/;<b>password=</b>eclairpassword...</code>
+                                </li>
+                            </ul>
+                            <p class="mt-2" html-translate="true">
+                                Note that <code>bitcoin-host</code> and <code>bitcoin-auth</code> are optional, only useful if you want to use <code>GetDepositAddress</code>
+                                on Eclair:
+                            </p>
+                            <ul class="mb-0">
+                                <li>
+                                    <code><b>type=</b>eclair;<b>server=</b>https://eclair:8080/;<b>password=</b>eclairpassword;<b>bitcoin-host=</b>bitcoin.host;<b>bitcoin-auth=</b>btcpass</code>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="CustomNodePhoenixdHeader">
+                        <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodePhoenixdContent"
+                                aria-controls="CustomNodePhoenixdContent" aria-expanded="false">
+                            <span><strong>Phoenixd</strong> <span text-translate="true">via HTTP</span></span>
+                            <vc:icon symbol="caret-down" />
+                        </button>
+                    </h2>
+                    <div id="CustomNodePhoenixdContent" class="accordion-collapse collapse" aria-labelledby="CustomNodePhoenixdHeader"
+                         data-bs-parent="#CustomNodeSupport">
+                        <div class="accordion-body">
+                            <ul class="pb-3">
+                                <li>
+                                    <code><b>type=</b>phoenixd;<b>server=</b>http://phoenixd:9740/;<b>password=</b>phoenixdpassword...</code>
+                                </li>
+                            </ul>
+                            <p class="mt-2" html-translate="true">
+                                The password is the <code>http-password</code> generated in your <code>~/.phoenix/phoenix.conf</code> file.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="CustomNodeLNDHeader">
+                        <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeLNDContent"
+                                aria-controls="CustomNodeLNDContent" aria-expanded="false">
+                            <span><strong>LND</strong> <span text-translate="true">via the REST API</span></span>
+                            <vc:icon symbol="caret-down" />
+                        </button>
+                    </h2>
+                    <div id="CustomNodeLNDContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeLNDHeader"
+                         data-bs-parent="#CustomNodeSupport">
+                        <div class="accordion-body">
+                            <ul class="pb-2">
+                                <li>
+                                    <code><b>type=</b>lnd-rest;<b>server=</b>https://mylnd:8080/;<b>macaroon=</b>abef263adfe...</code>
+                                </li>
+                                <li>
+                                    <code><b>type=</b>lnd-rest;<b>server=</b>https://mylnd:8080/;<b>macaroon=</b>abef263adfe...;<b>certthumbprint=</b>abef263adfe...</code>
+                                </li>
+                            </ul>
+                            <p>
+                                <span html-translate="true">For the macaroon options you need to provide a macaroon with the <code>invoices:write</code> permission (e.g. <code>invoice.macaroon</code>. If you want to display the node connection details, it also needs the <code>info:read</code> permission.</span>
+                                <a href="https://docs.lightning.engineering/lightning-network-tools/lnd/macaroons" target="_blank" rel="noreferrer noopener">
+                                    <vc:icon symbol="info" />
+                                </a>
+                                <br />
+                                <span html-translate="true">The path to the LND data directory may vary, the following examples assume <code>/root/.lnd</code>.</span>
+                            </p>
+                            <p class="mb-2" html-translate="true">The <code>macaroon</code> parameter expects the HEX value, it can be obtained using this
+                                command:</p>
+                            <pre class="mb-4">xxd -p -c 256 /root/.lnd/data/chain/bitcoin/mainnet/invoice.macaroon | tr -d '\n'</pre>
+                            <p class="mb-2" html-translate="true">
+                                You can omit <code>certthumbprint</code> if the certificate is trusted by your machine. The <code>certthumbprint</code> can be
+                                obtained using this command:
+                            </p>
+                            <pre class="mb-4">openssl x509 -noout -fingerprint -sha256 -in /root/.lnd/tls.cert | sed -e 's/.*=//;s/://g'</pre>
+                            <p class="mb-0" html-translate="true">If your LND REST server is using HTTP or HTTPS with an untrusted certificate, you can set
+                                <code>allowinsecure=true</code> as a fallback.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="CustomNodeLNDhubHeader">
+                        <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeLNDhubContent"
+                                aria-controls="CustomNodeLNDhubContent" aria-expanded="false">
+                            <span><strong>LNDhub</strong> <span text-translate="true">via the REST API</span></span>
+                            <vc:icon symbol="caret-down" />
+                        </button>
+                    </h2>
+                    <div id="CustomNodeLNDhubContent" class="accordion-collapse collapse" aria-labelledby="CustomNodeLNDhubHeader"
+                         data-bs-parent="#CustomNodeSupport">
+                        <div class="accordion-body">
+                            <ul class="pb-2">
+                                <li>
+                                    <code><b>type=</b>lndhub;<b>server=</b>https://login:password@lndhub.io</code>
+                                </li>
+                            </ul>
+                            <p class="my-2" html-translate="true">The credentials and server address are shown as a <code>lndhub://</code> URL on the
+                                "Export/Backup" screen in BlueWallet.</p>
+                            <p html-translate="true">You can also use this LNDhub-URL as the connection string and BTCPay Server converts it into the expected
+                                <code>type=lndhub</code> connection string format:</p>
+                            <ul class="mb-0">
+                                <li>
+                                    <code>lndhub://<b>login</b>:<b>password</b>@@<b>https://lndhub.io</b></code>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <vc:ui-extension-point location="ln-payment-method-setup-tab" model="@Model" />
+    </div>
+
+    <div class="text-start mt-4">
+        <button id="page-primary" name="command" type="submit" value="save" class="btn btn-primary me-2" text-translate="true">Save</button>
+    </div>
+</form>
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+}

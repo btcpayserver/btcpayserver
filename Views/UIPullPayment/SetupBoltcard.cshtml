@@ -1,0 +1,59 @@
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Blazor
+@using BTCPayServer.Blazor.VaultBridge
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.TagHelpers
+@model SetupBoltcardViewModel
+@{
+    Layout = "_LayoutWizard";
+    this.ViewData.SetBlazorAllowed(true);
+}
+
+@section Navbar {
+	<a href="@Url.EnsureLocal(Model.ReturnUrl, Context.Request)" id="CancelWizard" class="cancel">
+        <vc:icon symbol="cross" />
+    </a>
+}
+
+<header class="text-center">
+    @if (Model.NewCard)
+    {
+        <h1 text-translate="true">Setup Boltcard</h1>    
+    }
+    else
+    {
+        <h1 text-translate="true">Reset Boltcard</h1>
+    }
+    
+    <p class="lead text-secondary mt-3" text-translate="true">Using BTCPay Server Vault (NFC)</p>
+</header>
+
+<div class="row mt-5 mb-4">
+    <div class="col-md-8 mx-auto">
+        <component type="typeof(VaultBridgeUI)"
+                   param-Controller="@(new NFCController()
+                                     {
+                                         NewCard = Model.NewCard,
+                                         BoltcardUrl = Model.BoltcardUrl,
+                                         PullPaymentId = Model.PullPaymentId
+                                     })"
+                   render-mode="Server"/>
+    </div>
+</div>
+
+<div id="body" class="my-4">
+	<form id="broadcastForm" method="post" style="display:none;">
+    </form>
+</div>
+
+
+@section PageFootContent
+{
+    <script src="~/js/vaultbridge.js" asp-append-version="true"></script>
+    <script>
+        vault.done = function ()
+        {
+            $("#broadcastForm").submit();
+        }
+    </script>
+}

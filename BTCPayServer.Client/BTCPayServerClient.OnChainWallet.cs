@@ -102,6 +102,11 @@ public partial class BTCPayServerClient
             throw new ArgumentOutOfRangeException(nameof(request.ProceedWithBroadcast),
                 "Please use CreateOnChainTransactionButDoNotBroadcast when wanting to only create the transaction");
         }
+        if (request.SignWithSeed is false)
+        {
+            throw new ArgumentOutOfRangeException(nameof(request.SignWithSeed),
+                "Please use CreateOnChainTransactionPSBT when wanting an unsigned PSBT");
+        }
         return await SendHttpRequest<OnChainWalletTransactionData>($"api/v1/stores/{storeId}/payment-methods/{cryptoCode}-CHAIN/wallet/transactions", request, HttpMethod.Post, token);
     }
 
@@ -114,6 +119,34 @@ public partial class BTCPayServerClient
             throw new ArgumentOutOfRangeException(nameof(request.ProceedWithBroadcast),
                 "Please use CreateOnChainTransaction when wanting to also broadcast the transaction");
         }
+        if (request.SignWithSeed is false)
+        {
+            throw new ArgumentOutOfRangeException(nameof(request.SignWithSeed),
+                "Please use CreateOnChainTransactionPSBT when wanting an unsigned PSBT");
+        }
         return Transaction.Parse(await SendHttpRequest<string>($"api/v1/stores/{storeId}/payment-methods/{cryptoCode}-CHAIN/wallet/transactions", request, HttpMethod.Post, token), network);
+    }
+
+    public virtual async Task<CreateOnChainTransactionResponse> CreateOnChainTransactionPSBT(string storeId,
+        string cryptoCode, CreateOnChainTransactionRequest request,
+        CancellationToken token = default)
+    {
+        if (request.SignWithSeed)
+        {
+            throw new ArgumentOutOfRangeException(nameof(request.SignWithSeed),
+               $"Please use {nameof(CreateOnChainTransactionButDoNotBroadcast)} when wanting to sign the transaction");
+        }
+        if (request.ProceedWithBroadcast)
+        {
+            throw new ArgumentOutOfRangeException(nameof(request.ProceedWithBroadcast),
+                $"Please use {nameof(CreateOnChainTransaction)} when wanting to also broadcast the transaction");
+        }
+        return await SendHttpRequest<CreateOnChainTransactionResponse>($"api/v1/stores/{storeId}/payment-methods/{cryptoCode}-CHAIN/wallet/transactions", request, HttpMethod.Post, token);
+    }
+
+    public virtual async Task<OnChainWalletTransactionData> BroadcastOnChainTransaction(string storeId,
+        string cryptoCode, BroadcastOnChainTransactionRequest request, CancellationToken token = default)
+    {
+        return await SendHttpRequest<BroadcastOnChainTransactionRequest, OnChainWalletTransactionData>($"api/v1/stores/{storeId}/payment-methods/{cryptoCode}-CHAIN/wallet/transactions/broadcast", null, request, HttpMethod.Post, token);
     }
 }

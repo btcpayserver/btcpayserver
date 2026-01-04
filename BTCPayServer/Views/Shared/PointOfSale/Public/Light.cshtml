@@ -15,8 +15,8 @@
 }
 <div id="PosKeypad" class="public-page-wrap">
 	<partial name="_StatusMessage" />
-	@await Component.InvokeAsync("UiExtensionPoint", new { location = "pos-header", model = Model })
     <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.StoreBranding)" />
+	@await Component.InvokeAsync("UiExtensionPoint", new { location = "pos-header", model = Model })
     @if (Context.Request.Query.ContainsKey("simple"))
     {
         <partial name="PointOfSale/Public/MinimalLight" model="Model" />

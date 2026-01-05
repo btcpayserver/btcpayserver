@@ -53,6 +53,11 @@ jobs:
       - setup_remote_docker
       - checkout
       - run:
+          name: Verify commit is GPG/PGP signed
+          command: |
+            cd .circleci && chmod +x verify-signed-commit.sh && ./verify-signed-commit.sh
+      - run:
+          name: Build and push Docker images
           command: |
             LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
             GIT_COMMIT=$(git rev-parse HEAD)

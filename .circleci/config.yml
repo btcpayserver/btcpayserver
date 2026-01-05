@@ -53,7 +53,7 @@ jobs:
       - setup_remote_docker
       - checkout
       - run:
-          name: Verify commit is GPG/PGP signed
+          name: Verify commit is signed
           command: |
             cd .circleci && chmod +x verify-signed-commit.sh && ./verify-signed-commit.sh
       - run:

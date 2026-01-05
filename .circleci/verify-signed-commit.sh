@@ -2,4 +2,7 @@
 set -e
 
 echo "Checking commit signature..."
-git log -1 --format="%G?" HEAD | grep -qE "G|U|E|X|Y|R"
+if git log -1 --format="%G?" HEAD | grep -q "^N$"; then
+    echo "ERROR: Commit is not signed"
+    exit 1
+fi

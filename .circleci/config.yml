@@ -51,15 +51,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Run pre-release checks
           command: |
             cd .circleci && ./run-tests.sh "PreReleaseCheck=PreReleaseCheck"
-      - run:
-          name: Check if translations are up to date
-          command: |
-            if ! git diff --exit-code BTCPayServer/Services/Translations.Default.cs; then
-              echo "ERROR: Translations.Default.cs is out of date! Please run UpdateDefaultTranslations test before building docker images."
-              exit 1
-            fi
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined
   docker:
     docker:

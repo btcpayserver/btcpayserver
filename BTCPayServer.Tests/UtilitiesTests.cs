@@ -203,13 +203,37 @@ namespace BTCPayServer.Tests
         }
 
         /// <summary>
+        /// Pre-release check to ensure UpdateDefaultTranslations has been run
+        /// </summary>
+        [Trait("PreReleaseCheck", "PreReleaseCheck")]
+        [Fact]
+        public async Task CheckDefaultTranslationsUpToDate()
+        {
+            var soldir = TestUtils.TryGetSolutionDirectoryInfo();
+            var path = Path.Combine(soldir.FullName, "BTCPayServer/Services/Translations.Default.cs");
+            var originalContent = File.ReadAllText(path);
+            
+            await UpdateDefaultTranslationsCore();
+            
+            // Check if file was modified
+            var newContent = File.ReadAllText(path);
+            Assert.True(originalContent == newContent, 
+                "Default translations are out of date. Please run the UpdateDefaultTranslations test before building docker images.\n" +
+                "You can run it with: dotnet test --filter \"FullyQualifiedName~UpdateDefaultTranslations\"");
+        }
+
+        /// <summary>
         /// This utilities crawl through the cs files in search for
         /// Display attributes, then update Translations.Default to list them
         /// </summary>
         [Trait("Utilities", "Utilities")]
-        [Trait("PreReleaseCheck", "PreReleaseCheck")]
         [Fact]
         public async Task UpdateDefaultTranslations()
+        {
+            await UpdateDefaultTranslationsCore();
+        }
+
+        private async Task UpdateDefaultTranslationsCore()
         {
             var soldir = TestUtils.TryGetSolutionDirectoryInfo();
             List<string> defaultTranslatedKeys = new List<string>();

@@ -207,6 +207,7 @@ namespace BTCPayServer.Tests
         /// Display attributes, then update Translations.Default to list them
         /// </summary>
         [Trait("Utilities", "Utilities")]
+        [Trait("PreReleaseCheck", "PreReleaseCheck")]
         [Fact]
         public async Task UpdateDefaultTranslations()
         {

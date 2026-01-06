@@ -212,14 +212,21 @@ namespace BTCPayServer.Tests
             var soldir = TestUtils.TryGetSolutionDirectoryInfo();
             var path = Path.Combine(soldir.FullName, "BTCPayServer/Services/Translations.Default.cs");
             var originalContent = File.ReadAllText(path);
-            
-            await UpdateDefaultTranslationsCore();
-            
-            // Check if file was modified
-            var newContent = File.ReadAllText(path);
-            Assert.True(originalContent == newContent, 
-                "Default translations are out of date. Please run the UpdateDefaultTranslations test before building docker images.\n" +
-                "You can run it with: dotnet test --filter \"FullyQualifiedName~UpdateDefaultTranslations\"");
+
+            try
+            {
+                await UpdateDefaultTranslationsCore();
+
+                // Check if file was modified
+                var newContent = File.ReadAllText(path);
+                Assert.True(originalContent == newContent, 
+                    "Default translations are out of date. Please run the UpdateDefaultTranslations test before building docker images.\n" +
+                    "You can run it with: dotnet test --filter \"FullyQualifiedName~UpdateDefaultTranslations\"");
+            }
+            finally
+            {
+                File.WriteAllText(path, originalContent);
+            }
         }
 
         /// <summary>
@@ -254,26 +261,29 @@ namespace BTCPayServer.Tests
             }
 
             // Go through all cshtml file, search for text-translate or ViewLocalizer usage
-            using (var tester = CreateServerTester(newDb: true))
+            var btcpayDir = Path.Combine(soldir.FullName, "BTCPayServer");
+            var fileSystem = RazorProjectFileSystem.Create(btcpayDir);
+            var engine = RazorProjectEngine.Create(RazorConfiguration.Default, fileSystem, (builder) =>
             {
-                await tester.StartAsync();
-                var engine = tester.PayTester.GetService<RazorProjectEngine>();
-                var files = soldir.EnumerateFiles("*.cshtml", SearchOption.AllDirectories)
-                    .Union(soldir.EnumerateFiles("*.razor", SearchOption.AllDirectories));
-                foreach (var file in files)
-                {
-                    var filePath = file.FullName;
-                    var txt = File.ReadAllText(file.FullName);
-                    AddLocalizers(defaultTranslatedKeys, txt);
+                builder.SetNamespace("BTCPayServer");
+            });
+            
+            var btcpayDirInfo = new DirectoryInfo(btcpayDir);
+            var files = btcpayDirInfo.EnumerateFiles("*.cshtml", SearchOption.AllDirectories)
+                .Union(btcpayDirInfo.EnumerateFiles("*.razor", SearchOption.AllDirectories));
+            foreach (var file in files)
+            {
+                var filePath = file.FullName;
+                var txt = File.ReadAllText(file.FullName);
+                AddLocalizers(defaultTranslatedKeys, txt);
 
-                    filePath = filePath.Replace(Path.Combine(soldir.FullName, "BTCPayServer"), "/");
-                    var item = engine.FileSystem.GetItem(filePath);
+               
+                filePath = "/" + Path.GetRelativePath(btcpayDir, filePath).Replace("\\", "/");
+                var item = engine.FileSystem.GetItem(filePath);
 
-                    var node = (DocumentIntermediateNode)engine.Process(item).Items[typeof(DocumentIntermediateNode)];
-                    var w = new TranslatedKeyNodeWalker(defaultTranslatedKeys, txt);
-                    w.Visit(node);
-                }
-
+                var node = (DocumentIntermediateNode)engine.Process(item).Items[typeof(DocumentIntermediateNode)];
+                var w = new TranslatedKeyNodeWalker(defaultTranslatedKeys, txt);
+                w.Visit(node);
             }
             defaultTranslatedKeys = defaultTranslatedKeys.Select(d => d.Trim().Replace("\r\n", "\n")).Distinct().OrderBy(o => o).ToList();
             JObject obj = new JObject();

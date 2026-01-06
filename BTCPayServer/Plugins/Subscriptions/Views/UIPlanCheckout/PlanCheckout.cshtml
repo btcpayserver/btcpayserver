@@ -191,7 +191,7 @@
                     <div class="price-display">
                         <div
                             class="price-amount">@DisplayFormatter.Currency(Model.Data.Price, Model.Data.Currency, DisplayFormatter.CurrencyFormat.Symbol)</div>
-                        <div class="price-period">per month</div>
+                        <div class="price-period">@StringLocalizer.RecurringToString(Model.Data.RecurringType)</div>
                     </div>
 
                     @if (Model.Data.PlanFeatures.Count(i => !string.IsNullOrWhiteSpace(i.Feature.Description)) != 0)

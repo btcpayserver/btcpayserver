@@ -1,6 +1,5 @@
-﻿@using BTCPayServer.Client.Models
+﻿@using BTCPayServer.Plugins.Subscriptions
 @using BTCPayServer.Services
-@using BTCPayServer.Services.Invoices
 @using NBXplorer
 @model SubscriberPortalViewModel
 @inject DisplayFormatter DisplayFormatter
@@ -16,18 +15,6 @@
 
     string FormatDays(int days)
         => days is 1 or 0 ? StringLocalizer["{0} day", days] : StringLocalizer["{0} days", days];
-
-    private static string RecurringToString(PlanData.RecurringInterval type)
-    {
-        return type switch
-        {
-            PlanData.RecurringInterval.Lifetime => "Lifetime",
-            PlanData.RecurringInterval.Monthly => "per month",
-            PlanData.RecurringInterval.Quarterly => "per quarter",
-            PlanData.RecurringInterval.Yearly => "per year",
-            _ => throw new NotSupportedException()
-        };
-    }
 }
 
 @{
@@ -308,7 +295,7 @@
                 {
                     <div class="col-md-4 text-md-end">
                         <h4 class="mb-1">@DisplayFormatter.Currency(Model.Plan.Price, Model.Plan.Currency, DisplayFormatter.CurrencyFormat.Symbol)</h4>
-                        <p class="text-muted mb-0">@RecurringToString(Model.Plan.RecurringType)</p>
+                        <p class="text-muted mb-0">@StringLocalizer.RecurringToString(Model.Plan.RecurringType)</p>
                     </div>
                 }
             </div>
@@ -505,7 +492,7 @@
                                     <div class="col-md-4" data-plan-name="@plan.Name">
                                         <div class="current-plan">
                                             <h6 class="mb-1 changeplan-title">@plan.Name</h6>
-                                            <p class="text-muted mb-2"><span>@DisplayFormatter.Currency(plan.Price, plan.Currency, DisplayFormatter.CurrencyFormat.Symbol)</span> <span>@RecurringToString(plan.RecurringType)</span></p>
+                                            <p class="text-muted mb-2"><span>@DisplayFormatter.Currency(plan.Price, plan.Currency, DisplayFormatter.CurrencyFormat.Symbol)</span> <span>@StringLocalizer.RecurringToString(plan.RecurringType)</span></p>
                                             <span class="badge bg-primary">Current</span>
                                         </div>
                                     </div>
@@ -516,7 +503,7 @@
                                          data-plan-name="@plan.Name"
                                          data-plan-id="@plan.PlanId">
                                         <h6 class="mb-1 changeplan-title">@plan.Name</h6>
-                                        <p class="text-muted mb-2"><span>@DisplayFormatter.Currency(plan.Price, plan.Currency, DisplayFormatter.CurrencyFormat.Symbol)</span> <span>@RecurringToString(plan.RecurringType)</span></p>
+                                        <p class="text-muted mb-2"><span>@DisplayFormatter.Currency(plan.Price, plan.Currency, DisplayFormatter.CurrencyFormat.Symbol)</span> <span>@StringLocalizer.RecurringToString(plan.RecurringType)</span></p>
 
                                             <input type="hidden" name="changedPlanId" value="@plan.PlanId" />
                                             @if (plan.ChangeType == PlanChangeData.ChangeType.Upgrade)

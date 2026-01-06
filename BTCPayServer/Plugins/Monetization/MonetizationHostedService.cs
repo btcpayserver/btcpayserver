@@ -133,6 +133,8 @@ public class MonetizationHostedService(
                               WHERE ci.customer_id = s.customer_id
                                 AND ci.type = @type
                                 AND ci.value = @id;
+                              DELETE FROM customers_identities ci
+                              WHERE ci.type = @type AND ci.value = @id;
                               """, new { type = Monetization.SubscriberDataExtensions.IdentityType, id = deleted.User.Id });
         }
     }

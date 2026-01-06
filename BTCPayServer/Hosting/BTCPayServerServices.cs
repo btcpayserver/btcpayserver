@@ -166,6 +166,7 @@ namespace BTCPayServer.Hosting
                 o.GetRequiredService<IOptions<BTCPayServerOptions>>().Value);
 
             services.AddStartupTask<MigrationStartupTask>();
+            services.AddStartupTask<SettingsAccessorsStartupTask>();
 
             //
             services.AddSettingsAccessor<PoliciesSettings>();

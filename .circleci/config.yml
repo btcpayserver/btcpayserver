@@ -45,6 +45,14 @@ jobs:
       - run:
           command: |
             curl -X POST -H "Authorization: token $GH_PAT" -H "Accept: application/vnd.github.everest-preview+json" -H "Content-Type: application/json" https://api.github.com/repos/btcpayserver/btcpayserver-doc/dispatches --data '{"event_type": "build_docs"}'
+  check_translations:
+    machine:
+      image: ubuntu-2004:2024.11.1
+    steps:
+      - checkout
+      - run:
+          command: |
+            cd .circleci && ./check-translations.sh
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined
   docker:
     docker:
@@ -83,7 +91,15 @@ workflows:
             # only act on version tags
             tags:
               only: /(v[1-9]+(\.[0-9]+)*(-[a-z0-9-]+)?)|(v[a-z0-9-]+)/
+      - check_translations:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /(v[1-9]+(\.[0-9]+)*(-[a-z0-9-]+)?)|(v[a-z0-9-]+)/
       - docker:
+          requires:
+            - check_translations
           filters:
             # ignore any commit on any branch by default
             branches:

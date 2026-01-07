@@ -567,8 +567,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return Ok(new CreateOnChainTransactionResponse
                 {
-                    PSBT = psbt.PSBT.ToBase64(),
-                    Transaction = null
+                    PSBT = psbt.PSBT.ToBase64()
                 });
             }
 

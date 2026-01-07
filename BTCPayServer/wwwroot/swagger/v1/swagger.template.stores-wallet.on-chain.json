@@ -357,7 +357,7 @@
                                             "type": "string"
                                         },
                                         {
-                                            "description": "An unsigned PSBT and optional finalized transaction",
+                                            "description": "An unsigned PSBT in base64 format",
                                             "$ref": "#/components/schemas/CreateOnChainTransactionResponse"
                                         },
                                         {
@@ -1291,11 +1291,6 @@
                     "psbt": {
                         "type": "string",
                         "description": "Unsigned PSBT in base64 format"
-                    },
-                    "transaction": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "Finalized transaction in hex, when available"
                     }
                 }
             },

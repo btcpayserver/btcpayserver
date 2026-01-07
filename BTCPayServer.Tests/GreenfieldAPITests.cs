@@ -3813,7 +3813,6 @@ namespace BTCPayServer.Tests
             };
             var psbtResponse = await client.CreateOnChainTransactionPSBT(walletId.StoreId, walletId.CryptoCode, psbtRequest);
             Assert.False(string.IsNullOrEmpty(psbtResponse.PSBT));
-            Assert.Null(psbtResponse.Transaction);
             var unsignedPsbt = PSBT.Parse(psbtResponse.PSBT, tester.ExplorerClient.Network.NBitcoinNetwork);
             Assert.False(unsignedPsbt.IsAllFinalized());
             Assert.Contains(unsignedPsbt.Outputs, output => output.ScriptPubKey == BitcoinAddress.Create(psbtDestination.Address, tester.ExplorerClient.Network.NBitcoinNetwork).ScriptPubKey);

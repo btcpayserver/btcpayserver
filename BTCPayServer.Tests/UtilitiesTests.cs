@@ -209,7 +209,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public async Task CheckLanguagePacksListUpToDate()
         {
-            var httpClient = new HttpClient();
+            using var httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(30) };
             httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("BTCPayServer-Tests");
             var response = await httpClient.GetAsync("https://api.github.com/repos/btcpayserver/btcpayserver-translator/contents/translations");
             response.EnsureSuccessStatusCode();

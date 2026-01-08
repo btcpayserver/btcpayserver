@@ -1270,8 +1270,15 @@ namespace BTCPayServer.Tests
             const string labelName = "test-label";
             var testPrRow = s.Page.Locator("table tbody tr", new PageLocatorOptions { HasText = paymentRequestTitle });
             var labelInput = testPrRow.Locator(".ts-control input");
+            await Expect(labelInput).ToBeVisibleAsync();
+
             await labelInput.FillAsync(labelName);
-            await s.Page.Keyboard.PressAsync("Enter");
+            var resp = await s.Page.RunAndWaitForResponseAsync(
+                () => labelInput.PressAsync("Enter"),
+                r => r.Request.Method == "POST" &&
+                     r.Url.Contains("/update-labels", StringComparison.OrdinalIgnoreCase));
+            Assert.True(resp.Ok, $"update-labels returned {resp.Status}");
+
             await TestUtils.EventuallyAsync(async () =>
             {
                 var value = await testPrRow.InnerTextAsync();
@@ -1283,6 +1290,7 @@ namespace BTCPayServer.Tests
             await s.Page.WaitForLoadStateAsync();
             await s.Page.ClickAsync("#LabelOptionsToggle");
             await s.Page.ClickAsync($".dropdown-menu a:has-text(\"{labelName}\")");
+            await s.Page.WaitForLoadStateAsync();
             await TestUtils.EventuallyAsync(async () =>
             {
                 var rowsCount = await s.Page.Locator("table tbody tr").CountAsync();

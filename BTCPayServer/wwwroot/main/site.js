@@ -58,8 +58,6 @@ async function initLabelManager (elementId) {
                 select.addOption(lbl);
             }
         });
-
-        select.refreshItems();
     };
     const applyLabelStyle = (el, data) => {
         const bg = data && data.color

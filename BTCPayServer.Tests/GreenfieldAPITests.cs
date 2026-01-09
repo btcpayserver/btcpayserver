@@ -3795,6 +3795,124 @@ namespace BTCPayServer.Tests
             Assert.Contains(
                 await client.ShowOnChainWalletTransactions(walletId.StoreId, walletId.CryptoCode, null, "test label"), data => data.TransactionHash == txdata.TransactionHash);
 
+            // unsigned PSBT creation and broadcast endpoint
+            var psbtDestination = await client.GetOnChainWalletReceiveAddress(walletId.StoreId, walletId.CryptoCode, true);
+            var psbtRequest = new CreateOnChainTransactionRequest()
+            {
+                Destinations = new List<CreateOnChainTransactionRequest.CreateOnChainTransactionRequestDestination>()
+                {
+                    new CreateOnChainTransactionRequest.CreateOnChainTransactionRequestDestination()
+                    {
+                        Destination = psbtDestination.Address,
+                        Amount = 0.0002m
+                    }
+                },
+                FeeRate = new FeeRate(5m),
+                ProceedWithBroadcast = false,
+                SignWithSeed = false
+            };
+            var psbtResponse = await client.CreateOnChainTransactionPSBT(walletId.StoreId, walletId.CryptoCode, psbtRequest);
+            Assert.False(string.IsNullOrEmpty(psbtResponse.PSBT));
+            var unsignedPsbt = PSBT.Parse(psbtResponse.PSBT, tester.ExplorerClient.Network.NBitcoinNetwork);
+            Assert.False(unsignedPsbt.IsAllFinalized());
+            Assert.Contains(unsignedPsbt.Outputs, output => output.ScriptPubKey == BitcoinAddress.Create(psbtDestination.Address, tester.ExplorerClient.Network.NBitcoinNetwork).ScriptPubKey);
+
+            await AssertValidationError(new[] { nameof(BroadcastOnChainTransactionRequest.Transaction) }, async () =>
+            {
+                await client.BroadcastOnChainTransaction(walletId.StoreId, walletId.CryptoCode,
+                    new BroadcastOnChainTransactionRequest()
+                    {
+                        Transaction = psbtResponse.PSBT
+                    });
+            });
+
+            var broadcastDestination = await client.GetOnChainWalletReceiveAddress(walletId.StoreId, walletId.CryptoCode, true);
+            var broadcastRequest = new CreateOnChainTransactionRequest()
+            {
+                Destinations = new List<CreateOnChainTransactionRequest.CreateOnChainTransactionRequestDestination>()
+                {
+                    new CreateOnChainTransactionRequest.CreateOnChainTransactionRequestDestination()
+                    {
+                        Destination = broadcastDestination.Address,
+                        Amount = 0.0002m
+                    }
+                },
+                FeeRate = new FeeRate(5m),
+                ProceedWithBroadcast = false
+            };
+            var signedTx = await client.CreateOnChainTransactionButDoNotBroadcast(walletId.StoreId, walletId.CryptoCode,
+                broadcastRequest, tester.ExplorerClient.Network.NBitcoinNetwork);
+
+            var broadcastedTx = await client.BroadcastOnChainTransaction(walletId.StoreId, walletId.CryptoCode,
+                new BroadcastOnChainTransactionRequest()
+                {
+                    Transaction = signedTx.ToHex()
+                });
+            Assert.Equal(signedTx.GetHash(), broadcastedTx.TransactionHash);
+            Assert.Equal(TransactionStatus.Unconfirmed, broadcastedTx.Status);
+            Assert.NotNull(await tester.ExplorerClient.GetTransactionAsync(broadcastedTx.TransactionHash));
+
+            // Now lets try base64 PSBT broadcasting
+            var broadcastRequest2 = new CreateOnChainTransactionRequest()
+            {
+                Destinations = new List<CreateOnChainTransactionRequest.CreateOnChainTransactionRequestDestination>()
+                {
+                    new CreateOnChainTransactionRequest.CreateOnChainTransactionRequestDestination()
+                    {
+                        Destination = broadcastDestination.Address,
+                        Amount = 0.0002m
+                    }
+                },
+                FeeRate = new FeeRate(5m),
+                ProceedWithBroadcast = false
+            };
+
+            var signedTx2 = await client.CreateOnChainTransactionButDoNotBroadcast(walletId.StoreId, walletId.CryptoCode,
+                broadcastRequest2, tester.ExplorerClient.Network.NBitcoinNetwork);
+
+            // Create a clone so we don't modify the original 'signedTx'
+            // NBitcoin does not allow parsing of signed transactions into PSBT directly so we need to remove the signature first
+            var unsignedTx = signedTx2.Clone();
+
+            // Strip signatures from the clone (Satisfies the ArgumentException)
+            foreach (var input in unsignedTx.Inputs)
+            {
+                input.WitScript = WitScript.Empty;
+                input.ScriptSig = Script.Empty;
+            }
+
+            // Create the PSBT from the stripped transaction
+            var psbt2 = PSBT.FromTransaction(unsignedTx, tester.ExplorerClient.Network.NBitcoinNetwork);
+
+            // Re-attach the signatures from the original 'signedTx'
+            for (int i = 0; i < signedTx2.Inputs.Count; i++)
+            {
+                var input = signedTx2.Inputs[i];
+
+                // Copy Witness Data (SegWit)
+                if (input.WitScript != WitScript.Empty)
+                {
+                    psbt2.Inputs[i].FinalScriptWitness = input.WitScript;
+                }
+
+                // Copy ScriptSig (Legacy or Nested SegWit)
+                if (input.ScriptSig != Script.Empty)
+                {
+                    psbt2.Inputs[i].FinalScriptSig = input.ScriptSig;
+                }
+            }
+
+
+            var broadcastedTx2 = await client.BroadcastOnChainTransaction(walletId.StoreId, walletId.CryptoCode,
+                new BroadcastOnChainTransactionRequest()
+                {
+                    Transaction = psbt2.ToBase64()
+                });
+
+            Assert.Equal(signedTx2.GetHash(), broadcastedTx2.TransactionHash);
+            Assert.Equal(TransactionStatus.Unconfirmed, broadcastedTx2.Status);
+            Assert.NotNull(await tester.ExplorerClient.GetTransactionAsync(broadcastedTx2.TransactionHash));
+
             await tester.WaitForEvent<NewBlockEvent>(async () =>
             {
                 await tester.ExplorerNode.GenerateAsync(1);

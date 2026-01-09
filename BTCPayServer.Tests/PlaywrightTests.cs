@@ -1865,9 +1865,19 @@ namespace BTCPayServer.Tests
 
             opening = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("text=View");
-            newPage = await opening;
-            await Expect(newPage.GetByTestId("description")).ToContainTextAsync("Description Edit");
-            await Expect(newPage.GetByTestId("title")).ToContainTextAsync("PP1 Edited");
+            await using (await s.SwitchPage(opening))
+            {
+                try
+                {
+                    await Expect(s.Page.GetByTestId("description")).ToContainTextAsync("Description Edit");
+                    await Expect(s.Page.GetByTestId("title")).ToContainTextAsync("PP1 Edited");
+                }
+                catch
+                {
+                    await s.TakeScreenshot("Flaky-CanEditPullPaymentUI.png");
+                    throw;
+                }
+            }
         }
 
         [Fact]

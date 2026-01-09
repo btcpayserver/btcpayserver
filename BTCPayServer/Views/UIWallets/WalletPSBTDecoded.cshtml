@@ -70,7 +70,7 @@
                     hex = data;
                 }
                 document.getElementById("ImportedPSBT").value = hex;
-                document.getElementById("Decode").click();
+                document.getElementsByClassName("camera-submit")[0].click();
             }, "scanModal");
         });
     </script>
@@ -215,11 +215,11 @@ else
                         <div class="d-flex flex-column flex-sm-row flex-wrap align-items-sm-center">
                             @if (this.Model.SigningContext.PendingTransactionId is not null)
                             {
-                                <button type="submit" name="command" value="collect" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" id="Collect" text-translate="true">Collect signatures</button>
+                                <button type="submit" name="command" value="collect" class="btn btn-primary mb-3 mb-sm-0 me-sm-2 camera-submit" id="Collect" text-translate="true">Collect signatures</button>
                             }
                             else
                             {
-                                <button type="submit" name="command" value="decode" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" id="Decode" text-translate="true">Decode PSBT</button>
+                                <button type="submit" name="command" value="decode" class="btn btn-primary mb-3 mb-sm-0 me-sm-2 camera-submit" id="Decode" text-translate="true">Decode PSBT</button>
                             }
                             <button type="button" id="scanqrcode" class="btn btn-primary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" text-translate="true">Scan wallet QR with camera</button>
                         </div>

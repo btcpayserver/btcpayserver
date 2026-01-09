@@ -203,6 +203,44 @@ namespace BTCPayServer.Tests
         }
 
         /// <summary>
+        /// Pre-release check to ensure language packs list in ListDictionaries.cshtml is up to date
+        /// </summary>
+        [Trait("PreReleaseCheck", "PreReleaseCheck")]
+        [Fact]
+        public async Task CheckLanguagePacksListUpToDate()
+        {
+            using var httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(30) };
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("BTCPayServer-Tests");
+            var response = await httpClient.GetAsync("https://api.github.com/repos/btcpayserver/btcpayserver-translator/contents/translations");
+            response.EnsureSuccessStatusCode();
+            var files = JArray.Parse(await response.Content.ReadAsStringAsync());
+            
+            var availableLanguages = files
+                .Where(f => f["name"].Value<string>().EndsWith(".json"))
+                .Select(f => System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase(f["name"].Value<string>().Replace(".json", "")))
+                .OrderBy(l => l)
+                .ToList();
+            
+            var soldir = TestUtils.TryGetSolutionDirectoryInfo();
+            var cshtmlContent = File.ReadAllText(Path.Combine(soldir.FullName, "BTCPayServer/Views/UIServer/ListDictionaries.cshtml"));
+            var hardcodedLanguages = Regex.Matches(cshtmlContent, @"<option value=""([^""]+)"">")
+                .Cast<Match>()
+                .Select(m => m.Groups[1].Value)
+                .Where(v => v != "")
+                .OrderBy(l => l)
+                .ToList();
+            
+            var missingLanguages = availableLanguages.Except(hardcodedLanguages).ToList();
+            var extraLanguages = hardcodedLanguages.Except(availableLanguages).ToList();
+            
+            Assert.True(!missingLanguages.Any() && !extraLanguages.Any(), 
+                $"Language packs list is out of date.\n" +
+                (missingLanguages.Any() ? $"Missing: {string.Join(", ", missingLanguages)}\n" : "") +
+                (extraLanguages.Any() ? $"Extra: {string.Join(", ", extraLanguages)}\n" : "") +
+                "Update BTCPayServer/Views/UIServer/ListDictionaries.cshtml");
+        }
+
+        /// <summary>
         /// This utilities crawl through the cs files in search for
         /// Display attributes, then update Translations.Default to list them
         /// </summary>

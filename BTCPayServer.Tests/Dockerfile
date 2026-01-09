@@ -23,7 +23,7 @@ ENV SCREEN_HEIGHT 600 \
 COPY . .
 
 ARG CONFIGURATION_NAME=Release
-RUN cd BTCPayServer.Tests && dotnet build --configuration ${CONFIGURATION_NAME} /p:CI_TESTS=true
+RUN cd BTCPayServer.Tests && dotnet build --configuration ${CONFIGURATION_NAME} /p:CI_TESTS=true /p:RazorCompileOnBuild=true
 RUN dotnet tool install --global Microsoft.Playwright.CLI
 ENV PATH="$PATH:/root/.dotnet/tools"
 RUN playwright install chromium --with-deps

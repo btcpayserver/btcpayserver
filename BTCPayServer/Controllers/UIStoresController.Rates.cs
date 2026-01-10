@@ -195,11 +195,14 @@ public partial class UIStoresController
             return;
         var sources = GetAvailableExchanges();
         var exchange = rateSettings.GetPreferredExchange(_defaultRules, storeBlob.DefaultCurrency);
-        var chosenSource = sources.First(r => r.Id == exchange);
+        var chosenSource = sources.FirstOrDefault(r => r.Id == exchange);
         vm.Exchanges = _userStoresController.GetExchangesSelectList(storeBlob.DefaultCurrency, rateSettings);
         vm.PreferredExchange = vm.Exchanges.SelectedValue as string;
-        vm.PreferredResolvedExchange = chosenSource.Id;
-        vm.RateSource = chosenSource.Url;
+        if (chosenSource is not null)
+        {
+            vm.PreferredResolvedExchange = chosenSource.Id;
+            vm.RateSource = chosenSource.Url;
+        }
         vm.Script = rateSettings.GetRateRules(_defaultRules, storeBlob.Spread).ToString();
 
         var defaultRateSettings = (await _storeRepo.GetDefaultStoreTemplate()).GetStoreBlob()?.GetRateSettings(false) ?? new();

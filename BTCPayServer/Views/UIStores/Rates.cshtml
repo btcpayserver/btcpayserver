@@ -51,25 +51,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="accordion-item">
-                                <h2 class="accordion-header" id="coingecko-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#coingecko-content"
-                                            aria-expanded="false" aria-controls="coingecko-content">
-                                        <span text-translate="true">Coingecko integration</span>
-                                        <vc:icon symbol="caret-down" />
-                                    </button>
-                                </h2>
-                                <div id="coingecko-content" class="accordion-collapse collapse" aria-labelledby="coingecko-header"
-                                     data-bs-parent="#accordion-info">
-                                    <div class="accordion-body">
-                                        @foreach (var exchange in Model.AvailableExchanges.Where(a => a.Source == BTCPayServer.Rating.RateSource.Coingecko))
-                                        {
-                                            <a href="@exchange.Url" rel="noreferrer noopener">@exchange.Id</a>
-                                            <span>&nbsp;</span>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                     <div id="help" class="collapse text-start">

@@ -605,7 +605,6 @@ namespace BTCPayServer.Hosting
 
             // Handmade providers
             services.AddRateProvider<HitBTCRateProvider>();
-            services.AddRateProvider<CoinGeckoRateProvider>();
             services.AddRateProvider<KrakenExchangeRateProvider>();
             services.AddRateProvider<ByllsRateProvider>();
             services.AddRateProvider<BudaRateProvider>();

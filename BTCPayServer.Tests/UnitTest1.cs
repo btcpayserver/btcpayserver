@@ -1416,7 +1416,7 @@ namespace BTCPayServer.Tests
                 }
                 else
                 {
-                    Assert.Equal(CoinGeckoRateProvider.CoinGeckoName, await tester.Page.Locator($"#{source}_PreferredExchange").InputValueAsync());
+                    Assert.Equal("coingecko", await tester.Page.Locator($"#{source}_PreferredExchange").InputValueAsync());
                 }
 
                 Assert.Equal("0", await tester.Page.InputValueAsync("#Spread"));
@@ -1520,7 +1520,7 @@ namespace BTCPayServer.Tests
                     await tester.Page.ClickAsync("#HasFallback");
                     await tester.ClickPagePrimary();
                     await tester.FindAlertMessage();
-                    await tester.Page.SelectOptionAsync($"#{source}_PreferredExchange", CoinGeckoRateProvider.CoinGeckoName);
+                    await tester.Page.SelectOptionAsync($"#{source}_PreferredExchange", "coingecko");
                     await tester.Page.FillAsync("#Spread", "0");
                     await tester.ClickPagePrimary();
                 }
@@ -1529,7 +1529,7 @@ namespace BTCPayServer.Tests
             await tester.Page.ClickAsync("#HasFallback");
             await tester.ClickPagePrimary();
             await tester.FindAlertMessage();
-            await tester.Page.SelectOptionAsync($"#PrimarySource_PreferredExchange", CoinGeckoRateProvider.CoinGeckoName);
+            await tester.Page.SelectOptionAsync($"#PrimarySource_PreferredExchange", "coingecko");
             await tester.Page.SelectOptionAsync($"#FallbackSource_PreferredExchange", "bitflyer");
 
             await tester.Page.FillAsync("#DefaultCurrencyPairs", "BTC_JPY,BTC_CAD");

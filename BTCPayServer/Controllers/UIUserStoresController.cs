@@ -152,8 +152,8 @@ namespace BTCPayServer.Controllers
 				.AvailableRateProviders
 				.OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase)
 				.ToList();
-			var exchange = exchanges.First(e => e.Id == defaultExchange);
-			exchanges.Insert(0, new(null, StringLocalizer["Recommendation ({0})", exchange.DisplayName], ""));
+			var exchange = exchanges.FirstOrDefault(e => e.Id == defaultExchange);
+			exchanges.Insert(0, new(null, StringLocalizer["Recommendation ({0})", exchange?.DisplayName ?? ""], ""));
 			var chosen = exchanges.FirstOrDefault(f => f.Id == rateSettings.PreferredExchange) ?? exchanges.First();
 			return new SelectList(exchanges, nameof(chosen.Id), nameof(chosen.DisplayName), chosen.Id);
 		}

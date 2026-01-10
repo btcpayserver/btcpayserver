@@ -141,8 +141,7 @@ namespace BTCPayServer.Tests
                 .Select(s => s.Id).ToHashSet();
             var providerList = factory
                 .Providers
-                .Where(p => p.Value is BackgroundFetcherRateProvider bf &&
-                            !(bf.Inner is CoinGeckoRateProvider cg && cg.UnderlyingExchange != null))
+                .Where(p => p.Value is BackgroundFetcherRateProvider)
                 .Select(p => (ExpectedName: p.Key, ResultAsync: p.Value.GetRatesAsync(default),
                     Fetcher: (BackgroundFetcherRateProvider)p.Value))
                 .ToList();
@@ -621,7 +620,6 @@ retry:
             await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
             List<decimal> rates = new List<decimal>();
-            rates.Add(await CreateInvoice(tester, user, "coingecko"));
             var bitflyer = await CreateInvoice(tester, user, "bitflyer", "JPY");
             var bitflyer2 = await CreateInvoice(tester, user, "bitflyer", "JPY");
             Assert.Equal(bitflyer, bitflyer2); // Should be equal because cache

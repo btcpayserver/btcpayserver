@@ -1858,8 +1858,7 @@ namespace BTCPayServer.Tests
             var name = s.Page.Locator("#Name");
             await name.ClearAsync();
             await name.FillAsync("PP1 Edited");
-            var description = s.Page.Locator(".card-block");
-            await description.FillAsync("Description Edit");
+            await s.Page.FillAsync(".note-editable", "Description Edit");
             await s.ClickPagePrimary();
             await s.FindAlertMessage();
 

@@ -10,11 +10,11 @@ namespace BTCPayServer.Tests.Mocks
     {
         public List<PairRate> ExchangeRates { get; set; } = new List<PairRate>();
 
-        public RateSourceInfo RateSourceInfo => new RateSourceInfo("mock", "Mock", "https://mock.rf");
+        public RateSourceInfo RateSourceInfo { get; }
 
-        public MockRateProvider()
+        public MockRateProvider(RateSourceInfo rateSourceInfo = null)
         {
-
+            RateSourceInfo = rateSourceInfo ?? new RateSourceInfo("mock", "Mock", "https://mock.rf");
         }
         public Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {

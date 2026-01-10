@@ -55,10 +55,15 @@ public class DefaultRulesCollection
         {
             return Consolidated;
         }
-        else
+
+        try
         {
             var catchAll = RateRules.Parse($"X_X = {preferredExchange}(X_X);");
             return RateRules.Combine([catchAll, ConsolidatedWithoutRecommendation]);
+        }
+        catch (FormatException)
+        {
+            return Consolidated;
         }
     }
 

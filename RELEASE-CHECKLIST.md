@@ -3,7 +3,8 @@
 Things to think about when creating a new release:
 
 * Run `dotnet format` on the solution
-* Run `PullTransifexTranslations` test.
+* Run `UpdateDefaultTranslations` test (required before building docker images)
+* Run `PullTransifexTranslations` test
 * Write chanlog in CHANGELOG.md
 * Bump version in `Build/Version.csproj`
 * Ensure the commit is signed with GPG (do not merge PRs via GitHub UI)

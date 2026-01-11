@@ -303,16 +303,17 @@ namespace BTCPayServer.Tests
             {
                 await tester.StartAsync();
                 var engine = tester.PayTester.GetService<RazorProjectEngine>();
-                var solDirPath = soldir.FullName;
-                var files = soldir.EnumerateFiles("*.cshtml", SearchOption.AllDirectories)
-                    .Union(soldir.EnumerateFiles("*.razor", SearchOption.AllDirectories));
+                var btcpayDir = Path.Combine(soldir.FullName, "BTCPayServer");
+                var btcpayDirInfo = new DirectoryInfo(btcpayDir);
+                var files = btcpayDirInfo.EnumerateFiles("*.cshtml", SearchOption.AllDirectories)
+                    .Union(btcpayDirInfo.EnumerateFiles("*.razor", SearchOption.AllDirectories));
                 foreach (var file in files)
                 {
                     var filePath = file.FullName;
                     var txt = File.ReadAllText(file.FullName);
                     AddLocalizers(defaultTranslatedKeys, txt);
 
-                    filePath = filePath.Replace(Path.Combine(solDirPath, "BTCPayServer"), "/").Replace("\\", "/");
+                    filePath = filePath.Replace(btcpayDir, "").Replace("\\", "/");
                     var item = engine.FileSystem.GetItem(filePath);
 
                     var node = (DocumentIntermediateNode)engine.Process(item).Items[typeof(DocumentIntermediateNode)];

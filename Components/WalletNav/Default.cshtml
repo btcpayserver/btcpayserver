@@ -1,0 +1,14 @@
+@using BTCPayServer.Services
+@inject DisplayFormatter DisplayFormatter
+@model BTCPayServer.Components.WalletNav.WalletNavViewModel
+
+<a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId" class="unobtrusive-link">
+    <h2 class="my-1">@Model.Label</h2>
+    <div class="text-muted fw-semibold" data-sensitive>
+        @DisplayFormatter.Currency(Model.Balance, Model.Network.CryptoCode)
+        @if (!string.IsNullOrEmpty(Model.BalanceDefaultCurrency))
+        {
+            <span>(@DisplayFormatter.Currency(Model.BalanceDefaultCurrency, Model.DefaultCurrency))</span>
+        }
+    </div>
+</a>

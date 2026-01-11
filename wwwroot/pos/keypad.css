@@ -1,0 +1,131 @@
+#PosKeypad {
+    --wrap-max-width: 500px;
+    overflow: hidden;
+    position: relative;
+}
+#PosKeypad .alert {
+    margin-top: var(--btcpay-space-xl);
+}
+button[data-bs-toggle] {
+    position: absolute;
+    z-index: 1;
+    top: 1.5rem;
+    height: 3.25em !important;
+    width: 3.25em !important;
+    color: var(--btcpay-header-link);
+}
+button[data-bs-toggle] .icon {
+    --icon-size: 1.75em;
+    display: block;
+    margin: auto;
+}
+#ItemsListToggle {
+    right: var(--btcpay-space-m);
+}
+#RecentTransactionsToggle {
+    left: var(--btcpay-space-m);
+}
+
+@media (max-width: 359px) {
+    #RecentTransactions .list-group .badge-container {
+        flex-grow: 1;
+    }
+}
+
+#PosItems {
+    --image-size: 3rem;
+}
+
+#PosItems .img img {
+    width: var(--image-size);
+    height: var(--image-size);
+}
+
+#PosItems .img img {
+    max-width: var(--image-size);
+    max-height: var(--image-size);
+    object-fit: scale-down;
+    border-radius: var(--btcpay-border-radius);
+}
+
+/* modes */
+#ModeTabs {
+    min-height: 2.75rem;
+}
+
+/* keypad */
+.keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+.keypad .btn {
+    --icon-size: 1.75rem;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    position: relative;
+    border-radius: 0;
+    border-color: transparent !important;
+    font-weight: var(--btcpay-font-weight-bold);
+    font-size: var(--icon-size);
+    min-height: 3.5rem;
+    height: 8vh;
+    max-height: 6rem;
+    color: var(--btcpay-body-text);
+}
+.btcpay-pills label,
+.btn-secondary.rounded-pill {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+/* make borders collapse by shifting rows and columns by 1px */
+/* second column */
+.keypad .btn:nth-child(3n-1) {
+    margin-left: -1px;
+}
+/* third column */
+.keypad .btn:nth-child(3n) {
+    margin-left: -1px;
+}
+/* from second row downwards */
+.keypad .btn:nth-child(n+4) {
+    margin-top: -1px;
+}
+/* ensure highlighted button is topmost */
+.keypad .btn:hover,
+.keypad .btn:focus,
+.keypad .btn:active {
+    z-index: 1;
+}
+
+#Calculation {
+    min-height: 1.5rem;
+}
+
+@media (max-height: 700px) {
+    .store-header {
+        display: none !important;
+    }
+}
+@media (max-width: 575px) {
+    #PosKeypad {
+        --wrap-padding-horizontal: 0;
+        overflow: hidden;
+    }
+    .keypad {
+        margin-left: -1px;
+        margin-right: -1px;
+    }
+    .store-footer {
+        display: none !important;
+    }
+}
+/* fix sticky hover effect on mobile browsers */
+@media (hover: none) {
+    .actions .btn-secondary:hover {
+        border-color: var(--btcpay-secondary-border-active) !important;
+    }
+}

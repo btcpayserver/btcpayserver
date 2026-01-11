@@ -1,0 +1,495 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/payment-requests": {
+            "get": {
+                "tags": [
+                    "Payment Requests"
+                ],
+                "summary": "Get payment requests",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "description": "View information about the existing payment requests",
+                "operationId": "PaymentRequests_GetPaymentRequests",
+                "responses": {
+                    "200": {
+                        "description": "List of payment requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaymentRequestDataList"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewpaymentrequests"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Payment Requests"
+                ],
+                "summary": "Create a new payment request",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "description": "Create a new payment request",
+                "operationId": "PaymentRequests_CreatePaymentRequest",
+                "responses": {
+                    "200": {
+                        "description": "Information about the new payment request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaymentRequestData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when creating the payment request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to add new payment requests"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PaymentRequestBaseData"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifypaymentrequests"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}": {
+            "get": {
+                "tags": [
+                    "Payment Requests"
+                ],
+                "summary": "Get payment request",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "name": "paymentRequestId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The payment request to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "View information about the specified payment request",
+                "operationId": "PaymentRequests_GetPaymentRequest",
+                "responses": {
+                    "200": {
+                        "description": "specified payment request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaymentRequestData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified payment request"
+                    },
+                    "404": {
+                        "description": "The key is not found for this payment request"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewpaymentrequests"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Payment Requests"
+                ],
+                "summary": "Archive payment request",
+                "description": "Archives the specified payment request.",
+                "operationId": "PaymentRequests_ArchivePaymentRequest",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "name": "paymentRequestId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The payment request to remove",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The payment request has been archived"
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when archiving the payment request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to archive the specified payment request"
+                    },
+                    "404": {
+                        "description": "The key is not found for this payment request"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifypaymentrequests"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Payment Requests"
+                ],
+                "summary": "Update payment request",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "name": "paymentRequestId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The payment request to update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "description": "Update a payment request",
+                "operationId": "PaymentRequests_UpdatePaymentRequest",
+                "responses": {
+                    "200": {
+                        "description": "The updated payment request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaymentRequestData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the payment request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update the payment request"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PaymentRequestBaseData"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifypaymentrequests"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}/pay": {
+            "post": {
+                "tags": [
+                    "Payment Requests"
+                ],
+                "summary": "Create a new invoice for the payment request",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "name": "paymentRequestId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The payment request to create",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "operationId": "PaymentRequests_Pay",
+                "description": "Create a new invoice for the payment request, or reuse an existing one",
+                "requestBody": {
+                    "description": "Invoice creation request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "amount": {
+                                        "type": "string",
+                                        "format": "decimal",
+                                        "minimum": 0,
+                                        "exclusiveMinimum": true,
+                                        "description": "The amount of the invoice. If `null` or `unspecified`, it will be set to the payment request's due amount. Note that the payment's request `allowCustomPaymentAmounts` must be `true`, or a 422 error will be sent back.'",
+                                        "nullable": true,
+                                        "example": "0.1"
+                                    },
+                                    "allowPendingInvoiceReuse": {
+                                        "type": "boolean",
+                                        "nullable": true,
+                                        "default": false,
+                                        "description": "If `true`, this endpoint will not necessarily create a new invoice, and instead attempt to give back a pending one for this payment request."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "A new invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Wellknown error codes are: `archived`, `already-paid`, `expired`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewpaymentrequests"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "PaymentRequestDataList": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/PaymentRequestData"
+                }
+            },
+            "PaymentRequestData": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/PaymentRequestBaseData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "description": "The id of the payment request",
+                                "nullable": false
+                            },
+                            "storeId": {
+                                "type": "string",
+                                "nullable": false,
+                                "description": "The store identifier that the payment request belongs to",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/StoreId"
+                                    }
+                                ]
+                            },
+                            "status": {
+                                "type": "string",
+                                "enum": [
+                                    "Pending",
+                                    "Completed",
+                                    "Processing",
+                                    "Expired"
+                                ],
+                                "description": "Represents the status of a payment request:\n* `Pending`: Not enough has been paid or settled.\n* `Completed`: Paid and fully settled.\n* `Expired`: Expired before full settlement.\n* `Processing`: Paid enough, awaiting full settlement.",
+                                "nullable": false
+                            },
+                            "createdTime": {
+                                "type": "number",
+                                "description": "The creation date of the payment request",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/UnixTimestamp"
+                                    }
+                                ],
+                                "nullable": false
+                            }
+                        }
+                    }
+                ]
+            },
+            "PaymentRequestBaseData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "amount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
+                        "description": "The amount of the payment request",
+                        "nullable": false
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "The title of the payment request",
+                        "nullable": false
+                    },
+                    "currency": {
+                        "type": "string",
+                        "format": "ISO 4217 Currency code(BTC, EUR, USD, etc)",
+                        "description": "The currency of the payment request. If empty, the store's default currency code will be used.",
+                        "nullable": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "description": "The email used in invoices generated by the payment request",
+                        "nullable": true,
+                        "format": "email"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "The description of the payment request",
+                        "nullable": true,
+                        "format": "html"
+                    },
+                    "expiryDate": {
+                        "type": "number",
+                        "description": "The expiry date of the payment request",
+                        "nullable": true,
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
+                    },
+                    "referenceId": {
+                        "type": "string",
+                        "description": "An optional user-defined identifier for this payment request.",
+                        "nullable": true,
+                        "example": "INV-123493"
+                    },
+                    "allowCustomPaymentAmounts": {
+                        "type": "boolean",
+                        "description": "Whether to allow users to create invoices that partially pay the payment request ",
+                        "nullable": true
+                    },
+                    "formId": {
+                        "type": "string",
+                        "description": "Form ID to request customer data",
+                        "nullable": true
+                    },
+                    "formResponse": {
+                        "type": "object",
+                        "description": "Form data response",
+                        "nullable": true
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Payment Requests",
+            "description": "Payment Requests operations"
+        }
+    ]
+}

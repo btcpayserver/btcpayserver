@@ -1,0 +1,122 @@
+@using System.Drawing
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model StoreBrandingViewModel
+@if (!string.IsNullOrEmpty(Model.BrandColor))
+{
+    const double thresholdLight = 1.5;
+    const double thresholdDark = 2.5;
+    var brand = Model.BrandColor;
+    var brandColor = ColorPalette.Default.FromHtml(brand);
+    var brandRgbValues = $"{brandColor.R}, {brandColor.G}, {brandColor.B}";
+    var bgLight = ColorPalette.Default.FromHtml("#F8F9FA");
+    var bgDark = ColorPalette.Default.FromHtml("#0d1117");
+    var brandColorAdjustedForLight = brandColor.GetAdjustedForegroundForBackground(bgLight, -.02, thresholdLight);
+    var brandColorAdjustedForDark = brandColor.GetAdjustedForegroundForBackground(bgDark, .02, thresholdDark);
+    var accent = ColorPalette.Default.AdjustBrightness(brand, (float)-.15);
+    var accentColor = ColorPalette.Default.FromHtml(accent);
+    var accentRgbValues = $"{accentColor.R}, {accentColor.G}, {accentColor.B}";
+    var complement = ColorPalette.Default.TextColor(brand);
+    var complementVar = $"var(--btcpay-{(complement == "black" ? "black" : "white")})";
+    <style>
+        :root {
+            --btcpay-primary: @brand;
+            --btcpay-primary-rgb: @brandRgbValues;
+            --btcpay-primary-shadow: @brand;
+            --btcpay-primary-bg-hover: @accent;
+            --btcpay-primary-bg-active: @accent;
+            --btcpay-body-link-accent: @accent;
+            --btcpay-body-link-accent-rgb: @accentRgbValues;
+            --btcpay-primary-text: @complementVar;
+            --btcpay-primary-text-hover: @complementVar;
+            --btcpay-primary-text-active: @complementVar;
+        }
+    </style>
+    @if (brandColorAdjustedForLight != brandColor)
+    {
+        var brandAdjusted = ColorPalette.Default.ToHtml(brandColorAdjustedForLight);
+        var brandRgbValuesAdjusted = $"{brandColorAdjustedForLight.R}, {brandColorAdjustedForLight.G}, {brandColorAdjustedForLight.B}";
+        var accentColorAdjusted = ColorPalette.Default.AdjustBrightness(brandColorAdjustedForLight, (float)-.15);
+        var accentAdjusted = ColorPalette.Default.ToHtml(accentColorAdjusted);
+        var accentRgbValuesAdjusted = $"{accentColorAdjusted.R}, {accentColorAdjusted.G}, {accentColorAdjusted.B}";
+        var complementAdjusted = ColorPalette.Default.TextColor(brandAdjusted);
+        var complementVarAdjusted = $"var(--btcpay-{(complementAdjusted == "black" ? "black" : "white")})";
+        <style>
+            :root[data-theme='light'],
+            :root[data-btcpay-theme='light'] {
+                --btcpay-primary: @brandAdjusted;
+                --btcpay-primary-rgb: @brandRgbValuesAdjusted;
+                --btcpay-primary-shadow: @brandAdjusted;
+                --btcpay-primary-bg-hover: @accentAdjusted;
+                --btcpay-primary-bg-active: @accentAdjusted;
+                --btcpay-body-link-accent: @accentAdjusted;
+                --btcpay-body-link-accent-rgb: @accentRgbValuesAdjusted;
+                --btcpay-primary-text: @complementVarAdjusted;
+                --btcpay-primary-text-hover: @complementVarAdjusted;
+                --btcpay-primary-text-active: @complementVarAdjusted;
+            }
+            @@media (prefers-color-scheme: light) {
+                :root:not([data-btcpay-theme], [data-theme]) {
+                    --btcpay-primary: @brandAdjusted;
+                    --btcpay-primary-rgb: @brandRgbValuesAdjusted;
+                    --btcpay-primary-shadow: @brandAdjusted;
+                    --btcpay-primary-bg-hover: @accentAdjusted;
+                    --btcpay-primary-bg-active: @accentAdjusted;
+                    --btcpay-body-link-accent: @accentAdjusted;
+                    --btcpay-body-link-accent-rgb: @accentRgbValuesAdjusted;
+                    --btcpay-primary-text: @complementVarAdjusted;
+                    --btcpay-primary-text-hover: @complementVarAdjusted;
+                    --btcpay-primary-text-active: @complementVarAdjusted;
+                }
+            }
+        </style>
+    }
+    @if (brandColorAdjustedForDark != brandColor)
+    {
+        var brandAdjusted = ColorPalette.Default.ToHtml(brandColorAdjustedForDark);
+        var brandRgbValuesAdjusted = $"{brandColorAdjustedForDark.R}, {brandColorAdjustedForDark.G}, {brandColorAdjustedForDark.B}";
+        var accentColorAdjusted = ColorPalette.Default.AdjustBrightness(brandColorAdjustedForDark, (float).15);
+        var accentAdjusted = ColorPalette.Default.ToHtml(accentColorAdjusted);
+        var accentRgbValuesAdjusted = $"{accentColorAdjusted.R}, {accentColorAdjusted.G}, {accentColorAdjusted.B}";
+        var complementAdjusted = ColorPalette.Default.TextColor(brandColorAdjustedForDark);
+        var complementVarAdjusted = $"var(--btcpay-{(complementAdjusted == Color.Black ? "black" : "white")})";
+        <style>
+            :root[data-theme='dark'],
+            :root[data-btcpay-theme='dark'] {
+                --btcpay-primary: @brandAdjusted;
+                --btcpay-primary-rgb: @brandRgbValuesAdjusted;
+                --btcpay-primary-shadow: @brandAdjusted;
+                --btcpay-primary-bg-hover: @accentAdjusted;
+                --btcpay-primary-bg-active: @accentAdjusted;
+                --btcpay-body-link-accent: @accentAdjusted;
+                --btcpay-body-link-accent-rgb: @accentRgbValuesAdjusted;
+                --btcpay-primary-text: @complementVarAdjusted;
+                --btcpay-primary-text-hover: @complementVarAdjusted;
+                --btcpay-primary-text-active: @complementVarAdjusted;
+            }
+            @@media (prefers-color-scheme: dark) {
+                :root:not([data-btcpay-theme], [data-theme]) {
+                    --btcpay-primary: @brandAdjusted;
+                    --btcpay-primary-rgb: @brandRgbValuesAdjusted;
+                    --btcpay-primary-shadow: @brandAdjusted;
+                    --btcpay-primary-bg-hover: @accentAdjusted;
+                    --btcpay-primary-bg-active: @accentAdjusted;
+                    --btcpay-body-link-accent: @accentAdjusted;
+                    --btcpay-body-link-accent-rgb: @accentRgbValuesAdjusted;
+                    --btcpay-primary-text: @complementVarAdjusted;
+                    --btcpay-primary-text-hover: @complementVarAdjusted;
+                    --btcpay-primary-text-active: @complementVarAdjusted;
+                }
+            }
+        </style>
+    }
+    <meta name="theme-color" content="@brand">
+}
+@if (!string.IsNullOrEmpty(Model.CssUrl))
+{
+    <link href="@Model.CssUrl" asp-append-version="true" rel="stylesheet" />
+}
+@if (!string.IsNullOrEmpty(Model.LogoUrl))
+{
+    <link rel="icon" href="@Model.LogoUrl">
+    <link rel="apple-touch-icon" href="@Model.LogoUrl">
+}

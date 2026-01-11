@@ -1,0 +1,12 @@
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Forms
+@model BTCPayServer.Abstractions.Form.Form
+@inject FormComponentProviders FormComponentProviders
+
+@foreach (var field in Model.Fields)
+{
+    if (FormComponentProviders.TypeToComponentProvider.TryGetValue(field.Type, out var partial) && !string.IsNullOrEmpty(partial.View))
+    {
+        <partial name="@partial.View" for="@field" />
+    }
+}

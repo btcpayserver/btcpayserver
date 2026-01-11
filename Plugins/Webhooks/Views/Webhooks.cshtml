@@ -1,0 +1,75 @@
+@using BTCPayServer.Client
+@model WebhooksViewModel
+@{
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Webhooks), StringLocalizer["Webhooks"]).SetCategory(WellKnownCategories.Store));
+}
+
+<div class="sticky-header">
+    <h2>@ViewData["Title"]</h2>
+	<a id="page-primary" text-translate="true" asp-action="NewWebhook" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanModifyStoreSettings">
+        Create Webhook
+    </a>
+</div>
+<partial name="_StatusMessage" />
+<p text-translate="true">Webhooks allow BTCPay Server to send HTTP events related to your store to another server.</p>
+
+<div class="row">
+    <div class="col-xl-8 col-xxl-constrain">
+        @if (Model.Webhooks.Any())
+        {
+            <div class="table-responsive-md">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th text-translate="true">Status</th>
+                            <th text-translate="true">Url</th>
+                            <th class="actions-col" permission="@Policies.CanModifyStoreSettings" text-translate="true">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var wh in Model.Webhooks)
+                        {
+                            <tr>
+                                <td class="align-baseline">
+                                    @if (wh.LastDeliverySuccessful)
+                                    {
+                                        <span id="delivery-status-icon"
+                                              data-bs-toggle="tooltip"
+                                              title="@(wh.LastDeliveryTimeStamp == null ? StringLocalizer["No deliveries for this webhook yet"] : StringLocalizer["Last delivery {0}", wh.LastDeliveryTimeStamp.Value.ToTimeAgo()])">
+                                            <vc:icon symbol="checkmark" css-class="text-success" />
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span id="delivery-status-icon"
+                                              data-bs-toggle="tooltip"
+                                              data-bs-html="true"
+                                              title="Error: @wh.LastDeliveryErrorMessage. <br/> Delivery last attempted <span id='last-delivery-time'>@wh.LastDeliveryTimeStamp?.ToTimeAgo()</span>">
+                                            <vc:icon symbol="cross" css-class="text-danger" />
+                                        </span>
+                                    }
+                                </td>
+                                <td class="d-block text-break">@wh.Url</td>
+                                <td class="actions-col text-md-nowrap" permission="@Policies.CanModifyStoreSettings">
+                                    <a asp-action="ModifyWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id" text-translate="true">Modify</a> -
+                                    <a asp-action="DeleteWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Delete</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete Webhook"], StringLocalizer["This webhook will be removed from this store."], StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />
+        }
+        else
+        {
+            <p class="text-secondary mt-3" text-translate="true">
+                There are no webhooks yet.
+            </p>
+        }
+    </div>
+</div>
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+}

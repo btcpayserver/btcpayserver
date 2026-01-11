@@ -1,0 +1,37 @@
+@model CreateAppViewModel
+@{
+    ViewData.SetLayoutModel(new($"CreateApp-{Model.AppType}", StringLocalizer["Create a new {0}", Model.AppType]));
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<form asp-action="CreateApp" asp-route-appType="@Model.AppType">
+    <div class="sticky-header">
+        <h2>@ViewData["Title"]</h2>
+		<input id="page-primary" type="submit" value="Create" class="btn btn-primary" />
+    </div>
+    <partial name="_StatusMessage" />
+
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly"></div>
+            }
+            @if (string.IsNullOrEmpty(Model.AppType))
+            {
+                <div class="form-group">
+                    <label asp-for="SelectedAppType" class="form-label" data-required></label>
+                    <select asp-for="SelectedAppType" asp-items="Model.AppTypes" class="form-select"></select>
+                </div>
+            }
+            <div class="form-group">
+                <label asp-for="AppName" class="form-label" data-required></label>
+                <input asp-for="AppName" class="form-control" required />
+                <span asp-validation-for="AppName" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+</form>

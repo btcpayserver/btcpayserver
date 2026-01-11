@@ -1,0 +1,50 @@
+@using Newtonsoft.Json.Linq
+@model Fido2NetLib.CredentialCreateOptions
+@{
+    ViewData.SetLayoutModel(new(nameof(ManageNavPages.TwoFactorAuthentication), StringLocalizer["Register your security device"]));
+}
+
+<div class="sticky-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-controller="UIManage" asp-action="TwoFactorAuthentication" text-translate="true">Two Factor Authentication</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page" text-translate="true">Register Device</li>
+        </ol>
+        <h2>@ViewData["Title"]</h2>
+    </nav>
+</div>
+<partial name="_StatusMessage" />
+
+<p text-translate="true">Insert your security device and proceed.</p>
+
+<form asp-action="CreateResponse" id="registerForm">
+    <input type="hidden" name="data" id="data"/>
+    <input type="hidden" name="name" id="name" value="@(ViewData.ContainsKey("CredentialName") ? ViewData["CredentialName"] : string.Empty)"/>
+</form>
+<div class="row">
+    <div class="col-xl-8">
+        <div id="info-message" class="alert alert-info mb-3 d-none">
+            <div class="d-flex align-items-center">
+                <div class="spinner-border spinner-border-sm me-2 fido-running" role="status">
+                    <span class="visually-hidden" text-translate="true">Loading...</span>
+                </div>
+                <span text-translate="true">If your security device has a button, tap on it.</span>
+            </div>
+        </div>
+        <button id="btn-start" class="btn btn-primary d-none" type="button" text-translate="true">Start</button>
+        <p id="error-message" class="d-none alert alert-danger"></p>
+        <a id="btn-retry" class="btn btn-secondary d-none" text-translate="true">Retry</a>
+    </div>
+</div>
+
+@section PageFootContent {
+    <script>
+        document.getElementById('btn-retry').addEventListener('click', function () { window.location.reload() });
+        // send to server for registering
+        window.makeCredentialOptions = @Json.Serialize(JToken.Parse(Model.ToJson()));
+    </script>
+    <script src="~/js/webauthn/helpers.js"></script>
+    <script src="~/js/webauthn/register.js"></script>
+}

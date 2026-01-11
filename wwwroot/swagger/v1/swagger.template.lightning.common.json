@@ -1,0 +1,408 @@
+{
+    "components": {
+        "parameters": {
+            "CryptoCode": {
+                "name": "cryptoCode",
+                "in": "path",
+                "required": true,
+                "description": "The cryptoCode of the lightning-node to query",
+                "schema": {
+                    "type": "string"
+                },
+                "example": "BTC"
+            }
+        },
+        "schemas": {
+            "ConnectToNodeRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "nodeURI": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Node URI in the form `pubkey@endpoint[:port]`"
+                    }
+                }
+            },
+            "CreateLightningInvoiceRequest": {
+                "type": "object",
+                "properties": {
+                    "amount": {
+                        "type": "string",
+                        "description": "Amount wrapped in a string, represented in a millistatoshi string. (1000 millisatoshi = 1 satoshi)",
+                        "nullable": false
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Description of the invoice in the BOLT11"
+                    },
+                    "descriptionHashOnly": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "default": false,
+                        "description": "If `descriptionHashOnly` is `true` (default is `false`), then the BOLT11 returned contains a hash of the `description`, rather than the `description`, itself. This allows for much longer descriptions, but they must be communicated via some other mechanism."
+                    },
+                    "expiry": {
+                        "description": "Expiration time in seconds",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanSeconds"
+                            }
+                        ]
+                    },
+                    "privateRouteHints": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "default": false,
+                        "description": "True if the invoice should include private route hints"
+                    }
+                }
+            },
+            "LightningChannelData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "remoteNode": {
+                        "type": "string",
+                        "nullable": false,
+                        "description": "The public key of the node (Node ID)"
+                    },
+                    "isPublic": {
+                        "type": "boolean",
+                        "description": "Whether the node is public"
+                    },
+                    "isActive": {
+                        "type": "boolean",
+                        "description": "Whether the node is online"
+                    },
+                    "capacity": {
+                        "type": "string",
+                        "description": "The capacity of the channel in millisatoshi",
+                        "nullable": false
+                    },
+                    "localBalance": {
+                        "type": "string",
+                        "description": "The local balance of the channel in millisatoshi",
+                        "nullable": false
+                    },
+                    "channelPoint": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                }
+            },
+            "LightningPaymentData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The payment's ID"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/LightningPaymentStatus"
+                    },
+                    "BOLT11": {
+                        "type": "string",
+                        "description": "The BOLT11 representation of the payment",
+                        "nullable": false
+                    },
+                    "paymentHash": {
+                        "type": "string",
+                        "description": "The payment hash",
+                        "nullable": false
+                    },
+                    "preimage": {
+                        "type": "string",
+                        "description": "The payment preimage (available when status is complete)"
+                    },
+                    "createdAt": {
+                        "type": "number",
+                        "description": "The unix timestamp when the payment got created",
+                        "nullable": true,
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
+                    },
+                    "totalAmount": {
+                        "type": "string",
+                        "description": "The total amount (including fees) in millisatoshi"
+                    },
+                    "feeAmount": {
+                        "type": "string",
+                        "description": "The total fees in millisatoshi"
+                    }
+                }
+            },
+            "LightningInvoiceData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The invoice's ID"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/LightningInvoiceStatus"
+                    },
+                    "BOLT11": {
+                        "type": "string",
+                        "description": "The BOLT11 representation of the invoice",
+                        "nullable": false
+                    },
+                    "paidAt": {
+                        "type": "number",
+                        "description": "The unix timestamp when the invoice got paid",
+                        "nullable": true,
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
+                    },
+                    "expiresAt": {
+                        "description": "The unix timestamp when the invoice expires",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
+                    },
+                    "amount": {
+                        "type": "string",
+                        "description": "The amount of the invoice in millisatoshi"
+                    },
+                    "amountReceived": {
+                        "type": "string",
+                        "description": "The amount received in millisatoshi"
+                    },
+                    "paymentHash": {
+                        "type": "string",
+                        "description": "The payment hash"
+                    },
+                    "preimage": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The payment preimage (available when status is complete)"
+                    },
+                    "customRecords": {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "The custom TLV records attached to a keysend payment"
+                    }
+                }
+            },
+            "LightningInvoiceStatus": {
+                "type": "string",
+                "description": "",
+                "x-enumNames": [
+                    "Unpaid",
+                    "Paid",
+                    "Expired"
+                ],
+                "enum": [
+                    "Unpaid",
+                    "Paid",
+                    "Expired"
+                ]
+            },
+            "LightningPaymentStatus": {
+                "type": "string",
+                "description": "",
+                "x-enumNames": [
+                    "Unknown",
+                    "Pending",
+                    "Complete",
+                    "Failed"
+                ],
+                "enum": [
+                    "Unknown",
+                    "Pending",
+                    "Complete",
+                    "Failed"
+                ]
+            },
+            "LightningNodeInformationData": {
+                "type": "object",
+                "properties": {
+                    "nodeURIs": {
+                        "type": "array",
+                        "description": "Node URIs to connect to this node in the form `pubkey@endpoint[:port]`",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "blockHeight": {
+                        "type": "integer",
+                        "description": "The block height of the lightning node"
+                    },
+                    "alias": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The alias of the lightning node"
+                    },
+                    "color": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The color attribute of the lightning node"
+                    },
+                    "version": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The version name of the lightning node"
+                    },
+                    "peersCount": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "The number of peers"
+                    },
+                    "activeChannelsCount": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "The number of active channels"
+                    },
+                    "inactiveChannelsCount": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "The number of inactive channels"
+                    },
+                    "pendingChannelsCount": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "The number of pending channels"
+                    }
+                }
+            },
+            "LightningNodeBalanceData": {
+                "type": "object",
+                "properties": {
+                    "onchain": {
+                        "type": "object",
+                        "description": "On-chain balance of the Lightning node",
+                        "nullable": true,
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OnchainBalanceData"
+                            }
+                        ]
+                    },
+                    "offchain": {
+                        "type": "object",
+                        "description": "Off-chain balance of the Lightning node",
+                        "nullable": true,
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OffchainBalanceData"
+                            }
+                        ]
+                    }
+                }
+            },
+            "OnchainBalanceData": {
+                "type": "object",
+                "properties": {
+                    "confirmed": {
+                        "type": "string",
+                        "description": "The confirmed amount in satoshi",
+                        "nullable": true
+                    },
+                    "unconfirmed": {
+                        "type": "string",
+                        "description": "The unconfirmed amount in satoshi",
+                        "nullable": true
+                    },
+                    "reserved": {
+                        "type": "string",
+                        "description": "The reserved amount in satoshi",
+                        "nullable": true
+                    }
+                }
+            },
+            "OffchainBalanceData": {
+                "type": "object",
+                "properties": {
+                    "opening": {
+                        "type": "string",
+                        "description": "The amount of current channel openings in millisatoshi",
+                        "nullable": true
+                    },
+                    "local": {
+                        "type": "string",
+                        "description": "The amount that is available on the local end of active channels in millisatoshi",
+                        "nullable": true
+                    },
+                    "remote": {
+                        "type": "string",
+                        "description": "The amount that is available on the remote end of active channels in millisatoshi",
+                        "nullable": true
+                    },
+                    "closing": {
+                        "type": "string",
+                        "description": "The amount of current channel closings in millisatoshi",
+                        "nullable": true
+                    }
+                }
+            },
+            "PayLightningInvoiceRequest": {
+                "type": "object",
+                "properties": {
+                    "BOLT11": {
+                        "type": "string",
+                        "description": "The BOLT11 of the invoice to pay"
+                    },
+                    "amount": {
+                        "type": "string",
+                        "description": "Optional explicit payment amount in millisatoshi (if specified, it overrides the BOLT11 amount)",
+                        "nullable": true
+                    },
+                    "maxFeePercent": {
+                        "type": "string",
+                        "format": "float",
+                        "nullable": true,
+                        "description": "The fee limit expressed as a percentage of the payment amount",
+                        "example": "6.15"
+                    },
+                    "maxFeeFlat": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The fee limit expressed as a fixed amount in satoshi",
+                        "example": "21"
+                    },
+                    "sendTimeout": {
+                        "type": "number",
+                        "nullable": true,
+                        "example": 30,
+                        "default": 30,
+                        "description": "The number of seconds after which the payment times out",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanSeconds"
+                            }
+                        ]
+                    }
+                }
+            },
+            "OpenLightningChannelRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "nodeURI": {
+                        "type": "string",
+                        "description": "Node URI in the form `pubkey@endpoint[:port]`"
+                    },
+                    "channelAmount": {
+                        "type": "string",
+                        "description": "The amount to fund (in satoshi)"
+                    },
+                    "feeRate": {
+                        "type": "number",
+                        "description": "The amount to fund (in satoshi per byte)"
+                    }
+                }
+            }
+        }
+    }
+}

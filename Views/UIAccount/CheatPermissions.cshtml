@@ -1,0 +1,22 @@
+@model CheatPermissionsViewModel
+
+@{
+	ViewData["Title"] = ViewLocalizer["Permissions"];
+	Layout = "_LayoutSignedOut";
+}
+
+@if (Model.StoreId is not null)
+{
+	<h1>@ViewLocalizer["Store: {0}", Model.StoreId]</h1>
+}
+else
+{
+	<h1 text-translate="true">No scope</h1>
+}
+
+<ul>
+@foreach (var p in Model.Permissions.Where(o => o.Result.Succeeded))
+{
+	<li>@p.Item1</li>
+}
+</ul>

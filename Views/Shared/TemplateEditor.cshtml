@@ -1,0 +1,190 @@
+@model (string templateId, string template, string title, string currency)
+
+<template id="item-editor-upload">
+    <div class="form-group">
+        <div class="d-flex align-items-center gap-2">
+            <input type="file" class="form-control" ref="input" v-on:change="fileChanged">
+            <button class="btn btn-primary" type="button" v-on:click="upload" :disabled="disabled">Upload</button>
+        </div>
+        <div v-if="error" class="form-text text-danger" v-text="error"></div>
+    </div>
+</template>
+
+<template id="item-editor">
+    <div>
+        <div id="item-form" class="item" v-show="!!editingItem">
+            <div class="form-group">
+                <label for="EditorTitle" class="form-label" data-required>Title</label>
+                <input id="EditorTitle" required class="form-control mb-2" v-model="editingItem && editingItem.title" v-on:change="onTitleChange" />
+                <div class="text-danger mb-3" v-if="errors.title">{{errors.title}}</div>
+            </div>
+            <div class="form-group">
+                <label for="EditorId" class="form-label" data-required>ID</label>
+                <input id="EditorId" required class="form-control mb-2" v-model="editingItem && editingItem.id" v-on:change="onIdChange" />
+                <div class="text-danger mb-3" v-if="errors.id">{{errors.id}}</div>
+                <div class="form-text" v-else text-translate="true">Leave blank to generate ID from title.</div>
+            </div>
+            <div class="form-group row">
+                <div class="col-sm-6">
+                    <label for="EditorPrice" class="form-label">Price</label>
+                    <select id="EditorPrice" class="form-select" v-model="editingItem && editingItem.priceType" v-on:change="onPriceTypeChange">
+                        <option v-for="option in customPriceOptions" :value="option.value">{{option.text}}</option>
+                    </select>
+                </div>
+                <div class="col-sm-6" v-show="editingItem && editingItem.priceType !== 'Topup'">
+                    <label for="EditorAmount" class="form-label">&nbsp;</label>
+                    <div class="input-group mb-2">
+                        <input class="form-control hide-number-spin"
+                               id="EditorAmount"
+                               inputmode="decimal"
+                               pattern="\d*"
+                               step="any"
+                               min="0"
+                               type="number"
+                               required
+                               v-model="editingItem && editingItem.price"
+                               v-on:change="onPriceChange"
+                               aria-describedby="currency-addon" />
+                        <span class="input-group-text" id="currency-addon" v-pre>@Model.currency</span>
+                    </div>
+                </div>
+                <div class="text-danger" v-if="errors.price">{{errors.price}}</div>
+            </div>
+            <div class="form-group">
+                <label for="EditorTaxRate" class="form-label" text-translate="true">Tax rate</label>
+                <div class="input-group">
+                    <input inputmode="decimal" v-model="editingItem && editingItem.taxRate"
+                           pattern="\d*"
+                           step="any"
+                           min="0"
+                           type="number"
+                           class="form-control" />
+                    <span class="input-group-text">%</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="EditorImageUrl" class="form-label" text-translate="true">Image Url</label>
+                <input id="EditorImageUrl" class="form-control mb-2" v-model="editingItem && editingItem.image" ref="txtImage" />
+                <item-editor-upload upload-url=@Safe.Json(Url.Action("FileUpload", "UIApps", new { appId = Context.GetRouteValue("appId") })) v-on:uploaded="url => editingItem.image = url" />
+            </div>
+            <div class="form-group">
+                <label for="EditorDescription" class="form-label" text-translate="true">Description</label>
+                <textarea id="EditorDescription" rows="3" cols="40" class="form-control" v-model="editingItem && editingItem.description"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="EditorCategories" class="form-label" text-translate="true">Categories</label>
+                <input id="EditorCategories" class="form-control mb-2" autocomplete="off" ref="editorCategories" />
+                <div class="form-text" text-translate="true">Easily filter the different items using categories, used only in the product list with cart.</div>
+            </div>
+            <div class="form-group">
+                <label for="EditorInventory" class="form-label" text-translate="true">Inventory</label>
+                <input id="EditorInventory" type="number" inputmode="numeric" min="0" step="1" class="form-control mb-2" v-model="editingItem && editingItem.inventory" v-on:change="onInventoryChange" />
+                <div class="form-text" text-translate="true">Leave blank to not use this feature.</div>
+            </div>
+            <div class="form-group">
+                <label for="BuyButtonText" class="form-label" text-translate="true">Buy Button Text</label>
+                <input id="BuyButtonText" type="text" class="form-control mb-2" v-model="editingItem && editingItem.buyButtonText" />
+            </div>
+            <div class="form-group d-flex align-items-center">
+                <input type="checkbox" id="Disabled" class="btcpay-toggle me-3" :checked="editingItem && !editingItem.disabled" v-on:change="$event => editingItem.disabled = !$event.target.checked" />
+                <label for="Disabled" class="form-check-label" text-translate="true">Enable</label>
+            </div>
+            <vc:ui-extension-point location="app-template-editor-item-detail" model="Model"></vc:ui-extension-point>
+        </div>
+        <div v-if="!editingItem" text-translate="true">Select an item to edit</div>
+    </div>
+</template>
+
+<template id="items-editor">
+    <div>
+        <div class="items list-group list-group-flush" v-sortable="{ handle: '.drag', onUpdate (event) { $emit('sort-items', event) } }">
+            <div v-for="(item, index) of items" class="d-inline-flex align-items-center gap-3 list-group-item" :key="item.id" :class="{ active: item === selectedItem }" v-on:click.stop="$emit('select-item', $event, index)">
+                <button type="button" class="btn b-0 control drag" :disabled="items.length === 1">
+                    <vc:icon symbol="actions-drag" />
+                </button>
+                <div class="template-item d-flex align-items-start w-100 gap-3">
+                    <div class="img">
+                        <img :src="getImage(item)" :alt="item.title" :style="(item.image ? null : { opacity: 0.5 })">
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        <h5 class="card-title m-0" v-html="item.title"></h5>
+                        <div class="d-flex gap-2 align-items-center">
+                            <span class="fw-semibold badge text-bg-info" v-if="item.priceType === 'Topup' || item.price == 0">{{ item.priceType === 'Topup' ? 'Any amount' : 'Free' }}</span>
+                            <span class="fw-semibold text-muted" v-else>{{ item.price }} @Model.currency{{ item.priceType === 'Minimum' ? ' minimum' : '' }}</span>
+                            <span class="badge text-bg-warning" v-if="item.inventory">
+                                {{ item.inventory > 0 ? `${item.inventory} left` : 'Sold out' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn b-0 control remove" v-on:click="$emit('remove-item', $event, index)">
+                    <vc:icon symbol="actions-remove" />
+                </button>
+            </div>
+        </div>
+        <button type="button" id="btAddItem" class="btn btn-link py-0 px-2 mt-2 mb-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="$emit('add-item', $event)">
+            <vc:icon symbol="actions-add" />
+            <span text-translate="true">Add Item</span>
+        </button>
+    </div>
+</template>
+
+<div id="TemplateEditor" class="editor" v-cloak>
+    <h3 class="mt-5 mb-3" v-pre>@Model.title</h3>
+    @if (ViewContext.ViewData.ModelState.TryGetValue(Model.templateId, out var errors))
+    {
+        foreach (var error in errors.Errors)
+        {
+            <p class="text-danger" v-pre>@error.ErrorMessage</p>
+        }
+    }
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3">
+        <ul class="nav nav-pills gap-4" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="EditorTabButton" data-bs-toggle="pill" data-bs-target="#EditorTabPane" type="button" role="tab" aria-controls="EditorTabPane" aria-selected="true" text-translate="true">Editor</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="CodeTabButton" data-bs-toggle="pill" data-bs-target="#CodeTabPane" type="button" role="tab" aria-controls="CodeTabPane" aria-selected="false" text-translate="true">Code</button>
+            </li>
+        </ul>
+    </div>
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="EditorTabPane" role="tabpanel" aria-labelledby="EditorTabButton" tabindex="0">
+            <div class="row align-items-start">
+                <div class="col-12">
+                    <items-editor :items="items"
+                                  :selected-item="selectedItem"
+                                  v-on:add-item="addItem"
+                                  v-on:sort-items="sortItems"
+                                  v-on:select-item="selectItem"
+                                  v-on:remove-item="removeItem"
+                                  :class="{ 'pt-2': (!items || items.length === 0) }"
+                                  class="bg-tile pb-2 rounded" />
+                </div>
+                <div class="offcanvas offcanvas-end" tabindex="-1" ref="editorOffcanvas">
+                    <div class="offcanvas-header justify-content-between p-3">
+                        <h5 class="offcanvas-title" text-translate="true">Edit Item</h5>
+                        <button type="button" class="btn btn-sm rounded-pill" :class="{ 'btn-primary': itemChanged, 'btn-outline-secondary': !itemChanged }" v-on:click="hideOffcanvas" v-text="itemChanged ? 'Apply' : 'Close'"></button>
+                    </div>
+                    <div class="offcanvas-body p-3">
+                        <item-editor ref="itemEditor" :item="selectedItem" class="bg-tile w-100 rounded" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="CodeTabPane" role="tabpanel" aria-labelledby="CodeTabButton" tabindex="0">
+            <label for="TemplateConfig" class="form-label" text-translate="true">Template JSON</label>
+            <textarea id="TemplateConfig" name="@Model.templateId" rows="21" cols="21" class="form-control font-monospace" style="font-size:.85rem" v-model="itemsJSON" v-on:change="updateFromJSON">@Model.template</textarea>
+            <span asp-validation-for="@Model.templateId" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
+<link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" asp-append-version="true" rel="stylesheet">
+<link href="~/main/editor.css" rel="stylesheet" asp-append-version="true" />
+<script src="~/vendor/tom-select/tom-select.complete.min.js" asp-append-version="true"></script>
+<script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+<script src="~/vendor/vue-sanitize-directive/vue-sanitize-directive.umd.min.js" asp-append-version="true"></script>
+<script src="~/vendor/vue-sortable/sortable.min.js" asp-append-version="true"></script>
+<script src="~/vendor/vue-sortable/vue-sortable.js" asp-append-version="true"></script>
+<script src="~/js/template-editor.js" asp-append-version="true"></script>

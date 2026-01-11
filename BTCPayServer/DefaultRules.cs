@@ -70,7 +70,7 @@ public class DefaultRulesCollection
     public Dictionary<string, string> RecommendedExchanges { get; } = new Dictionary<string, string>();
 
     public string GetRecommendedExchange(string currency) =>
-        RecommendedExchanges.TryGetValue(currency, out var ex) ? ex : "coingecko";
+        RecommendedExchanges.TryGetValue(currency, out var ex) ? ex : "kraken";
 
     public override string ToString() => Consolidated.ToString();
 }

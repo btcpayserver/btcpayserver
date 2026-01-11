@@ -13,7 +13,7 @@
 	  const exchanges = @Safe.Json(DefaultRules.RecommendedExchanges);
 	  const recommended = document.querySelector("#PreferredExchange option[value='']")
 	  const updateRecommended = currency => {
-		  const source = exchanges[currency] || 'coingecko'
+		  const source = exchanges[currency] || 'kraken'
 		  const name = source.charAt(0).toUpperCase() + source.slice(1)
 		  recommended.innerText = @Safe.Json(StringLocalizer["Recommendation ({0})"].Value)
             .replace(`{0}`, name)

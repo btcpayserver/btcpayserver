@@ -4590,6 +4590,7 @@ namespace BTCPayServer.Tests
                         }
                         break;
                     case "after-automated-payout-processing":
+                        TestLogs.LogInformation("afterHookTcs.TrySetResult();");
                         afterHookTcs.TrySetResult();
                         var ad = (AfterPayoutActionData)tuple.args;
                         foreach (var p in ad.Payouts)

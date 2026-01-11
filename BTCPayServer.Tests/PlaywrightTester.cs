@@ -645,12 +645,10 @@ namespace BTCPayServer.Tests
             {
                 await MineBlockOnInvoiceCheckout();
             }
-
             if (amount is null)
                 await Page.Locator("xpath=//*[text()=\"Invoice Paid\" or text()=\"Payment Received\"]").WaitForAsync();
             else
-                await Page.Locator("xpath=//*[text()=\"Invoice Paid\" or text()=\"Payment Received\" or text()=\"The invoice hasn't been paid in full.\"]")
-                    .WaitForAsync();
+                await Page.Locator("xpath=//*[text()=\"Invoice Paid\" or text()=\"Payment Received\" or text()=\"The invoice hasn't been paid in full.\"]").WaitForAsync();
             if (clickRedirect)
             {
                 await Page.ClickAsync("#StoreLink");

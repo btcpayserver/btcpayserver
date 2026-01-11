@@ -160,7 +160,7 @@ retry:
                 if (el is null)
                     throw new NoSuchElementException($"Unable to find {className}");
                 if (!el.Displayed)
-                    throw new ElementNotVisibleException($"{className} is present, but not displayed: {el.GetAttribute("id")} - Text: {el.Text}");
+                    throw new Exception($"{className} is present, but not displayed: {el.GetAttribute("id")} - Text: {el.Text}");
                 return el;
             }
             // Selenium sometimes sucks...

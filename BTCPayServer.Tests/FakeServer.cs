@@ -3,19 +3,17 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using ExchangeSharp;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace BTCPayServer.Tests
 {
     public class FakeServer : IDisposable
     {
-        IWebHost webHost;
+        IHost host;
         readonly SemaphoreSlim semaphore;
         readonly CancellationTokenSource cts = new CancellationTokenSource();
         public FakeServer()
@@ -27,20 +25,24 @@ namespace BTCPayServer.Tests
         readonly Channel<HttpContext> _channel;
         public async Task Start()
         {
-            webHost = new WebHostBuilder()
-                    .UseKestrel()
-                    .UseUrls("http://127.0.0.1:0")
-                    .Configure(appBuilder =>
-                    {
-                        appBuilder.Run(async ctx =>
+            host = Host.CreateDefaultBuilder()
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder
+                        .UseKestrel()
+                        .UseUrls("http://127.0.0.1:0")
+                        .Configure(app =>
                         {
-                            await _channel.Writer.WriteAsync(ctx);
-                            await semaphore.WaitAsync(cts.Token);
+                            app.Run(async ctx =>
+                            {
+                                await _channel.Writer.WriteAsync(ctx);
+                                await semaphore.WaitAsync(cts.Token);
+                            });
                         });
-                    })
-                    .Build();
-            await webHost.StartAsync();
-            var port = new Uri(webHost.ServerFeatures.Get<IServerAddressesFeature>().Addresses.First(), UriKind.Absolute)
+                })
+                .Build();
+            await host.StartAsync();
+            var port = new Uri(host.GetServerFeatures<IServerAddressesFeature>().Addresses.First(), UriKind.Absolute)
                 .Port;
             ServerUri = new Uri($"http://127.0.0.1:{port}/");
         }
@@ -54,12 +56,12 @@ namespace BTCPayServer.Tests
 
         public async Task Stop()
         {
-            await webHost.StopAsync();
+            await host.StopAsync();
         }
         public void Dispose()
         {
             cts.Dispose();
-            webHost?.Dispose();
+            host?.Dispose();
             semaphore.Dispose();
         }
 

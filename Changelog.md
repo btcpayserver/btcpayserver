@@ -1,5 +1,38 @@
 # Changelog
 
+## 2.3.3
+
+CoinGecko's API now mandates the use of an API Key for accessing rates.
+Consequently, we've decided to discontinue support of CoinGecko-based rate sources.
+For those who relied on CoinGecko, invoice creation will now fail, and you must choose an alternative rate provider.
+
+In some circumstances, we were using CoinGecko rate providers to calculate the exchange rate (for example, for `LTC`).
+
+### New features
+
+* Cold wallet transaction support via Greenfield API (#7068) @Aeroverra
+* Add Norwegian lang in the available language packs (https://github.com/btcpayserver/btcpayserver-translator/pull/12) @schjonhaug
+
+### Bug fixes
+
+* Fix: It shouldn't be possible to create an invoice when all store users are disabled (#7100) @NicolasDorier
+* Fix: Remove CoinGecko and any rate source provided by them (#7096) @NicolasDorier
+* Fix: Change the default rate source for LTC conversion from CoinGecko to Kraken. (#7096) @NicolasDorier
+* Fix: In monetization, it was impossible to recreate a user with email of a previously deleted user (#7097 #7082) @NicolasDorier
+* Fix: Backend translations would sometimes fail to load during startup (#7083) @NicolasDorier
+* Fix: Subs plan checkout always showed 'per month' (#7080) @NicolasDorier
+* Fix: Editing a plan subscription set the Currency back to USD (#7079) @NicolasDorier
+* Fix: `Disable zero amount invoices` in PoS doesn't show when Keypad mode is selected (#7071) @NicolasDorier
+* Fix: Adding labels payment requests would sometimes not work as expected (#7087) @thgO-O
+* Fix: PSBT Scan via Camera was not closing the modal dialog when signing a multisig transaction (#6925 #7089) @NicolasDorier
+* Fix: Selecting some rate source would crash the Stores/Rates page (#7095) @NicolasDorier
+
+### Miscellaneous
+
+* Include UI extension point for pos (#7073) @TChukwuleta
+* CI: Make sure release commits are properly signed (#7077 #7069) @Abhijay007
+* CI: Make sure the list of language packs available in the UI reflect the [translation repository](https://github.com/btcpayserver/btcpayserver-translator). @Abhijay007
+
 ## 2.3.2
 
 This release fixes an important regression from `2.3.1` affecting support for payment methods other than BTC and Lightning.

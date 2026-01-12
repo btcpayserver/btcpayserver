@@ -145,7 +145,9 @@ public class MonetizationHostedService(
         var user = await userManager.FindByIdAsync(userId ?? "");
         if (user is not null &&
             await userService.SetDisabled(user.Id, !activated) is not UserService.SetDisabledResult.Error)
+        {
             EventAggregator.Publish(new MonetizationLockoutUpdated([(user.Id, !activated)]));
+        }
     }
 
     private async Task AttachUserIdToSubscriber(string id, SubscriptionEvent.NewSubscriber newSub)
@@ -339,6 +341,8 @@ public class MonetizationHostedService(
                 disabledUsers.Add(update.UserId);
             else
                 disabledUsers.Remove(update.UserId);
+
+        await ctx.Users.UpdateStoreNoActiveUserForUsers(updated.Select(u => u.UserId).ToArray());
         EventAggregator.Publish(new MonetizationLockoutUpdated(updated));
     }
 

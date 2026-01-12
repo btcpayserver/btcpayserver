@@ -77,6 +77,7 @@ using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 using Microsoft.Extensions.Caching.Memory;
 using PosViewType = BTCPayServer.Client.Models.PosViewType;
 using BTCPayServer.Plugins.Emails.Controllers;
+using BTCPayServer.Services.Stores;
 using BTCPayServer.Views.Stores;
 using Microsoft.Playwright;
 using MimeKit;
@@ -217,9 +218,10 @@ namespace BTCPayServer.Tests
 
             var client = await user.CreateClient();
             await client.RemoveStore(user.StoreId);
-            tester.Stores.Clear();
-            arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId, "arbitrary");
-            Assert.Null(arbValue);
+
+            var store = await tester.PayTester.GetService<StoreRepository>()
+                .FindStore(user.StoreId);
+            Assert.True(store?.GetStoreBlob().NoActiveUser);
         }
         class TestData
         {

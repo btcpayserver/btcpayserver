@@ -302,6 +302,8 @@ namespace BTCPayServer.Data
             }
         }
 
+        public bool NoActiveUser { get; set; }
+
         private string NormalizeCurrency(string v) =>
             v is null ? null :
             Regex.Replace(v.ToUpperInvariant(), "[^A-Z]", "").Trim() is { Length: > 0 } normalized ? normalized : null;

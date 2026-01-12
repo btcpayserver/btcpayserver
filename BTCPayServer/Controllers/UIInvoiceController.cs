@@ -213,6 +213,8 @@ namespace BTCPayServer.Controllers
             InvoiceLogs logs = new InvoiceLogs();
             logs.Write("Creation of invoice starting", InvoiceEventData.EventSeverity.Info);
             var storeBlob = store.GetStoreBlob();
+            if (storeBlob.NoActiveUser)
+                throw new BitpayHttpException(400, "Invoice creation is disabled for this store (No active user)");
             if (string.IsNullOrEmpty(entity.Currency))
                 entity.Currency = storeBlob.DefaultCurrency;
             entity.Currency = entity.Currency.Trim().ToUpperInvariant();

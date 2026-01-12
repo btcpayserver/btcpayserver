@@ -118,7 +118,8 @@
                         exclude-types="true"
                         select-element="Labels"
                         wallet-object-id="new WalletObjectId(wallet, WalletObjectData.Types.PaymentRequest, Model.Id ?? string.Empty)"
-                        auto-update="false" />
+                        auto-update="false"
+                        linked-type="@WalletObjectData.Types.PaymentRequest"/>
                     <a asp-action="PaymentRequestLabels" asp-controller="UIPaymentRequest" asp-route-storeId="@Model.StoreId"
                        class="btn btn-secondary input-group-clear"
                        title="@StringLocalizer["Manage Labels"]">

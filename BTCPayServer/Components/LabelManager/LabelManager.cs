@@ -7,7 +7,7 @@ namespace BTCPayServer.Components.LabelManager
 {
     public class LabelManager : ViewComponent
     {
-        public IViewComponentResult Invoke(WalletObjectId walletObjectId, string[] selectedLabels, bool excludeTypes = true, bool displayInline = false, Dictionary<string, RichLabelInfo> richLabelInfo = null, bool autoUpdate = true, string selectElement = null)
+        public IViewComponentResult Invoke(WalletObjectId walletObjectId, string[] selectedLabels, bool excludeTypes = true, bool displayInline = false, Dictionary<string, RichLabelInfo> richLabelInfo = null, bool autoUpdate = true, string selectElement = null, string linkedType = null)
         {
             var vm = new LabelViewModel
             {
@@ -17,7 +17,8 @@ namespace BTCPayServer.Components.LabelManager
                 DisplayInline = displayInline,
                 RichLabelInfo = richLabelInfo,
                 AutoUpdate = autoUpdate,
-                SelectElement = selectElement
+                SelectElement = selectElement,
+                LinkedType = linkedType
             };
             return View(vm);
         }

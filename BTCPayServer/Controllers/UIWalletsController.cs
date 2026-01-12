@@ -1876,14 +1876,17 @@ namespace BTCPayServer.Controllers
             [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
             bool excludeTypes,
             string? type = null,
-            string? id = null)
+            string? id = null,
+            string? linkedType = null)
         {
             var walletObjectId = !string.IsNullOrEmpty(type) && !string.IsNullOrEmpty(id)
                 ? new WalletObjectId(walletId, type, id)
                 : null;
-            var labels = walletObjectId == null
-                ? await WalletRepository.GetWalletLabels(walletId)
-                : await WalletRepository.GetWalletLabels(walletObjectId);
+            var labels = walletObjectId != null
+                ? await WalletRepository.GetWalletLabels(walletObjectId)
+                          : !string.IsNullOrEmpty(linkedType)
+                                    ? await WalletRepository.GetWalletLabelsByLinkedType(walletId, linkedType)
+                                                  : await WalletRepository.GetWalletLabels(walletId);
             return Ok(labels
                 .Where(l => !excludeTypes || !WalletObjectData.Types.AllTypes.Contains(l.Label))
                 .Select(tuple => new WalletLabelModel
@@ -1923,7 +1926,7 @@ namespace BTCPayServer.Controllers
             WalletId walletId, string id)
         {
             var labels = new[] { id };
-            
+
             if (await WalletRepository.RemoveWalletLabels(walletId, labels))
             {
                 TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The label has been successfully deleted."].Value;

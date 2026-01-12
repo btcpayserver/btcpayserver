@@ -347,7 +347,9 @@
                                     wallet-object-id="new WalletObjectId(wallet, WalletObjectData.Types.PaymentRequest, item.Id)"
                                     selected-labels="item.Labels?.Select(l => l.Text).ToArray()"
                                     exclude-types="true"
-                                    display-inline="true" />
+                                    display-inline="true"
+                                    linked-type="@WalletObjectData.Types.PaymentRequest"
+                                    />
                             }
                         </td>
                         <td>

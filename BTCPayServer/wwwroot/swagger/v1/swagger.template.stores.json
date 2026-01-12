@@ -466,6 +466,12 @@
                         "description": "The absolute url of the store",
                         "format": "url"
                     },
+                    "timeZone": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The timezone of the store",
+                        "example": "Africa/Lagos"
+                    },
                     "supportUrl": {
                         "type": "string",
                         "nullable": true,

@@ -1184,14 +1184,12 @@ goodies:
             Assert.Equal("/", new Uri(s.Page.Url, UriKind.Absolute).AbsolutePath);
 
             // Archive
-            await s.Page.Context.Pages.First().BringToFrontAsync();
-            Assert.Equal(0, await s.Page.Locator("text='Archived App'").CountAsync());
-            
             // Navigate to the app settings page if not already there
             if (!s.Page.Url.Contains("/settings/pos"))
             {
                 await s.GoToUrl($"/apps/{appId}/settings/pos");
             }
+            Assert.Equal(0, await s.Page.Locator("text='Archived App'").CountAsync());
             
             await s.Page.Locator("#btn-archive-toggle").WaitForAsync();
             await s.Page.Locator("#btn-archive-toggle").ScrollIntoViewIfNeededAsync();

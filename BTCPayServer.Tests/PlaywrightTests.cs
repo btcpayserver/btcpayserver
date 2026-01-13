@@ -2389,7 +2389,7 @@ namespace BTCPayServer.Tests
             }
 
             await s.GoToInvoices(storeId);
-            Assert.Contains("There are no invoices matching your criteria.", await s.Page.ContentAsync());
+            await Expect(s.Page.GetByTestId("no-invoices")).ToContainTextAsync("There are no invoices matching your criteria.");
             var invoiceId = await s.CreateInvoice(storeId);
             await s.FindAlertMessage();
 
@@ -2398,7 +2398,7 @@ namespace BTCPayServer.Tests
             //let's test archiving an invoice
             Assert.DoesNotContain("Archived", await s.Page.Locator("#btn-archive-toggle").InnerTextAsync());
             await s.Page.Locator("#btn-archive-toggle").ClickAsync();
-            Assert.Contains("Unarchive", await s.Page.Locator("#btn-archive-toggle").InnerTextAsync());
+            await Expect(s.Page.Locator("#btn-archive-toggle")).ToContainTextAsync("Unarchive");
 
             //check that it no longer appears in list
             await s.GoToInvoices(storeId);
@@ -2408,7 +2408,7 @@ namespace BTCPayServer.Tests
             await s.Page.GotoAsync(invoiceUrl);
             await s.Page.Locator("#btn-archive-toggle").ClickAsync();
             await s.FindAlertMessage();
-            Assert.DoesNotContain("Unarchive", await s.Page.Locator("#btn-archive-toggle").InnerTextAsync());
+            await Expect(s.Page.Locator("#btn-archive-toggle")).Not.ToContainTextAsync("Unarchive");
             await s.GoToInvoices(storeId);
             await s.Page.WaitForSelectorAsync($"tr[id=invoice_{invoiceId}]");
             Assert.Contains(invoiceId, await s.Page.ContentAsync());

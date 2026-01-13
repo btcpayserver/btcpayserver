@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 21.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Laag_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 102.6 79.1" style="enable-background:new 0 0 102.6 79.1;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:url(#_Pad__1_);}
+	.st1{fill:#4971FA;}
+	.st2{fill:url(#_Pad_3_1_);}
+</style>
+<title>dcr</title>
+<g id="Laag_3">
+	<g id="Layer_1-2">
+		
+			<linearGradient id="_Pad__1_" gradientUnits="userSpaceOnUse" x1="-7558.0513" y1="912.3351" x2="-7500.7217" y2="912.3351" gradientTransform="matrix(1 0 0 1 7603.2002 -872.83)">
+			<stop  offset="0" style="stop-color:#62D0C9"/>
+			<stop  offset="1" style="stop-color:#7DE2AC"/>
+		</linearGradient>
+		<path id="_Pad_" class="st0" d="M45.1,49.1h25.3c9.4,0,17.1-7.6,17.1-17.1S79.9,15,70.5,15h-8.1L45.1,0h25.3
+			c17.7-0.1,32.1,14.2,32.1,31.9c0.1,13.1-7.9,24.9-20.1,29.8l20,17.3H79.6L45.1,49.1z"/>
+		<path id="_Pad_2" class="st1" d="M57.5,30H32.2c-9.4,0-17.1,7.6-17.1,17.1s7.6,17.1,17.1,17.1h8.1l17.2,15H32.2
+			C14.5,79.2,0.1,64.9,0,47.3c-0.1-13.2,7.9-25,20.1-29.9L0.1,0H23L57.5,30z"/>
+		
+			<linearGradient id="_Pad_3_1_" gradientUnits="userSpaceOnUse" x1="-7603.021" y1="912.3806" x2="-7545.6909" y2="912.3806" gradientTransform="matrix(1 0 0 1 7603.2002 -872.83)">
+			<stop  offset="0" style="stop-color:#3268FB"/>
+			<stop  offset="1" style="stop-color:#4795FA"/>
+		</linearGradient>
+		<path id="_Pad_3" class="st2" d="M57.5,30H32.2c-9.4,0-17.1,7.6-17.1,17.1s7.6,17.1,17.1,17.1h8.1l17.2,15H32.2
+			C14.5,79.2,0.1,64.9,0,47.3c-0.1-13.2,7.9-25,20.1-29.9L0.1,0H23L57.5,30z"/>
+	</g>
+</g>
+</svg>

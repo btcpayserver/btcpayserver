@@ -1,9 +1,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0.201-noble AS builder
 
-RUN apt-get update && apt-get install -y --no-install-recommends chromium-driver \
+RUN apt-get update && apt-get install -y --no-install-recommends chromium-driver git \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /source
+# TODO: Replace with NuGet package references once NBitcoin and NBXplorer packages are published with Decred support.
+RUN git clone --depth 1 --branch adddecred https://github.com/joegruffins/NBitcoin.git /source/NBitcoin
+RUN git clone --depth 1 --branch adddecred https://github.com/joegruffins/NBXplorer.git /source/NBXplorer
+
+WORKDIR /source/btcpayserver
 COPY nuget.config nuget.config
 COPY Build/Common.csproj Build/Common.csproj
 COPY BTCPayServer/BTCPayServer.csproj BTCPayServer/BTCPayServer.csproj
@@ -27,6 +32,6 @@ RUN cd BTCPayServer.Tests && dotnet build --configuration ${CONFIGURATION_NAME} 
 RUN dotnet tool install --global Microsoft.Playwright.CLI
 ENV PATH="$PATH:/root/.dotnet/tools"
 RUN playwright install chromium --with-deps
-WORKDIR /source/BTCPayServer.Tests
+WORKDIR /source/btcpayserver/BTCPayServer.Tests
 ENV CONFIGURATION_NAME=${CONFIGURATION_NAME}
 ENTRYPOINT ["./docker-entrypoint.sh"]

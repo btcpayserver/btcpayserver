@@ -1218,6 +1218,13 @@
       "crypto":true
    },
    {
+      "name":"DCR",
+      "code":"DCR",
+      "divisibility":8,
+      "symbol":null,
+      "crypto":true
+   },
+   {
       "name":"DASH",
       "code":"DASH",
       "divisibility":8,

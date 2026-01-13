@@ -8,7 +8,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.4" />
-    <PackageReference Include="NBitcoin.Altcoins" Version="5.0.1" />
+    <!-- <PackageReference Include="NBitcoin.Altcoins" Version="5.0.1" /> -->
+    <ProjectReference Include="../../NBitcoin/NBitcoin/NBitcoin.csproj"/>
+    <ProjectReference Include="../../NBitcoin/NBitcoin.Altcoins/NBitcoin.Altcoins.csproj"/>
     <PackageReference Include="Dapper" Version="2.1.72" />
   </ItemGroup>
   <ItemGroup>

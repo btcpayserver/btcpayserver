@@ -1,6 +1,14 @@
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0.201-noble AS builder
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+RUN apt-get update && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /source
+# TODO: Replace with NuGet package references once NBitcoin and NBXplorer packages are published with Decred support.
+RUN git clone --depth 1 --branch adddecred https://github.com/joegruffins/NBitcoin.git /source/NBitcoin
+RUN git clone --depth 1 --branch adddecred https://github.com/joegruffins/NBXplorer.git /source/NBXplorer
+
+WORKDIR /source/btcpayserver
 COPY nuget.config nuget.config
 COPY Build/Common.csproj Build/Common.csproj
 COPY BTCPayServer.Abstractions/BTCPayServer.Abstractions.csproj BTCPayServer.Abstractions/BTCPayServer.Abstractions.csproj

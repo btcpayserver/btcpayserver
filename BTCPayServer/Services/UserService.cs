@@ -221,6 +221,13 @@ namespace BTCPayServer.Services
             {
                 _disabledUsers.Remove(userId);
             }
+
+            if (res.Succeeded)
+            {
+                await using var ctx = _applicationDbContextFactory.CreateContext();
+                await ctx.Users.UpdateStoreNoActiveUserForUsers([userId]);
+            }
+
             return res.Succeeded ? new SetDisabledResult.Success() : new SetDisabledResult.Error(res.Errors.ToArray());
         }
 

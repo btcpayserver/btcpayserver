@@ -2026,6 +2026,7 @@ namespace BTCPayServer.Tests
             await s.Page.ClickAsync("#InProgress-mark-awaiting-payment");
             await s.Page.ClickAsync("#AwaitingPayment-view");
 
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             var pageContent = await s.Page.ContentAsync();
             Assert.Contains("PP1", pageContent);
         }

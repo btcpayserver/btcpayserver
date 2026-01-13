@@ -632,7 +632,7 @@ namespace BTCPayServer.Tests
             return (name, appId);
         }
 
-        public async Task PayInvoice(bool mine = false, decimal? amount = null, bool clickRedirect = false)
+        public async Task PayInvoice(bool mine = false, decimal? amount = null, bool clickRedirect = false, bool clickReceipt = false)
         {
             if (amount is not null)
             {
@@ -652,6 +652,11 @@ namespace BTCPayServer.Tests
             if (clickRedirect)
             {
                 await Page.ClickAsync("#StoreLink");
+            }
+            if (clickReceipt)
+            {
+                await Page.Locator("#ReceiptLink").WaitForAsync();
+                await Page.ClickAsync("#ReceiptLink");
             }
         }
 

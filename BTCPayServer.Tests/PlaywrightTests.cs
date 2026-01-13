@@ -2968,9 +2968,7 @@ namespace BTCPayServer.Tests
             await s.GoToInvoices(s.StoreId);
             await s.GoToInvoiceCheckout(i);
             var checkouturi = s.Page.Url;
-            await s.PayInvoice(mine: true);
-            await s.Page.Locator("#ReceiptLink").WaitForAsync();
-            await s.Page.ClickAsync("#ReceiptLink");
+            await s.PayInvoice(mine: true, clickReceipt: true);
             
             await TestUtils.EventuallyAsync(async () =>
             {

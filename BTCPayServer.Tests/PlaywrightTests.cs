@@ -1825,13 +1825,10 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Playwright", "Playwright")]
-        [Trait("Lightning", "Lightning")]
         public async Task CanEditPullPaymentUI()
         {
             await using var s = CreatePlaywrightTester();
-            s.Server.ActivateLightning(LightningConnectionType.LndREST);
             await s.StartAsync();
-            await s.Server.EnsureChannelsSetup();
             await s.RegisterNewUser(true);
             await s.CreateNewStore();
             await s.GenerateWallet("BTC", "", true, true);

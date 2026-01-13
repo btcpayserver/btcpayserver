@@ -17,10 +17,12 @@ using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Tests.PMO;
+using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
 using LNURL;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Playwright;
+using static Microsoft.Playwright.Assertions;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -1031,6 +1033,189 @@ goodies:
             var content = await response.Content.ReadAsStringAsync();
             var json = JObject.Parse(content);
             return (json["invoiceId"]?.Value<string>(), json["error"]?.Value<string>());
+        }
+
+        [Fact]
+        [Trait("Playwright", "Playwright")]
+        public async Task CanCreateAppPoS()
+        {
+            await using var s = CreatePlaywrightTester(newDb: true);
+            await s.StartAsync();
+            var userId = await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            await s.GenerateWallet();
+            (_, string appId) = await s.CreateApp("PointOfSale");
+            
+            await s.Page.Locator("#Title").ClearAsync();
+            await s.Page.FillAsync("#Title", "Tea shop");
+            await s.Page.ClickAsync("label[for='DefaultView_Cart']");
+            await s.Page.ClickAsync(".template-item");
+            await s.Page.Locator("#BuyButtonText").WaitForAsync();
+            await s.Page.FillAsync("#BuyButtonText", "Take my money");
+            await s.Page.Locator("#EditorCategories-ts-control").FillAsync("Drinks");
+            await s.Page.Locator(".offcanvas-header button").ClickAsync();
+            await s.Page.Locator("#CodeTabButton").WaitForAsync();
+            await s.Page.Locator("#CodeTabButton").ScrollIntoViewIfNeededAsync();
+            await s.Page.ClickAsync("#CodeTabButton");
+            
+            // Wait for the textarea to be populated by Vue.js
+            await s.Page.Locator("#TemplateConfig").WaitForAsync();
+            var template = await s.Page.Locator("#TemplateConfig").InputValueAsync();
+            Assert.Contains("\"buyButtonText\": \"Take my money\"", template);
+            Assert.Matches("\"categories\": \\[\r?\n\\s*\"Drinks\"\\s*\\]", template);
+
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage();
+
+            await s.Page.Locator("#CodeTabButton").ScrollIntoViewIfNeededAsync();
+            await s.Page.ClickAsync("#CodeTabButton");
+            template = await s.Page.Locator("#TemplateConfig").InputValueAsync();
+            await s.Page.Locator("#TemplateConfig").ClearAsync();
+            await s.Page.Locator("#TemplateConfig").FillAsync(template.Replace(@"""id"": ""green-tea"",", ""));
+
+            await s.ClickPagePrimary();
+            await Expect(s.Page.Locator(".validation-summary-errors")).ToContainTextAsync("Invalid template: Missing ID for item \"Green Tea\".");
+
+            var o = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("#ViewApp");
+            await using var pageSwitch = await s.SwitchPage(o);
+
+            await s.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            var posBaseUrl = s.Page.Url.Replace("/cart", "");
+            await s.Page.WaitForLoadStateAsync();
+            var content = await s.Page.ContentAsync();
+            Assert.Contains("Tea shop", content);
+            Assert.Contains("Cart", content);
+            Assert.Contains("Take my money", content);
+            Assert.Equal(6, await s.Page.Locator(".posItem.posItem--displayed").CountAsync());
+
+            await Expect(s.Page.Locator("label[for='Category-Drinks']")).ToContainTextAsync("Drinks");
+            await s.Page.ClickAsync("label[for='Category-Drinks']");
+            await s.Page.Locator(".posItem.posItem--displayed").First.WaitForAsync();
+            Assert.Equal(1, await s.Page.Locator(".posItem.posItem--displayed").CountAsync());
+            await s.Page.ClickAsync("label[for='Category-*']");
+            await s.Page.Locator(".posItem.posItem--displayed").Nth(5).WaitForAsync();
+            Assert.Equal(6, await s.Page.Locator(".posItem.posItem--displayed").CountAsync());
+
+            await s.GoToUrl(posBaseUrl + "/static");
+            await s.Page.WaitForLoadStateAsync();
+            content = await s.Page.ContentAsync();
+            Assert.DoesNotContain("Cart", content);
+
+            await s.GoToUrl(posBaseUrl + "/cart");
+            await s.Page.WaitForLoadStateAsync();
+            content = await s.Page.ContentAsync();
+            Assert.Contains("Cart", content);
+
+            // Let's set change the root app
+            await s.GoToHome();
+            await s.GoToServer(ServerNavPages.Policies);
+            await s.Page.Locator("#RootAppId").ScrollIntoViewIfNeededAsync();
+            
+            var options = await s.Page.Locator("#RootAppId option").AllTextContentsAsync();
+            var targetOption = options.FirstOrDefault(o => o.Contains("Point of"));
+            if (targetOption != null)
+            {
+                await s.Page.Locator("#RootAppId").SelectOptionAsync(new[] { new SelectOptionValue { Label = targetOption } });
+            }
+            else
+            {
+                throw new Exception($"Could not find Point of Sale option. Available options: {string.Join(", ", options)}");
+            }
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage();
+            
+            // Make sure after login, we are not redirected to the PoS
+            await s.Logout();
+            await s.LogIn(userId);
+            await s.Page.WaitForLoadStateAsync();
+            content = await s.Page.ContentAsync();
+            Assert.DoesNotContain("Tea shop", content);
+            var prevUrl = s.Page.Url;
+            
+            // We are only if explicitly going to /
+            await s.GoToUrl("/");
+            await s.Page.WaitForLoadStateAsync();
+            content = await s.Page.ContentAsync();
+            Assert.Contains("Tea shop", content);
+            
+            // Check redirect to canonical url
+            await s.GoToUrl(posBaseUrl);
+            Assert.Equal("/", new Uri(s.Page.Url, UriKind.Absolute).AbsolutePath);
+
+            // Let's check with domain mapping as well.
+            await s.GoToUrl(prevUrl);
+            await s.GoToServer(ServerNavPages.Policies);
+            await s.Page.Locator("#RootAppId").ScrollIntoViewIfNeededAsync();
+            await s.Page.Locator("#RootAppId").SelectOptionAsync("");
+            await s.ClickPagePrimary();
+            await s.Page.Locator("#RootAppId").ScrollIntoViewIfNeededAsync();
+            await s.Page.ClickAsync("#AddDomainButton");
+            await s.Page.Locator("#DomainToAppMapping_0__Domain").FillAsync(new Uri(s.Page.Url, UriKind.Absolute).DnsSafeHost);
+            
+            var domainOptions = await s.Page.Locator("#DomainToAppMapping_0__AppId option").AllTextContentsAsync();
+            var targetDomainOption = domainOptions.FirstOrDefault(o => o.Contains("Point of"));
+            if (targetDomainOption != null)
+            {
+                await s.Page.Locator("#DomainToAppMapping_0__AppId").SelectOptionAsync(new[] { new SelectOptionValue { Label = targetDomainOption } });
+            }
+            else
+            {
+                throw new Exception($"Could not find Point of Sale option for domain mapping. Available options: {string.Join(", ", domainOptions)}");
+            }
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "Policies updated successfully");
+            
+            // Make sure after login, we are not redirected to the PoS
+            await s.Logout();
+            await s.LogIn(userId);
+            await s.Page.WaitForLoadStateAsync();
+            content = await s.Page.ContentAsync();
+            Assert.DoesNotContain("Tea shop", content);
+            
+            // We are only if explicitly going to /
+            await s.GoToUrl("/");
+            await s.Page.WaitForLoadStateAsync();
+            content = await s.Page.ContentAsync();
+            Assert.Contains("Tea shop", content);
+            
+            // Check redirect to canonical url
+            await s.GoToUrl(posBaseUrl);
+            Assert.Equal("/", new Uri(s.Page.Url, UriKind.Absolute).AbsolutePath);
+
+            // Archive
+            await s.Page.Context.Pages.First().BringToFrontAsync();
+            Assert.Equal(0, await s.Page.Locator("text='Archived App'").CountAsync());
+            
+            // Navigate to the app settings page if not already there
+            if (!s.Page.Url.Contains("/settings/pos"))
+            {
+                await s.GoToUrl($"/apps/{appId}/settings/pos");
+            }
+            
+            await s.Page.Locator("#btn-archive-toggle").WaitForAsync();
+            await s.Page.Locator("#btn-archive-toggle").ScrollIntoViewIfNeededAsync();
+            await s.Page.ClickAsync("#btn-archive-toggle");
+            await s.FindAlertMessage(partialText: "The app has been archived and will no longer appear in the apps list by default.");
+
+            Assert.Equal(0, await s.Page.Locator("#ViewApp").CountAsync());
+            
+            await s.GoToStore(s.StoreId);
+            var archivedLink = s.Page.Locator("text='1 Archived App'");
+            await archivedLink.WaitForAsync();
+            var archivedText = await archivedLink.TextContentAsync();
+            Assert.Contains("1 Archived App", archivedText);
+            
+            await s.GoToUrl(posBaseUrl);
+            var title = await s.Page.TitleAsync();
+            Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
+            await s.Page.GoBackAsync();
+            await s.Page.Locator("text='1 Archived App'").ClickAsync();
+
+            // Unarchive
+            await s.Page.Locator($"#App-{appId}").ClickAsync();
+            await s.Page.ClickAsync("#btn-archive-toggle");
+            await s.FindAlertMessage(partialText: "The app has been unarchived and will appear in the apps list by default again.");
         }
     }
 }

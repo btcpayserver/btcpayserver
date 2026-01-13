@@ -273,6 +273,8 @@ namespace BTCPayServer.Services
 
         public async Task DeleteUserAndAssociatedData(ApplicationUser user)
         {
+            // This makes sure stores are disabled if no more users
+            await SetDisabled(user.Id, true);
             using var scope = _serviceProvider.CreateScope();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 

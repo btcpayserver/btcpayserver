@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace BTCPayServer.Data.Migrations;
 
-
 [DbContext(typeof(ApplicationDbContext))]
 [Migration("20260112034125_replace_coingecko")]
 public class replace_coingecko  : Migration

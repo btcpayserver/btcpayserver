@@ -17,9 +17,26 @@ async function initLabelManager (elementId) {
     const element = document.getElementById(elementId);
     if (!element) return;
 
-    const { fetchUrl, updateUrl, walletId, walletObjectType, walletObjectId, labels, selectElement } = element.dataset;
-    const commonCallId = `walletLabels-${walletId}`;
+    const {
+        fetchUrl,
+        updateUrl,
+        walletId,
+        labels,
+        selectElement,
+        storeId,
+        objectId,
+        objectType
+    } = element.dataset;
+
+    const isStoreScoped = !!storeId;
+
+    const commonCallId = isStoreScoped
+        ? `labels-store-${storeId}-${objectType}`
+        : `labels-wallet-${walletId}-${objectType}`;
+
     const fetchWalletLabels = async (force = false) => {
+        if (!fetchUrl) return [];
+
         if (!force && window[commonCallId])
             return window[commonCallId];
 
@@ -163,8 +180,9 @@ async function initLabelManager (elementId) {
             const labels = Array.isArray(values) ? values : values.split(',');
             element.dispatchEvent(new CustomEvent("labelmanager:changed", {
                 detail: {
-                    walletObjectId,
-                    labels: labels
+                    id: objectId,
+                    type: objectType,
+                    labels
                 }
             }));
 
@@ -180,16 +198,11 @@ async function initLabelManager (elementId) {
             if (!updateUrl) return;
             select.lock();
             try {
+                const payload = { id: objectId, type: objectType, labels: select.items };
                 const response = await fetch(updateUrl, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        id: walletObjectId,
-                        type: walletObjectType,
-                        labels: select.items
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
                 if (!response.ok) {
                     throw new Error('Network response was not OK');

@@ -3,21 +3,57 @@
 @model BTCPayServer.Components.LabelManager.LabelViewModel
 @{
     var elementId = "a" + Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
-    var fetchUrl = Url.Action("LabelsJson", "UIWallets", new {
-        walletId = Model.WalletObjectId.WalletId,
-        excludeTypes = Safe.Json(Model.ExcludeTypes),
-        linkedType = Model.LinkedType
-    });
-    var updateUrl = Model.AutoUpdate? Url.Action("UpdateLabels", "UIWallets", new {
-        walletId = Model.WalletObjectId.WalletId
-    }): string.Empty;
+
+    var isWalletScoped = Model.WalletObjectId is not null;
+
+    if (!isWalletScoped && (string.IsNullOrEmpty(Model.StoreId) ||
+                            string.IsNullOrEmpty(Model.LinkedType)))
+        throw new InvalidOperationException("LabelManager store-scoped rendering requires StoreId, LinkedType and StoreObjectId.");
+
+    var objectType = isWalletScoped ? Model.WalletObjectId.Type : Model.LinkedType;
+    var objectId   = isWalletScoped ? Model.WalletObjectId.Id   : Model.StoreObjectId;
+
+    var fetchUrl = isWalletScoped
+        ? Url.Action("LabelsJson", "UIWallets", new {
+            walletId = Model.WalletObjectId.WalletId,
+            excludeTypes = Safe.Json(Model.ExcludeTypes),
+            linkedType = Model.LinkedType
+        })
+        : Url.Action("StoreLabelsJson", "UIStores", new {
+            storeId = Model.StoreId,
+            excludeTypes = Safe.Json(Model.ExcludeTypes),
+            linkedType = Model.LinkedType
+        });
+
+    var updateUrl = !Model.AutoUpdate
+        ? string.Empty
+        : isWalletScoped
+            ? Url.Action("UpdateLabels", "UIWallets", new { walletId = Model.WalletObjectId.WalletId })
+            : Url.Action("UpdateStoreLabels", "UIStores", new { storeId = Model.StoreId });
 }
-<input id="@elementId" placeholder=@StringLocalizer["Select labels"] autocomplete="off" value="@string.Join(",", Model.SelectedLabels)"
+
+<input id="@elementId"
+       placeholder=@StringLocalizer["Select labels"]
+       autocomplete="off"
+       value="@string.Join(",", Model.SelectedLabels ?? Array.Empty<string>())"
        class="only-for-js form-control label-manager ts-wrapper @(Model.DisplayInline ? "ts-inline" : "")"
+       data-scope="@(isWalletScoped ? "wallet" : "store")"
        data-fetch-url="@fetchUrl"
        data-update-url="@updateUrl"
-       data-wallet-id="@Model.WalletObjectId.WalletId"
-       data-wallet-object-id="@Model.WalletObjectId.Id"
-       data-wallet-object-type="@Model.WalletObjectId.Type"
+       data-object-id="@objectId"
+       data-object-type="@objectType"
        data-select-element="@Model.SelectElement"
-       data-labels='@Safe.Json(Model.RichLabelInfo)' />
+       data-labels='@Safe.Json(Model.RichLabelInfo)'
+       @if (isWalletScoped)
+       {
+           <text>
+               data-wallet-id="@Model.WalletObjectId.WalletId"
+           </text>
+       }
+       else
+       {
+           <text>
+               data-store-id="@Model.StoreId"
+           </text>
+       } />
+

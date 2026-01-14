@@ -12,6 +12,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Plugins.Emails.Services;
+using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
@@ -63,7 +64,8 @@ public partial class UIStoresController : Controller
         IStringLocalizer stringLocalizer,
         EventAggregator eventAggregator,
         LightningHistogramService lnHistogramService,
-        LightningClientFactoryService lightningClientFactory)
+        LightningClientFactoryService lightningClientFactory,
+        StoreLabelRepository storeLabelRepository)
     {
         _rateFactory = rateFactory;
         _storeRepo = storeRepo;
@@ -96,6 +98,7 @@ public partial class UIStoresController : Controller
         _lnHistogramService = lnHistogramService;
         _lightningClientFactory = lightningClientFactory;
         StringLocalizer = stringLocalizer;
+        _storeLabelRepository = storeLabelRepository;
     }
 
     private readonly BTCPayServerOptions _btcpayServerOptions;
@@ -128,6 +131,7 @@ public partial class UIStoresController : Controller
     private readonly IDataProtector _dataProtector;
     private readonly LightningHistogramService _lnHistogramService;
     private readonly LightningClientFactoryService _lightningClientFactory;
+    private readonly StoreLabelRepository _storeLabelRepository;
 
     public string? GeneratedPairingCode { get; set; }
     public IStringLocalizer StringLocalizer { get; }

@@ -6,6 +6,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.PaymentRequests;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,8 +16,7 @@ public class PaymentRequestsReportProvider(
     ApplicationDbContextFactory dbContextFactory,
     InvoiceRepository invoiceRepository,
     PaymentMethodHandlerDictionary handlers,
-    WalletRepository walletRepository,
-    BTCPayNetworkProvider networkProvider,
+    StoreLabelRepository storeLabelRepository,
     DisplayFormatter displayFormatter)
     : ReportProvider
 {
@@ -80,9 +80,6 @@ public class PaymentRequestsReportProvider(
         if (paymentRequests.Count == 0)
             return;
 
-        var network = networkProvider.DefaultNetwork;
-        var walletId = new WalletId(queryContext.StoreId, network.CryptoCode);
-
         var paymentRequestIds = paymentRequests.Select(pr => pr.Id).ToArray();
 
         var orderIds = paymentRequests
@@ -90,8 +87,8 @@ public class PaymentRequestsReportProvider(
             .Distinct()
             .ToArray();
 
-        var labelsTask = walletRepository.GetWalletLabelsForObjects(
-            walletId,
+        var labelsTask = storeLabelRepository.GetStoreLabelsForObjects(
+            queryContext.StoreId,
             WalletObjectData.Types.PaymentRequest,
             paymentRequestIds
         );

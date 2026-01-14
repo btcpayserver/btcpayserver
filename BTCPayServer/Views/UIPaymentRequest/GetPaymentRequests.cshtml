@@ -341,16 +341,13 @@
                             @item.ReferenceId
                         </td>
                         <td>
-                            @if (wallet != null)
-                            {
-                                <vc:label-manager
-                                    wallet-object-id="new WalletObjectId(wallet, WalletObjectData.Types.PaymentRequest, item.Id)"
-                                    selected-labels="item.Labels?.Select(l => l.Text).ToArray()"
-                                    exclude-types="true"
-                                    display-inline="true"
-                                    linked-type="@WalletObjectData.Types.PaymentRequest"
-                                    />
-                            }
+                            <vc:label-manager
+                                selected-labels="item.Labels?.Select(l => l.Text).ToArray()"
+                                exclude-types="true"
+                                display-inline="true"
+                                linked-type="@WalletObjectData.Types.PaymentRequest"
+                                store-id="@storeId"
+                                store-object-id="@item.Id"/>
                         </td>
                         <td>
                             <span class="badge badge-@item.Status.ToLower() status-badge">@item.Status</span>

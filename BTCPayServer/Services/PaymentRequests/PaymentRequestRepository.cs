@@ -147,10 +147,10 @@ namespace BTCPayServer.Services.PaymentRequests
                 // Escape LIKE wildcards to prevent SQL injection
                 var escapedSearch = search.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
                 var likePattern = $"%{escapedSearch}%";
-                var amountOrNull = decimal.TryParse(search, NumberStyles.Number, CultureInfo.InvariantCulture, out var amount) 
-                    ? amount 
+                var amountOrNull = decimal.TryParse(search, NumberStyles.Number, CultureInfo.InvariantCulture, out var amount)
+                    ? amount
                     : (decimal?)null;
-                
+
                 queryable = context.PaymentRequests
                     .Where(a => a.StoreDataId == query.StoreId)
                     .Where(a =>
@@ -174,23 +174,13 @@ namespace BTCPayServer.Services.PaymentRequests
             {
                 if (string.IsNullOrEmpty(query.StoreId))
                     throw new InvalidOperationException("PaymentRequestQuery.StoreId should be specified for label filtering");
-                if (string.IsNullOrEmpty(query.WalletId))
-                    throw new InvalidOperationException("PaymentRequestQuery.WalletId should be specified for label filtering");
 
-                var paymentRequestsIds = await context.WalletObjectLinks
-                    .Where(l =>
-                        l.WalletId == query.WalletId &&
-                        l.AType == WalletObjectData.Types.Label &&
-                        l.BType == WalletObjectData.Types.PaymentRequest &&
-                        l.AId == query.LabelFilter)
-                    .Select(l => l.BId)
-                    .Distinct()
-                    .ToArrayAsync(cancellationToken);
-
-                if (paymentRequestsIds.Length == 0)
-                    return Array.Empty<PaymentRequestData>();
-
-                queryable = queryable.Where(paymentRequest => paymentRequestsIds.Contains(paymentRequest.Id));
+                queryable = queryable.Where(pr =>
+                    context.StoreLabelLinks.Any(l =>
+                        l.StoreId == query.StoreId &&
+                        l.Type == WalletObjectData.Types.PaymentRequest &&
+                        l.LabelId == query.LabelFilter &&
+                        l.ObjectId == pr.Id));
             }
 
             queryable = queryable.Include(data => data.StoreData);
@@ -269,7 +259,6 @@ namespace BTCPayServer.Services.PaymentRequests
     public class PaymentRequestQuery
     {
         public string StoreId { get; set; }
-        public string WalletId { get; set; }
         public bool IncludeArchived { get; set; } = true;
         public PaymentRequestStatus[] Status { get; set; }
         public string UserId { get; set; }

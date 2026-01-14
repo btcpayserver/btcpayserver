@@ -3112,6 +3112,7 @@ namespace BTCPayServer.Tests
             await s.Page.SelectOptionAsync("#FormId", "Email");
             await s.ClickPagePrimary();
             await s.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await s.Page.Locator("#ViewApp").WaitForAsync(new() { State = WaitForSelectorState.Visible });
 
             await s.Page.ClickAsync("#ViewApp");
             var formPage = await s.Page.Context.WaitForPageAsync();

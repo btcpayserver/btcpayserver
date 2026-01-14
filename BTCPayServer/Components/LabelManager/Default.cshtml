@@ -7,8 +7,9 @@
     var isWalletScoped = Model.WalletObjectId is not null;
 
     if (!isWalletScoped && (string.IsNullOrEmpty(Model.StoreId) ||
-                            string.IsNullOrEmpty(Model.LinkedType)))
-        throw new InvalidOperationException("LabelManager store-scoped rendering requires StoreId, LinkedType and StoreObjectId.");
+                            string.IsNullOrEmpty(Model.LinkedType) ||
+                            (Model.AutoUpdate && string.IsNullOrEmpty(Model.StoreObjectId))))
+        throw new InvalidOperationException("LabelManager store-scoped rendering requires StoreId, LinkedType and StoreObjectId when AutoUpdate is enabled.");
 
     var objectType = isWalletScoped ? Model.WalletObjectId.Type : Model.LinkedType;
     var objectId   = isWalletScoped ? Model.WalletObjectId.Id   : Model.StoreObjectId;

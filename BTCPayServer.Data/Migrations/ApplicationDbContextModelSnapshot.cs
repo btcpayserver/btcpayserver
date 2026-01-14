@@ -956,6 +956,60 @@ namespace BTCPayServer.Migrations
                     b.ToTable("Stores");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.StoreLabelData", b =>
+                {
+                    b.Property<string>("StoreId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LabelId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Data")
+                        .HasColumnType("JSONB");
+
+                    b.Property<uint>("XMin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("StoreId", "LabelId");
+
+                    b.ToTable("StoreLabels");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.StoreLabelLinkData", b =>
+                {
+                    b.Property<string>("StoreId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LabelId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Type")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ObjectId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Data")
+                        .HasColumnType("JSONB");
+
+                    b.Property<uint>("XMin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("StoreId", "LabelId", "Type", "ObjectId");
+
+                    b.HasIndex("StoreId", "Type", "LabelId");
+
+                    b.HasIndex("StoreId", "Type", "ObjectId");
+
+                    b.ToTable("StoreLabelLinks");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.StoreRole", b =>
                 {
                     b.Property<string>("Id")
@@ -2210,6 +2264,15 @@ namespace BTCPayServer.Migrations
                     b.Navigation("InvoiceData");
 
                     b.Navigation("PullPaymentData");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.StoreLabelLinkData", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.StoreLabelData", null)
+                        .WithMany()
+                        .HasForeignKey("StoreId", "LabelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.StoreRole", b =>

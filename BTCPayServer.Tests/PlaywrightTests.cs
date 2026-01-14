@@ -1851,13 +1851,10 @@ namespace BTCPayServer.Tests
 
             await s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
 
-            await s.Page.FillAsync(".note-editable", "Description Edit");
-            await s.ClickPagePrimary();
-
             await s.Page.ClickAsync("text=PP1");
-            var name = s.Page.Locator("#Name");
-            await name.ClearAsync();
-            await name.FillAsync("PP1 Edited");
+            await s.Page.FillAsync(".note-editable", "Description Edit");
+            await s.Page.FillAsync("#Name", "PP1 Edited");
+            await s.ClickPagePrimary();
 
             await s.FindAlertMessage();
 
@@ -2940,13 +2937,13 @@ namespace BTCPayServer.Tests
             await s.GoToInvoices();
             var i = await s.CreateInvoice(100);
             await s.Server.PayTester.InvoiceRepository.MarkInvoiceStatus(i, InvoiceStatus.Settled);
-            
+
             await TestUtils.EventuallyAsync(async () =>
             {
                 await s.Page.ReloadAsync();
                 await s.Page.ClickAsync("#Receipt");
             });
-            
+
             await TestUtils.EventuallyAsync(async () =>
             {
                 await s.Page.ReloadAsync();
@@ -2971,7 +2968,7 @@ namespace BTCPayServer.Tests
             await s.GoToInvoiceCheckout(i);
             var checkouturi = s.Page.Url;
             await s.PayInvoice(mine: true, clickReceipt: true);
-            
+
             await TestUtils.EventuallyAsync(async () =>
             {
                 await s.Page.ReloadAsync();
@@ -2980,7 +2977,7 @@ namespace BTCPayServer.Tests
                 Assert.DoesNotContain("invoice-unsettled", pageContent);
                 Assert.Contains("\"PaymentDetails\"", pageContent);
             });
-            
+
             await s.GoToUrl(checkouturi);
 
             await s.Server.PayTester.InvoiceRepository.MarkInvoiceStatus(i, InvoiceStatus.Settled);

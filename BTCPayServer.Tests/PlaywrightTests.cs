@@ -1854,12 +1854,14 @@ namespace BTCPayServer.Tests
 
             await s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
 
+            await s.Page.FillAsync(".note-editable", "Description Edit");
+            await s.ClickPagePrimary();
+
             await s.Page.ClickAsync("text=PP1");
             var name = s.Page.Locator("#Name");
             await name.ClearAsync();
             await name.FillAsync("PP1 Edited");
-            await s.Page.FillAsync(".note-editable", "Description Edit");
-            await s.ClickPagePrimary();
+
             await s.FindAlertMessage();
 
             opening = s.Page.Context.WaitForPageAsync();

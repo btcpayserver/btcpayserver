@@ -1825,13 +1825,10 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Playwright", "Playwright")]
-        [Trait("Lightning", "Lightning")]
         public async Task CanEditPullPaymentUI()
         {
             await using var s = CreatePlaywrightTester();
-            s.Server.ActivateLightning(LightningConnectionType.LndREST);
             await s.StartAsync();
-            await s.Server.EnsureChannelsSetup();
             await s.RegisterNewUser(true);
             await s.CreateNewStore();
             await s.GenerateWallet("BTC", "", true, true);
@@ -2931,6 +2928,101 @@ namespace BTCPayServer.Tests
             var content = await s.Page.ContentAsync();
             Assert.Contains(user, content);
         }
+
+        [Fact]
+        public async Task CanUseInvoiceReceipts()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            await s.AddDerivationScheme();
+            await s.GoToInvoices();
+            var i = await s.CreateInvoice(100);
+            await s.Server.PayTester.InvoiceRepository.MarkInvoiceStatus(i, InvoiceStatus.Settled);
+            
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                await s.Page.ReloadAsync();
+                await s.Page.ClickAsync("#Receipt");
+            });
+            
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                await s.Page.ReloadAsync();
+                await s.Page.WaitForLoadStateAsync();
+                var content = await s.Page.ContentAsync();
+                Assert.DoesNotContain("invoice-unsettled", content);
+                Assert.DoesNotContain("invoice-processing", content);
+            });
+
+            await s.Page.WaitForLoadStateAsync();
+            var content = await s.Page.ContentAsync();
+            Assert.Contains("100.00 USD", content);
+            Assert.Contains(i, content);
+
+            await s.GoToInvoices(s.StoreId);
+            i = await s.CreateInvoice();
+            await s.GoToInvoiceCheckout(i);
+            await s.GoToUrl($"/i/{i}/receipt");
+            await s.Page.Locator("#invoice-unsettled").WaitForAsync();
+
+            await s.GoToInvoices(s.StoreId);
+            await s.GoToInvoiceCheckout(i);
+            var checkouturi = s.Page.Url;
+            await s.PayInvoice(mine: true, clickReceipt: true);
+            
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                await s.Page.ReloadAsync();
+                await s.Page.WaitForLoadStateAsync();
+                var pageContent = await s.Page.ContentAsync();
+                Assert.DoesNotContain("invoice-unsettled", pageContent);
+                Assert.Contains("\"PaymentDetails\"", pageContent);
+            });
+            
+            await s.GoToUrl(checkouturi);
+
+            await s.Server.PayTester.InvoiceRepository.MarkInvoiceStatus(i, InvoiceStatus.Settled);
+
+            await s.Page.Locator("#ReceiptLink").WaitForAsync();
+            await s.Page.ClickAsync("#ReceiptLink");
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                await s.Page.ReloadAsync();
+                await s.Page.WaitForLoadStateAsync();
+                var pageContent = await s.Page.ContentAsync();
+                Assert.DoesNotContain("invoice-unsettled", pageContent);
+                Assert.DoesNotContain("invoice-processing", pageContent);
+            });
+
+            // ensure archived invoices are not accessible for logged out users
+            await s.Server.PayTester.InvoiceRepository.ToggleInvoiceArchival(i, true);
+            await s.GoToHome();
+            await s.Logout();
+
+            await s.GoToUrl($"/i/{i}/receipt");
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var title = await s.Page.TitleAsync();
+                Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
+            });
+
+            await s.GoToUrl($"/i/{i}");
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var title = await s.Page.TitleAsync();
+                Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
+            });
+
+            await s.GoToUrl($"/i/{i}/status");
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var title = await s.Page.TitleAsync();
+                Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
+            });
+        }
+
     }
 }
 

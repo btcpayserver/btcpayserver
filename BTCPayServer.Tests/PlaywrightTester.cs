@@ -632,7 +632,7 @@ namespace BTCPayServer.Tests
             return (name, appId);
         }
 
-        public async Task PayInvoice(bool mine = false, decimal? amount = null, bool clickRedirect = false)
+        public async Task PayInvoice(bool mine = false, decimal? amount = null, bool clickRedirect = false, bool clickReceipt = false)
         {
             if (amount is not null)
             {
@@ -645,15 +645,18 @@ namespace BTCPayServer.Tests
             {
                 await MineBlockOnInvoiceCheckout();
             }
-
             if (amount is null)
                 await Page.Locator("xpath=//*[text()=\"Invoice Paid\" or text()=\"Payment Received\"]").WaitForAsync();
             else
-                await Page.Locator("xpath=//*[text()=\"Invoice Paid\" or text()=\"Payment Received\" or text()=\"The invoice hasn't been paid in full.\"]")
-                    .WaitForAsync();
+                await Page.Locator("xpath=//*[text()=\"Invoice Paid\" or text()=\"Payment Received\" or text()=\"The invoice hasn't been paid in full.\"]").WaitForAsync();
             if (clickRedirect)
             {
                 await Page.ClickAsync("#StoreLink");
+            }
+            if (clickReceipt)
+            {
+                await Page.Locator("#ReceiptLink").WaitForAsync();
+                await Page.ClickAsync("#ReceiptLink");
             }
         }
 

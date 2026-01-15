@@ -1,19 +1,16 @@
-using System;
 using System.Collections.Generic;
-using System.Data;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Data;
 using BTCPayServer.Hosting;
 using BTCPayServer.Services;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Support.Extensions;
+using Microsoft.Playwright;
+using static Microsoft.Playwright.Assertions;
 using Xunit;
 using Xunit.Abstractions;
-using static BTCPayServer.Services.LocalizerService;
 
 namespace BTCPayServer.Tests
 {
@@ -25,57 +22,71 @@ namespace BTCPayServer.Tests
         {
         }
 
+        public void ActivateLangs(ServerTester s)
+        {
+            TestLogs.LogInformation("Activating Langs...");
+            var dir = TestUtils.GetTestDataFullPath("Langs");
+            var langdir = Path.Combine(s.PayTester._Directory, "Langs");
+            Directory.CreateDirectory(langdir);
+            foreach (var file in Directory.GetFiles(dir))
+                File.Copy(file, Path.Combine(langdir, Path.GetFileName(file)));
+        }
+
         [Fact(Timeout = TestTimeout)]
-        [Trait("Selenium", "Selenium")]
+        [Trait("Playwright", "Playwright")]
         public async Task CanTranslateLoginPage()
         {
-            using var tester = CreateSeleniumTester(newDb: true);
-            tester.Server.ActivateLangs();
+            await using var tester = CreatePlaywrightTester(newDb: true);
+            ActivateLangs(tester.Server);
             await tester.StartAsync();
             await tester.Server.PayTester.RestartStartupTask<LoadTranslationsStartupTask>();
 
             // Check if the Cypherpunk translation has been loaded from the file
-            tester.RegisterNewUser(true);
-            tester.CreateNewStore();
-            tester.GoToServer(Views.Server.ServerNavPages.Translations);
-            tester.Driver.FindElement(By.Id("Select-Cypherpunk")).Click();
-            tester.Logout();
-            Assert.Contains("Cyphercode", tester.Driver.PageSource);
-            Assert.Contains("Yo at BTCPay Server", tester.Driver.PageSource);
+            await tester.RegisterNewUser(true);
+            await tester.CreateNewStore();
+            await tester.GoToServer(Views.Server.ServerNavPages.Translations);
+            await tester.Page.Locator("#Select-Cypherpunk").ClickAsync();
+            await tester.Logout();
 
-            // Create English (Custom) 
-            tester.LogIn();
-            tester.GoToServer(Views.Server.ServerNavPages.Translations);
-            tester.ClickPagePrimary();
-            tester.Driver.FindElement(By.Name("Name")).SendKeys("English (Custom)");
-            tester.ClickPagePrimary();
-            var translations = tester.Driver.FindElement(By.Name("Translations"));
-            translations.Clear();
-            translations.SendKeys("{ \"Password\": \"Mot de passe\" }");
-            tester.ClickPagePrimary();
+            await Expect(tester.Page.Locator("label[for=\"Password\"]")).ToContainTextAsync("Cyphercode");
+            await Expect(tester.Page.GetByTestId("header")).ToContainTextAsync("Yo at BTCPay Server");
+
+            // Create English (Custom)
+            await tester.LogIn(tester.CreatedUser);
+            await tester.GoToServer(Views.Server.ServerNavPages.Translations);
+            await tester.ClickPagePrimary();
+            await tester.Page.Locator("[name='Name']").FillAsync("English (Custom)");
+            await tester.ClickPagePrimary();
+            var translations = tester.Page.Locator("[name='Translations']");
+            await translations.ClearAsync();
+            await translations.FillAsync("{ \"Password\": \"Mot de passe\" }");
+            await tester.ClickPagePrimary();
 
             // Check English (Custom) can be selected
-            tester.Driver.FindElement(By.Id("Select-English (Custom)")).Click();
-            tester.Logout();
-            Assert.Contains("Mot de passe", tester.Driver.PageSource);
+            await tester.Page.Locator("#Select-English\\ \\(Custom\\)").ClickAsync();
+            await tester.Logout();
+            await Expect(tester.Page.Locator("label[for=\"Password\"]")).ToContainTextAsync("Mot de passe");
 
             // Check if we can remove English (Custom)
-            tester.LogIn();
-            tester.GoToServer(Views.Server.ServerNavPages.Translations);
-            var text = tester.Driver.PageSource;
+            await tester.LogIn(tester.CreatedUser);
+            await tester.GoToServer(Views.Server.ServerNavPages.Translations);
+            await tester.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+            var text = await tester.Page.ContentAsync();
             Assert.Contains("Select-Cypherpunk", text);
             Assert.DoesNotContain("Select-English (Custom)", text);
             // Cypherpunk is loaded from file, can't edit
             Assert.DoesNotContain("Delete-Cypherpunk", text);
             // English (Custom) is selected, can't edit
             Assert.DoesNotContain("Delete-English (Custom)", text);
-            tester.Driver.FindElement(By.Id("Select-Cypherpunk")).Click();
-            tester.Driver.FindElement(By.Id("Delete-English (Custom)")).Click();
-            tester.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
-            tester.Driver.FindElement(By.Id("ConfirmContinue")).Click();
+            await tester.Page.Locator("#Select-Cypherpunk").ClickAsync();
+            await tester.Page.Locator("#Delete-English\\ \\(Custom\\)").ClickAsync();
+            await tester.Page.Locator("#ConfirmInput").FillAsync("DELETE");
+            await tester.Page.Locator("#ConfirmContinue").ClickAsync();
 
-            Assert.Contains("Dictionary English (Custom) deleted", tester.FindAlertMessage().Text);
-            Assert.DoesNotContain("Select-English (Custom)", tester.Driver.PageSource);
+            var alertMessage = await tester.FindAlertMessage();
+            Assert.Contains("Dictionary English (Custom) deleted", await alertMessage.TextContentAsync());
+            var pageContent = await tester.Page.ContentAsync();
+            Assert.DoesNotContain("Select-English (Custom)", pageContent);
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -197,7 +208,7 @@ namespace BTCPayServer.Tests
             Assert.NotNull(lang3);
             Assert.Equal("fr-FR", lang3?.Code);
 
-            // Unusual format, but still valid. Some language is given that we don't have and a wildcard for everything else. 
+            // Unusual format, but still valid. Some language is given that we don't have and a wildcard for everything else.
             // Result should be NULL, because "xx" does not exist and * is a wildcard and has no meaning.
             var lang4 = languageService.FindLanguageInAcceptLanguageHeader("xx,*;q=0.5");
             Assert.Null(lang4);

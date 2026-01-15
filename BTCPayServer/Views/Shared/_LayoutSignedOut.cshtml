@@ -48,7 +48,7 @@
             <vc:main-logo />
         </a>
 
-		<h1 class="h2 mb-3">@ViewLocalizer["Welcome to {0}", string.IsNullOrWhiteSpace(settings.ServerName) ? "BTCPay Server" : settings.ServerName]</h1>
+		<h1 data-testid="header" class="h2 mb-3">@ViewLocalizer["Welcome to {0}", string.IsNullOrWhiteSpace(settings.ServerName) ? "BTCPay Server" : settings.ServerName]</h1>
         @if (ViewBag.ShowLeadText)
         {
             <p class="lead">

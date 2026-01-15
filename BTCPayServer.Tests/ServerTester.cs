@@ -84,17 +84,6 @@ namespace BTCPayServer.Tests
 
         public string Scope { get; set; }
 
-        public void ActivateLangs()
-        {
-            TestLogs.LogInformation("Activating Langs...");
-            var dir = TestUtils.GetTestDataFullPath("Langs");
-            var langdir = Path.Combine(PayTester._Directory, "Langs");
-            Directory.CreateDirectory(langdir);
-            foreach (var file in Directory.GetFiles(dir))
-                File.Copy(file, Path.Combine(langdir, Path.GetFileName(file)));
-        }
-
-
         public void ActivateLTC()
         {
             LTCExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_LTCRPCCONNECTION", "server=http://127.0.0.1:43783;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork<BTCPayNetwork>("LTC").NBitcoinNetwork);

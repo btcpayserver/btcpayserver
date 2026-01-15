@@ -2147,7 +2147,6 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        [Trait("Playwright", "Playwright")]
         [Trait("Lightning", "Lightning")]
         public async Task CanUsePredefinedRoles()
         {
@@ -2584,7 +2583,6 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        [Trait("Playwright", "Playwright")]
         [Trait("Lightning", "Lightning")]
         public async Task CanAccessUserStoreAsAdmin()
         {

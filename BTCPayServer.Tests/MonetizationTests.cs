@@ -17,7 +17,7 @@ namespace BTCPayServer.Tests;
 public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
 {
     [Fact]
-    [Trait("Playwright", "Playwright")]
+    [Trait("Playwright", "Playwright-2")]
     public async Task CanMonetizeServer()
     {
         await using var s = CreatePlaywrightTester(newDb: true);

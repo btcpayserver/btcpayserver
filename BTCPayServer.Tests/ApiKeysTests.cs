@@ -12,10 +12,8 @@ using BTCPayServer.Views.Manage;
 using Microsoft.Playwright;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
 using Xunit;
 using Xunit.Abstractions;
-using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Tests
 {
@@ -29,7 +27,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Playwright", "Playwright")]
+        [Trait("Playwright", "Playwright-2")]
         public async Task CanCreateApiKeys()
         {
             //there are 2 ways to create api keys:

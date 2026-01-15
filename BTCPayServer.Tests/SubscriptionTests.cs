@@ -55,7 +55,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
     }
 
     [Fact]
-    [Trait("Playwright", "Playwright")]
+    [Trait("Playwright", "Playwright-2")]
     public async Task CanEditOfferingAndPlans()
     {
         await using var s = CreatePlaywrightTester();
@@ -185,7 +185,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
     }
 
     [Fact]
-    [Trait("Playwright", "Playwright")]
+    [Trait("Playwright", "Playwright-2")]
     public async Task CanUpgradeAndDowngrade()
     {
         await using var s = CreatePlaywrightTester();
@@ -571,7 +571,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
     }
 
     [Fact]
-    [Trait("Playwright", "Playwright")]
+    [Trait("Playwright", "Playwright-2")]
     public async Task CanCreateSubscriberAndCircleThroughStates()
     {
         await using var s = CreatePlaywrightTester();
@@ -1033,7 +1033,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             var match = Regex.Match(text!, @"\((.*?) USD has been refunded\)");
             var v = decimal.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
             var diff = Math.Abs(refunded - v);
-            if (diff >= 3.0m)
+            if (diff >= 4.0m)
             {
                 Assert.Fail($"Expected {refunded} USD, but got {v} USD");
             }

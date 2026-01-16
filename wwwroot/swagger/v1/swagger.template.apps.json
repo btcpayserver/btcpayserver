@@ -1,0 +1,1238 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/apps/pos": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/StoreId"
+                }
+            ],
+            "post": {
+                "operationId": "Apps_CreatePointOfSaleApp",
+                "summary": "Create a new Point of Sale app",
+                "description": "Point of Sale app allows accepting payments for items in a virtual store",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PointOfSaleAppRequest"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "Created app details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PointOfSaleAppData"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Apps"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/apps/pos/{appId}": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/AppId"
+                }
+            ],
+            "put": {
+                "operationId": "Apps_PutPointOfSaleApp",
+                "summary": "Update a Point of Sale app",
+                "description": "Use this endpoint for updating the properties of a POS app",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PointOfSaleAppRequest"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "App details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PointOfSaleAppData"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Apps"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "get": {
+                "tags": [
+                    "Apps",
+                    "Point of Sale"
+                ],
+                "operationId": "Apps_GetPointOfSaleApp",
+                "summary": "Get Point of Sale app data",
+                "description": "Returns POS app data",
+                "responses": {
+                    "200": {
+                        "description": "POS app data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PointOfSaleAppData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "POS app with specified ID was not found"
+                    }
+                }
+            }
+        },
+        "/api/v1/apps/crowdfund/{appId}": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/AppId"
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Apps",
+                    "Crowdfund"
+                ],
+                "operationId": "Apps_GetCrowdfundApp",
+                "summary": "Get crowdfund app data",
+                "description": "Returns crowdfund app data",
+                "responses": {
+                    "200": {
+                        "description": "Crowdfund app data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CrowdfundAppData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Crowdfund app with specified ID was not found"
+                    }
+                }
+            }
+        },
+        "/api/v1/stores/{storeId}/apps/crowdfund": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/StoreId"
+                }
+            ],
+            "post": {
+                "operationId": "Apps_CreateCrowdfundApp",
+                "summary": "Create a new Crowdfund app",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CrowdfundAppRequest"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "Created app details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CrowdfundAppData"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Apps",
+                    "Crowdfund"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/apps/{appId}": {
+            "get": {
+                "tags": [
+                    "Apps"
+                ],
+                "operationId": "Apps_GetApp",
+                "summary": "Get basic app data",
+                "description": "Returns basic app data shared between all types of apps",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AppId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Basic app data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppBaseData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "App with specified ID was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Apps"
+                ],
+                "operationId": "Apps_DeleteApp",
+                "summary": "Delete app",
+                "description": "Deletes apps with specified ID",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AppId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "App was deleted"
+                    },
+                    "404": {
+                        "description": "App with specified ID was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/apps/{appId}/image": {
+            "post": {
+                "tags": [
+                    "Apps"
+                ],
+                "summary": "Uploads an image for a app item",
+                "description": "Uploads an image for a app item",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AppId"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "description": "The image",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "Apps_UploadAppItemImage",
+                "responses": {
+                    "200": {
+                        "description": "Uploads an image for a app item",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FileData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The app could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/apps/{appId}/image/{fileId}": {
+            "delete": {
+                "tags": [
+                    "Apps"
+                ],
+                "summary": "Deletes the app item image",
+                "description": "Deletes the app item image",
+                "operationId": "App_DeleteAppItemImage",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AppId"
+                    },
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The file ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "App item image deleted successfully"
+                    },
+                    "404": {
+                        "description": "The app could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/apps/{appId}/sales": {
+            "get": {
+                "tags": [
+                    "Apps"
+                ],
+                "operationId": "Apps_GetAppSales",
+                "summary": "Get app sales statistics",
+                "description": "Returns sales statistics for the app",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AppId"
+                    },
+                    {
+                        "name": "numberOfDays",
+                        "in": "query",
+                        "required": false,
+                        "description": "How many of the last days",
+                        "schema": {
+                            "nullable": true,
+                            "type": "number",
+                            "default": 7
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "App sales statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppSalesStats"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "App with specified ID was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/apps/{appId}/top-items": {
+            "get": {
+                "tags": [
+                    "Apps"
+                ],
+                "operationId": "Apps_GetAppTopItems",
+                "summary": "Get app top items statistics",
+                "description": "Returns top items statistics for the app",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AppId"
+                    },
+                    {
+                        "name": "count",
+                        "in": "query",
+                        "required": false,
+                        "description": "How many of the items",
+                        "schema": {
+                            "nullable": true,
+                            "type": "number",
+                            "default": 5
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "description": "Offset for paging",
+                        "schema": {
+                            "nullable": true,
+                            "type": "number",
+                            "default": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "App top items statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AppItemStats"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "App with specified ID was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/apps": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/StoreId"
+                }
+            ],
+            "get": {
+                "tags": [
+                    "Apps"
+                ],
+                "operationId": "Apps_GetAllAppsForStore",
+                "summary": "Get basic app data for all apps for a store",
+                "description": "Returns basic app data for all apps for a store",
+                "responses": {
+                    "200": {
+                        "description": "Array of basic app data object",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AppBaseData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the data"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/apps": {
+            "get": {
+                "tags": [
+                    "Apps"
+                ],
+                "operationId": "Apps_GetAllApps",
+                "summary": "Get basic app data for all apps for all stores for a user",
+                "description": "Returns basic app data for all apps for all stores",
+                "responses": {
+                    "200": {
+                        "description": "Array of basic app data object",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AppBaseData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the data"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "parameters": {
+            "AppId": {
+                "name": "appId",
+                "in": "path",
+                "required": true,
+                "description": "App ID",
+                "schema": {
+                    "type": "string"
+                }
+            }
+        },
+        "schemas": {
+            "AppBaseData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Id of the app",
+                        "example": "3ki4jsAkN4u9rv1PUzj1odX4Nx7s"
+                    },
+                    "appName": {
+                        "type": "string",
+                        "description": "Name given to the app when it was created",
+                        "example": "my test app"
+                    },
+                    "storeId": {
+                        "description": "Id of the store to which the app belongs",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/StoreId"
+                            }
+                        ]
+                    },
+                    "created": {
+                        "type": "integer",
+                        "example": 1651554744,
+                        "description": "UNIX timestamp for when the app was created"
+                    },
+                    "appType": {
+                        "type": "string",
+                        "example": "PointOfSale",
+                        "description": "Type of the app which was created"
+                    },
+                    "archived": {
+                        "type": "boolean",
+                        "description": "If true, the app does not appear in the apps list by default.",
+                        "default": false,
+                        "nullable": true
+                    }
+                }
+            },
+            "PointOfSaleBaseData": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/AppBaseData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "description": "Display title of the app",
+                                "example": "My PoS app",
+                                "nullable": true
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "App description",
+                                "example": "This is my amazing PoS app",
+                                "nullable": true
+                            },
+                            "defaultView": {
+                                "type": "string",
+                                "description": "App view type (e.g., static, cart, etc...)",
+                                "example": "Cart",
+                                "x-enumNames": [
+                                    "Static",
+                                    "Cart",
+                                    "Light",
+                                    "Print"
+                                ],
+                                "enum": [
+                                    "Static",
+                                    "Cart",
+                                    "Light",
+                                    "Print"
+                                ],
+                                "nullable": true
+                            },
+                            "showItems": {
+                                "type": "boolean",
+                                "default": false,
+                                "description": "Display item selection for keypad",
+                                "example": true,
+                                "nullable": true
+                            },
+                            "showCustomAmount": {
+                                "type": "boolean",
+                                "description": "Whether the option to enter a custom amount is shown",
+                                "example": true,
+                                "nullable": true
+                            },
+                            "showDiscount": {
+                                "default": false,
+                                "type": "boolean",
+                                "description": "Whether the option to enter a discount is shown",
+                                "example": false,
+                                "nullable": true
+                            },
+                            "showSearch": {
+                                "type": "boolean",
+                                "description": "Display the search bar",
+                                "example": false,
+                                "default": true,
+                                "nullable": true
+                            },
+                            "showCategories": {
+                                "type": "boolean",
+                                "description": "Display the list of categories",
+                                "example": false,
+                                "default": true,
+                                "nullable": true
+                            },
+                            "enableTips": {
+                                "default": false,
+                                "type": "boolean",
+                                "description": "Whether the option to enter a tip is shown",
+                                "example": true,
+                                "nullable": true
+                            },
+                            "currency": {
+                                "type": "string",
+                                "description": "Currency used for the app",
+                                "example": "BTC",
+                                "nullable": true
+                            },
+                            "fixedAmountPayButtonText": {
+                                "type": "string",
+                                "description": "Payment button text template for items with a set price",
+                                "example": "Buy for {0}",
+                                "nullable": true
+                            },
+                            "customAmountPayButtonText": {
+                                "type": "string",
+                                "description": "Payment button text which appears for items which allow user to input a custom amount",
+                                "example": "Pay",
+                                "nullable": true
+                            },
+                            "tipText": {
+                                "type": "string",
+                                "description": "Prompt which appears next to the tip amount field if tipping is enabled",
+                                "example": "Do you want to leave a tip?",
+                                "nullable": true
+                            },
+                            "customTipPercentages": {
+                                "type": "array",
+                                "description": "Array of predefined tip percentage amounts",
+                                "items": {
+                                    "type": "number"
+                                },
+                                "default": [
+                                    15,
+                                    18,
+                                    20
+                                ],
+                                "nullable": true
+                            },
+                            "notificationUrl": {
+                                "type": "string",
+                                "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations",
+                                "nullable": true
+                            },
+                            "redirectUrl": {
+                                "type": "string",
+                                "description": "URL user is redirected to once invoice is paid",
+                                "nullable": true
+                            },
+                            "redirectAutomatically": {
+                                "type": "boolean",
+                                "description": "Whether user is redirected to specified redirect URL automatically after the invoice is paid",
+                                "example": true,
+                                "nullable": true
+                            },
+                            "htmlLang": {
+                                "type": "string",
+                                "description": "Used for SEO, the [HTML Lang](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang) of the page",
+                                "nullable": true,
+                                "example": "en"
+                            },
+                            "htmlMetaTags": {
+                                "type": "string",
+                                "description": "Used for SEO, the [Meta tags](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta) of the page",
+                                "nullable": true,
+                                "example": "<meta name=\"description\" content=\"Your description\">"
+                            },
+                            "formId": {
+                                "type": "string",
+                                "description": "Form ID to request customer data",
+                                "nullable": true
+                            }
+                        }
+                    }
+                ]
+            },
+            "PointOfSaleAppRequest": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/PointOfSaleBaseData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "template": {
+                                "type": "string",
+                                "description": "JSON of item available in the app"
+                            }
+                        }
+                    }
+                ]
+            },
+            "PointOfSaleAppData": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/PointOfSaleBaseData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/AppItem"
+                                },
+                                "description": "JSON object of app items",
+                                "example": [
+                                    {
+                                        "id": "green tea",
+                                        "title": "Green Tea",
+                                        "description": "Lovely, fresh and tender, Meng Ding Gan Lu ('sweet dew') is grown in the lush Meng Ding Mountains of the southwestern province of Sichuan where it has been cultivated for over a thousand years.",
+                                        "image": "~/img/pos-sample/green-tea.jpg",
+                                        "price": "1.0",
+                                        "priceType": "Fixed",
+                                        "buyButtonText": null,
+                                        "inventory": 5,
+                                        "paymentMethods": null,
+                                        "disabled": false
+                                    },
+                                    {
+                                        "id": "black tea",
+                                        "title": "Black Tea",
+                                        "description": "Tian Jian Tian Jian means 'heavenly tippy tea' in Chinese, and it describes the finest grade of dark tea. Our Tian Jian dark tea is from Hunan province which is famous for making some of the best dark teas available.",
+                                        "image": "~/img/pos-sample/black-tea.jpg",
+                                        "price": "2.0",
+                                        "priceType": "Fixed",
+                                        "buyButtonText": "Test Buy Button Text",
+                                        "inventory": null,
+                                        "paymentMethods": null,
+                                        "disabled": false
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
+            },
+            "CrowdfundBaseData": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/AppBaseData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "description": "Display title of the app",
+                                "example": "My crowdfund app",
+                                "nullable": true
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "App description",
+                                "example": "My crowdfund description",
+                                "nullable": true
+                            },
+                            "enabled": {
+                                "type": "boolean",
+                                "description": "Whether the app is enabled to be viewed by everyone",
+                                "example": true,
+                                "nullable": true
+                            },
+                            "enforceTargetAmount": {
+                                "type": "boolean",
+                                "description": "Whether contributions over the set target amount are allowed",
+                                "example": false,
+                                "nullable": true
+                            },
+                            "startDate": {
+                                "type": "number",
+                                "description": "UNIX timestamp for crowdfund start time (https://www.unixtimestamp.com/)",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/UnixTimestamp"
+                                    }
+                                ],
+                                "example": 768658369,
+                                "nullable": true
+                            },
+                            "endDate": {
+                                "type": "number",
+                                "description": "UNIX timestamp for crowdfund end time (https://www.unixtimestamp.com/)",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/UnixTimestamp"
+                                    }
+                                ],
+                                "example": 771336769,
+                                "nullable": true
+                            },
+                            "targetCurrency": {
+                                "type": "string",
+                                "description": "Target currency for the crowdfund",
+                                "example": "BTC",
+                                "nullable": true
+                            },
+                            "targetAmount": {
+                                "type": "number",
+                                "description": "Target amount for the crowdfund",
+                                "example": 420.69,
+                                "nullable": true
+                            },
+                            "mainImageUrl": {
+                                "type": "string",
+                                "description": "URL for image used as a cover image for the app",
+                                "nullable": true
+                            },
+                            "notificationUrl": {
+                                "type": "string",
+                                "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations",
+                                "nullable": true
+                            },
+                            "tagline": {
+                                "type": "string",
+                                "description": "Tagline for the app displayed to user",
+                                "example": "I can't believe it's not butter",
+                                "nullable": true
+                            },
+                            "disqusEnabled": {
+                                "type": "boolean",
+                                "description": "Whether Disqus is enabled for the app",
+                                "nullable": true
+                            },
+                            "disqusShortname": {
+                                "type": "string",
+                                "description": "Disqus shortname to used for the app",
+                                "nullable": true
+                            },
+                            "soundsEnabled": {
+                                "type": "boolean",
+                                "description": "Whether sounds on new contributions are enabled",
+                                "example": false,
+                                "nullable": true
+                            },
+                            "animationsEnabled": {
+                                "type": "boolean",
+                                "description": "Whether background animations on new contributions are enabled",
+                                "example": true,
+                                "nullable": true
+                            },
+                            "resetEveryAmount": {
+                                "type": "number",
+                                "description": "Contribution goal reset frequency amount",
+                                "example": 1,
+                                "nullable": true
+                            },
+                            "resetEvery": {
+                                "type": "string",
+                                "description": "Contribution goal reset frequency",
+                                "example": "Day",
+                                "nullable": true
+                            },
+                            "displayPerksValue": {
+                                "type": "boolean",
+                                "description": "Whether perk values are displayed",
+                                "example": false,
+                                "nullable": true
+                            },
+                            "sortPerksByPopularity": {
+                                "type": "boolean",
+                                "description": "Whether perks are sorted by popularity",
+                                "default": true,
+                                "nullable": true
+                            },
+                            "sounds": {
+                                "type": "array",
+                                "description": "Array of custom sounds which can be used on new contributions",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": [
+                                    "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/AQS/doublekill.wav"
+                                ],
+                                "nullable": true
+                            },
+                            "animationColors": {
+                                "type": "array",
+                                "description": "Array of custom HEX colors which can be used for background animations on new contributions",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": [
+                                    "#FF0000",
+                                    "#00FF00",
+                                    "#0000FF"
+                                ],
+                                "nullable": true
+                            },
+                            "htmlLang": {
+                                "type": "string",
+                                "description": "Used for SEO, the [HTML Lang](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang) of the page",
+                                "nullable": true,
+                                "example": "en"
+                            },
+                            "htmlMetaTags": {
+                                "type": "string",
+                                "description": "Used for SEO, the [Meta tags](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta) of the page",
+                                "nullable": true,
+                                "example": "<meta name=\"description\" content=\"Your description\">"
+                            },
+                            "formId": {
+                                "type": "string",
+                                "description": "Form ID to request customer data",
+                                "nullable": true
+                            }
+                        }
+                    }
+                ]
+            },
+            "CrowdfundAppRequest": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/CrowdfundBaseData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "perksTemplate": {
+                                "type": "string",
+                                "description": "JSON of perks available in the app"
+                            }
+                        }
+                    }
+                ]
+            },
+            "CrowdfundAppData": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/CrowdfundBaseData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "perks": {
+                                "type": "object",
+                                "description": "JSON of perks available in the app",
+                                "example": [
+                                    {
+                                        "description": null,
+                                        "id": "test perk",
+                                        "image": null,
+                                        "price": {
+                                            "type": 2,
+                                            "formatted": "$100.00",
+                                            "value": 100.0
+                                        },
+                                        "title": "test perk",
+                                        "buyButtonText": null,
+                                        "inventory": null,
+                                        "paymentMethods": null,
+                                        "disabled": false
+                                    },
+                                    {
+                                        "description": "this is an amazing perk",
+                                        "id": "test test",
+                                        "image": "https://mainnet.demo.btcpayserver.org/img/errorpages/404_nicolas.jpg",
+                                        "price": {
+                                            "type": 1,
+                                            "formatted": "$69.42",
+                                            "value": 69.42
+                                        },
+                                        "title": "test test",
+                                        "buyButtonText": null,
+                                        "inventory": 5,
+                                        "paymentMethods": null,
+                                        "disabled": false
+                                    },
+                                    {
+                                        "description": null,
+                                        "id": "f$t45hj764325",
+                                        "image": null,
+                                        "price": {
+                                            "type": 0,
+                                            "formatted": null,
+                                            "value": null
+                                        },
+                                        "title": "amazing perk",
+                                        "buyButtonText": "button text",
+                                        "inventory": null,
+                                        "paymentMethods": null,
+                                        "disabled": true
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
+            },
+            "AppItem": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "green-tea",
+                        "description": "Unique ID of the item"
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Green Tea",
+                        "description": "The display name of the item"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Lovely, fresh and tender.",
+                        "description": "A description text for the item"
+                    },
+                    "image": {
+                        "type": "string",
+                        "example": "http://teashop.com/img/green-tea.jpg",
+                        "description": "An image URL for the item"
+                    },
+                    "price": {
+                        "type": "string",
+                        "format": "decimal",
+                        "nullable": true,
+                        "example": "21.0"
+                    },
+                    "priceType": {
+                        "type": "string",
+                        "x-enumNames": [
+                            "Fixed",
+                            "Topup",
+                            "Minimum"
+                        ],
+                        "enum": [
+                            "Fixed",
+                            "Topup",
+                            "Minimum"
+                        ]
+                    },
+                    "buyButtonText": {
+                        "type": "string",
+                        "example": "Buy me!",
+                        "description": "A custom text for the buy button for the item"
+                    },
+                    "inventory": {
+                        "type": "integer",
+                        "nullable": true,
+                        "example": 21,
+                        "description": "The remaining stock the item"
+                    },
+                    "disabled": {
+                        "type": "boolean",
+                        "description": "If true, the item does not appear in the list by default.",
+                        "default": false
+                    }
+                }
+            },
+            "AppSalesStats": {
+                "type": "object",
+                "properties": {
+                    "salesCount": {
+                        "type": "integer",
+                        "example": 615,
+                        "description": "Total sales in that period"
+                    },
+                    "series": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AppSalesStatsItem"
+                        }
+                    }
+                }
+            },
+            "AppSalesStatsItem": {
+                "type": "object",
+                "properties": {
+                    "date": {
+                        "type": "integer",
+                        "description": "UNIX timestamp of the beginning of that day"
+                    },
+                    "label": {
+                        "type": "string",
+                        "description": "Short date as label",
+                        "example": "Jul 21"
+                    },
+                    "salesCount": {
+                        "type": "integer",
+                        "example": 21,
+                        "description": "Total sales on that day"
+                    }
+                }
+            },
+            "AppItemStats": {
+                "type": "object",
+                "properties": {
+                    "itemCode": {
+                        "type": "string",
+                        "description": "Item ID"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Item Name"
+                    },
+                    "salesCount": {
+                        "type": "integer",
+                        "example": 21,
+                        "description": "Total sales of that item"
+                    },
+                    "total": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The total amount of sales of that item"
+                    },
+                    "totalFormatted": {
+                        "type": "string",
+                        "description": "The formatted total amount of sales of that item",
+                        "example": "615.21 USD"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Apps",
+            "description": "App operations"
+        },
+        {
+            "name": "Crowdfund",
+            "description": "Crowdfund operations"
+        },
+        {
+            "name": "Point of Sale",
+            "description": "Point of Sale operations"
+        }
+    ]
+}

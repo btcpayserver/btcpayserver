@@ -1,0 +1,118 @@
+<template id="lnurl-withdraw-template">
+    <div v-if="display" class="mt-4" id="NFC">
+        <div v-if="nfcErrorMessage" class="alert alert-danger" v-text="nfcErrorMessage"></div>
+        <div v-if="nfcWarningMessage" class="alert alert-warning" v-text="nfcWarningMessage"></div>
+        <button class="btn btn-secondary rounded-pill w-100" type="button" id="PayByNFC"
+                :disabled="nfcScanning || submitting" v-on:click="handleClick">{{btnText}}</button>
+    </div>
+</template>
+<script>
+Vue.component("lnurl-withdraw-checkout", {
+    template: "#lnurl-withdraw-template",
+    props: {
+        model: Object,
+        nfcSupported: Boolean,
+        nfcScanning: Boolean,
+        nfcErrorMessage: String,
+        nfcWarningMessage: String
+    },
+    computed: {
+        display () {
+            const {
+                onChainWithLnInvoiceFallback: isUnified,
+                paymentMethodId: activePaymentMethodId,
+                availablePaymentMethods: availablePaymentMethods,
+                invoiceBitcoinUrl: paymentUrl
+            } = this.model
+            const lnurlwAvailable = 
+                // Either we have LN or LNURL available directly
+                !!availablePaymentMethods.find(pm => ['BTC-LNURL', 'BTC-LN'].includes(pm.paymentMethodId)) ||
+                // Or the BIP21 payment URL flags Lightning support
+                !!paymentUrl.match(/lightning=ln/i)
+            const isAvailable = activePaymentMethodId === 'BTC-LNURL' || (
+                // Unified QR/BIP21 case
+                (activePaymentMethodId === 'BTC-CHAIN' && isUnified && lnurlwAvailable) ||
+                // Lightning with LNURL available
+                (activePaymentMethodId === 'BTC-LN' && lnurlwAvailable))
+            return isAvailable && (this.nfcSupported || this.testFallback)
+        },
+        testFallback () {
+            return !this.nfcSupported && window.location.search.match('lnurlwtest=(1|true)')
+        },
+        btnText () {
+            if (this.nfcSupported) {
+                if (this.submitting) {
+                    return this.$t('submitting_nfc')
+                } else if (this.nfcScanning) {
+                    return this.$t('scanning_nfc')
+                } else {
+                    return this.$t('pay_by_nfc')
+                }
+            } else {
+                return this.$t('pay_by_lnurl')
+            }
+        }
+    },
+    data () {
+        return {
+				url: @Safe.Json(Url.ActionAbsolute(Context.Request, "SubmitLNURLWithdrawForInvoice", "NFC").ToString()),
+            amount: 0,
+            submitting: false
+        }
+    },
+    beforeMount () {
+        this.$root.$on('read-nfc-data', this.sendData)
+    },
+    beforeDestroy () {
+        this.$root.$off('read-nfc-data')
+    },
+    methods: {
+        async handleClick () {
+            if (this.nfcSupported) {
+                this.$emit('start-nfc-scan')
+            } else {
+                if (this.model.isUnsetTopUp) {
+                    this.handleUnsetTopUp()
+                    if (!this.amount) {
+                        return;
+                    }
+                }
+                const lnurl = prompt("Enter LNURL-Withdraw")
+                if (lnurl) {
+                    await this.sendData(lnurl)
+                }
+            }
+        },
+        handleUnsetTopUp () {
+            const amountStr = prompt("How many sats do you want to pay?")
+            if (amountStr) {
+                try {
+                    this.amount = parseInt(amountStr)
+                } catch {
+                    alert("Please provide a valid number amount in sats")
+                }
+            }
+            return false
+        },
+        async sendData (data) {
+            this.submitting = true
+            this.$emit('handle-nfc-data')
+            
+            // Post LNURL-Withdraw data to server
+            const body = JSON.stringify({ lnurl: data, invoiceId: this.model.invoiceId, amount: this.amount })
+            const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
+            const response = await fetch(this.url, opts)
+
+            // Handle response
+            try {
+                const result = await response.text()
+                const action = response.ok ? 'handle-nfc-result' : 'handle-nfc-error'
+                this.$emit(action, result)
+            } catch (error) {
+                this.$emit('handle-nfc-error', error)
+            }
+            this.submitting = false
+        }
+    }
+});
+</script>

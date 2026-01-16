@@ -1,0 +1,10 @@
+@model BTCPayServer.Abstractions.Form.Form
+@using ExchangeSharp
+
+@if (Model.TopMessages.Count > 0)
+{
+    @foreach (var alertMessage in Model.TopMessages)
+    {
+        <p class="alert alert-@alertMessage.Type.ToStringLowerInvariant()">@alertMessage.Message</p>
+    }
+}

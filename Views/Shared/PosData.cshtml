@@ -1,0 +1,89 @@
+@using BTCPayServer.Services.Invoices
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model (Dictionary<string, object> Items, int Level)
+
+@if (Model.Items.Any())
+{
+    <table class="table my-0" v-pre>
+        @if (Model.Items.Keys.Any(WellKnownPosData.IsWellKnown))
+        {
+            _ = Model.Items.TryGetValue("cart", out var cart) || Model.Items.TryGetValue("Cart", out cart);
+            if (cart is Dictionary<string, object> { Keys.Count: > 0 } cartDict)
+            {
+                <tbody>
+                @foreach (var (key, value) in cartDict)
+                {
+                    <tr>
+                        <partial name="PosDataEntry" model="(key, value, Model.Level)"/>
+                    </tr>
+                }
+                </tbody>
+            }
+            else if (cart is ICollection<object> { Count: > 0 } cartCollection)
+            {
+                <tbody>
+                @foreach (var value in cartCollection)
+                {
+                    <tr>
+                        <partial name="PosDataEntry" model="(string.Empty, value, Model.Level)"/>
+                    </tr>
+                }
+                </tbody>
+            }
+            var posData = WellKnownPosData.TryParse(Model.Items) ?? new();
+            <tfoot style="border-top-width:0">
+            @if (posData.ItemsTotal != null)
+            {
+                <tr>
+                    <th text-translate="true">Items total</th>
+                    <td class="text-end">@posData.ItemsTotal</td>
+                </tr>
+            }
+            @if (posData.Discount != null)
+            {
+                <tr>
+                    <th text-translate="true">Discount</th>
+                    <td class="text-end">@posData.Discount</td>
+                </tr>
+            }
+            @if (posData.Subtotal != null)
+            {
+                <tr>
+                    <th text-translate="true">Subtotal</th>
+                    <td class="text-end">@posData.Subtotal</td>
+                </tr>
+            }
+            @if (posData.Tax != null)
+            {
+                <tr>
+                    <th text-translate="true">Tax</th>
+                    <td class="text-end">@posData.Tax</td>
+                </tr>
+            }
+            @if (posData.Tip != null)
+            {
+                <tr>
+                        <th text-translate="true">Tip</th>
+                        <td class="text-end">@posData.Tip</td>
+                </tr>
+            }
+            @if (posData.Total != null)
+            {
+                <tr style="border-top-width:3px">
+                    <th text-translate="true">Total</th>
+                    <td class="text-end">@posData.Total</td>
+                </tr>
+            }
+            </tfoot>
+        }
+        else
+        {
+            foreach (var (key, value) in Model.Items)
+            {
+                <tr>
+                    <partial name="PosDataEntry" model="(key, value, Model.Level)"/>
+                </tr>
+            }
+        }
+    </table>
+}

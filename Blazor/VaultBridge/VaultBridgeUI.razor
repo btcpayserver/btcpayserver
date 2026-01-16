@@ -1,0 +1,122 @@
+@using System.Threading
+@using BTCPayServer.Blazor.VaultBridge.Elements
+@using Microsoft.AspNetCore.Mvc.Localization
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer stringLocalizer
+@inject ViewLocalizer viewLocalizer
+@inject IJSRuntime jsRuntime
+@inject IServiceProvider serviceProvider
+@implements IDisposable
+
+@foreach (var e in this.Elements)
+{
+    @e.RenderFragment
+}
+
+@code {
+    [Parameter] public IController Controller { get; set; }
+
+    public List<VaultElement> Elements { get; set; } = new List<VaultElement>();
+
+    public new void StateHasChanged()
+    {
+        base.StateHasChanged();
+    }
+
+    public async Task Connect()
+    {
+        try
+        {
+            await Controller.Run(this, CancellationToken);
+        }
+        catch when (CancellationToken.IsCancellationRequested)
+        {
+        }
+        catch (Exception e)
+        {
+            this.ShowFeedback(FeedbackType.Failed, StringLocalizer["An unexpected error happened: {0}", e.Message]);
+            if (e is VaultClient.VaultException)
+                ShowRetry();
+            else
+                throw;
+        }
+    }
+
+    public void ShowRetry()
+    {
+        if (!Elements.OfType<Retry>().Any())
+        {
+            Elements.Add(new Retry(this));
+            this.StateHasChanged();
+        }
+    }
+
+    public void AddWarning(LocalizedHtmlString str)
+    {
+        Elements.Insert(0, new Warning(this, str));
+        this.StateHasChanged();
+    }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await Connect();
+    }
+
+    public void ShowFeedback(FeedbackType state, LocalizedString str)
+    {
+        var feedback = new Feedback(str, state);
+        ShowFeedback(feedback);
+    }
+    public void ShowFeedback(FeedbackType state, LocalizedHtmlString str)
+    {
+        var feedback = new Feedback(str, state);
+        ShowFeedback(feedback);
+    }
+    public void ShowFeedback(Feedback feedback)
+    {
+        var lastFeedback =(Feedback)(Elements.FindLastIndex(e => e is Feedback) switch
+        {
+            int i when i >= 0 => Elements[i],
+            _ => null
+        });
+        
+        if (lastFeedback is null || lastFeedback.State == FeedbackType.Success)
+        {
+            Elements.Add(feedback);
+        }
+        else
+        {
+            // Replace the last non successful feedback by the new one
+            for (int i = Elements.Count - 1; i >= 0; i--)
+            {
+                if (Elements[i] == lastFeedback)
+                    break;
+                Elements.RemoveAt(i);
+            }
+            Elements[^1] = feedback;
+        }
+        this.StateHasChanged();
+    }
+
+    public void AddElement(VaultElement el)
+    {
+        Elements.Add(el);
+        this.StateHasChanged();
+    }
+
+    CancellationTokenSource _Cts = new CancellationTokenSource();
+    public CancellationToken CancellationToken => _Cts.Token;
+    public IStringLocalizer StringLocalizer => stringLocalizer;
+    public ViewLocalizer ViewLocalizer => viewLocalizer;
+    public IJSRuntime JSRuntime => jsRuntime;
+    public IServiceProvider ServiceProvider => serviceProvider;
+    public void Dispose()
+    {
+        _Cts.Cancel();
+        foreach (var el in Elements.OfType<IDisposable>())
+        {
+            el.Dispose();
+        }
+    }
+
+}

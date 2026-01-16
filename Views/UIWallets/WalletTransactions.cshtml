@@ -1,0 +1,289 @@
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Client
+@using BTCPayServer.Components
+@using BTCPayServer.Components.WalletNav
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Html
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model ListTransactionsViewModel
+
+@{
+    var walletId = Context.GetRouteValue("walletId").ToString();
+    var storeId = Context.GetRouteValue("storeId")?.ToString();
+    var cryptoCode = Context.GetRouteValue("cryptoCode")?.ToString();
+    var labelFilter = Context.Request.Query["labelFilter"].ToString();
+    var wallet = walletId != null ? WalletId.Parse(walletId) : new WalletId(storeId, cryptoCode);
+    storeId = wallet.StoreId;
+
+    ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Transactions)}-{Model.CryptoCode}", StringLocalizer["{0} Transactions", Model.CryptoCode])
+        .SetCategory(WellKnownCategories.ForWallet(Model.CryptoCode)));
+}
+
+@section PageHeadContent {
+    <script src="~/vendor/tom-select/tom-select.complete.min.js" asp-append-version="true"></script>
+    <link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" asp-append-version="true" rel="stylesheet">
+    <style>
+        .smMaxWidth {
+            max-width: 125px;
+        }
+
+        @@media (min-width: 990px) {
+            .smMaxWidth {
+                max-width: 200px;
+            }
+        }
+
+        /* pull actions area, so that it is besides the search form */
+        @@media (min-width: 1200px) {
+            #Filter + #Dropdowns {
+                margin-top: -4rem;
+                float: right;
+            }
+
+            #Filter + #Dropdowns #Actions {
+                order: 1;
+            }
+        }
+
+        #LoadingIndicator {
+            margin-bottom: 1.5rem;
+        }
+    </style>
+}
+
+@section PageFootContent {
+    @*Without async, somehow selenium do not manage to click on links in this page*@
+    <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
+    @* Custom Range Modal *@
+    <script>
+        const $actions = document.getElementById('ListActions');
+        const $transactions = document.getElementById('WalletTransactions');
+        const $list = document.getElementById('WalletTransactionsList');
+        const $dropdowns = document.getElementById('Dropdowns');
+        const $indicator = document.getElementById('LoadingIndicator');
+
+        delegate('click', '#GoToTop', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        if ($actions && $actions.offsetTop - window.innerHeight > 0) {
+            document.getElementById('GoToTop').classList.remove('d-none');
+        }
+
+        const count = @Safe.Json(Model.Count);
+        const skipInitial = @Safe.Json(Model.Skip);
+		const loadMoreUrl = @Safe.Json(Url.Action("WalletTransactions", new {walletId, labelFilter, skip = Model.Skip, count = Model.Count, loadTransactions = true}));
+		// The next time we load transactions, skip will become 0
+        let skip = @Safe.Json(Model.Skip) - count;
+
+        async function loadMoreTransactions() {
+            $indicator.classList.remove('d-none');
+
+            const skipNext = skip + count;
+            const url = loadMoreUrl.replace(`skip=${skipInitial}`, `skip=${skipNext}`)
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'text/html',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (response.ok) {
+                const html = await response.text();
+                const responseEmpty = html.trim() === '';
+                $list.insertAdjacentHTML('beforeend', html);
+                skip = skipNext;
+
+                if (responseEmpty) {
+                    // in case the response html was empty, remove the observer and stop loading
+                    observer.unobserve($actions);
+                }
+                if (!$transactions.dataset.loaded) {
+                    $transactions.dataset.loaded = 'true';
+                    // replace table and dropdowns if initial response was empty
+                    if (responseEmpty) {
+                        $dropdowns.remove();
+                        $transactions.innerHTML = '<div class="text-secondary" data-loaded="true">There are no transactions yet.</div>';
+                    }
+                }
+            }
+
+            $indicator.classList.add('d-none');
+            formatDateTimes(document.querySelector('#WalletTransactions .switch-time-format').dataset.mode);
+            initLabelManagers();
+        }
+
+		const observer = new IntersectionObserver(async entries => {
+            const { isIntersecting } = entries[0];
+            if (isIntersecting) {
+                await loadMoreTransactions();
+            }
+        }, { rootMargin: '128px' });
+
+        // the actions div marks the end of the list table
+        observer.observe($actions);
+    </script>
+}
+
+<div class="sticky-header">
+    <vc:wallet-nav wallet-id="wallet"/>
+</div>
+<partial name="_StatusMessage" />
+
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3" id="Dropdowns">
+    @if (Model.Labels.Any())
+    {
+        <div class="btn-group" id="Filter">
+            <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                @if (string.IsNullOrEmpty(labelFilter))
+                {
+                    <span class="text-secondary" text-translate="true">Filter by label</span>
+                }
+                else
+                {
+                    <span class="text-secondary" text-translate="true">Label:</span>
+                    <span>@labelFilter</span>
+                }
+            </button>
+            <ul class="dropdown-menu">
+                @foreach (var label in Model.Labels)
+                {
+                    <li><a asp-route-labelFilter="@label.Text" class="dropdown-item transaction-label-text@(labelFilter == label.Text ? " active" : string.Empty)" style="--btcpay-dropdown-link-active-bg:@label.Color;--btcpay-dropdown-link-active-color:@label.TextColor;">@label.Text</a></li>
+                }
+                @if (!string.IsNullOrEmpty(labelFilter))
+                {
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" asp-route-labelFilter="" text-translate="true">Clear filter</a></li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="dropdown d-inline-flex align-items-center gap-3 ms-auto" id="Export">
+        <a
+            id="view-report"
+            permission="@Policies.CanViewReports"
+            asp-controller="UIReports"
+            asp-action="StoreReports"
+            asp-route-storeId="@storeId"
+            asp-route-viewName="Wallets"
+            class="btn btn-secondary">
+            <vc:icon symbol="nav-reporting" />
+            <span text-translate="true">Reporting</span>
+        </a>
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" text-translate="true">
+            Export
+        </button>
+        <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
+            <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="csv" asp-route-labelFilter="@labelFilter" class="dropdown-item export-link" target="_blank" id="ExportCSV">CSV</a>
+            <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="json" asp-route-labelFilter="@labelFilter" class="dropdown-item export-link" target="_blank" id="ExportJSON">JSON</a>
+            <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="bip329" asp-route-labelFilter="@labelFilter" class="dropdown-item export-link" target="_blank" id="ExportBIP329">Wallet Labels (BIP-329)</a>
+        </div>
+    </div>
+</div>
+<div style="clear:both"></div>
+
+@if (Model.PendingTransactions?.Any() == true)
+{
+    <div class="table-responsive-md">
+        <table class="table table-hover ">
+            <thead>
+                <th>Id</th>
+                <th>State</th>
+                <th>Signatures</th>
+                <th>Scheme</th>
+                <th>Actions</th>
+            </thead>
+            @for (var index = 0; index < Model.PendingTransactions.Length; index++)
+            {
+                var pendingTransaction = Model.PendingTransactions[index];
+                var ptblob = @pendingTransaction.GetBlob();
+                <tr>
+                    <td>@pendingTransaction.TransactionId</td>
+                    <td>@pendingTransaction.State</td>
+                    <td><span id="Sigs_@(index)__Collected">@ptblob?.SignaturesCollected</span></td>
+                    <td><span id="Sigs_@(index)__Scheme">@ptblob?.SignaturesNeeded/@ptblob?.SignaturesTotal</span></td>
+                    <td>
+                        <a asp-action="ViewPendingTransaction" asp-route-walletId="@walletId"
+                           asp-route-pendingTransactionId="@pendingTransaction.Id">@(pendingTransaction.State == PendingTransactionState.Signed ? "Broadcast" : "View")</a>
+                        -
+                        <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId"
+                           asp-route-pendingTransactionId="@pendingTransaction.Id">Abort</a>
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+}
+
+
+<div id="WalletTransactions" class="table-responsive-md">
+    <table class="table table-hover mass-action">
+        <thead class="mass-action-head">
+        <tr>
+            <th class="only-for-js mass-action-select-col">
+                <input type="checkbox" class="form-check-input mass-action-select-all" />
+            </th>
+            <th class="date-col">
+                <div class="d-flex align-items-center gap-3">
+                        <span text-translate="true">Date</span>
+                        <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="@StringLocalizer["Switch date format"]">
+                            <vc:icon symbol="time" />
+                        </button>
+                </div>
+            </th>
+            <th text-translate="true" style="min-width:125px">Label</th>
+            <th text-translate="true">Transaction</th>
+            <th text-translate="true" class="amount-col">Amount</th>
+            <th text-translate="true" class="fee-col">Transaction fee</th>
+            @foreach (var rate in Model.Rates)
+            {
+                <th class="rate-col"><span text-translate="true">Rate</span>&nbsp;<span>(@rate)</span></th>
+            }
+            <th></th>
+        </tr>
+        </thead>
+        <thead class="mass-action-actions">
+        <tr>
+            <th class="only-for-js mass-action-select-col">
+                <input type="checkbox" class="form-check-input mass-action-select-all" />
+            </th>
+            <th colspan="5">
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <div>
+                        <strong class="mass-action-selected-count">0</strong>
+                            <span text-translate="true">selected</span>
+                    </div>
+                    <form id="WalletActions" method="post" asp-action="WalletActions" asp-route-walletId="@walletId" permission="@Policies.CanModifyStoreSettings" class="d-inline-flex align-items-center gap-3">
+                        <button id="BumpFee" name="command" type="submit" value="cpfp" class="btn btn-link">
+                            <vc:icon symbol="actions-send" />
+                            <span text-translate="true">Bump fee</span>
+                        </button>
+                    </form>
+                </div>
+            </th>
+        </tr>
+        </thead>
+        <tbody id="WalletTransactionsList">
+        <partial name="_WalletTransactionsList" model="Model" />
+        </tbody>
+    </table>
+</div>
+<noscript>
+    <vc:pager view-model="Model" />
+</noscript>
+
+<div class="text-center only-for-js d-none" id="LoadingIndicator">
+    <div class="spinner-border spinner-border-sm text-secondary ms-2" role="status">
+        <span class="visually-hidden" text-translate="true">Loading...</span>
+    </div>
+</div>
+<div class="d-flex flex-wrap align-items-center justify-content-center gap-3 mb-5 only-for-js" id="ListActions">
+    <button type="button" class="btn btn-secondary d-none" id="GoToTop" text-translate="true">Go to top</button>
+</div>
+
+<p class="mt-4 mb-0">
+    @ViewLocalizer["If BTCPay Server shows you an invalid balance, {0}.<br />If some transactions appear in BTCPay Server, but are missing in another wallet, {1}.",
+        Html.ActionLink(StringLocalizer["rescan your wallet"], "WalletRescan", "UIWallets", new { walletId = Context.GetRouteValue("walletId") }),
+        new HtmlString($"<a href=\"https://docs.btcpayserver.org/FAQ/Wallet/#missing-payments-in-my-software-or-hardware-wallet\" target=\"_blank\" rel=\"noreferrer noopener\">{StringLocalizer["follow these instructions"]}</a>")]
+</p>

@@ -1,0 +1,118 @@
+{
+    "paths": {
+        "/api/v1/server/email": {
+            "get": {
+                "tags": ["ServerEmail"],
+                "summary": "Get server email settings",
+                "description": "Retrieve the email settings configured for the server. The password field will be masked if present.",
+                "operationId": "ServerEmail_GetSettings",
+                "responses": {
+                    "200": {
+                        "description": "Server email settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetServerEmailSettings"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": ["btcpay.server.canmodifyserversettings"],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": ["ServerEmail"],
+                "summary": "Update server email settings",
+                "description": "Update server's email settings.",
+                "operationId": "ServerEmail_UpdateSettings",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateServerEmailSettings"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Server email settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetServerEmailSettings"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request or email format",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": ["btcpay.server.canmodifyserversettings"],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "UpdateServerEmailSettings": {
+                "allOf": [
+                    { "$ref": "#/components/schemas/UpdateEmailSettings" },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "enableStoresToUseServerEmailSettings": {
+                                "type": "boolean",
+                                "description": "Indicates if stores can use server email settings"
+                            }
+                        }
+                    }
+                ]
+            },
+            "GetServerEmailSettings": {
+                "allOf": [
+                    { "$ref": "#/components/schemas/GetEmailSettings" },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "enableStoresToUseServerEmailSettings": {
+                                "type": "boolean",
+                                "description": "Indicates if stores can use server email settings"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "ServerEmail",
+            "description": "Server Email Settings operations"
+        }
+    ]
+}

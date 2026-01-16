@@ -1,0 +1,108 @@
+{
+    "paths": {
+        "/api-keys/authorize": {
+            "get": {
+                "operationId": "ApiKeys_Authorize",
+                "tags": [
+                    "Authorization"
+                ],
+                "summary": "Authorize User",
+                "description": "Redirect the browser to this endpoint to request the user to generate an api-key with specific permissions",
+                "parameters": [
+                    {
+                        "name": "permissions",
+                        "description": "The permissions to request. (See API Key authentication)",
+                        "in": "query",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "nullable": true,
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "x-position": 1
+                    },
+                    {
+                        "name": "applicationName",
+                        "description": "The name of your application",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "x-position": 2
+                    },
+                    {
+                        "name": "strict",
+                        "description": "If permissions are specified, and strict is set to false, it will allow the user to reject some of permissions the application is requesting.",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean",
+                            "default": true,
+                            "nullable": true
+                        },
+                        "x-position": 3
+                    },
+                    {
+                        "name": "selectiveStores",
+                        "description": "If the application is requesting the CanModifyStoreSettings permission and selectiveStores is set to true, this allows the user to only grant permissions to selected stores under the user's control.",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false,
+                            "nullable": true
+                        },
+                        "x-position": 4
+                    },
+                    {
+                        "name": "redirect",
+                        "description": "The url to redirect to after the user consents, with the query parameters appended to it: permissions, user-id, api-key. If not specified, user is redirected to their API Key list.",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "url",
+                            "nullable": true
+                        },
+                        "x-position": 5
+                    },
+                    {
+                        "name": "applicationIdentifier",
+                        "description": "If specified, BTCPay Server will check if there is an existing API key associated with the user that also has this application identifier, redirect host AND the permissions required match(takes selectiveStores and strict into account). `applicationIdentifier` is ignored if redirect is not specified.",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "x-position": 6
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A HTML form that a user can use to confirm permissions to grant",
+                        "content": {
+                            "text/html": {}
+                        }
+                    },
+                    "307": {
+                        "description": "Makes browser do an HTTP POST request to the specified url in `redirect` with a JSON body consisting of `apiKey` (the api key created or matched), `permissions` (the permissions the user consented to), and `userId` (the id of the user that consented) upon consent"
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "text/html": {}
+                        }
+                    }
+                },
+                "security": []
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Authorization",
+            "description": "Authorization operations"
+        }
+    ]
+}

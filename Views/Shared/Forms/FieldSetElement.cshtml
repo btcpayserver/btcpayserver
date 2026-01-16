@@ -1,0 +1,18 @@
+@using BTCPayServer.Forms
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject FormComponentProviders FormComponentProviders
+@model BTCPayServer.Abstractions.Form.Field
+@if (!Model.Constant)
+{
+    <fieldset>
+        <legend class="h3 mt-4 mb-3">@Safe.Raw(Model.Label)</legend>
+        @foreach (var field in Model.Fields)
+        {
+			if (FormComponentProviders.TypeToComponentProvider.TryGetValue(field.Type, out var partial) && !string.IsNullOrEmpty(partial.View))
+			{
+			    field.Name = $"{(string.IsNullOrEmpty(Model.Name)? string.Empty: $"{Model.Name}_")}{field.Name}";
+			    <partial name="@partial.View" for="@field"></partial>
+			}
+        }
+    </fieldset>
+}

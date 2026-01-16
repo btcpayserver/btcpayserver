@@ -1,0 +1,241 @@
+@using BTCPayServer.Views.Server
+@model StoreEmailRuleViewModel
+
+@{
+    var storeId = Model.StoreId;
+    var isEdit = !Model.IsNew;
+    if (storeId is not null)
+    {
+        ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Emails), StringLocalizer[isEdit ? "Edit Email Rule" : "Create Email Rule"])
+            .SetCategory(WellKnownCategories.Store));
+    }
+    else
+    {
+        ViewData.SetLayoutModel(new LayoutModel("Server-" + nameof(ServerNavPages.Emails), StringLocalizer[isEdit ? "Edit Email Rule" : "Create Email Rule"])
+            .SetCategory(WellKnownCategories.Server));
+    }
+}
+
+@section PageHeadContent {
+    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
+}
+
+<form id="save-form" method="post">
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    @if (storeId is not null)
+                    {
+                        <a asp-controller="UIStoresEmail" asp-action="StoreEmailSettings" asp-route-storeId="@storeId" text-translate="true">Emails</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="UIServerEmail" asp-action="ServerEmailSettings" text-translate="true">Server Emails</a>
+                    }
+                </li>
+                <li class="breadcrumb-item">
+                    @if (storeId is not null)
+                    {
+                        <a asp-action="StoreEmailRulesList" asp-route-storeId="@storeId" text-translate="true">Email Rules</a>
+                    }
+                    else
+                    {
+                        <a asp-action="ServerEmailRulesList" text-translate="true">Email Rules</a>
+                    }
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData.GetTitle()</li>
+            </ol>
+            <h2>@ViewData.GetTitle()</h2>
+        </nav>
+        <div>
+            <button id="page-primary" type="submit" class="btn btn-primary" text-translate="true">Save</button>
+            <a asp-action="StoreEmailRulesList" asp-route-storeId="@storeId" class="btn btn-secondary" text-translate="true">Cancel</a>
+        </div>
+    </div>
+    <partial name="_StatusMessage" />
+
+    <input type="hidden" asp-for="OfferingId"></input>
+    <input type="hidden" asp-for="RedirectUrl"></input>
+    <div class="form-group">
+        <label asp-for="Trigger" class="form-label" data-required></label>
+        <input type="hidden" asp-for="CanChangeTrigger"></input>
+        @if (Model.CanChangeTrigger)
+        {
+            <select asp-for="Trigger"
+                    asp-items="@Model.Triggers.Select(t => new SelectListItem(StringLocalizer[t.Description], t.Trigger))"
+                    class="form-select email-rule-trigger" required></select>
+            <span asp-validation-for="Trigger" class="text-danger"></span>
+            <div class="form-text" text-translate="true">Choose what event sends the email.</div>
+        }
+        else
+        {
+            <input type="hidden" asp-for="Trigger"></input>
+            <input asp-for="Trigger" class="form-control email-rule-trigger-hidden" disabled></input>
+        }
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Condition" class="form-label"></label>
+        <input type="hidden" asp-for="CanChangeCondition" ></input>
+        @if (Model.CanChangeCondition)
+        {
+            <input asp-for="Condition" class="form-control" placeholder="@StringLocalizer["A Postgres compatible JSON Path (eg. $ ? (@.Customer.Name == \"John\"))"]" />
+        }
+        else
+        {
+            <input type="hidden" asp-for="Condition"></input>
+            <input asp-for="Condition" class="form-control" disabled></input>
+        }
+        <span asp-validation-for="Condition" class="text-danger"></span>
+        <div class="form-text" text-translate="true">Only send email when the specified JSON Path exists</div>
+    </div>
+
+    @{
+        var placeholder = "\"John Smith\" <john.smith@example.com>, john.smith@example.com, {Placeholder}";
+    }
+    <div class="form-group">
+        <label asp-for="To" class="form-label" text-translate="true">To</label>
+        <input type="text" asp-for="To" placeholder="@placeholder" class="form-control email-rule-to" />
+        <span asp-validation-for="To" class="text-danger"></span>
+        <div class="form-text" text-translate="true">Who to send the email to. For multiple emails, separate with a comma.</div>
+    </div>
+    <div class="form-group">
+        <label asp-for="CC" class="form-label" text-translate="true">CC</label>
+        <input type="text" asp-for="CC" placeholder="@placeholder" class="form-control email-rule-cc" />
+        <span asp-validation-for="CC" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="BCC" class="form-label" text-translate="true">BCC</label>
+        <input type="text" asp-for="BCC" placeholder="@placeholder" class="form-control email-rule-bcc" />
+        <span asp-validation-for="BCC" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-4 customer-email-container">
+        <input asp-for="AdditionalData.CustomerEmail" type="checkbox" class="form-check-input email-rule-customer-email customer-email-checkbox" />
+        <label asp-for="AdditionalData.CustomerEmail" class="form-check-label" text-translate="true">Send the email to the buyer, if email was provided to the invoice</label>
+        <span asp-validation-for="AdditionalData.CustomerEmail" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Subject" class="form-label" data-required></label>
+        <input type="text" asp-for="Subject" class="form-control email-rule-subject" />
+        <span asp-validation-for="Subject" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Body" class="form-label" data-required></label>
+        <textarea asp-for="Body" class="form-control richtext email-rule-body" rows="4"></textarea>
+        <span asp-validation-for="Body" class="text-danger"></span>
+        <div class="form-text rounded bg-light p-2">
+            <h6 class="text-muted p-0" text-translate="true">Placeholders</h6>
+            <table id="placeholders" class="table">
+            </table>
+            <span>* These fields are JSON objects. You can access properties within them using <a href="https://www.newtonsoft.com/json/help/html/SelectToken.htm#SelectTokenJSONPath" rel="noreferrer noopener" target="_blank">this syntax</a>. One example is <code>{Invoice.Metadata.itemCode}</code></span>
+        </div>
+    </div>
+
+</form>
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
+    <script>
+        // Fix annoying summernote bug (need to go back to preview after changing codeview): https://github.com/summernote/summernote/issues/94
+        document.querySelector('#save-form').addEventListener('submit', function (e) {
+            const codeView = document.querySelector(".note-codeview-keep.active");
+            if (codeView) {
+                codeView.click();
+            }
+        });
+
+    </script>
+    <script>
+        var triggers = @Safe.Json(Model.Triggers);
+        var triggersByType = {};
+        for (var i = 0; i < triggers.length; i++) {
+            triggersByType[triggers[i].trigger] = triggers[i];
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const triggerSelect = document.querySelector('.email-rule-trigger') ?? document.querySelector('.email-rule-trigger-hidden');
+            const subjectInput = document.querySelector('.email-rule-subject');
+            const toInput = document.querySelector('.email-rule-to');
+            const ccInput = document.querySelector('.email-rule-cc');
+            const bccInput = document.querySelector('.email-rule-bcc');
+            const bodyTextarea = document.querySelector('.email-rule-body');
+            const placeholdersTd = document.querySelector('#placeholders');
+
+            function join(arr) {
+                return arr ? arr.join(', ') : '';
+            }
+            function applyTemplate() {
+                const selectedTrigger = triggerSelect.value;
+                if (triggersByType[selectedTrigger]) {
+                    subjectInput.value = triggersByType[selectedTrigger].defaultEmail.subject;
+                    toInput.value = join(triggersByType[selectedTrigger].defaultEmail.to);
+                    ccInput.value = join(triggersByType[selectedTrigger].defaultEmail.cc);
+                    bccInput.value = join(triggersByType[selectedTrigger].defaultEmail.bcc);
+                    var body = triggersByType[selectedTrigger].defaultEmail.body;
+
+                    if ($(bodyTextarea).summernote) {
+                        $(bodyTextarea).summernote('reset');
+                        $(bodyTextarea).summernote('code', body.replace(/\n/g, '<br/>'));
+                    } else {
+                        bodyTextarea.value = body;
+                    }
+                    applyPlaceholders();
+                }
+            }
+            function applyPlaceholders()
+            {
+                const selectedTrigger = triggerSelect.value;
+                if (triggersByType[selectedTrigger]) {
+                    placeholdersTd.innerHTML = '';
+                    triggersByType[selectedTrigger].placeHolders.forEach(p => {
+                        const tr = document.createElement('tr');
+                        const td1 = document.createElement('td');
+                        const td2 = document.createElement('td');
+                        const code = document.createElement('code');
+                        td1.appendChild(code);
+                        code.innerText = p.name;
+                        td2.innerText = p.description;
+                        tr.appendChild(td1);
+                        tr.appendChild(td2);
+                        placeholdersTd.appendChild(tr);
+                    });
+                }
+            }
+
+            function toggleCustomerEmailVisibility() {
+                const customerEmailContainer = document.querySelector('.customer-email-container');
+                const customerEmailCheckbox = document.querySelector('.customer-email-checkbox');
+                const selectedTrigger = triggerSelect.value;
+                if (triggersByType[selectedTrigger].defaultEmail.canIncludeCustomerEmail) {
+                    customerEmailContainer.style.display = 'block';
+                } else {
+                    customerEmailContainer.style.display = 'none';
+                    customerEmailCheckbox.checked = false;
+                }
+            }
+
+            triggerSelect.addEventListener('change', applyTemplate);
+            triggerSelect.addEventListener('change', toggleCustomerEmailVisibility);
+
+            // Apply template on page load if a trigger is selected
+            if (triggerSelect.value) {
+                if (@Safe.Json(!isEdit))
+                {
+                    applyTemplate();
+                }
+                else
+                {
+                    applyPlaceholders();
+                }
+                toggleCustomerEmailVisibility();
+            }
+        });
+    </script>
+
+}

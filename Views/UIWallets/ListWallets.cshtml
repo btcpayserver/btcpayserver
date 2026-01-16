@@ -1,0 +1,75 @@
+﻿@using BTCPayServer.Client
+@model BTCPayServer.Models.WalletViewModels.ListWalletsViewModel
+@{
+    ViewData.SetLayoutModel(new(nameof(WalletsNavPages.Index), StringLocalizer["Wallets"]));
+}
+
+<partial name="_StatusMessage" />
+
+<div class="d-sm-flex justify-content-between mb-2">
+    <h2 class="mb-0">
+        @ViewData["Title"]
+        <small>
+            <a href="https://docs.btcpayserver.org/Wallet/" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
+                <vc:icon symbol="info" />
+            </a>
+        </small>
+    </h2>
+    @if (Model.Wallets.Any())
+    {
+        <div class="mt-2 mt-sm-1">
+            @foreach (var balance in Model.BalanceForCryptoCode)
+            {
+                <div class="fs-5 fw-semibold">@($"{balance.Value.ShowMoney(balance.Key)} {balance.Key.CryptoCode}")</div>
+            }
+            <div class="text-muted text-sm-end fs-6" text-translate="true">Total Balance</div>
+        </div>
+    }
+</div>
+<div class="row">
+    <div class="col-lg-12">
+        @if (Model.Wallets.Any())
+        {
+            <div class="table-responsive-md">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th text-translate="true">Store Name</th>
+                        <th text-translate="true">Crypto Code</th>
+                        <th text-translate="true">Balance</th>
+                        <th text-translate="true" class="text-end">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var wallet in Model.Wallets)
+                    {
+                    <tr>
+
+                        <td>
+                            <a
+                                permission="@Policies.CanModifyStoreSettings"
+                                asp-action="GeneralSettings" asp-controller="UIStores" asp-route-storeId="@wallet.StoreId">
+                                @wallet.StoreName
+                            </a>
+                            <span not-permission="@Policies.CanModifyStoreSettings">@wallet.StoreName</span>
+                        </td>
+
+                        <td>@wallet.CryptoCode</td>
+                        <td><span permission="@Policies.CanModifyStoreSettings">@wallet.Balance</span></td>
+                        <td class="text-end">
+                            <a asp-action="WalletTransactions" asp-route-walletId="@wallet.Id" text-translate="true">Manage</a>
+                        </td>
+                    </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="text-secondary mt-3" text-translate="true">
+                There are no wallets yet. You can add wallets in the store setup.
+            </p>
+        }
+    </div>
+</div>

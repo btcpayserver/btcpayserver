@@ -1,0 +1,25 @@
+﻿@model BTCPayServer.Abstractions.Models.ConfirmModel
+
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "_LayoutSimple";
+}
+
+@section PageHeadContent {
+    <style>
+        body > .content-wrapper { flex-grow: 1; display:  flex; }
+        body > .content-wrapper, body > .content-wrapper > .container { flex-grow:1; }
+        .modal-dialog .btn-close { display: none; }
+    </style>
+}
+
+@section PageFootContent {
+    <script>
+        delegate('click', '#ConfirmCancel', function () {
+            history.back();
+        })
+    </script>
+}
+<div class="modal position-static d-block" tabindex="-1">
+    <partial name="ConfirmModal" model="Model" />
+</div>

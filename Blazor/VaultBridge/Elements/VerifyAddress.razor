@@ -1,0 +1,62 @@
+﻿@using BTCPayServer.Hwi
+@using NBitcoin
+@inherits VaultElement
+@implements IDisposable
+
+@if (ConfirmedOnDevice)
+{
+<button id="vault-confirm" class="btn btn-primary mt-4" type="button" @onclick="OnConfirm">@ui.StringLocalizer["Confirm"]</button>
+}
+else
+{
+<button id="vault-confirm" class="btn btn-primary mt-4" type="button" disabled="disabled">@ui.StringLocalizer["Please, confirm on the device first..."]</button>
+}
+
+@code {
+
+    private readonly VaultBridgeUI ui;
+    public VerifyAddress(VaultBridgeUI ui)
+    {
+        this.ui = ui;
+    }
+    
+    public BitcoinAddress Address { get; set; }
+    public KeyPath KeyPath { get; set; }
+    public ScriptPubKeyType ScriptPubKeyType { get; set; }
+    public HwiDeviceClient Device { get; set; }
+    
+    private TaskCompletionSource<bool> _cts;
+
+    public void OnConfirm()
+    {
+        ui.Elements.Remove(this);
+        ui.ShowFeedback(FeedbackType.Success, ui.StringLocalizer["Address verified."]);
+        _cts?.TrySetResult(true);
+        _cts = null;
+    }
+    
+    bool ConfirmedOnDevice { get; set; }
+
+    public async Task<bool> WaitConfirmed()
+    {
+        ui.ShowFeedback(FeedbackType.Loading,
+            ui.ViewLocalizer["Please verify that the address displayed on your device is <b>{0}</b>...", Address.ToString()]);
+        ui.AddElement(this);
+
+        var deviceAddress = await Device.DisplayAddressAsync(ScriptPubKeyType, KeyPath, ui.CancellationToken);
+        // Note that the device returned here may be different from what on screen for Testnet/Regtest
+        if (deviceAddress != Address)
+        {
+            ui.ShowFeedback(FeedbackType.Failed, ui.StringLocalizer["Unexpected address returned by the device..."]);
+            return false;
+        }
+
+        ConfirmedOnDevice = true;
+        ui.StateHasChanged();
+
+        _cts = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        return await _cts.Task;
+    }
+    
+    public void Dispose() => _cts?.TrySetCanceled();
+}

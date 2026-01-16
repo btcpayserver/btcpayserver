@@ -1,0 +1,28 @@
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en"@(env.IsDeveloping ? " data-devenv" : "")>
+<head>
+    <partial name="LayoutHead" />
+    @await RenderSectionAsync("PageHeadContent", false)
+    <style>
+        .btcpay-footer .flex-xl-row { flex-direction: column !important; }
+        .btcpay-footer .justify-content-xl-start { justify-content: center !important; }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <section class="content-wrapper flex-grow-1">
+        <div class="container">
+            @RenderBody()
+        </div>
+    </section>
+    @if (ViewData["ShowFooter"] is not false)
+    {
+        <partial name="_Footer"/>
+    }
+    <partial name="LayoutFoot" />
+    @await RenderSectionAsync("PageFootContent", false)
+</body>
+</html>

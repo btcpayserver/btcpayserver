@@ -1,0 +1,137 @@
+#PosCart {
+    --sidebar-width: 480px;
+}
+
+#PosCart .public-page-wrap {
+    --wrap-max-width: 1320px;
+    
+    padding-top: 0;
+}
+
+#PosCart .offcanvas-backdrop {
+    top: var(--mobile-header-height);
+    transition-duration: var(--btcpay-transition-duration-fast);
+}
+
+/* Horizontal scroll indicators */
+#Categories.scrollable:before,
+#Categories.scrollable:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--btcpay-space-m);
+}
+
+#Categories.scrollable:before {
+    background-image: linear-gradient(to right, var(--btcpay-body-bg), rgba(var(--btcpay-body-bg-rgb), 0));
+    left: calc(var(--scroll-indicator-spacing) * -1);
+}
+
+#Categories.scrollable:after {
+    background-image: linear-gradient(to left, var(--btcpay-body-bg), rgba(var(--btcpay-body-bg-rgb), 0));
+    right: calc(var(--scroll-indicator-spacing) * -1);
+}
+
+#RecentTransactionsToggle,
+.cart-toggle-btn {
+    --button-width: 40px;
+    --button-height: 40px;
+    --button-padding: 7px;
+    position: absolute;
+    top: calc(50% - var(--button-height) / 2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--button-width);
+    height: var(--button-height);
+    padding: var(--button-padding);
+    color: var(--btcpay-header-link);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    outline: none;
+}
+
+#RecentTransactionsToggle {
+    left: -.5rem;
+}
+#RecentTransactionsToggle.btn .icon {
+    --icon-size: 1.5rem;
+}
+@media screen and (max-width: 400px) {
+    header {
+        padding-left: .5rem;
+        padding-right: .5rem;
+    }
+    #RecentTransactionsToggle {
+        left: -.125rem;
+    }
+}
+
+header .cart-toggle-btn {
+    --icon-size: 2rem;
+    right: 0;
+}
+
+#RecentTransactionsToggle .icon,
+.cart-toggle-btn .icon-pos-cart {
+    width: var(--icon-size);
+    height: var(--icon-size);
+}
+
+.cart-toggle-btn:disabled {
+    color: var(--btcpay-body-text-muted);
+}
+
+#RecentTransactionsToggle:hover,
+.cart-toggle-btn:not(:disabled):hover {
+    color: var(--btcpay-header-link-accent);
+}
+
+#SearchTerm {
+    max-width: 47em;
+    margin: 0 auto;
+}
+
+#cart {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 1045;
+    height: 100vh;
+    overflow-y: auto;
+    color: var(--btcpay-body-text);
+    background-color: var(--btcpay-bg-tile);
+}
+
+#CartBadge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 1.75em;
+}
+
+@media (max-width: 991px) {
+    #cart {
+        left: 0;
+        transform: translateX(100%);
+        transition: transform var(--btcpay-transition-duration-fast) ease-in-out;
+    }
+    #cart.show {
+        transform: none;
+    }
+}
+@media (min-width: 992px) {
+    #content {
+        margin-right: var(--sidebar-width);
+    }
+    #cart {
+        width: var(--sidebar-width);
+        border-left: 1px solid var(--btcpay-body-border-light);
+    }
+    .cart-toggle-btn {
+        display: none;
+    }
+}

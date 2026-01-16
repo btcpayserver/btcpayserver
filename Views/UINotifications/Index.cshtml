@@ -1,0 +1,237 @@
+@model BTCPayServer.Models.NotificationViewModels.NotificationIndexViewModel
+@{
+    ViewData["Title"] = ViewLocalizer["Notifications"];
+    string status = ViewBag.Status;
+    var statusFilterCount = CountArrayFilter("type");
+    var storesFilterCount = CountArrayFilter("storeid");
+}
+
+@functions
+{
+    private int CountArrayFilter(string type) =>
+        Model.Search.ContainsFilter(type) ? Model.Search.GetFilterArray(type).Length : 0;
+
+    private bool HasArrayFilter(string type, string key = null) =>
+        Model.Search.ContainsFilter(type) && (key is null || Model.Search.GetFilterArray(type).Contains(key));
+}
+
+@section PageHeadContent
+{
+    <style>
+        .dropdown > .btn {
+            min-width: 7rem;
+            padding-left: 1rem;
+            text-align: left;
+        }
+        @@media (max-width: 568px) {
+            #SearchText {
+                width: 100%;
+            }
+        }
+    </style>
+}
+
+<div class="sticky-header">
+	<h2 class="my-1">@ViewData["Title"]</h2>
+    <a id="NotificationSettings" asp-controller="UIManage" asp-action="NotificationSettings" class="btn btn-secondary d-flex align-items-center">
+        <vc:icon symbol="nav-store-settings" />
+    </a>
+</div>
+<partial name="_StatusMessage" />
+<form asp-route-status="@Model.Status" class="d-flex flex-wrap align-items-center gap-md-4 gap-sm-0 mb-4 col-xxl-8" asp-action="Index" method="get">
+    <input asp-for="Count" type="hidden" />
+    <input asp-for="TimezoneOffset" type="hidden" />
+    <input type="hidden" asp-for="Status" value="@Model.Status" />
+
+    <div class="col-12 col-md-6 col-lg-4 mb-3 mb-md-0">
+        <input asp-for="SearchText" class="form-control" placeholder="@StringLocalizer["Search…"]" />
+    </div>
+
+    <div class="btn-group col-12 col-md-auto mb-3 mb-md-0" role="group" aria-label="View Notification">
+        <a class="btn @((status == "All") ? "btn-primary" : "btn-outline-secondary")"
+           asp-controller="UINotifications"
+           asp-action="Index"
+           asp-route-Status="All"
+           text-translate="true">
+            All
+        </a>
+        <a class="btn @((status == "Unread") ? "btn-primary" : "btn-outline-secondary")"
+           asp-controller="UINotifications"
+           asp-action="Index"
+           asp-route-Status="Unread"
+           text-translate="true">
+            Unread
+        </a>
+    </div>
+
+    <div class="dropdown col-12 col-md-auto mb-3 mb-md-0">
+        <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret w-100 w-md-auto" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (statusFilterCount > 0)
+            {
+                <span>@statusFilterCount Type</span>
+            }
+            else
+            {
+                <span text-translate="true">All Type</span>
+            }
+        </button>
+        <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "invoicestate")" class="dropdown-item @(HasArrayFilter("type", "invoicestate") ? "custom-active" : "")" text-translate="true">Invoice</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "payout")" class="dropdown-item @(HasArrayFilter("type", "payout") ? "custom-active" : "")" text-translate="true">Payouts</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "newversion")" class="dropdown-item @(HasArrayFilter("type", "newversion") ? "custom-active" : "")" text-translate="true">New Version</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "pluginupdate")" class="dropdown-item @(HasArrayFilter("type", "pluginupdate") ? "custom-active" : "")" text-translate="true">Plugin Updates</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "userupdate")" class="dropdown-item @(HasArrayFilter("type", "userupdate") ? "custom-active" : "")" text-translate="true">User Updates</a>
+        </div>
+    </div>
+
+    <div class="dropdown col-12 col-md-auto">
+        <button id="StoresOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret w-100 w-md-auto" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (storesFilterCount > 0)
+            {
+                <span>@(storesFilterCount == 1 ? StringLocalizer["{0} Store", storesFilterCount] : StringLocalizer["{0} Stores", storesFilterCount])</span>
+            }
+            else
+            {
+                <span text-translate="true">All Stores</span>
+            }
+        </button>
+        <div class="dropdown-menu" aria-labelledby="StoresOptionsToggle">
+            @foreach (var store in Model.StoreFilterOptions)
+            {
+                <a asp-action="Index"
+                   asp-route-count="@Model.Count"
+                   asp-route-status="@Model.Status"
+                   asp-route-searchTerm="@Model.Search.Toggle("storeid", store.Value)"
+                   class="dropdown-item @(store.Selected ? "custom-active" : "")">
+                    @store.Text
+                </a>
+            }
+        </div>
+    </div>
+</form>
+
+@if (Model.Items.Count > 0)
+{
+    <form method="post" asp-action="MassAction">
+        @if (Model.Items.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mass-action">
+                    <thead class="mass-action-head">
+                        <tr>
+                            <th class="mass-action-select-col only-for-js">
+                                <input name="selectedItems" type="checkbox" class="form-check-input mass-action-select-all" />
+                            </th>
+                            <th text-translate="true">Message</th>
+                            <th class="date-col">
+                                <div class="d-flex align-items-center gap-3">
+                                    <span text-translate="true">Date</span>
+                                    <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="@StringLocalizer["Switch date format"]">
+                                        <vc:icon symbol="time" />
+                                    </button>
+                                </div>
+                            </th>
+                            <th class="text-end text-success" text-translate="true">Actions</th>
+                        </tr>
+                    </thead>
+                    <thead class="mass-action-actions">
+                        <tr>
+                            <th class="mass-action-select-col only-for-js">
+                                <input type="checkbox" class="form-check-input mass-action-select-all" />
+                            </th>
+                            <th colspan="3">
+                                <div class="d-flex flex-wrap align-items-center justify-content-start gap-3">
+                                    <div class="d-inline-flex align-items-center gap-3">
+                                        @if (Model.Status == "Unread")
+                                        {
+                                            <button type="submit" name="command" value="mark-seen" class="btn btn-link gap-1">
+                                                <vc:icon symbol="actions-show" />
+                                                <span text-translate="true">Mark as seen</span>
+                                            </button>
+                                        }
+                                        <button type="submit" name="command" value="delete" class="btn btn-link gap-1">
+                                            <vc:icon symbol="actions-trash" />
+                                            <span text-translate="true">Delete</span>
+                                        </button>
+                                    </div>
+                                    <div class="vr"></div>
+                                    <div>
+                                        <strong class="mass-action-selected-count">0</strong>
+                                        <span text-translate="true">selected</span>
+                                    </div>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr data-guid="@item.Id" class="notification-row mass-action-row @(item.Seen ? "seen" : "")">
+                                <td class="only-for-js mass-action-select-col">
+                                    <input name="selectedItems" type="checkbox" class="form-check-input mass-action-select" value="@item.Id" />
+                                </td>
+                                <td>
+                                    @item.Body
+                                </td>
+                                <td class="date-col fw-normal">@item.Created.ToTimeAgo()</td>
+
+                                <td class="text-end">
+                                    <div class="d-inline-flex align-items-center gap-3">
+                                        @if (!string.IsNullOrEmpty(item.ActionLink))
+                                        {
+                                            <a href="@item.ActionLink" class="btn btn-link p-0" rel="noreferrer noopener" text-translate="true">Details</a>
+                                        }
+                                        @if (!item.Seen)
+                                        {
+                                            <button class="btn btn-link p-0 btn-toggle-seen text-nowrap" type="submit" name="command" value="flip-individual:@(item.Id)">
+                                                <span text-translate="true">Mark as seen</span>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <vc:pager view-model="Model" />
+            </div>
+        }
+    </form>
+}
+else
+{
+    <p class="text-secondary mt-3" text-translate="true">
+        There are no notifications.
+    </p>
+}
+
+<style>
+    .notification-row.loading {
+        cursor: wait;
+        pointer-events: none;
+    }
+
+    tr td {
+        font-weight: bold;
+    }
+
+    tr.seen td {
+        font-weight: normal;
+    }
+</style>
+
+@section PageFootContent {
+    <script type="text/javascript">
+        delegate('click', '.btn-toggle-seen', e => {
+            const row = $(e.target).parents(".notification-row").toggleClass("loading");
+            const guid = row.data("guid");
+            const url = "@Url.Action("FlipRead", "UINotifications", new { id = "placeholder" })".replace("placeholder", guid);
+            $.post(url, function (data) {
+                row.toggleClass("seen loading");
+            });
+            return false;
+        })
+    </script>
+}

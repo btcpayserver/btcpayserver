@@ -1,0 +1,47 @@
+@using BTCPayServer.Services
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject PoliciesSettings PoliciesSettings
+@inject UriResolver UriResolver
+@{
+    ViewData.TryGetValue("StoreBranding", out var storeBranding);
+    var store = Context.GetStoreData();
+    var storeBlob = store?.GetStoreBlob();
+    var isBackend = store != null && storeBranding == null; 
+    if (isBackend && storeBlob.ApplyBrandColorToBackend)
+    {
+        storeBranding = await StoreBrandingViewModel.CreateAsync(Context.Request, UriResolver, storeBlob);
+    }
+}
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+@if (PoliciesSettings.DiscourageSearchEngines)
+{
+<meta name="robots" content="noindex">
+}
+<title>@ViewData["Title"]</title>
+@* CSS *@
+<link href="~/main/bootstrap/bootstrap.css" asp-append-version="true"  rel="stylesheet" />
+<link href="~/vendor/flatpickr/flatpickr.css" asp-append-version="true"  rel="stylesheet" />
+<link href="~/main/fonts/OpenSans.css" asp-append-version="true"  rel="stylesheet" />
+<link href="~/main/layout.css" asp-append-version="true"  rel="stylesheet" />
+<link href="~/main/site.css" asp-append-version="true"  rel="stylesheet" />
+
+<partial name="LayoutHeadTheme" />
+@if (storeBranding != null)
+{
+    <partial name="LayoutHeadStoreBranding" model="storeBranding" />
+}
+else
+{
+    <meta name="theme-color" content="#51B13E">
+    <link rel="icon" href="~/favicon.ico">
+    <link rel="apple-touch-icon" href="~/img/icons/icon-512x512.png">
+    <link rel="apple-touch-startup-image" href="~/img/splash.png">
+}
+@* Non-JS *@
+<noscript>
+    <style>
+        .hide-when-js { display: block !important; }
+        .only-for-js { display: none !important; }
+    </style>
+</noscript>

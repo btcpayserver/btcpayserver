@@ -1,0 +1,20 @@
+@model System.Collections.Generic.List<BTCPayServer.Data.Payouts.LightningLike.UILightningLikePayoutController.ResultVM>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = StringLocalizer["Lightning Payout Result"];
+}
+
+<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
+@foreach (var item in Model)
+{
+    <div class="alert alert-@(item.Success is true ? "success" : "danger") mb-3" role="alert">
+        <h5 class="alert-heading">
+            @(item.Success is true ? "Sent" : "Failed")
+            @if (!string.IsNullOrEmpty(item.Message))
+            {
+                <span>- @item.Message</span>
+            }
+        </h5>
+        <div class="text-break me-3" title="@item.Destination">@item.Destination</div>
+    </div>
+}

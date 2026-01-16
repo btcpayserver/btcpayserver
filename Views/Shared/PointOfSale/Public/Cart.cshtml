@@ -1,0 +1,278 @@
+@using BTCPayServer.Services
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using Newtonsoft.Json.Linq
+@using BTCPayServer.Client
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Client.Models
+@inject DisplayFormatter DisplayFormatter
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
+@model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
+@{
+    Layout = "PointOfSale/Public/_Layout";
+    Csp.UnsafeEval();
+}
+@section PageHeadContent {
+    <link href="~/pos/cart.css" asp-append-version="true" rel="stylesheet" />
+}
+@section PageFootContent {
+    <script>const srvModel = @Safe.Json(Model);</script>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/pos/common.js" asp-append-version="true"></script>
+    <script src="~/pos/cart.js" asp-append-version="true"></script>
+}
+@functions {
+    private string GetItemPriceFormatted(AppItem item)
+    {
+        if (item.PriceType == AppItemPriceType.Topup) return "any amount";
+        if (item.Price == 0) return "free";
+        var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
+        return item.PriceType == AppItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
+    }
+}
+
+<div id="PosCart">
+    <div id="content">
+        <div class="public-page-wrap">
+            <header class="sticky-top bg-body d-flex flex-column py-3 py-lg-4 gap-3">
+                <div class="d-flex align-items-center justify-content-center gap-3 px-5 position-relative">
+                    <h1 class="mb-0">@(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title)</h1>
+                    <button id="CartToggle" class="cart-toggle-btn" type="button" v-on:click="toggleCart" aria-controls="cart" :disabled="cartCount === 0">
+                        <vc:icon symbol="pos-cart" />
+                        <span id="CartBadge" class="badge rounded-pill bg-danger p-1 ms-1" v-text="cartCount" v-if="cartCount !== 0"></span>
+                    </button>
+                    <button type="button" class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle" permission="@Policies.CanViewInvoices">
+                        <vc:icon symbol="nav-invoice"/>
+                    </button>
+                </div>
+                @if (Model.ShowSearch)
+                {
+                    <input id="SearchTerm" class="form-control rounded-pill" placeholder="@StringLocalizer["Search…"]" v-model="searchTerm" v-if="showSearch">
+                }
+                @if (Model.ShowCategories)
+                {
+                    <div id="Categories" ref="categories" v-if="showCategories && allCategories" class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-3" :class="{ 'scrollable': categoriesScrollable }">
+                        <nav class="btcpay-pills d-flex align-items-center gap-3" ref="categoriesNav">
+                            <template v-for="cat in allCategories">
+                                <input :id="`Category-${cat.value}`" type="radio" name="category" autocomplete="off" v-model="displayCategory" :value="cat.value">
+                                <label :for="`Category-${cat.value}`" class="btcpay-pill text-nowrap">{{ cat.text }}</label>
+                            </template>
+                        </nav>
+                    </div>
+                }
+            </header>
+            <main>
+                <partial name="_StatusMessage" />
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <div class="lead">@Safe.Raw(Model.Description)</div>
+                }
+                <div ref="posItems" class="row row-cols row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-2 row-cols-xl-3 row-cols-xxl-4 g-4" id="PosItems">
+                    @for (var index = 0; index < Model.Items.Length; index++)
+                    {
+                        var item = Model.Items[index];
+                        var formatted = GetItemPriceFormatted(item);
+                        var inStock = item.Inventory is null or > 0;
+                        var buttonText = string.IsNullOrEmpty(item.BuyButtonText)
+                            ? item.PriceType == AppItemPriceType.Topup ? Model.CustomButtonText : Model.ButtonText
+                            : item.BuyButtonText;
+                        buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
+                        var categories = new JArray(item.Categories ?? new object[] { });
+                        <div id="card_@item.Id" class="col posItem posItem--displayed" :class="{ 'posItem--inStock': inStock(@index) }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)" data-categories='@Safe.Json(categories)'>
+                            <div class="tile card" v-on:click="addToCart(@index, 1)">
+                                @if (!string.IsNullOrWhiteSpace(item.Image))
+                                {
+                                    <img class="card-img-top" src="@item.Image" alt="@item.Title" asp-append-version="true">
+                                }
+                                <div class="card-body d-flex flex-column gap-2 mb-auto">
+                                    <h5 class="card-title m-0">@Safe.Raw(item.Title)</h5>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        @if (item.PriceType == AppItemPriceType.Topup || item.Price == 0)
+                                        {
+                                            <span class="fw-semibold badge text-bg-info">@Safe.Raw(char.ToUpper(formatted[0]) + formatted[1..])</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fw-semibold">@Safe.Raw(formatted)</span>
+                                        }
+                                        @if (item.Inventory.HasValue)
+                                        {
+                                            <span class="badge text-bg-warning inventory">
+                                                @if (item.Inventory > 0)
+                                                {
+                                                    <span>@StringLocalizer["{0} left", item.Inventory.ToString()]</span>
+                                                }
+                                                else
+                                                {
+                                                    <span text-translate="true">Sold out</span>
+                                                }
+                                            </span>
+                                        }
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(item.Description))
+                                    {
+                                        <p class="card-text">@Safe.Raw(item.Description)</p>
+                                    }
+                                </div>
+                                @if (inStock)
+                                {
+                                    <form class="card-footer">
+                                        @if (item.PriceType != AppItemPriceType.Fixed)
+                                        {
+                                            <div class="input-group mb-2">
+                                                <span class="input-group-text">@Model.CurrencySymbol</span>
+                                                <input class="form-control" type="number" inputmode="decimal" min="@(item.Price ?? 0)" step="@Model.Step" name="amount" placeholder="@StringLocalizer["Amount"]" value="@item.Price" required v-on:click.stop>
+                                            </div>
+                                        }
+                                        <button type="button" class="btn btn-primary w-100" :disabled="!inStock(@index)">
+                                            @Safe.Raw(buttonText)
+                                        </button>
+                                    </form>
+                                    <div class="posItem-added"><vc:icon symbol="checkmark" /></div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </main>
+            <footer class="store-footer">
+                <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
+                    <span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" />
+                </a>
+            </footer>
+        </div>
+    </div>
+    <aside id="cart" ref="cart" tabindex="-1" aria-labelledby="cartLabel">
+        <div class="public-page-wrap" v-cloak>
+            <header class="sticky-top bg-tile offcanvas-header py-3 py-lg-4 d-flex align-items-baseline justify-content-center gap-3 px-5 pe-lg-0">
+                <h1 class="mb-0" id="cartLabel">Cart</h1>
+                <button id="CartClear" type="reset" v-on:click="clear" class="btn btn-text text-primary p-1" v-if="cartCount > 0" text-translate="true">
+                    Empty
+                </button>
+                <button id="CartClose" type="button" class="cart-toggle-btn" v-on:click="toggleCart" aria-controls="cart" aria-label="@StringLocalizer["Close"]">
+                    <vc:icon symbol="cross" />
+                </button>
+            </header>
+            <div class="offcanvas-body py-0">
+                <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" v-on:submit="handleFormSubmit" v-if="cartCount !== 0">
+                    <input type="hidden" name="amount" :value="totalNumeric">
+                    <input type="hidden" name="tip" :value="tipNumeric">
+                    <input type="hidden" name="discount" :value="discountPercentNumeric">
+                    <input type="hidden" name="posdata" :value="posdata">
+                    <table class="table table-borderless mt-0 mb-4">
+                        <tbody id="CartItems">
+                        <tr v-for="item in cart" :key="item.id">
+                            <td class="align-middle">
+                                <h6 class="fw-semibold mb-1">{{ item.title }}</h6>
+                                <button type="button" v-on:click="removeFromCart(item.id)" class="btn btn-sm btn-link p-0 text-danger fw-semibold" text-translate="true">Remove</button>
+                            </td>
+                            <td class="align-middle">
+                                <div class="d-flex align-items-center gap-2 justify-content-end quantity">
+                                    <span class="badge text-bg-warning inventory" v-if="item.inventory">
+                                        {{ item.inventory > 0 ? `${item.inventory} left` : "Sold out" }}
+                                    </span>
+                                    <div class="d-flex align-items-center gap-2 quantities">
+                                        <button type="button" v-on:click="updateQuantity(item.id, -1)" class="btn btn-minus">
+                                            <span><vc:icon symbol="minus" /></span>
+                                        </button>
+                                        <input class="form-control hide-number-spin w-50px text-center" type="number" inputmode="decimal" placeholder="@StringLocalizer["Qty"]" min="1" step="1" :max="item.inventory" v-model.number="item.count">
+                                        <button type="button" v-on:click="updateQuantity(item.id, +1)" class="btn btn-plus">
+                                            <span><vc:icon symbol="plus" /></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="align-middle text-end">
+                                {{ formatCurrency(item.price||0, true) }}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <table class="table table-borderless my-4" v-if="showDiscount || enableTips">
+                        <tr v-if="showDiscount">
+                            <th class="align-middle" text-translate="true">Discount</th>
+                            <th class="align-middle" colspan="3">
+                                <div class="d-flex justify-content-end">
+                                    <div class="input-group input-group-sm w-100px">
+                                        <input class="form-control hide-number-spin" type="number" inputmode="decimal" min="0" step="1" max="100" id="Discount" v-model.number="discountPercent">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                            </th>
+                        </tr>
+                        <tr v-if="enableTips">
+                            <th class="align-middle" text-translate="true">Tip</th>
+                            <th class="align-middle" colspan="3">
+                                <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-end gap-2" v-if="customTipPercentages">
+                                    <div class="btcpay-pill d-flex align-items-center px-3" id="Tip-Custom" :class="{ active: !tipPercent && tip }" v-on:click.prevent="tipPercent = null">
+                                        <input
+                                            v-model.number="tip"
+                                            class="form-control hide-number-spin shadow-none text-reset d-block bg-transparent border-0 p-0 me-1 fw-semibold"
+                                            style="height:1.5em;min-height:auto;width:4ch"
+                                            type="number"
+                                            inputmode="decimal"
+                                            min="0"
+                                            step="@Model.Step" />
+                                        <span>@(Model.CurrencyInfo.CurrencySymbol ?? Model.CurrencyCode)</span>
+                                    </div>
+                                    <button
+                                        v-for="percentage in customTipPercentages"
+                                        type="button"
+                                        class="btcpay-pill px-3"
+                                        :class="{ active: tipPercent == percentage }"
+                                        :id="`Tip-${percentage}`"
+                                        v-on:click.prevent="tipPercentage(percentage)">
+                                        {{ percentage }}%
+                                    </button>
+                                </div>
+                            </th>
+                        </tr>
+                    </table>
+                    <table class="table table-borderless mt-4 mb-0">
+                        <tr v-if="itemsTotalNumeric">
+                            <td class="align-middle h6 border-0" text-translate="true">Items total</td>
+                            <td class="align-middle h6 border-0 text-end" id="CartItemsTotal">{{ formatCurrency(itemsTotalNumeric, true) }}</td>
+                        </tr>
+                        <tr v-if="discountNumeric">
+                            <td class="align-middle" text-translate="true">Discount</td>
+                            <td class="align-middle text-end" id="CartDiscount">
+                                <span>{{ formatCurrency(discountNumeric, true) }}</span> <span v-if="discountPercent">({{discountPercent}}%)</span>
+                            </td>
+                        </tr>
+                        <tr v-if="subtotalNumeric">
+                            <td class="align-middle h6 border-0" text-translate="true">Subtotal</td>
+                            <td class="align-middle h6 border-0 text-end" id="CartAmount">{{ formatCurrency(subtotalNumeric, true) }}</td>
+                        </tr>
+                        <tr v-if="tipNumeric">
+                            <td class="align-middle" text-translate="true">Tip</td>
+                            <td class="align-middle text-end" id="CartTip">
+                                <span>{{ formatCurrency(tipNumeric, true) }}</span> <span v-if="tipPercent">({{tipPercent}}%)</span>
+                            </td>
+                        </tr>
+                        <tr v-if="taxNumeric">
+                            <td class="align-middle" text-translate="true">Taxes</td>
+                            <td class="align-middle text-end" id="CartTax">
+                                <span>{{ formatCurrency(taxNumeric, true) }}</span> <span v-if="taxPercent">({{taxPercent}}%)</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="align-middle h5 border-0" text-translate="true">Total</td>
+                            <td class="align-middle h5 border-0 text-end" id="CartTotal">{{ formatCurrency(totalNumeric, true) }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="pt-4">
+                                <button id="CartSubmit" class="btn btn-primary btn-lg w-100" :disabled="payButtonLoading" type="submit">
+                                    <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
+                                        <span class="visually-hidden" text-translate="true">Loading...</span>
+                                    </div>
+                                    <template v-else text-translate="true">Pay</template>
+                                </button>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
+                <p id="CartItems" v-else class="text-muted text-center my-0" text-translate="true">There are no items in your cart yet.</p>
+            </div>
+        </div>
+    </aside>
+    <partial name="PointOfSale/Public/RecentTransactions" model="Model"/>
+</div>

@@ -218,6 +218,20 @@
                 </div>
                 <span asp-validation-for="RecommendedFeeBlockTarget" class="text-danger"></span>
             </div>
+
+            <h3 class="mt-5 mb-3" text-translate="true">Regional Settings</h3>
+            <div class="form-group">
+                <label asp-for="StoreTimeZone" class="form-label"></label>
+                <select asp-for="StoreTimeZone" class="form-select w-auto">
+                    <option value="">@StringLocalizer["Use Server Time Zone"]</option>
+                    @foreach (var tz in TimeZoneInfo.GetSystemTimeZones())
+                    {
+                        <option value="@tz.Id">@tz.DisplayName</option>
+                    }
+                </select>
+                <div class="form-text" text-translate="true">The time zone for displaying dates in this store. If not set, the server's default time zone will be used.</div>
+                <span asp-validation-for="StoreTimeZone" class="text-danger"></span>
+            </div>
         </div>
     </div>
 </form>

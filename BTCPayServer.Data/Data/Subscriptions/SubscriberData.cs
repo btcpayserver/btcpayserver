@@ -130,16 +130,16 @@ public class SubscriberData : BaseEntityData
     [NotMapped]
     public bool CanStartNextPlan => CanStartNextPlanEx(false);
 
-    public bool CanStartNextPlanEx(bool newSubscriber) => this is
+    public bool CanStartNextPlanEx(bool newSubscriber, PhaseTypes? phase = null) => this is
     {
-        Phase: not PhaseTypes.Normal,
         NextPlan:
         {
             Status: Data.Subscriptions.PlanData.PlanStatus.Active
         },
         IsSuspended: false
     }
-    // If we stay on the same plan, check that the next plan is renwable
+    && (phase ?? Phase) is not PhaseTypes.Normal
+    // If we stay on the same plan, check that the next plan is renewable
     && (newSubscriber || this.PlanId != this.NextPlan.Id || this.IsNextPlanRenewable);
 
     [NotMapped]

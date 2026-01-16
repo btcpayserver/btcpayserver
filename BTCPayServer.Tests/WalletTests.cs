@@ -2,6 +2,11 @@
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Data;
+using BTCPayServer.Payments;
+using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Wallets;
+using BTCPayServer.Views.Wallets;
 using NBitcoin;
 using Xunit;
 using Xunit.Abstractions;
@@ -114,6 +119,77 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         }
     }
 
+     [Fact]
+     [Trait("Playwright", "Playwright-2")]
+    public async Task CanUseCoinSelection()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.RegisterNewUser(true);
+        var (_, storeId) = await s.CreateNewStore();
+        await s.GenerateWallet("BTC", "", false, true);
+        var walletId = new WalletId(storeId, "BTC");
+        await s.GoToWallet(walletId, WalletsNavPages.Receive);
+        var addressStr = await s.Page.Locator("#Address").GetAttributeAsync("data-text");
+        var address = BitcoinAddress.Create(addressStr!, ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
+        await s.Server.ExplorerNode.GenerateAsync(1);
+        for (var i = 0; i < 6; i++)
+        {
+            await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(1.0m));
+        }
+        var handlers = s.Server.PayTester.GetService<PaymentMethodHandlerDictionary>();
+        var targetTx = await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(1.2m));
+        var tx = await s.Server.ExplorerNode.GetRawTransactionAsync(targetTx);
+        var spentOutpoint = new OutPoint(targetTx, tx.Outputs.FindIndex(txout => txout.Value == Money.Coins(1.2m)));
+        var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(walletId.CryptoCode);
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            var store = await s.Server.PayTester.StoreRepository.FindStore(storeId);
+            var x = store!.GetPaymentMethodConfig<DerivationSchemeSettings>(pmi, handlers);
+            var wallet = s.Server.PayTester.GetService<BTCPayWalletProvider>().GetWallet(walletId.CryptoCode);
+            wallet.InvalidateCache(x!.AccountDerivation);
+            Assert.Contains(
+                await wallet.GetUnspentCoins(x.AccountDerivation),
+                coin => coin.OutPoint == spentOutpoint);
+        });
+        await s.Server.ExplorerNode.GenerateAsync(1);
+        await s.GoToWallet(walletId, WalletsNavPages.Send);
+        await s.Page.Locator("#toggleInputSelection").ClickAsync();
+        await s.Page.Locator($"[id='{spentOutpoint}']").WaitForAsync();
+        Assert.Equal("true", (await s.Page.Locator("[name='InputSelection']").InputValueAsync()).ToLowerInvariant());
+
+        // Select All test
+        await s.Page.Locator("#select-all-checkbox").ClickAsync();
+        var selectedOptions = await s.Page.Locator("[name='SelectedInputs'] option[selected]").AllAsync();
+        var listItems = await s.Page.Locator("li.list-group-item").AllAsync();
+        Assert.Equal(listItems.Count, selectedOptions.Count);
+        await s.Page.Locator("#select-all-checkbox").ClickAsync();
+        selectedOptions = await s.Page.Locator("[name='SelectedInputs'] option[selected]").AllAsync();
+        Assert.Empty(selectedOptions);
+
+        await s.Page.Locator($"[id='{spentOutpoint}']").ClickAsync();
+        selectedOptions = await s.Page.Locator("[name='SelectedInputs'] option[selected]").AllAsync();
+        Assert.Single(selectedOptions);
+
+        var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
+        await s.Page.Locator("[name='Outputs[0].DestinationAddress']").FillAsync(bob.ToString());
+        var amountInput = s.Page.Locator("[name='Outputs[0].Amount']");
+        await amountInput.FillAsync("0.3");
+        var checkboxElement = s.Page.Locator("input[type='checkbox'][name='Outputs[0].SubtractFeesFromOutput']");
+        if (!await checkboxElement.IsCheckedAsync())
+        {
+            await checkboxElement.ClickAsync();
+        }
+        await s.Page.Locator("#SignTransaction").ClickAsync();
+        await s.Page.Locator("button[value='broadcast']").ClickAsync();
+        var happyElement = await s.FindAlertMessage();
+        var happyText = await happyElement.InnerTextAsync();
+        var txid = System.Text.RegularExpressions.Regex.Match(happyText, @"\((.*)\)").Groups[1].Value;
+
+        tx = await s.Server.ExplorerNode.GetRawTransactionAsync(new uint256(txid));
+        Assert.Single(tx.Inputs);
+        Assert.Equal(spentOutpoint, tx.Inputs[0].PrevOut);
+    }
 
     [Fact]
     [Trait("Playwright", "Playwright-2")]
@@ -143,7 +219,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         Assert.Contains($"/stores/{s.StoreId}/invoices", s.Page.Url);
         await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error, partialText: "No UTXOs available");
 
-        for (int i = 0; i < 5; i++)
+        for (var i = 0; i < 5; i++)
         {
             var txs = await s.GoToWalletTransactions(s.WalletId);
             await txs.SelectAll();

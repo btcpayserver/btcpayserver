@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Http;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
@@ -13,26 +11,21 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models.InvoicingModels;
-using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.Lightning;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
-using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Plugins.Webhooks.HostedServices;
-using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
-using NBitcoin.DataEncoders;
 using NBitpayClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -1122,388 +1115,6 @@ namespace BTCPayServer.Tests
             Assert.Equal("avatar.jpg", changed.ImageUrl);
         }
 
-        [Fact]
-        [Trait("Integration", "Integration")]
-        public async Task CanUsePullPaymentViaAPI()
-        {
-            using var tester = CreateServerTester();
-            tester.ActivateLightning();
-            await tester.StartAsync();
-            await tester.EnsureChannelsSetup();
-            var acc = tester.NewAccount();
-            await acc.GrantAccessAsync(true);
-            acc.RegisterLightningNode("BTC", LightningConnectionType.CLightning, false);
-            var storeId = (await acc.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
-            var client = await acc.CreateClient();
-            var result = await client.CreatePullPayment(storeId, new CreatePullPaymentRequest()
-            {
-                Name = "Test",
-                Description = "Test description",
-                Amount = 12.3m,
-                Currency = "BTC",
-                PayoutMethods = new[] { "BTC" }
-            });
-
-            void VerifyResult()
-            {
-                Assert.Equal("Test", result.Name);
-                Assert.Equal("Test description", result.Description);
-                // If it contains ? it means that we are resolving an unknown route with the link generator
-                Assert.DoesNotContain("?", result.ViewLink);
-                Assert.False(result.Archived);
-                Assert.Equal("BTC", result.Currency);
-                Assert.Equal(12.3m, result.Amount);
-            }
-            VerifyResult();
-
-            var unauthenticated = new BTCPayServerClient(tester.PayTester.ServerUri);
-            result = await unauthenticated.GetPullPayment(result.Id);
-            VerifyResult();
-            await AssertHttpError(404, async () => await unauthenticated.GetPullPayment("lol"));
-            // Can't list pull payments unauthenticated
-            await AssertHttpError(401, async () => await unauthenticated.GetPullPayments(storeId));
-
-            var pullPayments = await client.GetPullPayments(storeId);
-            result = Assert.Single(pullPayments);
-            VerifyResult();
-
-            var test2 = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
-            {
-                Name = "Test 2",
-                Amount = 12.3m,
-                Currency = "BTC",
-                PayoutMethods = new[] { "BTC" },
-                BOLT11Expiration = TimeSpan.FromDays(31.0)
-            });
-            Assert.Equal(TimeSpan.FromDays(31.0), test2.BOLT11Expiration);
-
-            TestLogs.LogInformation("Can't archive without knowing the walletId");
-            var ex = await AssertAPIError("missing-permission", async () => await client.ArchivePullPayment("lol", result.Id));
-            Assert.Equal("btcpay.store.canarchivepullpayments", ((GreenfieldPermissionAPIError)ex.APIError).MissingPermission);
-            TestLogs.LogInformation("Can't archive without permission");
-            await AssertAPIError("unauthenticated", async () => await unauthenticated.ArchivePullPayment(storeId, result.Id));
-            await client.ArchivePullPayment(storeId, result.Id);
-            result = await unauthenticated.GetPullPayment(result.Id);
-            Assert.Equal(TimeSpan.FromDays(30.0), result.BOLT11Expiration);
-            Assert.True(result.Archived);
-            var pps = await client.GetPullPayments(storeId);
-            result = Assert.Single(pps);
-            Assert.Equal("Test 2", result.Name);
-            pps = await client.GetPullPayments(storeId, true);
-            Assert.Equal(2, pps.Length);
-            Assert.Equal("Test 2", pps[0].Name);
-            Assert.Equal("Test", pps[1].Name);
-
-            var payouts = await unauthenticated.GetPayouts(pps[0].Id);
-            Assert.Empty(payouts);
-
-            var destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
-            await this.AssertAPIError("overdraft", async () => await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
-            {
-                Destination = destination,
-                Amount = 1_000_000m,
-                PayoutMethodId = "BTC",
-            }));
-
-            await this.AssertAPIError("archived", async () => await unauthenticated.CreatePayout(pps[1].Id, new CreatePayoutRequest()
-            {
-                Destination = destination,
-                PayoutMethodId = "BTC"
-            }));
-
-            var payout = await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
-            {
-                Destination = destination,
-                PayoutMethodId = "BTC"
-            });
-
-            payouts = await unauthenticated.GetPayouts(pps[0].Id);
-            var payout2 = Assert.Single(payouts);
-            Assert.Equal(payout.OriginalAmount, payout2.OriginalAmount);
-            Assert.Equal(payout.Id, payout2.Id);
-            Assert.Equal(destination, payout2.Destination);
-            Assert.Equal(PayoutState.AwaitingApproval, payout.State);
-            Assert.Equal("BTC-CHAIN", payout2.PayoutMethodId);
-            Assert.Equal("BTC", payout2.PayoutCurrency);
-            Assert.Null(payout.PayoutAmount);
-
-            TestLogs.LogInformation("Can't overdraft");
-
-            var destination2 = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
-            await this.AssertAPIError("overdraft", async () => await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
-            {
-                Destination = destination2,
-                Amount = 0.00001m,
-                PayoutMethodId = "BTC"
-            }));
-
-            TestLogs.LogInformation("Can't create too low payout");
-            await this.AssertAPIError("amount-too-low", async () => await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
-            {
-                Destination = destination2,
-                PayoutMethodId = "BTC"
-            }));
-
-            TestLogs.LogInformation("Can archive payout");
-            await client.CancelPayout(storeId, payout.Id);
-            payouts = await unauthenticated.GetPayouts(pps[0].Id);
-            Assert.Empty(payouts);
-
-            payouts = await client.GetPayouts(pps[0].Id, true);
-            payout = Assert.Single(payouts);
-            Assert.Equal(PayoutState.Cancelled, payout.State);
-
-            TestLogs.LogInformation("Can create payout after cancelling");
-            payout = await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
-            {
-                Destination = destination,
-                PayoutMethodId = "BTC"
-            });
-
-            var start = RoundSeconds(DateTimeOffset.Now + TimeSpan.FromDays(7.0));
-            var inFuture = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
-            {
-                Name = "Starts in the future",
-                Amount = 12.3m,
-                StartsAt = start,
-                Currency = "BTC",
-                PayoutMethods = new[] { "BTC" }
-            });
-            Assert.Equal(start, inFuture.StartsAt);
-            Assert.Null(inFuture.ExpiresAt);
-            await this.AssertAPIError("not-started", async () => await unauthenticated.CreatePayout(inFuture.Id, new CreatePayoutRequest()
-            {
-                Amount = 1.0m,
-                Destination = destination,
-                PayoutMethodId = "BTC"
-            }));
-
-            var expires = RoundSeconds(DateTimeOffset.Now - TimeSpan.FromDays(7.0));
-            var inPast = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
-            {
-                Name = "Will expires",
-                Amount = 12.3m,
-                ExpiresAt = expires,
-                Currency = "BTC",
-                PayoutMethods = new[] { "BTC" }
-            });
-            await this.AssertAPIError("expired", async () => await unauthenticated.CreatePayout(inPast.Id, new CreatePayoutRequest()
-            {
-                Amount = 1.0m,
-                Destination = destination,
-                PayoutMethodId = "BTC"
-            }));
-
-            await this.AssertValidationError(new[] { "ExpiresAt" }, async () => await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
-            {
-                Name = "Test 2",
-                Amount = 12.3m,
-                StartsAt = DateTimeOffset.UtcNow,
-                ExpiresAt = DateTimeOffset.UtcNow - TimeSpan.FromDays(1)
-            }));
-
-
-            TestLogs.LogInformation("Create a pull payment with USD");
-            var pp = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
-            {
-                Name = "Test USD",
-                Amount = 5000m,
-                Currency = "USD",
-                PayoutMethods = new[] { "BTC" }
-            });
-
-            await this.AssertAPIError("lnurl-not-supported", async () => await unauthenticated.GetPullPaymentLNURL(pp.Id));
-
-            destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
-            TestLogs.LogInformation("Try to pay it in BTC");
-            payout = await unauthenticated.CreatePayout(pp.Id, new CreatePayoutRequest()
-            {
-                Destination = destination,
-                PayoutMethodId = "BTC"
-            });
-            await this.AssertAPIError("old-revision", async () => await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
-            {
-                Revision = -1
-            }));
-            await this.AssertAPIError("rate-unavailable", async () => await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
-            {
-                RateRule = "DONOTEXIST(BTC_USD)"
-            }));
-            payout = await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
-            {
-                Revision = payout.Revision
-            });
-            Assert.Equal(PayoutState.AwaitingPayment, payout.State);
-            Assert.NotNull(payout.PayoutAmount);
-            Assert.Equal(1.0m, payout.PayoutAmount); // 1 BTC == 5000 USD in tests
-            await this.AssertAPIError("invalid-state", async () => await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
-            {
-                Revision = payout.Revision
-            }));
-
-            // Create one pull payment with an amount of 9 decimals
-            var test3 = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
-            {
-                Name = "Test 2",
-                Amount = 12.303228134m,
-                Currency = "BTC",
-                PayoutMethods = new[] { "BTC" }
-            });
-            destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
-            payout = await unauthenticated.CreatePayout(test3.Id, new CreatePayoutRequest()
-            {
-                Destination = destination,
-                PayoutMethodId = "BTC"
-            });
-            payout = await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest());
-            // The payout should round the value of the payment down to the network of the payment method
-            Assert.Equal(12.30322814m, payout.PayoutAmount);
-            Assert.Equal(12.303228134m, payout.OriginalAmount);
-
-            await client.MarkPayoutPaid(storeId, payout.Id);
-            payout = (await client.GetPayouts(payout.PullPaymentId)).First(data => data.Id == payout.Id);
-            Assert.Equal(PayoutState.Completed, payout.State);
-            await AssertAPIError("invalid-state", async () => await client.MarkPayoutPaid(storeId, payout.Id));
-
-            // Test LNURL values
-            var test4 = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
-            {
-                Name = "Test 3",
-                Amount = 12.303228134m,
-                Currency = "BTC",
-                PayoutMethods = new[] { "BTC", "BTC-LightningNetwork", "BTC_LightningLike" }
-            });
-            var lnrURLs = await unauthenticated.GetPullPaymentLNURL(test4.Id);
-            Assert.IsType<string>(lnrURLs.LNURLBech32);
-            Assert.IsType<string>(lnrURLs.LNURLUri);
-            Assert.Equal(12.303228134m, test4.Amount);
-            Assert.Equal("BTC", test4.Currency);
-
-            // Check we can register Boltcard
-            var uid = new byte[7];
-            RandomNumberGenerator.Fill(uid);
-            var card = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
-            {
-                UID = uid
-            });
-            Assert.Equal(0, card.Version);
-            var card1keys = new[] { card.K0, card.K1, card.K2, card.K3, card.K4 };
-            Assert.DoesNotContain(null, card1keys);
-
-            var card2 = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
-            {
-                UID = uid
-            });
-            Assert.Equal(0, card2.Version);
-            card2 = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
-            {
-                UID = uid,
-                OnExisting = OnExistingBehavior.UpdateVersion
-            });
-            Assert.Equal(1, card2.Version);
-            Assert.StartsWith("lnurlw://", card2.LNURLW);
-            Assert.EndsWith("/boltcard", card2.LNURLW);
-            var card2keys = new[] { card2.K0, card2.K1, card2.K2, card2.K3, card2.K4 };
-            Assert.DoesNotContain(null, card2keys);
-            for (int i = 0; i < card1keys.Length; i++)
-            {
-                if (i == 1)
-                    Assert.Contains(card1keys[i], card2keys);
-                else
-                    Assert.DoesNotContain(card1keys[i], card2keys);
-            }
-            var card3 = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
-            {
-                UID = uid,
-                OnExisting = OnExistingBehavior.KeepVersion
-            });
-            Assert.Equal(card2.Version, card3.Version);
-            var p = new byte[] { 0xc7 }.Concat(uid).Concat(new byte[8]).ToArray();
-            var card4 = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
-            {
-                OnExisting = OnExistingBehavior.KeepVersion,
-                LNURLW = card2.LNURLW + $"?p={Encoders.Hex.EncodeData(AESKey.Parse(card2.K1).Encrypt(p))}"
-            });
-            Assert.Equal(card2.Version, card4.Version);
-            Assert.Equal(card2.K4, card4.K4);
-            // Can't define both properties
-            await AssertValidationError(["LNURLW"], () => client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
-            {
-                OnExisting = OnExistingBehavior.KeepVersion,
-                UID = uid,
-                LNURLW = card2.LNURLW + $"?p={Encoders.Hex.EncodeData(AESKey.Parse(card2.K1).Encrypt(p))}"
-            }));
-            // p is malformed
-            await AssertValidationError(["LNURLW"], () => client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
-            {
-                OnExisting = OnExistingBehavior.KeepVersion,
-                UID = uid,
-                LNURLW = card2.LNURLW + $"?p=lol"
-            }));
-            // p is invalid
-            p[0] = 0;
-            await AssertValidationError(["LNURLW"], () => client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
-            {
-                OnExisting = OnExistingBehavior.KeepVersion,
-                LNURLW = card2.LNURLW + $"?p={Encoders.Hex.EncodeData(AESKey.Parse(card2.K1).Encrypt(p))}"
-            }));
-            // Test with SATS denomination values
-            var testSats = await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
-            {
-                Name = "Test SATS",
-                Amount = 21000,
-                Currency = "SATS",
-                PayoutMethods = new[] { "BTC", "BTC-LightningNetwork", "BTC_LightningLike" }
-            });
-            lnrURLs = await unauthenticated.GetPullPaymentLNURL(testSats.Id);
-            Assert.IsType<string>(lnrURLs.LNURLBech32);
-            Assert.IsType<string>(lnrURLs.LNURLUri);
-            Assert.Equal(21000, testSats.Amount);
-            Assert.Equal("SATS", testSats.Currency);
-
-            //permission test around auto approved pps and payouts
-            var nonApproved = await acc.CreateClient(Policies.CanCreateNonApprovedPullPayments);
-            var approved = await acc.CreateClient(Policies.CanCreatePullPayments);
-            await AssertPermissionError(Policies.CanCreatePullPayments, async () =>
-            {
-                await nonApproved.CreatePullPayment(acc.StoreId, new CreatePullPaymentRequest()
-                {
-                    Amount = 100,
-                    Currency = "USD",
-                    Name = "pull payment",
-                    PayoutMethods = new[] { "BTC" },
-                    AutoApproveClaims = true
-                });
-            });
-            await AssertPermissionError(Policies.CanCreatePullPayments, async () =>
-            {
-                await nonApproved.CreatePayout(acc.StoreId, new CreatePayoutThroughStoreRequest()
-                {
-                    Amount = 100,
-                    PayoutMethodId = "BTC",
-                    Approved = true,
-                    Destination = new Key().GetAddress(ScriptPubKeyType.TaprootBIP86, Network.RegTest).ToString()
-                });
-            });
-
-            await approved.CreatePullPayment(acc.StoreId, new CreatePullPaymentRequest()
-            {
-                Amount = 100,
-                Currency = "USD",
-                Name = "pull payment",
-                PayoutMethods = new[] { "BTC" },
-                AutoApproveClaims = true
-            });
-
-            await approved.CreatePayout(acc.StoreId, new CreatePayoutThroughStoreRequest()
-            {
-                Amount = 100,
-                PayoutMethodId = "BTC",
-                Approved = true,
-                Destination = new Key().GetAddress(ScriptPubKeyType.TaprootBIP86, Network.RegTest).ToString()
-            });
-        }
-
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanProcessPayoutsExternally()
@@ -1511,7 +1122,7 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var acc = tester.NewAccount();
-            acc.Register();
+            await acc.RegisterAsync();
             await acc.CreateStoreAsync();
             var storeId = (await acc.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
             var client = await acc.CreateClient();
@@ -1616,23 +1227,12 @@ namespace BTCPayServer.Tests
         }
 
         private DateTimeOffset RoundSeconds(DateTimeOffset dateTimeOffset)
-        {
-            return new DateTimeOffset(dateTimeOffset.Year, dateTimeOffset.Month, dateTimeOffset.Day, dateTimeOffset.Hour, dateTimeOffset.Minute, dateTimeOffset.Second, dateTimeOffset.Offset);
-        }
+            => TestUtils.RoundSeconds(dateTimeOffset);
 
-        private async Task<GreenfieldAPIException> AssertAPIError(string expectedError, Func<Task> act)
-        {
-            var err = await Assert.ThrowsAsync<GreenfieldAPIException>(async () => await act());
-            Assert.Equal(expectedError, err.APIError.Code);
-            return err;
-        }
-        private async Task<GreenfieldAPIException> AssertPermissionError(string expectedPermission, Func<Task> act)
-        {
-            var err = await Assert.ThrowsAsync<GreenfieldAPIException>(async () => await act());
-            var err2 = Assert.IsType<GreenfieldPermissionAPIError>(err.APIError);
-            Assert.Equal(expectedPermission, err2.MissingPermission);
-            return err;
-        }
+        private Task<GreenfieldAPIException> AssertAPIError(string expectedError, Func<Task> act)
+            => AssertEx.AssertApiError(expectedError, act);
+        private Task<GreenfieldAPIException> AssertPermissionError(string expectedPermission, Func<Task> act)
+            => AssertEx.AssertPermissionError(expectedPermission, act);
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]

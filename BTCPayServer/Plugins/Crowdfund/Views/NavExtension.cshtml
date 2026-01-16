@@ -14,7 +14,7 @@
     var appType = AppService.GetAppType(CrowdfundAppType.AppType)!;
     var apps = Model.Apps.Where(app => app.AppType == appType.Type).ToList();
     <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
-        <a layout-menu-item="CreateApp-@appType.Type" asp-area="" asp-controller="UIApps" asp-action="CreateApp" asp-route-storeId="@store.Id" asp-route-appType="@appType.Type">
+        <a area="@CrowdfundPlugin.Area" layout-menu-item="CreateApp-@appType.Type" asp-area="" asp-controller="UIApps" asp-action="CreateApp" asp-route-storeId="@store.Id" asp-route-appType="@appType.Type">
             <vc:icon symbol="nav-crowdfund" />
 			<span text-translate="true">Crowdfund</span>
         </a>
@@ -31,12 +31,12 @@
     @foreach (var app in apps)
     {
         <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
-            <a layout-menu-item="@nameof(CrowdfundPlugin)-@app.Id" asp-area="" asp-controller="UICrowdfund" asp-action="UpdateCrowdfund" asp-route-appId="@app.Id">
+            <a asp-area="@CrowdfundPlugin.Area" layout-menu-item="@nameof(CrowdfundPlugin)-@app.Id" asp-controller="UICrowdfund" asp-action="UpdateCrowdfund" asp-route-appId="@app.Id">
                 <span>@app.AppName</span>
             </a>
         </li>
         <li class="nav-item nav-item-sub" not-permission="@Policies.CanViewStoreSettings">
-            <a layout-menu-item="@nameof(CrowdfundPlugin)-@app.Id" asp-area="" asp-controller="UICrowdfund" asp-action="ViewCrowdfund" asp-route-appId="@app.Id">
+            <a asp-area="@CrowdfundPlugin.Area" layout-menu-item="@nameof(CrowdfundPlugin)-@app.Id" asp-controller="UICrowdfund" asp-action="ViewCrowdfund" asp-route-appId="@app.Id">
                 <span>@app.AppName</span>
             </a>
         </li>

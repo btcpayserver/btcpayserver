@@ -11,7 +11,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.Crowdfund.Models.UpdateCrowdfundViewModel
 @{
-    // layout-menu-item="@nameof(CrowdfundPlugin)-@app.Id"
+    Layout = "_Layout";
     ViewData.SetLayoutModel(new LayoutModel($"{nameof(CrowdfundPlugin)}-{Model.AppId}", StringLocalizer["Update Crowdfund"]));
 	Csp.UnsafeEval();
     var canUpload = await FileService.IsAvailable();
@@ -41,7 +41,7 @@
             }
             else if (Model.ModelWithMinimumData)
             {
-                <a class="btn btn-secondary" asp-controller="UICrowdfund" asp-action="ViewCrowdfund" asp-route-appId="@Model.AppId" id="ViewApp" target="_blank" text-translate="true">View</a>
+                <a class="btn btn-secondary" asp-area="@CrowdfundPlugin.Area" asp-controller="UICrowdfund" asp-action="ViewCrowdfund" asp-route-appId="@Model.AppId" id="ViewApp" target="_blank" text-translate="true">View</a>
             }
         </div>
     </div>

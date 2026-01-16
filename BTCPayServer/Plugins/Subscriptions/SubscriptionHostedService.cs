@@ -198,6 +198,7 @@ public class SubscriptionHostedService(
 
     class MembershipServerSettings
     {
+        // ReSharper disable once UnusedMember.Local
         public MembershipServerSettings()
         {
         }
@@ -247,13 +248,9 @@ public class SubscriptionHostedService(
             var (prevPhase, prevActive) = (m.Phase, m.IsActive);
             if (prevPhase != newPhase)
             {
-                if (newPhase is PhaseTypes.Expired or PhaseTypes.Grace)
+                if (newPhase is PhaseTypes.Expired or PhaseTypes.Grace && m.AutoRenew)
                 {
-                    if (m is
-                        {
-                            CanStartNextPlan: true,
-                            AutoRenew: true
-                        })
+                    if (m.CanStartNextPlanEx(false, newPhase))
                     {
                         if (await subCtx.TryChargeSubscriber(m, $"Auto renewal for plan '{m.NextPlan.Name}'", m.NextPlan.Price))
                         {
@@ -267,7 +264,7 @@ public class SubscriptionHostedService(
                             });
                         }
                     }
-                    else if (m is { AutoRenew: true, CanStartNextPlan: false })
+                    else if (!m.IsSuspended)
                     {
                         subCtx.AddEvent(new SubscriptionEvent.NeedUpgrade(m));
                     }
@@ -292,7 +289,7 @@ public class SubscriptionHostedService(
 
             var needReminder = m.ReminderDate <= now &&
                                !m.PaymentReminded &&
-                               m.MissingCredit() >= 0m;
+                               m.MissingCredit() > 0m;
             if (needReminder)
             {
                 m.PaymentReminded = true;
@@ -371,7 +368,7 @@ public class SubscriptionHostedService(
 
     private async Task ProcessSubscriptionPayment(InvoiceEntity invoice, string checkoutId, CancellationToken cancellationToken = default)
     {
-        bool needUpdate = false;
+        var needUpdate = false;
         await using var subCtx = CreateContext(cancellationToken);
         var ctx = subCtx.Context;
         var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
@@ -474,7 +471,7 @@ public class SubscriptionHostedService(
             }
         }
         // In hard migrations, we stop the current plan by reimbursing what has
-        // not yet been spent. The we start the new plan.
+        // not yet been spent. We start the new plan.
         else if (checkout.OnPay == PlanCheckoutData.OnPayBehavior.HardMigration)
         {
             var unusedAmount = subCtx.RoundAmount(sub.GetUnusedPeriodAmount(now) ?? 0.0m, sub.Plan.Currency);
@@ -543,7 +540,7 @@ public class SubscriptionHostedService(
         if (email is null)
             return null;
         var cust = await ctx.Customers.GetOrUpdate(checkout.Plan.Offering.App.StoreDataId, CustomerSelector.ByEmail(email));
-        (var sub, var created) =
+        var (sub, created) =
             await ctx.Subscribers.GetOrCreateByCustomerId(cust.Id, plan.OfferingId, plan.Id, optimisticActivation, checkout.TestAccount,
                 JObject.Parse(checkout.NewSubscriberMetadata));
         if (!created || sub is null)

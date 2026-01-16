@@ -737,7 +737,7 @@ goodies:
             => new InvoiceCheckoutPMO(s).AssertContent(new() { AmountDue = expectedAmount });
 
         [Fact]
-        [Trait("Playwright", "Playwright")]
+        [Trait("Playwright", "Playwright-2")]
         public async Task CanUsePOSKeypad()
         {
             await using var s = CreatePlaywrightTester();
@@ -1045,7 +1045,7 @@ goodies:
             await s.CreateNewStore();
             await s.GenerateWallet();
             (_, string appId) = await s.CreateApp("PointOfSale");
-            
+
             await s.Page.Locator("#Title").ClearAsync();
             await s.Page.FillAsync("#Title", "Tea shop");
             await s.Page.ClickAsync("label[for='DefaultView_Cart']");
@@ -1057,7 +1057,7 @@ goodies:
             await s.Page.Locator("#CodeTabButton").WaitForAsync();
             await s.Page.Locator("#CodeTabButton").ScrollIntoViewIfNeededAsync();
             await s.Page.ClickAsync("#CodeTabButton");
-            
+
             // Wait for the textarea to be populated by Vue.js
             await s.Page.Locator("#TemplateConfig").WaitForAsync();
             var template = await s.Page.Locator("#TemplateConfig").InputValueAsync();
@@ -1111,7 +1111,7 @@ goodies:
             await s.GoToHome();
             await s.GoToServer(ServerNavPages.Policies);
             await s.Page.Locator("#RootAppId").ScrollIntoViewIfNeededAsync();
-            
+
             var options = await s.Page.Locator("#RootAppId option").AllTextContentsAsync();
             var targetOption = options.FirstOrDefault(o => o.Contains("Point of"));
             if (targetOption != null)
@@ -1124,7 +1124,7 @@ goodies:
             }
             await s.ClickPagePrimary();
             await s.FindAlertMessage();
-            
+
             // Make sure after login, we are not redirected to the PoS
             await s.Logout();
             await s.LogIn(userId);
@@ -1132,13 +1132,13 @@ goodies:
             content = await s.Page.ContentAsync();
             Assert.DoesNotContain("Tea shop", content);
             var prevUrl = s.Page.Url;
-            
+
             // We are only if explicitly going to /
             await s.GoToUrl("/");
             await s.Page.WaitForLoadStateAsync();
             content = await s.Page.ContentAsync();
             Assert.Contains("Tea shop", content);
-            
+
             // Check redirect to canonical url
             await s.GoToUrl(posBaseUrl);
             Assert.Equal("/", new Uri(s.Page.Url, UriKind.Absolute).AbsolutePath);
@@ -1152,7 +1152,7 @@ goodies:
             await s.Page.Locator("#RootAppId").ScrollIntoViewIfNeededAsync();
             await s.Page.ClickAsync("#AddDomainButton");
             await s.Page.Locator("#DomainToAppMapping_0__Domain").FillAsync(new Uri(s.Page.Url, UriKind.Absolute).DnsSafeHost);
-            
+
             var domainOptions = await s.Page.Locator("#DomainToAppMapping_0__AppId option").AllTextContentsAsync();
             var targetDomainOption = domainOptions.FirstOrDefault(o => o.Contains("Point of"));
             if (targetDomainOption != null)
@@ -1165,20 +1165,20 @@ goodies:
             }
             await s.ClickPagePrimary();
             await s.FindAlertMessage(partialText: "Policies updated successfully");
-            
+
             // Make sure after login, we are not redirected to the PoS
             await s.Logout();
             await s.LogIn(userId);
             await s.Page.WaitForLoadStateAsync();
             content = await s.Page.ContentAsync();
             Assert.DoesNotContain("Tea shop", content);
-            
+
             // We are only if explicitly going to /
             await s.GoToUrl("/");
             await s.Page.WaitForLoadStateAsync();
             content = await s.Page.ContentAsync();
             Assert.Contains("Tea shop", content);
-            
+
             // Check redirect to canonical url
             await s.GoToUrl(posBaseUrl);
             Assert.Equal("/", new Uri(s.Page.Url, UriKind.Absolute).AbsolutePath);
@@ -1190,20 +1190,20 @@ goodies:
                 await s.GoToUrl($"/apps/{appId}/settings/pos");
             }
             Assert.Equal(0, await s.Page.Locator("text='Archived App'").CountAsync());
-            
+
             await s.Page.Locator("#btn-archive-toggle").WaitForAsync();
             await s.Page.Locator("#btn-archive-toggle").ScrollIntoViewIfNeededAsync();
             await s.Page.ClickAsync("#btn-archive-toggle");
             await s.FindAlertMessage(partialText: "The app has been archived and will no longer appear in the apps list by default.");
 
             Assert.Equal(0, await s.Page.Locator("#ViewApp").CountAsync());
-            
+
             await s.GoToStore(s.StoreId);
             var archivedLink = s.Page.Locator("text='1 Archived App'");
             await archivedLink.WaitForAsync();
             var archivedText = await archivedLink.TextContentAsync();
             Assert.Contains("1 Archived App", archivedText);
-            
+
             await s.GoToUrl(posBaseUrl);
             var title = await s.Page.TitleAsync();
             Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);

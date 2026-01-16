@@ -22,6 +22,20 @@ jobs:
             docker run --rm -v btcpayservertests_tests_datadir:/data -v /tmp/Artifacts:/host alpine sh -c "cp -r /data/. /host/"
       - store_artifacts:
           path: /tmp/Artifacts
+  playwright_2_tests:
+    machine:
+      image: ubuntu-2004:2024.11.1
+    steps:
+      - checkout
+      - run:
+          command: |
+            cd .circleci && ./run-tests.sh "Playwright=Playwright-2"
+      - run:
+          when: always
+          command: |
+            docker run --rm -v btcpayservertests_tests_datadir:/data -v /tmp/Artifacts:/host alpine sh -c "cp -r /data/. /host/"
+      - store_artifacts:
+          path: /tmp/Artifacts
   selenium_tests:
     machine:
       image: ubuntu-2004:2024.11.1
@@ -81,6 +95,7 @@ workflows:
     jobs:
       - fast_tests
       - playwright_tests 
+      - playwright_2_tests 
       - selenium_tests
       - integration_tests
   publish:

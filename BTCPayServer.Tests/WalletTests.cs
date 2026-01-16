@@ -116,7 +116,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
 
     [Fact]
-    [Trait("Playwright", "Playwright")]
+    [Trait("Playwright", "Playwright-2")]
     public async Task CanUseCPFP()
     {
         await using var s = CreatePlaywrightTester();

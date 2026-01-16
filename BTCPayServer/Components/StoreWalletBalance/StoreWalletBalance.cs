@@ -70,11 +70,11 @@ public class StoreWalletBalance : ViewComponent
             using CancellationTokenSource cts = new(TimeSpan.FromSeconds(3));
             var wallet = _walletProvider.GetWallet(cryptoCode);
             var derivation = store.GetDerivationSchemeSettings(_handlers, walletId.CryptoCode);
-            if (wallet is not null && derivation is not null)
+            var handler = _handlers.TryGetBitcoinHandler(walletId.CryptoCode);
+            if (wallet is not null && derivation is not null && handler is not null)
             {
-                var network = _handlers.GetBitcoinHandler(walletId.CryptoCode).Network;
                 var balance = await wallet.GetBalance(derivation.AccountDerivation, cts.Token);
-                vm.Balance = balance.Available.GetValue(network);
+                vm.Balance = balance.Available.GetValue(handler.Network);
             }
             else
             {

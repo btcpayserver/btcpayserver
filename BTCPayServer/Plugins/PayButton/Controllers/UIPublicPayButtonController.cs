@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using System.Web;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Controllers;
 using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
-using BTCPayServer.Models;
 using BTCPayServer.Plugins.PayButton.Models;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
@@ -17,28 +17,18 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
 using NicolasDorier.RateLimits;
 
-namespace BTCPayServer.Controllers
+namespace BTCPayServer.Plugins.PayButton.Controllers
 {
-    public class UIPublicController : Controller
+    [Area(PayButtonPlugin.Area)]
+    public class UIPublicPayButtonController(
+        UIInvoiceController invoiceController,
+        StoreRepository storeRepository,
+        IStringLocalizer stringLocalizer,
+        CurrencyNameTable currencyNameTable,
+        LinkGenerator linkGenerator)
+        : Controller
     {
-        public UIPublicController(UIInvoiceController invoiceController,
-            StoreRepository storeRepository,
-            IStringLocalizer stringLocalizer,
-            CurrencyNameTable currencyNameTable,
-            LinkGenerator linkGenerator)
-        {
-            _InvoiceController = invoiceController;
-            _currencyNameTable = currencyNameTable;
-            _StoreRepository = storeRepository;
-            _linkGenerator = linkGenerator;
-            StringLocalizer = stringLocalizer;
-        }
-
-        private readonly CurrencyNameTable _currencyNameTable;
-        private readonly UIInvoiceController _InvoiceController;
-        private readonly StoreRepository _StoreRepository;
-        private readonly LinkGenerator _linkGenerator;
-        public IStringLocalizer StringLocalizer { get; }
+        public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
 
         [HttpGet]
         [IgnoreAntiforgeryToken]
@@ -56,8 +46,8 @@ namespace BTCPayServer.Controllers
         [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> PayButtonHandle([FromForm] PayButtonViewModel model, CancellationToken cancellationToken)
         {
-            var store = await _StoreRepository.FindStore(model.StoreId);
-            if (store == null)
+            var store = await storeRepository.FindStore(model.StoreId);
+            if (store is null)
                 ModelState.AddModelError("Store", StringLocalizer["Invalid store"]);
             else
             {
@@ -66,16 +56,16 @@ namespace BTCPayServer.Controllers
                     ModelState.AddModelError("Store", StringLocalizer["Store has not enabled Pay Button"]);
             }
 
-            if (model == null || (model.Price is decimal v ? v <= 0 : false))
+            if (model.Price is decimal and <= 0)
                 ModelState.AddModelError("Price", StringLocalizer["Price must be greater than 0"]);
 
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || store is null)
                 return View();
 
-            InvoiceEntity invoice = null;
+            InvoiceEntity invoice;
             try
             {
-                invoice = await _InvoiceController.CreateInvoiceCoreRaw(new CreateInvoiceRequest()
+                invoice = await invoiceController.CreateInvoiceCoreRaw(new CreateInvoiceRequest()
                 {
                     Amount = model.Price,
                     Currency = model.Currency,
@@ -86,7 +76,7 @@ namespace BTCPayServer.Controllers
                     }.ToJObject(),
                     Checkout = new ()
                     {
-                        RedirectURL = model.BrowserRedirect ?? store?.StoreWebsite,
+                        RedirectURL = model.BrowserRedirect ?? store.StoreWebsite,
                         DefaultPaymentMethod = model.DefaultPaymentMethod
                     }
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
@@ -109,7 +99,7 @@ namespace BTCPayServer.Controllers
                 return View();
             }
 
-            var url = GreenfieldInvoiceController.ToModel(invoice, _linkGenerator, _currencyNameTable, HttpContext.Request).CheckoutLink;
+            var url = GreenfieldInvoiceController.ToModel(invoice, linkGenerator, currencyNameTable, HttpContext.Request).CheckoutLink;
             if (!string.IsNullOrEmpty(model.CheckoutQueryString))
             {
                 var additionalParamValues = HttpUtility.ParseQueryString(model.CheckoutQueryString);

@@ -181,6 +181,7 @@ namespace BTCPayServer.Tests
             await s.RegisterNewUser();
             await s.CreateNewStore();
             await s.GoToUrl($"/stores/{s.StoreId}/payment-requests");
+            
             async Task<string> ReadStatusAsync()
             {
                 var locator = s.Page.Locator(".only-for-js[data-test='status']");
@@ -283,8 +284,23 @@ namespace BTCPayServer.Tests
             // Pay full amount
             await checkoutFrame.Locator("#FakePayment").ClickAsync();
 
-            // Processing (do not assert page badge; just wait for cheat success to avoid flakiness)
-            await checkoutFrame.Locator("#CheatSuccessMessage").WaitForAsync();
+            // Processing - verify payment received message and status
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var processingSection = checkoutFrame.Locator("#processing");
+                if (await processingSection.CountAsync() > 0 && await processingSection.IsVisibleAsync())
+                {
+                    var processingText = await processingSection.InnerTextAsync();
+                    Assert.Contains("Payment Received", processingText);
+                    Assert.Contains("Your payment has been received and is now processing", processingText);
+                }
+            });
+            
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var statusText = await ReadStatusAsync();
+                Assert.Equal("Processing", statusText);
+            });
 
             // Mine
             await checkoutFrame.Locator("#mine-block button").ClickAsync();
@@ -3052,12 +3068,7 @@ namespace BTCPayServer.Tests
             // unset end date
             await s.Page.EvaluateAsync("document.getElementById('EndDate').value = ''");
             await s.ClickPagePrimary();
-            // Wait for save - check that ViewApp button exists (appears after successful save)
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                var count = await s.Page.Locator("#ViewApp").CountAsync();
-                Assert.True(count > 0, "ViewApp button should appear after save");
-            });
+            await s.FindAlertMessage(partialText: "App updated");
             var editUrl = s.Page.Url;
 
             // Check public page
@@ -3111,8 +3122,8 @@ namespace BTCPayServer.Tests
             await s.GoToUrl(editUrl);
             await s.Page.SelectOptionAsync("#FormId", "Email");
             await s.ClickPagePrimary();
-            await s.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-            await s.Page.Locator("#ViewApp").WaitForAsync(new() { State = WaitForSelectorState.Visible });
+            // Verify "App updated" message
+            await s.FindAlertMessage(partialText: "App updated");
 
             await s.Page.ClickAsync("#ViewApp");
             var formPage = await s.Page.Context.WaitForPageAsync();
@@ -3149,7 +3160,8 @@ namespace BTCPayServer.Tests
             Assert.Contains("\"title\": \"Perk 1\"", template);
             Assert.Contains("\"id\": \"Perk-1\"", template);
             await s.ClickPagePrimary();
-            await s.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            // Verify "App updated" message
+            await s.FindAlertMessage(partialText: "App updated");
 
             await s.Page.ClickAsync("#ViewApp");
             var perkPage = await s.Page.Context.WaitForPageAsync();

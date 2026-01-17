@@ -33,6 +33,7 @@
             : Url.Action("UpdateStoreLabels", "UIStores", new { storeId = Model.StoreId });
 }
 
+@Html.AntiForgeryToken()
 <input id="@elementId"
        placeholder=@StringLocalizer["Select labels"]
        autocomplete="off"
@@ -57,4 +58,3 @@
                data-store-id="@Model.StoreId"
            </text>
        } />
-

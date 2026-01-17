@@ -49,14 +49,14 @@ public partial class UIStoresController
 
     [HttpPost("{storeId}/update-labels")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [IgnoreAntiforgeryToken]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateStoreLabels(string storeId, [FromBody] UpdateStoreLabelsRequest request)
     {
         var store = CurrentStore;
         if (store is null || !string.Equals(store.Id, storeId, StringComparison.Ordinal))
             return NotFound();
 
-        if (request.Type is null || request.Id is null)
+        if (string.IsNullOrWhiteSpace(request.Type) || string.IsNullOrWhiteSpace(request.Id))
             return BadRequest();
 
         await _storeLabelRepository.SetStoreObjectLabels(storeId, request.Type, request.Id, request.Labels ?? Array.Empty<string>());

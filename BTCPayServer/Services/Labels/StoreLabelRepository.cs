@@ -253,22 +253,19 @@ public class StoreLabelRepository
             """,
             new { storeId, oldId, newId });
 
-        if (updated > 0)
-        {
-            await conn.ExecuteAsync(
-                """
-                DELETE FROM "store_labels" sl
-                WHERE sl."StoreId" = @storeId
-                  AND sl."Id"      = @oldId
-                  AND NOT EXISTS (
-                      SELECT 1
-                      FROM "store_label_links" sll
-                      WHERE sll."StoreId"      = sl."StoreId"
-                        AND sll."StoreLabelId" = sl."Id"
-                  )
-                """,
-                new { storeId, oldId });
-        }
+        await conn.ExecuteAsync(
+            """
+            DELETE FROM "store_labels" sl
+            WHERE sl."StoreId" = @storeId
+              AND sl."Id"      = @oldId
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM "store_label_links" sll
+                  WHERE sll."StoreId"      = sl."StoreId"
+                    AND sll."StoreLabelId" = sl."Id"
+              )
+            """,
+            new { storeId, oldId });
 
         await tx.CommitAsync();
         return updated > 0;

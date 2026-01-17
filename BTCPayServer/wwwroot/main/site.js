@@ -199,9 +199,14 @@ async function initLabelManager (elementId) {
             select.lock();
             try {
                 const payload = { id: objectId, type: objectType, labels: select.items };
+                const tokenInput =
+                    element.closest('form')?.querySelector('input[name="__RequestVerificationToken"]') ||
+                    document.querySelector('input[name="__RequestVerificationToken"]');
+                const headers = { 'Content-Type': 'application/json' };
+                if (tokenInput?.value) headers['RequestVerificationToken'] = tokenInput.value;
                 const response = await fetch(updateUrl, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers,
                     body: JSON.stringify(payload)
                 });
                 if (!response.ok) {

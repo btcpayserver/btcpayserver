@@ -59,6 +59,8 @@ namespace BTCPayServer.Migrations
                 table: "store_label_links",
                 columns: new[] { "StoreId", "ObjectId" });
 
+            migrationBuilder.Sql(@"CREATE EXTENSION IF NOT EXISTS pgcrypto;");
+
             // Copy Payment Request label objects (label metadata) into StoreLabels
             migrationBuilder.Sql(@"
             WITH pr_links AS (

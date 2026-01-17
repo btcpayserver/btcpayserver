@@ -7,20 +7,25 @@ namespace BTCPayServer.Data;
 public class StoreLabelData
 {
     public string StoreId { get; set; } = null!;
-    public string LabelId { get; set; } = null!;
-
-    public string? Data { get; set; }
+    public string Id { get; set; } = null!;
+    public string Type { get; set; } = null!;
+    public string Text { get; set; } = null!;
+    public string? Color { get; set; }
 
     [Timestamp]
     public uint XMin { get; set; }
 
     internal static void OnModelCreating(ModelBuilder builder)
     {
-        builder.Entity<StoreLabelData>()
-            .HasKey(o => new { o.StoreId, o.LabelId });
+        builder.Entity<StoreLabelData>(b =>
+        {
+            b.ToTable("store_labels");
 
-        builder.Entity<StoreLabelData>()
-            .Property(o => o.Data)
-            .HasColumnType("JSONB");
+            b.HasKey(x => new { x.StoreId, x.Id });
+
+            b.Property(x => x.XMin).HasColumnName("xmin");
+
+            b.HasIndex(x => new { x.StoreId, x.Type, x.Text }).IsUnique();
+        });
     }
 }

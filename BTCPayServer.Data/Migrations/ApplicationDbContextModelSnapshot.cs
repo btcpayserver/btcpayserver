@@ -961,11 +961,19 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("StoreId")
                         .HasColumnType("text");
 
-                    b.Property<string>("LabelId")
+                    b.Property<string>("Id")
                         .HasColumnType("text");
 
-                    b.Property<string>("Data")
-                        .HasColumnType("JSONB");
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Color")
+                        .HasColumnType("text");
 
                     b.Property<uint>("XMin")
                         .IsConcurrencyToken()
@@ -973,9 +981,12 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.HasKey("StoreId", "LabelId");
+                    b.HasKey("StoreId", "Id");
 
-                    b.ToTable("StoreLabels");
+                    b.HasIndex("StoreId", "Type", "Text")
+                        .IsUnique();
+
+                    b.ToTable("store_labels", (string)null);
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.StoreLabelLinkData", b =>
@@ -983,17 +994,11 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("StoreId")
                         .HasColumnType("text");
 
-                    b.Property<string>("LabelId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Type")
+                    b.Property<string>("StoreLabelId")
                         .HasColumnType("text");
 
                     b.Property<string>("ObjectId")
                         .HasColumnType("text");
-
-                    b.Property<string>("Data")
-                        .HasColumnType("JSONB");
 
                     b.Property<uint>("XMin")
                         .IsConcurrencyToken()
@@ -1001,13 +1006,11 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.HasKey("StoreId", "LabelId", "Type", "ObjectId");
+                    b.HasKey("StoreId", "StoreLabelId", "ObjectId");
 
-                    b.HasIndex("StoreId", "Type", "LabelId");
+                    b.HasIndex("StoreId", "ObjectId");
 
-                    b.HasIndex("StoreId", "Type", "ObjectId");
-
-                    b.ToTable("StoreLabelLinks");
+                    b.ToTable("store_label_links", (string)null);
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.StoreRole", b =>
@@ -2268,11 +2271,13 @@ namespace BTCPayServer.Migrations
 
             modelBuilder.Entity("BTCPayServer.Data.StoreLabelLinkData", b =>
                 {
-                    b.HasOne("BTCPayServer.Data.StoreLabelData", null)
+                    b.HasOne("BTCPayServer.Data.StoreLabelData", "StoreLabel")
                         .WithMany()
-                        .HasForeignKey("StoreId", "LabelId")
+                        .HasForeignKey("StoreId", "StoreLabelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("StoreLabel");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.StoreRole", b =>

@@ -7,36 +7,31 @@ namespace BTCPayServer.Data;
 public class StoreLabelLinkData
 {
     public string StoreId { get; set; } = null!;
-    public string LabelId { get; set; } = null!;
-
-    public string Type { get; set; } = null!;
-
+    public string StoreLabelId { get; set; } = null!;
     public string ObjectId { get; set; } = null!;
 
-    public string? Data { get; set; }
+    public StoreLabelData StoreLabel { get; set; } = null!;
 
     [Timestamp]
     public uint XMin { get; set; }
 
     public static void OnModelCreating(ModelBuilder builder)
     {
-        builder.Entity<StoreLabelLinkData>()
-            .HasKey(o => new { o.StoreId, o.LabelId, o.Type, o.ObjectId });
+        builder.Entity<StoreLabelLinkData>(b =>
+        {
+            b.ToTable("store_label_links");
 
-        builder.Entity<StoreLabelLinkData>()
-            .Property(o => o.Data)
-            .HasColumnType("JSONB");
+            b.HasKey(x => new { x.StoreId, x.StoreLabelId, x.ObjectId });
 
-        builder.Entity<StoreLabelLinkData>()
-            .HasIndex(o => new { o.StoreId, o.Type, o.ObjectId });
+            b.Property(x => x.XMin).HasColumnName("xmin");
 
-        builder.Entity<StoreLabelLinkData>()
-            .HasIndex(o => new { o.StoreId, o.Type, o.LabelId });
+            b.HasIndex(x => new { x.StoreId, x.ObjectId });
 
-        builder.Entity<StoreLabelLinkData>()
-            .HasOne<StoreLabelData>()
-            .WithMany()
-            .HasForeignKey(o => new { o.StoreId, o.LabelId })
-            .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.StoreLabel)
+                .WithMany()
+                .HasForeignKey(x => new { x.StoreId, x.StoreLabelId })
+                .HasPrincipalKey(x => new { x.StoreId, x.Id })
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }

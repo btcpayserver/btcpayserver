@@ -14,57 +14,58 @@ namespace BTCPayServer.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "StoreLabels",
+                name: "store_labels",
                 columns: table => new
                 {
                     StoreId = table.Column<string>(type: "text", nullable: false),
-                    LabelId = table.Column<string>(type: "text", nullable: false),
-                    Data = table.Column<string>(type: "JSONB", nullable: true),
+                    Id      = table.Column<string>(type: "text", nullable: false),
+                    Type    = table.Column<string>(type: "text", nullable: false),
+                    Text    = table.Column<string>(type: "text", nullable: false),
+                    Color   = table.Column<string>(type: "text", nullable: true),
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_StoreLabels", x => new { x.StoreId, x.LabelId });
+                    table.PrimaryKey("PK_StoreLabels", x => new { x.StoreId, x.Id });
                 });
 
+            migrationBuilder.CreateIndex(
+                name: "IX_StoreLabels_StoreId_Type_Text",
+                table: "store_labels",
+                columns: new[] { "StoreId", "Type", "Text" },
+                unique: true);
+
+
             migrationBuilder.CreateTable(
-                name: "StoreLabelLinks",
+                name: "store_label_links",
                 columns: table => new
                 {
-                    StoreId = table.Column<string>(type: "text", nullable: false),
-                    LabelId = table.Column<string>(type: "text", nullable: false),
-                    Type = table.Column<string>(type: "text", nullable: false),
-                    ObjectId = table.Column<string>(type: "text", nullable: false),
-                    Data = table.Column<string>(type: "JSONB", nullable: true),
+                    StoreId       = table.Column<string>(type: "text", nullable: false),
+                    StoreLabelId  = table.Column<string>(type: "text", nullable: false),
+                    ObjectId      = table.Column<string>(type: "text", nullable: false),
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_StoreLabelLinks", x => new { x.StoreId, x.LabelId, x.Type, x.ObjectId });
+                    table.PrimaryKey("PK_StoreLabelLinks", x => new { x.StoreId, x.StoreLabelId, x.ObjectId });
                     table.ForeignKey(
-                        name: "FK_StoreLabelLinks_StoreLabels_StoreId_LabelId",
-                        columns: x => new { x.StoreId, x.LabelId },
-                        principalTable: "StoreLabels",
-                        principalColumns: new[] { "StoreId", "LabelId" },
+                        name: "FK_StoreLabelLinks_StoreLabels_StoreId_StoreLabelId",
+                        columns: x => new { x.StoreId, x.StoreLabelId },
+                        principalTable: "store_labels",
+                        principalColumns: new[] { "StoreId", "Id" },
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_StoreLabelLinks_StoreId_Type_LabelId",
-                table: "StoreLabelLinks",
-                columns: new[] { "StoreId", "Type", "LabelId" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_StoreLabelLinks_StoreId_Type_ObjectId",
-                table: "StoreLabelLinks",
-                columns: new[] { "StoreId", "Type", "ObjectId" });
-
+                name: "IX_StoreLabelLinks_StoreId_ObjectId",
+                table: "store_label_links",
+                columns: new[] { "StoreId", "ObjectId" });
 
             // Copy Payment Request label objects (label metadata) into StoreLabels
             migrationBuilder.Sql(@"
             WITH pr_links AS (
                 SELECT DISTINCT
                     wol.""WalletId"" AS ""WalletId"",
-                    wol.""AId""      AS ""LabelId"",
-                    wol.""BId""      AS ""PaymentRequestId""
+                    wol.""AId"" AS ""LabelText"",
+                    wol.""BId"" AS ""PaymentRequestId""
                 FROM ""WalletObjectLinks"" wol
                 WHERE wol.""AType"" = 'label'
                   AND wol.""BType"" = 'payment-request'
@@ -72,20 +73,25 @@ namespace BTCPayServer.Migrations
             pr_labels AS (
                 SELECT DISTINCT
                     pr.""StoreDataId"" AS ""StoreId"",
-                    pl.""LabelId"",
-                    wo.""Data""        AS ""LabelData""
+                    pl.""LabelText"",
+                    wo.""Data"" AS ""LabelData""
                 FROM pr_links pl
                 INNER JOIN ""PaymentRequests"" pr
                   ON pr.""Id"" = pl.""PaymentRequestId""
                 INNER JOIN ""WalletObjects"" wo
                   ON wo.""WalletId"" = pl.""WalletId""
                  AND wo.""Type"" = 'label'
-                 AND wo.""Id"" = pl.""LabelId""
+                 AND wo.""Id"" = pl.""LabelText""
             )
-            INSERT INTO ""StoreLabels"" (""StoreId"", ""LabelId"", ""Data"")
-            SELECT ""StoreId"", ""LabelId"", ""LabelData""
+            INSERT INTO ""store_labels"" (""StoreId"", ""Id"", ""Type"", ""Text"", ""Color"")
+            SELECT
+                ""StoreId"",
+                gen_random_uuid()::text,
+                'payment-request',
+                ""LabelText"",
+                (""LabelData""::jsonb ->> 'color')
             FROM pr_labels
-            ON CONFLICT (""StoreId"", ""LabelId"") DO NOTHING;
+            ON CONFLICT (""StoreId"", ""Type"", ""Text"") DO NOTHING;
             ");
 
             // Copy Payment Request label links into StoreLabelLinks
@@ -93,20 +99,25 @@ namespace BTCPayServer.Migrations
             WITH pr_links AS (
                 SELECT DISTINCT
                     pr.""StoreDataId"" AS ""StoreId"",
-                    wol.""AId""        AS ""LabelId"",
-                    wol.""BType""      AS ""Type"",
-                    wol.""BId""        AS ""ObjectId"",
-                    wol.""Data""       AS ""LinkData""
+                    wol.""AId""        AS ""LabelText"",
+                    wol.""BId""        AS ""ObjectId""
                 FROM ""WalletObjectLinks"" wol
                 INNER JOIN ""PaymentRequests"" pr
                   ON pr.""Id"" = wol.""BId""
                 WHERE wol.""AType"" = 'label'
                   AND wol.""BType"" = 'payment-request'
             )
-            INSERT INTO ""StoreLabelLinks"" (""StoreId"", ""LabelId"", ""Type"", ""ObjectId"", ""Data"")
-            SELECT ""StoreId"", ""LabelId"", ""Type"", ""ObjectId"", ""LinkData""
-            FROM pr_links
-            ON CONFLICT (""StoreId"", ""LabelId"", ""Type"", ""ObjectId"") DO NOTHING;
+            INSERT INTO ""store_label_links"" (""StoreId"", ""StoreLabelId"", ""ObjectId"")
+            SELECT
+                pl.""StoreId"",
+                sl.""Id""          AS ""StoreLabelId"",
+                pl.""ObjectId""
+            FROM pr_links pl
+            INNER JOIN ""store_labels"" sl
+              ON sl.""StoreId"" = pl.""StoreId""
+             AND sl.""Type""    = 'payment-request'
+             AND sl.""Text""    = pl.""LabelText""
+            ON CONFLICT (""StoreId"", ""StoreLabelId"", ""ObjectId"") DO NOTHING;
             ");
 
             // Remove the Payment Request label links from the wallet graph
@@ -117,7 +128,7 @@ namespace BTCPayServer.Migrations
             ");
 
             // Remove unlinked Labels from WalletObjects
-            migrationBuilder.Sql(@"
+                        migrationBuilder.Sql(@"
             WITH pr_wallets AS (
                 SELECT DISTINCT wo.""WalletId""
                 FROM ""WalletObjects"" wo
@@ -142,10 +153,10 @@ namespace BTCPayServer.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "StoreLabelLinks");
+                name: "store_label_links");
 
             migrationBuilder.DropTable(
-                name: "StoreLabels");
+                name: "store_labels");
         }
     }
 }

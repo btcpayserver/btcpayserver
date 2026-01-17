@@ -1639,6 +1639,7 @@ namespace BTCPayServer.Services
   "The label has been successfully renamed.": "",
   "The Lightning node could not be registered.": "",
   "The LND seed backup is useful to recover on-chain funds of your LND wallet in case of a corruption of your server.": "",
+  "In some deployments (for example BTCPay Server Docker), LND may be initialized/unlocked automatically and recovery may require running the steps with an interactive shell (TTY) and temporarily disabling any automatic init/unlock behavior.": "",
   "The name of the field in the invoice's metadata.": "",
   "The name should be maximum 50 characters.": "",
   "The node is offline": "",

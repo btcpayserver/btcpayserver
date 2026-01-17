@@ -178,9 +178,9 @@ namespace BTCPayServer.Services.PaymentRequests
                 queryable = queryable.Where(pr =>
                     context.StoreLabelLinks.Any(l =>
                         l.StoreId == query.StoreId &&
-                        l.Type == WalletObjectData.Types.PaymentRequest &&
-                        l.LabelId == query.LabelFilter &&
-                        l.ObjectId == pr.Id));
+                        l.ObjectId == pr.Id &&
+                        l.StoreLabel.Type == WalletObjectData.Types.PaymentRequest &&
+                        l.StoreLabel.Text == query.LabelFilter.Trim()));
             }
 
             queryable = queryable.Include(data => data.StoreData);

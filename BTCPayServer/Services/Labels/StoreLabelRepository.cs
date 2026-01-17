@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Labels;
 
@@ -19,130 +18,27 @@ public class StoreLabelRepository
         _contextFactory = contextFactory;
     }
 
-    public async Task<(string Label, string Color)[]> GetStoreLabels(string storeId)
+    public async Task<(string Label, string Color)[]> GetStoreLabels(string storeId, string type)
     {
         await using var ctx = _contextFactory.CreateContext();
         var conn = ctx.Database.GetDbConnection();
 
-        var rows = (await conn.QueryAsync<(string LabelId, string? Data)>(
+        var rows = (await conn.QueryAsync<(string Text, string? Color)>(
             """
-            SELECT "LabelId", "Data"
-            FROM "StoreLabels"
+            SELECT "Text", "Color"
+            FROM "store_labels"
             WHERE "StoreId" = @storeId
-            """, new { storeId })).ToList();
+              AND "Type"    = @type
+            ORDER BY "Text"
+            """, new { storeId, type })).ToList();
 
-        return rows.Select(r => FormatToLabel(r.LabelId, r.Data)).ToArray();
-    }
-
-    public async Task<(string Label, string Color)[]> GetStoreLabels(string storeId, string type, string id)
-    {
-        await using var ctx = _contextFactory.CreateContext();
-        var conn = ctx.Database.GetDbConnection();
-
-        var rows = (await conn.QueryAsync<(string LabelId, string? Data)>(
-            """
-            SELECT sl."LabelId", sl."Data"
-            FROM "StoreLabelLinks" sll
-            INNER JOIN "StoreLabels" sl
-                ON sl."StoreId" = sll."StoreId"
-               AND sl."LabelId" = sll."LabelId"
-            WHERE sll."StoreId" = @storeId
-              AND sll."Type" = @type
-              AND sll."ObjectId" = @id
-            """, new { storeId, type, id })).ToList();
-
-        return rows.Select(r => FormatToLabel(r.LabelId, r.Data)).ToArray();
-    }
-
-    public async Task<(string Label, string Color)[]> GetStoreLabelsByLinkedType(string storeId, string linkedType)
-    {
-        await using var ctx = _contextFactory.CreateContext();
-        var conn = ctx.Database.GetDbConnection();
-
-        var rows = (await conn.QueryAsync<(string LabelId, string? Data)>(
-            """
-            SELECT DISTINCT sl."LabelId", sl."Data"
-            FROM "StoreLabelLinks" sll
-            INNER JOIN "StoreLabels" sl
-                ON sl."StoreId" = sll."StoreId"
-               AND sl."LabelId" = sll."LabelId"
-            WHERE sll."StoreId" = @storeId
-              AND sll."Type" = @linkedType
-            """, new { storeId, linkedType })).ToList();
-
-        return rows.Select(r => FormatToLabel(r.LabelId, r.Data)).ToArray();
-    }
-
-    public async Task SetStoreObjectLabels(string storeId, string type, string id, string[] labels)
-    {
-        labels = labels
-            .Select(NormalizeLabel)
-            .Where(l => !string.IsNullOrEmpty(l))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
-
-        await using var ctx = _contextFactory.CreateContext();
-        var conn = ctx.Database.GetDbConnection();
-
-        var current = (await conn.QueryAsync<string>(
-            """
-            SELECT "LabelId"
-            FROM "StoreLabelLinks"
-            WHERE "StoreId" = @storeId
-              AND "Type" = @type
-              AND "ObjectId" = @id
-            """, new { storeId, type, id })).ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var toAdd = labels.Where(l => !current.Contains(l)).ToArray();
-        var toRemove = current.Where(l => !labels.Contains(l, StringComparer.OrdinalIgnoreCase)).ToArray();
-
-        await using var tx = await ctx.Database.BeginTransactionAsync();
-
-        if (toRemove.Length > 0)
-        {
-            await conn.ExecuteAsync(
-                """
-                DELETE FROM "StoreLabelLinks"
-                WHERE "StoreId" = @storeId
-                  AND "Type" = @type
-                  AND "ObjectId" = @id
-                  AND "LabelId" = ANY(@toRemove)
-                """, new { storeId, type, id, toRemove });
-        }
-
-        if (toAdd.Length > 0)
-        {
-            var labelRows = toAdd.Select(l => new
-            {
-                StoreId = storeId,
-                LabelId = l,
-                Data = CreateLabelDataJson(l)
-            }).ToArray();
-
-            await conn.ExecuteAsync(
-                """
-                INSERT INTO "StoreLabels" ("StoreId", "LabelId", "Data")
-                VALUES (@StoreId, @LabelId, @Data::jsonb)
-                ON CONFLICT ("StoreId", "LabelId")
-                DO UPDATE SET "Data" = COALESCE("StoreLabels"."Data", EXCLUDED."Data")
-                """,
-                labelRows);
-
-            await conn.ExecuteAsync(
-                """
-                INSERT INTO "StoreLabelLinks" ("StoreId", "LabelId", "Type", "ObjectId", "Data")
-                SELECT @storeId, unnest(@toAdd), @type, @id, NULL
-                ON CONFLICT ("StoreId", "LabelId", "Type", "ObjectId") DO NOTHING
-                """, new { storeId, type, id, toAdd });
-        }
-
-        await tx.CommitAsync();
+        return rows.Select(r => FormatToLabel(r.Text, r.Color)).ToArray();
     }
 
     public async Task<Dictionary<string, (string Label, string Color)[]>> GetStoreLabelsForObjects(
-    string storeId,
-    string type,
-    string[]? objectIds)
+        string storeId,
+        string type,
+        string[]? objectIds)
     {
         objectIds ??= Array.Empty<string>();
         objectIds = objectIds
@@ -157,17 +53,17 @@ public class StoreLabelRepository
         await using var ctx = _contextFactory.CreateContext();
         var conn = ctx.Database.GetDbConnection();
 
-        var rows = await conn.QueryAsync<(string ObjectId, string LabelId, string? Data)>(
+        var rows = await conn.QueryAsync<(string ObjectId, string Text, string? Color)>(
             """
-            SELECT sll."ObjectId", sl."LabelId", sl."Data"
-            FROM "StoreLabelLinks" sll
-            INNER JOIN "StoreLabels" sl
+            SELECT sll."ObjectId", sl."Text", sl."Color"
+            FROM "store_label_links" sll
+            INNER JOIN "store_labels" sl
                 ON sl."StoreId" = sll."StoreId"
-               AND sl."LabelId" = sll."LabelId"
-            WHERE sll."StoreId" = @storeId
-              AND sll."Type" = @type
+               AND sl."Id"      = sll."StoreLabelId"
+            WHERE sll."StoreId"  = @storeId
               AND sll."ObjectId" = ANY(@objectIds)
-            ORDER BY sll."ObjectId", sl."LabelId"
+              AND sl."Type"      = @type
+            ORDER BY sll."ObjectId", sl."Text"
             """,
             new { storeId, type, objectIds });
 
@@ -181,21 +77,99 @@ public class StoreLabelRepository
                 dict.Add(r.ObjectId, list);
             }
 
-            list.Add(FormatToLabel(r.LabelId, r.Data));
+            list.Add(FormatToLabel(r.Text, r.Color));
         }
 
         return dict.ToDictionary(k => k.Key, v => v.Value.ToArray(), StringComparer.Ordinal);
     }
 
-    public async Task<bool> RemoveStoreLabels(string storeId, string[] labels)
+    public async Task SetStoreObjectLabels(string storeId, string type, string objectId, string[] labels)
     {
-        labels = labels
+        var desired = labels
+            .Select(NormalizeLabel)
+            .Where(l => !string.IsNullOrEmpty(l))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        await using var ctx = _contextFactory.CreateContext();
+        var conn = ctx.Database.GetDbConnection();
+        await using var tx = await ctx.Database.BeginTransactionAsync();
+
+        var labelIdByText = await EnsureTypedLabelsExist(conn, storeId, type, desired);
+
+        var currentTexts = (await conn.QueryAsync<string>(
+            """
+            SELECT sl."Text"
+            FROM "store_label_links" sll
+            INNER JOIN "store_labels" sl
+                ON sl."StoreId" = sll."StoreId"
+               AND sl."Id"      = sll."StoreLabelId"
+            WHERE sll."StoreId"  = @storeId
+              AND sll."ObjectId" = @objectId
+              AND sl."Type"      = @type
+            """, new { storeId, type, objectId }))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var toAddTexts = desired.Where(t => !currentTexts.Contains(t)).ToArray();
+        var toRemoveTexts = currentTexts.Where(t => !desired.Contains(t, StringComparer.OrdinalIgnoreCase)).ToArray();
+
+        if (toRemoveTexts.Length > 0)
+        {
+            var toRemoveIds = toRemoveTexts
+                .Select(t => labelIdByText.TryGetValue(t, out var id) ? id : null)
+                .Where(id => !string.IsNullOrEmpty(id))
+                .ToArray()!;
+
+            if (toRemoveIds.Length != toRemoveTexts.Length)
+            {
+                var extra = await conn.QueryAsync<string>(
+                    """
+                    SELECT "Id"
+                    FROM "store_labels"
+                    WHERE "StoreId" = @storeId
+                      AND "Type"    = @type
+                      AND "Text"    = ANY(@toRemoveTexts)
+                    """, new { storeId, type, toRemoveTexts });
+
+                toRemoveIds = extra.ToArray();
+            }
+
+            if (toRemoveIds.Length > 0)
+            {
+                await conn.ExecuteAsync(
+                    """
+                    DELETE FROM "store_label_links"
+                    WHERE "StoreId"      = @storeId
+                      AND "ObjectId"     = @objectId
+                      AND "StoreLabelId" = ANY(@toRemoveIds)
+                    """, new { storeId, objectId, toRemoveIds });
+            }
+        }
+
+        if (toAddTexts.Length > 0)
+        {
+            var toAddIds = toAddTexts.Select(t => labelIdByText[t]).ToArray();
+
+            await conn.ExecuteAsync(
+                """
+                INSERT INTO "store_label_links" ("StoreId", "StoreLabelId", "ObjectId")
+                SELECT @storeId, unnest(@toAddIds), @objectId
+                ON CONFLICT ("StoreId", "StoreLabelId", "ObjectId") DO NOTHING
+                """, new { storeId, objectId, toAddIds });
+        }
+
+        await tx.CommitAsync();
+    }
+
+    public async Task<bool> RemoveStoreLabels(string storeId, string type, string[] labels)
+    {
+        var normalized = labels
             .Select(l => l?.Trim())
             .Where(l => !string.IsNullOrEmpty(l))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray()!;
 
-        if (labels.Length == 0)
+        if (normalized.Length == 0)
             return false;
 
         await using var ctx = _contextFactory.CreateContext();
@@ -203,16 +177,16 @@ public class StoreLabelRepository
 
         var affected = await conn.ExecuteAsync(
             """
-            DELETE FROM "StoreLabels"
+            DELETE FROM "store_labels"
             WHERE "StoreId" = @storeId
-              AND "LabelId" = ANY(@labels)
-            """,
-            new { storeId, labels });
+              AND "Type"    = @type
+              AND "Text"    = ANY(@normalized)
+            """, new { storeId, type, normalized });
 
         return affected > 0;
     }
 
-    public async Task<bool> RenameStoreLabel(string storeId, string oldLabel, string newLabel)
+    public async Task<bool> RenameStoreLabel(string storeId, string type, string oldLabel, string newLabel)
     {
         oldLabel = NormalizeLabel(oldLabel);
         newLabel = NormalizeLabel(newLabel);
@@ -227,69 +201,129 @@ public class StoreLabelRepository
         var conn = ctx.Database.GetDbConnection();
         await using var tx = await ctx.Database.BeginTransactionAsync();
 
-        await conn.ExecuteAsync(
+        var oldId = await conn.QuerySingleOrDefaultAsync<string?>(
             """
-            INSERT INTO "StoreLabels" ("StoreId", "LabelId", "Data")
-            VALUES (@storeId, @newLabel, @data::jsonb)
-            ON CONFLICT ("StoreId", "LabelId")
-            DO UPDATE SET "Data" = COALESCE("StoreLabels"."Data", EXCLUDED."Data")
-            """,
-            new { storeId, newLabel, data = CreateLabelDataJson(newLabel) });
+            SELECT "Id"
+            FROM "store_labels"
+            WHERE "StoreId" = @storeId
+              AND "Type"    = @type
+              AND "Text"    = @oldLabel
+            """, new { storeId, type, oldLabel });
+
+        if (oldId is null)
+            return false;
+
+        var map = await EnsureTypedLabelsExist(conn, storeId, type, new[] { newLabel });
+        var newId = map[newLabel];
 
         await conn.ExecuteAsync(
             """
-            DELETE FROM "StoreLabelLinks" old
-            WHERE old."StoreId" = @storeId
-              AND old."LabelId" = @oldLabel
+            DELETE FROM "store_label_links" old
+            WHERE old."StoreId"      = @storeId
+              AND old."StoreLabelId" = @oldId
               AND EXISTS (
                   SELECT 1
-                  FROM "StoreLabelLinks" cur
-                  WHERE cur."StoreId"  = old."StoreId"
-                    AND cur."Type"     = old."Type"
-                    AND cur."ObjectId" = old."ObjectId"
-                    AND cur."LabelId"  = @newLabel
+                  FROM "store_label_links" cur
+                  WHERE cur."StoreId"      = old."StoreId"
+                    AND cur."ObjectId"     = old."ObjectId"
+                    AND cur."StoreLabelId" = @newId
               )
             """,
-            new { storeId, oldLabel, newLabel });
+            new { storeId, oldId, newId });
 
         var updated = await conn.ExecuteAsync(
             """
-            UPDATE "StoreLabelLinks"
-            SET "LabelId" = @newLabel
-            WHERE "StoreId" = @storeId
-              AND "LabelId" = @oldLabel
+            UPDATE "store_label_links"
+            SET "StoreLabelId" = @newId
+            WHERE "StoreId"      = @storeId
+              AND "StoreLabelId" = @oldId
             """,
-            new { storeId, oldLabel, newLabel });
+            new { storeId, oldId, newId });
 
         if (updated > 0)
         {
             await conn.ExecuteAsync(
                 """
-                DELETE FROM "StoreLabels"
-                WHERE "StoreId" = @storeId
-                  AND "LabelId" = @oldLabel
+                DELETE FROM "store_labels" sl
+                WHERE sl."StoreId" = @storeId
+                  AND sl."Id"      = @oldId
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM "store_label_links" sll
+                      WHERE sll."StoreId"      = sl."StoreId"
+                        AND sll."StoreLabelId" = sl."Id"
+                  )
                 """,
-                new { storeId, oldLabel });
+                new { storeId, oldId });
         }
 
         await tx.CommitAsync();
         return updated > 0;
     }
 
-    private static (string Label, string Color) FormatToLabel(string labelId, string? data)
+    private async Task<Dictionary<string, string>> EnsureTypedLabelsExist(
+        System.Data.IDbConnection conn,
+        string storeId,
+        string type,
+        string[] texts)
     {
-        if (string.IsNullOrEmpty(data))
-            return (labelId, ColorPalette.Default.DeterministicColor(labelId));
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        try
+        if (texts.Length == 0)
+            return result;
+
+        var existing = (await conn.QueryAsync<(string Id, string Text)>(
+            """
+            SELECT "Id", "Text"
+            FROM "store_labels"
+            WHERE "StoreId" = @storeId
+              AND "Type"    = @type
+              AND "Text"    = ANY(@texts)
+            """, new { storeId, type, texts })).ToList();
+
+        foreach (var e in existing)
+            result[e.Text] = e.Id;
+
+        var missing = texts.Where(t => !result.ContainsKey(t)).ToArray();
+        if (missing.Length > 0)
         {
-            var color = JObject.Parse(data)["color"]?.Value<string>();
-            return (labelId, color ?? ColorPalette.Default.DeterministicColor(labelId));
+            var rows = missing.Select(t => new
+            {
+                StoreId = storeId,
+                Id = Guid.NewGuid().ToString(),
+                Type = type,
+                Text = t,
+                Color = ColorPalette.Default.DeterministicColor(t)
+            }).ToArray();
+
+            await conn.ExecuteAsync(
+                """
+                INSERT INTO "store_labels" ("StoreId", "Id", "Type", "Text", "Color")
+                VALUES (@StoreId, @Id, @Type, @Text, @Color)
+                ON CONFLICT ("StoreId", "Type", "Text") DO UPDATE
+                SET "Color" = COALESCE("store_labels"."Color", EXCLUDED."Color")
+                """,
+                rows);
+
+            var inserted = await conn.QueryAsync<(string Id, string Text)>(
+                """
+                SELECT "Id", "Text"
+                FROM "store_labels"
+                WHERE "StoreId" = @storeId
+                  AND "Type"    = @type
+                  AND "Text"    = ANY(@missing)
+                """, new { storeId, type, missing });
+
+            foreach (var i in inserted)
+                result[i.Text] = i.Id;
         }
-        catch
-        {
-            return (labelId, ColorPalette.Default.DeterministicColor(labelId));
-        }
+
+        return result;
+    }
+
+    private static (string Label, string Color) FormatToLabel(string text, string? color)
+    {
+        return !string.IsNullOrEmpty(color) ? (text, color) : (text, ColorPalette.Default.DeterministicColor(text));
     }
 
     private const int MaxLabelSize = 50;
@@ -302,12 +336,4 @@ public class StoreLabelRepository
         return label;
     }
 
-    private static string CreateLabelDataJson(string labelId)
-    {
-        var o = new JObject
-        {
-            ["color"] = ColorPalette.Default.DeterministicColor(labelId)
-        };
-        return o.ToString(Newtonsoft.Json.Formatting.None);
-    }
 }

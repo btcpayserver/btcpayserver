@@ -148,7 +148,7 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            var allLabels = await _storeLabelRepository.GetStoreLabelsByLinkedType(store.Id, WalletObjectData.Types.PaymentRequest);
+            var allLabels = await _storeLabelRepository.GetStoreLabels(store.Id, WalletObjectData.Types.PaymentRequest);
             model.Labels = allLabels
                 .Select(l => new TransactionTagModel
                 {
@@ -588,7 +588,7 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> PaymentRequestLabels(string storeId)
         {
-            var labels = await _storeLabelRepository.GetStoreLabelsByLinkedType(storeId, WalletObjectData.Types.PaymentRequest);
+            var labels = await _storeLabelRepository.GetStoreLabels(storeId, WalletObjectData.Types.PaymentRequest);
 
             var vm = new PaymentRequestLabelsViewModel
             {
@@ -620,7 +620,10 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(PaymentRequestLabels), new { storeId });
             }
 
-            var ok = await _storeLabelRepository.RemoveStoreLabels(storeId, new[] { id });
+            var ok = await _storeLabelRepository.RemoveStoreLabels(
+                storeId,
+                WalletObjectData.Types.PaymentRequest,
+                new[] { id });
 
             TempData[WellKnownTempData.SuccessMessage] = ok
                 ? StringLocalizer["The label has been successfully deleted."].Value
@@ -653,7 +656,11 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(PaymentRequestLabels), new { storeId });
             }
 
-            var ok = await _storeLabelRepository.RenameStoreLabel(storeId, id, newLabel);
+            var ok = await _storeLabelRepository.RenameStoreLabel(
+                storeId,
+                WalletObjectData.Types.PaymentRequest,
+                id,
+                newLabel);
 
             TempData[WellKnownTempData.SuccessMessage] = ok
                 ? StringLocalizer["The label has been successfully renamed."].Value

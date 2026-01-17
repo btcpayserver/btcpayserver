@@ -19,27 +19,16 @@ public partial class UIStoresController
     public async Task<IActionResult> StoreLabelsJson(
         string storeId,
         bool excludeTypes = true,
-        string? linkedType = null,
-        string? type = null,
-        string? id = null)
+        string? linkedType = null)
     {
         var store = CurrentStore;
         if (store is null || !string.Equals(store.Id, storeId, StringComparison.Ordinal))
             return NotFound();
 
-        (string Label, string Color)[] labels;
-        if (!string.IsNullOrEmpty(type) && !string.IsNullOrEmpty(id))
-        {
-            labels = await _storeLabelRepository.GetStoreLabels(storeId, type, id);
-        }
-        else if (!string.IsNullOrEmpty(linkedType))
-        {
-            labels = await _storeLabelRepository.GetStoreLabelsByLinkedType(storeId, linkedType);
-        }
-        else
-        {
-            labels = await _storeLabelRepository.GetStoreLabels(storeId);
-        }
+        if (string.IsNullOrEmpty(linkedType))
+            return BadRequest("linkedType is required.");
+
+        var labels = await _storeLabelRepository.GetStoreLabels(storeId, linkedType);
 
         return Ok(labels
             .Where(l => !excludeTypes || !WalletObjectData.Types.AllTypes.Contains(l.Label))

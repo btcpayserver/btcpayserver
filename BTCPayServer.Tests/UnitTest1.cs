@@ -3220,8 +3220,8 @@ namespace BTCPayServer.Tests
             const string walletId = "S-TestStore12345678901234-BTC";
 
             const string prId = "pr-1";
-            const string orphanLabelId = "orphan-label";
-            const string sharedLabelId = "shared-label";
+            const string orphanLabelText = "orphan-label";
+            const string sharedLabelText = "shared-label";
 
             await conn.ExecuteAsync("""
                 INSERT INTO "Stores" ("Id", "SpeedPolicy") VALUES (@storeId, 0);
@@ -3241,7 +3241,8 @@ namespace BTCPayServer.Tests
                   (@walletId, 'label', @orphanLabelId, 'payment-request', @prId, NULL),
                   (@walletId, 'label', @sharedLabelId, 'payment-request', @prId, NULL),
                   (@walletId, 'label', @sharedLabelId, 'invoice', 'inv-1', NULL);
-                """, new { storeId, walletId, prId, orphanLabelId, sharedLabelId });
+                """, new { storeId, walletId, prId, orphanLabelId = orphanLabelText,
+                sharedLabelId = sharedLabelText });
 
             Assert.Equal(1, await conn.QuerySingleAsync<long>("""
                 SELECT COUNT(*) FROM "PaymentRequests"
@@ -3261,6 +3262,14 @@ namespace BTCPayServer.Tests
             await tester.CompleteMigrations();
 
             Assert.True(await conn.QuerySingleAsync<bool>("""
+                                                          SELECT EXISTS (
+                                                            SELECT 1
+                                                            FROM pg_proc
+                                                            WHERE proname = 'gen_random_uuid'
+                                                          );
+                                                          """));
+
+            Assert.True(await conn.QuerySingleAsync<bool>("""
                 SELECT EXISTS (
                   SELECT 1 FROM "__EFMigrationsHistory"
                   WHERE "MigrationId" = @migrationId
@@ -3268,19 +3277,26 @@ namespace BTCPayServer.Tests
                 """, new { migrationId }));
 
             Assert.Equal(2, await conn.QuerySingleAsync<long>("""
-                SELECT COUNT(*) FROM "StoreLabels"
-                WHERE "StoreId" = @storeId;
-                """, new { storeId }));
+                                                              SELECT COUNT(*)
+                                                              FROM "store_labels"
+                                                              WHERE "StoreId" = @storeId
+                                                                AND "Type"    = 'payment-request'
+                                                                AND "Text"    = ANY(@texts);
+                                                              """, new { storeId, texts = new[] { orphanLabelText, sharedLabelText } }));
+
 
             Assert.Equal(2, await conn.QuerySingleAsync<long>("""
-                SELECT COUNT(*)
-                FROM "StoreLabelLinks"
-                WHERE "StoreId" = @storeId
-                  AND "Type" = 'payment-request'
-                  AND "ObjectId" = @prId;
-                """, new { storeId, prId }));
+                                                              SELECT COUNT(*)
+                                                              FROM "store_label_links" sll
+                                                              INNER JOIN "store_labels" sl
+                                                                ON sl."StoreId" = sll."StoreId"
+                                                               AND sl."Id"      = sll."StoreLabelId"
+                                                              WHERE sll."StoreId"  = @storeId
+                                                                AND sll."ObjectId" = @prId
+                                                                AND sl."Type"      = 'payment-request';
+                                                              """, new { storeId, prId }));
 
-            // PR label links removed from wallet graph
+
             Assert.Equal(0, await conn.QuerySingleAsync<long>("""
                 SELECT COUNT(*)
                 FROM "WalletObjectLinks" wol
@@ -3289,28 +3305,25 @@ namespace BTCPayServer.Tests
                   AND wol."BType" = 'payment-request';
                 """, new { walletId }));
 
-            // Orphan label removed from WalletObjects
             Assert.Equal(0, await conn.QuerySingleAsync<long>("""
                 SELECT COUNT(*)
                 FROM "WalletObjects"
                 WHERE "WalletId" = @walletId AND "Type" = 'label' AND "Id" = @orphanLabelId;
-                """, new { walletId, orphanLabelId }));
+                """, new { walletId, orphanLabelId = orphanLabelText }));
 
-            // Shared label still exists because it's still linked to invoice
             Assert.Equal(1, await conn.QuerySingleAsync<long>("""
                 SELECT COUNT(*)
                 FROM "WalletObjects"
                 WHERE "WalletId" = @walletId AND "Type" = 'label' AND "Id" = @sharedLabelId;
-                """, new { walletId, sharedLabelId }));
+                """, new { walletId, sharedLabelId = sharedLabelText }));
 
-            // Shared labels invoice link still present
             Assert.Equal(1, await conn.QuerySingleAsync<long>("""
                 SELECT COUNT(*)
                 FROM "WalletObjectLinks"
                 WHERE "WalletId" = @walletId
                   AND "AType" = 'label' AND "AId" = @sharedLabelId
                   AND "BType" = 'invoice' AND "BId" = 'inv-1';
-                """, new { walletId, sharedLabelId }));
+                """, new { walletId, sharedLabelId = sharedLabelText }));
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]

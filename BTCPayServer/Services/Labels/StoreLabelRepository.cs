@@ -93,9 +93,6 @@ public class StoreLabelRepository
 
         await using var ctx = _contextFactory.CreateContext();
         var conn = ctx.Database.GetDbConnection();
-        await using var tx = await ctx.Database.BeginTransactionAsync();
-
-        var labelIdByText = await EnsureTypedLabelsExist(conn, storeId, type, desired);
 
         var currentTexts = (await conn.QueryAsync<string>(
             """
@@ -113,26 +110,21 @@ public class StoreLabelRepository
         var toAddTexts = desired.Where(t => !currentTexts.Contains(t)).ToArray();
         var toRemoveTexts = currentTexts.Where(t => !desired.Contains(t, StringComparer.OrdinalIgnoreCase)).ToArray();
 
+        if (toAddTexts.Length == 0 && toRemoveTexts.Length == 0)
+            return;
+
+        await using var tx = await ctx.Database.BeginTransactionAsync();
+
         if (toRemoveTexts.Length > 0)
         {
-            var toRemoveIds = toRemoveTexts
-                .Select(t => labelIdByText.TryGetValue(t, out var id) ? id : null)
-                .Where(id => !string.IsNullOrEmpty(id))
-                .ToArray()!;
-
-            if (toRemoveIds.Length != toRemoveTexts.Length)
-            {
-                var extra = await conn.QueryAsync<string>(
-                    """
-                    SELECT "Id"
-                    FROM "store_labels"
-                    WHERE "StoreId" = @storeId
-                      AND "Type"    = @type
-                      AND "Text"    = ANY(@toRemoveTexts)
-                    """, new { storeId, type, toRemoveTexts });
-
-                toRemoveIds = extra.ToArray();
-            }
+            var toRemoveIds = (await conn.QueryAsync<string>(
+                """
+                SELECT "Id"
+                FROM "store_labels"
+                WHERE "StoreId" = @storeId
+                  AND "Type"    = @type
+                  AND "Text"    = ANY(@toRemoveTexts)
+                """, new { storeId, type, toRemoveTexts })).ToArray();
 
             if (toRemoveIds.Length > 0)
             {
@@ -148,6 +140,7 @@ public class StoreLabelRepository
 
         if (toAddTexts.Length > 0)
         {
+            var labelIdByText = await EnsureTypedLabelsExist(conn, storeId, type, toAddTexts);
             var toAddIds = toAddTexts.Select(t => labelIdByText[t]).ToArray();
 
             await conn.ExecuteAsync(
@@ -164,7 +157,7 @@ public class StoreLabelRepository
     public async Task<bool> RemoveStoreLabels(string storeId, string type, string[] labels)
     {
         var normalized = labels
-            .Select(l => l?.Trim())
+            .Select(l => l is null ? null : NormalizeLabel(l))
             .Where(l => !string.IsNullOrEmpty(l))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray()!;
@@ -213,8 +206,28 @@ public class StoreLabelRepository
         if (oldId is null)
             return false;
 
-        var map = await EnsureTypedLabelsExist(conn, storeId, type, new[] { newLabel });
-        var newId = map[newLabel];
+        var newId = await conn.QuerySingleOrDefaultAsync<string?>(
+            """
+            SELECT "Id"
+            FROM "store_labels"
+            WHERE "StoreId" = @storeId
+              AND "Type"    = @type
+              AND "Text"    = @newLabel
+            """, new { storeId, type, newLabel });
+
+        if (newId is null)
+        {
+            var updatedLabels = await conn.ExecuteAsync(
+                """
+                UPDATE "store_labels"
+                SET "Text" = @newLabel
+                WHERE "StoreId" = @storeId
+                  AND "Id"      = @oldId
+                """, new { storeId, oldId, newLabel });
+
+            await tx.CommitAsync();
+            return updatedLabels > 0;
+        }
 
         await conn.ExecuteAsync(
             """

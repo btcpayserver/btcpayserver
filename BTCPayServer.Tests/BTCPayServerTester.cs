@@ -25,6 +25,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer;
@@ -72,7 +73,7 @@ namespace BTCPayServer.Tests
             get; set;
         }
 
-        IWebHost _Host;
+        IHost _Host;
         public int Port
         {
             get; set;
@@ -176,36 +177,53 @@ namespace BTCPayServer.Tests
             if (LoadPluginsInDefaultAssemblyContext)
                 confBuilder.AddInMemoryCollection([new("TEST_RUNNER_ENABLED", "true")]);
             var conf = confBuilder.Build();
-            _Host = new WebHostBuilder()
-                    .UseDefaultServiceProvider(options =>
-                    {
-                        options.ValidateScopes = true;
-                    })
-                    .UseConfiguration(conf)
-                    .UseContentRoot(FindBTCPayServerDirectory())
-                    .UseWebRoot(Path.Combine(FindBTCPayServerDirectory(), "wwwroot"))
-                    .ConfigureServices(s =>
-                    {
-                        s.AddLogging(l =>
+            _Host = Host.CreateDefaultBuilder()
+                .UseDefaultServiceProvider(options =>
+                {
+                    options.ValidateScopes = true;
+                })
+                .ConfigureAppConfiguration((hostingContext, configBuilder) =>
+                {
+                    configBuilder.AddConfiguration(conf);
+                })
+                .ConfigureLogging(logging =>
+                {
+                    // This matches your logging setup more directly than services.AddLogging(...)
+                    logging.ClearProviders(); // optional: keep if you want full control
+
+                    logging.SetMinimumLevel(LogLevel.Information);
+                    logging.AddFilter("System.Net.Http.HttpClient", LogLevel.Critical);
+                    logging.AddFilter("Microsoft", LogLevel.Error);
+                    logging.AddFilter("Microsoft.EntityFrameworkCore.Migrations", LogLevel.Information);
+                    logging.AddFilter("Fido2NetLib.DistributedCacheMetadataService", LogLevel.Error);
+
+                    // If LoggerProvider is an ILoggerProvider instance:
+                    logging.AddProvider(LoggerProvider);
+
+                    // If you removed ClearProviders(), also add back defaults you want (Console/EventSource/etc.)
+                    // logging.AddConsole();
+                    // logging.AddDebug();
+                })
+                .ConfigureSerilog(conf)
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    var root = FindBTCPayServerDirectory();
+
+                    webBuilder
+                        .UseContentRoot(root)
+                        .UseWebRoot(Path.Combine(root, "wwwroot"))
+                        .UseKestrel()
+                        .UseStartup<Startup>()
+                        .ConfigureServices(services =>
                         {
-                            l.AddFilter("System.Net.Http.HttpClient", LogLevel.Critical);
-                            l.SetMinimumLevel(LogLevel.Information)
-                            .AddFilter("Microsoft", LogLevel.Error)
-                            .AddFilter("Microsoft.EntityFrameworkCore.Migrations", LogLevel.Information)
-                            .AddFilter("Fido2NetLib.DistributedCacheMetadataService", LogLevel.Error)
-                            .AddProvider(LoggerProvider);
+                            services.TryAddSingleton<IFeeProviderFactory>(
+                                new BTCPayServer.Services.Fees.FixedFeeProvider(new FeeRate(100L, 1)));
                         });
-                    })
-                    .ConfigureServices(services =>
-                    {
-                        services.TryAddSingleton<IFeeProviderFactory>(new BTCPayServer.Services.Fees.FixedFeeProvider(new FeeRate(100L, 1)));
-                    })
-                    .UseKestrel()
-                    .UseStartup<Startup>()
-                    .Build();
+                })
+                .Build();
             await _Host.StartWithTasksAsync();
 
-            var urls = _Host.ServerFeatures.Get<IServerAddressesFeature>().Addresses;
+            var urls = _Host.GetServerFeatures<IServerAddressesFeature>().Addresses;
             foreach (var url in urls)
             {
                 TestLogs.LogInformation("Listening on " + url);
@@ -353,7 +371,11 @@ namespace BTCPayServer.Tests
         public void Dispose()
         {
             if (_Host != null)
-                _Host.Dispose();
+            {
+                var app = _Host.Services.GetService<IHostApplicationLifetime>();
+                app.StopApplication();
+                _Host.WaitForShutdown();
+            }
         }
 
         public void ChangeRate(string pair, BidAsk bidAsk)

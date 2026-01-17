@@ -1,11 +1,13 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace BTCPayServer.Services.Labels;
 
@@ -42,8 +44,8 @@ public class StoreLabelRepository
     {
         objectIds ??= Array.Empty<string>();
         objectIds = objectIds
+            .Where(o => !string.IsNullOrWhiteSpace(o))
             .Select(o => o.Trim())
-            .Where(o => !string.IsNullOrEmpty(o))
             .Distinct(StringComparer.Ordinal)
             .ToArray();
 
@@ -86,13 +88,15 @@ public class StoreLabelRepository
     public async Task SetStoreObjectLabels(string storeId, string type, string objectId, string[] labels)
     {
         var desired = labels
-            .Select(NormalizeLabel)
+            .Select(l => string.IsNullOrEmpty(l) ? null : NormalizeLabel(l))
             .Where(l => !string.IsNullOrEmpty(l))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
         await using var ctx = _contextFactory.CreateContext();
         var conn = ctx.Database.GetDbConnection();
+        await using var tx = await ctx.Database.BeginTransactionAsync();
+        var dbTx = tx.GetDbTransaction();
 
         var currentTexts = (await conn.QueryAsync<string>(
             """
@@ -104,16 +108,17 @@ public class StoreLabelRepository
             WHERE sll."StoreId"  = @storeId
               AND sll."ObjectId" = @objectId
               AND sl."Type"      = @type
-            """, new { storeId, type, objectId }))
+            """, new { storeId, type, objectId }, transaction: dbTx))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var toAddTexts = desired.Where(t => !currentTexts.Contains(t)).ToArray();
         var toRemoveTexts = currentTexts.Where(t => !desired.Contains(t, StringComparer.OrdinalIgnoreCase)).ToArray();
 
         if (toAddTexts.Length == 0 && toRemoveTexts.Length == 0)
+        {
+            await tx.CommitAsync();
             return;
-
-        await using var tx = await ctx.Database.BeginTransactionAsync();
+        }
 
         if (toRemoveTexts.Length > 0)
         {
@@ -124,7 +129,7 @@ public class StoreLabelRepository
                 WHERE "StoreId" = @storeId
                   AND "Type"    = @type
                   AND "Text"    = ANY(@toRemoveTexts)
-                """, new { storeId, type, toRemoveTexts })).ToArray();
+                """, new { storeId, type, toRemoveTexts }, transaction: dbTx)).ToArray();
 
             if (toRemoveIds.Length > 0)
             {
@@ -134,13 +139,13 @@ public class StoreLabelRepository
                     WHERE "StoreId"      = @storeId
                       AND "ObjectId"     = @objectId
                       AND "StoreLabelId" = ANY(@toRemoveIds)
-                    """, new { storeId, objectId, toRemoveIds });
+                    """, new { storeId, objectId, toRemoveIds }, transaction: dbTx);
             }
         }
 
         if (toAddTexts.Length > 0)
         {
-            var labelIdByText = await EnsureTypedLabelsExist(conn, storeId, type, toAddTexts);
+            var labelIdByText = await EnsureTypedLabelsExist(conn, dbTx, storeId, type, toAddTexts);
             var toAddIds = toAddTexts.Select(t => labelIdByText[t]).ToArray();
 
             await conn.ExecuteAsync(
@@ -148,7 +153,7 @@ public class StoreLabelRepository
                 INSERT INTO "store_label_links" ("StoreId", "StoreLabelId", "ObjectId")
                 SELECT @storeId, unnest(@toAddIds), @objectId
                 ON CONFLICT ("StoreId", "StoreLabelId", "ObjectId") DO NOTHING
-                """, new { storeId, objectId, toAddIds });
+                """, new { storeId, objectId, toAddIds }, transaction: dbTx);
         }
 
         await tx.CommitAsync();
@@ -193,6 +198,7 @@ public class StoreLabelRepository
         await using var ctx = _contextFactory.CreateContext();
         var conn = ctx.Database.GetDbConnection();
         await using var tx = await ctx.Database.BeginTransactionAsync();
+        var dbTx = tx.GetDbTransaction();
 
         var oldId = await conn.QuerySingleOrDefaultAsync<string?>(
             """
@@ -201,7 +207,7 @@ public class StoreLabelRepository
             WHERE "StoreId" = @storeId
               AND "Type"    = @type
               AND "Text"    = @oldLabel
-            """, new { storeId, type, oldLabel });
+            """, new { storeId, type, oldLabel }, transaction: dbTx);
 
         if (oldId is null)
             return false;
@@ -213,7 +219,7 @@ public class StoreLabelRepository
             WHERE "StoreId" = @storeId
               AND "Type"    = @type
               AND "Text"    = @newLabel
-            """, new { storeId, type, newLabel });
+            """, new { storeId, type, newLabel }, transaction: dbTx);
 
         if (newId is null)
         {
@@ -223,7 +229,7 @@ public class StoreLabelRepository
                 SET "Text" = @newLabel
                 WHERE "StoreId" = @storeId
                   AND "Id"      = @oldId
-                """, new { storeId, oldId, newLabel });
+                """, new { storeId, oldId, newLabel }, transaction: dbTx);
 
             await tx.CommitAsync();
             return updatedLabels > 0;
@@ -242,16 +248,16 @@ public class StoreLabelRepository
                     AND cur."StoreLabelId" = @newId
               )
             """,
-            new { storeId, oldId, newId });
+            new { storeId, oldId, newId }, transaction: dbTx);
 
-        var updated = await conn.ExecuteAsync(
+        await conn.ExecuteAsync(
             """
             UPDATE "store_label_links"
             SET "StoreLabelId" = @newId
             WHERE "StoreId"      = @storeId
               AND "StoreLabelId" = @oldId
             """,
-            new { storeId, oldId, newId });
+            new { storeId, oldId, newId }, transaction: dbTx);
 
         await conn.ExecuteAsync(
             """
@@ -265,14 +271,15 @@ public class StoreLabelRepository
                     AND sll."StoreLabelId" = sl."Id"
               )
             """,
-            new { storeId, oldId });
+            new { storeId, oldId }, transaction: dbTx);
 
         await tx.CommitAsync();
-        return updated > 0;
+        return true;
     }
 
     private async Task<Dictionary<string, string>> EnsureTypedLabelsExist(
-        System.Data.IDbConnection conn,
+        DbConnection conn,
+        DbTransaction dbTx,
         string storeId,
         string type,
         string[] texts)
@@ -289,7 +296,7 @@ public class StoreLabelRepository
             WHERE "StoreId" = @storeId
               AND "Type"    = @type
               AND "Text"    = ANY(@texts)
-            """, new { storeId, type, texts })).ToList();
+            """, new { storeId, type, texts }, transaction: dbTx)).ToList();
 
         foreach (var e in existing)
             result[e.Text] = e.Id;
@@ -313,7 +320,8 @@ public class StoreLabelRepository
                 ON CONFLICT ("StoreId", "Type", "Text") DO UPDATE
                 SET "Color" = COALESCE("store_labels"."Color", EXCLUDED."Color")
                 """,
-                rows);
+                rows,
+                transaction: dbTx);
 
             var inserted = await conn.QueryAsync<(string Id, string Text)>(
                 """
@@ -322,7 +330,7 @@ public class StoreLabelRepository
                 WHERE "StoreId" = @storeId
                   AND "Type"    = @type
                   AND "Text"    = ANY(@missing)
-                """, new { storeId, type, missing });
+                """, new { storeId, type, missing }, transaction: dbTx);
 
             foreach (var i in inserted)
                 result[i.Text] = i.Id;

@@ -23,6 +23,9 @@ public class StoreLabelLinkData
 
             b.HasKey(x => new { x.StoreId, x.StoreLabelId, x.ObjectId });
 
+            b.Property(x => x.StoreId).HasColumnName("store_id");
+            b.Property(x => x.StoreLabelId).HasColumnName("store_label_id");
+            b.Property(x => x.ObjectId).HasColumnName("object_id");
             b.Property(x => x.XMin).HasColumnName("xmin");
 
             b.HasIndex(x => new { x.StoreId, x.ObjectId });

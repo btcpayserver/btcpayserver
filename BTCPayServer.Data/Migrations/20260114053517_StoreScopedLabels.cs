@@ -17,21 +17,21 @@ namespace BTCPayServer.Migrations
                 name: "store_labels",
                 columns: table => new
                 {
-                    StoreId = table.Column<string>(type: "text", nullable: false),
-                    Id      = table.Column<string>(type: "text", nullable: false),
-                    Type    = table.Column<string>(type: "text", nullable: false),
-                    Text    = table.Column<string>(type: "text", nullable: false),
-                    Color   = table.Column<string>(type: "text", nullable: true),
+                    store_id = table.Column<string>(type: "text", nullable: false),
+                    id       = table.Column<string>(type: "text", nullable: false),
+                    type     = table.Column<string>(type: "text", nullable: false),
+                    text     = table.Column<string>(type: "text", nullable: false),
+                    color    = table.Column<string>(type: "text", nullable: true),
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_StoreLabels", x => new { x.StoreId, x.Id });
+                    table.PrimaryKey("PK_StoreLabels", x => new { x.store_id, x.id });
                 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_StoreLabels_StoreId_Type_Text",
                 table: "store_labels",
-                columns: new[] { "StoreId", "Type", "Text" },
+                columns: new[] { "store_id", "type", "text" },
                 unique: true);
 
 
@@ -39,25 +39,25 @@ namespace BTCPayServer.Migrations
                 name: "store_label_links",
                 columns: table => new
                 {
-                    StoreId       = table.Column<string>(type: "text", nullable: false),
-                    StoreLabelId  = table.Column<string>(type: "text", nullable: false),
-                    ObjectId      = table.Column<string>(type: "text", nullable: false),
+                    store_id       = table.Column<string>(type: "text", nullable: false),
+                    store_label_id = table.Column<string>(type: "text", nullable: false),
+                    object_id      = table.Column<string>(type: "text", nullable: false),
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_StoreLabelLinks", x => new { x.StoreId, x.StoreLabelId, x.ObjectId });
+                    table.PrimaryKey("PK_StoreLabelLinks", x => new { x.store_id, x.store_label_id, x.object_id });
                     table.ForeignKey(
                         name: "FK_StoreLabelLinks_StoreLabels_StoreId_StoreLabelId",
-                        columns: x => new { x.StoreId, x.StoreLabelId },
+                        columns: x => new { x.store_id, x.store_label_id },
                         principalTable: "store_labels",
-                        principalColumns: new[] { "StoreId", "Id" },
+                        principalColumns: new[] { "store_id", "id" },
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_StoreLabelLinks_StoreId_ObjectId",
                 table: "store_label_links",
-                columns: new[] { "StoreId", "ObjectId" });
+                columns: new[] { "store_id", "object_id" });
 
             migrationBuilder.Sql(@"CREATE EXTENSION IF NOT EXISTS pgcrypto;");
 
@@ -85,7 +85,7 @@ namespace BTCPayServer.Migrations
                  AND wo.""Type"" = 'label'
                  AND wo.""Id"" = pl.""LabelText""
             )
-            INSERT INTO ""store_labels"" (""StoreId"", ""Id"", ""Type"", ""Text"", ""Color"")
+            INSERT INTO store_labels (store_id, id, type, text, color)
             SELECT
                 ""StoreId"",
                 gen_random_uuid()::text,
@@ -93,7 +93,7 @@ namespace BTCPayServer.Migrations
                 ""LabelText"",
                 (""LabelData""::jsonb ->> 'color')
             FROM pr_labels
-            ON CONFLICT (""StoreId"", ""Type"", ""Text"") DO NOTHING;
+            ON CONFLICT (store_id, type, text) DO NOTHING;
             ");
 
             // Copy Payment Request label links into StoreLabelLinks
@@ -109,17 +109,17 @@ namespace BTCPayServer.Migrations
                 WHERE wol.""AType"" = 'label'
                   AND wol.""BType"" = 'payment-request'
             )
-            INSERT INTO ""store_label_links"" (""StoreId"", ""StoreLabelId"", ""ObjectId"")
+            INSERT INTO store_label_links (store_id, store_label_id, object_id)
             SELECT
                 pl.""StoreId"",
-                sl.""Id""          AS ""StoreLabelId"",
+                sl.id AS store_label_id,
                 pl.""ObjectId""
             FROM pr_links pl
-            INNER JOIN ""store_labels"" sl
-              ON sl.""StoreId"" = pl.""StoreId""
-             AND sl.""Type""    = 'payment-request'
-             AND sl.""Text""    = pl.""LabelText""
-            ON CONFLICT (""StoreId"", ""StoreLabelId"", ""ObjectId"") DO NOTHING;
+            INNER JOIN store_labels sl
+              ON sl.store_id = pl.""StoreId""
+             AND sl.type     = 'payment-request'
+             AND sl.text     = pl.""LabelText""
+            ON CONFLICT (store_id, store_label_id, object_id) DO NOTHING;
             ");
 
             // Remove the Payment Request label links from the wallet graph

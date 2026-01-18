@@ -23,6 +23,11 @@ public class StoreLabelData
 
             b.HasKey(x => new { x.StoreId, x.Id });
 
+            b.Property(x => x.StoreId).HasColumnName("store_id");
+            b.Property(x => x.Id).HasColumnName("id");
+            b.Property(x => x.Type).HasColumnName("type");
+            b.Property(x => x.Text).HasColumnName("text");
+            b.Property(x => x.Color).HasColumnName("color");
             b.Property(x => x.XMin).HasColumnName("xmin");
 
             b.HasIndex(x => new { x.StoreId, x.Type, x.Text }).IsUnique();

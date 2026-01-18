@@ -3278,22 +3278,22 @@ namespace BTCPayServer.Tests
 
             Assert.Equal(2, await conn.QuerySingleAsync<long>("""
                                                               SELECT COUNT(*)
-                                                              FROM "store_labels"
-                                                              WHERE "StoreId" = @storeId
-                                                                AND "Type"    = 'payment-request'
-                                                                AND "Text"    = ANY(@texts);
+                                                              FROM store_labels
+                                                              WHERE store_id = @storeId
+                                                                AND type     = 'payment-request'
+                                                                AND text     = ANY(@texts);
                                                               """, new { storeId, texts = new[] { orphanLabelText, sharedLabelText } }));
 
 
             Assert.Equal(2, await conn.QuerySingleAsync<long>("""
                                                               SELECT COUNT(*)
-                                                              FROM "store_label_links" sll
-                                                              INNER JOIN "store_labels" sl
-                                                                ON sl."StoreId" = sll."StoreId"
-                                                               AND sl."Id"      = sll."StoreLabelId"
-                                                              WHERE sll."StoreId"  = @storeId
-                                                                AND sll."ObjectId" = @prId
-                                                                AND sl."Type"      = 'payment-request';
+                                                              FROM store_label_links sll
+                                                              INNER JOIN store_labels sl
+                                                                ON sl.store_id = sll.store_id
+                                                               AND sl.id       = sll.store_label_id
+                                                              WHERE sll.store_id  = @storeId
+                                                                AND sll.object_id = @prId
+                                                                AND sl.type       = 'payment-request';
                                                               """, new { storeId, prId }));
 
 

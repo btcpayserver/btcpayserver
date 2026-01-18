@@ -959,21 +959,26 @@ namespace BTCPayServer.Migrations
             modelBuilder.Entity("BTCPayServer.Data.StoreLabelData", b =>
                 {
                     b.Property<string>("StoreId")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("store_id");
 
                     b.Property<string>("Id")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("id");
 
                     b.Property<string>("Text")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("text");
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("type");
 
                     b.Property<string>("Color")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("color");
 
                     b.Property<uint>("XMin")
                         .IsConcurrencyToken()
@@ -992,13 +997,16 @@ namespace BTCPayServer.Migrations
             modelBuilder.Entity("BTCPayServer.Data.StoreLabelLinkData", b =>
                 {
                     b.Property<string>("StoreId")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("store_id");
 
                     b.Property<string>("StoreLabelId")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("store_label_id");
 
                     b.Property<string>("ObjectId")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("object_id");
 
                     b.Property<uint>("XMin")
                         .IsConcurrencyToken()

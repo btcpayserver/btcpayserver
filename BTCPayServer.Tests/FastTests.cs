@@ -1258,12 +1258,12 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             var factory = CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
             Assert.True(RateRules.TryParse("X_X=spy(X_X)", out var rule));
-			var result = await fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rule, null, default);
-			Assert.Single(result.Errors);
-			result = await fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rule, new StoreIdRateContext("hello"), default);
+            var result = await fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rule, null, default);
+            Assert.Single(result.Errors);
+            result = await fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rule, new StoreIdRateContext("hello"), default);
             Assert.Empty(result.Errors);
             Assert.Equal(SpyContextualRateProvider.ExpectedBidAsk, result.BidAsk);
-		}
+        }
 
         [Fact]
         public async Task CheckRatesProvider()
@@ -2583,5 +2583,114 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.Equal("BTC-hasjdfhasjkfjlajn", new PaymentMethodIdJsonConverter().ReadJson(reader, typeof(PaymentMethodId), null,
                 JsonSerializer.CreateDefault()).ToString());
         }
+
+        #region ExpiryLimits Tests
+
+        [Fact]
+        public void ExpiryLimits_Clamp_RespectsMinimum()
+        {
+            var limits = new ExpiryLimits(
+                MinExpiry: TimeSpan.FromHours(12),
+                MaxExpiry: null);
+
+            var expiry = TimeSpan.FromMinutes(15);
+            var clamped = limits.Clamp(expiry);
+
+            Assert.Equal(TimeSpan.FromHours(12), clamped);
+        }
+
+        [Fact]
+        public void ExpiryLimits_Clamp_RespectsMaximum()
+        {
+            var limits = new ExpiryLimits(
+                MinExpiry: null,
+                MaxExpiry: TimeSpan.FromHours(1));
+
+            var expiry = TimeSpan.FromHours(24);
+            var clamped = limits.Clamp(expiry);
+
+            Assert.Equal(TimeSpan.FromHours(1), clamped);
+        }
+
+        [Fact]
+        public void ExpiryLimits_Clamp_RespectsMinAndMax()
+        {
+            var limits = new ExpiryLimits(
+                MinExpiry: TimeSpan.FromMinutes(30),
+                MaxExpiry: TimeSpan.FromHours(2));
+
+            // Below min
+            Assert.Equal(TimeSpan.FromMinutes(30), limits.Clamp(TimeSpan.FromMinutes(5)));
+            // Above max
+            Assert.Equal(TimeSpan.FromHours(2), limits.Clamp(TimeSpan.FromHours(24)));
+            // Within range
+            Assert.Equal(TimeSpan.FromHours(1), limits.Clamp(TimeSpan.FromHours(1)));
+        }
+
+        [Fact]
+        public void ExpiryLimits_Clamp_PassesThroughWhenWithinLimits()
+        {
+            var limits = new ExpiryLimits(
+                MinExpiry: TimeSpan.FromMinutes(5),
+                MaxExpiry: TimeSpan.FromHours(24));
+
+            var expiry = TimeSpan.FromMinutes(15);
+            var clamped = limits.Clamp(expiry);
+
+            Assert.Equal(TimeSpan.FromMinutes(15), clamped);
+        }
+
+        [Fact]
+        public void ExpiryLimits_IsWithinLimits_ReturnsFalseWhenBelowMin()
+        {
+            var limits = new ExpiryLimits(
+                MinExpiry: TimeSpan.FromHours(12),
+                MaxExpiry: null);
+
+            Assert.False(limits.IsWithinLimits(TimeSpan.FromMinutes(15)));
+            Assert.True(limits.IsWithinLimits(TimeSpan.FromHours(12)));
+            Assert.True(limits.IsWithinLimits(TimeSpan.FromHours(24)));
+        }
+
+        [Fact]
+        public void ExpiryLimits_IsWithinLimits_ReturnsFalseWhenAboveMax()
+        {
+            var limits = new ExpiryLimits(
+                MinExpiry: null,
+                MaxExpiry: TimeSpan.FromHours(1));
+
+            Assert.True(limits.IsWithinLimits(TimeSpan.FromMinutes(15)));
+            Assert.True(limits.IsWithinLimits(TimeSpan.FromHours(1)));
+            Assert.False(limits.IsWithinLimits(TimeSpan.FromHours(2)));
+        }
+
+        [Fact]
+        public void ExpiryLimits_NullLimits_AllowsAnyExpiry()
+        {
+            var limits = new ExpiryLimits(null, null);
+
+            Assert.True(limits.IsWithinLimits(TimeSpan.FromSeconds(1)));
+            Assert.True(limits.IsWithinLimits(TimeSpan.FromDays(365)));
+            Assert.Equal(TimeSpan.FromMinutes(15), limits.Clamp(TimeSpan.FromMinutes(15)));
+            Assert.Equal(TimeSpan.FromDays(30), limits.Clamp(TimeSpan.FromDays(30)));
+        }
+
+        [Fact]
+        public void ExpiryLimits_EdgeCases()
+        {
+            var limits = new ExpiryLimits(
+                MinExpiry: TimeSpan.FromHours(1),
+                MaxExpiry: TimeSpan.FromHours(1));
+
+            // Exactly at the limit
+            Assert.True(limits.IsWithinLimits(TimeSpan.FromHours(1)));
+            Assert.Equal(TimeSpan.FromHours(1), limits.Clamp(TimeSpan.FromHours(1)));
+
+            // When min equals max, any other value gets clamped to that value
+            Assert.Equal(TimeSpan.FromHours(1), limits.Clamp(TimeSpan.FromMinutes(30)));
+            Assert.Equal(TimeSpan.FromHours(1), limits.Clamp(TimeSpan.FromHours(2)));
+        }
+
+        #endregion
     }
 }

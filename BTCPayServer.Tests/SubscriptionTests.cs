@@ -214,22 +214,22 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             // Note that at this point, the customer has a period of 15 days + 1 month.
             // This is because the trial period is 15 days, so we extend the plan.
             await portal.GoTo7Days();
+            // The downgrade can be paid by the current, more expensive plan.
+            var unused = GetUnusedPeriodValue(usedDays: 7, planPrice: 299.0m, daysInPeriod: 15 + DaysInTrialEndMonth(15));
             await portal.Downgrade("Pro Plan");
 
             var totalRefunded = 0m;
-            // The downgrade can be paid by the current, more expensive plan.
-            var unused = GetUnusedPeriodValue(usedDays: 7, planPrice: 299.0m, daysInPeriod: 15 + DaysInThisMonth());
             totalRefunded += await portal.AssertRefunded(unused);
             var expectedBalance = totalRefunded - 99.0m;
-            await portal.AssertCredit(creditBalance: $"${expectedBalance:F2}");
+            await portal.AssertCredit(creditBalance: $"${expectedBalance.ToString("F2", CultureInfo.InvariantCulture)}");
 
             // This time, we should have 1 month in the current period.
             await portal.GoTo7Days();
 
+            unused = GetUnusedPeriodValue(usedDays: 7, planPrice: 99.0m, daysInPeriod: DaysInThisMonth());
             var credited = await s.Server.WaitForEvent<SubscriptionEvent.SubscriberCredited>(async () =>
             {
                 await portal.Downgrade("Basic Plan");
-                unused = GetUnusedPeriodValue(usedDays: 7, planPrice: 99.0m, daysInPeriod: DaysInThisMonth());
                 unused = await portal.AssertRefunded(unused);
                 totalRefunded += unused;
             });
@@ -239,17 +239,17 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
 
 
             expectedBalance = totalRefunded - 29.0m - 99.0m;
-            await portal.AssertCredit("$29.00", "-$29.00", "$0.00", $"${expectedBalance:F2}");
+            await portal.AssertCredit("$29.00", "-$29.00", "$0.00", $"${expectedBalance.ToString("F2", CultureInfo.InvariantCulture)}");
             // The balance should now be around 202.15 USD
 
             // Now, let's try upgrade. Since we have enough money, we should be able to upgrade without invoice.
             await portal.GoTo7Days();
-            await portal.Upgrade("Pro Plan");
             unused = GetUnusedPeriodValue(usedDays: 7, planPrice: 29.0m, daysInPeriod: DaysInThisMonth());
+            await portal.Upgrade("Pro Plan");
             unused = await portal.AssertRefunded(unused);
             totalRefunded += unused;
             expectedBalance = totalRefunded - 29.0m - 99.0m - 99.0m;
-            await portal.AssertCredit(creditBalance: $"${expectedBalance:F2}");
+            await portal.AssertCredit(creditBalance: $"${expectedBalance.ToString("F2", CultureInfo.InvariantCulture)}");
 
             // However, for going back to enterprise, we do not have enough.
             await portal.GoTo7Days();
@@ -275,7 +275,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
                     "$" + (299m - expectedBalance - unused).ToString("F2", CultureInfo.InvariantCulture)
                 ]);
             expectedBalance = 0m;
-            await portal.AssertCredit(creditBalance: $"${expectedBalance:F2}");
+            await portal.AssertCredit(creditBalance: $"${expectedBalance.ToString("F2", CultureInfo.InvariantCulture)}");
         }
     }
 
@@ -291,6 +291,11 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         return DateTime.DaysInMonth(DateTimeOffset.UtcNow.Year, DateTimeOffset.UtcNow.Month);
     }
 
+    private static int DaysInTrialEndMonth(int trialDays)
+    {
+        var trialEnd = DateTimeOffset.UtcNow.AddDays(trialDays);
+        return DateTime.DaysInMonth(trialEnd.Year, trialEnd.Month);
+    }
 
     [Fact]
     [Trait("Integration", "Integration")]

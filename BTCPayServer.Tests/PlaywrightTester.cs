@@ -513,6 +513,18 @@ namespace BTCPayServer.Tests
             await Page.Locator("#page-primary").ClickAsync();
         }
 
+        public async Task AddStoreLabelAsync(ILocator row, string label)
+        {
+            var labelInput = row.Locator(".ts-control input");
+            await labelInput.WaitForAsync();
+            await labelInput.FillAsync(label);
+            var resp = await Page.RunAndWaitForResponseAsync(
+                () => labelInput.PressAsync("Enter"),
+                r => r.Request.Method == "POST" &&
+                     r.Url.Contains("/update-labels", StringComparison.OrdinalIgnoreCase));
+            Assert.True(resp.Ok, $"update-labels returned {resp.Status}");
+        }
+
         public async Task GoToWalletSettings(string cryptoCode = "BTC")
         {
             await Page.GetByTestId("Wallet-" + cryptoCode).Locator("a").ClickAsync();

@@ -1269,15 +1269,7 @@ namespace BTCPayServer.Tests
             // Labels
             const string labelName = "test-label";
             var testPrRow = s.Page.Locator("table tbody tr", new PageLocatorOptions { HasText = paymentRequestTitle });
-            var labelInput = testPrRow.Locator(".ts-control input");
-            await Expect(labelInput).ToBeVisibleAsync();
-
-            await labelInput.FillAsync(labelName);
-            var resp = await s.Page.RunAndWaitForResponseAsync(
-                () => labelInput.PressAsync("Enter"),
-                r => r.Request.Method == "POST" &&
-                     r.Url.Contains("/update-labels", StringComparison.OrdinalIgnoreCase));
-            Assert.True(resp.Ok, $"update-labels returned {resp.Status}");
+            await s.AddStoreLabelAsync(testPrRow, labelName);
 
             await TestUtils.EventuallyAsync(async () =>
             {
@@ -1314,6 +1306,65 @@ namespace BTCPayServer.Tests
             await s.Page.WaitForSelectorAsync("#app table tbody tr");
             var allPrRows = s.Page.Locator("#app table tbody tr").Filter(new LocatorFilterOptions { HasText = "Payment Request" });
             Assert.Equal(2, await allPrRows.CountAsync());
+        }
+
+        [Fact]
+        public async Task CanUseStoreLabels()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            await s.GenerateWallet("BTC", "", true);
+
+            await s.GoToStore();
+            await s.Page.ClickAsync("#menu-item-PaymentRequests");
+
+            await s.ClickPagePrimary();
+            var paymentRequestTitle1 = "Label Case PR 1";
+            await s.Page.FillAsync("#Title", paymentRequestTitle1);
+            await s.Page.FillAsync("#Amount", "0.1");
+            await s.Page.FillAsync("#Currency", "BTC");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "Payment request");
+
+            await s.Page.ClickAsync("#menu-item-PaymentRequests");
+            await s.ClickPagePrimary();
+            var paymentRequestTitle2 = "Label Case PR 2";
+            await s.Page.FillAsync("#Title", paymentRequestTitle2);
+            await s.Page.FillAsync("#Amount", "0.2");
+            await s.Page.FillAsync("#Currency", "BTC");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "Payment request");
+
+            await s.Page.ClickAsync("#menu-item-PaymentRequests");
+            await s.Page.WaitForLoadStateAsync();
+
+            const string labelOriginal = "Case";
+            const string labelLower = "case";
+
+            var row1 = s.Page.Locator("table tbody tr", new PageLocatorOptions { HasText = paymentRequestTitle1 });
+            await s.AddStoreLabelAsync(row1, labelOriginal);
+
+            var row2 = s.Page.Locator("table tbody tr", new PageLocatorOptions { HasText = paymentRequestTitle2 });
+            await s.AddStoreLabelAsync(row2, labelLower);
+
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var text1 = await row1.InnerTextAsync();
+                var text2 = await row2.InnerTextAsync();
+                Assert.Contains(labelOriginal, text1);
+                Assert.Contains(labelOriginal, text2);
+            });
+
+            await s.Page.ReloadAsync();
+            await s.Page.WaitForLoadStateAsync();
+            await s.Page.WaitForSelectorAsync("#LabelOptionsToggle");
+            await s.Page.ClickAsync("#LabelOptionsToggle");
+            var labelItems = await s.Page.Locator(".dropdown-menu a").AllInnerTextsAsync();
+            var matches = labelItems.Where(t => t.Equals(labelOriginal, StringComparison.OrdinalIgnoreCase)).ToArray();
+            Assert.Single(matches);
+            Assert.Equal(labelOriginal, matches[0]);
         }
 
         [Fact]
@@ -2897,5 +2948,3 @@ namespace BTCPayServer.Tests
 
     }
 }
-
-

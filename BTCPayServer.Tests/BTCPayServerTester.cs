@@ -254,6 +254,7 @@ namespace BTCPayServer.Tests
                 var kraken = new MockRateProvider(realKraken.RateSourceInfo);
                 kraken.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("ETH_BTC"), new BidAsk(0.1m)));
                 kraken.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("BTC_LTC"), new BidAsk(162m)));
+                kraken.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("BTC_USD"), new BidAsk(5000m)));
                 rateProvider.Providers.Add("kraken", kraken);
 
                 foreach (var prov in rateProvider.Providers)

@@ -782,13 +782,19 @@ namespace BTCPayServer
                         var expiry = i.ExpirationTime.ToUniversalTime() - DateTimeOffset.UtcNow;
 
                         // Check if the lightning implementation has expiry limits and apply them
+                        // Use a short timeout linked to the request cancellation token
                         var lightningHandler = _handlers.GetLightningHandler(network);
                         try
                         {
-                            var expiryLimits = await lightningHandler.GetExpiryLimits(lnConfig);
+                            using var limitsCts = CancellationTokenSource.CreateLinkedTokenSource(HttpContext.RequestAborted);
+                            limitsCts.CancelAfter(LightningLikePaymentHandler.LightningTimeout);
+                            var expiryLimits = await lightningHandler.GetExpiryLimits(lnConfig, limitsCts.Token);
                             if (expiryLimits is not null)
                             {
-                                expiry = expiryLimits.Clamp(expiry);
+                                // Apply limits without extending beyond the invoice window
+                                // Take the minimum of the original expiry and the clamped value
+                                var clampedExpiry = expiryLimits.Clamp(expiry);
+                                expiry = expiry < clampedExpiry ? expiry : clampedExpiry;
                             }
                         }
                         catch

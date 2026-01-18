@@ -125,7 +125,7 @@ namespace BTCPayServer.Payments.Lightning
                     var minLimitStr = expiryLimits.MinExpiry.HasValue ? $"{expiryLimits.MinExpiry.Value.TotalMinutes:F0}" : "none";
                     var maxLimitStr = expiryLimits.MaxExpiry.HasValue ? $"{expiryLimits.MaxExpiry.Value.TotalMinutes:F0}" : "none";
                     context.Logs.Write(
-                        $"Invoice expiry adjusted from {originalExpiry.TotalMinutes:F0} to {expiry.TotalMinutes:F0} minutes due to lightning implementation limits (min: {minLimitStr}, max: {maxLimitStr}). BTCPay invoice expiration also extended.",
+                        $"Invoice expiry adjusted from {originalExpiry.TotalMinutes:F0} to {expiry.TotalMinutes:F0} minutes due to lightning implementation limits (min: {minLimitStr}, max: {maxLimitStr}). BTCPay invoice expiration also adjusted accordingly.",
                         InvoiceEventData.EventSeverity.Warning);
                 }
             }

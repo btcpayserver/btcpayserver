@@ -110,5 +110,31 @@ namespace BTCPayServer.Payments.Lightning
         {
             return details.ToObject<LNURLPayPaymentMethodDetails>(Serializer) ?? throw new FormatException($"Invalid {nameof(LNURLPayPaymentMethodDetails)}");
         }
+
+        /// <summary>
+        /// Returns the expiry limits from the underlying lightning node.
+        /// LNURL's limits are determined by the lightning node it uses.
+        /// </summary>
+        /// <remarks>
+        /// This method requires the LightningPaymentMethodConfig, not the LNURLPaymentMethodConfig.
+        /// If you have store access, resolve the lightning config first using:
+        /// store.GetPaymentMethodConfigs()[PaymentTypes.LN.GetPaymentMethodId(cryptoCode)]
+        /// </remarks>
+        public async Task<ExpiryLimits?> GetExpiryLimits(object config, CancellationToken cancellationToken = default)
+        {
+            // LNURL uses the underlying lightning node, so we delegate to the lightning handler
+            var handlers = _serviceProvider.GetRequiredService<PaymentMethodHandlerDictionary>();
+            var lnPmi = PaymentTypes.LN.GetPaymentMethodId(_network.CryptoCode);
+
+            if (!handlers.TryGetValue(lnPmi, out var handler) || handler is not LightningLikePaymentHandler lightningHandler)
+                return null;
+
+            // The config passed must be a LightningPaymentMethodConfig, not LNURLPaymentMethodConfig
+            // If the wrong config type is passed, the lightning handler will return null
+            if (config is not LightningPaymentMethodConfig lightningConfig)
+                return null;
+
+            return await lightningHandler.GetExpiryLimits(lightningConfig, cancellationToken);
+        }
     }
 }

@@ -28,6 +28,43 @@ using InvoiceResponse = BTCPayServer.Models.InvoiceResponse;
 namespace BTCPayServer.Payments
 {
     /// <summary>
+    /// Represents the minimum and maximum invoice expiry limits supported by a payment method.
+    /// Some lightning implementations (e.g. Boltz) have restrictions around the invoice expiry they can produce.
+    /// </summary>
+    /// <param name="MinExpiry">The minimum expiry time supported, or null if no minimum limit.</param>
+    /// <param name="MaxExpiry">The maximum expiry time supported, or null if no maximum limit.</param>
+    public record ExpiryLimits(TimeSpan? MinExpiry, TimeSpan? MaxExpiry)
+    {
+        /// <summary>
+        /// Clamps the given expiry to be within the allowed limits.
+        /// </summary>
+        /// <param name="expiry">The desired expiry time.</param>
+        /// <returns>The clamped expiry time within the allowed range.</returns>
+        public TimeSpan Clamp(TimeSpan expiry)
+        {
+            if (MinExpiry.HasValue && expiry < MinExpiry.Value)
+                return MinExpiry.Value;
+            if (MaxExpiry.HasValue && expiry > MaxExpiry.Value)
+                return MaxExpiry.Value;
+            return expiry;
+        }
+
+        /// <summary>
+        /// Checks if the given expiry is within the allowed limits.
+        /// </summary>
+        /// <param name="expiry">The expiry time to check.</param>
+        /// <returns>True if the expiry is within limits, false otherwise.</returns>
+        public bool IsWithinLimits(TimeSpan expiry)
+        {
+            if (MinExpiry.HasValue && expiry < MinExpiry.Value)
+                return false;
+            if (MaxExpiry.HasValue && expiry > MaxExpiry.Value)
+                return false;
+            return true;
+        }
+    }
+
+    /// <summary>
     /// This class customize invoice creation by the creation of payment details for the PaymentMethod during invoice creation
     /// </summary>
     public interface IPaymentMethodHandler : IHandler<PaymentMethodId>
@@ -81,6 +118,16 @@ namespace BTCPayServer.Payments
 
         Task ValidatePaymentMethodConfig(PaymentMethodConfigValidationContext validationContext) => Task.CompletedTask;
         object ParsePaymentDetails(JToken details);
+
+        /// <summary>
+        /// Returns the minimum and maximum invoice expiry limits supported by this payment method.
+        /// Some payment methods (e.g. certain lightning implementations like Boltz) have restrictions
+        /// around the invoice expiry they can produce.
+        /// </summary>
+        /// <param name="config">The payment method configuration.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The expiry limits, or null if no limits apply.</returns>
+        Task<ExpiryLimits?> GetExpiryLimits(object config, CancellationToken cancellationToken = default) => Task.FromResult<ExpiryLimits?>(null);
     }
     public class PaymentMethodConfigValidationContext
     {

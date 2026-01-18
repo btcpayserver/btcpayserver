@@ -99,6 +99,37 @@ namespace BTCPayServer.Payments.Lightning
             if (expiry < TimeSpan.Zero)
                 expiry = TimeSpan.FromSeconds(1);
 
+            // Check if the lightning implementation has expiry limits and apply them
+            ExpiryLimits? expiryLimits = null;
+            try
+            {
+                using var limitsCts = new CancellationTokenSource(LightningTimeout);
+                expiryLimits = await GetExpiryLimits(config, limitsCts.Token);
+            }
+            catch
+            {
+                // If we can't get limits, continue with the configured expiry
+            }
+
+            if (expiryLimits is not null)
+            {
+                var originalExpiry = expiry;
+                expiry = expiryLimits.Clamp(expiry);
+                if (expiry != originalExpiry)
+                {
+                    // Also update the BTCPay invoice expiration to match the clamped BOLT11 expiry
+                    var expiryDifference = expiry - originalExpiry;
+                    invoice.ExpirationTime = invoice.ExpirationTime + expiryDifference;
+                    invoice.MonitoringExpiration = invoice.MonitoringExpiration + expiryDifference;
+
+                    var minLimitStr = expiryLimits.MinExpiry.HasValue ? $"{expiryLimits.MinExpiry.Value.TotalMinutes:F0}" : "none";
+                    var maxLimitStr = expiryLimits.MaxExpiry.HasValue ? $"{expiryLimits.MaxExpiry.Value.TotalMinutes:F0}" : "none";
+                    context.Logs.Write(
+                        $"Invoice expiry adjusted from {originalExpiry.TotalMinutes:F0} to {expiry.TotalMinutes:F0} minutes due to lightning implementation limits (min: {minLimitStr}, max: {maxLimitStr}). BTCPay invoice expiration also extended.",
+                        InvoiceEventData.EventSeverity.Warning);
+                }
+            }
+
             LightningInvoice? lightningInvoice;
 
             string description = storeBlob.LightningDescriptionTemplate;
@@ -255,6 +286,30 @@ namespace BTCPayServer.Payments.Lightning
         object IPaymentMethodHandler.ParsePaymentDetails(JToken details)
         {
             return ParsePaymentDetails(details);
+        }
+
+        /// <summary>
+        /// Returns the expiry limits supported by the configured lightning implementation.
+        /// </summary>
+        public Task<ExpiryLimits?> GetExpiryLimits(object config, CancellationToken cancellationToken = default)
+        {
+            if (config is not LightningPaymentMethodConfig lnConfig)
+                return Task.FromResult<ExpiryLimits?>(null);
+
+            try
+            {
+                var client = lnConfig.CreateLightningClient(_Network, Options.Value, _lightningClientFactory);
+                if (client is IExtendedLightningClient extendedClient)
+                {
+                    return extendedClient.GetExpiryLimits(cancellationToken);
+                }
+            }
+            catch
+            {
+                // If we can't connect to the lightning node, we can't determine limits
+            }
+
+            return Task.FromResult<ExpiryLimits?>(null);
         }
 
         public async Task ValidatePaymentMethodConfig(PaymentMethodConfigValidationContext validationContext)

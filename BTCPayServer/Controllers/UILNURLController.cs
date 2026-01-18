@@ -179,20 +179,20 @@ namespace BTCPayServer
                 Processors = [LightningAutomatedPayoutSenderFactory.ProcessorName]
             });
             var processorBlob = processors.FirstOrDefault()?.HasTypedBlob<LightningAutomatedPayoutBlob>().GetBlob();
-			var instantProcessing = processorBlob?.ProcessNewPayoutsInstantly is true;
+            var instantProcessing = processorBlob?.ProcessNewPayoutsInstantly is true;
             if (nonInteractiveOnly && !instantProcessing)
             {
                 return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Payment cancelled: The payer must activate the lightning automated payment process and must check \"Process approved payouts instantly\"." });
             }
 
-			var interval = processorBlob?.Interval.TotalMinutes;
-			var autoApprove = pp.GetBlob().AutoApproveClaims;
+            var interval = processorBlob?.Interval.TotalMinutes;
+            var autoApprove = pp.GetBlob().AutoApproveClaims;
             if (nonInteractiveOnly && !autoApprove)
             {
                 return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Payment cancelled: The payer must activate \"Automatically approve claims\" in the settings of the pull payment." });
             }
 
-			var claimResponse = await _pullPaymentHostedService.Claim(new ClaimRequest
+            var claimResponse = await _pullPaymentHostedService.Claim(new ClaimRequest
             {
                 Destination = new BoltInvoiceClaimDestination(pr, result),
                 PayoutMethodId = pmi,
@@ -205,7 +205,7 @@ namespace BTCPayServer
             if (claimResponse.Result != ClaimRequest.ClaimResult.Ok)
                 return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = $"Payment request could not be paid (Claim result: {claimResponse.Result})" });
             var payout = claimResponse.PayoutData;
-			DateTimeOffset since = DateTimeOffset.UtcNow;
+            DateTimeOffset since = DateTimeOffset.UtcNow;
             while (true)
             {
                 switch (payout.State)
@@ -214,41 +214,41 @@ namespace BTCPayServer
                         return Ok(new LNUrlStatusResponse { Status = "OK" });
                     case PayoutState.Cancelled:
                         return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Payment request could not be paid (Payout state: Cancelled)" });
-					case PayoutState.AwaitingApproval when !autoApprove:
-						return Ok(new LNUrlStatusResponse
-						{
-							Status = "OK",
-							Reason =
-								"The request has been recorded, but still need to be approved before execution."
-						});
-				}
-				if (instantProcessing)
-				{
-					if (DateTimeOffset.UtcNow - since > TimeSpan.FromSeconds(10.0))
-						return Ok(new LNUrlStatusResponse
-						{
-							Status = "OK",
-							Reason = $"The payment is in pending state and should be completed shortly. ({payout.State})"
-						});
-					await WaitPayoutChanged(claimResponse.PayoutData.Id, cancellationToken);
-					payout = (await _pullPaymentHostedService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
-					{
-						PayoutIds = [claimResponse.PayoutData.Id]
-					})).Single();
-				}
-				else
-				{
-					var message = interval switch
-					{
-						double intervalMinutes => $"The payment will be sent after {intervalMinutes} minutes.",
-						null => "The sender needs to send the payment manually. (Or activate the lightning automated payment processor)"
-					};
-					return Ok(new LNUrlStatusResponse
-					{
-						Status = "OK",
-						Reason = $"The request has been approved. {message}"
-					});
-				}
+                    case PayoutState.AwaitingApproval when !autoApprove:
+                        return Ok(new LNUrlStatusResponse
+                        {
+                            Status = "OK",
+                            Reason =
+                                "The request has been recorded, but still need to be approved before execution."
+                        });
+                }
+                if (instantProcessing)
+                {
+                    if (DateTimeOffset.UtcNow - since > TimeSpan.FromSeconds(10.0))
+                        return Ok(new LNUrlStatusResponse
+                        {
+                            Status = "OK",
+                            Reason = $"The payment is in pending state and should be completed shortly. ({payout.State})"
+                        });
+                    await WaitPayoutChanged(claimResponse.PayoutData.Id, cancellationToken);
+                    payout = (await _pullPaymentHostedService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
+                    {
+                        PayoutIds = [claimResponse.PayoutData.Id]
+                    })).Single();
+                }
+                else
+                {
+                    var message = interval switch
+                    {
+                        double intervalMinutes => $"The payment will be sent after {intervalMinutes} minutes.",
+                        null => "The sender needs to send the payment manually. (Or activate the lightning automated payment processor)"
+                    };
+                    return Ok(new LNUrlStatusResponse
+                    {
+                        Status = "OK",
+                        Reason = $"The request has been approved. {message}"
+                    });
+                }
             }
         }
 
@@ -520,7 +520,7 @@ namespace BTCPayServer
             if (store is null)
                 return NotFound();
 
-			var blob = store.GetStoreBlob();
+            var blob = store.GetStoreBlob();
             if (!blob.AnyoneCanInvoice)
                 return NotFound(StringLocalizer["'Anyone can invoice' is turned off"]);
             var metadata = new InvoiceMetadata();
@@ -780,6 +780,22 @@ namespace BTCPayServer
                     try
                     {
                         var expiry = i.ExpirationTime.ToUniversalTime() - DateTimeOffset.UtcNow;
+
+                        // Check if the lightning implementation has expiry limits and apply them
+                        var lightningHandler = _handlers.GetLightningHandler(network);
+                        try
+                        {
+                            var expiryLimits = await lightningHandler.GetExpiryLimits(lnConfig);
+                            if (expiryLimits is not null)
+                            {
+                                expiry = expiryLimits.Clamp(expiry);
+                            }
+                        }
+                        catch
+                        {
+                            // If we can't get limits, continue with the configured expiry
+                        }
+
                         HttpContext.Items.Add(nameof(invoiceId), invoiceId);
                         var description = (await _pluginHookService.ApplyFilter("modify-lnurlp-description", lnurlPayRequest.Metadata)) as string;
                         if (description is null)

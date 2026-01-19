@@ -246,7 +246,7 @@
                     <div class="overflow-hidden">@Safe.Raw(Model.Description)</div>
                 </div>
                 <div class="col-md-4 col-sm-12">
-                    <partial name="Crowdfund/Public/ContributeForm" model="@(new ContributeToCrowdfund { ViewCrowdfundViewModel = Model, RedirectToCheckout = true })" />
+                    <partial name="/Plugins/Crowdfund/Views/Public/ContributeForm.cshtml" model="@(new ContributeToCrowdfund { ViewCrowdfundViewModel = Model, RedirectToCheckout = true })" />
                 </div>
             </div>
         </noscript>

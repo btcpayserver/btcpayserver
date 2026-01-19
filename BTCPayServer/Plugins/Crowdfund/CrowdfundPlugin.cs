@@ -30,13 +30,14 @@ namespace BTCPayServer.Plugins.Crowdfund
 {
     public class CrowdfundPlugin : BaseBTCPayServerPlugin
     {
+        public const string Area = "Crowdfund";
         public override string Identifier => "BTCPayServer.Plugins.Crowdfund";
         public override string Name => "Crowdfund";
         public override string Description => "Create a self-hosted funding campaign, similar to Kickstarter or Indiegogo. Funds go directly to the creator’s wallet without any fees.";
 
         public override void Execute(IServiceCollection services)
         {
-            services.AddUIExtension("header-nav", "Crowdfund/NavExtension");
+            services.AddUIExtension("header-nav", "/Plugins/Crowdfund/Views/NavExtension.cshtml");
             services.AddSingleton<CrowdfundAppType>();
             services.AddSingleton<AppBaseType, CrowdfundAppType>();
 
@@ -80,7 +81,7 @@ namespace BTCPayServer.Plugins.Crowdfund
         public override Task<string> ConfigureLink(AppData app)
         {
             return Task.FromResult(_linkGenerator.GetPathByAction(nameof(UICrowdfundController.UpdateCrowdfund),
-                "UICrowdfund", new { appId = app.Id }, _options.Value.RootPath)!);
+                "UICrowdfund", new { area = CrowdfundPlugin.Area, appId = app.Id }, _options.Value.RootPath)!);
         }
 
         public Task<AppSalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
@@ -187,7 +188,7 @@ namespace BTCPayServer.Plugins.Crowdfund
             var store = appData.StoreData;
             var formUrl = settings.FormId != null
                 ? _linkGenerator.GetPathByAction(nameof(UICrowdfundController.CrowdfundForm), "UICrowdfund",
-                    new { appId = appData.Id }, _options.Value.RootPath)
+                    new { area = CrowdfundPlugin.Area, appId = appData.Id }, _options.Value.RootPath)
                 : null;
             var vm =  new ViewCrowdfundViewModel
             {
@@ -264,7 +265,7 @@ namespace BTCPayServer.Plugins.Crowdfund
         public override Task<string> ViewLink(AppData app)
         {
             return Task.FromResult(_linkGenerator.GetPathByAction(nameof(UICrowdfundController.ViewCrowdfund),
-                "UICrowdfund", new { appId = app.Id }, _options.Value.RootPath)!);
+                "UICrowdfund", new { area = CrowdfundPlugin.Area, appId = app.Id }, _options.Value.RootPath)!);
         }
     }
 }

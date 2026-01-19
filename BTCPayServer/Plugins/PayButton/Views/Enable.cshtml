@@ -1,8 +1,7 @@
-@using BTCPayServer.TagHelpers
 @using BTCPayServer.Views.Stores
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @{
 	ViewData.SetLayoutModel(new(nameof(StoreNavPages.PayButton), StringLocalizer["Pay Button"]));
+    Layout = "_Layout";
 }
 
 <div class="sticky-header">

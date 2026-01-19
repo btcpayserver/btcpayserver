@@ -5,6 +5,7 @@
 @{
     ViewData.SetLayoutModel(new(nameof(StoreNavPages.PayButton), StringLocalizer["Pay Button"]));
 	Csp.UnsafeEval();
+    Layout = "_Layout";
 }
 
 @section PageHeadContent {

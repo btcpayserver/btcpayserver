@@ -25,14 +25,14 @@ namespace BTCPayServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_StoreLabels", x => new { x.store_id, x.id });
+                    table.PrimaryKey("PK_store_labels", x => new { x.store_id, x.id });
                 });
 
-            migrationBuilder.CreateIndex(
-                name: "IX_StoreLabels_StoreId_Type_Text",
-                table: "store_labels",
-                columns: new[] { "store_id", "type", "text" },
-                unique: true);
+            migrationBuilder.Sql(
+                """
+                CREATE UNIQUE INDEX "IX_store_labels_store_id_type_text_lower"
+                ON store_labels (store_id, type, lower(text));
+                """);
 
 
             migrationBuilder.CreateTable(
@@ -45,9 +45,9 @@ namespace BTCPayServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_StoreLabelLinks", x => new { x.store_id, x.store_label_id, x.object_id });
+                    table.PrimaryKey("PK_store_label_links", x => new { x.store_id, x.store_label_id, x.object_id });
                     table.ForeignKey(
-                        name: "FK_StoreLabelLinks_StoreLabels_StoreId_StoreLabelId",
+                        name: "FK_store_label_links_store_labels_store_id_store_label_id",
                         columns: x => new { x.store_id, x.store_label_id },
                         principalTable: "store_labels",
                         principalColumns: new[] { "store_id", "id" },
@@ -55,11 +55,9 @@ namespace BTCPayServer.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_StoreLabelLinks_StoreId_ObjectId",
+                name: "IX_store_label_links_store_id_object_id",
                 table: "store_label_links",
                 columns: new[] { "store_id", "object_id" });
-
-            migrationBuilder.Sql(@"CREATE EXTENSION IF NOT EXISTS pgcrypto;");
 
             // Copy Payment Request label objects (label metadata) into StoreLabels
             migrationBuilder.Sql(@"
@@ -93,7 +91,7 @@ namespace BTCPayServer.Migrations
                 ""LabelText"",
                 (""LabelData""::jsonb ->> 'color')
             FROM pr_labels
-            ON CONFLICT (store_id, type, text) DO NOTHING;
+            ON CONFLICT (store_id, type, (lower(text))) DO NOTHING;
             ");
 
             // Copy Payment Request label links into StoreLabelLinks

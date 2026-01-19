@@ -988,9 +988,6 @@ namespace BTCPayServer.Migrations
 
                     b.HasKey("StoreId", "Id");
 
-                    b.HasIndex("StoreId", "Type", "Text")
-                        .IsUnique();
-
                     b.ToTable("store_labels", (string)null);
                 });
 

@@ -30,7 +30,6 @@ public class StoreLabelData
             b.Property(x => x.Color).HasColumnName("color");
             b.Property(x => x.XMin).HasColumnName("xmin");
 
-            b.HasIndex(x => new { x.StoreId, x.Type, x.Text }).IsUnique();
         });
     }
 }

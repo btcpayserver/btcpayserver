@@ -176,10 +176,11 @@ public class StoreLabelRepository
 
         var affected = await conn.ExecuteAsync(
             """
-            DELETE FROM store_labels
-            WHERE store_id = @storeId
-              AND type     = @type
-              AND lower(text) = ANY(@lowerNormalized)
+            DELETE FROM store_labels sl
+            USING unnest(@lowerNormalized) AS t(lower_text)
+            WHERE sl.store_id = @storeId
+              AND sl.type     = @type
+              AND lower(sl.text) = t.lower_text
             """, new { storeId, type, lowerNormalized });
 
         return affected > 0;
@@ -192,9 +193,6 @@ public class StoreLabelRepository
 
         if (string.IsNullOrEmpty(oldLabel) || string.IsNullOrEmpty(newLabel))
             return false;
-
-        if (oldLabel.Equals(newLabel, StringComparison.Ordinal))
-            return true;
 
         await using var ctx = _contextFactory.CreateContext();
         var conn = ctx.Database.GetDbConnection();
@@ -215,6 +213,9 @@ public class StoreLabelRepository
         if (oldId is null)
             return false;
 
+        if (oldLabel.Equals(newLabel, StringComparison.Ordinal))
+            return true;
+
         var newId = await conn.QuerySingleOrDefaultAsync<string?>(
             """
             SELECT id
@@ -226,6 +227,7 @@ public class StoreLabelRepository
 
         if (newId is null || newId == oldId)
         {
+            // No existing label with the new text just rename the label in place
             var updatedLabels = await conn.ExecuteAsync(
                 """
                 UPDATE store_labels
@@ -238,6 +240,8 @@ public class StoreLabelRepository
             return updatedLabels > 0;
         }
 
+        // Merge old label into existing new label:
+        // drop duplicate links
         await conn.ExecuteAsync(
             """
             DELETE FROM store_label_links old
@@ -253,6 +257,7 @@ public class StoreLabelRepository
             """,
             new { storeId, oldId, newId }, transaction: dbTx);
 
+        // relink remaining old links to newId
         await conn.ExecuteAsync(
             """
             UPDATE store_label_links
@@ -262,6 +267,7 @@ public class StoreLabelRepository
             """,
             new { storeId, oldId, newId }, transaction: dbTx);
 
+        //delete old label if it becomes orphaned.
         await conn.ExecuteAsync(
             """
             DELETE FROM store_labels sl
@@ -295,11 +301,12 @@ public class StoreLabelRepository
         var lowerTexts = texts.Select(t => t.ToLowerInvariant()).ToArray();
         var existing = (await conn.QueryAsync<(string Id, string Text)>(
             """
-            SELECT id, text
-            FROM store_labels
-            WHERE store_id = @storeId
-              AND type     = @type
-              AND lower(text) = ANY(@lowerTexts)
+            SELECT sl.id, sl.text
+            FROM store_labels sl
+            INNER JOIN unnest(@lowerTexts) AS t(lower_text)
+              ON sl.store_id = @storeId
+             AND sl.type     = @type
+             AND lower(sl.text) = t.lower_text
             """, new { storeId, type, lowerTexts }, transaction: dbTx)).ToList();
 
         foreach (var e in existing)
@@ -322,7 +329,7 @@ public class StoreLabelRepository
                 """
                 INSERT INTO store_labels (store_id, id, type, text, color)
                 VALUES (@StoreId, @Id, @Type, @Text, @Color)
-                ON CONFLICT (store_id, type, text) DO UPDATE
+                ON CONFLICT (store_id, type, lower(text)) DO UPDATE
                 SET color = COALESCE(store_labels.color, EXCLUDED.color)
                 """,
                 rows,
@@ -330,11 +337,12 @@ public class StoreLabelRepository
 
             var inserted = await conn.QueryAsync<(string Id, string Text)>(
                 """
-                SELECT id, text
-                FROM store_labels
-                WHERE store_id = @storeId
-                  AND type     = @type
-                  AND lower(text) = ANY(@lowerMissing)
+                SELECT sl.id, sl.text
+                FROM store_labels sl
+                INNER JOIN unnest(@lowerMissing) AS t(lower_text)
+                  ON sl.store_id = @storeId
+                 AND sl.type     = @type
+                 AND lower(sl.text) = t.lower_text
                 """, new { storeId, type, lowerMissing }, transaction: dbTx);
 
             foreach (var i in inserted)

@@ -1,7 +1,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @{
-    Layout = "PointOfSale/Public/_Layout";
+    Layout = "/Plugins/PointOfSale/Views/Public/_Layout.cshtml";
 	Csp.UnsafeEval();
 }
 @section PageHeadContent {
@@ -19,14 +19,14 @@
 	@await Component.InvokeAsync("UiExtensionPoint", new { location = "pos-header", model = Model })
     @if (Context.Request.Query.ContainsKey("simple"))
     {
-        <partial name="PointOfSale/Public/MinimalLight" model="Model" />
+        <partial name="/Plugins/PointOfSale/Views/Public/MinimalLight.cshtml" model="Model" />
     }
     else
     {
         <noscript>
-            <partial name="PointOfSale/Public/MinimalLight" model="Model" />
+            <partial name="/Plugins/PointOfSale/Views/Public/MinimalLight.cshtml" model="Model" />
         </noscript>
-        <partial name="PointOfSale/Public/VueLight" model="Model" />
+        <partial name="/Plugins/PointOfSale/Views/Public/VueLight.cshtml" model="Model" />
     }
     <footer class="store-footer">
         <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">

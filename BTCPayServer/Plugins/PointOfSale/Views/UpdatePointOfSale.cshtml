@@ -8,6 +8,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.PointOfSale.Models.UpdatePointOfSaleViewModel
 @{
+    Layout = "_Layout";
     ViewData.SetLayoutModel(new($"{nameof(PointOfSalePlugin)}-{Model.Id}",StringLocalizer["Update Point of Sale"]));
 	Csp.UnsafeEval();
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);

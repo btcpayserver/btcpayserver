@@ -971,7 +971,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         public async Task AssertNoCallToAction()
         {
             await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
-            if (await s.Page.Locator($"div.alert-translucent").CountAsync() == 0)
+            if (await s.Page.Locator($"div.alert-translucent").CountAsync() != 0)
             {
                 var text = await s.Page.Locator($"div.alert-translucent").TextContentAsync();
                 Assert.Fail($"Call to action shouldn't have shown ({text})");

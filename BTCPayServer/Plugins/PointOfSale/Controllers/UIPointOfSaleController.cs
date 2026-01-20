@@ -111,7 +111,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var storeBlob = store.GetStoreBlob();
             var storeBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
 
-            return View($"PointOfSale/Public/{viewType}", new ViewPointOfSaleViewModel
+            return View($"/Plugins/PointOfSale/Views/Public/{viewType}.cshtml", new ViewPointOfSaleViewModel
             {
                 Title = settings.Title,
                 StoreName = store.StoreName,
@@ -611,7 +611,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             vm.ExampleCallback = "{\n  \"id\":\"SkdsDghkdP3D3qkj7bLq3\",\n  \"url\":\"https://btcpay.example.com/invoice?id=SkdsDghkdP3D3qkj7bLq3\",\n  \"status\":\"paid\",\n  \"price\":10,\n  \"currency\":\"EUR\",\n  \"invoiceTime\":1520373130312,\n  \"expirationTime\":1520374030312,\n  \"currentTime\":1520373179327,\n  \"exceptionStatus\":false,\n  \"buyerFields\":{\n    \"buyerEmail\":\"customer@example.com\",\n    \"buyerNotify\":false\n  },\n  \"paymentSubtotals\": {\n    \"BTC\":114700\n  },\n  \"paymentTotals\": {\n    \"BTC\":118400\n  },\n  \"transactionCurrency\": \"BTC\",\n  \"amountPaid\": \"1025900\",\n  \"exchangeRates\": {\n    \"BTC\": {\n      \"EUR\": 8721.690715789999,\n      \"USD\": 10817.99\n    }\n  }\n}";
 
             await FillUsers(vm);
-            return View("PointOfSale/UpdatePointOfSale", vm);
+            return View("/Plugins/PointOfSale/Views/UpdatePointOfSale.cshtml", vm);
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -624,7 +624,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
             vm.Id = app.Id;
             if (!ModelState.IsValid)
-                return View("PointOfSale/UpdatePointOfSale", vm);
+                return View("/Plugins/PointOfSale/Views/UpdatePointOfSale.cshtml", vm);
 
             vm.Currency = await GetStoreDefaultCurrentIfEmpty(app.StoreDataId, vm.Currency);
             if (_currencies.GetCurrencyData(vm.Currency, false) == null)
@@ -640,7 +640,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             if (!ModelState.IsValid)
             {
                 await FillUsers(vm);
-                return View("PointOfSale/UpdatePointOfSale", vm);
+                return View("/Plugins/PointOfSale/Views/UpdatePointOfSale.cshtml", vm);
             }
 
             var settings = new PointOfSaleSettings

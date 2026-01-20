@@ -74,10 +74,8 @@ namespace BTCPayServer.Tests
             await s.Page.SelectOptionAsync("#FormId", "Email");
             await s.ClickPagePrimary();
             await s.FindAlertMessage(partialText: "App updated");
-            var opening = s.Page.Context.WaitForPageAsync();
-            await s.Page.ClickAsync("#ViewApp");
             string invoiceId;
-            await using (_ = await s.SwitchPage(opening))
+            await using (_ = await POSTests.ViewApp(s))
             {
                 await s.Page.Locator("button[type='submit']").First.ClickAsync();
                 await s.Page.FillAsync("[name='buyerEmail']", "aa@aa.com");
@@ -98,12 +96,12 @@ namespace BTCPayServer.Tests
             await s.ClickPagePrimary();
             await s.Page.Locator("a[id^='Edit-']").First.ClickAsync();
             var editUrl = new Uri(s.Page.Url);
-            opening = s.Page.Context.WaitForPageAsync();
+            var opening = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("#ViewPaymentRequest");
             var popOutPage = await opening;
             await popOutPage.ClickAsync("[data-test='form-button']");
-            Assert.Contains("Enter your email", await popOutPage.ContentAsync());
             await popOutPage.FillAsync("input[name='buyerEmail']", "aa@aa.com");
+            Assert.Contains("Enter your email", await popOutPage.ContentAsync());
             await popOutPage.ClickAsync("#page-primary");
             invoiceId = popOutPage.Url.Split('/').Last();
             await popOutPage.CloseAsync();
@@ -171,6 +169,148 @@ namespace BTCPayServer.Tests
             await s.ClickPagePrimary();
             var selectOptions = await s.Page.Locator("#FormId >> option").CountAsync();
             Assert.Equal(4, selectOptions);
+        }
+
+        [Fact]
+        public async Task CanCreatePayRequest()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser();
+            await s.CreateNewStore();
+            await s.GoToUrl($"/stores/{s.StoreId}/payment-requests");
+
+            async Task<string> ReadStatusAsync()
+            {
+                var locator = s.Page.Locator(".only-for-js[data-test='status']");
+                await locator.WaitForAsync(new() { State = WaitForSelectorState.Visible });
+                return (await locator.InnerTextAsync()).Trim();
+            }
+
+            Task WaitStatusContains(string text)
+                => s.Page
+                    .Locator(".only-for-js[data-test='status']")
+                    .Filter(new() { HasTextString = text })
+                    .WaitForAsync(new() { State = WaitForSelectorState.Visible });
+
+            // Should give us an error message if we try to create a payment request before adding a wallet
+            await s.ClickPagePrimary();
+            Assert.Contains("To create a payment request, you need to", await s.Page.ContentAsync());
+
+            await s.AddDerivationScheme();
+            await s.GoToUrl($"/stores/{s.StoreId}/payment-requests");
+            await s.ClickPagePrimary();
+            await s.Page.FillAsync("#Title", "Pay123");
+            await s.Page.FillAsync("#Amount", ".01");
+
+            var currencyValue = await s.Page.InputValueAsync("#Currency");
+            Assert.Equal("USD", currencyValue);
+            await s.Page.FillAsync("#Currency", "BTC");
+
+            await s.ClickPagePrimary();
+            await s.Page.ClickAsync("a[id^='Edit-']");
+            var editUrl = s.Page.Url;
+
+            var opening = s.Page.Context.WaitForPageAsync();
+            await s.Page.ClickAsync("#ViewPaymentRequest");
+            string viewUrl;
+            await using (await s.SwitchPage(opening))
+            {
+                viewUrl = s.Page.Url;
+                Assert.Equal("Pay Invoice", (await s.Page.InnerTextAsync("#PayInvoice")).Trim());
+            }
+
+            // expire
+            await s.Page.EvaluateAsync("() => document.getElementById('ExpiryDate').value = '2021-01-21T21:00:00.000Z'");
+            await s.ClickPagePrimary();
+            await s.Page.ClickAsync("a[id^='Edit-']");
+
+            await s.GoToUrl(viewUrl);
+            await WaitStatusContains("Expired");
+
+            // unexpire
+            await s.GoToUrl(editUrl);
+            await s.Page.ClickAsync("#ClearExpiryDate");
+            await s.ClickPagePrimary();
+            await s.Page.Locator("a[id^='Edit-']").First.ClickAsync();
+
+            // amount and currency should be editable, because no invoice exists
+            await s.GoToUrl(editUrl);
+            Assert.True(await s.Page.IsEnabledAsync("#Amount"));
+            Assert.True(await s.Page.IsEnabledAsync("#Currency"));
+
+            await s.GoToUrl(viewUrl);
+            Assert.Equal("Pay Invoice", (await s.Page.InnerTextAsync("#PayInvoice")).Trim());
+
+            // test invoice creation
+            await s.Page.ClickAsync("#PayInvoice");
+            await s.Page.Locator("iframe[name='btcpay']").WaitForAsync();
+            var checkoutFrame = s.Page.FrameLocator("iframe[name='btcpay']");
+            await checkoutFrame.Locator("#Checkout").WaitForAsync();
+
+            await checkoutFrame.Locator("#close").WaitForAsync();
+            await checkoutFrame.Locator("#close").ClickAsync();
+            await s.Page.Locator("iframe[name='btcpay']").WaitForAsync(new() { State = WaitForSelectorState.Detached });
+
+            // amount and currency should not be editable, because invoice exists
+            await s.GoToUrl(editUrl);
+            Assert.False(await s.Page.IsEnabledAsync("#Amount"));
+            Assert.False(await s.Page.IsEnabledAsync("#Currency"));
+
+            // archive (from details page)
+            var payReqId = s.Page.Url.Split('/').Last();
+            await s.Page.ClickAsync("#ArchivePaymentRequest");
+            await s.FindAlertMessage(partialText: "The payment request has been archived");
+            Assert.DoesNotContain("Pay123", await s.Page.ContentAsync());
+            await s.Page.ClickAsync("#StatusOptionsToggle");
+            await s.Page.ClickAsync("#StatusOptionsIncludeArchived");
+            Assert.Contains("Pay123", await s.Page.ContentAsync());
+
+            // unarchive (from list)
+            await s.Page.ClickAsync($"#ToggleActions-{payReqId}");
+            await s.Page.ClickAsync($"#ToggleArchival-{payReqId}");
+            await s.FindAlertMessage(partialText: "The payment request has been unarchived");
+            Assert.Contains("Pay123", await s.Page.ContentAsync());
+
+            // payment
+            await s.GoToUrl(viewUrl);
+            await s.Page.ClickAsync("#PayInvoice");
+            await s.Page.Locator("iframe[name='btcpay']").WaitForAsync();
+            checkoutFrame = s.Page.FrameLocator("iframe[name='btcpay']");
+            await checkoutFrame.Locator("#Checkout").WaitForAsync();
+
+            // Pay full amount
+            await checkoutFrame.Locator("#FakePayment").ClickAsync();
+
+            // Processing - verify payment received message and status
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var processingSection = checkoutFrame.Locator("#processing");
+                if (await processingSection.CountAsync() > 0 && await processingSection.IsVisibleAsync())
+                {
+                    var processingText = await processingSection.InnerTextAsync();
+                    Assert.Contains("Payment Received", processingText);
+                    Assert.Contains("Your payment has been received and is now processing", processingText);
+                }
+            });
+
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var statusText = await ReadStatusAsync();
+                Assert.Equal("Processing", statusText);
+            });
+
+            // Mine
+            await checkoutFrame.Locator("#mine-block button").ClickAsync();
+            await checkoutFrame.Locator("#CheatSuccessMessage").WaitForAsync();
+            Assert.Contains("Mined 1 block", await checkoutFrame.Locator("#CheatSuccessMessage").InnerTextAsync());
+
+            await checkoutFrame.Locator("#close").ClickAsync();
+            await s.Page.Locator("iframe[name='btcpay']").WaitForAsync(new() { State = WaitForSelectorState.Detached });
+
+            // One last refresh to ensure UI reflects final state
+            await s.Page.ReloadAsync();
+            await WaitStatusContains("Settled");
         }
 
 
@@ -1269,15 +1409,7 @@ namespace BTCPayServer.Tests
             // Labels
             const string labelName = "test-label";
             var testPrRow = s.Page.Locator("table tbody tr", new PageLocatorOptions { HasText = paymentRequestTitle });
-            var labelInput = testPrRow.Locator(".ts-control input");
-            await Expect(labelInput).ToBeVisibleAsync();
-
-            await labelInput.FillAsync(labelName);
-            var resp = await s.Page.RunAndWaitForResponseAsync(
-                () => labelInput.PressAsync("Enter"),
-                r => r.Request.Method == "POST" &&
-                     r.Url.Contains("/update-labels", StringComparison.OrdinalIgnoreCase));
-            Assert.True(resp.Ok, $"update-labels returned {resp.Status}");
+            await s.AddStoreLabelAsync(testPrRow, labelName);
 
             await TestUtils.EventuallyAsync(async () =>
             {
@@ -1314,6 +1446,65 @@ namespace BTCPayServer.Tests
             await s.Page.WaitForSelectorAsync("#app table tbody tr");
             var allPrRows = s.Page.Locator("#app table tbody tr").Filter(new LocatorFilterOptions { HasText = "Payment Request" });
             Assert.Equal(2, await allPrRows.CountAsync());
+        }
+
+        [Fact]
+        public async Task CanUseStoreLabels()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            await s.GenerateWallet("BTC", "", true);
+
+            await s.GoToStore();
+            await s.Page.ClickAsync("#menu-item-PaymentRequests");
+
+            await s.ClickPagePrimary();
+            var paymentRequestTitle1 = "Label Case PR 1";
+            await s.Page.FillAsync("#Title", paymentRequestTitle1);
+            await s.Page.FillAsync("#Amount", "0.1");
+            await s.Page.FillAsync("#Currency", "BTC");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "Payment request");
+
+            await s.Page.ClickAsync("#menu-item-PaymentRequests");
+            await s.ClickPagePrimary();
+            var paymentRequestTitle2 = "Label Case PR 2";
+            await s.Page.FillAsync("#Title", paymentRequestTitle2);
+            await s.Page.FillAsync("#Amount", "0.2");
+            await s.Page.FillAsync("#Currency", "BTC");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "Payment request");
+
+            await s.Page.ClickAsync("#menu-item-PaymentRequests");
+            await s.Page.WaitForLoadStateAsync();
+
+            const string labelOriginal = "Case";
+            const string labelLower = "case";
+
+            var row1 = s.Page.Locator("table tbody tr", new PageLocatorOptions { HasText = paymentRequestTitle1 });
+            await s.AddStoreLabelAsync(row1, labelOriginal);
+
+            var row2 = s.Page.Locator("table tbody tr", new PageLocatorOptions { HasText = paymentRequestTitle2 });
+            await s.AddStoreLabelAsync(row2, labelLower);
+
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var text1 = await row1.InnerTextAsync();
+                var text2 = await row2.InnerTextAsync();
+                Assert.Contains(labelOriginal, text1);
+                Assert.Contains(labelOriginal, text2);
+            });
+
+            await s.Page.ReloadAsync();
+            await s.Page.WaitForLoadStateAsync();
+            await s.Page.WaitForSelectorAsync("#LabelOptionsToggle");
+            await s.Page.ClickAsync("#LabelOptionsToggle");
+            var labelItems = await s.Page.Locator(".dropdown-menu a").AllInnerTextsAsync();
+            var matches = labelItems.Where(t => t.Equals(labelOriginal, StringComparison.OrdinalIgnoreCase)).ToArray();
+            Assert.Single(matches);
+            Assert.Equal(labelOriginal, matches[0]);
         }
 
         [Fact]
@@ -2576,7 +2767,6 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error, "The user is the last owner. Their role cannot be changed.");
         }
 
-
         [Fact]
         [Trait("Playwright", "Playwright")]
         public async Task CanUseRoleManager()
@@ -2895,7 +3085,146 @@ namespace BTCPayServer.Tests
             });
         }
 
+        [Fact]
+        public async Task CanCreateCrowdfundingApp()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser();
+            await s.CreateNewStore();
+            await s.AddDerivationScheme();
+
+            (_, string appId) = await s.CreateApp("Crowdfund");
+            await s.Page.Locator("#Title").ClearAsync();
+            await s.Page.FillAsync("#Title", "Kukkstarter");
+            await s.Page.FillAsync("div.note-editable.card-block", "1BTC = 1BTC");
+            await s.Page.Locator("#TargetCurrency").ClearAsync();
+            await s.Page.FillAsync("#TargetCurrency", "EUR");
+            await s.Page.FillAsync("#TargetAmount", "700");
+
+            // test wrong dates
+            await s.Page.EvaluateAsync(@"
+                const now = new Date();
+                document.getElementById('StartDate').value = now.toISOString();
+                const yst = new Date(now.setDate(now.getDate() - 1));
+                document.getElementById('EndDate').value = yst.toISOString();
+            ");
+            await s.ClickPagePrimary();
+            var pageContent = await s.Page.ContentAsync();
+            Assert.Contains("End date cannot be before start date", pageContent);
+            Assert.DoesNotContain("App updated", pageContent);
+
+            // unset end date
+            await s.Page.EvaluateAsync("document.getElementById('EndDate').value = ''");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "App updated");
+            var editUrl = s.Page.Url;
+
+            // Check public page
+            await using var pageSwitch = await POSTests.ViewApp(s);
+            var cfUrl = s.Page.Url;
+
+            await Expect(s.Page.Locator("[data-test='time-state']")).ToContainTextAsync("Currently active!");
+
+            // Contribute
+            await s.Page.ClickAsync("#crowdfund-body-header-cta");
+            await s.Page.WaitForSelectorAsync("iframe[name='btcpay']", new() { Timeout = 10000 });
+
+            var frameElement = s.Page.Frame("btcpay");
+            Assert.NotNull(frameElement);
+            await frameElement.WaitForSelectorAsync("#Checkout");
+
+            var closeButton = frameElement.Locator("#close");
+            Assert.True(await closeButton.IsVisibleAsync());
+            await closeButton.ClickAsync();
+
+            await s.Page.WaitForSelectorAsync("iframe[name='btcpay']", new() { State = WaitForSelectorState.Hidden });
+
+            // Archive - navigate to the app edit page and archive it
+            await s.Page.GotoAsync(editUrl);
+            await s.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await s.Page.ClickAsync("#btn-archive-toggle");
+            await s.FindAlertMessage(partialText: "The app has been archived and will no longer appear in the apps list by default.");
+
+            Assert.Equal(0, await s.Page.Locator("#ViewApp").CountAsync());
+
+            // Go to store page to verify archived app link appears
+            await s.GoToStore(s.StoreId);
+            var archivedLink = s.Page.Locator("text='1 Archived App'");
+            await archivedLink.WaitForAsync();
+            await Expect(archivedLink).ToContainTextAsync("1 Archived App");
+
+            // Verify crowdfund is no longer accessible
+            await s.Page.GotoAsync(cfUrl);
+            Assert.Contains("Page not found", await s.Page.TitleAsync(), StringComparison.OrdinalIgnoreCase);
+            await s.Page.GoBackAsync();
+
+            // Navigate to archived apps and unarchive
+            await s.Page.Locator("text='1 Archived App'").ClickAsync();
+            await s.Page.ClickAsync($"#App-{appId}");
+            await s.Page.ClickAsync("#btn-archive-toggle");
+            await s.FindAlertMessage(partialText: "The app has been unarchived and will appear in the apps list by default again.");
+
+            // Crowdfund with form
+            await s.GoToUrl(editUrl);
+            await s.Page.SelectOptionAsync("#FormId", "Email");
+            await s.ClickPagePrimary();
+            // Verify "App updated" message
+            await s.FindAlertMessage(partialText: "App updated");
+
+            await using var formPageSwitch = await POSTests.ViewApp(s);
+            await s.Page.ClickAsync("#crowdfund-body-header-cta");
+
+            pageContent = await s.Page.ContentAsync();
+            Assert.Contains("Enter your email", pageContent);
+            await s.Page.FillAsync("[name='buyerEmail']", "test-without-perk@crowdfund.com");
+            await s.Page.ClickAsync("input[type='submit']");
+
+            await s.PayInvoice(true, 10);
+            var invoiceId = s.Page.Url[(s.Page.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
+            await s.GoToInvoice(invoiceId);
+            pageContent = await s.Page.ContentAsync();
+            Assert.Contains("test-without-perk@crowdfund.com", pageContent);
+
+            // Crowdfund with perk
+            await s.GoToUrl(editUrl);
+            await s.Page.Locator("#btAddItem").ScrollIntoViewIfNeededAsync();
+            await s.Page.ClickAsync("#btAddItem");
+            await s.Page.Locator("#EditorTitle").WaitForAsync();
+            await s.Page.FillAsync("#EditorTitle", "Perk 1");
+            await s.Page.FillAsync("#EditorAmount", "20");
+            // Test autogenerated ID
+            Assert.Equal("perk-1", await s.Page.InputValueAsync("#EditorId"));
+            await s.Page.Locator("#EditorId").ClearAsync();
+            await s.Page.FillAsync("#EditorId", "Perk-1");
+            await s.Page.ClickAsync(".offcanvas-header button");
+            await s.Page.Locator("#CodeTabButton").WaitForAsync();
+            await s.Page.Locator("#CodeTabButton").ScrollIntoViewIfNeededAsync();
+            await s.Page.ClickAsync("#CodeTabButton");
+            var template = await s.Page.InputValueAsync("#TemplateConfig");
+            Assert.Contains("\"title\": \"Perk 1\"", template);
+            Assert.Contains("\"id\": \"Perk-1\"", template);
+            await s.ClickPagePrimary();
+            // Verify "App updated" message
+            await s.FindAlertMessage(partialText: "App updated");
+
+            await using var perkPageSwitch = await POSTests.ViewApp(s);
+            await s.Page.Locator(".perk.unexpanded[id='Perk-1']").WaitForAsync();
+            await s.Page.ClickAsync(".perk.unexpanded[id='Perk-1']");
+            await s.Page.Locator(".perk.expanded[id='Perk-1'] button[type=\"submit\"]").WaitForAsync();
+            await s.Page.ClickAsync(".perk.expanded[id='Perk-1'] button[type=\"submit\"]");
+
+            pageContent = await s.Page.ContentAsync();
+            Assert.Contains("Enter your email", pageContent);
+            await s.Page.FillAsync("[name='buyerEmail']", "test-with-perk@crowdfund.com");
+            await s.Page.ClickAsync("input[type='submit']");
+
+            await s.PayInvoice(true, 20);
+            invoiceId = s.Page.Url[(s.Page.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
+            await s.GoToInvoice(invoiceId);
+            pageContent = await s.Page.ContentAsync();
+            Assert.Contains("test-with-perk@crowdfund.com", pageContent);
+        }
+
     }
 }
-
-

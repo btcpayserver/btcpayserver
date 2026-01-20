@@ -513,6 +513,18 @@ namespace BTCPayServer.Tests
             await Page.Locator("#page-primary").ClickAsync();
         }
 
+        public async Task AddStoreLabelAsync(ILocator row, string label)
+        {
+            var labelInput = row.Locator(".ts-control input");
+            await labelInput.WaitForAsync();
+            await labelInput.FillAsync(label);
+            var resp = await Page.RunAndWaitForResponseAsync(
+                () => labelInput.PressAsync("Enter"),
+                r => r.Request.Method == "POST" &&
+                     r.Url.Contains("/update-labels", StringComparison.OrdinalIgnoreCase));
+            Assert.True(resp.Ok, $"update-labels returned {resp.Status}");
+        }
+
         public async Task GoToWalletSettings(string cryptoCode = "BTC")
         {
             await Page.GetByTestId("Wallet-" + cryptoCode).Locator("a").ClickAsync();
@@ -692,6 +704,14 @@ namespace BTCPayServer.Tests
                     await newPage.CloseAsync();
                 tester.Page = oldPage;
             }
+        }
+
+        public async Task<IAsyncDisposable> SwitchPage(Func<Task> pageOpeningAction, bool closeAfter = true)
+        {
+            var o = Page.Context.WaitForPageAsync();
+            await pageOpeningAction();
+            await o;
+            return await SwitchPage(o, closeAfter);
         }
 
         public async Task<IAsyncDisposable> SwitchPage(Task<IPage> page, bool closeAfter = true)
@@ -888,6 +908,29 @@ namespace BTCPayServer.Tests
             var link = match.Groups[1].Value;
             link = System.Net.WebUtility.HtmlDecode(link);
             await GoToUrl(link);
+        }
+
+        public async Task SelectStoreContext(string storeId)
+        {
+            await Page.ClickAsync("#StoreSelectorToggle");
+            await Page.ClickAsync($"#StoreSelectorMenuItem-{storeId}");
+        }
+
+        public async Task FillAlertDialog(string text, Func<Task> openDialog)
+        {
+            // Handle the alert dialog in Playwright
+            // ReSharper disable once AsyncVoidMethod
+            async void Callback(object? sender, IDialog e)
+                => await e.AcceptAsync(text);
+            Page.Dialog += Callback;
+            try
+            {
+                await openDialog();
+            }
+            finally
+            {
+                Page.Dialog -= Callback;
+            }
         }
     }
 }

@@ -171,13 +171,6 @@
                                     </div>
                                 }
                             </h5>
-                            @if (updateAvailable)
-                            {
-                                <span class="nav version-switch mt-n1" role="tablist">
-                                    <a data-bs-toggle="tab" href="#@tabId-current" class="nav-link text-info p-0 show active" text-translate="true">Show current info</a>
-                                    <a data-bs-toggle="tab" href="#@tabId-update" class="nav-link text-info p-0" text-translate="true">Show update info</a>
-                                </span>
-                            }
                         </div>
 
                         <div class="tab-content">
@@ -202,31 +195,6 @@
                                     </ul>
                                 }
                             </div>
-
-                            @if (updateAvailable && x != null)
-                            {
-                                <div class="tab-pane" id="@tabId-update">
-                                    <p class="card-text">@x.Description</p>
-                                    @if (x.Dependencies.Any())
-                                    {
-                                        <h6 class="text-muted fw-semibold" text-translate="true">Dependencies</h6>
-                                        <ul class="list-group list-group-flush">
-                                            @foreach (var dependency in x.Dependencies)
-                                            {
-                                                <li class="list-group-item p-2 d-inline-flex align-items-center gap-2">
-                                                    @dependency
-                                                    @if (!PluginManager.DependencyMet(dependency, installed))
-                                                    {
-                                                        <span title="Dependency not met." data-bs-toggle="tooltip" class="text-danger">
-                                                            <vc:icon symbol="warning" />
-                                                        </span>
-                                                    }
-                                                </li>
-                                            }
-                                        </ul>
-                                    }
-                                </div>
-                            }
 
                             @if (plugin != null)
                             {
@@ -301,8 +269,8 @@
                                     </form>
                                 }
                             }
-                            
-                            
+
+
                             @if (DependentOn(plugin.Identifier))
                             {
                                 <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-3" data-bs-toggle="tooltip" title="This plugin cannot be uninstalled as it is depended on by other plugins.">

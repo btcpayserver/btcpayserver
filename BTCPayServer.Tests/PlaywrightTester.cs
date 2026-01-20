@@ -901,5 +901,28 @@ namespace BTCPayServer.Tests
             link = System.Net.WebUtility.HtmlDecode(link);
             await GoToUrl(link);
         }
+
+        public async Task SelectStoreContext(string storeId)
+        {
+            await Page.ClickAsync("#StoreSelectorToggle");
+            await Page.ClickAsync($"#StoreSelectorMenuItem-{storeId}");
+        }
+
+        public async Task FillAlertDialog(string text, Func<Task> openDialog)
+        {
+            // Handle the alert dialog in Playwright
+            // ReSharper disable once AsyncVoidMethod
+            async void Callback(object? sender, IDialog e)
+                => await e.AcceptAsync(text);
+            Page.Dialog += Callback;
+            try
+            {
+                await openDialog();
+            }
+            finally
+            {
+                Page.Dialog -= Callback;
+            }
+        }
     }
 }

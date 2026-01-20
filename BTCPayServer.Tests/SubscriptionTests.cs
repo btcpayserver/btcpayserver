@@ -969,7 +969,14 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         private static string GetAlertSelector(CallToAction callToAction) => $"div.alert-translucent.alert-{callToAction.ToString().ToLowerInvariant()}";
 
         public async Task AssertNoCallToAction()
-            => Assert.Equal(0, await s.Page.Locator($"div.alert-translucent").CountAsync());
+        {
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+            if (await s.Page.Locator($"div.alert-translucent").CountAsync() == 0)
+            {
+                var text = await s.Page.Locator($"div.alert-translucent").TextContentAsync();
+                Assert.Fail($"Call to action shouldn't have shown ({text})");
+            }
+        }
 
 
         public ValueTask DisposeAsync() => disposable?.DisposeAsync() ?? ValueTask.CompletedTask;

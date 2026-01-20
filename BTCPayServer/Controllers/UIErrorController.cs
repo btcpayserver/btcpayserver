@@ -9,7 +9,7 @@ namespace BTCPayServer.Controllers
         [Route("/errors/{statusCode:int}")]
         public IActionResult Handle(int? statusCode = null)
         {
-            if (Request.Headers.TryGetValue("Accept", out var v) && v.Any(v => v.Contains("text/html", StringComparison.OrdinalIgnoreCase)))
+            if (Request.Headers.TryGetValue("Accept", out var v) && v.Any(o => o.Contains("text/html", StringComparison.OrdinalIgnoreCase)))
             {
                 if (statusCode.HasValue)
                 {
@@ -22,7 +22,7 @@ namespace BTCPayServer.Controllers
                 }
                 return View(statusCode);
             }
-            return this.StatusCode(statusCode.Value);
+            return this.StatusCode(statusCode ?? 500);
         }
     }
 }

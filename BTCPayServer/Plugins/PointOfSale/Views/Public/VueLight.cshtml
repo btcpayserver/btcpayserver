@@ -81,7 +81,7 @@
             <span text-translate="true">Charge</span>
         </template>
     </button>
-    <partial name="PointOfSale/Public/RecentTransactions" model="Model"/>
+    <partial name="/Plugins/PointOfSale/Views/Public/RecentTransactions.cshtml" model="Model"/>
     <button type="button" class="btn btn-light rounded-circle" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle" permission="@Policies.CanViewInvoices">
         <vc:icon symbol="nav-transactions"/>
     </button>

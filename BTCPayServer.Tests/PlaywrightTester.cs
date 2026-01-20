@@ -706,6 +706,14 @@ namespace BTCPayServer.Tests
             }
         }
 
+        public async Task<IAsyncDisposable> SwitchPage(Func<Task> pageOpeningAction, bool closeAfter = true)
+        {
+            var o = Page.Context.WaitForPageAsync();
+            await pageOpeningAction();
+            await o;
+            return await SwitchPage(o, closeAfter);
+        }
+
         public async Task<IAsyncDisposable> SwitchPage(Task<IPage> page, bool closeAfter = true)
         {
             var p = await page;

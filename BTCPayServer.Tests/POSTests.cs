@@ -216,10 +216,8 @@ fruit tea:
             await s.Page.FillAsync("#DefaultTaxRate", "10");
             await s.ClickPagePrimary();
 
-            var o = s.Page.Context.WaitForPageAsync();
-            await s.Page.ClickAsync("#ViewApp");
             string posInvoiceId;
-            await using (_ = await s.SwitchPage(o))
+            await using (_ = await ViewApp(s))
             {
                 await s.Page.ClickAsync("#card_rooibos button");
                 await s.Page.ClickAsync("#card_rooibos button");
@@ -433,9 +431,7 @@ goodies:
             await s.FindAlertMessage(partialText: "App updated");
 
             // View
-            var o = s.Page.Context.WaitForPageAsync();
-            await s.Page.ClickAsync("#ViewApp");
-            await s.SwitchPage(o);
+            await ViewApp(s);
             await s.Page.WaitForSelectorAsync("#PosItems");
             Assert.Empty(await s.Page.QuerySelectorAllAsync("#CartItems tr"));
             var posUrl = s.Page.Url;
@@ -607,6 +603,12 @@ goodies:
             Assert.False(await s.Page.IsVisibleAsync("#RecentTransactionsToggle"));
         }
 
+        public static Task<IAsyncDisposable> ViewApp(PlaywrightTester s)
+            => s.SwitchPage(async () =>
+            {
+                await s.Page.ClickAsync("#ViewApp");
+            });
+
         public class CartSummaryAssertion
         {
             public string Subtotal { get; set; }
@@ -654,9 +656,7 @@ goodies:
             await s.Page.SetCheckedAsync("#ShowCustomAmount", true);
             await s.ClickPagePrimary();
 
-            var o = s.Page.Context.WaitForPageAsync();
-            await s.Page.ClickAsync("#ViewApp");
-            await using (_ = await s.SwitchPage(o))
+            await using (_ = await ViewApp(s))
             {
                 await s.Page.FillAsync("#card_herbal-tea [name='amount']", "123");
                 await s.Page.PressAsync("#card_herbal-tea [name='amount']", "Enter");
@@ -687,9 +687,7 @@ goodies:
             await s.GoToUrl(appUrl);
             await s.Page.SelectOptionAsync("#FormId", new SelectOptionValue { Label = "test" });
             await s.ClickPagePrimary();
-            o = s.Page.Context.WaitForPageAsync();
-            await s.Page.ClickAsync("#ViewApp");
-            await using (_ = await s.SwitchPage(o))
+            await using (_ = await ViewApp(s))
             {
                 await s.Page.ClickAsync("#card_black-tea button");
                 await s.Page.FillAsync("[name='invoice_amount_adjustment']", "0.5");
@@ -774,9 +772,7 @@ goodies:
             await s.FindAlertMessage(partialText: "App updated");
 
             // View
-            var o = s.Page.Context.WaitForPageAsync();
-            await s.Page.ClickAsync("#ViewApp");
-            await s.SwitchPage(o);
+            await ViewApp(s);
 
             // basic checks
             var keypadUrl = s.Page.Url;
@@ -1076,9 +1072,7 @@ goodies:
             await s.ClickPagePrimary();
             await Expect(s.Page.Locator(".validation-summary-errors")).ToContainTextAsync("Invalid template: Missing ID for item \"Green Tea\".");
 
-            var o = s.Page.Context.WaitForPageAsync();
-            await s.Page.ClickAsync("#ViewApp");
-            await using var pageSwitch = await s.SwitchPage(o);
+            await using var pageSwitch = await ViewApp(s);
 
             await s.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
             var posBaseUrl = s.Page.Url.Replace("/cart", "");

@@ -8,7 +8,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @{
-    Layout = "PointOfSale/Public/_Layout";
+    Layout = "/Plugins/PointOfSale/Views/Public/_Layout.cshtml";
     Csp.UnsafeEval();
 }
 @section PageHeadContent {
@@ -274,5 +274,5 @@
             </div>
         </div>
     </aside>
-    <partial name="PointOfSale/Public/RecentTransactions" model="Model"/>
+    <partial name="/Plugins/PointOfSale/Views/Public/RecentTransactions.cshtml" model="Model"/>
 </div>

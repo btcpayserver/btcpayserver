@@ -74,10 +74,8 @@ namespace BTCPayServer.Tests
             await s.Page.SelectOptionAsync("#FormId", "Email");
             await s.ClickPagePrimary();
             await s.FindAlertMessage(partialText: "App updated");
-            var opening = s.Page.Context.WaitForPageAsync();
-            await s.Page.ClickAsync("#ViewApp");
             string invoiceId;
-            await using (_ = await s.SwitchPage(opening))
+            await using (_ = await POSTests.ViewApp(s))
             {
                 await s.Page.Locator("button[type='submit']").First.ClickAsync();
                 await s.Page.FillAsync("[name='buyerEmail']", "aa@aa.com");
@@ -98,12 +96,12 @@ namespace BTCPayServer.Tests
             await s.ClickPagePrimary();
             await s.Page.Locator("a[id^='Edit-']").First.ClickAsync();
             var editUrl = new Uri(s.Page.Url);
-            opening = s.Page.Context.WaitForPageAsync();
+            var opening = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("#ViewPaymentRequest");
             var popOutPage = await opening;
             await popOutPage.ClickAsync("[data-test='form-button']");
-            Assert.Contains("Enter your email", await popOutPage.ContentAsync());
             await popOutPage.FillAsync("input[name='buyerEmail']", "aa@aa.com");
+            Assert.Contains("Enter your email", await popOutPage.ContentAsync());
             await popOutPage.ClickAsync("#page-primary");
             invoiceId = popOutPage.Url.Split('/').Last();
             await popOutPage.CloseAsync();
@@ -181,7 +179,7 @@ namespace BTCPayServer.Tests
             await s.RegisterNewUser();
             await s.CreateNewStore();
             await s.GoToUrl($"/stores/{s.StoreId}/payment-requests");
-            
+
             async Task<string> ReadStatusAsync()
             {
                 var locator = s.Page.Locator(".only-for-js[data-test='status']");
@@ -295,7 +293,7 @@ namespace BTCPayServer.Tests
                     Assert.Contains("Your payment has been received and is now processing", processingText);
                 }
             });
-            
+
             await TestUtils.EventuallyAsync(async () =>
             {
                 var statusText = await ReadStatusAsync();
@@ -3123,9 +3121,7 @@ namespace BTCPayServer.Tests
             var editUrl = s.Page.Url;
 
             // Check public page
-            await s.Page.ClickAsync("#ViewApp");
-            var newPage = await s.Page.Context.WaitForPageAsync();
-            await using var pageSwitch = await s.SwitchPage(newPage);
+            await using var pageSwitch = await POSTests.ViewApp(s);
             var cfUrl = s.Page.Url;
 
             await Expect(s.Page.Locator("[data-test='time-state']")).ToContainTextAsync("Currently active!");
@@ -3151,18 +3147,18 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage(partialText: "The app has been archived and will no longer appear in the apps list by default.");
 
             Assert.Equal(0, await s.Page.Locator("#ViewApp").CountAsync());
-            
+
             // Go to store page to verify archived app link appears
             await s.GoToStore(s.StoreId);
             var archivedLink = s.Page.Locator("text='1 Archived App'");
             await archivedLink.WaitForAsync();
             await Expect(archivedLink).ToContainTextAsync("1 Archived App");
-            
+
             // Verify crowdfund is no longer accessible
             await s.Page.GotoAsync(cfUrl);
             Assert.Contains("Page not found", await s.Page.TitleAsync(), StringComparison.OrdinalIgnoreCase);
             await s.Page.GoBackAsync();
-            
+
             // Navigate to archived apps and unarchive
             await s.Page.Locator("text='1 Archived App'").ClickAsync();
             await s.Page.ClickAsync($"#App-{appId}");
@@ -3176,9 +3172,7 @@ namespace BTCPayServer.Tests
             // Verify "App updated" message
             await s.FindAlertMessage(partialText: "App updated");
 
-            await s.Page.ClickAsync("#ViewApp");
-            var formPage = await s.Page.Context.WaitForPageAsync();
-            await using var formPageSwitch = await s.SwitchPage(formPage);
+            await using var formPageSwitch = await POSTests.ViewApp(s);
             await s.Page.ClickAsync("#crowdfund-body-header-cta");
 
             pageContent = await s.Page.ContentAsync();
@@ -3214,9 +3208,7 @@ namespace BTCPayServer.Tests
             // Verify "App updated" message
             await s.FindAlertMessage(partialText: "App updated");
 
-            await s.Page.ClickAsync("#ViewApp");
-            var perkPage = await s.Page.Context.WaitForPageAsync();
-            await using var perkPageSwitch = await s.SwitchPage(perkPage);
+            await using var perkPageSwitch = await POSTests.ViewApp(s);
             await s.Page.Locator(".perk.unexpanded[id='Perk-1']").WaitForAsync();
             await s.Page.ClickAsync(".perk.unexpanded[id='Perk-1']");
             await s.Page.Locator(".perk.expanded[id='Perk-1'] button[type=\"submit\"]").WaitForAsync();

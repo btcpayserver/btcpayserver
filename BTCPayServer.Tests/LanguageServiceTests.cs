@@ -22,7 +22,7 @@ namespace BTCPayServer.Tests
         {
         }
 
-        public void ActivateLangs(ServerTester s)
+        void ActivateLangs(ServerTester s)
         {
             TestLogs.LogInformation("Activating Langs...");
             var dir = TestUtils.GetTestDataFullPath("Langs");

@@ -16,7 +16,6 @@ using BTCPayServer.Payments.Lightning;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.Lightning;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
-using BTCPayServer.Plugins.Webhooks.HostedServices;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -38,12 +37,9 @@ using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 namespace BTCPayServer.Tests
 {
     [Collection(nameof(NonParallelizableCollectionDefinition))]
-    public class GreenfieldAPITests : UnitTestBase
+    public class GreenfieldAPITests(ITestOutputHelper helper) : UnitTestBase(helper)
     {
         public const int TestTimeout = TestUtils.TestTimeout;
-        public GreenfieldAPITests(ITestOutputHelper helper) : base(helper)
-        {
-        }
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
@@ -1414,116 +1410,6 @@ namespace BTCPayServer.Tests
             await AssertValidationError(new[] { "Email" }, async () =>
                 await clientServer.CreateUser(
                     new CreateApplicationUserRequest() { Password = Guid.NewGuid().ToString() }));
-        }
-
-        [Fact(Timeout = TestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task CanUseWebhooks()
-        {
-            void AssertHook(FakeServer fakeServer, StoreWebhookData hook)
-            {
-                Assert.True(hook.Enabled);
-                Assert.True(hook.AuthorizedEvents.Everything);
-                Assert.False(hook.AutomaticRedelivery);
-                Assert.Equal(fakeServer.ServerUri.AbsoluteUri, hook.Url);
-            }
-            using var tester = CreateServerTester(newDb: true);
-            using var fakeServer = new FakeServer();
-            await fakeServer.Start();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            user.GrantAccess();
-            user.RegisterDerivationScheme("BTC");
-            var clientProfile = await user.CreateClient(Policies.CanModifyWebhooks, Policies.CanCreateInvoice);
-            var hook = await clientProfile.CreateWebhook(user.StoreId, new CreateStoreWebhookRequest()
-            {
-                Url = fakeServer.ServerUri.AbsoluteUri,
-                AutomaticRedelivery = false
-            });
-            Assert.NotNull(hook.Secret);
-            AssertHook(fakeServer, hook);
-            hook = await clientProfile.GetWebhook(user.StoreId, hook.Id);
-            AssertHook(fakeServer, hook);
-            var hooks = await clientProfile.GetWebhooks(user.StoreId);
-            hook = Assert.Single(hooks);
-            AssertHook(fakeServer, hook);
-            await clientProfile.CreateInvoice(user.StoreId,
-                        new CreateInvoiceRequest() { Currency = "USD", Amount = 100 });
-            var req = await fakeServer.GetNextRequest();
-            req.Response.StatusCode = 200;
-            fakeServer.Done();
-            hook = await clientProfile.UpdateWebhook(user.StoreId, hook.Id, new UpdateStoreWebhookRequest()
-            {
-                Url = hook.Url,
-                Secret = "lol",
-                AutomaticRedelivery = false
-            });
-            Assert.Null(hook.Secret);
-            AssertHook(fakeServer, hook);
-            WebhookDeliveryData delivery = null;
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                var deliveries = await clientProfile.GetWebhookDeliveries(user.StoreId, hook.Id);
-                delivery = Assert.Single(deliveries);
-            });
-
-            delivery = await clientProfile.GetWebhookDelivery(user.StoreId, hook.Id, delivery.Id);
-            Assert.NotNull(delivery);
-            Assert.Equal(WebhookDeliveryStatus.HttpSuccess, delivery.Status);
-
-            var newDeliveryId = await clientProfile.RedeliverWebhook(user.StoreId, hook.Id, delivery.Id);
-            req = await fakeServer.GetNextRequest();
-            req.Response.StatusCode = 404;
-            Assert.StartsWith("BTCPayServer", Assert.Single(req.Request.Headers.UserAgent));
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                // Releasing semaphore several times may help making this test less flaky
-                fakeServer.Done();
-                var newDelivery = await clientProfile.GetWebhookDelivery(user.StoreId, hook.Id, newDeliveryId);
-                Assert.NotNull(newDelivery);
-                Assert.Equal(404, newDelivery.HttpCode);
-                var req = await clientProfile.GetWebhookDeliveryRequest(user.StoreId, hook.Id, newDeliveryId);
-                Assert.Equal(delivery.Id, req.OriginalDeliveryId);
-                Assert.True(req.IsRedelivery);
-                Assert.Equal(WebhookDeliveryStatus.HttpError, newDelivery.Status);
-            });
-            var deliveries = await clientProfile.GetWebhookDeliveries(user.StoreId, hook.Id);
-            Assert.Equal(2, deliveries.Length);
-            Assert.Equal(newDeliveryId, deliveries[0].Id);
-            var jObj = await clientProfile.GetWebhookDeliveryRequest(user.StoreId, hook.Id, newDeliveryId);
-            Assert.NotNull(jObj);
-
-            TestLogs.LogInformation("Should not be able to access webhook without proper auth");
-            var unauthorized = await user.CreateClient(Policies.CanCreateInvoice);
-            await AssertHttpError(403, async () =>
-            {
-                await unauthorized.GetWebhookDeliveryRequest(user.StoreId, hook.Id, newDeliveryId);
-            });
-
-            TestLogs.LogInformation("Can use btcpay.store.canmodifystoresettings to query webhooks");
-            clientProfile = await user.CreateClient(Policies.CanModifyStoreSettings, Policies.CanCreateInvoice);
-            await clientProfile.GetWebhookDeliveryRequest(user.StoreId, hook.Id, newDeliveryId);
-
-
-            TestLogs.LogInformation("Can prune deliveries");
-            var cleanup = tester.PayTester.GetService<CleanupWebhookDeliveriesTask>();
-            cleanup.BatchSize = 1;
-            cleanup.PruneAfter = TimeSpan.Zero;
-            await cleanup.Do(default);
-            await AssertHttpError(409, () => clientProfile.RedeliverWebhook(user.StoreId, hook.Id, delivery.Id));
-
-            TestLogs.LogInformation("Testing corner cases");
-            Assert.Null(await clientProfile.GetWebhookDeliveryRequest(user.StoreId, "lol", newDeliveryId));
-            Assert.Null(await clientProfile.GetWebhookDeliveryRequest(user.StoreId, hook.Id, "lol"));
-            Assert.Null(await clientProfile.GetWebhookDeliveryRequest(user.StoreId, "lol", "lol"));
-            Assert.Null(await clientProfile.GetWebhook(user.StoreId, "lol"));
-            await AssertHttpError(404, async () =>
-            {
-                await clientProfile.UpdateWebhook(user.StoreId, "lol", new UpdateStoreWebhookRequest() { Url = hook.Url });
-            });
-
-            Assert.True(await clientProfile.DeleteWebhook(user.StoreId, hook.Id));
-            Assert.False(await clientProfile.DeleteWebhook(user.StoreId, hook.Id));
         }
 
         [Fact(Timeout = TestTimeout)]

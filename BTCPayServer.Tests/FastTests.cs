@@ -1431,17 +1431,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void CanFixupWebhookEventPropertyName()
-        {
-            string legacy = "{\"orignalDeliveryId\":\"blahblah\"}";
-            var obj = JsonConvert.DeserializeObject<WebhookEvent>(legacy, WebhookEvent.DefaultSerializerSettings);
-            Assert.Equal("blahblah", obj.OriginalDeliveryId);
-            var serialized = JsonConvert.SerializeObject(obj, WebhookEvent.DefaultSerializerSettings);
-            Assert.DoesNotContain("orignalDeliveryId", serialized);
-            Assert.Contains("originalDeliveryId", serialized);
-        }
-
-        [Fact]
         public void CanUsePermission()
         {
             Assert.True(Permission.Create(Policies.CanModifyServerSettings)

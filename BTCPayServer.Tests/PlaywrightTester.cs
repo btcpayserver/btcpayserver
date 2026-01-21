@@ -663,7 +663,7 @@ namespace BTCPayServer.Tests
                 await Page.Locator("xpath=//*[text()=\"Invoice Paid\" or text()=\"Payment Received\" or text()=\"The invoice hasn't been paid in full.\"]").WaitForAsync();
             if (clickRedirect)
             {
-                await Page.ClickAsync("#StoreLink");
+                await ClickCheckoutRedirect();
             }
             if (clickReceipt)
             {
@@ -671,6 +671,8 @@ namespace BTCPayServer.Tests
                 await Page.ClickAsync("#ReceiptLink");
             }
         }
+
+        public Task ClickCheckoutRedirect() => Page.ClickAsync("#StoreLink");
 
         /// <summary>
         /// Take a screenshot. If running in CI, it is uploaded in the artifacts (see https://github.com/btcpayserver/btcpayserver/pull/6794)
@@ -931,6 +933,20 @@ namespace BTCPayServer.Tests
             {
                 Page.Dialog -= Callback;
             }
+        }
+
+        // Open collapse via JS, because if we click the link it triggers the toggle animation.
+        // This leads to Selenium trying to click the button while it is moving resulting in an error.
+        public async Task ToggleCollapse(string collapseId)
+        {
+            await Page.EvaluateAsync($"document.getElementById('{collapseId}').classList.add('show')");
+        }
+
+        public async Task<bool> ElementDoesNotExist(string selector)
+        {
+            var count = await Page.Locator(selector).CountAsync();
+            Assert.Equal(0, count);
+            return true;
         }
     }
 }

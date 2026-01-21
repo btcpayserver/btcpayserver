@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using OpenQA.Selenium;
 using Xunit;
 using Xunit.Sdk;
 
@@ -94,10 +93,6 @@ namespace BTCPayServer.Tests
                 {
                     act();
                     break;
-                }
-                catch (WebDriverException) when (!cts.Token.IsCancellationRequested)
-                {
-                    cts.Token.WaitHandle.WaitOne(500);
                 }
                 catch (XunitException) when (!cts.Token.IsCancellationRequested)
                 {

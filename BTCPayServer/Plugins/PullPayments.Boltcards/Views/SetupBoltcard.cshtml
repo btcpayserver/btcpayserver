@@ -1,9 +1,6 @@
-@using BTCPayServer.Abstractions.TagHelpers
-@using BTCPayServer.Blazor
 @using BTCPayServer.Blazor.VaultBridge
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.TagHelpers
-@model SetupBoltcardViewModel
+@using BTCPayServer.Plugins.PullPayments.Boltcards
+@model BTCPayServer.Plugins.PullPayments.Boltcards.SetupBoltcardViewModel
 @{
     Layout = "_LayoutWizard";
     this.ViewData.SetBlazorAllowed(true);
@@ -18,20 +15,20 @@
 <header class="text-center">
     @if (Model.NewCard)
     {
-        <h1 text-translate="true">Setup Boltcard</h1>    
+        <h1 text-translate="true">Setup Boltcard</h1>
     }
     else
     {
         <h1 text-translate="true">Reset Boltcard</h1>
     }
-    
+
     <p class="lead text-secondary mt-3" text-translate="true">Using BTCPay Server Vault (NFC)</p>
 </header>
 
 <div class="row mt-5 mb-4">
     <div class="col-md-8 mx-auto">
         <component type="typeof(VaultBridgeUI)"
-                   param-Controller="@(new NFCController()
+                   param-Controller="@(new BoltcardVaultController()
                                      {
                                          NewCard = Model.NewCard,
                                          BoltcardUrl = Model.BoltcardUrl,

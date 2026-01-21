@@ -22,7 +22,6 @@ using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitpayClient;
 using Newtonsoft.Json.Linq;
-using OpenQA.Selenium;
 using Xunit;
 using Xunit.Abstractions;
 using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;

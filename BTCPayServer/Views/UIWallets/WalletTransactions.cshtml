@@ -52,7 +52,7 @@
 }
 
 @section PageFootContent {
-    @*Without async, somehow selenium do not manage to click on links in this page*@
+    @*Script must be async to ensure proper page loading*@
     <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
     @* Custom Range Modal *@
     <script>

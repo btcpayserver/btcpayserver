@@ -10,8 +10,6 @@ using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitpayClient;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Support.Extensions;
 using Xunit;
 using Xunit.Abstractions;
 

@@ -547,8 +547,12 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         await portal.GoToReminder();
         await portal.AssertCallToAction(PortalPMO.CallToAction.Warning, noticeTitle: "Upgrade needed in 3 days");
         await portal.ClickCallToAction();
-        await s.PayInvoice(clickRedirect: true);
 
+        await s.Server.WaitForEvent<Events.SubscriptionEvent.PlanStarted>(async () =>
+        {
+            await s.PayInvoice();
+        });
+        await s.ClickCheckoutRedirect();
         await portal.AssertNoCallToAction();
         await portal.AssertPlan("Basic Plan");
 
@@ -725,7 +729,11 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             await portal.GoToReminder();
             await portal.AssertCallToAction(PortalPMO.CallToAction.Warning, noticeTitle: "Payment due in 3 days");
             await portal.ClickCallToAction();
-            await s.PayInvoice(mine: true, clickRedirect: true);
+            await s.Server.WaitForEvent<Events.SubscriptionEvent.SubscriberCredited>(async () =>
+            {
+                await s.PayInvoice(mine: true);
+            });
+            await s.ClickCheckoutRedirect();
             await portal.AssertNoCallToAction();
         }
 

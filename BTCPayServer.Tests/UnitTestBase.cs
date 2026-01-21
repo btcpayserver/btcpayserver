@@ -95,10 +95,6 @@ namespace BTCPayServer.Tests
         {
             return new ServerTester(scope, newDb, TestLogs, TestLogProvider, CreateNetworkProvider());
         }
-        public SeleniumTester CreateSeleniumTester([CallerMemberNameAttribute] string scope = null, bool newDb = false)
-        {
-            return new SeleniumTester() { Server = new ServerTester(scope, newDb, TestLogs, TestLogProvider, CreateNetworkProvider()) };
-        }
         public PlaywrightTester CreatePlaywrightTester([CallerMemberNameAttribute] string scope = null, bool newDb = false)
         {
             return new PlaywrightTester() { Server = new ServerTester(scope, newDb, TestLogs, TestLogProvider, CreateNetworkProvider()) };

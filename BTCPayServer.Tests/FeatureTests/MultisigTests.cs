@@ -13,7 +13,6 @@ using BTCPayServer.Views.Wallets;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
-using OpenQA.Selenium;
 using Xunit;
 using Xunit.Abstractions;
 

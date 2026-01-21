@@ -37,7 +37,6 @@ services:
       - "80"
     depends_on:
       - dev
-      - selenium
     extra_hosts:
       - "tests:127.0.0.1"
     networks:
@@ -91,16 +90,6 @@ services:
       - postgres
       - customer_lnd
       - merchant_lnd
-
-  selenium:
-    image: selenium/standalone-chrome:125.0
-    extra_hosts:
-      - "tests:172.23.0.18"
-    expose:
-      - "4444"
-    networks:
-      default:
-      custom:
 
   mailpit:
     image: axllent/mailpit:v1.27

@@ -46,16 +46,6 @@ services:
       - customer_lnd
       - merchant_lnd
 
-  selenium:
-    image: selenium/standalone-chrome:125.0
-    extra_hosts:
-      - "tests:172.23.0.18"
-    expose:
-      - "4444"
-    networks:
-      default:
-      custom:
-
   nbxplorer:
     image: nicolasdorier/nbxplorer:2.5.29
     restart: unless-stopped

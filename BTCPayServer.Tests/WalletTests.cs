@@ -12,6 +12,8 @@ using Xunit;
 using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests;
+
+
 public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
 {
     [Fact]

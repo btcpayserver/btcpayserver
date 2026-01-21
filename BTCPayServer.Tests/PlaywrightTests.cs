@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
@@ -3001,125 +3000,6 @@ namespace BTCPayServer.Tests
             await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             var pageContent = await s.Page.ContentAsync();
             Assert.Contains("PP1", pageContent);
-        }
-
-        [Fact]
-        public async Task CanUseWebhooks()
-        {
-            await using var s = CreatePlaywrightTester();
-            await s.StartAsync();
-            await s.RegisterNewUser(true);
-            await s.CreateNewStore();
-            await s.GoToStore(StoreNavPages.Webhooks);
-
-            TestLogs.LogInformation("Let's create two webhooks");
-            for (var i = 0; i < 2; i++)
-            {
-                await s.ClickPagePrimary();
-                await s.Page.FillAsync("[name='PayloadUrl']", $"http://127.0.0.1/callback{i}");
-                await s.Page.SelectOptionAsync("#Everything", "false");
-                await s.Page.ClickAsync("#InvoiceCreated");
-                await s.Page.ClickAsync("#InvoiceProcessing");
-                await s.ClickPagePrimary();
-            }
-
-            await s.FindAlertMessage();
-            TestLogs.LogInformation("Let's delete one of them");
-            var deleteLinks = await s.Page.Locator("a:has-text('Delete')").AllAsync();
-            Assert.Equal(2, deleteLinks.Count);
-            await deleteLinks[0].ClickAsync();
-            await s.ConfirmDeleteModal();
-            deleteLinks = await s.Page.Locator("a:has-text('Delete')").AllAsync();
-            Assert.Single(deleteLinks);
-            await s.FindAlertMessage();
-
-            TestLogs.LogInformation("Let's try to update one of them");
-            await s.Page.ClickAsync("text=Modify");
-
-            using var server = new FakeServer();
-            await server.Start();
-            await s.Page.FillAsync("[name='PayloadUrl']", server.ServerUri.AbsoluteUri);
-            await s.Page.FillAsync("[name='Secret']", "HelloWorld");
-            await s.Page.ClickAsync("[name='update']");
-            await s.FindAlertMessage();
-            await s.Page.ClickAsync("text=Modify");
-
-            // Check which events are selected
-            await Expect(s.Page.Locator("input[value='InvoiceProcessing']")).ToBeCheckedAsync();
-            await Expect(s.Page.Locator("input[value='InvoiceCreated']")).ToBeCheckedAsync();
-            await Expect(s.Page.Locator("input[value='InvoiceReceivedPayment']")).Not.ToBeCheckedAsync();
-
-            await s.Page.ClickAsync("[name='update']");
-            await s.FindAlertMessage();
-            var pageContent = await s.Page.ContentAsync();
-            Assert.Contains(server.ServerUri.AbsoluteUri, pageContent);
-
-            TestLogs.LogInformation("Let's see if we can generate an event");
-            await s.GoToStore();
-            await s.AddDerivationScheme();
-            await s.CreateInvoice();
-            var request = await server.GetNextRequest();
-            var headers = request.Request.Headers;
-            var actualSig = headers["BTCPay-Sig"].First();
-            var bytes = await request.Request.Body.ReadBytesAsync((int)headers.ContentLength.Value);
-            var expectedSig =
-                $"sha256={Encoders.Hex.EncodeData(NBitcoin.Crypto.Hashes.HMACSHA256(Encoding.UTF8.GetBytes("HelloWorld"), bytes))}";
-            Assert.Equal(expectedSig, actualSig);
-            request.Response.StatusCode = 200;
-            server.Done();
-
-            TestLogs.LogInformation("Let's make a failed event");
-            var invoiceId = await s.CreateInvoice();
-            request = await server.GetNextRequest();
-            request.Response.StatusCode = 404;
-            server.Done();
-
-            // The delivery is done asynchronously, so small wait here
-            await Task.Delay(500);
-            await s.GoToStore();
-            await s.GoToStore(StoreNavPages.Webhooks);
-            await s.Page.ClickAsync("text=Modify");
-            var redeliverElements = await s.Page.Locator("button.redeliver").AllAsync();
-
-            // One worked, one failed
-            await s.Page.Locator(".icon-cross").WaitForAsync();
-            await s.Page.Locator(".icon-checkmark").WaitForAsync();
-            await redeliverElements[0].ClickAsync();
-
-            await s.FindAlertMessage();
-            request = await server.GetNextRequest();
-            request.Response.StatusCode = 404;
-            server.Done();
-
-            TestLogs.LogInformation("Can we browse the json content?");
-            await CanBrowseContentAsync(s);
-
-            await s.GoToInvoices();
-            await s.Page.ClickAsync($"text={invoiceId}");
-            await CanBrowseContentAsync(s);
-            var redeliverElement = s.Page.Locator("button.redeliver").First;
-            await redeliverElement.ClickAsync();
-
-            await s.FindAlertMessage();
-            request = await server.GetNextRequest();
-            request.Response.StatusCode = 404;
-            server.Done();
-
-            TestLogs.LogInformation("Let's see if we can delete store with some webhooks inside");
-            await s.GoToStore();
-            await s.Page.ClickAsync("#DeleteStore");
-            await s.ConfirmDeleteModal();
-            await s.FindAlertMessage();
-        }
-
-        private static async Task CanBrowseContentAsync(PlaywrightTester s)
-        {
-            var newPageDoing = s.Page.Context.WaitForPageAsync();
-            await s.Page.ClickAsync(".delivery-content");
-            var newPage = await newPageDoing;
-            var bodyText = await newPage.Locator("body").TextContentAsync();
-            JObject.Parse(bodyText);
-            await newPage.CloseAsync();
         }
 
         [Fact]

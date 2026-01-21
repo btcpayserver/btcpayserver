@@ -1,4 +1,4 @@
-namespace BTCPayServer.Models
+namespace BTCPayServer.Plugins.PullPayments.Boltcards
 {
     public class SetupBoltcardViewModel
     {

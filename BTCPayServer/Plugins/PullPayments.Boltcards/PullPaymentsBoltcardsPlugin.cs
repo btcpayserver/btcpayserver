@@ -13,6 +13,7 @@ public class PullPaymentsBoltcardsPlugin : BaseBTCPayServerPlugin
 
     public override void Execute(IServiceCollection applicationBuilder)
     {
-        applicationBuilder.AddUIExtension("pullpayment-store-footer", "/Plugins/PullPayments.Boltcards/Views/BoltcardPullPaymentExtension.cshtml");
+        applicationBuilder.AddUIExtension("pullpayment-store-footer", "/Plugins/PullPayments.Boltcards/Views/BoltcardLinks.cshtml");
+        applicationBuilder.AddUIExtension("pullpayment-foot", "/Plugins/PullPayments.Boltcards/Views/BoltcardScripts.cshtml");
     }
 }

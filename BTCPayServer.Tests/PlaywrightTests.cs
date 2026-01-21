@@ -89,14 +89,13 @@ namespace BTCPayServer.Tests
             await s.Page.FillAsync("#Amount", "99.0");
             await s.ClickPagePrimary();
 
-            var newPage1 = s.Page.Context.WaitForPageAsync();
-            await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
-            await using (await s.SwitchPage(await newPage1))
+            await using (_ = await s.SwitchPage(async () =>
+                         {
+                             await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
+                         }))
             {
                 await Expect(s.Page.Locator("body")).ToContainTextAsync("PP1");
             }
-
-            await s.Page.Context.Pages.First().BringToFrontAsync();
 
             await s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
 
@@ -105,11 +104,12 @@ namespace BTCPayServer.Tests
             await s.Page.FillAsync("#Amount", "100.0");
             await s.ClickPagePrimary();
 
-            // This should select the first View, ie, the last one PP2
-            var newPage2 = s.Page.Context.WaitForPageAsync();
-            await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
             string viewPullPaymentUrl;
-            await using (await s.SwitchPage(await newPage2))
+            // This should select the first View, ie, the last one PP2
+            await using (await s.SwitchPage(async () =>
+                         {
+                             await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
+                         }))
             {
                 var address = await s.Server.ExplorerNode.GetNewAddressAsync();
                 await s.Page.FillAsync("#Destination", address.ToString());
@@ -132,7 +132,6 @@ namespace BTCPayServer.Tests
 
                 viewPullPaymentUrl = s.Page.Url;
             }
-            await s.Page.Context.Pages.First().BringToFrontAsync();
 
             // This one should have nothing
             await s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
@@ -157,25 +156,15 @@ namespace BTCPayServer.Tests
             await s.Page.ClickAsync("button[value='broadcast']");
             await s.FindAlertMessage();
 
-            await s.GoToWallet(null, WalletsNavPages.Transactions);
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                await s.Page.ReloadAsync();
-                Assert.True(await s.Page.Locator("#WalletTransactions[data-loaded='true']").IsVisibleAsync());
-                Assert.Equal(2, await s.Page.Locator(".transaction-label").CountAsync());
-                var labels = await s.Page.Locator("#WalletTransactionsList tr:first-child div.transaction-label").AllTextContentsAsync();
-                Assert.Equal(2, labels.Count);
-                Assert.Contains("payout", labels);
-                Assert.Contains("pull-payment", labels);
-            });
+            var pmo = await s.GoToWalletTransactions();
+            await Expect(s.Page.Locator(".transaction-label")).ToHaveCountAsync(2);
+            await pmo.AssertHasLabels("payout");
+            await pmo.AssertHasLabels("pull-payment");
 
             await s.GoToStore(s.StoreId, StoreNavPages.Payouts);
             await s.Page.ClickAsync($"#{PayoutState.InProgress}-view");
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                await s.Page.ReloadAsync();
-                Assert.Equal(2, await s.Page.Locator(".transaction-link").CountAsync());
-            });
+
+            await Expect(s.Page.Locator(".transaction-link")).ToHaveCountAsync(2);
 
             await s.GoToUrl(viewPullPaymentUrl);
             await Expect(s.Page.Locator(".transaction-link")).ToHaveCountAsync(2);
@@ -200,7 +189,7 @@ namespace BTCPayServer.Tests
             await s.GoToHome();
             //offline/external payout test
 
-            var newStore = await s.CreateNewStore();
+            await s.CreateNewStore();
             await s.GenerateWallet("BTC", "", true, true);
             await s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
 
@@ -210,9 +199,10 @@ namespace BTCPayServer.Tests
             await s.Page.FillAsync("#Currency", "BTC");
             await s.ClickPagePrimary();
 
-            var newPage3 = s.Page.Context.WaitForPageAsync();
-            await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
-            await using (await s.SwitchPage(await newPage3))
+            await using (await s.SwitchPage(async () =>
+                         {
+                             await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
+                         }))
             {
                 var address = await s.Server.ExplorerNode.GetNewAddressAsync();
                 await s.Page.FillAsync("#Destination", address.ToString());
@@ -241,10 +231,10 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage();
 
             await s.Page.ClickAsync($"#{PayoutState.InProgress}-view");
-            if (await s.Page.Locator(".payout").CountAsync() == 0)
-            {
-                await s.Page.ClickAsync($"#{PayoutState.Completed}-view");
-            }
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+            await Expect(s.Page.Locator(".payout")).ToHaveCountAsync(0);
+            await s.Page.ClickAsync($"#{PayoutState.Completed}-view");
+
             await TestUtils.EventuallyAsync(async () =>
             {
                 await s.Page.ReloadAsync();
@@ -264,7 +254,7 @@ namespace BTCPayServer.Tests
             var resp = await s.Server.CustomerLightningD.Pay(inv.BOLT11);
             Assert.Equal(PayResult.Ok, resp.Result);
 
-            newStore = await s.CreateNewStore();
+            var newStore = await s.CreateNewStore();
             await s.AddLightningNode();
 
             //Currently an onchain wallet is required to use the Lightning payouts feature..
@@ -279,10 +269,12 @@ namespace BTCPayServer.Tests
             await s.Page.FillAsync("#Amount", payoutAmount.ToString());
             await s.Page.FillAsync("#Currency", "BTC");
             await s.ClickPagePrimary();
-            var newPage4 = s.Page.Context.WaitForPageAsync();
             await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
             string bolt;
-            await using (await s.SwitchPage(await newPage4))
+            await using (await s.SwitchPage(async () =>
+                         {
+                             await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
+                         }))
             {
                 // Bitcoin-only, SelectedPaymentMethod should not be displayed
                 await Expect(s.Page.Locator("#SelectedPayoutMethod")).ToHaveCountAsync(0);
@@ -306,7 +298,6 @@ namespace BTCPayServer.Tests
 
                 await Expect(s.Page.Locator("body")).ToContainTextAsync(PayoutState.AwaitingApproval.GetStateString());
             }
-            await s.Page.Context.Pages.First().BringToFrontAsync();
 
             await s.GoToStore(newStore.storeId, StoreNavPages.Payouts);
             await s.Page.ClickAsync($"#{PaymentTypes.LN.GetPaymentMethodId("BTC")}-view");
@@ -344,10 +335,11 @@ namespace BTCPayServer.Tests
             await s.Page.PressAsync("#Amount", "Enter");
             await s.FindAlertMessage();
 
-            var newPage5 = s.Page.Context.WaitForPageAsync();
-            await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
             string lnurlStr = null;
-            await using (await s.SwitchPage(await newPage5))
+            await using (await s.SwitchPage(async () =>
+                         {
+                             await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
+                         }))
             {
                 var address = await s.Server.ExplorerNode.GetNewAddressAsync();
                 await s.Page.FillAsync("#Destination", address.ToString());
@@ -357,7 +349,6 @@ namespace BTCPayServer.Tests
 
                 await Expect(s.Page.Locator("body")).ToContainTextAsync(PayoutState.AwaitingPayment.GetStateString());
             }
-            await s.Page.Context.Pages.First().BringToFrontAsync();
 
             // LNURL Withdraw support check with BTC denomination
             await s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
@@ -369,9 +360,10 @@ namespace BTCPayServer.Tests
             await s.Page.PressAsync("#Currency", "Enter");
             await s.FindAlertMessage();
 
-            var newPage6 = s.Page.Context.WaitForPageAsync();
-            await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
-            await using (await s.SwitchPage(await newPage6))
+            await using (await s.SwitchPage(async () =>
+                         {
+                             await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
+                         }))
             {
                 await Expect(s.Page.Locator("#lnurlwithdraw-button")).ToBeVisibleAsync();
                 await s.Page.ClickAsync("#lnurlwithdraw-button");
@@ -411,7 +403,6 @@ namespace BTCPayServer.Tests
                     Assert.Equal(LightningInvoiceStatus.Paid, (await s.Server.CustomerLightningD.GetInvoice(bolt2.Id)).Status);
                 });
             }
-            await s.Page.Context.Pages.First().BringToFrontAsync();
 
             // Simulate a boltcard
             Assert.False(string.IsNullOrEmpty(lnurlStr), "LNURL string should have been captured from the previous flow");
@@ -667,7 +658,7 @@ namespace BTCPayServer.Tests
             await s.RegisterNewUser();
             await s.CreateNewStore();
             await s.GoToUrl($"/stores/{s.StoreId}/payment-requests");
-            
+
             async Task<string> ReadStatusAsync()
             {
                 var locator = s.Page.Locator(".only-for-js[data-test='status']");
@@ -876,7 +867,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(new LightMoney(0.000002m, LightMoneyUnit.BTC), lnurlResponse2.GetPaymentRequest(network).MinimumAmount);
             // Initial bolt was cancelled
             var res = await s.Server.CustomerLightningD.Pay(lnurlResponse.Pr);
-            Assert.Equal(PayResult.Error, res.Result); 
+            Assert.Equal(PayResult.Error, res.Result);
 
             res = await s.Server.CustomerLightningD.Pay(lnurlResponse2.Pr);
             Assert.Equal(PayResult.Ok, res.Result);
@@ -885,7 +876,7 @@ namespace BTCPayServer.Tests
                 var inv = await s.Server.PayTester.InvoiceRepository.GetInvoice(i);
                 Assert.Equal(InvoiceStatus.Settled, inv.Status);
             });
-            
+
             var greenfield = await s.AsTestAccount().CreateClient();
             var paymentMethods = await greenfield.GetInvoicePaymentMethods(s.StoreId, i);
             Assert.Single(paymentMethods, p =>
@@ -977,10 +968,12 @@ namespace BTCPayServer.Tests
             await s.Page.FillAsync("#Currency", "BTC");
 
             await s.ClickPagePrimary();
-            var newPageTask = s.Page.Context.WaitForPageAsync();
-            await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
+
             string pullPaymentId;
-            await using (await s.SwitchPage(await newPageTask))
+            await using (_ = await s.SwitchPage(async () =>
+                         {
+                             await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
+                         }))
             {
                 pullPaymentId = s.Page.Url.Split('/').Last();
 
@@ -1030,7 +1023,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(0, await s.Page.Locator("#menu-item-LightningAddress").CountAsync());
 
             await s.AddLightningNode(LightningConnectionType.LndREST, false);
-            
+
             // Navigate to store to refresh the menu and show Lightning Address
             await s.GoToStore(s.StoreId);
             await s.Page.ClickAsync("#menu-item-LightningAddress");
@@ -1192,7 +1185,7 @@ namespace BTCPayServer.Tests
             await s.GoToInvoice(match!.Id);
             await Expect(s.Page.Locator("body")).ToContainTextAsync(lnUsername);
         }
-        
+
         [Fact]
         public async Task CanManageUsers()
         {
@@ -2137,10 +2130,11 @@ namespace BTCPayServer.Tests
             Assert.NotEmpty(payReqId);
             var markAsSettledExists = await s.Page.Locator("button:has-text('Mark as settled')").CountAsync();
             Assert.Equal(0, markAsSettledExists);
-            var opening = s.Page.Context.WaitForPageAsync();
-            await s.Page.ClickAsync($"#PaymentRequest-{payReqId}");
-            string invoiceId;
-            await using (_ = await s.SwitchPage(opening))
+
+            await using (_ = await s.SwitchPage(async () =>
+            {
+                await s.Page.ClickAsync($"#PaymentRequest-{payReqId}");
+            }))
             {
                 await s.Page.ClickAsync("button:has-text('Pay')");
                 await s.Page.WaitForLoadStateAsync();
@@ -2153,8 +2147,6 @@ namespace BTCPayServer.Tests
                 await iframe.FillAsync("#test-payment-amount", "0.05");
                 await iframe.ClickAsync("#FakePayment");
                 await iframe.WaitForSelectorAsync("#CheatSuccessMessage", new() { Timeout = 10000 });
-
-                invoiceId = s.Page.Url.Split('/').Last();
             }
             await s.GoToInvoices();
 
@@ -2166,9 +2158,10 @@ namespace BTCPayServer.Tests
             await s.Page.ClickAsync("#menu-item-PaymentRequests");
             await s.Page.WaitForLoadStateAsync();
 
-            var opening2 = s.Page.Context.WaitForPageAsync();
-            await s.Page.ClickAsync($"#PaymentRequest-{payReqId}");
-            await using (_ = await s.SwitchPage(opening2))
+            await using (_ = await s.SwitchPage(async () =>
+                         {
+                             await s.Page.ClickAsync($"#PaymentRequest-{payReqId}");
+                         }))
             {
                 await s.Page.WaitForLoadStateAsync();
 
@@ -2202,15 +2195,14 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage(partialText: "Payment request");
             await s.Page.ClickAsync("#menu-item-PaymentRequests");
             await s.Page.WaitForLoadStateAsync();
-            var rowsBeforeSearch = await s.Page.Locator("table tbody tr").CountAsync();
-            Assert.Equal(2, rowsBeforeSearch);
+            await Expect(s.Page.Locator("table tbody tr")).ToHaveCountAsync(2);
 
             // Filter by Title
             await s.Page.FillAsync("input[name='SearchText']", paymentRequestTitle);
             await s.Page.PressAsync("input[name='SearchText']", "Enter");
             await s.Page.WaitForLoadStateAsync();
-            var rowsAfterTitleSearch = await s.Page.Locator("table tbody tr").CountAsync();
-            Assert.Equal(1, rowsAfterTitleSearch);
+
+            await Expect(s.Page.Locator("table tbody tr")).ToHaveCountAsync(1);
             Assert.Contains(paymentRequestTitle, await s.Page.Locator("table tbody tr").First.InnerTextAsync());
 
             // Filter by Status
@@ -2228,7 +2220,8 @@ namespace BTCPayServer.Tests
             await s.Page.PressAsync("input[name='SearchText']", "Enter");
             await s.Page.WaitForLoadStateAsync();
             var rowsAfterAmountSearch = s.Page.Locator("table tbody tr");
-            Assert.Equal(1, await rowsAfterAmountSearch.CountAsync());
+
+            await Expect(rowsAfterAmountSearch).ToHaveCountAsync(1);
             var amountRowText = await rowsAfterAmountSearch.First.InnerTextAsync();
             Assert.Contains(paymentRequestTitle, amountRowText);
 
@@ -2237,13 +2230,12 @@ namespace BTCPayServer.Tests
             await s.Page.PressAsync("input[name='SearchText']", "Enter");
             await s.Page.WaitForLoadStateAsync();
             var rowsAfterIdSearch = s.Page.Locator("table tbody tr");
-            Assert.Equal(1, await rowsAfterIdSearch.CountAsync());
+            await Expect(rowsAfterIdSearch).ToHaveCountAsync(1);
             var idRowText = await rowsAfterIdSearch.First.InnerTextAsync();
             Assert.Contains(paymentRequestTitle, idRowText);
 
             // Clear All
-            var clearAllCount = await s.Page.Locator("#clearAllFiltersBtn").CountAsync();
-            Assert.True(clearAllCount == 1, "Clear All button should be visible when filters are applied");
+            await Expect(s.Page.Locator("#clearAllFiltersBtn")).ToHaveCountAsync(1);
             await s.Page.ClickAsync("#clearAllFiltersBtn");
             await s.Page.WaitForLoadStateAsync();
             await Expect(s.Page.Locator("input[name='SearchText']")).ToHaveValueAsync(string.Empty);
@@ -2251,8 +2243,7 @@ namespace BTCPayServer.Tests
             var qsAfterClearAll = System.Web.HttpUtility.ParseQueryString(urlAfterClearAll.Query);
             Assert.True(string.IsNullOrEmpty(qsAfterClearAll["SearchText"]));
             Assert.True(string.IsNullOrEmpty(qsAfterClearAll["SearchTerm"]));
-            var rowsAfterClearAll = await s.Page.Locator("table tbody tr").CountAsync();
-            Assert.True(rowsAfterClearAll == 2, "After clearing filters, two payment requests should be listed again");
+            await Expect(s.Page.Locator("table tbody tr")).ToHaveCountAsync(2);
 
             // Labels
             const string labelName = "test-label";
@@ -2273,8 +2264,7 @@ namespace BTCPayServer.Tests
             await s.Page.WaitForLoadStateAsync();
             await TestUtils.EventuallyAsync(async () =>
             {
-                var rowsCount = await s.Page.Locator("table tbody tr").CountAsync();
-                Assert.Equal(1, rowsCount);
+                await Expect(s.Page.Locator("table tbody tr")).ToHaveCountAsync(1);
                 var filteredText = await s.Page.InnerTextAsync("table tbody");
                 Assert.Contains(paymentRequestTitle, filteredText);
                 Assert.Contains(labelName, filteredText);
@@ -2292,8 +2282,7 @@ namespace BTCPayServer.Tests
             var reportHtml = await s.Page.ContentAsync();
             Assert.Contains("\"viewName\":\"Requests\"", reportHtml);
             await s.Page.WaitForSelectorAsync("#app table tbody tr");
-            var allPrRows = s.Page.Locator("#app table tbody tr").Filter(new LocatorFilterOptions { HasText = "Payment Request" });
-            Assert.Equal(2, await allPrRows.CountAsync());
+            await Expect(s.Page.Locator("#app table tbody tr").Filter(new LocatorFilterOptions { HasText = "Payment Request" })).ToHaveCountAsync(2);
         }
 
         [Fact]

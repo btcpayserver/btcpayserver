@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Blazor.VaultBridge;
 using BTCPayServer.Blazor.VaultBridge.Elements;
 using BTCPayServer.Data;
 using BTCPayServer.NTag424;
@@ -9,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using static BTCPayServer.BoltcardDataExtensions;
 
-namespace BTCPayServer.Blazor.VaultBridge;
+namespace BTCPayServer.Plugins.PullPayments.Boltcards;
 
 record CardOrigin
 {
@@ -24,7 +25,7 @@ record CardOrigin
     public record ThisIssuerReset(BoltcardRegistration Registration) : ThisIssuer(Registration);
 }
 
-public class NFCController : VaultController
+public class BoltcardVaultController : VaultController
 {
     protected override string VaultUri => "http://127.0.0.1:65092/nfc-bridge/v1";
     public bool NewCard { get; set; }
@@ -132,7 +133,7 @@ public class NFCController : VaultController
             else
             {
                 var res = await dbContextFactory.GetBoltcardRegistration(issuerKey, piccData.Uid);
-                if (res != null && res.PullPaymentId is null)
+                if (res is { PullPaymentId: null })
                     cardOrigin = new CardOrigin.ThisIssuerReset(res);
                 else if (res?.PullPaymentId != pullPaymentId)
                     cardOrigin = new CardOrigin.OtherIssuer();

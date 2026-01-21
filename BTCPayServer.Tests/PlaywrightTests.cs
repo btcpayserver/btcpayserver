@@ -3115,9 +3115,10 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain("App updated", pageContent);
 
             // unset end date
-            await s.Page.EvaluateAsync("document.getElementById('EndDate').value = ''");
+            await s.Page.ClickAsync("#clear_end");
             await s.ClickPagePrimary();
             await s.FindAlertMessage(partialText: "App updated");
+
             var editUrl = s.Page.Url;
 
             // Check public page

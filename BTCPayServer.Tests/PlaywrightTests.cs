@@ -3022,8 +3022,8 @@ namespace BTCPayServer.Tests
             await s.GoToInvoiceCheckout(invoiceId);
             await s.Page.Locator(".payment-method").First.WaitForAsync();
             Assert.Equal(2, await s.Page.Locator(".payment-method").CountAsync());
-            Assert.Contains("Bitcoin", await s.Page.Locator(".payment-method.active").TextContentAsync());
-            Assert.Contains("LNURL", await s.Page.Locator(".payment-method:nth-child(2)").TextContentAsync());
+            await Expect(s.Page.Locator(".payment-method.active")).ToContainTextAsync("Bitcoin");
+            await Expect(s.Page.Locator(".payment-method:nth-child(2)")).ToContainTextAsync("LNURL");
             var qrValue = await s.Page.Locator(".qr-container").GetAttributeAsync("data-qr-value");
             var clipboard = await s.Page.Locator(".qr-container").GetAttributeAsync("data-clipboard");
             var payUrl = await s.Page.Locator("#PayInWallet").GetAttributeAsync("href");
@@ -3045,8 +3045,8 @@ namespace BTCPayServer.Tests
             await s.ElementDoesNotExist("#PaymentDetails-TotalPrice");
             await s.ElementDoesNotExist("#PaymentDetails-TotalFiat");
             await s.ElementDoesNotExist("#PaymentDetails-AmountDue");
-            Assert.Contains("$", await s.Page.Locator("#PaymentDetails-ExchangeRate").TextContentAsync());
-            Assert.Contains("sat/byte", await s.Page.Locator("#PaymentDetails-RecommendedFee").TextContentAsync());
+            await Expect(s.Page.Locator("#PaymentDetails-ExchangeRate")).ToContainTextAsync("$");
+            await Expect(s.Page.Locator("#PaymentDetails-RecommendedFee")).ToContainTextAsync("sat/byte");
 
             // Switch to LNURL
             await s.Page.ClickAsync(".payment-method:nth-child(2)");
@@ -3064,8 +3064,8 @@ namespace BTCPayServer.Tests
             await s.GoToInvoiceCheckout(invoiceId);
             await s.Page.Locator(".payment-method.active").WaitForAsync();
             Assert.Equal(2, await s.Page.Locator(".payment-method").CountAsync());
-            Assert.Contains("Lightning", await s.Page.Locator(".payment-method.active").TextContentAsync());
-            Assert.Contains("Bitcoin", await s.Page.Locator(".payment-method").First.TextContentAsync());
+            await Expect(s.Page.Locator(".payment-method.active")).ToContainTextAsync("Lightning");
+            await Expect(s.Page.Locator(".payment-method").First).ToContainTextAsync("Bitcoin");
             qrValue = await s.Page.Locator(".qr-container").GetAttributeAsync("data-qr-value");
             clipboard = await s.Page.Locator(".qr-container").GetAttributeAsync("data-clipboard");
             payUrl = await s.Page.Locator("#PayInWallet").GetAttributeAsync("href");
@@ -3076,22 +3076,22 @@ namespace BTCPayServer.Tests
             await s.ElementDoesNotExist("#Address_BTC-CHAIN");
 
             // Lightning amount in sats
-            Assert.Contains("BTC", await s.Page.Locator("#AmountDue").TextContentAsync());
+            await Expect(s.Page.Locator("#AmountDue")).ToContainTextAsync("BTC");
             await s.GoToHome();
             await s.GoToLightningSettings();
             await s.Page.Locator("#LightningAmountInSatoshi").SetCheckedAsync(true);
             await s.ClickPagePrimary();
             Assert.Contains("BTC Lightning settings successfully updated", await (await s.FindAlertMessage()).TextContentAsync());
             await s.GoToInvoiceCheckout(invoiceId);
-            Assert.Contains("sats", await s.Page.Locator("#AmountDue").TextContentAsync());
+            await Expect(s.Page.Locator("#AmountDue")).ToContainTextAsync("sats");
 
             // Details should not show exchange rate
             await s.ToggleCollapse("PaymentDetails");
             await s.ElementDoesNotExist("#PaymentDetails-ExchangeRate");
             await s.ElementDoesNotExist("#PaymentDetails-TotalFiat");
             await s.ElementDoesNotExist("#PaymentDetails-RecommendedFee");
-            Assert.Contains("21 000 sats", await s.Page.Locator("#PaymentDetails-AmountDue").TextContentAsync());
-            Assert.Contains("21 000 sats", await s.Page.Locator("#PaymentDetails-TotalPrice").TextContentAsync());
+            await Expect(s.Page.Locator("#PaymentDetails-AmountDue")).ToContainTextAsync("21 000 sats");
+            await Expect(s.Page.Locator("#PaymentDetails-TotalPrice")).ToContainTextAsync("21 000 sats");
 
             // Expire
             var expirySeconds = s.Page.Locator("#ExpirySeconds");
@@ -3169,10 +3169,10 @@ namespace BTCPayServer.Tests
             Assert.Contains("Exchange Rate", detailsText);
             Assert.Contains("Amount Due", detailsText);
             Assert.Contains("Recommended Fee", detailsText);
-            Assert.Contains("$", await s.Page.Locator("#PaymentDetails-ExchangeRate").TextContentAsync());
-            Assert.Contains("$", await s.Page.Locator("#PaymentDetails-TotalFiat").TextContentAsync());
-            Assert.Contains("BTC", await s.Page.Locator("#PaymentDetails-AmountDue").TextContentAsync());
-            Assert.Contains("BTC", await s.Page.Locator("#PaymentDetails-TotalPrice").TextContentAsync());
+            await Expect(s.Page.Locator("#PaymentDetails-ExchangeRate")).ToContainTextAsync("$");
+            await Expect(s.Page.Locator("#PaymentDetails-TotalFiat")).ToContainTextAsync("$");
+            await Expect(s.Page.Locator("#PaymentDetails-AmountDue")).ToContainTextAsync("BTC");
+            await Expect(s.Page.Locator("#PaymentDetails-TotalPrice")).ToContainTextAsync("BTC");
 
             // Pay partial amount
             await Task.Delay(200);
@@ -3240,7 +3240,7 @@ namespace BTCPayServer.Tests
             await s.GoToInvoiceCheckout(invoiceId);
             async Task AssertNoPaymentMethods() => Assert.False(await s.Page.Locator(".payment-method").IsVisibleAsync());
             await AssertNoPaymentMethods();
-            Assert.Contains("BTC", await s.Page.Locator("#AmountDue").TextContentAsync());
+            await Expect(s.Page.Locator("#AmountDue")).ToContainTextAsync("BTC");
             qrValue = await s.Page.Locator(".qr-container").GetAttributeAsync("data-qr-value");
             clipboard = await s.Page.Locator(".qr-container").GetAttributeAsync("data-clipboard");
             payUrl = await s.Page.Locator("#PayInWallet").GetAttributeAsync("href");
@@ -3258,11 +3258,11 @@ namespace BTCPayServer.Tests
 
             // Check details
             await s.ToggleCollapse("PaymentDetails");
-            Assert.Contains("1 BTC = ", await s.Page.Locator("#PaymentDetails-ExchangeRate").TextContentAsync());
-            Assert.Contains("$", await s.Page.Locator("#PaymentDetails-ExchangeRate").TextContentAsync());
-            Assert.Contains("$", await s.Page.Locator("#PaymentDetails-TotalFiat").TextContentAsync());
-            Assert.Contains("BTC", await s.Page.Locator("#PaymentDetails-AmountDue").TextContentAsync());
-            Assert.Contains("BTC", await s.Page.Locator("#PaymentDetails-TotalPrice").TextContentAsync());
+            await Expect(s.Page.Locator("#PaymentDetails-ExchangeRate")).ToContainTextAsync("1 BTC = ");
+            await Expect(s.Page.Locator("#PaymentDetails-ExchangeRate")).ToContainTextAsync("$");
+            await Expect(s.Page.Locator("#PaymentDetails-TotalFiat")).ToContainTextAsync("$");
+            await Expect(s.Page.Locator("#PaymentDetails-AmountDue")).ToContainTextAsync("BTC");
+            await Expect(s.Page.Locator("#PaymentDetails-TotalPrice")).ToContainTextAsync("BTC");
 
             // Switch to amount displayed in sats
             await s.GoToHome();
@@ -3271,15 +3271,15 @@ namespace BTCPayServer.Tests
             await s.ClickPagePrimary();
             Assert.Contains("Store successfully updated", await (await s.FindAlertMessage()).TextContentAsync());
             await s.GoToInvoiceCheckout(invoiceId);
-            Assert.Contains("sats", await s.Page.Locator("#AmountDue").TextContentAsync());
+            await Expect(s.Page.Locator("#AmountDue")).ToContainTextAsync("sats");
 
             // Check details
             await s.ToggleCollapse("PaymentDetails");
-            Assert.Contains("1 sat = ", await s.Page.Locator("#PaymentDetails-ExchangeRate").TextContentAsync());
-            Assert.Contains("$", await s.Page.Locator("#PaymentDetails-ExchangeRate").TextContentAsync());
-            Assert.Contains("$", await s.Page.Locator("#PaymentDetails-TotalFiat").TextContentAsync());
-            Assert.Contains("sats", await s.Page.Locator("#PaymentDetails-AmountDue").TextContentAsync());
-            Assert.Contains("sats", await s.Page.Locator("#PaymentDetails-TotalPrice").TextContentAsync());
+            await Expect(s.Page.Locator("#PaymentDetails-ExchangeRate")).ToContainTextAsync("1 sat = ");
+            await Expect(s.Page.Locator("#PaymentDetails-ExchangeRate")).ToContainTextAsync("$");
+            await Expect(s.Page.Locator("#PaymentDetails-TotalFiat")).ToContainTextAsync("$");
+            await Expect(s.Page.Locator("#PaymentDetails-AmountDue")).ToContainTextAsync("sats");
+            await Expect(s.Page.Locator("#PaymentDetails-TotalPrice")).ToContainTextAsync("sats");
 
             // BIP21 with LN as default payment method
             await s.GoToHome();
@@ -3292,11 +3292,11 @@ namespace BTCPayServer.Tests
 
             // Check details
             await s.ToggleCollapse("PaymentDetails");
-            Assert.Contains("1 sat = ", await s.Page.Locator("#PaymentDetails-ExchangeRate").TextContentAsync());
-            Assert.Contains("$", await s.Page.Locator("#PaymentDetails-ExchangeRate").TextContentAsync());
-            Assert.Contains("$", await s.Page.Locator("#PaymentDetails-TotalFiat").TextContentAsync());
-            Assert.Contains("sats", await s.Page.Locator("#PaymentDetails-AmountDue").TextContentAsync());
-            Assert.Contains("sats", await s.Page.Locator("#PaymentDetails-TotalPrice").TextContentAsync());
+            await Expect(s.Page.Locator("#PaymentDetails-ExchangeRate")).ToContainTextAsync("1 sat = ");
+            await Expect(s.Page.Locator("#PaymentDetails-ExchangeRate")).ToContainTextAsync("$");
+            await Expect(s.Page.Locator("#PaymentDetails-TotalFiat")).ToContainTextAsync("$");
+            await Expect(s.Page.Locator("#PaymentDetails-AmountDue")).ToContainTextAsync("sats");
+            await Expect(s.Page.Locator("#PaymentDetails-TotalPrice")).ToContainTextAsync("sats");
 
             // Ensure LNURL is enabled
             await s.GoToHome();
@@ -3323,8 +3323,8 @@ namespace BTCPayServer.Tests
 
             // Check details
             await s.ToggleCollapse("PaymentDetails");
-            Assert.Contains("1 sat = ", await s.Page.Locator("#PaymentDetails-ExchangeRate").TextContentAsync());
-            Assert.Contains("$", await s.Page.Locator("#PaymentDetails-ExchangeRate").TextContentAsync());
+            await Expect(s.Page.Locator("#PaymentDetails-ExchangeRate")).ToContainTextAsync("1 sat = ");
+            await Expect(s.Page.Locator("#PaymentDetails-ExchangeRate")).ToContainTextAsync("$");
             await s.ElementDoesNotExist("#PaymentDetails-TotalFiat");
             await s.ElementDoesNotExist("#PaymentDetails-AmountDue");
             await s.ElementDoesNotExist("#PaymentDetails-TotalPrice");

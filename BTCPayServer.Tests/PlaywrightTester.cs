@@ -16,6 +16,7 @@ using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Playwright;
+using static Microsoft.Playwright.Assertions;
 using NBitcoin;
 using NBitcoin.RPC;
 using Xunit;
@@ -935,18 +936,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        // Open collapse via JS, because if we click the link it triggers the toggle animation.
-        // This leads to Selenium trying to click the button while it is moving resulting in an error.
-        public async Task ToggleCollapse(string collapseId)
-        {
-            await Page.EvaluateAsync($"document.getElementById('{collapseId}').classList.add('show')");
-        }
-
-        public async Task<bool> ElementDoesNotExist(string selector)
-        {
-            var count = await Page.Locator(selector).CountAsync();
-            Assert.Equal(0, count);
-            return true;
-        }
+        public Task ElementDoesNotExist(string selector)
+            => Expect(Page.Locator(selector)).ToHaveCountAsync(0);
     }
 }

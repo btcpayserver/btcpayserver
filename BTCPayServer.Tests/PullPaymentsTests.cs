@@ -1045,9 +1045,9 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
         await s.FindAlertMessage();
 
-        opening = s.Page.Context.WaitForPageAsync();
-        await s.Page.ClickAsync("text=View");
-        await using (await s.SwitchPage(opening))
+        await using (await s.SwitchPage(async () => {
+                         await s.Page.ClickAsync("text=View");
+                     }))
         {
             try
             {

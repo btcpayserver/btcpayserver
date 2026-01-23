@@ -804,7 +804,7 @@ namespace BTCPayServer.Tests
 
             var searchText = tx.Id[..12];
             AssertSearchWalletTransaction(walletController, walletId, true, tx.Id, "label:test", null);
-            AssertSearchWalletTransaction(walletController, walletId, false, tx.Id, "label:none", null);
+            AssertSearchWalletTransaction(walletController, walletId, false, tx.Id, "nolabel:true", null);
             AssertSearchWalletTransaction(walletController, walletId, true, tx.Id, "direction:in", null);
             AssertSearchWalletTransaction(walletController, walletId, false, tx.Id, "direction:out", null);
             AssertSearchWalletTransaction(walletController, walletId, true, tx.Id, null, searchText);

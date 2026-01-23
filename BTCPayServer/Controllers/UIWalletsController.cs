@@ -632,9 +632,8 @@ namespace BTCPayServer.Controllers
                 labelFilters.Add(labelFilter);
             }
 
-            var includeNoLabel = labelFilters.Any(label => label.Equals("none", StringComparison.OrdinalIgnoreCase));
+            var includeNoLabel = search.GetFilterBool("nolabel") is true;
             labelFilters = labelFilters
-                .Where(label => !label.Equals("none", StringComparison.OrdinalIgnoreCase))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 

@@ -801,6 +801,24 @@ namespace BTCPayServer.Tests
             Assert.Contains("test", tx.Tags.Select(l => l.Text));
             Assert.DoesNotContain("test2", tx.Tags.Select(l => l.Text));
             Assert.Single(tx.Tags.GroupBy(l => l.Color));
+
+            var searchText = tx.Id[..12];
+            AssertSearchWalletTransaction(walletController, walletId, true, tx.Id, "label:test", null);
+            AssertSearchWalletTransaction(walletController, walletId, false, tx.Id, "label:none", null);
+            AssertSearchWalletTransaction(walletController, walletId, true, tx.Id, "direction:in", null);
+            AssertSearchWalletTransaction(walletController, walletId, false, tx.Id, "direction:out", null);
+            AssertSearchWalletTransaction(walletController, walletId, true, tx.Id, null, searchText);
+            AssertSearchWalletTransaction(walletController, walletId, true, tx.Id, null, "hello");
+
+            var txTimestamp = tx.Timestamp;
+            AssertSearchWalletTransaction(walletController, walletId, true, tx.Id,
+                $"startdate:{txTimestamp.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)}", null);
+            AssertSearchWalletTransaction(walletController, walletId, true, tx.Id,
+                $"enddate:{txTimestamp.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)}", null);
+            AssertSearchWalletTransaction(walletController, walletId, false, tx.Id,
+                $"startdate:{txTimestamp.AddSeconds(1).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)}", null);
+            AssertSearchWalletTransaction(walletController, walletId, false, tx.Id,
+                $"enddate:{txTimestamp.AddSeconds(-1).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)}", null);
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
@@ -918,6 +936,13 @@ namespace BTCPayServer.Tests
                 (InvoicesModel)((ViewResult)acc.GetController<UIInvoiceController>(storeId is not null)
                     .ListInvoices(new InvoicesModel { SearchTerm = filter, StoreId = storeId }).Result).Model;
             Assert.Equal(expected, result.Invoices.Any(i => i.InvoiceId == invoiceId));
+        }
+
+        private void AssertSearchWalletTransaction(UIWalletsController walletController, WalletId walletId, bool expected, string transactionId, string searchTerm, string searchText)
+        {
+            var result = (ListTransactionsViewModel)((ViewResult)walletController
+                .WalletTransactions(walletId, searchTerm: searchTerm, searchText: searchText, loadTransactions: true, count: 50).Result).Model;
+            Assert.Equal(expected, result.Transactions.Any(tx => tx.Id == transactionId));
         }
 
         // [Fact(Timeout = TestTimeout)]

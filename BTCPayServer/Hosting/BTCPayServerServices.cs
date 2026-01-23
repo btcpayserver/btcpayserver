@@ -563,6 +563,7 @@ namespace BTCPayServer.Hosting
                          { "NGN", "bitnob" },
                          { "NOK", "barebitcoin" },
                          { "CZK", "coinmate" },
+                         { "ZAR", "luno" }
                      })
             {
                 var r = new DefaultRules.Recommendation(rule.Key, rule.Value);
@@ -621,6 +622,7 @@ namespace BTCPayServer.Hosting
             services.AddRateProvider<BitmyntRateProvider>();
             services.AddRateProvider<BareBitcoinRateProvider>();
             services.AddRateProvider<CoinmateRateProvider>();
+            services.AddRateProvider<LunoRateProvider>();
 
             services.AddSingleton<InvoiceBlobMigratorHostedService>();
             services.AddSingleton<IHostedService, InvoiceBlobMigratorHostedService>(o => o.GetRequiredService<InvoiceBlobMigratorHostedService>());

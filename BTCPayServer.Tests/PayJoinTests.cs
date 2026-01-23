@@ -280,7 +280,15 @@ namespace BTCPayServer.Tests
 
             await s.Server.WaitForEvent<NewOnChainTransactionEvent>(async () =>
             {
-                await s.Page.ClickAsync("button[value=payjoin]");
+                try
+                {
+                    await s.Page.ClickAsync("button[value=payjoin]");
+                }
+                catch
+                {
+                    await s.TakeScreenshot("Flaky.png");
+                    throw;
+                }
             });
 
             await s.FindAlertMessage();

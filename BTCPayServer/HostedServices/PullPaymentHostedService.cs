@@ -1057,5 +1057,7 @@ namespace BTCPayServer.HostedServices
             Approved,
             Updated
         }
+
+        public override string ToString() => $"Payout Event for {Payout.Id} ({Type})";
     }
 }

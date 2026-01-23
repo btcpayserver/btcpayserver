@@ -127,32 +127,49 @@
         }
 
         $('#btnCustomRangeDate').on('click', function () {
-            var filterString = "";
+            const dtpStartDate = $("#dtpStartDate").val();
+            const dtpEndDate = $("#dtpEndDate").val();
 
-            var dtpStartDate = $("#dtpStartDate").val();
-            if (dtpStartDate) {
-                filterString = "startdate%3A" + encodeURIComponent(dtpStartDate);
-            }
-
-            var dtpEndDate = $("#dtpEndDate").val();
-            if (dtpEndDate) {
-                if (filterString !== "") {
-                    filterString += ",";
-                }
-                filterString += "enddate%3A" + encodeURIComponent(dtpEndDate);
-            }
-
-            if (filterString) {
-                var baseUrl = "@Url.Action("WalletTransactions", new { walletId, labelFilter })";
-                var redirectUri = baseUrl +
-                    "?Count=" + $("#Count").val() +
-                    "&timezoneoffset=" + $("#TimezoneOffset").val() +
-                    "&SearchTerm=" + filterString +
-                    "&SearchText=" + encodeURIComponent($('#SearchText').val() || '');
-                window.location.href = redirectUri;
-            } else {
+            if (!dtpStartDate && !dtpEndDate) {
                 $("#dtpStartDate").next().trigger("focus");
+                return;
             }
+
+            const dateFilters = [];
+            if (dtpStartDate) {
+                dateFilters.push(`startdate:${dtpStartDate}`);
+            }
+            if (dtpEndDate) {
+                dateFilters.push(`enddate:${dtpEndDate}`);
+            }
+
+            const currentSearchTerm = $('#WalletTransactionsSearch input[name="SearchTerm"]').val() || '';
+            const cleanedSearchTerm = currentSearchTerm
+                .split(',')
+                .map(value => value.trim())
+                .filter(value => value && !value.toLowerCase().startsWith('startdate:') && !value.toLowerCase().startsWith('enddate:'))
+                .join(',');
+            const combinedSearchTerm = [cleanedSearchTerm, dateFilters.join(',')].filter(Boolean).join(',');
+
+            const baseUrl = "@Url.Action("WalletTransactions", new { walletId, labelFilter })";
+            const url = new URL(baseUrl, window.location.origin);
+            url.searchParams.set("Count", $("#Count").val());
+            url.searchParams.set("timezoneOffset", $("#TimezoneOffset").val());
+
+            if (combinedSearchTerm) {
+                url.searchParams.set("SearchTerm", combinedSearchTerm);
+            } else {
+                url.searchParams.delete("SearchTerm");
+            }
+
+            const searchText = $('#SearchText').val() || '';
+            if (searchText) {
+                url.searchParams.set("SearchText", searchText);
+            } else {
+                url.searchParams.delete("SearchText");
+            }
+
+            window.location.href = url.toString();
         });
 
         const clearBtn = document.getElementById('clearAllFiltersBtn');

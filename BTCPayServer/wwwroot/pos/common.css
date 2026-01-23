@@ -86,6 +86,21 @@
 .posItem--displayed {
     display: flex;
 }
+.posItem--disabled {
+    opacity: 0.6;
+    filter: grayscale(50%);
+}
+.posItem--disabled .card-title {
+    color: var(--btcpay-muted);
+}
+.posItem--disabled .btn-plus,
+.posItem--disabled .btn-minus {
+    cursor: not-allowed !important;
+}
+.posItem--disabled .quantities .btn span {
+    background: var(--btcpay-light-bg-hover);
+    color: var(--btcpay-muted);
+}
 .posItem--first {
     margin-left: auto;
 }

@@ -117,9 +117,11 @@
                     var item = Model.Items[index];
                     var formatted = GetItemPriceFormatted(item);
                     var inStock = item.Inventory is null or > 0;
-                    var displayed = item.PriceType == AppItemPriceType.Fixed && inStock ? "true" : "false";
+                    var isFixedPrice = item.PriceType == AppItemPriceType.Fixed;
+                    var displayed = (isFixedPrice && inStock) || item.PriceType == AppItemPriceType.Topup ? "true" : "false";
+                    var isDisabled = item.PriceType == AppItemPriceType.Topup ? "true" : "false";
                     var categories = new JArray(item.Categories ?? new object[] { });
-                    <div class="posItem p-3" :class="{ 'posItem--inStock': inStock(@index), 'posItem--displayed': @displayed }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)" data-categories='@Safe.Json(categories)' v-show="@displayed">
+                    <div class="posItem p-3" :class="{ 'posItem--inStock': inStock(@index), 'posItem--displayed': @displayed, 'posItem--disabled': @isDisabled }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)" data-categories='@Safe.Json(categories)' v-show="@displayed" @if (item.PriceType == AppItemPriceType.Topup) { <text>data-bs-toggle="tooltip" data-bs-placement="top" title="@StringLocalizer["Not available in Keypad POS"]"</text> }>
                         <div class="d-flex align-items-start w-100 gap-3">
                             @if (!string.IsNullOrWhiteSpace(item.Image))
                             {
@@ -154,12 +156,12 @@
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-2 ms-auto quantities">
-                                <button type="button" v-on:click="updateQuantity(`@Safe.Raw(item.Id)`, -1, true)" class="btn btn-minus" :disabled="getQuantity(`@Safe.Raw(item.Id)`) <= 0">
-                                    <span><vc:icon symbol="minus" /></span>
+                                <button type="button" v-on:click="updateQuantity(`@Safe.Raw(item.Id)`, -1, true)" class="btn btn-minus" :disabled="getQuantity(`@Safe.Raw(item.Id)`) <= 0 || @isDisabled">
+                                    <span><vc:icon symbol="minus" css-class="ms-0" /></span>
                                 </button>
                                 <div class="quantity text-center fs-5" style="width:2rem">{{ getQuantity(`@Safe.Raw(item.Id)`) }}</div>
-                                <button type="button" v-on:click="updateQuantity(`@Safe.Raw(item.Id)`, +1, true)" class="btn btn-plus" :disabled="!inStock(@index)">
-                                    <span><vc:icon symbol="plus" /></span>
+                                <button type="button" v-on:click="updateQuantity(`@Safe.Raw(item.Id)`, +1, true)" class="btn btn-plus" :disabled="!inStock(@index) || @isDisabled">
+                                    <span><vc:icon symbol="plus" css-class="ms-0" /></span>
                                 </button>
                             </div>
                         </div>

@@ -172,11 +172,11 @@
                                     </span>
                                     <div class="d-flex align-items-center gap-2 quantities">
                                         <button type="button" v-on:click="updateQuantity(item.id, -1)" class="btn btn-minus">
-                                            <span><vc:icon symbol="minus" /></span>
+                                            <span><vc:icon symbol="minus" css-class="ms-0" /></span>
                                         </button>
                                         <input class="form-control hide-number-spin w-50px text-center" type="number" inputmode="decimal" placeholder="@StringLocalizer["Qty"]" min="1" step="1" :max="item.inventory" v-model.number="item.count">
                                         <button type="button" v-on:click="updateQuantity(item.id, +1)" class="btn btn-plus">
-                                            <span><vc:icon symbol="plus" /></span>
+                                            <span><vc:icon symbol="plus" css-class="ms-0" /></span>
                                         </button>
                                     </div>
                                 </div>

@@ -33,7 +33,12 @@ public class HtmlInputFormProvider : FormComponentProviderBase
         if (field.Required)
         {
             ValidateField<RequiredAttribute>(field);
+            if (field.ValidationErrors.Count != 0)
+                return;
         }
+        else if (string.IsNullOrEmpty(field.Value))
+            return;
+
         if (field.Type == "email")
         {
             ValidateField<MailboxAddressAttribute>(field);

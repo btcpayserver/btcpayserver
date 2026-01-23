@@ -23,6 +23,7 @@ using NBitcoin.DataEncoders;
 using Xunit;
 using Xunit.Abstractions;
 using static Microsoft.Playwright.Assertions;
+using PayoutData = BTCPayServer.Data.PayoutData;
 
 namespace BTCPayServer.Tests;
 
@@ -35,6 +36,13 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
     public async Task CanUsePullPaymentsViaUI()
     {
         await using var s = CreatePlaywrightTester();
+        async Task<PayoutData> ClickClaimAmount()
+        {
+            return (await s.Server.WaitForEvent<PayoutEvent>(async () =>
+            {
+                await s.Page.PressAsync("#ClaimedAmount", "Enter");
+            }, e => e.Type == PayoutEvent.PayoutEventType.Created)).Payout;
+        }
         s.Server.DeleteStore = false;
         s.Server.ActivateLightning(LightningConnectionType.LndREST);
         await s.StartAsync();
@@ -76,7 +84,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             var address = await s.Server.ExplorerNode.GetNewAddressAsync();
             await s.Page.FillAsync("#Destination", address.ToString());
             await s.Page.FillAsync("#ClaimedAmount", "15");
-            await s.Page.PressAsync("#ClaimedAmount", "Enter");
+            await ClickClaimAmount();
             await s.FindAlertMessage();
 
             // We should not be able to use an address already used
@@ -88,7 +96,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             address = await s.Server.ExplorerNode.GetNewAddressAsync();
             await s.Page.FillAsync("#Destination", address.ToString());
             await s.Page.FillAsync("#ClaimedAmount", "20");
-            await s.Page.PressAsync("#ClaimedAmount", "Enter");
+            await ClickClaimAmount();
             await s.FindAlertMessage();
             await Expect(s.Page.Locator("body")).ToContainTextAsync("Awaiting Approval");
 
@@ -105,12 +113,8 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
         payouts = s.Page.Locator(".pp-payout");
         await payouts.First.ClickAsync();
+        await Expect(s.Page.Locator(".payout")).ToHaveCountAsync(2);
 
-        await TestUtils.EventuallyAsync(async () =>
-        {
-            var count = await s.Page.Locator(".payout").CountAsync();
-            Assert.True(count > 0);
-        });
         await s.Page.CheckAsync(".mass-action-select-all");
         await s.Page.ClickAsync($"#{PayoutState.AwaitingApproval}-approve-pay");
 
@@ -168,7 +172,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         {
             var address = await s.Server.ExplorerNode.GetNewAddressAsync();
             await s.Page.FillAsync("#Destination", address.ToString());
-            await s.Page.PressAsync("#ClaimedAmount", "Enter");
+            await ClickClaimAmount();
             await s.FindAlertMessage();
 
             await Expect(s.Page.Locator("body")).ToContainTextAsync(PayoutState.AwaitingApproval.GetStateString());
@@ -193,22 +197,12 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.FindAlertMessage();
 
         await s.Page.ClickAsync($"#{PayoutState.InProgress}-view");
-        await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
         await Expect(s.Page.Locator(".payout")).ToHaveCountAsync(0);
         await s.Page.ClickAsync($"#{PayoutState.Completed}-view");
+        await Expect(s.Page.Locator(".payout").Filter(new() { HasText = "External Test" })).ToHaveCountAsync(1);
 
-        await TestUtils.EventuallyAsync(async () =>
-        {
-            await s.Page.ReloadAsync();
-            var rows = s.Page.Locator(".payout");
-            var count = await rows.CountAsync();
-            Assert.True(count > 0);
-            // Basic sanity: source column shows the pull payment name
-            var rowText = await rows.First.InnerTextAsync();
-            Assert.Contains("External Test", rowText);
-        });
 
-        // lightning tests
+        // lightning tests,
         // Since the merchant is sending on lightning, it needs some liquidity from the client
         var payoutAmount = LightMoney.Satoshis(1000);
         var minimumReserve = LightMoney.Satoshis(167773m);
@@ -234,6 +228,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.ClickPagePrimary();
         await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
         string bolt;
+        PayoutData payout;
         await using (await s.SwitchPage(async () =>
                      {
                          await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
@@ -256,7 +251,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
                 $"LN payout test {DateTime.UtcNow.Ticks}",
                 TimeSpan.FromDays(31), CancellationToken.None)).BOLT11;
             await s.Page.FillAsync("#Destination", bolt);
-            await s.Page.PressAsync("#ClaimedAmount", "Enter");
+            payout = await ClickClaimAmount();
             await s.FindAlertMessage();
 
             await Expect(s.Page.Locator("body")).ToContainTextAsync(PayoutState.AwaitingApproval.GetStateString());
@@ -266,20 +261,29 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Page.ClickAsync($"#{PaymentTypes.LN.GetPaymentMethodId("BTC")}-view");
         await s.Page.ClickAsync($"#{PayoutState.AwaitingApproval}-view");
         await s.Page.CheckAsync(".mass-action-select-all");
-        await s.Page.ClickAsync($"#{PayoutState.AwaitingApproval}-approve-pay");
+        await s.Server.WaitForEvent<PayoutEvent>(async () =>
+        {
+            await s.Page.ClickAsync($"#{PayoutState.AwaitingApproval}-approve-pay");
+        }, e => e.Type == PayoutEvent.PayoutEventType.Approved && e.Payout.Id == payout.Id);
+
         await Expect(s.Page.Locator("body")).ToContainTextAsync(bolt);
         await Expect(s.Page.Locator("body")).ToContainTextAsync($"{payoutAmount} BTC");
-        await s.Page.Locator("#pay-invoices-form").EvaluateAsync("form => form.submit()");
+
+        await s.Server.WaitForEvent<PayoutEvent>(async () =>
+        {
+            await s.Page.ClickAsync("#Pay");
+        }, e => e.Type == PayoutEvent.PayoutEventType.Updated && e.Payout.Id == payout.Id);
 
         await s.FindAlertMessage();
         await s.GoToStore(newStore.storeId, StoreNavPages.Payouts);
         await s.Page.ClickAsync($"#{PaymentTypes.LN.GetPaymentMethodId("BTC")}-view");
 
         await s.Page.ClickAsync($"#{PayoutState.Completed}-view");
+        await Expect(s.Page.Locator("body")).ToContainTextAsync(bolt);
         if (!(await s.Page.ContentAsync()).Contains(bolt))
         {
             await s.Page.ClickAsync($"#{PayoutState.AwaitingPayment}-view");
-            await Expect(s.Page.Locator("body")).ToContainTextAsync(bolt);
+
 
             await s.Page.CheckAsync(".mass-action-select-all");
             await s.Page.ClickAsync($"#{PayoutState.AwaitingPayment}-mark-paid");
@@ -307,7 +311,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             var address = await s.Server.ExplorerNode.GetNewAddressAsync();
             await s.Page.FillAsync("#Destination", address.ToString());
             await s.Page.FillAsync("#ClaimedAmount", "20");
-            await s.Page.PressAsync("#ClaimedAmount", "Enter");
+            await ClickClaimAmount();
             await s.FindAlertMessage();
 
             await Expect(s.Page.Locator("body")).ToContainTextAsync(PayoutState.AwaitingPayment.GetStateString());
@@ -425,9 +429,10 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Page.PressAsync("#Currency", "Enter");
         await s.FindAlertMessage();
 
-        var newPage7 = s.Page.Context.WaitForPageAsync();
-        await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
-        await using (await s.SwitchPage(await newPage7))
+        await using (await s.SwitchPage(async () =>
+                     {
+                         await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
+                     }))
         {
             await Expect(s.Page.Locator("#lnurlwithdraw-button")).ToBeVisibleAsync();
             await s.Page.ClickAsync("#lnurlwithdraw-button");
@@ -459,8 +464,6 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             });
         }
 
-        await s.Page.Context.Pages.First().BringToFrontAsync();
-
         // LNURL Withdraw support check with SATS denomination
         await s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
         await s.ClickPagePrimary();
@@ -471,9 +474,10 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Page.PressAsync("#Currency", "Enter");
         await s.FindAlertMessage();
 
-        var newPage8 = s.Page.Context.WaitForPageAsync();
-        await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
-        await using (await s.SwitchPage(await newPage8))
+        await using (await s.SwitchPage(async () =>
+                     {
+                         await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
+                     }))
         {
             await Expect(s.Page.Locator("#lnurlwithdraw-button")).ToBeVisibleAsync();
             await s.Page.ClickAsync("#lnurlwithdraw-button");

@@ -5,6 +5,7 @@ using System.Linq;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Plugins.PointOfSale.Models
 {
@@ -32,8 +33,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public bool EnableTips { get; set; }
         public string Step { get; set; }
         public string Title { get; set; }
-        AppItem[] _Items;
-        public AppItem[] Items
+        AppItemViewModel[] _Items;
+        public AppItemViewModel[] Items
         {
             get
             {
@@ -44,6 +45,16 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
                 _Items = value;
                 UpdateGroups();
             }
+        }
+
+        public class AppItemViewModel : AppItem
+        {
+            public string PriceFormatted { get; set; }
+            public bool HasPrice { get; set; }
+            public string InventoryText { get; set; }
+            public bool Displayed { get; set; }
+            public string Search { get; set; }
+            public bool HasImage { get; set; }
         }
 
         private void UpdateGroups()
@@ -74,5 +85,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public SelectList AllCategories { get; set; }
         public string StoreId { get; set; }
         public decimal DefaultTaxRate { get; set; }
+        public string NotAvailable { get; set; }
     }
 }

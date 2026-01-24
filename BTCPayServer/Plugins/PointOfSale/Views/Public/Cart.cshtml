@@ -168,7 +168,7 @@
                             <td class="align-middle">
                                 <div class="d-flex align-items-center gap-2 justify-content-end quantity">
                                     <span class="badge text-bg-warning inventory" v-if="item.inventory">
-                                        {{ item.inventory > 0 ? `${item.inventory} left` : "Sold out" }}
+                                        {{ item.inventoryText }}
                                     </span>
                                     <div class="d-flex align-items-center gap-2 quantities">
                                         <button type="button" v-on:click="updateQuantity(item.id, -1)" class="btn btn-minus">

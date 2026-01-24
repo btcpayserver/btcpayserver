@@ -156,12 +156,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private ViewPointOfSaleViewModel.AppItemViewModel[] CreateItemsViewModel(PointOfSaleSettings settings)
         {
             var items = AppService.Parse(settings.Template, false).Select(i => JObject.FromObject(i).ToObject<ViewPointOfSaleViewModel.AppItemViewModel>()).ToList();
-            return items.Select(i => FillItemViewModel(i, settings.Currency)).ToArray();
+            return items.Select(i => FillItemViewModel(i, settings)).ToArray();
         }
 
-        private ViewPointOfSaleViewModel.AppItemViewModel FillItemViewModel(ViewPointOfSaleViewModel.AppItemViewModel vm, string currency)
+        private ViewPointOfSaleViewModel.AppItemViewModel FillItemViewModel(ViewPointOfSaleViewModel.AppItemViewModel vm, PointOfSaleSettings settings)
         {
-            vm.PriceFormatted = GetItemPriceFormatted(vm, currency);
+            vm.PriceFormatted = GetItemPriceFormatted(vm, settings.Currency);
             vm.HasPrice = vm.PriceType != AppItemPriceType.Topup && vm.Price != 0;
             vm.InventoryText = vm.Inventory is { } inv ? StringLocalizer["{0} left", inv].Value : StringLocalizer["Sold out"].Value;
 
@@ -171,6 +171,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             vm.Disabled = vm.PriceType == AppItemPriceType.Topup;
             vm.Search = _htmlSanitizer.Sanitize(vm.Title + " " + vm.Description);
             vm.HasImage = !string.IsNullOrWhiteSpace(vm.Image);
+            vm.ButtonText = string.IsNullOrEmpty(vm.BuyButtonText)
+                ? vm.PriceType == AppItemPriceType.Topup ? settings.CustomButtonText : settings.ButtonText
+                : vm.BuyButtonText;
+            vm.ButtonText = vm.ButtonText.Replace("{0}", vm.PriceFormatted).Replace("{Price}", vm.PriceFormatted);
+            vm.InStock = vm.Inventory is null or > 0;
             return vm;
         }
 

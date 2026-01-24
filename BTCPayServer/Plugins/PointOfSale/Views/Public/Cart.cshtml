@@ -1,10 +1,4 @@
-@using BTCPayServer.Services
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using Newtonsoft.Json.Linq
 @using BTCPayServer.Client
-@using BTCPayServer.Abstractions.TagHelpers
-@using BTCPayServer.Client.Models
-@inject DisplayFormatter DisplayFormatter
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @{
@@ -20,22 +14,13 @@
     <script src="~/pos/common.js" asp-append-version="true"></script>
     <script src="~/pos/cart.js" asp-append-version="true"></script>
 }
-@functions {
-    private string GetItemPriceFormatted(AppItem item)
-    {
-        if (item.PriceType == AppItemPriceType.Topup) return "any amount";
-        if (item.Price == 0) return "free";
-        var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
-        return item.PriceType == AppItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
-    }
-}
 
 <div id="PosCart">
     <div id="content">
         <div class="public-page-wrap">
             <header class="sticky-top bg-body d-flex flex-column py-3 py-lg-4 gap-3">
                 <div class="d-flex align-items-center justify-content-center gap-3 px-5 position-relative">
-                    <h1 class="mb-0">@(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title)</h1>
+                    <h1 class="mb-0" v-pre>@(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title)</h1>
                     <button id="CartToggle" class="cart-toggle-btn" type="button" v-on:click="toggleCart" aria-controls="cart" :disabled="cartCount === 0">
                         <vc:icon symbol="pos-cart" />
                         <span id="CartBadge" class="badge rounded-pill bg-danger p-1 ms-1" v-text="cartCount" v-if="cartCount !== 0"></span>
@@ -64,77 +49,47 @@
                 <partial name="_StatusMessage" />
                 @if (!string.IsNullOrEmpty(Model.Description))
                 {
-                    <div class="lead">@Safe.Raw(Model.Description)</div>
+                    <div class="lead" v-pre>@Safe.Raw(Model.Description)</div>
+                }
+                @foreach (var item in Model.Items.Where(i => i.HasImage))
+                {
+                    // Hack to get the image URL resolved properly.
+                    // The src resolved here is taken to rewrite `item.image`
+                    <img id="@(item.Id)_image" src="@item.Image" alt="@item.Title" asp-append-version="true" style="display:none;" />
                 }
                 <div ref="posItems" class="row row-cols row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-2 row-cols-xl-3 row-cols-xxl-4 g-4" id="PosItems">
-                    @for (var index = 0; index < Model.Items.Length; index++)
-                    {
-                        var item = Model.Items[index];
-                        var formatted = GetItemPriceFormatted(item);
-                        var inStock = item.Inventory is null or > 0;
-                        var buttonText = string.IsNullOrEmpty(item.BuyButtonText)
-                            ? item.PriceType == AppItemPriceType.Topup ? Model.CustomButtonText : Model.ButtonText
-                            : item.BuyButtonText;
-                        buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
-                        var categories = new JArray(item.Categories ?? new object[] { });
-                        <div id="card_@item.Id" class="col posItem posItem--displayed" :class="{ 'posItem--inStock': inStock(@index) }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)" data-categories='@Safe.Json(categories)'>
-                            <div class="tile card" v-on:click="addToCart(@index, 1)">
-                                @if (!string.IsNullOrWhiteSpace(item.Image))
-                                {
-                                    <img class="card-img-top" src="@item.Image" alt="@item.Title" asp-append-version="true">
-                                }
-                                <div class="card-body d-flex flex-column gap-2 mb-auto">
-                                    <h5 class="card-title m-0">@Safe.Raw(item.Title)</h5>
-                                    <div class="d-flex gap-2 align-items-center">
-                                        @if (item.PriceType == AppItemPriceType.Topup || item.Price == 0)
-                                        {
-                                            <span class="fw-semibold badge text-bg-info">@Safe.Raw(char.ToUpper(formatted[0]) + formatted[1..])</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="fw-semibold">@Safe.Raw(formatted)</span>
-                                        }
-                                        @if (item.Inventory.HasValue)
-                                        {
-                                            <span class="badge text-bg-warning inventory">
-                                                @if (item.Inventory > 0)
-                                                {
-                                                    <span>@StringLocalizer["{0} left", item.Inventory.ToString()]</span>
-                                                }
-                                                else
-                                                {
-                                                    <span text-translate="true">Sold out</span>
-                                                }
-                                            </span>
-                                        }
-                                    </div>
-                                    @if (!string.IsNullOrWhiteSpace(item.Description))
-                                    {
-                                        <p class="card-text">@Safe.Raw(item.Description)</p>
-                                    }
+                        <div v-for="(item, index) in items" :id="'card_' + item.id" class="col posItem posItem--displayed" :class="{ 'posItem--inStock': inStock(index) }" :data-index="index" :data-search="item.search" :data-categories='item.categories ? JSON.stringify(item.categories) : null'>
+                            <div class="tile card" v-on:click="addToCart(index, 1)">
+                                <div v-if="item.hasImage" class="img d-none d-sm-block">
+                                    <img class="card-img-top" :src="item.image" :alt="item.title" />
                                 </div>
-                                @if (inStock)
-                                {
-                                    <form class="card-footer">
-                                        @if (item.PriceType != AppItemPriceType.Fixed)
-                                        {
-                                            <div class="input-group mb-2">
-                                                <span class="input-group-text">@Model.CurrencySymbol</span>
-                                                <input class="form-control" type="number" inputmode="decimal" min="@(item.Price ?? 0)" step="@Model.Step" name="amount" placeholder="@StringLocalizer["Amount"]" value="@item.Price" required v-on:click.stop>
-                                            </div>
-                                        }
-                                        <button type="button" class="btn btn-primary w-100" :disabled="!inStock(@index)">
-                                            @Safe.Raw(buttonText)
-                                        </button>
-                                    </form>
-                                    <div class="posItem-added"><vc:icon symbol="checkmark" /></div>
-                                }
+
+                                <div class="card-body d-flex flex-column gap-2 mb-auto">
+                                    <h5 class="card-title m-0">{{ item.title }}</h5>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <span v-if="!item.hasPrice" class="fw-semibold badge text-bg-info">{{ item.priceFormatted }}</span>
+                                        <span v-if="item.hasPrice" class="fw-semibold">{{ item.priceFormatted }}</span>
+                                        <span v-if="item.inventory !== null" class="badge text-bg-warning inventory">
+                                            <span>{{ item.inventoryText }}</span>
+                                        </span>
+                                    </div>
+                                    <p class="card-text" v-if="item.description">{{ item.description }}</p>
+                                </div>
+                                <form v-if="item.inStock" class="card-footer">
+                                    <div v-if="item.priceType !== 'Fixed'" class="input-group mb-2">
+                                        <span class="input-group-text" v-pre>@Model.CurrencySymbol</span>
+                                        <input class="form-control" type="number" inputmode="decimal" :min="item.price ?? 0" step="@Model.Step" name="amount" placeholder="@StringLocalizer["Amount"]" :value="item.price" required v-on:click.stop>
+                                    </div>
+                                    <button type="button" class="btn btn-primary w-100" :disabled="!inStock(index)">
+                                        {{ item.buttonText }}
+                                    </button>
+                                </form>
+                                <div class="posItem-added"><vc:icon symbol="checkmark" /></div>
                             </div>
                         </div>
-                    }
                 </div>
             </main>
-            <footer class="store-footer">
+            <footer class="store-footer" v-pre>
                 <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
                     <span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" />
                 </a>

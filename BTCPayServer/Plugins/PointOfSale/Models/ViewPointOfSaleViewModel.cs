@@ -55,6 +55,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
             public bool Displayed { get; set; }
             public string Search { get; set; }
             public bool HasImage { get; set; }
+            public string ButtonText { get; set; }
+            public bool InStock { get; set; }
         }
 
         private void UpdateGroups()

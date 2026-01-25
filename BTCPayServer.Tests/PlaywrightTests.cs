@@ -180,13 +180,6 @@ namespace BTCPayServer.Tests
             await s.CreateNewStore();
             await s.GoToUrl($"/stores/{s.StoreId}/payment-requests");
 
-            async Task<string> ReadStatusAsync()
-            {
-                var locator = s.Page.Locator(".only-for-js[data-test='status']");
-                await locator.WaitForAsync(new() { State = WaitForSelectorState.Visible });
-                return (await locator.InnerTextAsync()).Trim();
-            }
-
             Task WaitStatusContains(string text)
                 => s.Page
                     .Locator(".only-for-js[data-test='status']")
@@ -195,7 +188,7 @@ namespace BTCPayServer.Tests
 
             // Should give us an error message if we try to create a payment request before adding a wallet
             await s.ClickPagePrimary();
-            Assert.Contains("To create a payment request, you need to", await s.Page.ContentAsync());
+            await s.FindAlertMessage(partialText: "To create a payment request, you need to", severity: StatusMessageModel.StatusSeverity.Error);
 
             await s.AddDerivationScheme();
             await s.GoToUrl($"/stores/{s.StoreId}/payment-requests");
@@ -283,22 +276,14 @@ namespace BTCPayServer.Tests
             await checkoutFrame.Locator("#FakePayment").ClickAsync();
 
             // Processing - verify a payment received message and status
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                var processingSection = checkoutFrame.Locator("#processing");
-                if (await processingSection.CountAsync() > 0 && await processingSection.IsVisibleAsync())
-                {
-                    var processingText = await processingSection.InnerTextAsync();
-                    Assert.Contains("Payment Received", processingText);
-                    Assert.Contains("Your payment has been received and is now processing", processingText);
-                }
-            });
+            await Expect(checkoutFrame.Locator("#processing"))
+                .ToContainTextAsync("Payment Received");
+            await Expect(checkoutFrame.Locator("#processing"))
+                .ToContainTextAsync("Your payment has been received and is now processing");
 
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                var statusText = await ReadStatusAsync();
-                Assert.Equal("Processing", statusText);
-            });
+            await Expect(s.Page.Locator(".only-for-js[data-test='status']"))
+                .ToContainTextAsync("Processing");
+
 
             // Mine
             await checkoutFrame.Locator("#mine-block button").ClickAsync();

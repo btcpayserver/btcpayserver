@@ -174,12 +174,15 @@
         </div>
         <div class="tab-pane fade" id="CodeTabPane" role="tabpanel" aria-labelledby="CodeTabButton" tabindex="0">
             <label for="TemplateConfig" class="form-label" text-translate="true">Template JSON</label>
-            <textarea id="TemplateConfig" name="@Model.templateId" rows="21" cols="21" class="form-control font-monospace" style="font-size:.85rem" v-model="itemsJSON" v-on:change="updateFromJSON">@Model.template</textarea>
+            <textarea id="TemplateConfig" name="@Model.templateId" rows="21" cols="21" class="form-control font-monospace" style="font-size:.85rem" v-model="itemsJSON" v-on:change="updateFromJSON"></textarea>
             <span asp-validation-for="@Model.templateId" class="text-danger"></span>
         </div>
     </div>
 </div>
 
+<script>
+    var initialConfig = @Safe.Json(Model.template);
+</script>
 <link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" asp-append-version="true" rel="stylesheet">
 <link href="~/main/editor.css" rel="stylesheet" asp-append-version="true" />
 <script src="~/vendor/tom-select/tom-select.complete.min.js" asp-append-version="true"></script>

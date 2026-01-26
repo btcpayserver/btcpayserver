@@ -1616,7 +1616,7 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             await s.RegisterNewUser(isAdmin: true);
             await s.GoToUrl("/server/services");
-            Assert.Contains("Dynamic DNS", await s.Page.ContentAsync());
+            await Expect(s.Page.Locator("td").Filter(new() { HasText = "Dynamic DNS" })).ToBeVisibleAsync();
 
             await s.GoToUrl("/server/services/dynamic-dns");
             await s.Page.AssertNoError();
@@ -1634,7 +1634,7 @@ namespace BTCPayServer.Tests
             await s.Page.FillAsync("#Settings_Password", "MyLog");
             await s.ClickPagePrimary();
             await s.Page.AssertNoError();
-            Assert.Contains("The Dynamic DNS has been successfully queried", await s.Page.ContentAsync());
+            await s.FindAlertMessage(partialText: "The Dynamic DNS has been successfully queried");
             Assert.EndsWith("/server/services/dynamic-dns", s.Page.Url);
 
             // Try to create the same hostname (should fail)
@@ -1646,10 +1646,11 @@ namespace BTCPayServer.Tests
             await s.Page.FillAsync("#Settings_Password", "MyLog");
             await s.ClickPagePrimary();
             await s.Page.AssertNoError();
-            Assert.Contains("This hostname already exists", await s.Page.ContentAsync());
+            await Expect(s.Page.Locator(".validation-summary-errors")).ToContainTextAsync("This hostname already exists");
 
             // Delete the hostname
             await s.GoToUrl("/server/services/dynamic-dns");
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             Assert.Contains("/server/services/dynamic-dns/pouet.hello.com/delete", await s.Page.ContentAsync());
             await s.GoToUrl("/server/services/dynamic-dns/pouet.hello.com/delete");
             await s.Page.ClickAsync("#ConfirmContinue");

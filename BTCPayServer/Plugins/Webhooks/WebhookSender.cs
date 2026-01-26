@@ -119,7 +119,7 @@ public class WebhookSender(
                 return;
             var result = await SendAndSaveDelivery(ctx, cancellationToken);
             if (ctx.WebhookBlob.AutomaticRedelivery &&
-                result is { Success: false, DeliveryId: not null })
+                result is { ShouldRetry: true, DeliveryId: not null })
             {
                 var originalDeliveryId = result.DeliveryId;
                 foreach (var wait in new[]
@@ -129,13 +129,14 @@ public class WebhookSender(
                          })
                 {
                     await Task.Delay(wait, cancellationToken);
-                    ctx = (await CreateRedeliveryRequest(originalDeliveryId))!;
+                    var localCtx = await CreateRedeliveryRequest(originalDeliveryId);
                     // This may have changed
-                    if (ctx is null || !ctx.WebhookBlob.AutomaticRedelivery ||
-                        !ctx.WebhookBlob.ShouldDeliver(ctx.WebhookEvent.Type))
+                    if (localCtx is null || !localCtx.WebhookBlob.AutomaticRedelivery ||
+                        !localCtx.WebhookBlob.ShouldDeliver(ctx.WebhookEvent.Type))
                         return;
+                    ctx = localCtx;
                     result = await SendAndSaveDelivery(ctx, cancellationToken);
-                    if (result.Success)
+                    if (!result.ShouldRetry)
                         return;
                 }
             }
@@ -188,7 +189,24 @@ public class WebhookSender(
 
         ctx.Delivery.SetBlob(deliveryBlob);
 
-        return new DeliveryResult { Success = deliveryBlob.ErrorMessage is null, DeliveryId = ctx.Delivery.Id, ErrorMessage = deliveryBlob.ErrorMessage };
+        return new DeliveryResult
+        {
+            ShouldRetry = deliveryBlob.HttpCode switch
+            {
+                // Retry on server errors (5xx)
+                >= 500 and <= 599 => true,
+                // Retry on rate limiting
+                429 => true,
+                // Retry on request timeout
+                408 => true,
+                // Retry when no HTTP code (network/connection errors)
+                null => true,
+                // Don't retry on client errors (4xx except 408, 429) or success (2xx, 3xx)
+                _ => false
+            },
+            DeliveryId = ctx.Delivery.Id,
+            ErrorMessage = deliveryBlob.ErrorMessage
+        };
     }
 
     private async Task<DeliveryResult> SendAndSaveDelivery(WebhookDeliveryRequest ctx,
@@ -227,7 +245,7 @@ public class WebhookSender(
     public class DeliveryResult
     {
         public string? DeliveryId { get; set; }
-        public bool Success { get; set; }
+        public bool ShouldRetry { get; set; }
         public string? ErrorMessage { get; set; }
     }
 }

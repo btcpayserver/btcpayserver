@@ -164,6 +164,7 @@ public class WebhookSender(
         var sig = Encoders.Hex.EncodeData(hmac.ComputeHash(bytes));
         content.Headers.Add("BTCPay-Sig", $"sha256={sig}");
         request.Content = content;
+        ctx.Delivery.DeliveryTime = DateTimeOffset.UtcNow;
         var deliveryBlob = ctx.Delivery.GetBlob() ?? new WebhookDeliveryBlob();
         deliveryBlob.Request = bytes;
         try

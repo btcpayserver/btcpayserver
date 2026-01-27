@@ -16,9 +16,10 @@ function debounce(key, fn, delay = 250) {
     DEBOUNCE_TIMERS[key] = setTimeout(fn, delay)
 }
 
-function formatDateTimes(format) {
+function formatDateTimes(format, root) {
+    root = root || document;
     // select only elements which haven't been initialized before, those without data-localized
-    document.querySelectorAll("time[datetime]:not([data-localized])").forEach($el => {
+    root.querySelectorAll("time[datetime]:not([data-localized])").forEach($el => {
         const date = new Date($el.getAttribute("datetime"));
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat
         const { dateStyle = 'short', timeStyle = 'short' } = $el.dataset;

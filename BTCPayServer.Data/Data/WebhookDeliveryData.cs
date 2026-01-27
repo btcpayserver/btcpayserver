@@ -23,6 +23,8 @@ namespace BTCPayServer.Data
         public DateTimeOffset Timestamp { get; set; }
         public string Blob { get; set; }
         public bool Pruned { get; set; }
+        [Required]
+        public DateTimeOffset DeliveryTime { get; set; }
 
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {

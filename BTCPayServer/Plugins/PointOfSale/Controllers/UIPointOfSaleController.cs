@@ -61,6 +61,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             IRateLimitService rateLimitService,
             IAuthorizationService authorizationService,
             UserManager<ApplicationUser> userManager,
+            HtmlSanitizer htmlSanitizer,
             Safe safe)
         {
             _currencies = currencies;
@@ -73,6 +74,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             _rateLimitService = rateLimitService;
             _authorizationService = authorizationService;
             _userManager = userManager;
+            _htmlSanitizer = htmlSanitizer;
             _safe = safe;
             StringLocalizer = stringLocalizer;
             FormDataService = formDataService;
@@ -88,6 +90,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly IRateLimitService _rateLimitService;
         private readonly IAuthorizationService _authorizationService;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly HtmlSanitizer _htmlSanitizer;
         private readonly Safe _safe;
         public FormDataService FormDataService { get; }
         public IStringLocalizer StringLocalizer { get; }
@@ -135,7 +138,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     Prefixed = new[] { 0, 2 }.Contains(numberFormatInfo.CurrencyPositivePattern),
                     SymbolSpace = new[] { 2, 3 }.Contains(numberFormatInfo.CurrencyPositivePattern)
                 },
-                Items = AppService.Parse(settings.Template, false),
+                Items = CreateItemsViewModel(settings),
                 ButtonText = settings.ButtonText,
                 CustomButtonText = settings.CustomButtonText,
                 CustomTipText = settings.CustomTipText,
@@ -146,7 +149,42 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 HtmlLang = settings.HtmlLang,
                 HtmlMetaTags= settings.HtmlMetaTags,
                 Description = settings.Description,
+                NotAvailable = StringLocalizer["Not available in Keypad POS"].Value
             });
+        }
+
+        private ViewPointOfSaleViewModel.AppItemViewModel[] CreateItemsViewModel(PointOfSaleSettings settings)
+        {
+            var items = AppService.Parse(settings.Template, false).Select(i => JObject.FromObject(i).ToObject<ViewPointOfSaleViewModel.AppItemViewModel>()).ToList();
+            return items.Select(i => FillItemViewModel(i, settings)).ToArray();
+        }
+
+        private ViewPointOfSaleViewModel.AppItemViewModel FillItemViewModel(ViewPointOfSaleViewModel.AppItemViewModel vm, PointOfSaleSettings settings)
+        {
+            vm.PriceFormatted = GetItemPriceFormatted(vm, settings.Currency);
+            vm.HasPrice = vm.PriceType != AppItemPriceType.Topup && vm.Price != 0;
+            vm.InventoryText = vm.Inventory is { } inv ? StringLocalizer["{0} left", inv].Value : StringLocalizer["Sold out"].Value;
+
+            var inStock = vm.Inventory is null or > 0;
+            var isFixedPrice = vm.PriceType == AppItemPriceType.Fixed;
+            vm.Displayed = (isFixedPrice && inStock) || vm.PriceType == AppItemPriceType.Topup;
+            vm.Disabled = vm.PriceType == AppItemPriceType.Topup;
+            vm.Search = _htmlSanitizer.Sanitize(vm.Title + " " + vm.Description);
+            vm.HasImage = !string.IsNullOrWhiteSpace(vm.Image);
+            vm.ButtonText = string.IsNullOrEmpty(vm.BuyButtonText)
+                ? vm.PriceType == AppItemPriceType.Topup ? settings.CustomButtonText : settings.ButtonText
+                : vm.BuyButtonText;
+            vm.ButtonText = vm.ButtonText.Replace("{0}", vm.PriceFormatted).Replace("{Price}", vm.PriceFormatted);
+            vm.InStock = vm.Inventory is null or > 0;
+            return vm;
+        }
+
+        private string GetItemPriceFormatted(AppItem item, string currency)
+        {
+            if (item.PriceType == AppItemPriceType.Topup) return "Any amount";
+            if (item.Price == 0) return "Free";
+            var formatted = _displayFormatter.Currency(item.Price ?? 0, currency, DisplayFormatter.CurrencyFormat.Symbol);
+            return item.PriceType == AppItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
         }
 
         [HttpPost("/")]

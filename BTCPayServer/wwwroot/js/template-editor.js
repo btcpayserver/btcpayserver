@@ -6,9 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error deserializing form config:', err)
         }
     }
-    const $config = document.getElementById('TemplateConfig')
-    let items = parseConfig($config.value) || []
-    
+    let items = parseConfig(initialConfig) || []
+
     const itemProps = {
         id: String,
         title: String,
@@ -253,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return (!this.selectedItem && this.selectedItemInitial) ||
                     (!this.selectedItem && this.selectedItemInitial) ||
                     (JSON.stringify(this.selectedItem) !== JSON.stringify(this.selectedItemInitial))
-                
+
             }
         },
         methods: {

@@ -1,13 +1,11 @@
-@using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Client.Models
-@using BTCPayServer.Components.QRCode
 @using BTCPayServer.Payments
 @using BTCPayServer.Payments.Lightning
+@using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services
 @using BTCPayServer.Services.Invoices
 @using BTCPayServer.Services.Stores
 @using LNURL
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject StoreRepository StoreRepository
 @inject PaymentMethodHandlerDictionary Handlers
 @inject DisplayFormatter DisplayFormatter
@@ -61,7 +59,7 @@ else
             if (Model.ShowCustomAmount)
             {
                 Model.Items = Model.Items.Concat([
-                    new AppItem
+                    new ViewPointOfSaleViewModel.AppItemViewModel
                     {
                         Description = "Create invoice to pay custom amount",
                         Title = "Custom amount",
@@ -127,7 +125,7 @@ else
 									cryptoCode = cryptoCode,
                                     appid = Model.AppId,
                                     ItemCode = item.Id
-                                }, Context.Request.Scheme, Context.Request.Host.ToString()));
+                                }, Context.Request.Scheme, Context.Request.Host.ToString())!);
                                 var lnUrl = LNURL.EncodeUri(lnurlEndpoint, "payRequest", supported.UseBech32Scheme);
                                 <a href="@lnUrl" rel="noreferrer noopener" class="card-img-bottom">
                                     <vc:qr-code data="@lnUrl.ToString().ToUpperInvariant()" />

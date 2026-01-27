@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.3.4
+
+### New Features
+
+* Set LUNO as the default exchange for ZAR currency @NicolasDorier
+* Add a `deliveryTime` property to webhook deliveries in the API and UI (#7140) @NicolasDorier
+
+### Fixes
+
+* Subscribers with enough credits were receiving payment reminder emails and not being automatically renewed (#7108) @NicolasDorier
+* Fix scan-qrcode icon alignment (#7116) @Psycarlo
+* Public node info page no longer lists local network IPs (#7131 #7028) @NicolasDorier
+* Forms with an optional empty email field can now be submitted (#7117 #7134) @NicolasDorier
+* Keypad POS now displays “Any amount” items correctly (#6697 #7137) @NicolasDorier
+* `CanModifyInvoices` permission now includes viewing Lightning invoices for the store (#6867 #7138) @NicolasDorier
+* Certain HTTP status codes no longer cause webhooks to be retried (#3146 #7139) @NicolasDorier
+
+### Miscellaneous
+
+* Test suite migrated from Selenium to Playwright @Abhijay007
+
 ## 2.3.3
 
 CoinGecko's API now mandates the use of an API Key for accessing rates.

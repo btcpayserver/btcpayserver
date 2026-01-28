@@ -6,9 +6,12 @@
 
 * Set LUNO as the default exchange for ZAR currency @NicolasDorier
 * Add a `deliveryTime` property to webhook deliveries in the API and UI (#7140) @NicolasDorier
+* Add subscriber's metadata to email placeholders (#7150) @NicolasDorier
 
 ### Fixes
 
+* Fix: Deleting webhooks could time out (#7151) @NicolasDorier
+* Fix: Offering and Customer metadata email placeholders couldn't be used (#7150) @NicolasDorier
 * Subscribers with enough credits were receiving payment reminder emails and not being automatically renewed (#7108) @NicolasDorier
 * Fix scan-qrcode icon alignment (#7116) @Psycarlo
 * Public node info page no longer lists local network IPs (#7131 #7028) @NicolasDorier
@@ -603,7 +606,6 @@ If you are using Boltcards, we advise you to update to this release.
 
 ### Bug fixes
 
-* Fix: Offering and Customer metadata email placeholders couldn't be used (#7150) @NicolasDorier
 * LNUrl payouts failing due to amount restriction wouldn't be immediately canceled (#6061) @Kukks
 * Fix row ordering and display issues in reporting (#6065 #6087, 597e2b0e) @NicolasDorier @dennisreimann
 * Parse Timespan strings in the API properly (#6012) @dennisreimann
@@ -616,7 +618,6 @@ If you are using Boltcards, we advise you to update to this release.
 
 ### Improvements
 
-* Add subscriber's metadata to email placeholders (#7150) @NicolasDorier
 * Checkout: Display item description if present (#6082) @dennisreimann
 * Disable plugins if they crash the Dashboard page (#6099) @NicolasDorier
 * Hide empty values in the receipts (#6079) @dennisreimann

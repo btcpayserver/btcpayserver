@@ -10,6 +10,8 @@ namespace BTCPayServer.Client.Models
         public string Id { get; set; }
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset Timestamp { get; set; }
+        [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
+        public DateTimeOffset DeliveryTime { get; set; }
         public int? HttpCode { get; set; }
         public string ErrorMessage { get; set; }
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]

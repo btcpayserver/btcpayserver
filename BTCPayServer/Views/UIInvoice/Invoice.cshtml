@@ -14,7 +14,6 @@
         #posData table > tbody > tr:first-child > td > h4 {
             margin-top: 0 !important;
         }
-
         .invoice-information {
             display: flex;
             flex-wrap: wrap;
@@ -523,8 +522,33 @@
                                             </span>
                                         </td>
                                         <td>
+                                            @{
+                                                var timeDiff = delivery.DeliveryTime - delivery.Time;
+                                                var hasSignificantDelay = Math.Abs(timeDiff.TotalMinutes) > 2;
+                                            }
                                             <span>
-                                                    @delivery.Time.ToBrowserDate()
+                                                <span class="webhook-time" data-bs-html="true" data-bs-toggle="tooltip">
+                                                    <template class="webhook-time-tooltip">
+                                                        <div class="text-start">
+                                                            <span><b text-translate="true">Created at</b>:&nbsp;@delivery.Time.ToBrowserDate()</span><br />
+                                                            <span><b text-translate="true">Delivered at</b>:&nbsp;@delivery.DeliveryTime.ToBrowserDate()</span>
+                                                            @if (hasSignificantDelay)
+                                                            {
+                                                                <br />
+                                                                <span><b text-translate="true">Delay</b>:&nbsp;<span>@StringLocalizer["{0} minutes", @timeDiff.TotalMinutes.ToString("F1")]</span></span>
+                                                                <br />
+                                                                <br />
+                                                                <span text-translate="true">A delay means your service either failed to process earlier deliveries or is taking too long to respond.</span>
+                                                            }
+                                                        </div>
+                                                    </template>
+
+                                                    <span class="delivery-time">@delivery.DeliveryTime.ToBrowserDate()</span>
+                                                    @if (hasSignificantDelay)
+                                                    {
+                                                        <vc:icon symbol="warning" css-class="mb-1 text-warning" />
+                                                    }
+                                                </span>
                                             </span>
                                         </td>
                                         <td class="text-end">
@@ -615,3 +639,17 @@
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll(".webhook-time-tooltip").forEach(function (el) {
+            formatDateTimes(null, el.content);
+            // Somehow <time> isn't supported in tooltip... we replace it by <span>
+            el.content.querySelectorAll('time').forEach(time => {
+                var span = document.createElement('span');
+                span.innerHTML = time.innerHTML;
+                time.replaceWith(span);
+            });
+            el.parentElement.setAttribute('title', el.innerHTML);
+        });
+    });
+</script>

@@ -174,6 +174,7 @@ namespace BTCPayServer.Plugins.Webhooks.Controllers
             {
                 Id = data.Id,
                 Timestamp = data.Timestamp,
+                DeliveryTime = data.DeliveryTime,
                 Status = b.Status,
                 ErrorMessage = b.ErrorMessage,
                 HttpCode = b.HttpCode

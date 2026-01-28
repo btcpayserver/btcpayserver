@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.HostedServices;
-using BTCPayServer.Plugins.Emails;
 using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Services.PaymentRequests;
 using Microsoft.AspNetCore.Mvc;

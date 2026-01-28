@@ -257,13 +257,13 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain("Pay123", await s.Page.ContentAsync());
             await s.Page.ClickAsync("#StatusOptionsToggle");
             await s.Page.ClickAsync("#StatusOptionsIncludeArchived");
-            Assert.Contains("Pay123", await s.Page.ContentAsync());
+            await Expect(s.Page.Locator($"#Edit-{payReqId}")).ToHaveTextAsync("Pay123");
 
             // unarchive (from list)
             await s.Page.ClickAsync($"#ToggleActions-{payReqId}");
             await s.Page.ClickAsync($"#ToggleArchival-{payReqId}");
             await s.FindAlertMessage(partialText: "The payment request has been unarchived");
-            Assert.Contains("Pay123", await s.Page.ContentAsync());
+            await Expect(s.Page.Locator($"#Edit-{payReqId}")).ToHaveTextAsync("Pay123");
 
             // payment
             await s.GoToUrl(viewUrl);
@@ -358,6 +358,7 @@ namespace BTCPayServer.Tests
             var i = await s.CreateInvoice(storeId, null, cryptoCode);
             await s.GoToInvoiceCheckout(i);
             var lnurl = await s.Page.Locator("#Lightning_BTC-LNURL .truncate-center").GetAttributeAsync("data-text");
+            Assert.NotNull(lnurl);
             var parsed = LNURL.LNURL.Parse(lnurl, out _);
             var fetchedRequest = Assert.IsType<LNURLPayRequest>(await LNURL.LNURL.FetchInformation(parsed, new HttpClient()));
             Assert.Equal(1m, fetchedRequest.MinSendable.ToDecimal(LightMoneyUnit.Satoshi));
@@ -457,6 +458,7 @@ namespace BTCPayServer.Tests
             var invForPP = await s.CreateInvoice(null, cryptoCode);
             await s.GoToInvoiceCheckout(invForPP);
             lnurl = await s.Page.Locator("#Lightning_BTC-LNURL .truncate-center").GetAttributeAsync("data-text");
+            Assert.NotNull(lnurl);
             LNURL.LNURL.Parse(lnurl, out _);
 
             // Check that pull payment has lightning option
@@ -538,7 +540,7 @@ namespace BTCPayServer.Tests
             await s.Page.ClickAsync("button[value='add']");
             await s.FindAlertMessage();
 
-            // Add second lightning address with advanced settings
+            // Add a second lightning address with advanced settings
             // Ensure the add form is open
             if (!await s.Page.Locator("#Add_Username").IsVisibleAsync())
             {
@@ -564,6 +566,7 @@ namespace BTCPayServer.Tests
             for (var i = 0; i < await addresses.CountAsync(); i++)
             {
                 var value = await addresses.Nth(i).GetAttributeAsync("value");
+                Assert.NotNull(value);
                 var lnurl = new Uri(LNURL.LNURL.ExtractUriFromInternetIdentifier(value).ToString().Replace("https", "http"));
                 var request = (LNURLPayRequest)await LNURL.LNURL.FetchInformation(lnurl, new HttpClient());
                 var m = request.ParsedMetadata.ToDictionary(o => o.Key, o => o.Value);
@@ -606,8 +609,10 @@ namespace BTCPayServer.Tests
             foreach (var inv in invoices)
             {
                 var prompt = inv.GetPaymentPrompt(PaymentTypes.LNURL.GetPaymentMethodId("BTC"));
+                Assert.NotNull(prompt);
                 var handlers = s.Server.PayTester.GetService<PaymentMethodHandlerDictionary>();
                 var details = (LNURLPayPaymentMethodDetails)handlers.ParsePaymentPromptDetails(prompt);
+                Assert.NotNull(details);
                 Assert.Contains(details.ConsumedLightningAddress, new[] { lnaddress1, lnaddress2Resolved });
                 if (details.ConsumedLightningAddress == lnaddress2Resolved)
                 {
@@ -682,6 +687,7 @@ namespace BTCPayServer.Tests
                 var prompt = i.GetPaymentPrompt(PaymentTypes.LNURL.GetPaymentMethodId("BTC"));
                 if (prompt == null) return false;
                 var det = (LNURLPayPaymentMethodDetails)handlers2.ParsePaymentPromptDetails(prompt);
+                Assert.NotNull(det);
                 return det.ConsumedLightningAddress?.StartsWith(lnUsername, StringComparison.OrdinalIgnoreCase) == true;
             });
             Assert.NotNull(match);
@@ -2528,6 +2534,7 @@ namespace BTCPayServer.Tests
             await s.RegisterNewUser(true);
             await s.GoToHome();
             await s.GoToServer(ServerNavPages.Roles);
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             var existingServerRoles = await s.Page.Locator("table tr").AllAsync();
             Assert.Equal(5, existingServerRoles.Count);
             ILocator ownerRow = null;
@@ -2537,6 +2544,7 @@ namespace BTCPayServer.Tests
             foreach (var roleItem in existingServerRoles)
             {
                 var text = await roleItem.TextContentAsync();
+                Assert.NotNull(text);
                 if (text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
                 {
                     ownerRow = roleItem;
@@ -2586,6 +2594,7 @@ namespace BTCPayServer.Tests
             foreach (var roleItem in existingServerRoles)
             {
                 var text = await roleItem.TextContentAsync();
+                Assert.NotNull(text);
                 if (text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
                 {
                     ownerRow = roleItem;
@@ -2616,6 +2625,7 @@ namespace BTCPayServer.Tests
             foreach (var roleItem in existingServerRoles)
             {
                 var text = await roleItem.TextContentAsync();
+                Assert.NotNull(text);
                 if (text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
                 {
                     ownerRow = roleItem;
@@ -2631,6 +2641,7 @@ namespace BTCPayServer.Tests
             foreach (var roleItem in existingServerRoles)
             {
                 var text = await roleItem.TextContentAsync();
+                Assert.NotNull(text);
                 if (text.Contains("guest", StringComparison.InvariantCultureIgnoreCase))
                 {
                     guestRow = roleItem;

@@ -20,11 +20,12 @@ namespace BTCPayServer.Migrations
                                  -- noinspection SqlWithoutWhere
                                  UPDATE "WebhookDeliveries" SET "DeliveryTime" = "Timestamp";
                                  """);
-        }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
+            // When we delete a webhook, in cascade to webhook delivery, then to invoice webhook delivery.
+            // If we don't have an index there, the deletion of a webhook may time out.
+            migrationBuilder.Sql("""
+                                 CREATE INDEX IF NOT EXISTS "IX_InvoiceWebhookDeliveries_DeliveryId" ON "InvoiceWebhookDeliveries" ("DeliveryId");
+                                 """);
         }
     }
 }

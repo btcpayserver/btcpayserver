@@ -257,13 +257,13 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain("Pay123", await s.Page.ContentAsync());
             await s.Page.ClickAsync("#StatusOptionsToggle");
             await s.Page.ClickAsync("#StatusOptionsIncludeArchived");
-            Assert.Contains("Pay123", await s.Page.ContentAsync());
+            await Expect(s.Page.Locator($"#Edit-{payReqId}")).ToHaveTextAsync("Pay123");
 
             // unarchive (from list)
             await s.Page.ClickAsync($"#ToggleActions-{payReqId}");
             await s.Page.ClickAsync($"#ToggleArchival-{payReqId}");
             await s.FindAlertMessage(partialText: "The payment request has been unarchived");
-            Assert.Contains("Pay123", await s.Page.ContentAsync());
+            await Expect(s.Page.Locator($"#Edit-{payReqId}")).ToHaveTextAsync("Pay123");
 
             // payment
             await s.GoToUrl(viewUrl);

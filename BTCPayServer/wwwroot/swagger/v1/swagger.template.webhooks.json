@@ -433,7 +433,17 @@
                     "timestamp": {
                         "type": "number",
                         "nullable": false,
-                        "description": "Timestamp of when the delivery got broadcasted",
+                        "description": "Timestamp of when the delivery should have been broadcasted",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
+                    },
+                    "deliveryTime": {
+                        "type": "number",
+                        "nullable": false,
+                        "description": "Timestamp of when the delivery has actually been broadcasted. A delay with `timestamp` means your service either failed to process earlier deliveries or is taking too long to respond.",
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/UnixTimestamp"

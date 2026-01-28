@@ -966,6 +966,10 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("text")
                         .HasColumnName("id");
 
+                    b.Property<string>("Color")
+                        .HasColumnType("text")
+                        .HasColumnName("color");
+
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasColumnType("text")
@@ -975,10 +979,6 @@ namespace BTCPayServer.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("type");
-
-                    b.Property<string>("Color")
-                        .HasColumnType("text")
-                        .HasColumnName("color");
 
                     b.Property<uint>("XMin")
                         .IsConcurrencyToken()
@@ -1868,6 +1868,9 @@ namespace BTCPayServer.Migrations
 
                     b.Property<string>("Blob")
                         .HasColumnType("JSONB");
+
+                    b.Property<DateTimeOffset>("DeliveryTime")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("Pruned")
                         .HasColumnType("boolean");

@@ -273,11 +273,10 @@ namespace BTCPayServer.Tests
             {
                 await s.Page.ClickAsync("#bip21parse");
             });
-
+            await AssertDestinationFilled(s, bip21);
             await s.Page.FillAsync("#Outputs_0__Amount", "0.023");
-
+            await s.TakeScreenshot("filled.png");
             await s.Page.ClickAsync("#SignTransaction");
-
             await s.Server.WaitForEvent<NewOnChainTransactionEvent>(async () =>
             {
                 try
@@ -299,6 +298,12 @@ namespace BTCPayServer.Tests
                 Assert.Equal(InvoiceStatus.Processing, invoice.Status);
                 Assert.Equal(0.023m, invoice.Price);
             });
+        }
+
+        private static async Task AssertDestinationFilled(PlaywrightTester s, string bip21)
+        {
+            var bitcoinUrl = new BitcoinUrlBuilder(bip21!, Network.RegTest);
+            await Expect(s.Page.Locator("#Outputs_0__DestinationAddress")).ToHaveValueAsync(bitcoinUrl.Address!.ToString());
         }
 
         [Fact]
@@ -343,7 +348,7 @@ namespace BTCPayServer.Tests
                 {
                     await s.Page.ClickAsync("#bip21parse");
                 });
-
+                await AssertDestinationFilled(s, bip21Url);
                 await Expect(s.Page.Locator("#PayJoinBIP21")).Not.ToHaveValueAsync("");
                 await s.Page.ClickAsync("#SignTransaction");
                 await s.Server.WaitForEvent<NewOnChainTransactionEvent>(async () =>
@@ -375,7 +380,7 @@ namespace BTCPayServer.Tests
                 {
                     await s.Page.ClickAsync("#bip21parse");
                 });
-
+                await AssertDestinationFilled(s, bip21);
                 await Expect(s.Page.Locator("#PayJoinBIP21")).Not.ToHaveValueAsync("");
                 await s.Page.FillAsync("#FeeSatoshiPerByte", "2");
                 await s.Page.ClickAsync("#SignTransaction");

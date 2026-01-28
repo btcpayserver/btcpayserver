@@ -211,13 +211,13 @@ namespace BTCPayServer.Tests
             var response = await httpClient.GetAsync("https://api.github.com/repos/btcpayserver/btcpayserver-translator/contents/translations");
             response.EnsureSuccessStatusCode();
             var files = JArray.Parse(await response.Content.ReadAsStringAsync());
-            
+
             var availableLanguages = files
                 .Where(f => f["name"].Value<string>().EndsWith(".json"))
                 .Select(f => System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase(f["name"].Value<string>().Replace(".json", "")))
                 .OrderBy(l => l)
                 .ToList();
-            
+
             var soldir = TestUtils.TryGetSolutionDirectoryInfo();
             var cshtmlContent = File.ReadAllText(Path.Combine(soldir.FullName, "BTCPayServer/Views/UIServer/ListDictionaries.cshtml"));
             var hardcodedLanguages = Regex.Matches(cshtmlContent, @"<option value=""([^""]+)"">")
@@ -226,11 +226,11 @@ namespace BTCPayServer.Tests
                 .Where(v => v != "")
                 .OrderBy(l => l)
                 .ToList();
-            
+
             var missingLanguages = availableLanguages.Except(hardcodedLanguages).ToList();
             var extraLanguages = hardcodedLanguages.Except(availableLanguages).ToList();
-            
-            Assert.True(!missingLanguages.Any() && !extraLanguages.Any(), 
+
+            Assert.True(!missingLanguages.Any() && !extraLanguages.Any(),
                 $"Language packs list is out of date.\n" +
                 (missingLanguages.Any() ? $"Missing: {string.Join(", ", missingLanguages)}\n" : "") +
                 (extraLanguages.Any() ? $"Extra: {string.Join(", ", extraLanguages)}\n" : "") +
@@ -356,6 +356,34 @@ namespace BTCPayServer.Tests
                     Keys.Add(name);
                     InAttribute = false;
                 }
+            }
+        }
+
+
+        /// <summary>
+        /// Pre-release check to ensure UpdateDefaultTranslations has been run
+        /// </summary>
+        [Trait("PreReleaseCheck", "PreReleaseCheck")]
+        [Fact]
+        public async Task CheckDefaultTranslationsUpToDate()
+        {
+            var soldir = TestUtils.TryGetSolutionDirectoryInfo();
+            var path = Path.Combine(soldir.FullName, "BTCPayServer/Services/Translations.Default.cs");
+            var originalContent = await File.ReadAllTextAsync(path);
+
+            try
+            {
+                await UpdateDefaultTranslations();
+
+                // Check if file was modified
+                var newContent = await File.ReadAllTextAsync(path);
+                Assert.True(originalContent == newContent,
+                    "Default translations are out of date. Please run the UpdateDefaultTranslations test before building docker images.\n" +
+                    "You can run it with: dotnet test --filter \"FullyQualifiedName~UpdateDefaultTranslations\"");
+            }
+            finally
+            {
+                await File.WriteAllTextAsync(path, originalContent);
             }
         }
 

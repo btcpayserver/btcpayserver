@@ -25,19 +25,20 @@ public class SubscriberWebhookProvider : WebhookTriggerProvider<SubscriptionEven
             ["Name"] = evt.Subscriber.Offering.App.Name,
             ["Id"] = evt.Subscriber.Offering.Id,
             ["AppId"] = evt.Subscriber.Offering.AppId,
-            ["Metadata"] = evt.Subscriber.Offering.Metadata,
+            ["Metadata"] = JObject.Parse(evt.Subscriber.Offering.Metadata),
         };
         model["Subscriber"] = new JObject()
         {
             ["Phase"] = evt.Subscriber.Phase.ToString(),
             // TODO: When the subscriber can customize the email, also check it!
-            ["Email"] = evt.Subscriber.Customer.Email.Get()
+            ["Email"] = evt.Subscriber.Customer.Email.Get(),
+            ["Metadata"] = JObject.Parse(evt.Subscriber.Metadata)
         };
         model["Customer"] = new JObject()
         {
             ["ExternalRef"] = evt.Subscriber.Customer.ExternalRef ?? "",
             ["Name"] = evt.Subscriber.Customer.Name,
-            ["Metadata"] = evt.Subscriber.Customer.Metadata
+            ["Metadata"] = JObject.Parse(evt.Subscriber.Customer.Metadata)
         };
         return model;
     }

@@ -82,6 +82,7 @@ public class SubscriptionsPlugin : BaseBTCPayServerPlugin
             new("{Offering.Metadata}*", "Offering metadata"),
             new("{Subscriber.Phase}", "Subscriber phase (Trial, Normal, Grace, Expired)"),
             new("{Subscriber.Email}", "Subscriber email"),
+            new("{Subscriber.Metadata}*", "Subscriber metadata"),
             new("{Customer.ExternalRef}", "Customer external reference"),
             new("{Customer.Name}", "Customer name"),
             new("{Customer.Metadata}*", "Customer metadata")

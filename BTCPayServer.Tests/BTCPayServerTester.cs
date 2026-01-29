@@ -10,7 +10,10 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
+using BTCPayServer.Controllers;
 using BTCPayServer.Hosting;
+using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
@@ -272,11 +275,36 @@ namespace BTCPayServer.Tests
         MockRateProvider coinAverageMock;
         private async Task WaitSiteIsOperational()
         {
-            _ = HttpClient.GetAsync("/").ConfigureAwait(false);
-            using var cts = new CancellationTokenSource(20_000);
-            var syncing = WaitIsFullySynched(cts.Token);
-            await Task.WhenAll(syncing).ConfigureAwait(false);
             // Opportunistic call to wake up view compilation in debug mode, we don't need to await.
+            _ = HttpClient.GetAsync("/").ConfigureAwait(false);
+            try
+            {
+                using var cts = new CancellationTokenSource(20_000);
+                await WaitIsFullySynched(cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // Sometimes NBX needs a kick...
+                await MineOneBlock();
+                using var cts = new CancellationTokenSource(20_000);
+                await WaitIsFullySynched(cts.Token);
+            }
+        }
+
+        private async Task MineOneBlock()
+        {
+            var cheatModes = GetService<IEnumerable<ICheckoutCheatModeExtension>>();
+            foreach (var cheatMode in cheatModes.OfType<BitcoinCheckoutCheatModeExtension>())
+            {
+                try
+                {
+                    await cheatMode.MineBlock(new ICheckoutCheatModeExtension.MineBlockContext()
+                    {
+                        BlockCount = 1
+                    });
+                }
+                catch { }
+            }
         }
 
         private async Task WaitIsFullySynched(CancellationToken cancellationToken)
@@ -285,6 +313,7 @@ namespace BTCPayServer.Tests
             while (!o.All(d => d.AllAvailable()))
             {
                 await Task.Delay(10, cancellationToken).ConfigureAwait(false);
+
             }
         }
 

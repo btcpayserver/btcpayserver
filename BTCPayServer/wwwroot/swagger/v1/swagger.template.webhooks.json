@@ -575,7 +575,7 @@
                                 "items": {
                                     "type": "string"
                                 },
-                                "description": "If `everything` is false, the specific events that the endpoint is interested in. Current events are: `InvoiceCreated`, `InvoiceReceivedPayment`, `InvoiceProcessing`, `InvoiceExpired`, `InvoiceSettled`, `InvoiceInvalid`.",
+                                "description": "If `everything` is false, the specific events that the endpoint is interested in. Current events are: `InvoiceCreated`, `InvoiceReceivedPayment`, `InvoiceProcessing`, `InvoiceExpired`, `InvoiceSettled`, `InvoiceInvalid`, `InvoicePaymentSettled`, `PaymentRequestCreated`, `PaymentRequestUpdated`, `PaymentRequestArchived`, `PaymentRequestStatusChanged`, `PayoutCreated`, `PayoutApproved`, `PayoutUpdated`, `SubscriberCreated`, `SubscriberCredited`, `SubscriberCharged`, `SubscriberActivated`, `SubscriberPhaseChanged`, `SubscriberDisabled`, `PaymentReminder`, `PlanStarted`, `SubscriberNeedUpgrade`.",
                                 "nullable": false
                             }
                         }
@@ -609,7 +609,7 @@
                     "type": {
                         "type": "string",
                         "nullable": false,
-                        "description": "The type of this event, current available are `InvoiceCreated`, `InvoiceReceivedPayment`, `InvoiceProcessing`, `InvoiceExpired`, `InvoiceSettled`, `InvoiceInvalid`, and `InvoicePaymentSettled`."
+                        "description": "The type of this event, current available are `InvoiceCreated`, `InvoiceReceivedPayment`, `InvoiceProcessing`, `InvoiceExpired`, `InvoiceSettled`, `InvoiceInvalid`, `InvoicePaymentSettled`, `PaymentRequestCreated`, `PaymentRequestUpdated`, `PaymentRequestArchived`, `PaymentRequestStatusChanged`, `PayoutCreated`, `PayoutApproved`, `PayoutUpdated`, `SubscriberCreated`, `SubscriberCredited`, `SubscriberCharged`, `SubscriberActivated`, `SubscriberPhaseChanged`, `SubscriberDisabled`, `PaymentReminder`, `PlanStarted`, and `SubscriberNeedUpgrade`."
                     },
                     "timestamp": {
                         "description": "The timestamp when this delivery has been created",

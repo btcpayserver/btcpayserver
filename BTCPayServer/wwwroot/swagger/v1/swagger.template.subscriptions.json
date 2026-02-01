@@ -1061,15 +1061,7 @@
                         "description": "Plan scheduled for next billing cycle."
                     },
                     "phase": {
-                        "type": "string",
-                        "description": "Lifecycle phase of the subscription.",
-                        "enum": [
-                            "Trial",
-                            "Normal",
-                            "Grace",
-                            "Expired"
-                        ],
-                        "example": "Normal"
+                        "$ref": "#/components/schemas/SubscriptionPhase"
                     }
                 }
             },
@@ -1285,6 +1277,17 @@
                     }
                 }
             },
+            "SubscriptionPhase": {
+                "type": "string",
+                "description": "Lifecycle phase of the subscription.",
+                "enum": [
+                    "Trial",
+                    "Normal",
+                    "Grace",
+                    "Expired"
+                ],
+                "example": "Normal"
+            },
             "FeatureModel": {
                 "type": "object",
                 "description": "Represents a feature that can be included in an offering or plan.",
@@ -1392,6 +1395,552 @@
                         "additionalProperties": true,
                         "example": {
                             "tier": "standard"
+                        }
+                    }
+                }
+            },
+            "WebhookSubscriptionEvent": {
+                "description": "Base data for subscription webhooks.",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/WebhookEvent"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "storeId": {
+                                "type": "string",
+                                "description": "The store id of the subscription's event",
+                                "nullable": false,
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/StoreId"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
+            },
+            "WebhookSubscriberEvent": {
+                "description": "Callback sent for subscription events tied to a subscriber.",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/WebhookSubscriptionEvent"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "subscriber": {
+                                "$ref": "#/components/schemas/SubscriberModel",
+                                "description": "Subscriber associated with the event."
+                            }
+                        }
+                    }
+                ]
+            },
+            "WebhookSubscriberCreditedEvent": {
+                "description": "Callback sent if the `type` is `SubscriberCredited`",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/WebhookSubscriberEvent"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "total": {
+                                "type": "string",
+                                "format": "decimal",
+                                "description": "Subscriber's total credit after the adjustment.",
+                                "example": "110.00"
+                            },
+                            "amount": {
+                                "type": "string",
+                                "format": "decimal",
+                                "description": "Amount credited to the subscriber.",
+                                "example": "10.00"
+                            },
+                            "currency": {
+                                "type": "string",
+                                "description": "Currency of the credit adjustment.",
+                                "example": "USD"
+                            }
+                        }
+                    }
+                ]
+            },
+            "WebhookSubscriberChargedEvent": {
+                "description": "Callback sent if the `type` is `SubscriberCharged`",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/WebhookSubscriberEvent"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "total": {
+                                "type": "string",
+                                "format": "decimal",
+                                "description": "Subscriber's total credit after the charge.",
+                                "example": "90.00"
+                            },
+                            "amount": {
+                                "type": "string",
+                                "format": "decimal",
+                                "description": "Amount charged from the subscriber.",
+                                "example": "10.00"
+                            },
+                            "currency": {
+                                "type": "string",
+                                "description": "Currency of the charge.",
+                                "example": "USD"
+                            }
+                        }
+                    }
+                ]
+            },
+            "WebhookSubscriberPhaseChangedEvent": {
+                "description": "Callback sent if the `type` is `SubscriberPhaseChanged`",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/WebhookSubscriberEvent"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "previousPhase": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/SubscriptionPhase"
+                                    }
+                                ],
+                                "description": "Previous subscription phase.",
+                                "example": "Trial"
+                            },
+                            "currentPhase": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/SubscriptionPhase"
+                                    }
+                                ],
+                                "description": "Current subscription phase.",
+                                "example": "Normal"
+                            }
+                        }
+                    }
+                ]
+            },
+            "WebhookPlanStartedEvent": {
+                "description": "Callback sent if the `type` is `PlanStarted`",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/WebhookSubscriberEvent"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "autoRenew": {
+                                "type": "boolean",
+                                "description": "Whether the plan got renewed automatically."
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "x-webhooks": {
+        "SubscriberCreated": {
+            "post": {
+                "operationId": "Webhook_SubscriberCreated",
+                "summary": "SubscriberCreated",
+                "description": "A new subscriber has been created",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Subscriptions",
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookSubscriberEvent"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "SubscriberCredited": {
+            "post": {
+                "operationId": "Webhook_SubscriberCredited",
+                "summary": "SubscriberCredited",
+                "description": "A subscriber has been credited",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Subscriptions",
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookSubscriberCreditedEvent"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "SubscriberCharged": {
+            "post": {
+                "operationId": "Webhook_SubscriberCharged",
+                "summary": "SubscriberCharged",
+                "description": "A subscriber has been charged",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Subscriptions",
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookSubscriberChargedEvent"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "SubscriberActivated": {
+            "post": {
+                "operationId": "Webhook_SubscriberActivated",
+                "summary": "SubscriberActivated",
+                "description": "A subscriber has been activated",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Subscriptions",
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookSubscriberEvent"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "SubscriberPhaseChanged": {
+            "post": {
+                "operationId": "Webhook_SubscriberPhaseChanged",
+                "summary": "SubscriberPhaseChanged",
+                "description": "A subscriber's phase has changed",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Subscriptions",
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookSubscriberPhaseChangedEvent"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "SubscriberDisabled": {
+            "post": {
+                "operationId": "Webhook_SubscriberDisabled",
+                "summary": "SubscriberDisabled",
+                "description": "A subscriber has been disabled",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Subscriptions",
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookSubscriberEvent"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "PaymentReminder": {
+            "post": {
+                "operationId": "Webhook_PaymentReminder",
+                "summary": "PaymentReminder",
+                "description": "A subscriber payment reminder has been sent",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Subscriptions",
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookSubscriberEvent"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "PlanStarted": {
+            "post": {
+                "operationId": "Webhook_PlanStarted",
+                "summary": "PlanStarted",
+                "description": "A subscriber plan has started",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Subscriptions",
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookPlanStartedEvent"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "SubscriberNeedUpgrade": {
+            "post": {
+                "operationId": "Webhook_SubscriberNeedUpgrade",
+                "summary": "SubscriberNeedUpgrade",
+                "description": "A subscriber needs to upgrade their plan",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Subscriptions",
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookSubscriberEvent"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
                         }
                     }
                 }

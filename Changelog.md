@@ -23,6 +23,7 @@
 ### Miscellaneous
 
 * Test suite migrated from Selenium to Playwright @Abhijay007
+* Add docs for subscriptions webhooks (#7149 #7152) @NicolasDorier
 
 ## 2.3.3
 

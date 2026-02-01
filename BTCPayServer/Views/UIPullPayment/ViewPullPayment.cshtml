@@ -33,7 +33,7 @@
 </head>
 <body class="min-vh-100">
     <div id="app" class="d-flex flex-column min-vh-100 pb-l">
-        @if (Model.IsPending)
+        @if (Model.IsPending && !Model.Archived)
         {
             <nav class="btcpay-header navbar sticky-top py-3 py-lg-4 d-print-none">
                 <div class="container gap-3">

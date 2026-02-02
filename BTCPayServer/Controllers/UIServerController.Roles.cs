@@ -7,6 +7,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
@@ -42,23 +43,30 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("server/roles/{role}")]
-        public async Task<IActionResult> CreateOrEditRole(string role)
+        public async Task<IActionResult> CreateOrEditRole(string role, [FromServices] IPluginPermissionRegistry pluginPermissionRegistry = null)
         {
+            var viewModel = new UpdateRoleViewModel();
+            
+            // Populate plugin permissions from registry
+            if (pluginPermissionRegistry != null)
+            {
+                viewModel.PluginPermissions = pluginPermissionRegistry.GetAllPluginPermissions().ToList();
+            }
+            
             if (role == "create")
             {
                 ModelState.Remove(nameof(role));
-                return View(new UpdateRoleViewModel());
+                return View(viewModel);
             }
 
             var roleData = await _StoreRepository.GetStoreRole(new StoreRoleId(role));
             if (roleData == null)
                 return NotFound();
 
-            return View(new UpdateRoleViewModel
-            {
-                Policies = roleData.Permissions,
-                Role = roleData.Role
-            });
+            viewModel.Policies = roleData.Permissions;
+            viewModel.Role = roleData.Role;
+            
+            return View(viewModel);
         } 
 
         [HttpPost("server/roles/{role}")]
@@ -172,4 +180,6 @@ public class UpdateRoleViewModel
     public string Role { get; set; }
 
     [Display(Name = "Policies")] public List<string> Policies { get; set; } = new();
+    
+    public List<BTCPayServer.Abstractions.Contracts.PluginPermission> PluginPermissions { get; set; } = new();
 }

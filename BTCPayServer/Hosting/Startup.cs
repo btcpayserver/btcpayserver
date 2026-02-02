@@ -111,6 +111,9 @@ namespace BTCPayServer.Hosting
             services.AddBTCPayServer(Configuration, Logs);
             services.AddProviderStorage();
             services.AddSession();
+            
+            // Register plugin permission registry
+            services.AddSingleton<BTCPayServer.Services.IPluginPermissionRegistry, BTCPayServer.Services.PluginPermissionRegistry>();
             services.AddSignalR().AddNewtonsoftJsonProtocol(options =>
             {
                 NBitcoin.JsonConverters.Serializer.RegisterFrontConverters(options.PayloadSerializerSettings);
@@ -363,6 +366,40 @@ namespace BTCPayServer.Hosting
                 endpoints.MapControllerRoute("default", "{controller:validate=UIHome}/{action:lowercase=Index}/{id?}");
             });
             app.UsePlugins();
+            
+            // Initialize plugin permissions after plugins are loaded
+            var pluginRegistry = prov.GetService<BTCPayServer.Services.IPluginPermissionRegistry>();
+            if (pluginRegistry != null)
+            {
+                var pluginProviders = prov.GetServices<BTCPayServer.Abstractions.Contracts.IPluginPermissionProvider>().ToList();
+                Logs.Configuration.LogInformation($"Found {pluginProviders.Count} plugin permission providers");
+                
+                foreach (var provider in pluginProviders)
+                {
+                    try
+                    {
+                        var permissions = provider.GetPermissions();
+                        var permissionsList = permissions.ToList();
+                        Logs.Configuration.LogInformation($"Registering {permissionsList.Count} permissions from {provider.GetType().Name}");
+                        pluginRegistry.RegisterPermissions(permissionsList);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logs.Configuration.LogError(ex, $"Error registering permissions from plugin provider: {provider.GetType().Name}");
+                    }
+                }
+                
+                // Set the registry in Policies class for permission validation and display names
+                BTCPayServer.Client.Policies.SetPluginRegistry(pluginRegistry);
+                
+                // Force PolicyMap reinitialization to include plugin permissions
+                var policyMapField = typeof(BTCPayServer.Client.Permission).GetField("PolicyMap", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                if (policyMapField != null)
+                {
+                    policyMapField.SetValue(null, null);
+                    _ = BTCPayServer.Client.Permission.PolicyMap; // Trigger reinitialization
+                }
+            }
         }
 
         private static void LongCache(Microsoft.AspNetCore.StaticFiles.StaticFileResponseContext ctx)

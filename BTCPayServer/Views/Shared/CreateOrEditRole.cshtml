@@ -69,6 +69,26 @@
                     }
                 }
             </div>
+            
+            @* Plugin Permissions Section *@
+            @if (Model.PluginPermissions != null && Model.PluginPermissions.Any())
+            {
+                <h5 class="mt-4 mb-3">Plugin Permissions</h5>
+                <div class="list-group mb-2">
+                    @foreach (var pluginPermission in Model.PluginPermissions)
+                    {
+                        var isChecked = Model.Policies?.Contains(pluginPermission.Policy) ?? false;
+                        <div class="form-check mb-0">
+                            <input type="checkbox" class="form-check-input policy-cb" checked="@isChecked" value="@pluginPermission.Policy" id="Policy-@pluginPermission.Policy.Replace(".", "_")" />
+                            <label class="h5 fw-semibold form-check-label mb-1" for="Policy-@pluginPermission.Policy.Replace(".", "_")" data-bs-toggle="tooltip" title="@pluginPermission.Policy">
+                                @pluginPermission.DisplayName
+                            </label>
+                            <p class="text-muted">@pluginPermission.Description</p>
+                        </div>
+                    }
+                </div>
+            }
+            
             <span asp-validation-for="Policies" class="text-danger"></span>
         </div>
     </div>
@@ -79,10 +99,27 @@
     {
         <div class="form-check mb-0">
             <input type="checkbox" class="form-check-input policy-cb" checked="@isChecked" value="@policy.Key" id="Policy-@policy.Key.Replace(".", "_")" />
+            @{
+                string title;
+                string description;
+                
+                // Check if this is a plugin permission or core permission
+                if (UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey(policy.Key))
+                {
+                    title = UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions[policy.Key].Title;
+                    description = UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions[policy.Key].Description;
+                }
+                else
+                {
+                    // Plugin permission - use Policies.DisplayName which handles plugin permissions
+                    title = Policies.DisplayName(policy.Key);
+                    description = policy.Key; // Use policy string as description for now
+                }
+            }
             <label class="h5 fw-semibold form-check-label mb-1" for="Policy-@policy.Key.Replace(".", "_")" data-bs-toggle="tooltip" title="@policy.Key">
-                @UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions[policy.Key].Title
+                @title
             </label>
-            <p class="text-muted">@UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions[policy.Key].Description</p>
+            <p class="text-muted">@description</p>
             @if (policy.Value?.Any() is true)
             {
                 <div class="list-group">

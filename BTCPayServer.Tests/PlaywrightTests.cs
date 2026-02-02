@@ -45,6 +45,88 @@ namespace BTCPayServer.Tests
     [Collection(nameof(NonParallelizableCollectionDefinition))]
     public class PlaywrightTests(ITestOutputHelper helper) : UnitTestBase(helper)
     {
+
+        [Fact]
+        public async Task ServerRolesLinkedCorrectlyFromStoreRolesPage()
+        {
+            await using var s = CreatePlaywrightTester(newDb: true);
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            var (_, storeId) = await s.CreateNewStore();
+
+            // Navigate to store roles page
+            await s.GoToStore(StoreNavPages.Roles);
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+
+            // Create a custom store role first
+            await s.ClickPagePrimary(); // Click "Add Role" button
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+
+            var customRoleName = "CustomStoreRole";
+            await s.Page.FillAsync("input[name='Role']", customRoleName);
+
+            // Wait for permissions to load and select some permissions for the custom role
+            var firstPermissionCheckbox = s.Page.Locator("input.policy-cb").First;
+            await Expect(firstPermissionCheckbox).ToBeVisibleAsync();
+            await firstPermissionCheckbox.CheckAsync();
+
+            // Save the custom role
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "Role created");
+
+            // Now we should be back on the roles list page
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+
+            // Test 1: Verify custom store role links to store roles URL
+            var customRoleRow = s.Page.Locator($"tr:has-text('{customRoleName}')");
+            await Expect(customRoleRow).ToBeVisibleAsync();
+
+            // Verify it has "Store-level" badge
+            var storeLevelBadge = customRoleRow.Locator("span.badge.bg-light:has-text('Store-level')");
+            await Expect(storeLevelBadge).ToBeVisibleAsync();
+
+            // Click Edit on custom store role
+            var customRoleEditLink = customRoleRow.Locator("a:has-text('Edit')");
+            await customRoleEditLink.ClickAsync();
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+
+            var customRoleUrl = s.Page.Url;
+            Assert.Contains($"/stores/{storeId}/roles/{customRoleName}", customRoleUrl);
+            Assert.DoesNotContain("/server/roles/", customRoleUrl);
+
+            // Go back to roles list
+            await s.GoToStore(StoreNavPages.Roles);
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+
+            // Test 2: Verify server-wide role links to server roles URL
+            var serverRoleBadge = s.Page.Locator("span.badge.bg-dark:has-text('Server-wide')").First;
+            await Expect(serverRoleBadge).ToBeVisibleAsync();
+
+            // Get the row containing the server-wide role
+            var serverRoleRow = s.Page.Locator("tr:has(span.badge.bg-dark:has-text('Server-wide'))").First;
+
+            // Click the Edit link for this server role
+            var serverRoleEditLink = serverRoleRow.Locator("a:has-text('Edit')");
+            await serverRoleEditLink.ClickAsync();
+
+            // Verify we're redirected to server roles page, not store roles page
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+            var serverRoleUrl = s.Page.Url;
+
+            // URL should be /server/roles/{roleName}, not /stores/{storeId}/roles/{roleName}
+            Assert.Contains("/server/roles/", serverRoleUrl);
+            Assert.DoesNotContain($"/stores/{storeId}/roles/", serverRoleUrl);
+
+            // Verify we can see the permissions form
+            var permissionsForm = s.Page.Locator("form");
+            await Expect(permissionsForm).ToBeVisibleAsync();
+
+            // Verify we have permission checkboxes
+            var permissionCheckboxes = s.Page.Locator("input.policy-cb");
+            var count = await permissionCheckboxes.CountAsync();
+            Assert.True(count > 0, "Should have permission checkboxes on server roles page");
+        }
+
         [Fact]
         public async Task CanNavigateServerSettings()
         {

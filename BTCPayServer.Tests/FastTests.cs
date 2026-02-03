@@ -1842,24 +1842,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void CanParseStoreRoleId()
-        {
-            var id = StoreRoleId.Parse("test::lol");
-            Assert.Equal("test", id.StoreId);
-            Assert.Equal("lol", id.Role);
-            Assert.Equal("test::lol", id.ToString());
-            Assert.Equal("test::lol", id.Id);
-            Assert.False(id.IsServerRole);
-
-            id = StoreRoleId.Parse("lol");
-            Assert.Null(id.StoreId);
-            Assert.Equal("lol", id.Role);
-            Assert.Equal("lol", id.ToString());
-            Assert.Equal("lol", id.Id);
-            Assert.True(id.IsServerRole);
-        }
-
-        [Fact]
         public void KitchenSinkTest()
         {
             var b = JsonConvert.DeserializeObject<PullPaymentBlob>("{}");

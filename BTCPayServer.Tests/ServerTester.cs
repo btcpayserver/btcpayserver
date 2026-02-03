@@ -17,6 +17,8 @@ using NBitpayClient;
 using NBXplorer;
 using System.Threading;
 using BTCPayServer.Events;
+using BTCPayServer.Hosting;
+using BTCPayServer.Services;
 
 namespace BTCPayServer.Tests
 {
@@ -75,6 +77,13 @@ namespace BTCPayServer.Tests
             PayTester.SSHKeyFile = GetEnvironment("TESTS_SSHKEYFILE", "");
             PayTester.SSHConnection = GetEnvironment("TESTS_SSHCONNECTION", "root@127.0.0.1:21622");
             PayTester.SocksEndpoint = GetEnvironment("TESTS_SOCKSENDPOINT", "localhost:9050");
+        }
+
+        public async Task RestartMigration()
+        {
+            var settings = PayTester.GetService<SettingsRepository>();
+            await settings.UpdateSetting<MigrationSettings>(new MigrationSettings());
+            await PayTester.RestartStartupTask<MigrationStartupTask>();
         }
 
         public string Scope { get; set; }

@@ -2712,12 +2712,12 @@ namespace BTCPayServer.Tests
             await s.Page.ClickAsync("#ConfirmContinue");
             await s.FindAlertMessage();
 
+            await s.GoToStore();
             await s.GoToStore(StoreNavPages.Roles);
             await s.ClickPagePrimary();
 
-            Assert.Contains("Create role", await s.Page.ContentAsync());
-            await s.ClickPagePrimary();
             await s.Page.Locator("#Role").FillAsync("store role");
+            await s.Page.Locator("input.policy-cb").First.CheckAsync();
             await s.ClickPagePrimary();
             await s.FindAlertMessage();
 

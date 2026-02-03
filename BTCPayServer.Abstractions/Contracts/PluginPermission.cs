@@ -3,17 +3,6 @@ using System.Collections.Generic;
 namespace BTCPayServer.Abstractions.Contracts;
 
 /// <summary>
-/// Interface for plugins to provide custom permissions that can be assigned to roles
-/// </summary>
-public interface IPluginPermissionProvider
-{
-    /// <summary>
-    /// Returns the list of permissions provided by this plugin
-    /// </summary>
-    IEnumerable<PluginPermission> GetPermissions();
-}
-
-/// <summary>
 /// Represents a permission provided by a plugin
 /// </summary>
 public class PluginPermission

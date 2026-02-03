@@ -371,22 +371,17 @@ namespace BTCPayServer.Hosting
             var pluginRegistry = prov.GetService<BTCPayServer.Services.IPluginPermissionRegistry>();
             if (pluginRegistry != null)
             {
-                var pluginProviders = prov.GetServices<BTCPayServer.Abstractions.Contracts.IPluginPermissionProvider>().ToList();
-                Logs.Configuration.LogInformation($"Found {pluginProviders.Count} plugin permission providers");
+                var pluginPermissions = prov.GetServices<BTCPayServer.Abstractions.Contracts.PluginPermission>().ToList();
+                Logs.Configuration.LogInformation($"Found {pluginPermissions.Count} plugin permissions");
                 
-                foreach (var provider in pluginProviders)
+                try
                 {
-                    try
-                    {
-                        var permissions = provider.GetPermissions();
-                        var permissionsList = permissions.ToList();
-                        Logs.Configuration.LogInformation($"Registering {permissionsList.Count} permissions from {provider.GetType().Name}");
-                        pluginRegistry.RegisterPermissions(permissionsList);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logs.Configuration.LogError(ex, $"Error registering permissions from plugin provider: {provider.GetType().Name}");
-                    }
+                    pluginRegistry.RegisterPermissions(pluginPermissions);
+                    Logs.Configuration.LogInformation($"Registered {pluginPermissions.Count} plugin permissions");
+                }
+                catch (Exception ex)
+                {
+                    Logs.Configuration.LogError(ex, "Error registering plugin permissions");
                 }
                 
                 // Set the registry in Policies class for permission validation and display names

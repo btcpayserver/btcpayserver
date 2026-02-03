@@ -45,6 +45,65 @@ namespace BTCPayServer.Tests
     [Collection(nameof(NonParallelizableCollectionDefinition))]
     public class PlaywrightTests(ITestOutputHelper helper) : UnitTestBase(helper)
     {
+
+        [Fact]
+        public async Task ServerRolesLinkedCorrectlyFromStoreRolesPage()
+        {
+            await using var s = CreatePlaywrightTester(newDb: true);
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            var (_, storeId) = await s.CreateNewStore();
+
+            // Navigate to store roles page
+            await s.GoToStore(StoreNavPages.Roles);
+
+            // Create a custom store role first
+            await s.ClickPagePrimary(); // Click "Add Role" button
+
+            var customRoleName = "CustomStoreRole";
+            await s.Page.FillAsync("input[name='Role']", customRoleName);
+
+            // Select some permissions for the custom role
+            await s.Page.Locator("input.policy-cb").First.CheckAsync();
+
+            // Save the custom role
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "Role created");
+
+            // Test 1: Verify custom store role links to store roles URL
+            var customRoleRow = s.Page.Locator($"tr:has-text('{customRoleName}')");
+
+            // Verify it has "Store-level" badge
+            await Expect(customRoleRow.Locator("span.badge.bg-light:has-text('Store-level')")).ToBeVisibleAsync();
+
+            // Click Edit on custom store role
+            await customRoleRow.Locator("a:has-text('Edit')").ClickAsync();
+
+            var customRoleUrl = s.Page.Url;
+            Assert.Contains($"/stores/{storeId}/roles/{customRoleName}", customRoleUrl);
+            Assert.DoesNotContain("/server/roles/", customRoleUrl);
+
+            // Go back to roles list
+            await s.GoToStore(StoreNavPages.Roles);
+
+            // Test 2: Verify server-wide role links to server roles URL
+            // Click the Edit link for the first server-wide role
+            await s.Page.Locator("tr:has(span.badge.bg-dark:has-text('Server-wide'))").First.Locator("a:has-text('Edit')").ClickAsync();
+
+            // Verify we're redirected to server roles page, not store roles page
+            var serverRoleUrl = s.Page.Url;
+
+            // URL should be /server/roles/{roleName}, not /stores/{storeId}/roles/{roleName}
+            Assert.Contains("/server/roles/", serverRoleUrl);
+            Assert.DoesNotContain($"/stores/{storeId}/roles/", serverRoleUrl);
+
+            // Verify we can see the permissions form
+            await Expect(s.Page.Locator("form")).ToBeVisibleAsync();
+
+            // Verify we have permission checkboxes
+            await Expect(s.Page.Locator("input.policy-cb")).Not.ToHaveCountAsync(0);
+        }
+
         [Fact]
         public async Task CanNavigateServerSettings()
         {
@@ -2653,12 +2712,12 @@ namespace BTCPayServer.Tests
             await s.Page.ClickAsync("#ConfirmContinue");
             await s.FindAlertMessage();
 
+            await s.GoToStore();
             await s.GoToStore(StoreNavPages.Roles);
             await s.ClickPagePrimary();
 
-            Assert.Contains("Create role", await s.Page.ContentAsync());
-            await s.ClickPagePrimary();
             await s.Page.Locator("#Role").FillAsync("store role");
+            await s.Page.Locator("input.policy-cb").First.CheckAsync();
             await s.ClickPagePrimary();
             await s.FindAlertMessage();
 

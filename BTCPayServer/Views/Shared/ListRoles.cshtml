@@ -25,7 +25,7 @@
 
 <div class="sticky-header">
     <h2>@ViewData["Title"]</h2>
-	<a id="page-primary" text-translate="true" class="btn btn-primary" role="button" asp-controller="@controller" asp-action="CreateOrEditRole" asp-route-role="create" asp-route-storeId="@storeId" permission="@permission">Add Role</a>
+	<a id="page-primary" text-translate="true" class="btn btn-primary" role="button" asp-controller="@(string.IsNullOrEmpty(storeId) ? "UIServer" : "UIStores")" asp-action="CreateOrEditRole" asp-route-role="create" asp-route-storeId="@storeId" permission="@permission">Add Role</a>
 </div>
 <partial name="_StatusMessage" />
 
@@ -118,8 +118,8 @@
                         {
                             <a permission="@Policies.CanModifyServerSettings" asp-action="SetDefaultRole" asp-route-role="@role.Role" asp-controller="UIServer" id="SetDefault" text-translate="true">Set as default</a>
                         }
-                        <a permission="@(role.IsServerRole && string.IsNullOrEmpty(storeId) ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="CreateOrEditRole" asp-route-storeId="@storeId" asp-route-role="@role.Role" asp-controller="@(role.IsServerRole && string.IsNullOrEmpty(storeId) ? "UIServer" : "UIStores")" text-translate="true">Edit</a>
-                        <a permission="@(role.IsServerRole && string.IsNullOrEmpty(storeId) ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="DeleteRole" asp-route-storeId="@storeId" asp-route-role="@role.Role" asp-controller="@(role.IsServerRole && string.IsNullOrEmpty(storeId) ? "UIServer" : "UIStores")" text-translate="true">Remove</a>
+                        <a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="CreateOrEditRole" asp-route-storeId="@(role.IsServerRole ? null : storeId)" asp-route-role="@role.Role" asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")" text-translate="true">Edit</a>
+                        <a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="DeleteRole" asp-route-storeId="@(role.IsServerRole ? null : storeId)" asp-route-role="@role.Role" asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")" text-translate="true">Remove</a>
                     </div>
                 </td>
             </tr>

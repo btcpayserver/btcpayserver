@@ -70,7 +70,10 @@ namespace BTCPayServer.Controllers
         } 
 
         [HttpPost("server/roles/{role}")]
-        public async Task<IActionResult> CreateOrEditRole([FromRoute] string role, UpdateRoleViewModel viewModel)
+        public async Task<IActionResult> CreateOrEditRole(
+            [FromRoute] string role, 
+            UpdateRoleViewModel viewModel,
+            [FromServices] Services.IPluginPermissionRegistry pluginPermissionRegistry = null)
         {
             string successMessage = null;
             if (role == "create")
@@ -88,6 +91,8 @@ namespace BTCPayServer.Controllers
 
             if (!ModelState.IsValid)
             {
+                if (pluginPermissionRegistry != null)
+                    viewModel.PluginPermissions = pluginPermissionRegistry.GetAllPluginPermissions().ToList();
                 return View(viewModel);
             }
 
@@ -99,6 +104,8 @@ namespace BTCPayServer.Controllers
                     Severity = StatusMessageModel.StatusSeverity.Error,
                     Message = StringLocalizer["Role could not be updated"].Value
                 });
+                if (pluginPermissionRegistry != null)
+                    viewModel.PluginPermissions = pluginPermissionRegistry.GetAllPluginPermissions().ToList();
                 return View(viewModel);
             }
 

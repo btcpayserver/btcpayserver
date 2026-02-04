@@ -80,6 +80,7 @@ public partial class UIStoresController
     public async Task<IActionResult> CreateOrEditRole(
         string storeId,
         [FromServices] StoreRepository storeRepository,
+        [FromServices] Services.IPluginPermissionRegistry pluginPermissionRegistry,
         [FromRoute] string role, UpdateRoleViewModel viewModel)
     {
         string successMessage;
@@ -101,6 +102,8 @@ public partial class UIStoresController
 
         if (!ModelState.IsValid)
         {
+            if (pluginPermissionRegistry != null)
+                viewModel.PluginPermissions = pluginPermissionRegistry.GetAllPluginPermissions().ToList();
             return View(viewModel);
         }
 
@@ -112,6 +115,8 @@ public partial class UIStoresController
                 Severity = StatusMessageModel.StatusSeverity.Error,
                 Message = StringLocalizer["Role could not be updated"].Value
             });
+            if (pluginPermissionRegistry != null)
+                viewModel.PluginPermissions = pluginPermissionRegistry.GetAllPluginPermissions().ToList();
             return View(viewModel);
         }
 

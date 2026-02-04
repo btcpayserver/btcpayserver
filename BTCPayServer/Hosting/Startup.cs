@@ -388,11 +388,25 @@ namespace BTCPayServer.Hosting
                 BTCPayServer.Client.Policies.SetPluginRegistry(pluginRegistry);
                 
                 // Force PolicyMap reinitialization to include plugin permissions
-                var policyMapField = typeof(BTCPayServer.Client.Permission).GetField("PolicyMap", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                if (policyMapField != null)
+                // Note: This uses reflection to reset a static readonly field, which is fragile.
+                // A future improvement would be to add a public reset method to the Permission class.
+                try
                 {
-                    policyMapField.SetValue(null, null);
-                    _ = BTCPayServer.Client.Permission.PolicyMap; // Trigger reinitialization
+                    var policyMapField = typeof(BTCPayServer.Client.Permission).GetField("PolicyMap", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                    if (policyMapField != null)
+                    {
+                        policyMapField.SetValue(null, null);
+                        _ = BTCPayServer.Client.Permission.PolicyMap; // Trigger reinitialization
+                        Logs.Configuration.LogInformation("Successfully reinitialized PolicyMap with plugin permissions");
+                    }
+                    else
+                    {
+                        Logs.Configuration.LogWarning("Could not find PolicyMap field for reinitialization. Plugin permissions may not be included in policy hierarchy.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logs.Configuration.LogError(ex, "Failed to reinitialize PolicyMap with plugin permissions. Plugin permissions will still work but may not appear in policy hierarchy.");
                 }
             }
         }

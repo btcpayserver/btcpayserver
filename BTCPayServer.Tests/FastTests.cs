@@ -1811,7 +1811,12 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             rule.Reevaluate();
             Assert.True(!rule.HasError);
             Assert.Equal(1.1m, rule.BidAsk.Ask);
+            // Check invalid currency pair (GetRule for should not contains X)
+            rule = rules.GetRuleFor(new CurrencyPair("DOGE", "X"));
+            rule.Reevaluate();
+            Assert.True(rule.HasError);
         }
+
 
         [Fact]
         public void CanSerializeExchangeRatesCache()

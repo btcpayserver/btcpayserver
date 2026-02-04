@@ -66,6 +66,17 @@
                         <option value="@pluginPermission.Policy" class="text-truncate" asp-selected="@(Model.Policies?.Contains(pluginPermission.Policy) ?? false)">@pluginPermission.Policy</option>
                     }
                 }
+                @* Add orphaned plugin permissions to the select so they get submitted *@
+                @{
+                    var orphanedPermissionsForSelect = Model.Policies?
+                        .Where(p => Policies.IsPluginPolicy(p) && 
+                                    (Model.PluginPermissions == null || !Model.PluginPermissions.Any(pp => pp.Policy == p)))
+                        .ToList() ?? new List<string>();
+                }
+                @foreach (var orphanedPolicy in orphanedPermissionsForSelect)
+                {
+                    <option value="@orphanedPolicy" class="text-truncate" selected="selected">@orphanedPolicy</option>
+                }
             </select>
             <div class="list-group mb-2">
                 @{

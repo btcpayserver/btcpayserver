@@ -45,8 +45,8 @@ public class PluginPermissionRegistry : IPluginPermissionRegistry
             if (string.IsNullOrEmpty(permission.Policy))
                 throw new ArgumentException("Permission policy cannot be null or empty");
 
-            if (!permission.Policy.StartsWith("btcpay.plugin.", StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException($"Plugin permission policy must start with 'btcpay.plugin.': {permission.Policy}");
+            if (!permission.Policy.StartsWith("btcpay.plugin.", StringComparison.Ordinal))
+                throw new ArgumentException($"Plugin permission policy must start with 'btcpay.plugin.' (case-sensitive): {permission.Policy}");
 
             if (string.IsNullOrEmpty(permission.DisplayName))
                 throw new ArgumentException($"Permission display name cannot be null or empty for policy: {permission.Policy}");

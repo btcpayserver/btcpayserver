@@ -35,7 +35,7 @@ namespace BTCPayServer.Models
             ExpiryDate = data.EndDate is DateTimeOffset dt ? (DateTime?)dt.UtcDateTime : null;
             Email = blob.View.Email;
             MinimumClaim = blob.MinimumClaim;
-            IsPending = !data.IsExpired(now);
+            IsPending = !data.IsExpired(now) && !data.Archived;
             if (data.Archived)
             {
                 Status = "Archived";

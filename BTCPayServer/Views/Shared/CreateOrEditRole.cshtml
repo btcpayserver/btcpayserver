@@ -58,6 +58,14 @@
                 {
                     <option value="@policy" class="text-truncate" asp-selected="@(Model.Policies?.Contains(policy) ?? false)">@policy</option>
                 }
+                @* Add plugin permissions to the select so they get submitted *@
+                @if (Model.PluginPermissions != null)
+                {
+                    foreach (var pluginPermission in Model.PluginPermissions)
+                    {
+                        <option value="@pluginPermission.Policy" class="text-truncate" asp-selected="@(Model.Policies?.Contains(pluginPermission.Policy) ?? false)">@pluginPermission.Policy</option>
+                    }
+                }
             </select>
             <div class="list-group mb-2">
                 @{
@@ -86,6 +94,37 @@
                             <p class="text-muted">@pluginPermission.Description</p>
                         </div>
                     }
+                </div>
+            }
+            
+            @* Orphaned Plugin Permissions Section *@
+            @{
+                // Detect orphaned permissions: plugin permissions in the role that aren't in the registry
+                var orphanedPermissions = Model.Policies?
+                    .Where(p => Policies.IsPluginPolicy(p) && 
+                                (Model.PluginPermissions == null || !Model.PluginPermissions.Any(pp => pp.Policy == p)))
+                    .ToList() ?? new List<string>();
+            }
+            @if (orphanedPermissions.Any())
+            {
+                <div class="alert alert-warning mt-4" role="alert">
+                    <h5 class="alert-heading">
+                        <i class="fa fa-exclamation-triangle me-2"></i>
+                        Orphaned Plugin Permissions
+                    </h5>
+                    <p class="mb-2">The following permissions are from plugins that are no longer installed. They will not grant any access but are preserved in case you reinstall the plugin.</p>
+                    <div class="list-group">
+                        @foreach (var orphanedPolicy in orphanedPermissions)
+                        {
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input policy-cb" checked="true" value="@orphanedPolicy" id="Policy-@orphanedPolicy.Replace(".", "_")" />
+                                <label class="form-check-label text-warning" for="Policy-@orphanedPolicy.Replace(".", "_")">
+                                    <strong>@Policies.DisplayName(orphanedPolicy)</strong>
+                                </label>
+                                <small class="text-muted d-block">@orphanedPolicy</small>
+                            </div>
+                        }
+                    </div>
                 </div>
             }
             
@@ -139,7 +178,11 @@
         const policySelect = document.getElementById('Policies');
         const subPolicies = element.parentElement.querySelectorAll(`.list-group .policy-cb:not([value="${policy}"])`);
 
-        policySelect.querySelector(`option[value="${policy}"]`).selected = checked;
+        const option = policySelect.querySelector(`option[value="${policy}"]`);
+        if (option) {
+            option.selected = checked;
+        }
+        
         subPolicies.forEach(subPolicy => {
             subPolicy.checked = checked? false : subPolicy.checked;
             if (checked){
@@ -147,7 +190,10 @@
             } else {
                 subPolicy.removeAttribute("disabled");
             }
-            policySelect.querySelector(`option[value="${subPolicy.value}"]`).selected = subPolicy.checked;
+            const subOption = policySelect.querySelector(`option[value="${subPolicy.value}"]`);
+            if (subOption) {
+                subOption.selected = subPolicy.checked;
+            }
         });
     }
 
@@ -156,6 +202,17 @@
 
         delegate('change', '.policy-cb', event => {
            handleCheckboxChange(event.target);
+        });
+        
+        // Before form submission, ensure all checked checkboxes are reflected in the select
+        document.querySelector('form').addEventListener('submit', (e) => {
+            const policySelect = document.getElementById('Policies');
+            document.querySelectorAll('.policy-cb').forEach(checkbox => {
+                const option = policySelect.querySelector(`option[value="${checkbox.value}"]`);
+                if (option) {
+                    option.selected = checkbox.checked;
+                }
+            });
         });
     });
 </script>

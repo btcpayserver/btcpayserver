@@ -375,6 +375,34 @@ h2 .icon.icon-info {
     grid-template-columns: repeat(12, 1fr);
 }
 
+#Dashboard .dashboard-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--btcpay-space-m);
+    grid-column-start: 1;
+    grid-column-end: 13;
+}
+
+#Dashboard .dashboard-row .widget {
+    flex: 1 1 320px;
+}
+
+#Dashboard .dashboard-row.wallet-balances .widget {
+    flex: 1 1 420px;
+}
+
+#Dashboard .dashboard-row.dashboard-row-secondary .widget.store-numbers {
+    flex: 1 1 320px;
+}
+
+#Dashboard .dashboard-row.dashboard-row-secondary .widget.store-recent-transactions {
+    flex: 2 1 520px;
+}
+
+#Dashboard .dashboard-row.dashboard-row-tertiary .widget {
+    flex: 1 1 100%;
+}
+
 .widget {
     --widget-padding: var(--btcpay-space-m);
     --widget-chart-width: 100vw;

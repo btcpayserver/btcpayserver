@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
 using BTCPayServer.Plugins.Dotnet;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -171,7 +172,11 @@ namespace BTCPayServer.Plugins
                 if (!File.Exists(pluginFilePath))
                     continue;
                 if (disabledPluginIdentifiers.Contains(pluginIdentifier))
+                {
+                    logger.LogInformation($"Skipping disabled plugin {pluginIdentifier}");
                     continue;
+                }
+
                 pluginsToPreload.Add((pluginIdentifier, pluginFilePath));
             }
 
@@ -235,8 +240,13 @@ namespace BTCPayServer.Plugins
                     if (preloadedPlugin.Loader is not null)
                         mvcBuilder.AddPluginLoader(preloadedPlugin.Loader);
 
-                    logger.Log(plugin.SystemPlugin ? LogLevel.Debug : LogLevel.Information,
-                        $"Adding and executing plugin {plugin.Identifier} - {plugin.Version}");
+                    var (logLevel, message) = plugin switch
+                    {
+                        { Identifier: "BTCPayServer" } => (LogLevel.Information, $"Running {plugin.Identifier} - {BTCPayServerEnvironment.GetInformationalVersion()}"),
+                        { SystemPlugin: true } => (LogLevel.Debug, $"Running system plugin {plugin.Identifier} - {plugin.Version}"),
+                        _ => (LogLevel.Information, $"Running plugin {plugin.Identifier} - {plugin.Version}")
+                    };
+                    logger.Log(logLevel, message);
                     var pluginServiceCollection = new PluginServiceCollection(serviceCollection, bootstrapServiceProvider);
                     plugin.Execute(pluginServiceCollection);
                     serviceCollection.AddSingleton(plugin);

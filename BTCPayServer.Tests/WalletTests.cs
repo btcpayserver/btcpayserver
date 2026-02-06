@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -403,8 +403,10 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await using (_ = await s.SwitchPage(opening))
         {
             await s.Page.WaitForLoadStateAsync();
+            var exportUri = new Uri(s.Page.Url);
             Assert.Contains(s.WalletId.ToString(), s.Page.Url);
-            Assert.EndsWith("export?format=json", s.Page.Url);
+            Assert.EndsWith("/export", exportUri.AbsolutePath);
+            Assert.Contains("format=json", exportUri.Query);
             Assert.Contains("\"Amount\": \"3.00000000\"", await s.Page.ContentAsync());
         }
 

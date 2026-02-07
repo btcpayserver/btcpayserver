@@ -623,6 +623,7 @@ namespace BTCPayServer.Hosting
             services.AddRateProvider<BareBitcoinRateProvider>();
             services.AddRateProvider<CoinmateRateProvider>();
             services.AddRateProvider<LunoRateProvider>();
+            services.AddRateProvider<DesiboardRateProvider>();
 
             services.AddSingleton<InvoiceBlobMigratorHostedService>();
             services.AddSingleton<IHostedService, InvoiceBlobMigratorHostedService>(o => o.GetRequiredService<InvoiceBlobMigratorHostedService>());

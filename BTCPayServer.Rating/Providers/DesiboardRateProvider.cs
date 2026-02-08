@@ -1,3 +1,4 @@
+using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +15,7 @@ namespace BTCPayServer.Services.Rates
 
         public DesiboardRateProvider(HttpClient httpClient)
         {
-            _httpClient = httpClient ?? new HttpClient();
+            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         }
 
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)

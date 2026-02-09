@@ -44,18 +44,18 @@
         <div class="col-sm-8 col-md-6 @(store is null ? "mx-auto" : "")">
             <table class="table table-hover">
                 <tr>
-                    <th>Label</th>
+                    <th text-translate="true">Label</th>
                     <td class="text-end">@Model.Label</td>
                 </tr>
                 <tr>
-                    <th>SIN</th>
+                    <th text-translate="true">SIN</th>
                     <td class="text-end">@Model.SIN</td>
                 </tr>
             </table>
             @if (store is null)
             {
                 <div class="form-group">
-                    <label asp-for="StoreId" class="form-label">Pair To Store</label>
+                    <label asp-for="StoreId" class="form-label" text-translate="true">Pair To Store</label>
                     <select asp-for="StoreId" asp-items="@(new SelectList(Model.Stores, "Id", "Name"))" class="form-select"></select>
                     <span asp-validation-for="StoreId" class="text-danger"></span>
                 </div>

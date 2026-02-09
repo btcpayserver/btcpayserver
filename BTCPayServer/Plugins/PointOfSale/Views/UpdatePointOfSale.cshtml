@@ -32,7 +32,7 @@
     <div class="sticky-header">
         <h2>@ViewData["Title"]</h2>
         <div>
-            <button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
+            <button id="page-primary" type="submit" class="btn btn-primary order-sm-1" text-translate="true">Save</button>
             <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm" text-translate="true">Invoices</a>
             @if (Model.Archived)
             {

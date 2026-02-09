@@ -563,7 +563,8 @@ namespace BTCPayServer.Hosting
                          { "NGN", "bitnob" },
                          { "NOK", "barebitcoin" },
                          { "CZK", "coinmate" },
-                         { "ZAR", "luno" }
+                         { "ZAR", "luno" },
+                         { "INR", "desiboard" }
                      })
             {
                 var r = new DefaultRules.Recommendation(rule.Key, rule.Value);

@@ -104,6 +104,9 @@ namespace BTCPayServer.Hosting
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders()
+                .AddTokenProvider<Fido2TokenProvider>("FIDO2")
+                .AddTokenProvider<DisabledEmailTokenProvider>(TokenOptions.DefaultEmailProvider)
+                .AddTokenProvider<BTCPayAuthenticatorTokenProvider>(TokenOptions.DefaultAuthenticatorProvider)
                 .AddInvitationTokenProvider();
             services.Configure<AuthenticationOptions>(opts =>
             {

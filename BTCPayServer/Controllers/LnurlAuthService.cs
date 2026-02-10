@@ -13,9 +13,7 @@ namespace BTCPayServer
 {
     public class LoginWithLNURLAuthViewModel
     {
-        public string UserId { get; set; }
         public Uri LNURLEndpoint { get; set; }
-        public bool RememberMe { get; set; }
     }
 
     public class LnurlAuthService
@@ -68,6 +66,7 @@ namespace BTCPayServer
                 }
 
                 var newCredential = new Fido2Credential() { Name = name, ApplicationUserId = userId, Type = Fido2Credential.CredentialType.LNURLAuth, Blob = pubkeyBytes };
+                user.TwoFactorEnabled = true;
                 await dbContext.Fido2Credentials.AddAsync(newCredential);
                 await dbContext.SaveChangesAsync();
                 CreationStore.Remove(userId, out _);
@@ -133,17 +132,14 @@ namespace BTCPayServer
             {
                 return false;
             }
+
+            credential.LastUsedAt = DateTimeOffset.UtcNow;
+            await dbContext.SaveChangesAsync();
             LoginStore.Remove(userId, out _);
 
             FinalLoginStore.AddOrReplace(userId, k1);
             // 7. return OK to client
             return true;
-        }
-
-        public async Task<bool> HasCredentials(string userId)
-        {
-            await using var context = _contextFactory.CreateContext();
-            return await context.Fido2Credentials.Where(fDevice => fDevice.ApplicationUserId == userId && fDevice.Type == Fido2Credential.CredentialType.LNURLAuth).AnyAsync();
         }
     }
 

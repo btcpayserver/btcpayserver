@@ -4,8 +4,10 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
+using BTCPayServer.Data;
 using LNURL;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
@@ -21,13 +23,16 @@ namespace BTCPayServer
     {
         private readonly LnurlAuthService _lnurlAuthService;
         private readonly LinkGenerator _linkGenerator;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         public IStringLocalizer StringLocalizer { get; }
 
         public UILNURLAuthController(LnurlAuthService lnurlAuthService,
+            SignInManager<ApplicationUser> signInManager,
             IStringLocalizer stringLocalizer, LinkGenerator linkGenerator)
         {
             _lnurlAuthService = lnurlAuthService;
             _linkGenerator = linkGenerator;
+            _signInManager = signInManager;
             StringLocalizer = stringLocalizer;
         }
 
@@ -115,9 +120,10 @@ namespace BTCPayServer
 
         [HttpGet("login-check")]
         [AllowAnonymous]
-        public Task<IActionResult> LoginCheck(string userId)
+        public async Task<IActionResult> LoginCheck()
         {
-            return _lnurlAuthService.LoginStore.ContainsKey(userId) ? Task.FromResult<IActionResult>(Ok()) : Task.FromResult<IActionResult>(NotFound());
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            return _lnurlAuthService.LoginStore.ContainsKey(user?.Id ?? "") ? Ok() : NotFound();
         }
 
         [HttpGet("login-callback")]

@@ -6,6 +6,7 @@ namespace BTCPayServer.Fido2.Models
     {
         public AuthenticatorAttachment? AuthenticatorAttachment { get; set; }
         public string Name { get; set; }
+        public bool IsPasskey { get; set; }
     }
 
 }

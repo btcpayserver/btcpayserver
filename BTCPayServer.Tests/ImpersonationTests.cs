@@ -28,13 +28,15 @@ public class ImpersonationTests(ITestOutputHelper helper) : UnitTestBase(helper)
         Assert.NotEqual(prevCode, code);
         await s.Logout();
         await s.GoToLogin();
+        await s.Page.EvaluateAsync("document.querySelector('#login-password-fieldset').disabled = true");
         await s.Page.EvaluateAsync("document.getElementById('LoginCode').value = 'bad code'");
-        await s.Page.EvaluateAsync("document.getElementById('logincode-form').submit()");
+        await s.Page.EvaluateAsync("document.getElementById(\"LoginCodeButton\").click();");
         await s.Page.WaitForLoadStateAsync();
 
         await s.GoToLogin();
+        await s.Page.EvaluateAsync("document.querySelector('#login-password-fieldset').disabled = true");
         await s.Page.EvaluateAsync($"document.getElementById('LoginCode').value = '{code}'");
-        await s.Page.EvaluateAsync("document.getElementById('logincode-form').submit()");
+        await s.Page.EvaluateAsync("document.getElementById(\"LoginCodeButton\").click();");
         await s.Page.WaitForLoadStateAsync();
         await s.Page.WaitForLoadStateAsync();
 

@@ -90,6 +90,8 @@ public class DefaultSearchResultProvider : ISearchResultItemProvider
             AddPage(results, "Change your password", context.Url.Action(nameof(UIManageController.ChangePassword), "UIManage"), "Account", ["Password", "Change"]);
             AddPage(results, "Configure Two-Factor Authentication", context.Url.Action(nameof(UIManageController.TwoFactorAuthentication), "UIManage"), "Account",
                 ["2FA Security", "Two-Factor", "Authentication"]);
+            AddPage(results, "Configure Passkey Authentication", context.Url.Action(nameof(UIManageController.Passkeys), "UIManage"), "Account",
+                ["Passkey", "Authentication"]);
             AddPage(results, "Manage API Keys", context.Url.Action(nameof(UIManageController.APIKeys), "UIManage"), "Account", ["API", "Keys"]);
             AddPage(results, "Manage the notification settings", context.Url.Action(nameof(UIManageController.NotificationSettings), "UIManage"), "Account", ["Notifications", "Manage"]);
         }

@@ -3,11 +3,11 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Models.ManageViewModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Controllers
 {
@@ -15,40 +15,6 @@ namespace BTCPayServer.Controllers
     {
         private const string RecoveryCodesKey = nameof(RecoveryCodesKey);
         private const string AuthenicatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
-
-        [HttpGet]
-        public async Task<IActionResult> TwoFactorAuthentication()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-                return NotFound();
-
-            var model = new TwoFactorAuthenticationViewModel
-            {
-                Is2faEnabled = user.TwoFactorEnabled,
-                RecoveryCodesLeft = await _userManager.CountRecoveryCodesAsync(user),
-                Credentials = await _fido2Service.GetCredentials(User.GetId())
-            };
-
-            return View(model);
-        }
-
-        public async Task<IActionResult> Disable2fa()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-                return NotFound();
-
-            var disable2faResult = await _userManager.SetTwoFactorEnabledAsync(user, false);
-            if (!disable2faResult.Succeeded)
-            {
-                throw new ApplicationException(
-                    $"Unexpected error occurred disabling 2FA for user with ID '{user.Id}'.");
-            }
-
-            _logger.LogInformation("User {Email} has disabled 2fa", user.Email);
-            return RedirectToAction(nameof(TwoFactorAuthentication));
-        }
 
         [HttpGet]
         public async Task<IActionResult> EnableAuthenticator()
@@ -59,7 +25,6 @@ namespace BTCPayServer.Controllers
 
             var model = new EnableAuthenticatorViewModel();
             await LoadSharedKeyAndQrCodeUriAsync(user, model);
-
             return View(model);
         }
 
@@ -91,7 +56,10 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
 
-            await _userManager.SetTwoFactorEnabledAsync(user, true);
+            user.AuthenticatorEnabled = true;
+            await _userManager.UpdateAsync(user);
+
+            TempData.SetStatusSuccess(StringLocalizer["Authenticator enabled successfully."]);
             var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
             TempData[RecoveryCodesKey] = recoveryCodes.ToArray();
 
@@ -104,9 +72,10 @@ namespace BTCPayServer.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
                 return NotFound();
-
-            await _userManager.SetTwoFactorEnabledAsync(user, false);
             await _userManager.ResetAuthenticatorKeyAsync(user);
+            user.AuthenticatorEnabled = false;
+            await _userManager.UpdateAsync(user);
+            TempData.SetStatusSuccess(StringLocalizer["Authenticator disabled successfully."]);
             return RedirectToAction(nameof(EnableAuthenticator));
         }
 
@@ -187,6 +156,8 @@ namespace BTCPayServer.Controllers
             {
                 case Fido2Credential.CredentialType.FIDO2:
                     return RedirectToAction("Create", "UIFido2", new { name });
+                case Fido2Credential.CredentialType.Passkey:
+                    return RedirectToAction("Create", "UIFido2", new { name, isPasskey = true });
                 case Fido2Credential.CredentialType.LNURLAuth:
                     return RedirectToAction("Create", "UILNURLAuth", new { name });
                 default:

@@ -1794,8 +1794,8 @@ namespace BTCPayServer.Tests
             var user = await s.RegisterNewUser(true);
             await s.SkipWizard();
             await s.GoToProfile(ManageNavPages.TwoFactorAuthentication);
-            await s.Page.FillAsync("[name='Name']", "ln wallet");
-            await s.Page.SelectOptionAsync("[name='type']", $"{(int)Fido2Credential.CredentialType.LNURLAuth}");
+            await s.Page.FillAsync("#security-device-form [name='Name']", "ln wallet");
+            await s.Page.SelectOptionAsync("select[name='type']", "LNURLAuth");
             await s.Page.ClickAsync("#btn-add");
             var linkElements = await s.Page.Locator(".tab-content a").AllAsync();
             var links = new List<string>();
@@ -1841,11 +1841,7 @@ namespace BTCPayServer.Tests
             }
             request = Assert.IsType<LNAuthRequest>(await LNURL.LNURL.FetchInformation(prevEndpoint, null));
             _ = await request.SendChallenge(linkingKey, new HttpClient());
-            await TestUtils.EventuallyAsync(() =>
-            {
-                Assert.StartsWith(s.ServerUri.ToString(), s.Page.Url);
-                return Task.CompletedTask;
-            });
+            await s.WaitLoggedIn();
         }
 
         [Fact]

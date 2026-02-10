@@ -3,6 +3,7 @@ using System;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Security;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 
 namespace BTCPayServer
@@ -21,10 +22,23 @@ namespace BTCPayServer
             return await userManager.FindByIdAsync(idOrEmail);
         }
 
+        public static async Task<bool> IsAuthenticatorConfigured(this UserManager<ApplicationUser> userManager, ApplicationUser user)
+        {
+            return (await userManager.GetValidTwoFactorProvidersAsync(user)).Contains(userManager.Options.Tokens.AuthenticatorTokenProvider);
+        }
+
         public static async Task<string?> GenerateInvitationTokenAsync(this UserManager<ApplicationUser> userManager, string userId)
         {
             var token = Guid.NewGuid().ToString("n")[..12];
             return await userManager.SetInvitationTokenAsync(userId, token) ? token : null;
+        }
+
+        public static async Task TwoFactorSignInAsync(this SignInManager<ApplicationUser> signInManager, ApplicationUser user)
+        {
+            var userIdAsync = await signInManager.UserManager.GetUserIdAsync(user);
+            var storeTwoFactorInfoMethod = typeof(SignInManager<ApplicationUser>).GetMethod("StoreTwoFactorInfo", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+            var principal = (System.Security.Claims.ClaimsPrincipal)storeTwoFactorInfoMethod!.Invoke(null, new object[] { userIdAsync, (null as string)! })!;
+            await signInManager.Context.SignInAsync(IdentityConstants.TwoFactorUserIdScheme, principal!);
         }
 
         public static Task<bool> UnsetInvitationTokenAsync(this UserManager<ApplicationUser> userManager, string userId)

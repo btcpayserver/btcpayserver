@@ -1,0 +1,60 @@
+@model List<BTCPayServer.Data.Fido2Credential>
+@using BTCPayServer.Fido2
+@{
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ManageNavPages.Passkeys), StringLocalizer["Passkeys"])
+        .SetCategory(nameof(ManageNavPages)));
+}
+<div class="sticky-header">
+    <h2 class="my-1">@ViewData["Title"]</h2>
+</div>
+<partial name="_StatusMessage" />
+<div class="row">
+    <div class="col-xl-8 col-xxl-constrain">
+        <span html-translate="true">
+            <p>Passkeys are a simpler and safer way to sign in — no login or password required.</p>
+            <p>
+                With passkeys, users can log in using the same method they already use to unlock their device,
+                such as Face ID, Touch ID, Windows Hello, Android biometrics, or a hardware security key such as Yubikey.
+            </p>
+        </span>
+
+        @if (Model.Any())
+        {
+            <div class="list-group mb-3">
+                @foreach (var device in Model)
+                {
+                    var name = string.IsNullOrEmpty(device.Name) ? "Unnamed passkey" : device.Name;
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <div class="mb-0">
+                            <h5 class="w-100">@name</h5>
+                            <span class="text-muted">
+                                <span text-translate="true">Last used</span>:
+                                @if (device.LastUsedAt is { } lastUsedAt)
+                                {
+                                    @lastUsedAt.ToTimeAgo()
+                                }
+                                else
+                                {
+                                    <span text-translate="true">Never</span>
+                                }
+                            </span>
+                        </div>
+                        <a asp-controller="UIFido2" asp-action="Remove" asp-route-id="@device.Id" asp-route-isPasskey="true" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="@StringLocalizer["Remove passkey"]" data-description="@ViewLocalizer["Your account will no longer have the passkey <strong>{0}</strong> as an option for passwordless login.", Html.Encode(name)]" data-confirm="@StringLocalizer["Delete"]" data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Remove</a>
+                    </div>
+                }
+            </div>
+        }
+
+        <form id="passkey-form" asp-action="CreateCredential" class="mb-4">
+            <div class="input-group">
+                <input type="hidden" name="type" value="Passkey" />
+                <input type="text" class="form-control" name="Name" placeholder="@StringLocalizer["Passkey name (e.g., MacBook Touch ID)"]" />
+                <button id="btn-add-passkey" type="submit" class="btn btn-primary" text-translate="true">
+                    Add
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Passkeys"], StringLocalizer["Placeholder"], StringLocalizer["Placeholder"]))"/>

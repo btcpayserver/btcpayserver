@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -16,12 +17,15 @@ namespace BTCPayServer.Data
         public byte[] Blob { get; set; }
         public string Blob2 { get; set; }
         public CredentialType Type { get; set; }
+        public DateTimeOffset? LastUsedAt { get; set; }
         public enum CredentialType
         {
             [Display(Name = "Security device (FIDO2)")]
             FIDO2,
             [Display(Name = "Lightning node (LNURL Auth)")]
-            LNURLAuth
+            LNURLAuth,
+            [Display(Name = "Passkey (Sign in with Passkey)")]
+            Passkey
         }
         public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {

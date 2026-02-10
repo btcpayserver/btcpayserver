@@ -40,9 +40,11 @@ public class StoreWalletBalance : ViewComponent
         _handlers = handlers;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync(StoreData store)
+    public async Task<IViewComponentResult> InvokeAsync(StoreData store, string? cryptoCode = null)
     {
-        var cryptoCode = _networkProvider.DefaultNetwork.CryptoCode;
+        cryptoCode = string.IsNullOrEmpty(cryptoCode)
+            ? _networkProvider.DefaultNetwork.CryptoCode
+            : cryptoCode;
         var walletId = new WalletId(store.Id, cryptoCode);
         var data = await _walletHistogramService.GetHistogram(store, walletId, DefaultType);
         var defaultCurrency = store.GetStoreBlob().DefaultCurrency;
@@ -66,13 +68,13 @@ public class StoreWalletBalance : ViewComponent
         else
         {
             using CancellationTokenSource cts = new(TimeSpan.FromSeconds(3));
-            var wallet = _walletProvider.GetWallet(_networkProvider.DefaultNetwork);
+            var wallet = _walletProvider.GetWallet(cryptoCode);
             var derivation = store.GetDerivationSchemeSettings(_handlers, walletId.CryptoCode);
-            var network = _handlers.GetBitcoinHandler(walletId.CryptoCode).Network;
-            if (derivation is not null)
+            var handler = _handlers.TryGetBitcoinHandler(walletId.CryptoCode);
+            if (wallet is not null && derivation is not null && handler is not null)
             {
                 var balance = await wallet.GetBalance(derivation.AccountDerivation, cts.Token);
-                vm.Balance = balance.Available.GetValue(network);
+                vm.Balance = balance.Available.GetValue(handler.Network);
             }
             else
             {

@@ -44,7 +44,12 @@ public partial class UIStoresController
             StoreName = CurrentStore.StoreName,
             CryptoCode = cryptoCode,
             Network = _networkProvider.DefaultNetwork,
-            IsSetUp = walletEnabled || lightningEnabled
+            IsSetUp = walletEnabled || lightningEnabled,
+            EnabledWalletCryptos = derivationSchemes
+                .Where(scheme => scheme.Enabled && scheme.WalletSupported)
+                .Select(scheme => scheme.Crypto)
+                .Distinct()
+                .ToList()
         };
 
         // Widget data

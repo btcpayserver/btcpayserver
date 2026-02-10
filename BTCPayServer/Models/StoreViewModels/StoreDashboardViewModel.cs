@@ -12,6 +12,7 @@ public class StoreDashboardViewModel
     public bool LightningEnabled { get; set; }
     public bool LightningSupported { get; set; }
     public bool IsSetUp { get; set; }
+    public List<string> EnabledWalletCryptos { get; set; } = new();
     public List<AppData> Apps { get; set; } = new();
     public BTCPayNetworkBase Network { get; set; }
 }

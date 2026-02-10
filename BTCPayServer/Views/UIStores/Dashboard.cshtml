@@ -54,46 +54,55 @@
     </script>
     <div id="Dashboard">
         <vc:ui-extension-point location="dashboard" model="@Model" />
-        @if (Model.WalletEnabled)
+        @if (Model.WalletEnabled && Model.EnabledWalletCryptos.Count > 0)
         {
-            <vc:store-wallet-balance store="@store" />
-        }
-        else
-        {
-            <div class="widget setup-guide">
-                <header>
-                    <h5 class="mb-4 text-muted" text-translate="true">This store is ready to accept transactions, good job!</h5>
-                </header>
-                <div class="list-group" id="SetupGuide">
-                    <div class="list-group-item d-flex align-items-center" id="SetupGuide-LightningDone">
-                        <vc:icon symbol="done" />
-                        <div class="content">
-                            <h5 class="mb-0 text-success" text-translate="true">Set up a Lightning node</h5>
-                        </div>
-                    </div>
-                    <a asp-controller="UIStores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode"
-                       id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center">
-                        <vc:icon symbol="wallet-new" />
-                        <div class="content">
-                            <h5 class="mb-0" text-translate="true">Set up a wallet</h5>
-                        </div>
-                        <vc:icon symbol="caret-right" />
-                    </a>
-                    <vc:ui-extension-point location="dashboard-setup-guide-payment" model="@Model" />
-                </div>
+            <div class="dashboard-row wallet-balances">
+                @foreach (var walletCryptoCode in Model.EnabledWalletCryptos)
+                {
+                    <vc:store-wallet-balance store="@store" crypto-code="@walletCryptoCode" />
+                }
             </div>
         }
-        <vc:store-numbers store="store" crypto-code="@Model.CryptoCode" initial-rendering="true" />
+        <div class="dashboard-row dashboard-row-secondary">
+            @if (!Model.WalletEnabled)
+            {
+                <div class="widget setup-guide">
+                    <header>
+                        <h5 class="mb-4 text-muted" text-translate="true">This store is ready to accept transactions, good job!</h5>
+                    </header>
+                    <div class="list-group" id="SetupGuide">
+                        <div class="list-group-item d-flex align-items-center" id="SetupGuide-LightningDone">
+                            <vc:icon symbol="done" />
+                            <div class="content">
+                                <h5 class="mb-0 text-success" text-translate="true">Set up a Lightning node</h5>
+                            </div>
+                        </div>
+                        <a asp-controller="UIStores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode"
+                           id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center">
+                            <vc:icon symbol="wallet-new" />
+                            <div class="content">
+                                <h5 class="mb-0" text-translate="true">Set up a wallet</h5>
+                            </div>
+                            <vc:icon symbol="caret-right" />
+                        </a>
+                        <vc:ui-extension-point location="dashboard-setup-guide-payment" model="@Model" />
+                    </div>
+                </div>
+            }
+            <vc:store-numbers store="store" crypto-code="@Model.CryptoCode" initial-rendering="true" />
+            @if (Model.WalletEnabled)
+            {
+                <vc:store-recent-transactions store="store" crypto-code="@Model.CryptoCode" initial-rendering="true" />
+            }
+        </div>
+        <div class="dashboard-row dashboard-row-tertiary">
+            <vc:store-recent-invoices store="store" crypto-code="@Model.CryptoCode" initial-rendering="true" />
+        </div>
         @if (Model.LightningEnabled)
         {
             <vc:store-lightning-balance store="store" crypto-code="@Model.CryptoCode" initial-rendering="true" />
             <vc:store-lightning-services store="store" crypto-code="@Model.CryptoCode" permission="@Policies.CanModifyServerSettings" />
         }
-        @if (Model.WalletEnabled)
-        {
-            <vc:store-recent-transactions store="store" crypto-code="@Model.CryptoCode" initial-rendering="true" />
-        }
-        <vc:store-recent-invoices store="store" crypto-code="@Model.CryptoCode" initial-rendering="true" />
         @foreach (var app in Model.Apps)
         {
             <vc:app-sales app-id="@app.Id" app-type="@app.AppType" />

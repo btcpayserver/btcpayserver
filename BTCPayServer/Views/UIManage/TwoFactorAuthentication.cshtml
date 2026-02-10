@@ -1,4 +1,5 @@
 @model TwoFactorAuthenticationViewModel
+@using BTCPayServer.Fido2
 @{
     ViewData.SetLayoutModel(new LayoutModel(nameof(ManageNavPages.TwoFactorAuthentication), StringLocalizer["Two-Factor Authentication"])
         .SetCategory(nameof(ManageNavPages)));
@@ -91,12 +92,49 @@
             }
         </div>
 
-        <h4 class="mt-4 mb-3" text-translate="true">Security devices</h4>
+        <h4 class="mt-4 mb-3" text-translate="true">Passkeys</h4>
+        <p class="text-muted" text-translate="true">Passkeys let you sign in without entering your password. Use your fingerprint, face recognition, or security key.</p>
 
-        @if (Model.Credentials.Any())
+        @{
+            var passkeys = Model.Credentials.Where(c => c.Type == Fido2Credential.CredentialType.FIDO2 && c.GetFido2Blob()?.IsDiscoverable == true).ToList();
+        }
+        @if (passkeys.Any())
         {
             <div class="list-group mb-3">
-                @foreach (var device in Model.Credentials)
+                @foreach (var device in passkeys)
+                {
+                    var name = string.IsNullOrEmpty(device.Name) ? "Unnamed passkey" : device.Name;
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <div class="mb-0">
+                            <h5 class="mb-0 w-100">@name</h5>
+                            <span class="text-muted" text-translate="true">Passkey (passwordless login)</span>
+                        </div>
+                        <a asp-controller="UIFido2" asp-action="Remove" asp-route-id="@device.Id" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="@StringLocalizer["Remove passkey"]" data-description="@ViewLocalizer["Your account will no longer have the passkey <strong>{0}</strong> as an option for passwordless login.", Html.Encode(name)]" data-confirm="@StringLocalizer["Delete"]" data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Remove</a>
+                    </div>
+                }
+            </div>
+        }
+
+        <form asp-controller="UIFido2" asp-action="CreatePasskey" class="mb-4">
+            <div class="input-group">
+                <input type="text" class="form-control" name="Name" placeholder="@StringLocalizer["Passkey name (e.g., MacBook Touch ID)"]"/>
+                <button id="btn-add-passkey" type="submit" class="btn btn-primary" text-translate="true">
+                    Add Passkey
+                </button>
+            </div>
+        </form>
+
+        <h4 class="mt-4 mb-3" text-translate="true">Security devices</h4>
+
+        @{
+            var securityDevices = Model.Credentials.Where(c => c.Type == Fido2Credential.CredentialType.FIDO2 && c.GetFido2Blob()?.IsDiscoverable != true).ToList();
+            var lnurlDevices = Model.Credentials.Where(c => c.Type == Fido2Credential.CredentialType.LNURLAuth).ToList();
+            var allSecurityDevices = securityDevices.Concat(lnurlDevices).ToList();
+        }
+        @if (allSecurityDevices.Any())
+        {
+            <div class="list-group mb-3">
+                @foreach (var device in allSecurityDevices)
                 {
                     var name = string.IsNullOrEmpty(device.Name) ? "Unnamed security device" : device.Name;
                     <div class="list-group-item d-flex justify-content-between align-items-center py-3">

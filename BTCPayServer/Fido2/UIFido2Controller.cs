@@ -70,15 +70,28 @@ namespace BTCPayServer.Fido2
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> CreateResponse([FromForm] string data, [FromForm] string name)
+        public async Task<IActionResult> CreateResponse([FromForm] string data, [FromForm] string name, [FromForm] bool isPasskey = false)
         {
-            if (await _fido2Service.CompleteCreation(_userManager.GetUserId(User), name, data))
+            bool success;
+            if (isPasskey)
             {
+                success = await _fido2Service.CompletePasskeyCreation(_userManager.GetUserId(User), name, data);
+            }
+            else
+            {
+                success = await _fido2Service.CompleteCreation(_userManager.GetUserId(User), name, data);
+            }
+
+            if (success)
+            {
+                var message = isPasskey
+                    ? StringLocalizer["The passkey was registered successfully. You can now use it to sign in without a password."].Value
+                    : StringLocalizer["The security device was registered successfully."].Value;
 
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Success,
-                    Html = StringLocalizer["The security device was registered successfully."].Value
+                    Html = message
                 });
             }
             else
@@ -92,6 +105,33 @@ namespace BTCPayServer.Fido2
 
             return RedirectToList();
         }
+
+        #region Passkey Registration
+
+        /// <summary>
+        /// Register a new passkey (discoverable credential for passwordless login)
+        /// </summary>
+        [HttpGet("register/passkey")]
+        public async Task<IActionResult> CreatePasskey(AddFido2CredentialViewModel viewModel)
+        {
+            var options = await _fido2Service.RequestPasskeyCreation(_userManager.GetUserId(User));
+            if (options is null)
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Html = StringLocalizer["The passkey could not be registered."].Value
+                });
+
+                return RedirectToList();
+            }
+
+            ViewData["CredentialName"] = viewModel.Name ?? "";
+            ViewData["IsPasskey"] = true;
+            return View("Create", options);
+        }
+
+        #endregion
 
         private ActionResult RedirectToList()
         {

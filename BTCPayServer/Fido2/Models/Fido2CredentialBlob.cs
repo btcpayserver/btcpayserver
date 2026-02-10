@@ -92,5 +92,9 @@ namespace BTCPayServer.Fido2.Models
         public uint SignatureCounter { get; set; }
         public string CredType { get; set; }
         public string AaGuid { get; set; }
+        /// <summary>
+        /// Indicates if this credential is a discoverable passkey for passwordless login
+        /// </summary>
+        public bool IsDiscoverable { get; set; } = false;
     }
 }

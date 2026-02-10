@@ -32,7 +32,7 @@ else
     <p text-translate="true">Insert your security device and proceed.</p>
 }
 
-<form asp-action="CreateResponse" id="registerForm">
+<form asp-controller="UIFido2" asp-action="CreateResponse" method="post" id="registerForm">
     <input type="hidden" name="data" id="data"/>
     <input type="hidden" name="name" id="name" value="@(ViewData.ContainsKey("CredentialName") ? ViewData["CredentialName"] : string.Empty)"/>
     <input type="hidden" name="isPasskey" id="isPasskey" value="@(isPasskey ? "true" : "false")"/>

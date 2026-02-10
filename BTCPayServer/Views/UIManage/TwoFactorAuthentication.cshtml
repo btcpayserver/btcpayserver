@@ -115,7 +115,7 @@
             </div>
         }
 
-        <form asp-controller="UIFido2" asp-action="CreatePasskey" class="mb-4">
+        <form asp-controller="UIFido2" asp-action="CreatePasskey" method="get" class="mb-4">
             <div class="input-group">
                 <input type="text" class="form-control" name="Name" placeholder="@StringLocalizer["Passkey name (e.g., MacBook Touch ID)"]"/>
                 <button id="btn-add-passkey" type="submit" class="btn btn-primary" text-translate="true">

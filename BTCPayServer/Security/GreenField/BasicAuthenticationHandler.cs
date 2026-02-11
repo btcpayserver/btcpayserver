@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Security.Greenfield
 {
@@ -23,7 +24,8 @@ namespace BTCPayServer.Security.Greenfield
         ILoggerFactory logger,
         UrlEncoder encoder,
         SignInManager<ApplicationUser> signInManager,
-        UserService UserService,
+        UserService userService,
+        IRateLimitService rateLimitService,
         UserManager<ApplicationUser> userManager)
         : AuthenticationHandler<GreenfieldAuthenticationOptions>(options, logger, encoder)
     {
@@ -38,7 +40,7 @@ namespace BTCPayServer.Security.Greenfield
             try
             {
                 var encodedUsernamePassword =
-                    authHeader.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries)[1]?.Trim();
+                    authHeader.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries)[1].Trim();
                 var decodedUsernamePassword =
                     Encoding.UTF8.GetString(Convert.FromBase64String(encodedUsernamePassword)).Split(':');
                 username = decodedUsernamePassword[0];
@@ -46,7 +48,7 @@ namespace BTCPayServer.Security.Greenfield
             }
             catch (Exception)
             {
-                return AuthenticateResult.Fail(
+                return Fail(
                     "Basic authentication header was not in a correct format. (username:password encoded in base64)");
             }
 
@@ -54,18 +56,28 @@ namespace BTCPayServer.Security.Greenfield
                 .Include(applicationUser => applicationUser.Fido2Credentials)
                 .FirstOrDefaultAsync(applicationUser =>
                     applicationUser.NormalizedUserName == userManager.NormalizeName(username));
-            var loggingContext = new UserService.CanLoginContext(user, baseUrl: Request.GetRequestBaseUrl());
-            if (!await UserService.CanLogin(loggingContext))
+
+            // We disable throttling for new accounts to give time to create API keys via greenfield API.
+            if (user.Created is not {} created ||
+                (DateTimeOffset.UtcNow - created) > TimeSpan.FromMinutes(5))
             {
-                return AuthenticateResult.Fail($"Basic authentication failed: {loggingContext.Failures[0].Text.Value}");
+                if (Context.Connection.RemoteIpAddress?.ToString() is string ip)
+                    if (!await rateLimitService.Throttle(ZoneLimits.Login, ip))
+                        return Fail($"Basic authentication failed: Rate limited. Please use authentication with API Keys to avoid throttling.");
+            }
+
+            var loggingContext = new UserService.CanLoginContext(user, baseUrl: Request.GetRequestBaseUrl());
+            if (!await userService.CanLogin(loggingContext))
+            {
+                return Fail($"Basic authentication failed: {loggingContext.Failures[0].Text.Value}");
             }
             if (user.Fido2Credentials.Any())
             {
-                return AuthenticateResult.Fail("Cannot use Basic authentication with multi-factor is enabled.");
+                return Fail("Cannot use Basic authentication when multi-factor is enabled.");
             }
             var result = await signInManager.CheckPasswordSignInAsync(user, password, true);
             if (!result.Succeeded)
-                return AuthenticateResult.Fail(result.ToString());
+                return Fail(result.ToString());
             var claims = new List<Claim>()
             {
                 new Claim(identityOptions.CurrentValue.ClaimsIdentity.UserIdClaimType, user.Id),
@@ -77,6 +89,12 @@ namespace BTCPayServer.Security.Greenfield
             return AuthenticateResult.Success(new AuthenticationTicket(
                 new ClaimsPrincipal(new ClaimsIdentity(claims, GreenfieldConstants.AuthenticationType)),
                 GreenfieldConstants.AuthenticationType));
+        }
+
+        AuthenticateResult Fail(string reason)
+        {
+            Context.Items.TryAdd(APIKeysAuthenticationHandler.AuthFailureReason, reason);
+            return AuthenticateResult.Fail(reason);
         }
     }
 }

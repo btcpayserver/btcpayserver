@@ -8,6 +8,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
+using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models.InvoicingModels;
@@ -22,8 +23,10 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Services.Stores;
+using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using NBitcoin;
 using NBitpayClient;
 using Newtonsoft.Json;
@@ -1358,9 +1361,10 @@ namespace BTCPayServer.Tests
         {
             using var tester = CreateServerTester(newDb: true);
             tester.PayTester.DisableRegistration = true;
+            tester.PayTester.HostEnvironment = Environments.Production;
             await tester.StartAsync();
             var user = tester.NewAccount();
-            user.GrantAccess();
+            await user.GrantAccessAsync();
             await user.MakeAdmin();
             var clientProfile = await user.CreateClient(Policies.CanModifyProfile);
             var clientServer = await user.CreateClient(Policies.CanCreateUser, Policies.CanViewProfile);
@@ -1410,6 +1414,29 @@ namespace BTCPayServer.Tests
             await AssertValidationError(new[] { "Email" }, async () =>
                 await clientServer.CreateUser(
                     new CreateApplicationUserRequest() { Password = Guid.NewGuid().ToString() }));
+
+            // No rate limit for new accounts
+            for (var i = 0; i < 10; i++)
+            {
+                await clientBasic.GetCurrentUser();
+            }
+
+            var facto = tester.PayTester.GetService<ApplicationDbContextFactory>();
+            await using var ctx = facto.CreateContext();
+            await ctx.Database.GetDbConnection().ExecuteAsync("""
+                                                        UPDATE "AspNetUsers"
+                                                        SET "Created"= NOW() - interval '1 day'
+                                                        WHERE "Id"=@id
+                                                        """, new{ id = user.UserId });
+
+            var err = await AssertEx.AssertApiError(401, "unauthenticated", async () =>
+            {
+                for (var i = 0; i < 10; i++)
+                {
+                    await clientBasic.GetCurrentUser();
+                }
+            });
+            Assert.Contains("Rate limited", err.Message);
         }
 
         [Fact(Timeout = TestTimeout)]

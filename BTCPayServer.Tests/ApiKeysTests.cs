@@ -48,13 +48,13 @@ namespace BTCPayServer.Tests
 
             async Task AssertNoPermission(string permission)
             {
+                await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
                 var txt = await s.Page.ContentAsync();
                 Assert.DoesNotContain(permission, txt);
             }
             async Task AssertPermission(string permission)
             {
-                var txt = await s.Page.ContentAsync();
-                Assert.Contains(permission, txt);
+                await s.Page.Locator($".text-muted:has-text('{permission}')").WaitForAsync();
             }
 
             //not an admin, so this permission should not show

@@ -28,6 +28,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer;
@@ -184,6 +185,7 @@ namespace BTCPayServer.Tests
                     {
                         options.ValidateScopes = true;
                     })
+                    .UseEnvironment(HostEnvironment)
                     .UseConfiguration(conf)
                     .UseContentRoot(FindBTCPayServerDirectory())
                     .UseWebRoot(Path.Combine(FindBTCPayServerDirectory(), "wwwroot"))
@@ -344,6 +346,7 @@ namespace BTCPayServer.Tests
         public string SSHKeyFile { get; internal set; }
         public string SSHConnection { get; set; }
         public bool NoCSP { get; set; }
+        public string HostEnvironment { get; set; } = Environments.Development;
 
         public T GetController<T>(string userId = null, string storeId = null, bool isAdmin = false) where T : Controller
         {

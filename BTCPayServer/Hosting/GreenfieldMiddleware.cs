@@ -43,7 +43,9 @@ namespace BTCPayServer.Hosting
                 }
                 if (httpContext.Response.StatusCode == 401)
                 {
-                    var outputObj = new GreenfieldAPIError("unauthenticated", "Authentication is required for accessing this endpoint");
+                    httpContext.Items.TryGetValue(APIKeysAuthenticationHandler.AuthFailureReason, out var reason);
+                    var reasonStr = reason as string ?? "Authentication is required for accessing this endpoint";
+                    var outputObj = new GreenfieldAPIError("unauthenticated", reasonStr);
                     await WriteError(httpContext, outputObj);
                 }
             }

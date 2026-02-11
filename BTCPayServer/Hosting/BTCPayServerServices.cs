@@ -564,7 +564,7 @@ namespace BTCPayServer.Hosting
                          { "NOK", "barebitcoin" },
                          { "CZK", "coinmate" },
                          { "ZAR", "luno" },
-                         { "INR", "desiboard" }
+                         { "INR", "coindcx" }
                      })
             {
                 var r = new DefaultRules.Recommendation(rule.Key, rule.Value);
@@ -625,6 +625,7 @@ namespace BTCPayServer.Hosting
             services.AddRateProvider<CoinmateRateProvider>();
             services.AddRateProvider<LunoRateProvider>();
             services.AddRateProvider<DesiboardRateProvider>();
+            services.AddRateProvider<CoinDCXRateProvider>();
 
             services.AddSingleton<InvoiceBlobMigratorHostedService>();
             services.AddSingleton<IHostedService, InvoiceBlobMigratorHostedService>(o => o.GetRequiredService<InvoiceBlobMigratorHostedService>());

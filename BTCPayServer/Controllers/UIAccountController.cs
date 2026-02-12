@@ -256,21 +256,17 @@ namespace BTCPayServer.Controllers
 
         private async Task<LoginWithFido2ViewModel> BuildFido2ViewModel(bool rememberMe, ApplicationUser user)
         {
-            if (btcPayServerEnvironment.IsSecure(HttpContext))
+            if (!btcPayServerEnvironment.IsSecure(HttpContext))
+                return null;
+            var r = await fido2Service.RequestLogin(user.Id);
+            if (r is null)
+                return null;
+            return new LoginWithFido2ViewModel
             {
-                var r = await fido2Service.RequestLogin(user.Id);
-                if (r is null)
-                {
-                    return null;
-                }
-                return new LoginWithFido2ViewModel
-                {
-                    Data = System.Text.Json.JsonSerializer.Serialize(r, r.GetType()),
-                    UserId = user.Id,
-                    RememberMe = rememberMe
-                };
-            }
-            return null;
+                Data = r.ToJson(),
+                UserId = user.Id,
+                RememberMe = rememberMe
+            };
         }
 
         private async Task<LoginWithLNURLAuthViewModel> BuildLNURLAuthViewModel(bool rememberMe, ApplicationUser user)

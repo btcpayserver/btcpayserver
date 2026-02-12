@@ -2483,6 +2483,7 @@ namespace BTCPayServer.Tests
             await s.PayInvoice(true, 10);
             var invoiceId = s.Page.Url[(s.Page.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
             await s.GoToInvoice(invoiceId);
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             pageContent = await s.Page.ContentAsync();
             Assert.Contains("test-without-perk@crowdfund.com", pageContent);
 

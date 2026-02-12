@@ -1063,6 +1063,7 @@ goodies:
             await s.ClickPagePrimary();
             await s.FindAlertMessage();
 
+            await s.Page.Locator("#CodeTabButton").WaitForAsync();
             await s.Page.Locator("#CodeTabButton").ScrollIntoViewIfNeededAsync();
             await s.Page.ClickAsync("#CodeTabButton");
             template = await s.Page.Locator("#TemplateConfig").InputValueAsync();
@@ -1104,6 +1105,7 @@ goodies:
             // Let's set change the root app
             await s.GoToHome();
             await s.GoToServer(ServerNavPages.Policies);
+            await s.Page.Locator("#RootAppId").WaitForAsync();
             await s.Page.Locator("#RootAppId").ScrollIntoViewIfNeededAsync();
 
             var options = await s.Page.Locator("#RootAppId option").AllTextContentsAsync();
@@ -1140,10 +1142,8 @@ goodies:
             // Let's check with domain mapping as well.
             await s.GoToUrl(prevUrl);
             await s.GoToServer(ServerNavPages.Policies);
-            await s.Page.Locator("#RootAppId").ScrollIntoViewIfNeededAsync();
             await s.Page.Locator("#RootAppId").SelectOptionAsync("");
             await s.ClickPagePrimary();
-            await s.Page.Locator("#RootAppId").ScrollIntoViewIfNeededAsync();
             await s.Page.ClickAsync("#AddDomainButton");
             await s.Page.Locator("#DomainToAppMapping_0__Domain").FillAsync(new Uri(s.Page.Url, UriKind.Absolute).DnsSafeHost);
 

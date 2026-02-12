@@ -145,9 +145,9 @@ namespace BTCPayServer.Tests
             var conn = ctx.Database.GetDbConnection();
             await conn.ExecuteAsync("INSERT INTO \"Invoices\" (\"Id\", \"Created\") VALUES ('i', NOW())");
             await conn.ExecuteAsync(
-                "INSERT INTO \"AddressInvoices\" VALUES ('aaa#BTC', 'i'),('bbb','i'),('ccc#BTC_LNU', 'i'),('ddd#XMR_MoneroLike', 'i'),('eee#ZEC_ZcashLike', 'i')");
+                "INSERT INTO \"AddressInvoices\" VALUES ('aaa#BTC', 'i'),('bbb','i'),('ccc#BTC_LNU', 'i'),('ddd#XMR_MoneroLike', 'i'),('eee#ZEC_ZcashLike', 'i'),('fff#BDX_BeldexLike', 'i')");
             await tester.CompleteMigrations();
-            foreach (var v in new[] { ("aaa", "BTC-CHAIN"), ("bbb", "BTC-CHAIN"), ("ddd", "XMR-CHAIN") , ("eee", "ZEC-CHAIN") })
+            foreach (var v in new[] { ("aaa", "BTC-CHAIN"), ("bbb", "BTC-CHAIN"), ("ddd", "XMR-CHAIN") , ("eee", "ZEC-CHAIN"), ("fff", "BDX-CHAIN") })
             {
                 var ok = await conn.ExecuteScalarAsync<bool>("SELECT 't'::BOOLEAN FROM \"AddressInvoices\" WHERE \"Address\"=@a AND \"PaymentMethodId\"=@b", new { a = v.Item1, b = v.Item2 });
                 Assert.True(ok);

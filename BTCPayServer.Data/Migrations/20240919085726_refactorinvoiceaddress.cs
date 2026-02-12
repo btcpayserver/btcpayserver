@@ -32,6 +32,7 @@ namespace BTCPayServer.Migrations
                                          WHEN STRPOS((string_to_array("Address", '#'))[2], '_') = 0 THEN (string_to_array("Address", '#'))[2] || '-CHAIN'
                                          WHEN STRPOS((string_to_array("Address", '#'))[2], '_MoneroLike') > 0 THEN replace((string_to_array("Address", '#'))[2],'_MoneroLike','-CHAIN')
                                          WHEN STRPOS((string_to_array("Address", '#'))[2], '_ZcashLike') > 0 THEN replace((string_to_array("Address", '#'))[2],'_ZcashLike','-CHAIN')
+                                         WHEN STRPOS((string_to_array("Address", '#'))[2], '_BeldexLike') > 0 THEN replace((string_to_array("Address", '#'))[2],'_BeldexLike','-CHAIN')
                                          ELSE '' END;
                 ALTER TABLE "AddressInvoices" DROP COLUMN IF EXISTS "CreatedTime";
                 DELETE FROM "AddressInvoices" WHERE "PaymentMethodId" = '';

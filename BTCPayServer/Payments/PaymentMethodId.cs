@@ -103,6 +103,7 @@ namespace BTCPayServer.Payments
         {
             "XMR",
             "ZEC",
+            "BDX",
             "LCAD",
             "LBTC",
             "USDt",
@@ -164,7 +165,7 @@ namespace BTCPayServer.Payments
             return paymentType.ToLowerInvariant() switch
             {
                 "lightninglike" or "lightningnetwork" or "offchain" or "off-chain" => PaymentTypes.LN,
-                "bitcoinlike" or "onchain" or "btclike" or "on-chain" or "monerolike" or "zcashlike" => PaymentTypes.CHAIN,
+                "bitcoinlike" or "onchain" or "btclike" or "on-chain" or "monerolike" or "zcashlike" or "beldexlike" => PaymentTypes.CHAIN,
                 "lnurlpay" => PaymentTypes.LNURL,
                 _ => null
             };

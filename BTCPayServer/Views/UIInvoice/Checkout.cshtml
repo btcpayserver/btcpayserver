@@ -223,6 +223,11 @@
                 </div>
             </section>
         </main>
+        <main v-if="isActive && srvModel.checkoutText" class="tile checkout-text">
+            <section>
+                <div class="text-muted text-center" v-text="srvModel.checkoutText"></div>
+            </section>
+        </main>
         @if (Env.CheatMode)
         {
             <checkout-cheating invoice-id="@Model.InvoiceId" :due="due" :is-settled="isSettled" :is-processing="isProcessing" :payment-method-id="pmId" :crypto-code="srvModel.paymentMethodCurrency"></checkout-cheating>

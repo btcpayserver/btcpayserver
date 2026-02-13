@@ -180,6 +180,13 @@ section dl > div dd {
     margin-top: var(--btcpay-space-l);
 }
 
+.checkout-text {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: var(--btcpay-font-size-s);
+    line-height: 1.4;
+}
+
 @media (max-width: 400px) {
     /* Pull it up if there's no store header */
     #Checkout > main.tile:first-child {

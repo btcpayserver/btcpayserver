@@ -222,7 +222,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="CheckoutText" class="form-label"></label>
-                <textarea asp-for="CheckoutText" class="form-control" rows="3"></textarea>
+                <textarea asp-for="CheckoutText" class="form-control" rows="3" maxlength="500"></textarea>
                 <span asp-validation-for="CheckoutText" class="text-danger"></span>
                 <div class="form-text" text-translate="true">Custom text displayed on the checkout page below the payment details. Plain text only, newlines are supported.</div>
             </div>

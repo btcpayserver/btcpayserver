@@ -10,13 +10,10 @@
 @using BTCPayServer.Services
 @inject FormDataService FormDataService
 @inject LinkGenerator LinkGenerator
-@inject BTCPayNetworkProvider BTCPayNetworkProvider
 @model BTCPayServer.Models.PaymentRequestViewModels.UpdatePaymentRequestViewModel
 @{
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
     ViewData.SetLayoutModel(new LayoutModel("PaymentRequests", string.IsNullOrEmpty(Model.Id) ? StringLocalizer["Create Payment Request"] : StringLocalizer["Edit Payment Request"]));
-    var defaultNetwork = BTCPayNetworkProvider.DefaultNetwork;
-    var wallet = new WalletId(Model.StoreId, defaultNetwork.CryptoCode);
 }
 
 @section PageHeadContent {

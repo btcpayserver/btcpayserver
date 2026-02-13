@@ -20,6 +20,8 @@ namespace BTCPayServer.Models.WalletViewModels
 
         public PSBT GetSourcePSBT(Network network, ModelStateDictionary modelState)
         {
+            if (network is null)
+                return null;
             if (!string.IsNullOrEmpty(OtherPSBT))
             {
                 try
@@ -44,6 +46,8 @@ namespace BTCPayServer.Models.WalletViewModels
                 }
                 try
                 {
+                    if (network is null)
+                        return null;
                     return NBitcoin.PSBT.Load(bytes, network);
                 }
                 catch (FormatException ex)
@@ -56,6 +60,8 @@ namespace BTCPayServer.Models.WalletViewModels
             {
                 try
                 {
+                    if (network is null)
+                        return null;
                     return NBitcoin.PSBT.Parse(PSBT, network);
                 }
                 catch (FormatException ex)

@@ -28,9 +28,11 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using NBitcoin;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
@@ -650,8 +652,8 @@ namespace BTCPayServer.Controllers
                     break;
                 case "cpfp" when storeId is not null:
                     var network = _NetworkProvider.DefaultNetwork;
-                    var explorer = _ExplorerClients.GetExplorerClient(network);
-                    if (explorer is null)
+                    var explorer = network is null ? null : _ExplorerClients.GetExplorerClient(network);
+                    if (explorer is null || network is null)
                         return NotSupported(StringLocalizer["This feature is only available to BTC wallets"]);
                     if (!GetCurrentStore().HasPermission(GetUserId(), Policies.CanModifyStoreSettings))
                         return Forbid();
@@ -912,8 +914,8 @@ namespace BTCPayServer.Controllers
                                                   PaymentMethodName = _prettyName.PrettyName(kv.PaymentMethodId, true),
                                                   Order = kv.PaymentMethodId switch
                                                   {
-                                                      _ when PaymentTypes.CHAIN.GetPaymentMethodId(_NetworkProvider.DefaultNetwork.CryptoCode) == kv.PaymentMethodId => 0,
-                                                      _ when PaymentTypes.LN.GetPaymentMethodId(_NetworkProvider.DefaultNetwork.CryptoCode) == kv.PaymentMethodId => 1,
+                                                      _ when PaymentTypes.CHAIN.GetPaymentMethodId(_NetworkProvider.DefaultCryptoCode) == kv.PaymentMethodId => 0,
+                                                      _ when PaymentTypes.LN.GetPaymentMethodId(_NetworkProvider.DefaultCryptoCode) == kv.PaymentMethodId => 1,
                                                       _ when handler is ILightningPaymentHandler => 2,
                                                       _ => 3
                                                   }
@@ -1316,10 +1318,16 @@ namespace BTCPayServer.Controllers
 
         private IActionResult NoPaymentMethodResult(string storeId)
         {
+            object text = _NetworkProvider.DefaultNetwork?.CryptoCode switch
+            {
+                null => StringLocalizer["To create an invoice, you need to setup a wallet first"],
+                {} cryptoCode => ViewLocalizer["To create an invoice, you need to <a href='{0}'>setup a wallet</a> first", Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode, storeId })!]
+            };
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Error,
-                Html = $"To create an invoice, you need to <a href='{Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode = _NetworkProvider.DefaultNetwork.CryptoCode, storeId })}' class='alert-link'>set up a wallet</a> first",
+                LocalizedHtml = text as LocalizedHtmlString,
+                LocalizedMessage = text as LocalizedString,
                 AllowDismiss = false
             });
             return RedirectToAction(nameof(ListInvoices), new { storeId });

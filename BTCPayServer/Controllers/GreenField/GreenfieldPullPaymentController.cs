@@ -375,14 +375,14 @@ retry:
         public async Task<IActionResult> GetPullPaymentLNURL(string pullPaymentId)
         {
             var pp = await _pullPaymentService.GetPullPayment(pullPaymentId, false);
-            if (pp is null)
+            if (pp is null || _networkProvider.DefaultNetwork?.CryptoCode is not {} cryptoCode)
                 return PullPaymentNotFound();
 
             if (_pullPaymentService.SupportsLNURL(pp))
             {
                 var lnurlEndpoint = new Uri(Url.Action("GetLNURLForPullPayment", "UILNURL", new
                 {
-                    cryptoCode = _networkProvider.DefaultNetwork.CryptoCode,
+                    cryptoCode,
                     pullPaymentId
                 }, Request.Scheme, Request.Host.ToString())!);
 
@@ -446,7 +446,7 @@ retry:
                 ModelState.AddModelError(nameof(request.Destination), destination.error ?? "The destination is invalid for the payment specified");
                 return this.CreateValidationError(ModelState);
             }
-            
+
             var amt = ClaimRequest.GetClaimedAmount(destination.destination, request.Amount, payoutHandler.Currency, pp.Currency);
             if (amt is ClaimRequest.ClaimedAmountResult.Error err)
             {

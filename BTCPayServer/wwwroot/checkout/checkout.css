@@ -182,7 +182,7 @@ section dl > div dd {
 
 .checkout-text {
     white-space: pre-wrap;
-    word-break: break-word;
+    overflow-wrap: break-word;
     font-size: var(--btcpay-font-size-s);
     line-height: 1.4;
 }

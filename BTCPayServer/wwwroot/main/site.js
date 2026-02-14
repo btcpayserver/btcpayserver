@@ -371,10 +371,14 @@ const initGlobalSearch = () => {
 
     setBodySearchState(false);
 
-    const getCachedRemoteResults = cacheKey => remoteCache.get(cacheKey);
+    const getCachedRemoteResults = cacheKey => {
+        const cached = remoteCache.get(cacheKey);
+        return Array.isArray(cached) ? cached.slice() : null;
+    };
     const setCachedRemoteResults = (cacheKey, value) => {
+        const cachedValue = Array.isArray(value) ? value.slice() : [];
         if (remoteCache.has(cacheKey)) remoteCache.delete(cacheKey);
-        remoteCache.set(cacheKey, value);
+        remoteCache.set(cacheKey, cachedValue);
         if (remoteCache.size > maxRemoteCacheEntries) {
             const oldestKey = remoteCache.keys().next().value;
             if (oldestKey !== undefined) remoteCache.delete(oldestKey);
@@ -552,10 +556,26 @@ const initGlobalSearch = () => {
         resultsElement.appendChild(empty);
     };
 
+    const refreshRecentMetadata = entries => {
+        const localByUrl = new Map(localIndex.map(item => [item.url, item]));
+        return entries.map(entry => {
+            const local = localByUrl.get(entry.url);
+            if (!local) return entry;
+            return {
+                title: local.title || entry.title,
+                subtitle: local.subtitle || entry.subtitle || '',
+                category: local.category || entry.category,
+                url: entry.url
+            };
+        });
+    };
+
     const renderInitial = () => {
         showPanel();
         resultsElement.innerHTML = '';
-        const recent = loadGlobalSearchRecents().map(normalizeResult).filter(Boolean);
+        const recent = refreshRecentMetadata(loadGlobalSearchRecents())
+            .map(normalizeResult)
+            .filter(Boolean);
         const recentGroup = renderGroup('Recent', recent, 'Clear history', 'data-clear-search-history');
         if (recentGroup) resultsElement.appendChild(recentGroup);
         const suggestions = suggestedQueries.map(toSuggestionResult);

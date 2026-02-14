@@ -380,11 +380,22 @@ namespace BTCPayServer.Tests
         public async Task GoToProfile(string navPages)
         {
             await Page.ClickAsync("#menu-item-Account");
-            await Page.ClickAsync("#Nav-ManageAccount");
-            if (navPages != nameof(ManageNavPages.Index))
+            if (navPages == nameof(ManageNavPages.Index))
             {
-                await Page.ClickAsync($"#menu-item-{navPages}");
+                await Page.ClickAsync("#globalNavAccountMenu #Nav-ManageAccount");
+                return;
             }
+
+            var accountNavSelector = $"#globalNavAccountMenu #menu-item-{navPages}";
+            var accountNavItem = Page.Locator(accountNavSelector);
+            if (await accountNavItem.CountAsync() > 0 && await accountNavItem.First.IsVisibleAsync())
+            {
+                await accountNavItem.First.ClickAsync();
+                return;
+            }
+
+            await Page.ClickAsync("#globalNavAccountMenu #Nav-ManageAccount");
+            await Page.ClickAsync($"#menu-item-{navPages}");
         }
 
         public Task GoToServer(ServerNavPages navPages = ServerNavPages.Policies)
@@ -395,24 +406,18 @@ namespace BTCPayServer.Tests
             if (navPages == nameof(ServerNavPages.Plugins))
             {
                 await Page.ClickAsync("#globalNavPluginsToggle");
-                await Page.ClickAsync($"#menu-item-{navPages}");
+                await Page.ClickAsync("#globalNavPluginsMenu #menu-item-Plugins");
                 return;
             }
 
             await Page.ClickAsync("#globalNavServerToggle");
-            if (navPages == nameof(ServerNavPages.Policies))
-            {
-                await Page.ClickAsync("#menu-item-Policies");
-                return;
-            }
-
             if (navPages == nameof(ServerNavPages.Emails))
             {
-                await Page.ClickAsync($"#menu-item-Server-{navPages}");
+                await Page.ClickAsync("#globalNavServerMenu #menu-item-Server-Emails");
                 return;
             }
 
-            await Page.ClickAsync($"#menu-item-{navPages}");
+            await Page.ClickAsync($"#globalNavServerMenu #menu-item-{navPages}");
         }
 
         public async Task ClickOnAllSectionLinks(string sectionSelector = "#menu-item")
@@ -560,10 +565,15 @@ namespace BTCPayServer.Tests
                 if (WalletId != null)
                     WalletId = new WalletId(storeId, WalletId.CryptoCode);
                 if (storeNavPage != StoreNavPages.General)
-                    await Page.Locator($"#menu-item-{StoreNavPages.General}").ClickAsync();
+                    await Page.Locator($"#mainNav #menu-item-{StoreNavPages.General}").ClickAsync();
             }
 
-            await Page.Locator($"#menu-item-{storeNavPage}").ClickAsync();
+            var storeNavSelector = $"#mainNav #menu-item-{storeNavPage}";
+            var storeNavItem = Page.Locator(storeNavSelector);
+            if (storeNavPage != StoreNavPages.General && !await storeNavItem.First.IsVisibleAsync())
+                await Page.Locator($"#mainNav #menu-item-{StoreNavPages.General}").ClickAsync();
+
+            await storeNavItem.ClickAsync();
         }
 
         public async Task ClickCancel()

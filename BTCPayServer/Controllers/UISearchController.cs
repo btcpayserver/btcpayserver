@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using BTCPayServer;
 using BTCPayServer.Abstractions.Constants;
@@ -15,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Controllers
 {
@@ -306,41 +306,19 @@ namespace BTCPayServer.Controllers
         {
             var results = new List<GlobalSearchResult>();
 
-            var canModifyServerTask = IsAuthorized(Policies.CanModifyServerSettings);
-            var canViewProfileTask = IsAuthorized(Policies.CanViewProfile);
-            var canViewNotificationsTask = IsAuthorized(Policies.CanViewNotificationsForUser);
-            await Task.WhenAll(canModifyServerTask, canViewProfileTask, canViewNotificationsTask);
-
-            var canModifyServer = canModifyServerTask.Result;
-            var canViewProfile = canViewProfileTask.Result;
-            var canViewNotifications = canViewNotificationsTask.Result;
+            var canModifyServer = await IsAuthorized(Policies.CanModifyServerSettings);
+            var canViewProfile = await IsAuthorized(Policies.CanViewProfile);
+            var canViewNotifications = await IsAuthorized(Policies.CanViewNotificationsForUser);
 
             if (store != null)
             {
-                var canViewStoreSettingsTask = IsAuthorized(Policies.CanViewStoreSettings, store.Id);
-                var canModifyStoreSettingsTask = IsAuthorized(Policies.CanModifyStoreSettings, store.Id);
-                var canViewInvoicesTask = IsAuthorized(Policies.CanViewInvoices, store.Id);
-                var canViewReportsTask = IsAuthorized(Policies.CanViewReports, store.Id);
-                var canViewPaymentRequestsTask = IsAuthorized(Policies.CanViewPaymentRequests, store.Id);
-                var canViewPullPaymentsTask = IsAuthorized(Policies.CanViewPullPayments, store.Id);
-                var canViewPayoutsTask = IsAuthorized(Policies.CanViewPayouts, store.Id);
-
-                await Task.WhenAll(
-                    canViewStoreSettingsTask,
-                    canModifyStoreSettingsTask,
-                    canViewInvoicesTask,
-                    canViewReportsTask,
-                    canViewPaymentRequestsTask,
-                    canViewPullPaymentsTask,
-                    canViewPayoutsTask);
-
-                var canViewStoreSettings = canViewStoreSettingsTask.Result;
-                var canModifyStoreSettings = canModifyStoreSettingsTask.Result;
-                var canViewInvoices = canViewInvoicesTask.Result;
-                var canViewReports = canViewReportsTask.Result;
-                var canViewPaymentRequests = canViewPaymentRequestsTask.Result;
-                var canViewPullPayments = canViewPullPaymentsTask.Result;
-                var canViewPayouts = canViewPayoutsTask.Result;
+                var canViewStoreSettings = await IsAuthorized(Policies.CanViewStoreSettings, store.Id);
+                var canModifyStoreSettings = await IsAuthorized(Policies.CanModifyStoreSettings, store.Id);
+                var canViewInvoices = await IsAuthorized(Policies.CanViewInvoices, store.Id);
+                var canViewReports = await IsAuthorized(Policies.CanViewReports, store.Id);
+                var canViewPaymentRequests = await IsAuthorized(Policies.CanViewPaymentRequests, store.Id);
+                var canViewPullPayments = await IsAuthorized(Policies.CanViewPullPayments, store.Id);
+                var canViewPayouts = await IsAuthorized(Policies.CanViewPayouts, store.Id);
 
                 if (canModifyStoreSettings)
                 {

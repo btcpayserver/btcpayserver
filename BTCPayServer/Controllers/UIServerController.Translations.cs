@@ -179,6 +179,7 @@ namespace BTCPayServer.Controllers
             
             await _localizer.Save(existingDictionary, translations);
             await UpdateLanguagePackMetadata(language, version);
+            _updateCheckCache.TryRemove(language, out _);
             return RedirectToAction(nameof(ListDictionaries));
         }
 
@@ -208,6 +209,7 @@ namespace BTCPayServer.Controllers
             var translations = Translations.CreateFromJson(translationsJson);
             await _localizer.Save(existingDictionary, translations);
             await UpdateLanguagePackMetadata(dictionary, version);
+            _updateCheckCache.TryRemove(dictionary, out _);
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' updated successfully", dictionary].Value;
             return RedirectToAction(nameof(ListDictionaries));
         }
@@ -289,7 +291,9 @@ namespace BTCPayServer.Controllers
 
         private async Task UpdateLanguagePackMetadata(string language, string version)
         {
-            var metadata = new JObject { ["version"] = version };
+            var existingDict = await _localizer.GetDictionary(language);
+            var metadata = existingDict?.Metadata ?? new JObject();
+            metadata["version"] = version;
             await _localizer.UpdateDictionaryMetadata(language, metadata);
         }
 

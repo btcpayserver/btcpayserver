@@ -268,6 +268,7 @@ const collectGlobalSearchLinks = () => {
     const selectors = [
         '#mainNav a[href]',
         '#mainNavSettings a[href]',
+        '#globalNavPluginsMenu a[href]',
         '#globalNavServerMenu a[href]',
         '#globalNavAccountMenu a[href]'
     ];
@@ -324,9 +325,7 @@ const clearGlobalSearchRecents = () => {
 
 const addGlobalSearchRecent = result => {
     if (!result || !result.url) return;
-    const current = loadGlobalSearchRecents()
-        .filter(item => item.url !== result.url)
-        .filter(item => item.title !== result.title);
+    const current = loadGlobalSearchRecents().filter(item => item.url !== result.url);
     current.unshift({
         title: result.title,
         subtitle: result.subtitle || '',
@@ -348,7 +347,8 @@ const initGlobalSearch = () => {
 
     const { searchUrl, storeId } = nav.dataset;
     const localIndex = collectGlobalSearchLinks();
-    const remoteCache = {};
+    const remoteCache = new Map();
+    const maxRemoteCacheEntries = 32;
     const now = new Date();
     const todayIso = now.toISOString().slice(0, 10);
     const yesterday = new Date(now);
@@ -370,6 +370,16 @@ const initGlobalSearch = () => {
     };
 
     setBodySearchState(false);
+
+    const getCachedRemoteResults = cacheKey => remoteCache.get(cacheKey);
+    const setCachedRemoteResults = (cacheKey, value) => {
+        if (remoteCache.has(cacheKey)) remoteCache.delete(cacheKey);
+        remoteCache.set(cacheKey, value);
+        if (remoteCache.size > maxRemoteCacheEntries) {
+            const oldestKey = remoteCache.keys().next().value;
+            if (oldestKey !== undefined) remoteCache.delete(oldestKey);
+        }
+    };
 
     const isMobileSearchOpen = () => nav.classList.contains('globalSearch-mobile-open');
 
@@ -419,11 +429,23 @@ const initGlobalSearch = () => {
 
     const normalizeResult = result => {
         if (!result || !result.url || !result.title) return null;
+        let resolvedUrl;
+        try {
+            resolvedUrl = new URL(result.url, window.location.href);
+        } catch {
+            return null;
+        }
+        const protocol = (resolvedUrl.protocol || '').toLowerCase();
+        const isHttpLike = protocol === 'http:' || protocol === 'https:';
+        if (!isHttpLike && protocol !== 'mailto:' && protocol !== 'tel:') return null;
+        const normalizedUrl = isHttpLike && resolvedUrl.origin === window.location.origin
+            ? `${resolvedUrl.pathname}${resolvedUrl.search}${resolvedUrl.hash}`
+            : resolvedUrl.toString();
         return {
             title: result.title,
             subtitle: result.subtitle || '',
             category: result.category || 'Result',
-            url: result.url
+            url: normalizedUrl
         };
     };
 
@@ -562,7 +584,8 @@ const initGlobalSearch = () => {
     const searchRemote = async query => {
         if (!searchUrl || !query || query.length < 2) return [];
         const cacheKey = `${query}|${storeId || ''}`;
-        if (remoteCache[cacheKey]) return remoteCache[cacheKey];
+        const cached = getCachedRemoteResults(cacheKey);
+        if (cached) return cached;
         const url = new URL(searchUrl, window.location.origin);
         url.searchParams.set('q', query);
         if (storeId) url.searchParams.set('storeId', storeId);
@@ -570,10 +593,11 @@ const initGlobalSearch = () => {
         const response = await fetch(url.toString(), { credentials: 'include' });
         if (!response.ok) return [];
         const payload = await response.json();
-        remoteCache[cacheKey] = (Array.isArray(payload) ? payload : [])
+        const normalized = (Array.isArray(payload) ? payload : [])
             .map(normalizeResult)
             .filter(Boolean);
-        return remoteCache[cacheKey];
+        setCachedRemoteResults(cacheKey, normalized);
+        return normalized;
     };
 
     const mergeResults = (remote, local) => {

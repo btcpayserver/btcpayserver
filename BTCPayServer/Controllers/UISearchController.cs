@@ -361,15 +361,15 @@ namespace BTCPayServer.Controllers
 
             if (canModifyServer)
             {
-                AddPage(results, query, "Server Settings", Url.Action(nameof(UIServerController.Policies), "UIServer"), "Server", "policies settings");
-                AddPage(results, query, "Users", Url.Action(nameof(UIServerController.ListUsers), "UIServer"), "Server", "users");
-                AddPage(results, query, "Roles", Url.Action(nameof(UIServerController.ListRoles), "UIServer"), "Server", "roles");
-                AddPage(results, query, "Services", Url.Action(nameof(UIServerController.Services), "UIServer"), "Server", "services");
-                AddPage(results, query, "Branding", Url.Action(nameof(UIServerController.Branding), "UIServer"), "Server", "branding");
-                AddPage(results, query, "Translations", Url.Action(nameof(UIServerController.ListDictionaries), "UIServer"), "Server", "translations");
-                AddPage(results, query, "Maintenance", Url.Action(nameof(UIServerController.Maintenance), "UIServer"), "Server", "maintenance");
-                AddPage(results, query, "Logs", Url.Action(nameof(UIServerController.LogsView), "UIServer"), "Server", "logs");
-                AddPage(results, query, "Files", Url.Action(nameof(UIServerController.Files), "UIServer"), "Server", "files storage");
+                AddPage(results, query, "Server Settings", Url.Action(nameof(UIServerController.Policies), "UIServer"), "Server", "server settings policies");
+                AddPage(results, query, "Users", Url.Action(nameof(UIServerController.ListUsers), "UIServer"), "Server", "server settings users");
+                AddPage(results, query, "Roles", Url.Action(nameof(UIServerController.ListRoles), "UIServer"), "Server", "server settings roles");
+                AddPage(results, query, "Services", Url.Action(nameof(UIServerController.Services), "UIServer"), "Server", "server settings services");
+                AddPage(results, query, "Branding", Url.Action(nameof(UIServerController.Branding), "UIServer"), "Server", "server settings branding");
+                AddPage(results, query, "Translations", Url.Action(nameof(UIServerController.ListDictionaries), "UIServer"), "Server", "server settings translations");
+                AddPage(results, query, "Maintenance", Url.Action(nameof(UIServerController.Maintenance), "UIServer"), "Server", "server settings maintenance");
+                AddPage(results, query, "Logs", Url.Action(nameof(UIServerController.LogsView), "UIServer"), "Server", "server settings logs");
+                AddPage(results, query, "Files", Url.Action(nameof(UIServerController.Files), "UIServer"), "Server", "server settings files storage");
 
                 var pluginsUrl = Url.Action(nameof(UIServerController.ListPlugins), "UIServer");
                 AddPage(results, query, "Manage Plugins", pluginsUrl, "Server", "plugins");
@@ -468,8 +468,16 @@ namespace BTCPayServer.Controllers
             if (string.IsNullOrEmpty(query))
                 return true;
 
-            return values.Any(value => !string.IsNullOrEmpty(value) &&
-                                       value.Contains(query, StringComparison.OrdinalIgnoreCase));
+            var terms = query.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            if (terms.Length == 0)
+                return true;
+
+            var searchableValues = values.Where(value => !string.IsNullOrEmpty(value)).ToArray();
+            if (searchableValues.Length == 0)
+                return false;
+
+            return terms.All(term => searchableValues.Any(value =>
+                value.Contains(term, StringComparison.OrdinalIgnoreCase)));
         }
 
         private static string CreateContainsILikePattern(string value) => $"%{EscapeILikePattern(value)}%";

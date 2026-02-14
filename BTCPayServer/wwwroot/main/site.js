@@ -286,6 +286,11 @@ const collectGlobalSearchLinks = () => {
         if (absoluteHref.protocol === 'javascript:') return;
         const isHttpLike = absoluteHref.protocol === 'http:' || absoluteHref.protocol === 'https:';
         const isSameOriginHttp = isHttpLike && absoluteHref.origin === window.location.origin;
+        const contextualKeywords = [
+            anchor.closest('#globalNavServerMenu') ? 'server settings' : '',
+            anchor.closest('#globalNavAccountMenu') ? 'account settings profile' : '',
+            anchor.closest('#globalNavPluginsMenu') ? 'plugins' : ''
+        ].filter(Boolean).join(' ');
         candidates.push({
             title: text,
             subtitle: '',
@@ -293,7 +298,7 @@ const collectGlobalSearchLinks = () => {
             url: isSameOriginHttp
                 ? `${absoluteHref.pathname}${absoluteHref.search}${absoluteHref.hash}`
                 : absoluteHref.toString(),
-            keywords: `${text} ${absoluteHref.pathname} ${absoluteHref.hostname}`
+            keywords: `${text} ${absoluteHref.pathname} ${absoluteHref.hostname} ${contextualKeywords}`.trim()
         });
     });
     return candidates.filter((item, index, all) =>

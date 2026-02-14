@@ -226,7 +226,6 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Page.FillAsync("#Amount", payoutAmount.ToString());
         await s.Page.FillAsync("#Currency", "BTC");
         await s.ClickPagePrimary();
-        await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
         string bolt;
         PayoutData payout;
         await using (await s.SwitchPage(async () =>

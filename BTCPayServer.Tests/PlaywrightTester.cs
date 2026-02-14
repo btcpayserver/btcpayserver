@@ -564,8 +564,6 @@ namespace BTCPayServer.Tests
                 StoreId = storeId;
                 if (WalletId != null)
                     WalletId = new WalletId(storeId, WalletId.CryptoCode);
-                if (storeNavPage != StoreNavPages.General)
-                    await Page.Locator($"#mainNav #menu-item-{StoreNavPages.General}").ClickAsync();
             }
 
             var storeNavSelector = $"#mainNav #menu-item-{storeNavPage}";

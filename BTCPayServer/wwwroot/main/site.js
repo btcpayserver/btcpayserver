@@ -373,7 +373,10 @@ const initGlobalSearch = () => {
 
     const getCachedRemoteResults = cacheKey => {
         const cached = remoteCache.get(cacheKey);
-        return Array.isArray(cached) ? cached.slice() : null;
+        if (!Array.isArray(cached)) return null;
+        remoteCache.delete(cacheKey);
+        remoteCache.set(cacheKey, cached);
+        return cached.slice();
     };
     const setCachedRemoteResults = (cacheKey, value) => {
         const cachedValue = Array.isArray(value) ? value.slice() : [];

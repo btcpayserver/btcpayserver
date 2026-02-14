@@ -90,8 +90,18 @@
     <div class="mb-5">
         <h3 class="mb-4" text-translate="true">Disabled Plugins</h3>
         <ul class="list-group list-group-flush d-inline-block">
-            @foreach (var (plugin, version) in Model.Disabled)
+             @foreach (var item in Model.Disabled)
             {
+                var plugin = item.Key;
+                var version = item.Value;
+
+                var matchedAvailable = Model.Available
+                .Where(p => p.Identifier == plugin && version != null && p.Version > version)
+                .OrderByDescending(p => p.Version)
+                .ToArray();
+
+                var updateCandidate = matchedAvailable.FirstOrDefault();
+                var updateAvailable = updateCandidate != null; 
                 <li class="list-group-item px-0">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                         <span>
@@ -106,6 +116,17 @@
                             var enabled = Model.Commands.Any(c => c.plugin == plugin && c.command == "enable");
 						}
                         <div class="d-flex gap-2">
+                             @if (updateAvailable)
+                             {
+                                <form asp-action="InstallPlugin"
+                                    asp-route-plugin="@plugin"
+                                    asp-route-version="@updateCandidate.Version">
+                                    <button type="submit" class="btn btn-sm btn-secondary" text-translate="true">
+                                            Update
+                                    </button>
+                                </form>
+                              }
+
                             <form asp-action="EnablePlugin" asp-route-plugin="@plugin">
 							    @if (enabled)
 							    {

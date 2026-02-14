@@ -5,12 +5,9 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Data;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services;
-using Dapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Data.Common;
 using System.Linq;
 using System.Net.Http;
@@ -16,6 +17,8 @@ namespace BTCPayServer.Controllers
 {
     public partial class UIServerController
     {
+        private static readonly ConcurrentDictionary<string, (bool UpdateAvailable, DateTime CheckedAt)> _updateCheckCache = new();
+        private static readonly TimeSpan _cacheExpiration = TimeSpan.FromHours(1);
         [HttpGet("server/dictionaries")]
         public async Task<IActionResult> ListDictionaries()
         {
@@ -32,7 +35,7 @@ namespace BTCPayServer.Controllers
                 
                 if (isDownloadedPack && dictionary.Source == "Custom")
                 {
-                    updateAvailable = await CheckForLanguagePackUpdate(dictionary.DictionaryName, dictionary.Metadata);
+                    updateAvailable = await CheckForLanguagePackUpdateCached(dictionary.DictionaryName, dictionary.Metadata);
                 }
                 
                 var dict = new ListDictionariesViewModel.DictionaryViewModel
@@ -180,6 +183,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("server/dictionaries/{dictionary}/update")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateLanguagePack(string dictionary)
         {
             var existingDictionary = await _localizer.GetDictionary(dictionary);
@@ -210,10 +214,17 @@ namespace BTCPayServer.Controllers
 
         private async Task<(string translationsJson, string version)> FetchLanguagePackFromRepository(string language)
         {
-            var fileName = language.ToLowerInvariant();
+            if (!GetDownloadableLanguages().Contains(language))
+            {
+                throw new ArgumentException($"Language '{language}' is not a valid downloadable language pack.", nameof(language));
+            }
+            
+            var fileName = Uri.EscapeDataString(language.ToLowerInvariant());
             var url = $"https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/translations/{fileName}.json";
             
             var httpClient = HttpClientFactory.CreateClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(30);
+            
             var translationsJson = await httpClient.GetStringAsync(url);
             
             var hash = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(translationsJson));
@@ -222,14 +233,39 @@ namespace BTCPayServer.Controllers
             return (translationsJson, version);
         }
 
+        private async Task<bool> CheckForLanguagePackUpdateCached(string language, JObject metadata)
+        {
+            var cacheKey = language;
+            
+            if (_updateCheckCache.TryGetValue(cacheKey, out var cached))
+            {
+                if (DateTime.UtcNow - cached.CheckedAt < _cacheExpiration)
+                {
+                    return cached.UpdateAvailable;
+                }
+            }
+            
+            var updateAvailable = await CheckForLanguagePackUpdate(language, metadata);
+            _updateCheckCache[cacheKey] = (updateAvailable, DateTime.UtcNow);
+            
+            return updateAvailable;
+        }
+        
         private async Task<bool> CheckForLanguagePackUpdate(string language, JObject metadata)
         {
             try
             {
-                var fileName = language.ToLowerInvariant();
+                if (!GetDownloadableLanguages().Contains(language))
+                {
+                    return false;
+                }
+                
+                var fileName = Uri.EscapeDataString(language.ToLowerInvariant());
                 var url = $"https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/translations/{fileName}.json";
                 
                 var httpClient = HttpClientFactory.CreateClient();
+                httpClient.Timeout = TimeSpan.FromSeconds(10);
+                
                 var remoteContent = await httpClient.GetStringAsync(url);
                 
                 var remoteHash = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(remoteContent));
@@ -241,7 +277,11 @@ namespace BTCPayServer.Controllers
                 
                 return remoteVersion != localVersion;
             }
-            catch
+            catch (HttpRequestException)
+            {
+                return false;
+            }
+            catch (TaskCanceledException)
             {
                 return false;
             }

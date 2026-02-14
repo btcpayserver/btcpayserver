@@ -56,7 +56,9 @@
 							@if (v.IsDownloadedLanguagePack && v.UpdateAvailable)
 							{
 								<a id="Update-@v.DictionaryName" href="#" onclick="document.getElementById('update-form-@v.DictionaryName').submit(); return false;" text-translate="true">Update</a>
-								<form id="update-form-@v.DictionaryName" method="post" asp-action="UpdateLanguagePack" asp-route-dictionary="@v.DictionaryName" style="display:none;"></form>
+								<form id="update-form-@v.DictionaryName" method="post" asp-action="UpdateLanguagePack" asp-route-dictionary="@v.DictionaryName" style="display:none;">
+									@Html.AntiForgeryToken()
+								</form>
 							}
 							<a asp-action="CreateDictionary" asp-route-fallback="@v.DictionaryName" text-translate="true">Clone</a>
 							@if (!v.IsSelected)

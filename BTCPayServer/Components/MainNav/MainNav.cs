@@ -27,8 +27,6 @@ namespace BTCPayServer.Components.MainNav
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
-        private readonly SettingsRepository _settingsRepository;
-        private readonly UriResolver _uriResolver;
         private readonly IMemoryCache _cache;
 
         public PoliciesSettings PoliciesSettings { get; }
@@ -40,9 +38,7 @@ namespace BTCPayServer.Components.MainNav
             BTCPayNetworkProvider networkProvider,
             UserManager<ApplicationUser> userManager,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
-            SettingsRepository settingsRepository,
             IMemoryCache cache,
-            UriResolver uriResolver,
             PoliciesSettings policiesSettings)
         {
             _storeRepo = storeRepo;
@@ -51,8 +47,6 @@ namespace BTCPayServer.Components.MainNav
             _networkProvider = networkProvider;
             _storesController = storesController;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
-            _settingsRepository = settingsRepository;
-            _uriResolver = uriResolver;
             _cache = cache;
             PoliciesSettings = policiesSettings;
         }
@@ -60,11 +54,9 @@ namespace BTCPayServer.Components.MainNav
         public async Task<IViewComponentResult> InvokeAsync()
         {
             var store = ViewContext.HttpContext.GetStoreData();
-            var serverSettings = await _settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
             var vm = new MainNavViewModel
             {
-                Store = store,
-                ContactUrl = serverSettings.ContactUrl
+                Store = store
             };
             if (store != null)
             {
@@ -121,16 +113,6 @@ namespace BTCPayServer.Components.MainNav
                     }).ToList();
 
                 vm.ArchivedAppsCount = apps.Count(a => a.Archived);
-            }
-
-            var user = await _userManager.GetUserAsync(HttpContext.User);
-            if (user != null)
-            {
-                var blob = user.GetBlob();
-                vm.UserName = blob?.Name;
-                vm.UserImageUrl = string.IsNullOrEmpty(blob?.ImageUrl)
-                    ? null
-                    : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob?.ImageUrl));
             }
 
             return View(vm);

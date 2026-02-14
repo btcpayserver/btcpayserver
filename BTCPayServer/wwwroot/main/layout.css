@@ -217,6 +217,7 @@
 #globalNav .globalSearch-clear .icon,
 #globalNav .globalSearch-back .icon {
     --icon-size: 1.1rem;
+
     width: 1.1rem;
     height: 1.1rem;
 }
@@ -694,7 +695,6 @@ body.global-search-open {
 }
 
 #NotificationsDropdown {
-    border: 0;
     border-radius: var(--btcpay-border-radius-l);
     background-color: var(--btcpay-body-bg);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 16%);
@@ -1180,7 +1180,7 @@ body.global-search-open {
 
 @media (min-width: 992px) and (max-height: 799px) {
     :root {
-        --content-padding-top: 1.25rem;
+        --content-padding-top: calc(var(--global-nav-height) + 1.25rem);
     }
 }
 

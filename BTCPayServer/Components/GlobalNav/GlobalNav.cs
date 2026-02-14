@@ -47,10 +47,11 @@ namespace BTCPayServer.Components.GlobalNav
             if (user != null)
             {
                 var blob = user.GetBlob();
+                var imageUrl = blob?.ImageUrl;
                 vm.UserName = blob?.Name;
-                vm.UserImageUrl = string.IsNullOrEmpty(blob?.ImageUrl)
+                vm.UserImageUrl = string.IsNullOrEmpty(imageUrl)
                     ? null
-                    : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob?.ImageUrl));
+                    : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(imageUrl));
             }
 
             return View(vm);

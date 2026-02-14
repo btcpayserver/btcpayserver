@@ -10,6 +10,12 @@
 @{
     var searchUrl = Url.Action("Global", "UISearch");
     var pluginsUrl = Url.Action("ListPlugins", "UIServer");
+    var loginName = User.Identity?.Name;
+    var accountDisplayName = string.IsNullOrEmpty(Model.UserName)
+        ? loginName ?? string.Empty
+        : string.IsNullOrEmpty(loginName)
+            ? Model.UserName
+            : $"{Model.UserName} ({loginName})";
 }
 
 <div id="globalNav" data-search-url="@searchUrl" data-store-id="@Model.CurrentStoreId">
@@ -116,16 +122,7 @@
                         <img src="@Model.UserImageUrl" alt="Profile picture" class="profile-picture" />
                     }
                     <div>
-                        <strong class="d-block text-truncate" style="max-width:@(string.IsNullOrEmpty(Model.UserImageUrl) ? "195px" : "160px")">
-                            @if (string.IsNullOrEmpty(Model.UserName))
-                            {
-                                @(User.Identity?.Name)
-                            }
-                            else
-                            {
-                                @($"{Model.UserName} ({User.Identity?.Name})")
-                            }
-                        </strong>
+                        <strong class="d-block text-truncate" style="max-width:@(string.IsNullOrEmpty(Model.UserImageUrl) ? "195px" : "160px")" title="@accountDisplayName">@accountDisplayName</strong>
                         @if (User.IsInRole(Roles.ServerAdmin))
                         {
                             <div class="text-secondary" text-translate="true">Administrator</div>

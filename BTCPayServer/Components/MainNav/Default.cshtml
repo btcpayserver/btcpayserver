@@ -242,7 +242,14 @@
                 </div>
             </div>
             <div id="MainNavTopRightHint" class="mainNav-top-right-hint py-2 px-3 mb-3 d-flex align-items-start gap-2" role="status">
-                <div class="small" text-translate="true">Server, account settings and navigation moved to the top-right menu, just look up!</div>
+                @if (User.IsInRole(Roles.ServerAdmin))
+                {
+                    <div class="small" text-translate="true">Server and account settings moved to the top-right menu, just look up!</div>
+                }
+                else
+                {
+                    <div class="small" text-translate="true">Account settings and navigation moved to the top-right menu, just look up!</div>
+                }
                 <button type="button" class="mainNav-top-right-hint-close ms-auto" data-dismiss-main-nav-hint aria-label="@StringLocalizer["Dismiss"]">
                     <vc:icon symbol="close" />
                 </button>

@@ -81,7 +81,6 @@
 				{
 					var res = await _NotificationManager.GetSummaryNotifications(userId, cachedOnly: false);
 					UpdateState(res);
-					StateHasChanged();
 				}
 			});
 		});

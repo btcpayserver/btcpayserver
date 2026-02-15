@@ -26,6 +26,7 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
@@ -55,6 +56,7 @@ namespace BTCPayServer.Controllers
         private FormComponentProviders FormProviders { get; }
         public FormDataService FormDataService { get; }
         public IStringLocalizer StringLocalizer { get; }
+        public ViewLocalizer ViewLocalizer { get; }
 
         public UIPaymentRequestController(
             UIInvoiceController invoiceController,
@@ -70,6 +72,7 @@ namespace BTCPayServer.Controllers
             FormComponentProviders formProviders,
             FormDataService formDataService,
             IStringLocalizer stringLocalizer,
+            ViewLocalizer viewLocalizer,
             ApplicationDbContextFactory dbContextFactory,
             BTCPayNetworkProvider networkProvider,
             StoreLabelRepository storeLabelRepository)
@@ -88,6 +91,7 @@ namespace BTCPayServer.Controllers
             FormProviders = formProviders;
             FormDataService = formDataService;
             StringLocalizer = stringLocalizer;
+            ViewLocalizer = viewLocalizer;
             _networkProvider = networkProvider;
             _storeLabelRepository = storeLabelRepository;
         }
@@ -677,11 +681,16 @@ namespace BTCPayServer.Controllers
 
         private IActionResult NoPaymentMethodResult(string storeId)
         {
+            object text = _networkProvider.DefaultNetwork?.CryptoCode switch
+            {
+                null => StringLocalizer["To create a payment request, you need to set up a wallet first"],
+                {} cryptoCode => ViewLocalizer["To create a payment request, you need to <a href='{0}'>setup a wallet</a> first", Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode, storeId })!]
+            };
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Error,
-                Html =
-                    $"To create a payment request, you need to <a href='{Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode = _networkProvider.DefaultNetwork.CryptoCode, storeId })}' class='alert-link'>set up a wallet</a> first",
+                LocalizedHtml = text as LocalizedHtmlString,
+                LocalizedMessage = text as LocalizedString,
                 AllowDismiss = false
             });
             return RedirectToAction(nameof(GetPaymentRequests), new { storeId });

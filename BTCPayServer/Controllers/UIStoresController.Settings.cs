@@ -419,8 +419,8 @@ public partial class UIStoresController
         var defaultChoice = defaultPaymentId?.FindNearest(enabled);
         if (defaultChoice is null)
         {
-            defaultChoice = enabled.FirstOrDefault(e => e == PaymentTypes.CHAIN.GetPaymentMethodId(_networkProvider.DefaultNetwork.CryptoCode)) ??
-                            enabled.FirstOrDefault(e => e == PaymentTypes.LN.GetPaymentMethodId(_networkProvider.DefaultNetwork.CryptoCode)) ??
+            defaultChoice = enabled.FirstOrDefault(e => e == PaymentTypes.CHAIN.GetPaymentMethodId(_networkProvider.DefaultCryptoCode)) ??
+                            enabled.FirstOrDefault(e => e == PaymentTypes.LN.GetPaymentMethodId(_networkProvider.DefaultCryptoCode)) ??
                             enabled.FirstOrDefault();
         }
         var choices = GetEnabledPaymentMethodChoices(storeData);

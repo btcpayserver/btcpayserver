@@ -31,6 +31,7 @@ using Newtonsoft.Json.Linq;
 using StoreData = BTCPayServer.Data.StoreData;
 using BTCPayServer.Payouts;
 using BTCPayServer.Plugins.Webhooks;
+using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Controllers
@@ -67,6 +68,7 @@ namespace BTCPayServer.Controllers
         public WebhookSender WebhookNotificationManager { get; }
         public IEnumerable<IGlobalCheckoutModelExtension> GlobalCheckoutModelExtensions { get; }
         public IStringLocalizer StringLocalizer { get; }
+        public ViewLocalizer ViewLocalizer { get; }
 
         public UIInvoiceController(
             InvoiceRepository invoiceRepository,
@@ -96,6 +98,7 @@ namespace BTCPayServer.Controllers
             Dictionary<PaymentMethodId, ICheckoutModelExtension> paymentModelExtensions,
             IEnumerable<IGlobalCheckoutModelExtension> globalCheckoutModelExtensions,
             IStringLocalizer stringLocalizer,
+            ViewLocalizer viewLocalizer,
             PrettyNameProvider prettyName)
         {
             _displayFormatter = displayFormatter;
@@ -126,6 +129,7 @@ namespace BTCPayServer.Controllers
             _defaultRules = defaultRules;
             _appService = appService;
             StringLocalizer = stringLocalizer;
+            ViewLocalizer = viewLocalizer;
         }
 
         internal async Task<InvoiceEntity> CreatePaymentRequestInvoice(Data.PaymentRequestData prData, decimal? amount, decimal amountDue, StoreData storeData, HttpRequest request, CancellationToken cancellationToken)

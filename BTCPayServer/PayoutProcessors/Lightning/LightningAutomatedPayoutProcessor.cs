@@ -36,19 +36,16 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
 {
 	private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
 	private readonly LightningClientFactoryService _lightningClientFactoryService;
-	private readonly UserService _userService;
 	private readonly IOptions<LightningNetworkOptions> _options;
 	private readonly PullPaymentHostedService _pullPaymentHostedService;
 	private readonly LightningLikePayoutHandler _payoutHandler;
 	public BTCPayNetwork Network => _payoutHandler.Network;
-	private readonly PaymentMethodHandlerDictionary _handlers;
 
 	public LightningAutomatedPayoutProcessor(
 		PayoutMethodId payoutMethodId,
 		BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
 		LightningClientFactoryService lightningClientFactoryService,
 		PayoutMethodHandlerDictionary payoutHandlers,
-		UserService userService,
 		ILoggerFactory logger, IOptions<LightningNetworkOptions> options,
 		StoreRepository storeRepository, PayoutProcessorData payoutProcessorSettings,
 		ApplicationDbContextFactory applicationDbContextFactory,
@@ -61,11 +58,9 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
 	{
 		_btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
 		_lightningClientFactoryService = lightningClientFactoryService;
-		_userService = userService;
 		_options = options;
 		_pullPaymentHostedService = pullPaymentHostedService;
 		_payoutHandler = GetPayoutHandler(payoutHandlers, payoutMethodId);
-		_handlers = handlers;
 	}
 	private static LightningLikePayoutHandler GetPayoutHandler(PayoutMethodHandlerDictionary payoutHandlers, PayoutMethodId payoutMethodId)
 	{
@@ -291,7 +286,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
 
         if (preimage is not null)
             proofBlob.Preimage = preimage;
-        
+
         var vm = new ResultVM
         {
             PayoutId = payoutData.Id,

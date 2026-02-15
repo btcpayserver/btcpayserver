@@ -48,7 +48,7 @@ public class PayoutProcessorService : EventHostedServiceBase
     {
         public PayoutProcessorQuery()
         {
-            
+
         }
         public PayoutProcessorQuery(string storeId, PayoutMethodId payoutMethodId)
         {
@@ -149,8 +149,11 @@ public class PayoutProcessorService : EventHostedServiceBase
                 Logs.PayServer.LogWarning(ex, $"Payout processor ({data.PayoutMethodId}) failed to start. Skipping...");
                 return;
             }
-            await processor.StartAsync(cancellationToken);
-            Services.TryAdd(data.Id, processor);
+            if (processor is not null)
+            {
+                await processor.StartAsync(cancellationToken);
+                Services.TryAdd(data.Id, processor);
+            }
         }
 
     }

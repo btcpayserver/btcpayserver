@@ -341,9 +341,27 @@ const addGlobalSearchRecent = result => {
 };
 
 const initGlobalNavTooltips = () => {
-    if (!window.bootstrap?.Tooltip) return;
     const header = document.getElementById('mainMenuHead');
     if (!header) return;
+
+    if (window.bootstrap?.Dropdown) {
+        header.addEventListener('show.bs.dropdown', event => {
+            const source = event.target;
+            if (!(source instanceof Element)) return;
+
+            const currentToggle = source.matches('[data-bs-toggle="dropdown"]')
+                ? source
+                : source.querySelector('[data-bs-toggle="dropdown"]');
+            if (!(currentToggle instanceof Element)) return;
+
+            header.querySelectorAll('[data-bs-toggle="dropdown"][aria-expanded="true"]').forEach(openToggle => {
+                if (openToggle === currentToggle) return;
+                window.bootstrap.Dropdown.getOrCreateInstance(openToggle).hide();
+            });
+        });
+    }
+
+    if (!window.bootstrap?.Tooltip) return;
     const tooltipTargets = Array.from(header.querySelectorAll('[data-global-nav-tooltip]'));
     if (!tooltipTargets.length) return;
 

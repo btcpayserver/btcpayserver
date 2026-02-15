@@ -176,6 +176,7 @@ namespace BTCPayServer.Data
 
         public List<PaymentMethodCriteria> PaymentMethodCriteria { get; set; }
         public string HtmlTitle { get; set; }
+        public string CheckoutText { get; set; }
 
         public bool AutoDetectLanguage { get; set; }
 

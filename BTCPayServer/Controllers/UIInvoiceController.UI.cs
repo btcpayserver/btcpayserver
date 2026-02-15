@@ -889,6 +889,7 @@ namespace BTCPayServer.Controllers
                 RedirectAutomatically = invoice.RedirectAutomatically,
                 StoreName = store.StoreName,
                 StoreSupportUrl = supportUrl,
+                CheckoutText = storeBlob.CheckoutText,
                 TxCount = accounting.TxRequired,
                 TxCountForFee = storeBlob.NetworkFeeMode switch
                 {

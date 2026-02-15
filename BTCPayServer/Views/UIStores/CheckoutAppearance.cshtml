@@ -220,6 +220,12 @@
                 <span asp-validation-for="SupportUrl" class="text-danger"></span>
                 <div class="form-text" html-translate="true">A "Contact Us" button with this link will be shown on the checkout page. Can contain the placeholders <code>{OrderId}</code> and <code>{InvoiceId}</code>. Can be any valid URI, such as a website, email, and Nostr.</div>
             </div>
+            <div class="form-group">
+                <label asp-for="CheckoutText" class="form-label"></label>
+                <textarea asp-for="CheckoutText" class="form-control" rows="3" maxlength="500"></textarea>
+                <span asp-validation-for="CheckoutText" class="text-danger"></span>
+                <div class="form-text" text-translate="true">Custom text displayed on the checkout page below the payment details. Plain text only, newlines are supported.</div>
+            </div>
             <div class="d-flex my-3">
                 <input asp-for="LazyPaymentMethods" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="LazyPaymentMethods" class="form-check-label"></label>

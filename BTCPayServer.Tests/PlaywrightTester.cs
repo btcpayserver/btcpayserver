@@ -392,15 +392,27 @@ namespace BTCPayServer.Tests
 
         public async Task GoToServer(string navPages)
         {
-            await Page.ClickAsync("#menu-item-Policies");
+            if (navPages == nameof(ServerNavPages.Plugins))
+            {
+                await Page.ClickAsync("#globalNavPluginsToggle");
+                await Page.ClickAsync($"#menu-item-{navPages}");
+                return;
+            }
+
+            await Page.ClickAsync("#globalNavServerToggle");
+            if (navPages == nameof(ServerNavPages.Policies))
+            {
+                await Page.ClickAsync("#menu-item-Policies");
+                return;
+            }
+
             if (navPages == nameof(ServerNavPages.Emails))
             {
                 await Page.ClickAsync($"#menu-item-Server-{navPages}");
+                return;
             }
-            else if (navPages != nameof(ServerNavPages.Policies))
-            {
-                await Page.ClickAsync($"#menu-item-{navPages}");
-            }
+
+            await Page.ClickAsync($"#menu-item-{navPages}");
         }
 
         public async Task ClickOnAllSectionLinks(string sectionSelector = "#menu-item")

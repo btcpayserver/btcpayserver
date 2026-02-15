@@ -8,6 +8,7 @@
 :root {
     --mobile-header-height: 4rem;
     --desktop-header-height: 8rem;
+    --global-nav-height: 4rem;
     --sidebar-width: 280px;
     --sticky-header-height: 0; /* gets dynamically set via JavaScript */
 
@@ -105,8 +106,373 @@
     color: var(--btcpay-header-link-active);
 }
 
-#mainNavSettings {
-    margin-top: auto;
+#mainNav .mainNav-top-right-hint {
+    margin: 0 0 var(--btcpay-space-s);
+    border: 1px solid var(--btcpay-body-border-light);
+    border-radius: var(--btcpay-border-radius-m);
+    background: transparent;
+    color: var(--btcpay-body-text-muted);
+}
+
+#mainNav .mainNav-top-right-hint-close {
+    border: 0;
+    background: transparent;
+    color: var(--btcpay-body-text-muted);
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+#mainNav .mainNav-top-right-hint-close:hover {
+    color: var(--btcpay-body-text);
+}
+
+#mainNav .mainNav-top-right-hint-close .icon {
+    --icon-size: 1rem;
+}
+
+#mainNav .mainNav-top-right-hint[hidden] {
+    display: none !important;
+}
+
+/* Global Top Bar */
+#globalNav {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--btcpay-space-s);
+    min-width: 0;
+}
+
+#globalNav .globalNav-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--button-width);
+    height: var(--button-height);
+    padding: var(--button-padding);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    outline: none;
+    color: var(--btcpay-body-text-muted);
+    border-radius: var(--btcpay-border-radius-m);
+}
+
+#globalNav .globalNav-btn:hover {
+    color: var(--btcpay-header-link-accent);
+    background: var(--btcpay-neutral-100);
+}
+
+#globalNav #mainNavSettings {
+    display: flex;
+    align-items: center;
+    gap: var(--btcpay-space-xs);
+    flex: 0 0 auto;
+}
+
+#globalNav .globalNav-btn.menu-item {
+    margin: 0;
+    text-decoration: none;
+}
+
+#globalNav .globalSearch-shell {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: min(44rem, calc(100vw - var(--sidebar-width) - 22rem));
+}
+
+#globalNav .globalSearch-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--btcpay-space-s);
+    height: var(--button-height);
+    padding: 0 var(--btcpay-space-m);
+    border: 1px solid var(--btcpay-body-border-light);
+    border-radius: var(--btcpay-border-radius-l);
+    background: var(--btcpay-body-bg);
+    transition: border-color var(--btcpay-transition-duration-fast), box-shadow var(--btcpay-transition-duration-fast);
+}
+
+#globalNav .globalSearch-bar:hover,
+#globalNav .globalSearch-shell.is-open .globalSearch-bar,
+#globalNav .globalSearch-bar:focus-within {
+    border-color: var(--btcpay-body-border-medium);
+    box-shadow: 0 0 0 1px var(--btcpay-body-border-light);
+}
+
+#globalNav .globalSearch-bar .icon {
+    flex: 0 0 auto;
+    color: var(--btcpay-body-text-muted);
+}
+
+#globalNav .globalSearch-bar > .icon,
+#globalNav .globalSearch-clear .icon,
+#globalNav .globalSearch-back .icon {
+    --icon-size: 1.1rem;
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+#globalNav .globalSearch-shortcut {
+    margin-left: auto;
+    color: var(--btcpay-body-text-muted);
+    font-size: 1.1rem;
+    line-height: 1;
+    font-weight: var(--btcpay-font-weight-semibold);
+    min-width: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#globalNav .globalSearch-input {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    color: var(--btcpay-body-text);
+    min-width: 0;
+}
+
+#globalNav .globalSearch-input:focus {
+    outline: none;
+}
+
+#globalNav .globalSearch-clear,
+#globalNav .globalSearch-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: transparent;
+    color: var(--btcpay-body-text-muted);
+    width: calc(var(--button-width) - 4px);
+    height: calc(var(--button-height) - 4px);
+    border-radius: 50%;
+    flex: 0 0 auto;
+}
+
+#globalNav .globalSearch-clear:hover,
+#globalNav .globalSearch-back:hover {
+    color: var(--btcpay-body-text);
+    background: var(--btcpay-neutral-200);
+}
+
+#globalNav .globalSearch-panel {
+    position: absolute;
+    top: calc(100% + var(--btcpay-space-xs));
+    left: 0;
+    right: 0;
+    z-index: 1042;
+    max-height: min(65vh, 34rem);
+    overflow-y: auto;
+    border: 1px solid var(--btcpay-body-border-medium);
+    border-radius: var(--btcpay-border-radius-l);
+    background: var(--btcpay-body-bg);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .16);
+    padding: var(--btcpay-space-s);
+}
+
+#globalNav .globalSearch-group {
+    margin-bottom: var(--btcpay-space-m);
+}
+
+#globalNav .globalSearch-group:last-child {
+    margin-bottom: 0;
+}
+
+#globalNav .globalSearch-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--btcpay-space-s);
+    margin: 0 var(--btcpay-space-s) var(--btcpay-space-xs);
+}
+
+#globalNav .globalSearch-group-title {
+    display: block;
+    color: var(--btcpay-body-text-muted);
+    font-size: var(--btcpay-font-size-xs);
+    font-weight: var(--btcpay-font-weight-semibold);
+    letter-spacing: .02em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+#globalNav .globalSearch-group-action {
+    border: 0;
+    background: transparent;
+    color: var(--btcpay-body-link);
+    font-size: var(--btcpay-font-size-xs);
+    font-weight: var(--btcpay-font-weight-semibold);
+    padding: 0;
+    text-decoration: underline;
+}
+
+#globalNav .globalSearch-group-action:hover {
+    color: var(--btcpay-body-link-accent);
+}
+
+#globalNav .globalSearch-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+#globalNav .globalSearch-item {
+    display: block;
+    width: 100%;
+    border-radius: var(--btcpay-border-radius-m);
+    color: var(--btcpay-body-link);
+    padding: var(--btcpay-space-s);
+    text-decoration: none;
+    text-align: left;
+    border: 0;
+    background: transparent;
+}
+
+#globalNav .globalSearch-item-button {
+    cursor: pointer;
+}
+
+#globalNav .globalSearch-item:hover {
+    background: var(--btcpay-neutral-100);
+}
+
+#globalNav .globalSearch-item-title {
+    display: flex;
+    align-items: center;
+    gap: var(--btcpay-space-s);
+    color: var(--btcpay-body-text);
+    font-weight: var(--btcpay-font-weight-semibold);
+    line-height: 1.35;
+}
+
+#globalNav .globalSearch-item-category {
+    color: var(--btcpay-body-text-muted);
+    font-size: var(--btcpay-font-size-xs);
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+
+#globalNav .globalSearch-item-subtitle {
+    color: var(--btcpay-body-text-muted);
+    font-size: var(--btcpay-font-size-s);
+    margin-top: .1rem;
+}
+
+#globalNav .globalSearch-empty {
+    color: var(--btcpay-body-text-muted);
+    font-size: var(--btcpay-font-size-s);
+    padding: var(--btcpay-space-s);
+}
+
+body.global-search-open {
+    overflow: hidden;
+}
+
+#globalNav .dropdown-menu {
+    min-width: 220px;
+    border: 1px solid var(--btcpay-body-border-medium);
+    border-radius: var(--btcpay-border-radius-l);
+    background: var(--btcpay-body-bg);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, .12);
+    padding: .25rem 0;
+}
+
+#globalNav #globalNavServerMenu,
+#globalNav #globalNavPluginsMenu {
+    min-width: 250px;
+}
+
+#globalNav .dropdown-menu li {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+#globalNav .dropdown-menu > li > a,
+#globalNav .dropdown-menu .menu-item,
+#globalNav .dropdown-menu .dropdown-item,
+#globalNav .dropdown-menu .nav-item .nav-link,
+#globalNav .dropdown-menu .nav-link {
+    display: block;
+    width: 100%;
+    padding: .45rem .6rem;
+    clear: both;
+    font-weight: var(--btcpay-font-weight-semibold);
+    color: var(--bs-dropdown-link-color);
+    text-decoration: none;
+    white-space: normal;
+    background-color: transparent;
+    border: 0;
+    border-radius: 0;
+}
+
+#globalNav #globalNavServerMenu > li,
+#globalNav #globalNavPluginsMenu > li,
+#globalNav #globalNavServerMenu > .nav-item,
+#globalNav #globalNavPluginsMenu > .nav-item {
+    padding: .25rem .75rem;
+}
+
+#globalNav #globalNavServerMenu > li > a,
+#globalNav #globalNavPluginsMenu > li > a,
+#globalNav #globalNavServerMenu > .nav-item > a,
+#globalNav #globalNavPluginsMenu > .nav-item > a {
+    border-radius: var(--btcpay-border-radius-m);
+    padding: .45rem .6rem;
+}
+
+#globalNav .dropdown-menu > li > a:hover,
+#globalNav .dropdown-menu .menu-item:hover,
+#globalNav .dropdown-menu .dropdown-item:hover,
+#globalNav .dropdown-menu .nav-item .nav-link:hover,
+#globalNav .dropdown-menu .nav-link:hover {
+    color: var(--bs-dropdown-link-hover-color);
+    background-color: var(--bs-dropdown-link-hover-bg);
+}
+
+#globalNav .dropdown-menu > li > a.active,
+#globalNav .dropdown-menu .menu-item.active,
+#globalNav .dropdown-menu .dropdown-item.active,
+#globalNav .dropdown-menu .nav-item .nav-link.active,
+#globalNav .dropdown-menu .nav-link.active {
+    color: var(--bs-dropdown-link-active-color);
+    background-color: var(--bs-dropdown-link-active-bg);
+}
+
+/* Global Search */
+#globalSearchModal .modal-dialog { max-width: 540px; }
+#globalSearchModal .modal-content {
+    border-radius: var(--btcpay-border-radius-l);
+    overflow: hidden;
+}
+#globalSearchResults a {
+    display: flex;
+    align-items: center;
+    gap: var(--btcpay-space-s);
+    padding: var(--btcpay-space-s) var(--btcpay-space-m);
+    color: var(--btcpay-body-text);
+    text-decoration: none;
+}
+#globalSearchResults a:hover,
+#globalSearchResults a.active {
+    background: var(--btcpay-body-border-light);
+    color: var(--btcpay-body-link);
+}
+#globalSearchResults .search-section {
+    font-size: var(--btcpay-font-size-s);
+    color: var(--btcpay-body-text-muted);
+    padding: var(--btcpay-space-xs) var(--btcpay-space-m);
+    font-weight: var(--btcpay-font-weight-semibold);
+    text-transform: uppercase;
 }
 
 .navbar-brand,
@@ -223,35 +589,35 @@
 }
 
 /* Logo */
-#mainMenuHead .main-logo {
+#StoreSelectorHome .main-logo {
     display: inline-block;
     height: 2rem;
 }
 
 @media (max-width: 575px) {
-    #mainMenuHead .main-logo-custom {
+    #StoreSelectorHome .main-logo-custom {
         max-width: 25vw;
     }
 
-    #mainMenuHead .main-logo-btcpay {
+    #StoreSelectorHome .main-logo-btcpay {
         width: 1.125rem;
     }
 
-    #mainMenuHead .main-logo-btcpay .main-logo-btcpay--large {
+    #StoreSelectorHome .main-logo-btcpay .main-logo-btcpay--large {
         display: none;
     }
 }
 
 @media (min-width: 576px) {
-    #mainMenuHead .main-logo-custom {
+    #StoreSelectorHome .main-logo-custom {
         max-width: 10.5rem;
     }
 
-    #mainMenuHead .main-logo-btcpay {
+    #StoreSelectorHome .main-logo-btcpay {
         width: 4.625rem;
     }
 
-    #mainMenuHead .main-logo-btcpay .main-logo-btcpay--small {
+    #StoreSelectorHome .main-logo-btcpay .main-logo-btcpay--small {
         display: none;
     }
 }
@@ -304,6 +670,7 @@
 /* Notifications */
 #Notifications {
     flex: 0 0 var(--button-width);
+    position: relative;
 }
 
 #NotificationsBadge {
@@ -316,6 +683,10 @@
 #NotificationsHandle .icon {
     --icon-size: 1.625rem;
     color: var(--btcpay-header-link);
+}
+
+#NotificationsHandle.dropdown-toggle::after {
+    content: none;
 }
 
 #NotificationsHandle:hover .icon {
@@ -331,6 +702,8 @@
     z-index: 2000;
     top: var(--btcpay-space-xs) !important;
     border: 1px solid var(--btcpay-body-border-medium);
+    left: auto;
+    right: 0;
 }
 
 #NotificationsList .icon {
@@ -461,6 +834,9 @@
     }
 
     #mainMenu {
+        --button-width: 44px;
+        --button-height: 44px;
+
         position: fixed;
         top: 0;
         left: 0;
@@ -469,7 +845,90 @@
     }
 
     #mainMenuHead  {
+        gap: var(--btcpay-space-xs);
         padding: var(--btcpay-space-s) var(--btcpay-space-m);
+    }
+
+    #globalNav {
+        flex: 1 1 auto;
+        min-width: 0;
+        justify-content: flex-end;
+        gap: 0;
+    }
+
+    #globalNav #mainNavSettings {
+        gap: 0;
+    }
+
+    #globalNav .globalNav-btn {
+        width: var(--button-width);
+        height: var(--button-height);
+    }
+
+    #globalNav .globalSearch-shell {
+        display: none;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: 100vw;
+        min-width: 100vw;
+        max-width: none;
+        box-sizing: border-box;
+        z-index: 1048;
+        padding:
+            calc(env(safe-area-inset-top) + var(--btcpay-space-s))
+            calc(env(safe-area-inset-right) + var(--btcpay-space-m))
+            calc(env(safe-area-inset-bottom) + var(--btcpay-space-m))
+            calc(env(safe-area-inset-left) + var(--btcpay-space-m));
+        background: var(--btcpay-body-bg);
+        overflow: hidden;
+    }
+
+    #globalNav.globalSearch-mobile-open .globalSearch-shell {
+        display: flex;
+        flex-direction: column;
+    }
+
+    #globalNav.globalSearch-mobile-open #mainNavSettings,
+    #globalNav.globalSearch-mobile-open #globalSearchMobileToggle {
+        display: none !important;
+    }
+
+    #globalNav .globalSearch-bar {
+        min-height: calc(var(--mobile-header-height) - (2 * var(--btcpay-space-s)));
+        flex: 0 0 auto;
+        width: 100%;
+    }
+
+    #globalNav .globalSearch-panel {
+        position: relative;
+        top: auto;
+        left: auto;
+        right: auto;
+        flex: 1 1 auto;
+        width: 100%;
+        min-height: 0;
+        max-height: none;
+        margin-top: var(--btcpay-space-s);
+        border-radius: var(--btcpay-border-radius-l);
+        border: 1px solid var(--btcpay-body-border-light);
+        box-shadow: none;
+        padding: var(--btcpay-space-s);
+    }
+
+    #globalNav .globalSearch-group-title {
+        margin: 0;
+    }
+
+    #globalNav .globalSearch-group-header {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    #globalNav .globalSearch-item {
+        padding: .65rem var(--btcpay-space-s);
     }
 
     #mainNav {
@@ -504,13 +963,32 @@
         transition-duration: var(--btcpay-transition-duration-fast);
     }
 
-    #StoreSelector {
-        margin: 0 auto;
-        max-width: 60vw;
+    #mainNav #StoreSelectorHome {
+        margin: 0;
+        display: inline-flex;
+        margin-bottom: var(--btcpay-space-s);
+    }
+
+    #mainNav #StoreSelector {
+        margin: 0 0 var(--btcpay-space-m);
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+        flex: 0 0 auto;
+    }
+
+    #StoreSelectorToggle {
+        min-width: 0;
+        padding-left: .5rem;
+        padding-right: .5rem;
+    }
+
+    #StoreSelectorToggle span {
+        min-width: 0;
     }
 
     #Notifications {
-        margin-left: var(--btcpay-space-s);
+        margin-left: 0;
     }
 
     #mainMenuToggle {
@@ -610,6 +1088,7 @@
         margin-right: 1.5rem;
         border-bottom-color: var(--btcpay-body-border-light);
     }
+
 }
 
 @media (min-width: 992px) {
@@ -631,17 +1110,23 @@
     }
 
     #mainMenuHead {
-        flex-wrap: wrap;
-        padding: var(--btcpay-space-m) 1.5rem;
+        padding: 0;
     }
 
-    #Notifications {
-        order: 1;
-        margin-left: auto;
+    #globalNav {
+        position: fixed;
+        top: 0;
+        left: var(--sidebar-width);
+        right: 0;
+        z-index: 1031;
+        min-height: var(--global-nav-height);
+        padding: var(--btcpay-space-s) var(--content-padding-horizontal);
+        justify-content: space-between;
+        border-bottom: var(--menu-border);
+        background: var(--btcpay-body-bg);
     }
 
     #StoreSelector {
-        order: 2;
         margin-top: var(--btcpay-space-m);
         /* Make sure we are actually taking up all of the space or else you end up with this: https://github.com/btcpayserver/btcpayserver/issues/3972 */
         min-width: 100%;
@@ -653,7 +1138,6 @@
     }
 
     #NotificationsDropdown {
-        inset: calc(var(--button-height) * -1 - var(--btcpay-space-s)) auto auto calc(var(--button-width) + var(--btcpay-space-s)) !important;
         width: 400px;
     }
 
@@ -703,16 +1187,5 @@
 @media (min-width: 992px) and (min-height: 800px) {
     #StatusUpdates {
         top: 1.25rem;
-    }
-}
-
-@media (max-width: 449px) {
-    #StoreSelector {
-        max-width: 40vw;
-        flex-shrink: 1;
-    }
-
-    #StoreSelectorToggle .icon.icon-store {
-        display: none;
     }
 }

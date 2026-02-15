@@ -1,0 +1,41 @@
+@using BTCPayServer.Client
+@using BTCPayServer.Plugins.PointOfSale
+@model BTCPayServer.Plugins.PointOfSale.ViewModels.ProductSalesViewModel
+@{
+    Layout = "_Layout";
+    ViewData.SetLayoutModel(new LayoutModel($"{nameof(PointOfSalePlugin)}-{Model.AppId}", StringLocalizer["Product Sales"]));
+}
+
+<div class="sticky-header">
+    <h2>@Model.AppName — <span text-translate="true">Product Sales</span></h2>
+    <a class="btn btn-secondary" asp-controller="UIPointOfSale" asp-action="UpdatePointOfSale" asp-route-appId="@Model.AppId" text-translate="true">Manage</a>
+</div>
+
+<div class="table-responsive-md">
+    @if (Model.Items != null && Model.Items.Any())
+    {
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th text-translate="true">Product</th>
+                <th class="text-end" text-translate="true">Sales Count</th>
+                <th class="text-end" text-translate="true">Total</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>@item.Title</td>
+                    <td class="text-end">@item.SalesCount</td>
+                    <td class="text-end" data-sensitive>@item.TotalFormatted</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-secondary mt-3" text-translate="true">No sales have been made yet.</p>
+    }
+</div>

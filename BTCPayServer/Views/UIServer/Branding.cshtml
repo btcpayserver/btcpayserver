@@ -23,6 +23,8 @@
 
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
+            <div class="settings-section">
+                <h3 class="settings-section-title" text-translate="true">General</h3>
             <div class="form-group">
                 <label asp-for="ServerName" class="form-label"></label>
                 <input asp-for="ServerName" class="form-control" />
@@ -74,8 +76,10 @@
                     <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
                 }
             </div>
+            </div>
 
-			<h3 class="mt-5 mb-3" text-translate="true">Theme</h3>
+            <div class="settings-section">
+                <h3 class="settings-section-title" text-translate="true">Theme</h3>
             <p text-translate="true">Use the default Light or Dark Themes, or provide a custom CSS theme file below.</p>
 
             <div class="d-flex align-items-center mb-3">
@@ -123,6 +127,7 @@
                         <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
                     }
                 </div>
+            </div>
             </div>
         </div>
     </div>

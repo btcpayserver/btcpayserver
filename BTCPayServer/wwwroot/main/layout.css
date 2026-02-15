@@ -189,6 +189,12 @@
     max-width: min(44rem, calc(100vw - var(--sidebar-width) - 22rem));
 }
 
+@keyframes global-search-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 #globalNav .globalSearch-bar {
     display: flex;
     align-items: center;
@@ -254,16 +260,44 @@
     border: 0;
     background: transparent;
     color: var(--btcpay-body-text-muted);
-    width: calc(var(--button-width) - 4px);
-    height: calc(var(--button-height) - 4px);
+    width: var(--button-width);
+    height: var(--button-height);
     border-radius: 50%;
     flex: 0 0 auto;
+}
+
+#globalNav .globalSearch-clear {
+    display: none;
+}
+
+#globalNav .globalSearch-shell.has-query .globalSearch-clear,
+#globalNav.globalSearch-mobile-open .globalSearch-clear {
+    display: inline-flex;
+}
+
+#globalNav .globalSearch-shell.has-query .globalSearch-shortcut {
+    display: none !important;
 }
 
 #globalNav .globalSearch-clear:hover,
 #globalNav .globalSearch-back:hover {
     color: var(--btcpay-body-text);
     background: var(--btcpay-neutral-200);
+}
+
+#globalNav .globalSearch-shell.is-loading .globalSearch-shortcut,
+#globalNav .globalSearch-shell.is-loading .globalSearch-clear {
+    display: none !important;
+}
+
+#globalNav .globalSearch-shell.is-loading .globalSearch-bar::after {
+    content: "";
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--btcpay-body-border-medium);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: global-search-spin .8s linear infinite;
 }
 
 #globalNav .globalSearch-panel {
@@ -900,6 +934,7 @@ body.global-search-open {
         min-height: calc(var(--mobile-header-height) - (2 * var(--btcpay-space-s)));
         flex: 0 0 auto;
         width: 100%;
+        gap: var(--btcpay-space-xs);
     }
 
     #globalNav .globalSearch-panel {
@@ -1122,7 +1157,6 @@ body.global-search-open {
         min-height: var(--global-nav-height);
         padding: var(--btcpay-space-s) var(--content-padding-horizontal);
         justify-content: space-between;
-        border-bottom: var(--menu-border);
         background: var(--btcpay-body-bg);
     }
 

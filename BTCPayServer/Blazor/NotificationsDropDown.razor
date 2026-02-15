@@ -16,7 +16,17 @@
 @inject EventAggregator _EventAggregator
 
 <div id="Notifications" class="dropdown">
-	<button id="NotificationsHandle" class="mainMenuButton dropdown-toggle" title="@StringLocalizer["Notifications"]" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside" aria-expanded="false">
+	<button id="NotificationsHandle"
+            class="mainMenuButton dropdown-toggle"
+            title="@StringLocalizer["Notifications"]"
+            type="button"
+            data-bs-toggle="dropdown"
+            data-bs-display="static"
+            data-bs-auto-close="outside"
+            data-bs-trigger="hover"
+            data-bs-placement="bottom"
+            data-global-nav-tooltip="1"
+            aria-expanded="false">
 		<Icon Symbol="nav-notifications" />
 		@if (HasUnseenNotifications)
 		{

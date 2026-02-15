@@ -340,6 +340,36 @@ const addGlobalSearchRecent = result => {
     saveGlobalSearchRecents(current);
 };
 
+const initGlobalNavTooltips = () => {
+    if (!window.bootstrap?.Tooltip) return;
+    const header = document.getElementById('mainMenuHead');
+    if (!header) return;
+    const tooltipTargets = Array.from(header.querySelectorAll('[data-global-nav-tooltip]'));
+    if (!tooltipTargets.length) return;
+
+    const getTooltipOptions = target => ({
+        trigger: target.dataset.bsTrigger || 'hover',
+        placement: target.dataset.bsPlacement || 'bottom'
+    });
+    const hideAllTooltips = () => {
+        tooltipTargets.forEach(target => {
+            window.bootstrap.Tooltip.getInstance(target)?.hide();
+        });
+    };
+
+    tooltipTargets.forEach(target => {
+        window.bootstrap.Tooltip.getOrCreateInstance(target, getTooltipOptions(target));
+    });
+
+    header.addEventListener('click', event => {
+        const target = event.target;
+        if (!(target instanceof Element) || !target.closest('[data-global-nav-tooltip]')) return;
+        window.requestAnimationFrame(hideAllTooltips);
+    });
+    header.addEventListener('shown.bs.dropdown', hideAllTooltips);
+    header.addEventListener('hide.bs.dropdown', hideAllTooltips);
+};
+
 const initGlobalSearch = () => {
     const nav = document.getElementById('globalNav');
     const shell = document.getElementById('globalSearchShell');
@@ -368,6 +398,7 @@ const initGlobalSearch = () => {
 
     let latestSearchToken = 0;
     let panelOpen = false;
+    let navigationFeedbackTimeout = null;
     const desktopMediaQuery = window.matchMedia('(min-width: 992px)');
     const setBodySearchState = isOpen => {
         if (isOpen) document.body.classList.add('global-search-open');
@@ -394,6 +425,17 @@ const initGlobalSearch = () => {
     };
 
     const isMobileSearchOpen = () => nav.classList.contains('globalSearch-mobile-open');
+    const setLoadingState = isLoading => {
+        shell.classList.toggle('is-loading', isLoading);
+        if (!isLoading && navigationFeedbackTimeout) {
+            window.clearTimeout(navigationFeedbackTimeout);
+            navigationFeedbackTimeout = null;
+        }
+    };
+    const syncSearchActionState = () => {
+        const hasQuery = !!input.value.trim();
+        shell.classList.toggle('has-query', hasQuery);
+    };
 
     const showPanel = () => {
         panelOpen = true;
@@ -405,6 +447,7 @@ const initGlobalSearch = () => {
         panelOpen = false;
         shell.classList.remove('is-open');
         resultsElement.hidden = true;
+        setLoadingState(false);
     };
 
     const openMobileSearch = () => {
@@ -469,9 +512,19 @@ const initGlobalSearch = () => {
     });
 
     const clearAndFocus = () => {
-        input.value = '';
-        focusSearch();
-        renderInitial();
+        if (input.value.trim()) {
+            input.value = '';
+            setLoadingState(false);
+            syncSearchActionState();
+            focusSearch();
+            renderInitial();
+            return;
+        }
+        if (isMobileSearchOpen()) {
+            closeSearchUi();
+            return;
+        }
+        hidePanel();
     };
 
     const createResultItem = result => {
@@ -521,9 +574,14 @@ const initGlobalSearch = () => {
             subtitle.textContent = result.subtitle;
             link.appendChild(subtitle);
         }
-        link.addEventListener('click', () => {
+        link.addEventListener('click', event => {
             addGlobalSearchRecent(result);
-            closeSearchUi();
+            const isModifiedClick = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+            const isPrimaryClick = event.button === 0 && !isModifiedClick;
+            if (!isPrimaryClick || link.target === '_blank') return;
+            hidePanel();
+            setLoadingState(true);
+            navigationFeedbackTimeout = window.setTimeout(() => setLoadingState(false), 2000);
         });
         listItem.appendChild(link);
         return listItem;
@@ -579,6 +637,8 @@ const initGlobalSearch = () => {
     };
 
     const renderInitial = () => {
+        setLoadingState(false);
+        syncSearchActionState();
         showPanel();
         resultsElement.innerHTML = '';
         const recent = refreshRecentMetadata(loadGlobalSearchRecents())
@@ -663,6 +723,8 @@ const initGlobalSearch = () => {
 
     const runSearch = async () => {
         const query = input.value.trim();
+        setLoadingState(false);
+        syncSearchActionState();
         if (!query) {
             renderInitial();
             return;
@@ -689,13 +751,18 @@ const initGlobalSearch = () => {
     backButton?.addEventListener('click', closeSearchUi);
     clearButton?.addEventListener('click', clearAndFocus);
     input.addEventListener('focus', () => {
+        setLoadingState(false);
+        syncSearchActionState();
         if (input.value.trim()) {
             runSearch();
         } else {
             renderInitial();
         }
     });
-    input.addEventListener('input', () => debounce('global-search-input', runSearch, 120));
+    input.addEventListener('input', () => {
+        syncSearchActionState();
+        debounce('global-search-input', runSearch, 120);
+    });
     resultsElement.addEventListener('click', e => {
         const clearHistory = e.target.closest('[data-clear-search-history]');
         if (clearHistory) {
@@ -748,10 +815,13 @@ const initGlobalSearch = () => {
             hidePanel();
         }
     });
+
+    syncSearchActionState();
 };
 
 document.addEventListener("DOMContentLoaded", () => {
     reinsertSvgUseElements();
+    initGlobalNavTooltips();
     initGlobalSearch();
     // sticky header
     const stickyHeader = document.querySelector('#mainContent > section .sticky-header');

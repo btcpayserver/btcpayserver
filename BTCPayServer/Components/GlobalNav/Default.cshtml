@@ -19,7 +19,14 @@
 }
 
 <div id="globalNav" data-search-url="@searchUrl" data-store-id="@Model.CurrentStoreId">
-    <button id="globalSearchMobileToggle" class="globalNav-btn d-lg-none" type="button" aria-label="@StringLocalizer["Search"]">
+    <button id="globalSearchMobileToggle"
+            class="globalNav-btn d-lg-none"
+            type="button"
+            aria-label="@StringLocalizer["Search"]"
+            title="@StringLocalizer["Search"]"
+            data-bs-trigger="hover"
+            data-bs-placement="bottom"
+            data-global-nav-tooltip="1">
         <vc:icon symbol="actions-search" />
     </button>
     <div id="globalSearchShell" class="globalSearch-shell">
@@ -35,6 +42,9 @@
                    placeholder="@StringLocalizer["Search..."]"
                    aria-label="@StringLocalizer["Search"]" />
             <span class="globalSearch-shortcut d-none d-xl-inline">/</span>
+            <button id="globalSearchClear" type="button" class="globalSearch-clear" aria-label="@StringLocalizer["Close search"]">
+                <vc:icon symbol="close" />
+            </button>
         </div>
         <div id="globalSearchResults" class="globalSearch-panel" hidden aria-live="polite"></div>
     </div>
@@ -42,8 +52,16 @@
     <div id="mainNavSettings" class="d-flex align-items-center gap-1">
         <component type="typeof(BTCPayServer.Blazor.NotificationsDropDown)" render-mode="ServerPrerendered" />
 
-        <div class="dropdown d-none d-lg-block" permission="@Policies.CanModifyServerSettings">
-            <button id="globalNavPluginsToggle" class="globalNav-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="@StringLocalizer["Plugins"]">
+        <div class="dropdown" permission="@Policies.CanModifyServerSettings">
+            <button id="globalNavPluginsToggle"
+                    class="globalNav-btn"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    title="@StringLocalizer["Plugins"]"
+                    data-bs-trigger="hover"
+                    data-bs-placement="bottom"
+                    data-global-nav-tooltip="1">
                 <vc:icon symbol="nav-plugin" />
             </button>
             <ul id="globalNavPluginsMenu" class="dropdown-menu dropdown-menu-end py-0">
@@ -62,8 +80,16 @@
             </ul>
         </div>
 
-        <div class="dropdown d-none d-lg-block" permission="@Policies.CanModifyServerSettings">
-            <button id="globalNavServerToggle" class="globalNav-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="@StringLocalizer["Server Settings"]">
+        <div class="dropdown" permission="@Policies.CanModifyServerSettings">
+            <button id="globalNavServerToggle"
+                    class="globalNav-btn"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    title="@StringLocalizer["Server Settings"]"
+                    data-bs-trigger="hover"
+                    data-bs-placement="bottom"
+                    data-global-nav-tooltip="1">
                 <vc:icon symbol="nav-server-settings" />
             </button>
             <ul id="globalNavServerMenu" class="dropdown-menu dropdown-menu-end py-0">
@@ -105,7 +131,16 @@
         </div>
 
         <div class="dropdown">
-            <button id="menu-item-Account" class="globalNav-btn menu-item nav-link" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="@StringLocalizer["Account"]">
+            <button id="menu-item-Account"
+                    class="globalNav-btn menu-item nav-link"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    data-bs-auto-close="outside"
+                    aria-expanded="false"
+                    title="@StringLocalizer["Account"]"
+                    data-bs-trigger="hover"
+                    data-bs-placement="bottom"
+                    data-global-nav-tooltip="1">
                 @if (!string.IsNullOrEmpty(Model.UserImageUrl))
                 {
                     <img src="@Model.UserImageUrl" alt="Profile picture" class="profile-picture" style="--profile-picture-size:1.5rem" />

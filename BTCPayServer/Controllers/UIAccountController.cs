@@ -394,6 +394,92 @@ namespace BTCPayServer.Controllers
             });
         }
 
+        #region Passkey (Passwordless) Authentication
+
+        /// <summary>
+        /// Get passkey authentication options for passwordless login
+        /// </summary>
+        [HttpPost("/login/passkey/options")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetPasskeyLoginOptions([FromBody] PasskeyLoginOptionsRequest request)
+        {
+            if (!CanLoginOrRegister())
+            {
+                return BadRequest("Insecure connection");
+            }
+
+            if (!btcPayServerEnvironment.IsSecure(HttpContext))
+            {
+                return BadRequest("WebAuthn requires a secure connection");
+            }
+
+            try
+            {
+                var options = await fido2Service.RequestPasskeyLogin(request?.Email);
+                return Ok(options);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting passkey login options");
+                return BadRequest("Failed to get passkey options");
+            }
+        }
+
+        /// <summary>
+        /// Complete passkey authentication and sign in user
+        /// </summary>
+        [HttpPost("/login/passkey")]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
+        public async Task<IActionResult> LoginWithPasskey(LoginWithPasskeyViewModel viewModel, string returnUrl = null)
+        {
+            if (!CanLoginOrRegister())
+            {
+                return RedirectToAction("Login");
+            }
+
+            ViewData["ReturnUrl"] = returnUrl;
+            var errorMessage = StringLocalizer["Invalid login attempt."].Value;
+
+            try
+            {
+                var response = System.Text.Json.JsonSerializer.Deserialize<AuthenticatorAssertionRawResponse>(viewModel.Response);
+                var (success, userId, user) = await fido2Service.CompletePasskeyLogin(response);
+
+                if (!success || user == null)
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = errorMessage;
+                    return RedirectToAction("Login");
+                }
+
+                var loginContext = CreateLoginContext(user);
+                if (!await userService.CanLogin(loginContext))
+                {
+                    TempData.SetStatusLoginResult(loginContext);
+                    return RedirectToAction("Login");
+                }
+
+                await signInManager.SignInAsync(user, viewModel.RememberMe, "Passkey");
+                _logger.LogInformation("User {Email} logged in with Passkey", user.Email);
+                return RedirectToLocal(returnUrl);
+            }
+            catch (Fido2VerificationException e)
+            {
+                _logger.LogWarning(e, "Passkey verification failed");
+                TempData[WellKnownTempData.ErrorMessage] = "Passkey verification failed";
+                return RedirectToAction("Login");
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error during passkey login");
+                TempData[WellKnownTempData.ErrorMessage] = errorMessage;
+                return RedirectToAction("Login");
+            }
+        }
+
+        #endregion
+
         [HttpGet("/login/2fa")]
         [AllowAnonymous]
         public async Task<IActionResult> LoginWith2fa(bool rememberMe, string returnUrl = null)

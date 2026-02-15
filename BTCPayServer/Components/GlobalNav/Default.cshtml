@@ -13,12 +13,12 @@
 }
 
 <div id="globalNav" data-search-url="@searchUrl" data-store-id="@Model.CurrentStoreId">
-    <button id="globalSearchMobileToggle" class="globalNav-btn d-lg-none" type="button" aria-label="@StringLocalizer["Search"]">
+    <button id="globalSearchMobileToggle" class="globalNav-btn d-lg-none" type="button" aria-label="@StringLocalizer["Search"]" title="@StringLocalizer["Search"]">
         <vc:icon symbol="actions-search" />
     </button>
     <div id="globalSearchShell" class="globalSearch-shell">
         <div class="globalSearch-bar">
-            <button id="globalSearchBack" type="button" class="globalSearch-back d-lg-none" aria-label="@StringLocalizer["Back"]">
+            <button id="globalSearchBack" type="button" class="globalSearch-back d-lg-none" aria-label="@StringLocalizer["Back"]" title="@StringLocalizer["Back"]">
                 <vc:icon symbol="back" />
             </button>
             <vc:icon symbol="actions-search" />
@@ -37,7 +37,7 @@
         <component type="typeof(BTCPayServer.Blazor.NotificationsDropDown)" render-mode="ServerPrerendered" />
 
         <div class="dropdown d-none d-lg-block" permission="@Policies.CanModifyServerSettings">
-            <button id="globalNavPluginsToggle" class="globalNav-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="@StringLocalizer["Plugins"]">
+            <button id="globalNavPluginsToggle" class="globalNav-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="@StringLocalizer["Plugins"]" title="@StringLocalizer["Plugins"]">
                 <vc:icon symbol="nav-plugin" />
             </button>
             <ul id="globalNavPluginsMenu" class="dropdown-menu dropdown-menu-end py-0">
@@ -57,7 +57,7 @@
         </div>
 
         <div class="dropdown d-none d-lg-block" permission="@Policies.CanModifyServerSettings">
-            <button id="globalNavServerToggle" class="globalNav-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="@StringLocalizer["Server Settings"]">
+            <button id="globalNavServerToggle" class="globalNav-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="@StringLocalizer["Server Settings"]" title="@StringLocalizer["Server Settings"]">
                 <vc:icon symbol="nav-server-settings" />
             </button>
             <ul id="globalNavServerMenu" class="dropdown-menu dropdown-menu-end py-0">
@@ -99,7 +99,7 @@
         </div>
 
         <div class="dropdown">
-            <button id="menu-item-Account" class="globalNav-btn menu-item nav-link" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="@StringLocalizer["Account"]">
+            <button id="menu-item-Account" class="globalNav-btn menu-item nav-link" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="@StringLocalizer["Account"]" title="@StringLocalizer["Account"]">
                 @if (!string.IsNullOrEmpty(Model.UserImageUrl))
                 {
                     <img src="@Model.UserImageUrl" alt="Profile picture" class="profile-picture" style="--profile-picture-size:1.5rem" />

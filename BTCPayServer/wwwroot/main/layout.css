@@ -689,6 +689,14 @@ body.global-search-open {
     content: none;
 }
 
+#NotificationsHandle {
+    border-radius: var(--btcpay-border-radius-m);
+}
+
+#NotificationsHandle:hover {
+    background: var(--btcpay-neutral-100);
+}
+
 #NotificationsHandle:hover .icon {
     color: var(--btcpay-header-link-accent);
 }

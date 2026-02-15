@@ -226,7 +226,6 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Page.FillAsync("#Amount", payoutAmount.ToString());
         await s.Page.FillAsync("#Currency", "BTC");
         await s.ClickPagePrimary();
-        await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
         string bolt;
         PayoutData payout;
         await using (await s.SwitchPage(async () =>
@@ -1035,7 +1034,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.ClickPagePrimary();
 
         var opening = s.Page.Context.WaitForPageAsync();
-        await s.Page.ClickAsync("text=View");
+        await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
         var newPage = await opening;
         await Expect(newPage.Locator("body")).ToContainTextAsync("PP1");
         await newPage.CloseAsync();
@@ -1050,7 +1049,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.FindAlertMessage();
 
         await using (await s.SwitchPage(async () => {
-                         await s.Page.ClickAsync("text=View");
+                         await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
                      }))
         {
             try

@@ -23,6 +23,7 @@ using BTCPayServer.Forms.Models;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Plugins.PointOfSale.Models;
+using BTCPayServer.Plugins.PointOfSale.ViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -565,6 +566,24 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     ["url"] = Url.Action(nameof(UIInvoiceController.Invoice), "UIInvoice", new { invoiceId = i.Id })
                 });
             return Json(recent);
+        }
+
+        [Authorize(Policy = Policies.CanViewInvoices, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [HttpGet("{appId}/product-sales")]
+        public async Task<IActionResult> ProductSales(string appId)
+        {
+            var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
+            if (app == null)
+                return NotFound();
+
+            var entries = await _appService.GetItemStats(app);
+            var vm = new ProductSalesViewModel
+            {
+                AppId = app.Id,
+                AppName = app.Name,
+                Items = entries.ToList()
+            };
+            return View("/Plugins/PointOfSale/Views/UIPointOfSale/ProductSales.cshtml", vm);
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]

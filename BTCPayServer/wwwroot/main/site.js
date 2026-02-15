@@ -257,8 +257,450 @@ const reinsertSvgUseElements = () => {
     });
 };
 
+const isEditableElement = element => {
+    if (!element) return false;
+    const tagName = (element.tagName || '').toLowerCase();
+    return tagName === 'input' || tagName === 'textarea' || tagName === 'select' || element.isContentEditable;
+};
+
+const collectGlobalSearchLinks = () => {
+    const candidates = [];
+    const selectors = [
+        '#mainNav a[href]',
+        '#mainNavSettings a[href]',
+        '#globalNavServerMenu a[href]',
+        '#globalNavAccountMenu a[href]'
+    ];
+    document.querySelectorAll(selectors.join(',')).forEach(anchor => {
+        const href = anchor.getAttribute('href');
+        const text = anchor.textContent ? anchor.textContent.replace(/\s+/g, ' ').trim() : '';
+        if (!href || !text) return;
+        if (href.startsWith('#') || href.includes('/logout')) return;
+        let absoluteHref;
+        try {
+            absoluteHref = new URL(href, window.location.href);
+        } catch {
+            return;
+        }
+        if (absoluteHref.protocol === 'javascript:') return;
+        const isHttpLike = absoluteHref.protocol === 'http:' || absoluteHref.protocol === 'https:';
+        const isSameOriginHttp = isHttpLike && absoluteHref.origin === window.location.origin;
+        candidates.push({
+            title: text,
+            subtitle: '',
+            category: 'Page',
+            url: isSameOriginHttp
+                ? `${absoluteHref.pathname}${absoluteHref.search}${absoluteHref.hash}`
+                : absoluteHref.toString(),
+            keywords: `${text} ${absoluteHref.pathname} ${absoluteHref.hostname}`
+        });
+    });
+    return candidates.filter((item, index, all) =>
+        all.findIndex(other => other.url === item.url && other.title === item.title) === index);
+};
+
+const GLOBAL_SEARCH_RECENTS_KEY = 'btcpay-global-search-recents';
+
+const loadGlobalSearchRecents = () => {
+    try {
+        const parsed = JSON.parse(window.localStorage.getItem(GLOBAL_SEARCH_RECENTS_KEY) || '[]');
+        return Array.isArray(parsed) ? parsed.slice(0, 8) : [];
+    } catch (e) {
+        return [];
+    }
+};
+
+const saveGlobalSearchRecents = items => {
+    window.localStorage.setItem(GLOBAL_SEARCH_RECENTS_KEY, JSON.stringify(items.slice(0, 8)));
+};
+
+const clearGlobalSearchRecents = () => {
+    try {
+        window.localStorage.removeItem(GLOBAL_SEARCH_RECENTS_KEY);
+    } catch (e) {
+        saveGlobalSearchRecents([]);
+    }
+};
+
+const addGlobalSearchRecent = result => {
+    if (!result || !result.url) return;
+    const current = loadGlobalSearchRecents()
+        .filter(item => item.url !== result.url)
+        .filter(item => item.title !== result.title);
+    current.unshift({
+        title: result.title,
+        subtitle: result.subtitle || '',
+        category: result.category || 'Page',
+        url: result.url
+    });
+    saveGlobalSearchRecents(current);
+};
+
+const initGlobalSearch = () => {
+    const nav = document.getElementById('globalNav');
+    const shell = document.getElementById('globalSearchShell');
+    const mobileToggle = document.getElementById('globalSearchMobileToggle');
+    const input = document.getElementById('globalSearchInput');
+    const clearButton = document.getElementById('globalSearchClear');
+    const backButton = document.getElementById('globalSearchBack');
+    const resultsElement = document.getElementById('globalSearchResults');
+    if (!nav || !shell || !input || !resultsElement) return;
+
+    const { searchUrl, storeId } = nav.dataset;
+    const localIndex = collectGlobalSearchLinks();
+    const remoteCache = {};
+    const now = new Date();
+    const todayIso = now.toISOString().slice(0, 10);
+    const yesterday = new Date(now);
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+    const yesterdayIso = yesterday.toISOString().slice(0, 10);
+    const suggestedQueries = [
+        { query: `date:${todayIso}`, hint: 'Find invoices and requests created today' },
+        { query: `date:${yesterdayIso}`, hint: 'Find invoices and requests from yesterday' },
+        { query: 'tx:4e3a67', hint: 'Find by transaction id (prefix supported)' },
+        { query: 'server settings', hint: 'Jump to server settings pages quickly' }
+    ];
+
+    let latestSearchToken = 0;
+    let panelOpen = false;
+    const desktopMediaQuery = window.matchMedia('(min-width: 992px)');
+    const setBodySearchState = isOpen => {
+        if (isOpen) document.body.classList.add('global-search-open');
+        else document.body.classList.remove('global-search-open');
+    };
+
+    setBodySearchState(false);
+
+    const isMobileSearchOpen = () => nav.classList.contains('globalSearch-mobile-open');
+
+    const showPanel = () => {
+        panelOpen = true;
+        shell.classList.add('is-open');
+        resultsElement.hidden = false;
+    };
+
+    const hidePanel = () => {
+        panelOpen = false;
+        shell.classList.remove('is-open');
+        resultsElement.hidden = true;
+    };
+
+    const openMobileSearch = () => {
+        if (desktopMediaQuery.matches) return;
+        const mainNav = document.getElementById('mainNav');
+        if (mainNav && mainNav.classList.contains('show') && window.bootstrap?.Offcanvas) {
+            window.bootstrap.Offcanvas.getOrCreateInstance(mainNav).hide();
+        }
+        nav.classList.add('globalSearch-mobile-open');
+        setBodySearchState(true);
+        input.focus();
+        input.select();
+    };
+
+    const closeMobileSearch = () => {
+        nav.classList.remove('globalSearch-mobile-open');
+        setBodySearchState(false);
+    };
+
+    const focusSearch = () => {
+        if (!desktopMediaQuery.matches && !isMobileSearchOpen()) {
+            openMobileSearch();
+        }
+        input.focus();
+        input.select();
+    };
+
+    const closeSearchUi = () => {
+        hidePanel();
+        if (!desktopMediaQuery.matches) {
+            closeMobileSearch();
+        }
+    };
+
+    const normalizeResult = result => {
+        if (!result || !result.url || !result.title) return null;
+        return {
+            title: result.title,
+            subtitle: result.subtitle || '',
+            category: result.category || 'Result',
+            url: result.url
+        };
+    };
+
+    const toSuggestionResult = item => ({
+        title: item.query,
+        subtitle: item.hint,
+        category: 'Try searching',
+        query: item.query
+    });
+
+    const clearAndFocus = () => {
+        input.value = '';
+        focusSearch();
+        renderInitial();
+    };
+
+    const createResultItem = result => {
+        const listItem = document.createElement('li');
+        const link = document.createElement('a');
+        link.className = 'globalSearch-item';
+        if (result.query) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'globalSearch-item globalSearch-item-button';
+            button.dataset.searchSuggestion = result.query;
+            const title = document.createElement('span');
+            title.className = 'globalSearch-item-title';
+            title.textContent = result.title;
+            if (result.category) {
+                const category = document.createElement('span');
+                category.className = 'globalSearch-item-category';
+                category.textContent = result.category;
+                title.appendChild(category);
+            }
+            button.appendChild(title);
+            if (result.subtitle) {
+                const subtitle = document.createElement('div');
+                subtitle.className = 'globalSearch-item-subtitle';
+                subtitle.textContent = result.subtitle;
+                button.appendChild(subtitle);
+            }
+            listItem.appendChild(button);
+            return listItem;
+        }
+
+        link.href = result.url;
+        link.dataset.searchResult = '1';
+        const title = document.createElement('span');
+        title.className = 'globalSearch-item-title';
+        title.textContent = result.title;
+        if (result.category) {
+            const category = document.createElement('span');
+            category.className = 'globalSearch-item-category';
+            category.textContent = result.category;
+            title.appendChild(category);
+        }
+        link.appendChild(title);
+        if (result.subtitle) {
+            const subtitle = document.createElement('div');
+            subtitle.className = 'globalSearch-item-subtitle';
+            subtitle.textContent = result.subtitle;
+            link.appendChild(subtitle);
+        }
+        link.addEventListener('click', () => {
+            addGlobalSearchRecent(result);
+            closeSearchUi();
+        });
+        listItem.appendChild(link);
+        return listItem;
+    };
+
+    const renderGroup = (title, entries, actionLabel = null, actionDataAttribute = null) => {
+        if (!entries.length) return null;
+        const group = document.createElement('div');
+        group.className = 'globalSearch-group';
+        const headingRow = document.createElement('div');
+        headingRow.className = 'globalSearch-group-header';
+        const heading = document.createElement('span');
+        heading.className = 'globalSearch-group-title';
+        heading.textContent = title;
+        headingRow.appendChild(heading);
+        if (actionLabel && actionDataAttribute) {
+            const action = document.createElement('button');
+            action.type = 'button';
+            action.className = 'globalSearch-group-action';
+            action.textContent = actionLabel;
+            action.setAttribute(actionDataAttribute, '1');
+            headingRow.appendChild(action);
+        }
+        const list = document.createElement('ul');
+        list.className = 'globalSearch-list';
+        entries.forEach(entry => {
+            list.appendChild(createResultItem(entry));
+        });
+        group.append(headingRow, list);
+        return group;
+    };
+
+    const renderEmpty = text => {
+        const empty = document.createElement('div');
+        empty.className = 'globalSearch-empty';
+        empty.textContent = text;
+        resultsElement.innerHTML = '';
+        resultsElement.appendChild(empty);
+    };
+
+    const renderInitial = () => {
+        showPanel();
+        resultsElement.innerHTML = '';
+        const recent = loadGlobalSearchRecents().map(normalizeResult).filter(Boolean);
+        const recentGroup = renderGroup('Recent', recent, 'Clear history', 'data-clear-search-history');
+        if (recentGroup) resultsElement.appendChild(recentGroup);
+        const suggestions = suggestedQueries.map(toSuggestionResult);
+        const suggestedGroup = renderGroup('Suggested', suggestions);
+        if (suggestedGroup) {
+            resultsElement.appendChild(suggestedGroup);
+        }
+
+        if (!recentGroup && !suggestedGroup) {
+            renderEmpty('Type to search');
+        }
+    };
+
+    const searchLocal = query => {
+        if (!query) return [];
+        const normalized = query.toLowerCase();
+        return localIndex
+            .filter(item => {
+                const title = (item.title || '').toLowerCase();
+                const keywords = (item.keywords || '').toLowerCase();
+                return title.includes(normalized) || keywords.includes(normalized);
+            })
+            .slice(0, 12);
+    };
+
+    const searchRemote = async query => {
+        if (!searchUrl || !query || query.length < 2) return [];
+        const cacheKey = `${query}|${storeId || ''}`;
+        if (remoteCache[cacheKey]) return remoteCache[cacheKey];
+        const url = new URL(searchUrl, window.location.origin);
+        url.searchParams.set('q', query);
+        if (storeId) url.searchParams.set('storeId', storeId);
+        url.searchParams.set('take', '25');
+        const response = await fetch(url.toString(), { credentials: 'include' });
+        if (!response.ok) return [];
+        const payload = await response.json();
+        remoteCache[cacheKey] = (Array.isArray(payload) ? payload : [])
+            .map(normalizeResult)
+            .filter(Boolean);
+        return remoteCache[cacheKey];
+    };
+
+    const mergeResults = (remote, local) => {
+        const merged = [];
+        const seen = {};
+        [...remote, ...local].forEach(result => {
+            if (!result || !result.url || !result.title) return;
+            const key = `${result.url}|${result.title}`.toLowerCase();
+            if (seen[key]) return;
+            seen[key] = true;
+            merged.push(result);
+        });
+        return merged.slice(0, 25);
+    };
+
+    const renderResults = entries => {
+        resultsElement.innerHTML = '';
+        if (!entries.length) {
+            renderEmpty('No matches found');
+            return;
+        }
+
+        const grouped = entries.reduce((acc, item) => {
+            const key = item.category || 'Results';
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(item);
+            return acc;
+        }, {});
+
+        Object.keys(grouped).forEach(groupName => {
+            const group = renderGroup(groupName, grouped[groupName]);
+            if (group) resultsElement.appendChild(group);
+        });
+    };
+
+    const runSearch = async () => {
+        const query = input.value.trim();
+        if (!query) {
+            renderInitial();
+            return;
+        }
+
+        showPanel();
+        const token = ++latestSearchToken;
+        const localMatches = searchLocal(query);
+        renderResults(localMatches);
+        let remoteMatches = [];
+        try {
+            remoteMatches = await searchRemote(query);
+        } catch {
+            remoteMatches = [];
+        }
+        if (token !== latestSearchToken || !panelOpen) return;
+        renderResults(mergeResults(remoteMatches, localMatches));
+    };
+
+    mobileToggle?.addEventListener('click', () => {
+        openMobileSearch();
+        renderInitial();
+    });
+    backButton?.addEventListener('click', closeSearchUi);
+    clearButton?.addEventListener('click', clearAndFocus);
+    input.addEventListener('focus', () => {
+        if (input.value.trim()) {
+            runSearch();
+        } else {
+            renderInitial();
+        }
+    });
+    input.addEventListener('input', () => debounce('global-search-input', runSearch, 120));
+    resultsElement.addEventListener('click', e => {
+        const clearHistory = e.target.closest('[data-clear-search-history]');
+        if (clearHistory) {
+            e.preventDefault();
+            clearGlobalSearchRecents();
+            renderInitial();
+            return;
+        }
+        const suggestion = e.target.closest('[data-search-suggestion]');
+        if (!suggestion) return;
+        e.preventDefault();
+        input.value = suggestion.dataset.searchSuggestion || '';
+        input.focus();
+        runSearch();
+    });
+
+    document.addEventListener('keydown', e => {
+        const openShortcut = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k';
+        const slashShortcut = e.key === '/' && !isEditableElement(e.target);
+        if (openShortcut || slashShortcut) {
+            e.preventDefault();
+            focusSearch();
+            if (input.value.trim()) {
+                runSearch();
+            } else {
+                renderInitial();
+            }
+            return;
+        }
+
+        if (e.key === 'Escape' && (panelOpen || isMobileSearchOpen())) {
+            e.preventDefault();
+            closeSearchUi();
+        }
+    });
+
+    document.addEventListener('click', e => {
+        const target = e.target;
+        if (target instanceof Element && (shell.contains(target) || mobileToggle?.contains(target))) {
+            return;
+        }
+        if (panelOpen || isMobileSearchOpen()) {
+            closeSearchUi();
+        }
+    });
+
+    desktopMediaQuery.addEventListener('change', e => {
+        if (e.matches) {
+            closeMobileSearch();
+            hidePanel();
+        }
+    });
+};
+
 document.addEventListener("DOMContentLoaded", () => {
     reinsertSvgUseElements();
+    initGlobalSearch();
     // sticky header
     const stickyHeader = document.querySelector('#mainContent > section .sticky-header');
     if (stickyHeader) {
@@ -445,8 +887,45 @@ document.addEventListener("DOMContentLoaded", () => {
         })
     }
 
-    // Menu collapses
     const mainNav = document.getElementById('mainNav')
+    const closeMobileNav = () => {
+        if (!mainNav || !window.matchMedia('(max-width: 991px)').matches || !mainNav.classList.contains('show')) return;
+        if (window.bootstrap?.Offcanvas) {
+            window.bootstrap.Offcanvas.getOrCreateInstance(mainNav).hide();
+        }
+    }
+
+    if (mainNav) {
+        delegate('click', '#mainNav a[href]', closeMobileNav)
+
+        let startX = 0;
+        let startY = 0;
+        let trackingSwipe = false;
+
+        mainNav.addEventListener('touchstart', e => {
+            if (!mainNav.classList.contains('show') || !e.touches[0]) return;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            trackingSwipe = true;
+        }, { passive: true });
+
+        mainNav.addEventListener('touchmove', e => {
+            if (!trackingSwipe || !e.touches[0]) return;
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            const deltaX = currentX - startX;
+            const deltaY = currentY - startY;
+            if (Math.abs(deltaX) < 64 || Math.abs(deltaX) < Math.abs(deltaY)) return;
+            if (deltaX < 0) closeMobileNav();
+            trackingSwipe = false;
+        }, { passive: true });
+
+        mainNav.addEventListener('touchend', () => {
+            trackingSwipe = false;
+        }, { passive: true });
+    }
+
+    // Menu collapses
     if (mainNav) {
         const COLLAPSED_KEY = 'btcpay-nav-collapsed'
         delegate('show.bs.collapse', '#mainNav', (e) => {

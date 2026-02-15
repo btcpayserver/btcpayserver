@@ -170,7 +170,8 @@ namespace BTCPayServer.Services.Stores
 
         public async Task<StoreRole?> AddOrUpdateStoreRole(StoreRoleId role, List<string> policies)
         {
-            policies = policies.Where(s => Policies.IsValidPolicy(s) && Policies.IsStorePolicy(s)).ToList();
+            // Include both core store policies and plugin permissions with store scope
+            policies = policies.Where(s => Policies.IsValidPolicy(s) && (Policies.IsStorePolicy(s) || Policies.IsPluginPolicy(s))).ToList();
             await using var ctx = _ContextFactory.CreateContext();
             Data.StoreRole? match = await ctx.StoreRoles.FindAsync(role.Id);
             var added = false;

@@ -8,13 +8,14 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Security;
+using BTCPayServer.Services.GlobalSearch;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Controllers
 {
@@ -30,19 +31,25 @@ namespace BTCPayServer.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IAuthorizationService _authorizationService;
         private readonly ApplicationDbContextFactory _dbContextFactory;
+        private readonly IEnumerable<IGlobalSearchProvider> _globalSearchProviders;
+        private readonly ILogger<UISearchController> _logger;
 
         public UISearchController(
             StoreRepository storeRepository,
             InvoiceRepository invoiceRepository,
             UserManager<ApplicationUser> userManager,
             IAuthorizationService authorizationService,
-            ApplicationDbContextFactory dbContextFactory)
+            ApplicationDbContextFactory dbContextFactory,
+            IEnumerable<IGlobalSearchProvider> globalSearchProviders,
+            ILogger<UISearchController> logger)
         {
             _storeRepository = storeRepository;
             _invoiceRepository = invoiceRepository;
             _userManager = userManager;
             _authorizationService = authorizationService;
             _dbContextFactory = dbContextFactory;
+            _globalSearchProviders = globalSearchProviders;
+            _logger = logger;
         }
 
         [HttpGet("global")]
@@ -64,12 +71,10 @@ namespace BTCPayServer.Controllers
             }
 
             results.AddRange(await BuildPageResults(context.Store, parsedQuery.RawQuery));
+            // Let plugin providers contribute results without modifying this controller.
+            await AddPluginResults(results, parsedQuery, storeId, take, context);
 
-            var deduped = results
-                .Where(r => !string.IsNullOrEmpty(r.Url))
-                .DistinctBy(r => $"{r.Category}|{r.Url}|{r.Title}", StringComparer.OrdinalIgnoreCase)
-                .Take(take)
-                .ToArray();
+            var deduped = DeduplicateResults(results, take);
 
             return Json(deduped);
         }
@@ -94,10 +99,58 @@ namespace BTCPayServer.Controllers
             return query[..MaxQueryLength];
         }
 
-        private static ParsedQuery ParseQuery(string query)
+        private static GlobalSearchQuery ParseQuery(string query)
         {
             var dateRange = GetDateRangeSearch(query);
-            return new ParsedQuery(query, GetTransactionSearch(query), dateRange);
+            return new GlobalSearchQuery
+            {
+                RawQuery = query,
+                TransactionSearch = GetTransactionSearch(query),
+                DateRange = dateRange,
+                MatchQuery = dateRange.HasValue ? string.Empty : query
+            };
+        }
+
+        private async Task AddPluginResults(
+            IList<GlobalSearchResult> results,
+            GlobalSearchQuery parsedQuery,
+            string storeId,
+            int take,
+            SearchContext context)
+        {
+            if (_globalSearchProviders == null)
+                return;
+
+            var pluginContext = new GlobalSearchPluginContext(
+                requestedStoreId: storeId,
+                take: take,
+                user: User,
+                userId: context.UserId,
+                isServerAdmin: context.IsServerAdmin,
+                store: context.Store,
+                query: parsedQuery,
+                results: results);
+
+            foreach (var provider in _globalSearchProviders)
+            {
+                try
+                {
+                    await provider.Search(pluginContext);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Global search provider {Provider} failed", provider.GetType().FullName);
+                }
+            }
+        }
+
+        private static GlobalSearchResult[] DeduplicateResults(IEnumerable<GlobalSearchResult> results, int take)
+        {
+            return results
+                .Where(r => !string.IsNullOrEmpty(r.Url))
+                .DistinctBy(r => $"{r.Category}|{r.Url}|{r.Title}", StringComparer.OrdinalIgnoreCase)
+                .Take(take)
+                .ToArray();
         }
 
         private async Task<StoreData> ResolveStore(string storeId, string userId, bool isServerAdmin)
@@ -112,7 +165,7 @@ namespace BTCPayServer.Controllers
 
         private async Task AddInvoiceResults(
             ICollection<GlobalSearchResult> results,
-            ParsedQuery parsedQuery,
+            GlobalSearchQuery parsedQuery,
             int take,
             SearchContext context)
         {
@@ -159,7 +212,7 @@ namespace BTCPayServer.Controllers
 
         private async Task AddPaymentRequestResults(
             ICollection<GlobalSearchResult> results,
-            ParsedQuery parsedQuery,
+            GlobalSearchQuery parsedQuery,
             int take,
             SearchContext context)
         {
@@ -600,30 +653,5 @@ namespace BTCPayServer.Controllers
             public Dictionary<string, string[]> StoreIdsByPolicy { get; } = new(StringComparer.Ordinal);
         }
 
-        private sealed class ParsedQuery
-        {
-            public ParsedQuery(string rawQuery, string transactionSearch, (DateTimeOffset Start, DateTimeOffset End)? dateRange)
-            {
-                RawQuery = rawQuery;
-                TransactionSearch = transactionSearch;
-                DateRange = dateRange;
-                MatchQuery = dateRange.HasValue ? string.Empty : rawQuery;
-            }
-
-            public string RawQuery { get; }
-            public string MatchQuery { get; }
-            public string TransactionSearch { get; }
-            public (DateTimeOffset Start, DateTimeOffset End)? DateRange { get; }
-        }
-
-        public class GlobalSearchResult
-        {
-            public string Category { get; set; }
-            public string Title { get; set; }
-            public string Subtitle { get; set; }
-            public string Url { get; set; }
-            [JsonIgnore]
-            public string Keywords { get; set; }
-        }
     }
 }

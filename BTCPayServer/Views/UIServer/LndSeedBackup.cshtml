@@ -1,3 +1,5 @@
+@using BTCPayServer.Configuration
+@inject BTCPayServerOptions BtcPayServerOptions
 @model LndSeedBackupViewModel
 @{
     ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Services), StringLocalizer["LND Seed Backup"])
@@ -23,7 +25,11 @@
         <div class="col-lg-8">
             <div class="form-group">
                 <p text-translate="true">The LND seed backup is useful to recover on-chain funds of your LND wallet in case of a corruption of your server.</p>
-                <p>The recovering process is documented by LND on <a href="https://github.com/lightningnetwork/lnd/blob/master/docs/recovery.md" rel="noreferrer noopener">this page</a>.</p>
+                @if (BtcPayServerOptions.DockerDeployment)
+                {
+                    <p text-translate="true">In BTCPay Server Docker deployments, LND is initialized and unlocked automatically. Recovery requires running the steps with an interactive shell (TTY) and temporarily disabling automatic init/unlock behavior.</p>
+                }
+                <p text-translate="true">The recovering process is documented by LND on <a href="https://github.com/lightningnetwork/lnd/blob/master/docs/recovery.md" rel="noreferrer noopener">this page</a>.</p>
             </div>
             <button class="btn btn-primary @(Model.Removed ? "collapse" : "")" id="details" type="button" text-translate="true">See confidential seed information</button>
             

@@ -84,6 +84,8 @@
 
 <partial name="_StatusMessage" />
 <form id="walletSettingsForm" method="post" asp-action="UpdateWalletSettings" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+    <div class="settings-section">
+        <h3 class="settings-section-title" text-translate="true">General</h3>
     <div class="form-group my-4">
         <div class="d-flex align-items-center">
             <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-3"/>
@@ -121,6 +123,9 @@
         </div>
         <span asp-validation-for="DefaultIncludeNonWitnessUtxo" class="text-danger"></span>
     </div>
+    </div>
+    <div class="settings-section">
+        <h3 class="settings-section-title" text-translate="true">Wallet</h3>
     <div class="form-group">
         <label asp-for="Label" class="form-label"></label>
         <input asp-for="Label" class="form-control" style="max-width:24em;" />
@@ -147,9 +152,11 @@
             </div>
         </div>
     }
+    </div>
     @for (var i = 0; i < Model.AccountKeys.Count; i++)
     {
-        <h4 class="mt-5 mb-3">@StringLocalizer["Account Key"] @i</h4>
+    <div class="settings-section">
+        <h3 class="settings-section-title">@StringLocalizer["Account Key"] @i</h3>
         <div class="form-group">
             <div class="d-flex align-items-center justify-content-between">
                 <label asp-for="@Model.AccountKeys[i].AccountKey" class="form-label"></label>
@@ -174,6 +181,7 @@
                 <input asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-control" style="max-width:16ch;" />
             </div>
         </div>
+    </div>
     }
 </form>
 

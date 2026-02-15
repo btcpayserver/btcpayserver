@@ -59,7 +59,8 @@
                 </div>
 
                 <div class="text-start">
-                    <h3 class="mt-5 mb-3" text-translate="true">Payment</h3>
+                    <div class="settings-section">
+                        <h3 class="settings-section-title" text-translate="true">Payment</h3>
                     <div class="form-check my-3">
                         <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input"/>
                         <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
@@ -81,8 +82,10 @@
                         <span asp-validation-for="LightningDescriptionTemplate" class="text-danger"></span>
                         <div class="form-text" html-translate="true">Available placeholders: <code>{StoreName} {ItemDescription} {OrderId}</code></div>
                     </div>
+                    </div>
 
-                    <h3 class="mt-5 mb-3" id="ln-url" text-translate="true">LNURL</h3>
+                    <div class="settings-section">
+                        <h3 class="settings-section-title" id="ln-url" text-translate="true">LNURL</h3>
                     <div class="form-group d-flex align-items-center">
                         <input asp-for="LNURLEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#LNURLSettings" aria-expanded="@Model.LNURLEnabled" aria-controls="LNURLSettings"/>
                         <label asp-for="LNURLEnabled" class="form-check-label"></label>
@@ -105,6 +108,7 @@
                                 <label asp-for="LUD12Enabled" class="form-check-label"></label>
                             </div>
                         </div>
+                    </div>
                     </div>
                 </div>
             </div>

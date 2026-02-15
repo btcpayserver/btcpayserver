@@ -495,14 +495,18 @@ const initGlobalSearch = () => {
         return listItem;
     };
 
+    let groupIdCounter = 0;
     const renderGroup = (title, entries, actionLabel = null, actionDataAttribute = null) => {
         if (!entries.length) return null;
         const group = document.createElement('div');
         group.className = 'globalSearch-group';
+        group.setAttribute('role', 'group');
+        const headingId = 'globalSearch-group-' + (++groupIdCounter);
         const headingRow = document.createElement('div');
         headingRow.className = 'globalSearch-group-header';
         const heading = document.createElement('span');
         heading.className = 'globalSearch-group-title';
+        heading.id = headingId;
         heading.textContent = title;
         headingRow.appendChild(heading);
         if (actionLabel && actionDataAttribute) {
@@ -511,13 +515,16 @@ const initGlobalSearch = () => {
             action.className = 'globalSearch-group-action';
             action.textContent = actionLabel;
             action.setAttribute(actionDataAttribute, '1');
+            action.setAttribute('aria-label', actionLabel);
             headingRow.appendChild(action);
         }
         const list = document.createElement('ul');
         list.className = 'globalSearch-list';
+        list.setAttribute('role', 'list');
         entries.forEach(entry => {
             list.appendChild(createResultItem(entry));
         });
+        group.setAttribute('aria-labelledby', headingId);
         group.append(headingRow, list);
         return group;
     };

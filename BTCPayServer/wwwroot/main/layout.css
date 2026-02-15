@@ -282,6 +282,11 @@
 
 #globalNav .globalSearch-group {
     margin-bottom: var(--btcpay-space-m);
+    padding-top: var(--btcpay-space-s);
+}
+
+#globalNav .globalSearch-group:first-child {
+    padding-top: 0;
 }
 
 #globalNav .globalSearch-group:last-child {
@@ -336,14 +341,18 @@
     text-align: left;
     border: 0;
     background: transparent;
+    cursor: pointer;
+    transition: background-color var(--btcpay-transition-duration-fast);
 }
 
 #globalNav .globalSearch-item-button {
     cursor: pointer;
 }
 
-#globalNav .globalSearch-item:hover {
+#globalNav .globalSearch-item:hover,
+#globalNav .globalSearch-item:focus-visible {
     background: var(--btcpay-neutral-100);
+    outline: none;
 }
 
 #globalNav .globalSearch-item-title {
@@ -375,6 +384,15 @@
 
 body.global-search-open {
     overflow: hidden;
+}
+
+/* Settings pages – semantic section grouping */
+.settings-section {
+    margin-bottom: var(--btcpay-space-xl);
+}
+
+.settings-section-title {
+    margin-bottom: var(--btcpay-space-m);
 }
 
 #globalNav .dropdown-menu {

@@ -22,22 +22,26 @@
             {
                 <div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
             }
-            <div class="form-group">
-                <label asp-for="Id" class="form-label"></label>
-                <input asp-for="Id" readonly class="form-control" />
-            </div>
-            <div class="form-group">
-                <label asp-for="StoreName" class="form-label"></label>
-                <input asp-for="StoreName" class="form-control" />
-                <span asp-validation-for="StoreName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="StoreWebsite" class="form-label"></label>
-                <input asp-for="StoreWebsite" class="form-control" />
-                <span asp-validation-for="StoreWebsite" class="text-danger"></span>
+            <div class="settings-section">
+                <h3 class="settings-section-title" text-translate="true">Store</h3>
+                <div class="form-group">
+                    <label asp-for="Id" class="form-label"></label>
+                    <input asp-for="Id" readonly class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="StoreName" class="form-label"></label>
+                    <input asp-for="StoreName" class="form-control" />
+                    <span asp-validation-for="StoreName" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="StoreWebsite" class="form-label"></label>
+                    <input asp-for="StoreWebsite" class="form-control" />
+                    <span asp-validation-for="StoreWebsite" class="text-danger"></span>
+                </div>
             </div>
 
-            <h3 class="mt-5 mb-3" text-translate="true">Branding</h3>
+            <div class="settings-section">
+                <h3 class="settings-section-title" text-translate="true">Branding</h3>
             <p text-translate="true">The custom color, logo and CSS are applied on the public/customer-facing pages (Invoice, Payment Request, Pull Payment, etc.). The brand color is used as the accent color for buttons, links, etc. It might get adapted to fit the light/dark color scheme.</p>
 
             <div>
@@ -111,8 +115,10 @@
                     <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
                 }
             </div>
+            </div>
 
-			<h3 class="mt-5 mb-3" text-translate="true">Payment</h3>
+            <div class="settings-section">
+                <h3 class="settings-section-title" text-translate="true">Payment</h3>
             <div class="form-group">
                 <label asp-for="DefaultCurrency" class="form-label"></label>
                 <input asp-for="DefaultCurrency" class="form-control w-auto" currency-selection />
@@ -218,12 +224,13 @@
                 </div>
                 <span asp-validation-for="RecommendedFeeBlockTarget" class="text-danger"></span>
             </div>
+            </div>
         </div>
     </div>
 </form>
 
-<div permission="@Policies.CanModifyStoreSettings">
-	<h3 class="mt-5 mb-3" text-translate="true">Additional Actions</h3>
+<div class="settings-section" permission="@Policies.CanModifyStoreSettings">
+    <h3 class="settings-section-title" text-translate="true">Additional Actions</h3>
     <div id="danger-zone" class="d-flex flex-wrap align-items-center gap-3 mb-5 mt-2">
         <form asp-action="ToggleArchive" asp-route-storeId="@Model.Id" method="post">
             <button type="submit" class="btn btn-outline-secondary" id="btn-archive-toggle">

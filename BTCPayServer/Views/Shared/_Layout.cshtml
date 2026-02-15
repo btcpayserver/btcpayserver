@@ -1,4 +1,3 @@
-@using BTCPayServer.Components.StoreSelector
 @using BTCPayServer.Components.MainNav
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor _context;
 @inject BTCPayServer.Services.BTCPayServerEnvironment _env
@@ -24,10 +23,9 @@
         <button id="mainMenuToggle" class="mainMenuButton" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
             <span>Menu</span>
         </button>
-        <vc:store-selector />
         @if (_signInManager.IsSignedIn(User))
         {
-			<component type="typeof(BTCPayServer.Blazor.NotificationsDropDown)" render-mode="ServerPrerendered" />
+            <vc:global-nav />
         }
     </div>
     <vc:main-nav />

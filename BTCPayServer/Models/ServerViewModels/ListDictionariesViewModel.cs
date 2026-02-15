@@ -11,6 +11,8 @@ public class ListDictionariesViewModel
         public string Source { get; set; }
         public bool Editable { get; set; }
         public bool IsSelected { get; set; }
+        public bool IsDownloadedLanguagePack { get; set; }
+        public bool UpdateAvailable { get; set; }
     }
 
     public List<DictionaryViewModel> Dictionaries = [];

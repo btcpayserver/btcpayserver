@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Concurrent;
 using System.Data.Common;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -12,22 +14,36 @@ namespace BTCPayServer.Controllers
 {
     public partial class UIServerController
     {
+        private static readonly ConcurrentDictionary<string, (bool UpdateAvailable, DateTime CheckedAt)> _updateCheckCache = new();
+        private static readonly TimeSpan _cacheExpiration = TimeSpan.FromHours(1);
         [HttpGet("server/dictionaries")]
         public async Task<IActionResult> ListDictionaries()
         {
             var dictionaries = await _localizer.GetDictionaries();
             var vm = new ListDictionariesViewModel();
+            var downloadableLanguages = GetDownloadableLanguages();
+            
             foreach (var dictionary in dictionaries)
             {
                 var isSelected = _policiesSettings.LangDictionary == dictionary.DictionaryName ||
                                   (_policiesSettings.LangDictionary is null && dictionary.Source == "Default");
+                var isDownloadedPack = downloadableLanguages.Contains(dictionary.DictionaryName);
+                var updateAvailable = false;
+                
+                if (isDownloadedPack && dictionary.Source == "Custom")
+                {
+                    updateAvailable = await CheckForLanguagePackUpdateCached(dictionary.DictionaryName, dictionary.Metadata);
+                }
+                
                 var dict = new ListDictionariesViewModel.DictionaryViewModel
                 {
                     Editable = dictionary.Source == "Custom",
                     Source = dictionary.Source,
                     DictionaryName = dictionary.DictionaryName,
                     Fallback = dictionary.Fallback,
-                    IsSelected = isSelected
+                    IsSelected = isSelected,
+                    IsDownloadedLanguagePack = isDownloadedPack && dictionary.Source == "Custom",
+                    UpdateAvailable = updateAvailable
                 };
                 if (isSelected)
                     vm.Dictionaries.Insert(0, dict);
@@ -135,9 +151,10 @@ namespace BTCPayServer.Controllers
             }
 
             string translationsJson;
+            string version;
             try
             {
-                translationsJson = await FetchLanguagePackFromRepository(language);
+                (translationsJson, version) = await FetchLanguagePackFromRepository(language);
             }
             catch (HttpRequestException ex)
             {
@@ -158,19 +175,145 @@ namespace BTCPayServer.Controllers
             }
             
             await _localizer.Save(existingDictionary, translations);
+            await UpdateLanguagePackMetadata(language, version);
+            _updateCheckCache.TryRemove(language, out _);
             return RedirectToAction(nameof(ListDictionaries));
         }
 
-        private async Task<string> FetchLanguagePackFromRepository(string language)
+        [HttpPost("server/dictionaries/{dictionary}/update")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateLanguagePack(string dictionary)
         {
-            var fileName = language.ToLowerInvariant();
+            var existingDictionary = await _localizer.GetDictionary(dictionary);
+            if (existingDictionary is null || !GetDownloadableLanguages().Contains(dictionary))
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Dictionary not found or not a downloadable language pack"].Value;
+                return RedirectToAction(nameof(ListDictionaries));
+            }
+
+            string translationsJson;
+            string version;
+            try
+            {
+                (translationsJson, version) = await FetchLanguagePackFromRepository(dictionary);
+            }
+            catch (HttpRequestException ex)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Failed to update language pack: {0}", ex.Message].Value;
+                return RedirectToAction(nameof(ListDictionaries));
+            }
+
+            var translations = Translations.CreateFromJson(translationsJson);
+            await _localizer.Save(existingDictionary, translations);
+            await UpdateLanguagePackMetadata(dictionary, version);
+            _updateCheckCache.TryRemove(dictionary, out _);
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' updated successfully", dictionary].Value;
+            return RedirectToAction(nameof(ListDictionaries));
+        }
+
+        private async Task<(string translationsJson, string version)> FetchLanguagePackFromRepository(string language)
+        {
+            if (!GetDownloadableLanguages().Contains(language))
+            {
+                throw new ArgumentException($"Language '{language}' is not a valid downloadable language pack.", nameof(language));
+            }
+            
+            var fileName = Uri.EscapeDataString(language.ToLowerInvariant());
             var url = $"https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/translations/{fileName}.json";
             
             var httpClient = HttpClientFactory.CreateClient();
-            using var response = await httpClient.GetAsync(url);
-            response.EnsureSuccessStatusCode();
+            httpClient.Timeout = TimeSpan.FromSeconds(30);
             
-            return await response.Content.ReadAsStringAsync();
+            var translationsJson = await httpClient.GetStringAsync(url);
+            
+            var hash = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(translationsJson));
+            var version = Convert.ToHexString(hash);
+            
+            return (translationsJson, version);
+        }
+
+        private async Task<bool> CheckForLanguagePackUpdateCached(string language, JObject metadata)
+        {
+            var cacheKey = language;
+            
+            if (_updateCheckCache.TryGetValue(cacheKey, out var cached))
+            {
+                if (DateTime.UtcNow - cached.CheckedAt < _cacheExpiration)
+                {
+                    return cached.UpdateAvailable;
+                }
+            }
+            
+            var updateAvailable = await CheckForLanguagePackUpdate(language, metadata);
+            _updateCheckCache[cacheKey] = (updateAvailable, DateTime.UtcNow);
+            
+            return updateAvailable;
+        }
+        
+        private async Task<bool> CheckForLanguagePackUpdate(string language, JObject metadata)
+        {
+            try
+            {
+                if (!GetDownloadableLanguages().Contains(language))
+                {
+                    return false;
+                }
+                
+                var fileName = Uri.EscapeDataString(language.ToLowerInvariant());
+                var url = $"https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/translations/{fileName}.json";
+                
+                var httpClient = HttpClientFactory.CreateClient();
+                httpClient.Timeout = TimeSpan.FromSeconds(10);
+                
+                var remoteContent = await httpClient.GetStringAsync(url);
+                
+                var remoteHash = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(remoteContent));
+                var remoteVersion = Convert.ToHexString(remoteHash);
+                var localVersion = metadata["version"]?.ToString();
+                
+                if (string.IsNullOrEmpty(localVersion))
+                    return true;
+                
+                return remoteVersion != localVersion;
+            }
+            catch (HttpRequestException)
+            {
+                return false;
+            }
+            catch (TaskCanceledException)
+            {
+                return false;
+            }
+        }
+
+        private async Task UpdateLanguagePackMetadata(string language, string version)
+        {
+            var existingDict = await _localizer.GetDictionary(language);
+            var metadata = existingDict?.Metadata ?? new JObject();
+            metadata["version"] = version;
+            await _localizer.UpdateDictionaryMetadata(language, metadata);
+        }
+
+        private static string[] GetDownloadableLanguages()
+        {
+            return new[]
+            {
+                "Dutch",
+                "French",
+                "German",
+                "Hindi",
+                "Indonesian",
+                "Italian",
+                "Japanese",
+                "Norwegian",
+                "Korean",
+                "Portuguese (Brazil)",
+                "Russian",
+                "Serbian",
+                "Spanish",
+                "Thai",
+                "Turkish"
+            };
         }
     }
 }

@@ -197,5 +197,13 @@ namespace BTCPayServer.Services
             var db = ctx.Database.GetDbConnection();
             await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id=@dict_id AND source='Custom'", new { dict_id = dictionary });
         }
+
+        public async Task UpdateDictionaryMetadata(string dictionary, JObject metadata)
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            var db = ctx.Database.GetDbConnection();
+            await db.ExecuteAsync("UPDATE lang_dictionaries SET metadata = @metadata::jsonb WHERE dict_id = @dict_id",
+                new { dict_id = dictionary, metadata = metadata.ToString() });
+        }
     }
 }

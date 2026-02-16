@@ -43,7 +43,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("server/roles/{role}")]
-        public async Task<IActionResult> CreateOrEditRole(string role, [FromServices] IPluginPermissionRegistry pluginPermissionRegistry = null)
+        public async Task<IActionResult> CreateOrEditRole(string role, [FromServices] PluginPermissionRegistry pluginPermissionRegistry = null)
         {
             var viewModel = new UpdateRoleViewModel();
             
@@ -73,7 +73,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> CreateOrEditRole(
             [FromRoute] string role, 
             UpdateRoleViewModel viewModel,
-            [FromServices] Services.IPluginPermissionRegistry pluginPermissionRegistry = null)
+            [FromServices] PluginPermissionRegistry pluginPermissionRegistry = null)
         {
             string successMessage = null;
             if (role == "create")

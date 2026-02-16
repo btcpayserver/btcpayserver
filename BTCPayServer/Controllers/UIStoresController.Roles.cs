@@ -48,7 +48,7 @@ public partial class UIStoresController
     public async Task<IActionResult> CreateOrEditRole(
         string storeId,
         [FromServices] StoreRepository storeRepository,
-        [FromServices] Services.IPluginPermissionRegistry pluginPermissionRegistry,
+        [FromServices] Services.PluginPermissionRegistry pluginPermissionRegistry,
         string role)
     {
         var viewModel = new UpdateRoleViewModel();
@@ -80,7 +80,7 @@ public partial class UIStoresController
     public async Task<IActionResult> CreateOrEditRole(
         string storeId,
         [FromServices] StoreRepository storeRepository,
-        [FromServices] Services.IPluginPermissionRegistry pluginPermissionRegistry,
+        [FromServices] Services.PluginPermissionRegistry pluginPermissionRegistry,
         [FromRoute] string role, UpdateRoleViewModel viewModel)
     {
         string successMessage;

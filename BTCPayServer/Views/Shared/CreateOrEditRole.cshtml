@@ -5,6 +5,7 @@
 @using BTCPayServer.Controllers
 @using BTCPayServer.Views.Stores
 @model UpdateRoleViewModel
+@inject BTCPayServer.Services.PluginPermissionRegistry PluginPermissionRegistry
 @{
     var role = Context.GetRouteValue("role") as string;
 
@@ -16,6 +17,14 @@
     var category = storeId is null ? WellKnownCategories.Server : WellKnownCategories.Store;
     ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Roles), title).SetCategory(category));
     var storePolicies = Policies.AllPolicies.Where(Policies.IsStorePolicy).ToArray();
+    var pluginPermissions = Model.PluginPermissions ?? new List<BTCPayServer.Abstractions.Contracts.PluginPermission>();
+    var orphanedPermissions = Model.Policies?
+        .Where(p => Policies.IsPluginPolicy(p) && !pluginPermissions.Any(pp => pp.Policy == p))
+        .ToList() ?? new List<string>();
+
+    // We resolve display names through a helper because core and plugin permissions currently come from different sources.
+    string GetPermissionDisplayName(string policy) =>
+        (PluginPermissionRegistry?.GetDisplayName(policy)) ?? Policies.DisplayName(policy);
 }
 
 <form method="post">
@@ -59,21 +68,15 @@
                     <option value="@policy" class="text-truncate" asp-selected="@(Model.Policies?.Contains(policy) ?? false)">@policy</option>
                 }
                 @* Add plugin permissions to the select so they get submitted *@
-                @if (Model.PluginPermissions != null)
+                @if (pluginPermissions.Any())
                 {
-                    foreach (var pluginPermission in Model.PluginPermissions)
+                    foreach (var pluginPermission in pluginPermissions)
                     {
                         <option value="@pluginPermission.Policy" class="text-truncate" asp-selected="@(Model.Policies?.Contains(pluginPermission.Policy) ?? false)">@pluginPermission.Policy</option>
                     }
                 }
                 @* Add orphaned plugin permissions to the select so they get submitted *@
-                @{
-                    var orphanedPermissionsForSelect = Model.Policies?
-                        .Where(p => Policies.IsPluginPolicy(p) && 
-                                    (Model.PluginPermissions == null || !Model.PluginPermissions.Any(pp => pp.Policy == p)))
-                        .ToList() ?? new List<string>();
-                }
-                @foreach (var orphanedPolicy in orphanedPermissionsForSelect)
+                @foreach (var orphanedPolicy in orphanedPermissions)
                 {
                     <option value="@orphanedPolicy" class="text-truncate" selected="selected">@orphanedPolicy</option>
                 }
@@ -90,11 +93,11 @@
             </div>
             
             @* Plugin Permissions Section *@
-            @if (Model.PluginPermissions != null && Model.PluginPermissions.Any())
+            @if (pluginPermissions.Any())
             {
                 <h5 class="mt-4 mb-3">Plugin Permissions</h5>
                 <div class="list-group mb-2">
-                    @foreach (var pluginPermission in Model.PluginPermissions)
+                    @foreach (var pluginPermission in pluginPermissions)
                     {
                         var isChecked = Model.Policies?.Contains(pluginPermission.Policy) ?? false;
                         <div class="form-check mb-0">
@@ -109,13 +112,6 @@
             }
             
             @* Orphaned Plugin Permissions Section *@
-            @{
-                // Detect orphaned permissions: plugin permissions in the role that aren't in the registry
-                var orphanedPermissions = Model.Policies?
-                    .Where(p => Policies.IsPluginPolicy(p) && 
-                                (Model.PluginPermissions == null || !Model.PluginPermissions.Any(pp => pp.Policy == p)))
-                    .ToList() ?? new List<string>();
-            }
             @if (orphanedPermissions.Any())
             {
                 <div class="alert alert-warning mt-4" role="alert">
@@ -130,7 +126,7 @@
                             <div class="form-check mb-2">
                                 <input type="checkbox" class="form-check-input policy-cb" checked="true" value="@orphanedPolicy" id="Policy-@orphanedPolicy.Replace(".", "_")" />
                                 <label class="form-check-label text-warning" for="Policy-@orphanedPolicy.Replace(".", "_")">
-                                    <strong>@Policies.DisplayName(orphanedPolicy)</strong>
+                                    <strong>@GetPermissionDisplayName(orphanedPolicy)</strong>
                                 </label>
                                 <small class="text-muted d-block">@orphanedPolicy</small>
                             </div>
@@ -161,8 +157,7 @@
                 }
                 else
                 {
-                    // Plugin permission - use Policies.DisplayName which handles plugin permissions
-                    title = Policies.DisplayName(policy.Key);
+                    title = GetPermissionDisplayName(policy.Key);
                     description = policy.Key; // Use policy string as description for now
                 }
             }

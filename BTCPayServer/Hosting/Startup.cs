@@ -113,7 +113,7 @@ namespace BTCPayServer.Hosting
             services.AddSession();
             
             // Register plugin permission registry
-            services.AddSingleton<BTCPayServer.Services.IPluginPermissionRegistry, BTCPayServer.Services.PluginPermissionRegistry>();
+            services.AddSingleton<BTCPayServer.Services.PluginPermissionRegistry>();
             services.AddSignalR().AddNewtonsoftJsonProtocol(options =>
             {
                 NBitcoin.JsonConverters.Serializer.RegisterFrontConverters(options.PayloadSerializerSettings);
@@ -367,47 +367,12 @@ namespace BTCPayServer.Hosting
             });
             app.UsePlugins();
             
-            // Initialize plugin permissions after plugins are loaded
-            var pluginRegistry = prov.GetService<BTCPayServer.Services.IPluginPermissionRegistry>();
+            // Resolve plugin permissions once to validate and log startup state.
+            var pluginRegistry = prov.GetService<BTCPayServer.Services.PluginPermissionRegistry>();
             if (pluginRegistry != null)
             {
-                var pluginPermissions = prov.GetServices<BTCPayServer.Abstractions.Contracts.PluginPermission>().ToList();
-                Logs.Configuration.LogInformation($"Found {pluginPermissions.Count} plugin permissions");
-                
-                try
-                {
-                    pluginRegistry.RegisterPermissions(pluginPermissions);
-                    Logs.Configuration.LogInformation($"Registered {pluginPermissions.Count} plugin permissions");
-                }
-                catch (Exception ex)
-                {
-                    Logs.Configuration.LogError(ex, "Error registering plugin permissions");
-                }
-                
-                // Set the registry in Policies class for permission validation and display names
-                BTCPayServer.Client.Policies.SetPluginRegistry(pluginRegistry);
-                
-                // Force PolicyMap reinitialization to include plugin permissions
-                // Note: This uses reflection to reset a static readonly field, which is fragile.
-                // A future improvement would be to add a public reset method to the Permission class.
-                try
-                {
-                    var policyMapField = typeof(BTCPayServer.Client.Permission).GetField("PolicyMap", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                    if (policyMapField != null)
-                    {
-                        policyMapField.SetValue(null, null);
-                        _ = BTCPayServer.Client.Permission.PolicyMap; // Trigger reinitialization
-                        Logs.Configuration.LogInformation("Successfully reinitialized PolicyMap with plugin permissions");
-                    }
-                    else
-                    {
-                        Logs.Configuration.LogWarning("Could not find PolicyMap field for reinitialization. Plugin permissions may not be included in policy hierarchy.");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logs.Configuration.LogError(ex, "Failed to reinitialize PolicyMap with plugin permissions. Plugin permissions will still work but may not appear in policy hierarchy.");
-                }
+                var pluginPermissionCount = pluginRegistry.GetAllPluginPermissions().Count();
+                Logs.Configuration.LogInformation($"Registered {pluginPermissionCount} plugin permissions");
             }
         }
 

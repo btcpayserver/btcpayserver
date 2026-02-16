@@ -9,24 +9,6 @@ namespace BTCPayServer.Client
 {
     public class Policies
     {
-        private static object _pluginRegistry;
-
-        /// <summary>
-        /// Set the plugin permission registry (called during startup)
-        /// </summary>
-        public static void SetPluginRegistry(object registry)
-        {
-            _pluginRegistry = registry;
-        }
-
-        /// <summary>
-        /// Get the plugin permission registry
-        /// </summary>
-        internal static object GetPluginRegistry()
-        {
-            return _pluginRegistry;
-        }
-
         public const string CanViewLightningInvoiceInternalNode = "btcpay.server.canviewlightninginvoiceinternalnode";
         public const string CanCreateLightningInvoiceInternalNode = "btcpay.server.cancreatelightninginvoiceinternalnode";
         public const string CanViewLightningInvoiceInStore = "btcpay.store.canviewlightninginvoice";
@@ -146,42 +128,6 @@ namespace BTCPayServer.Client
         {
             var p = policy.Split(".");
             if (p.Length < 3 || p[0] != "btcpay") return policy;
-
-            // Check if this is a plugin policy
-            if (IsPluginPolicy(policy))
-            {
-                // Try to get display name from registry
-                if (_pluginRegistry != null)
-                {
-                    try
-                    {
-                        // Use reflection to call GetPermission method
-                        var getPermissionMethod = _pluginRegistry.GetType().GetMethod("GetPermission");
-                        if (getPermissionMethod != null)
-                        {
-                            var permission = getPermissionMethod.Invoke(_pluginRegistry, new object[] { policy });
-                            if (permission != null)
-                            {
-                                var displayNameProp = permission.GetType().GetProperty("DisplayName");
-                                if (displayNameProp != null)
-                                {
-                                    var displayName = displayNameProp.GetValue(permission) as string;
-                                    if (!string.IsNullOrEmpty(displayName))
-                                        return displayName;
-                                }
-                            }
-                        }
-                    }
-                    catch
-                    {
-                        // Fallback to default display name
-                    }
-                }
-
-                // Plugin permission but not registered (orphaned) - mark it
-                var perm = string.Join(' ', p[2..]);
-                return $"⚠️ [Uninstalled Plugin] {_culture.TextInfo.ToTitleCase(perm)}";
-            }
 
             // Core permission display name
             var constName = typeof(Policies).GetFields().Select(f => f.Name).FirstOrDefault(f => f.Equals(p[^1], StringComparison.OrdinalIgnoreCase));
@@ -354,31 +300,6 @@ namespace BTCPayServer.Client
             PolicyHasChild(policyMap, Policies.CanModifyInvoices, Policies.CanViewInvoices, Policies.CanCreateInvoice, Policies.CanCreateLightningInvoiceInStore);
             PolicyHasChild(policyMap, Policies.CanViewStoreSettings, Policies.CanViewInvoices, Policies.CanViewPaymentRequests, Policies.CanViewReports, Policies.CanViewPullPayments, Policies.CanViewPayouts);
             PolicyHasChild(policyMap, Policies.CanManagePayouts, Policies.CanViewPayouts);
-
-            // Merge plugin policy hierarchies from registry
-            var pluginRegistry = Policies.GetPluginRegistry();
-            if (pluginRegistry != null)
-            {
-                try
-                {
-                    var getPluginPolicyMapMethod = pluginRegistry.GetType().GetMethod("GetPluginPolicyMap");
-                    if (getPluginPolicyMapMethod != null)
-                    {
-                        var pluginPolicyMap = getPluginPolicyMapMethod.Invoke(pluginRegistry, null) as Dictionary<string, HashSet<string>>;
-                        if (pluginPolicyMap != null)
-                        {
-                            foreach (var kvp in pluginPolicyMap)
-                            {
-                                PolicyHasChild(policyMap, kvp.Key, kvp.Value.ToArray());
-                            }
-                        }
-                    }
-                }
-                catch
-                {
-                    // If plugin policy map retrieval fails, continue without it
-                }
-            }
 
             var missingPolicies = Policies.AllPolicies.ToHashSet();
             //recurse through the tree to see which policies are not included in the tree

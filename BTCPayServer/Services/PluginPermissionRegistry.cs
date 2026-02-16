@@ -1,90 +1,98 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Client;
 
 namespace BTCPayServer.Services;
 
-public interface IPluginPermissionRegistry
+public class PluginPermissionRegistry
 {
-    /// <summary>
-    /// Register permissions from a plugin
-    /// </summary>
-    void RegisterPermissions(IEnumerable<PluginPermission> permissions);
+    private readonly IReadOnlyDictionary<string, PluginPermission> _permissions;
+    private readonly IReadOnlyDictionary<string, HashSet<string>> _pluginPolicyMap;
+    private static readonly CultureInfo Culture = new(CultureInfo.InvariantCulture.Name);
 
-    /// <summary>
-    /// Get all registered plugin permissions
-    /// </summary>
-    IEnumerable<PluginPermission> GetAllPluginPermissions();
-
-    /// <summary>
-    /// Get a specific permission by policy string
-    /// </summary>
-    PluginPermission GetPermission(string policy);
-
-    /// <summary>
-    /// Get the policy map for plugin permissions (for hierarchical permissions)
-    /// </summary>
-    Dictionary<string, HashSet<string>> GetPluginPolicyMap();
-
-    /// <summary>
-    /// Check if a policy is a registered plugin permission
-    /// </summary>
-    bool IsRegisteredPluginPermission(string policy);
-}
-
-public class PluginPermissionRegistry : IPluginPermissionRegistry
-{
-    private readonly ConcurrentDictionary<string, PluginPermission> _permissions = new();
-
-    public void RegisterPermissions(IEnumerable<PluginPermission> permissions)
+    public PluginPermissionRegistry(IEnumerable<PluginPermission> permissions)
     {
+        ArgumentNullException.ThrowIfNull(permissions);
+
+        var permissionMap = new Dictionary<string, PluginPermission>(StringComparer.Ordinal);
+        var pluginPolicyMap = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+
         foreach (var permission in permissions)
         {
-            if (string.IsNullOrEmpty(permission.Policy))
-                throw new ArgumentException("Permission policy cannot be null or empty");
+            if (permission is null)
+                continue;
 
-            if (!permission.Policy.StartsWith("btcpay.plugin.", StringComparison.Ordinal))
-                throw new ArgumentException($"Plugin permission policy must start with 'btcpay.plugin.' (case-sensitive): {permission.Policy}");
+            ValidatePermission(permission);
+            permissionMap[permission.Policy] = permission;
 
-            if (string.IsNullOrEmpty(permission.DisplayName))
-                throw new ArgumentException($"Permission display name cannot be null or empty for policy: {permission.Policy}");
-
-            if (string.IsNullOrEmpty(permission.PluginIdentifier))
-                throw new ArgumentException($"Permission plugin identifier cannot be null or empty for policy: {permission.Policy}");
-
-            _permissions[permission.Policy] = permission;
+            if (permission.ChildPolicies is { Count: > 0 })
+                pluginPolicyMap[permission.Policy] = permission.ChildPolicies.ToHashSet(StringComparer.Ordinal);
         }
+
+        _permissions = new ReadOnlyDictionary<string, PluginPermission>(permissionMap);
+        _pluginPolicyMap = new ReadOnlyDictionary<string, HashSet<string>>(pluginPolicyMap);
+    }
+
+    private static void ValidatePermission(PluginPermission permission)
+    {
+        if (string.IsNullOrEmpty(permission.Policy))
+            throw new ArgumentException("Permission policy cannot be null or empty");
+
+        if (!permission.Policy.StartsWith("btcpay.plugin.", StringComparison.Ordinal))
+            throw new ArgumentException($"Plugin permission policy must start with 'btcpay.plugin.' (case-sensitive): {permission.Policy}");
+
+        if (string.IsNullOrEmpty(permission.DisplayName))
+            throw new ArgumentException($"Permission display name cannot be null or empty for policy: {permission.Policy}");
+
+        if (string.IsNullOrEmpty(permission.PluginIdentifier))
+            throw new ArgumentException($"Permission plugin identifier cannot be null or empty for policy: {permission.Policy}");
     }
 
     public IEnumerable<PluginPermission> GetAllPluginPermissions()
     {
-        return _permissions.Values.ToList();
+        return _permissions.Values;
     }
 
     public PluginPermission GetPermission(string policy)
     {
+        if (string.IsNullOrEmpty(policy))
+            return null;
+
         return _permissions.TryGetValue(policy, out var permission) ? permission : null;
     }
 
     public Dictionary<string, HashSet<string>> GetPluginPolicyMap()
     {
-        var policyMap = new Dictionary<string, HashSet<string>>();
-
-        foreach (var permission in _permissions.Values)
-        {
-            if (permission.ChildPolicies != null && permission.ChildPolicies.Any())
-            {
-                policyMap[permission.Policy] = new HashSet<string>(permission.ChildPolicies);
-            }
-        }
-
-        return policyMap;
+        return _pluginPolicyMap.ToDictionary(
+            kvp => kvp.Key,
+            kvp => new HashSet<string>(kvp.Value, StringComparer.Ordinal),
+            StringComparer.Ordinal);
     }
 
     public bool IsRegisteredPluginPermission(string policy)
     {
-        return _permissions.ContainsKey(policy);
+        return !string.IsNullOrEmpty(policy) && _permissions.ContainsKey(policy);
+    }
+
+    public string GetDisplayName(string policy)
+    {
+        if (string.IsNullOrEmpty(policy))
+            return policy;
+
+        if (GetPermission(policy)?.DisplayName is { Length: > 0 } displayName)
+            return displayName;
+
+        if (Policies.IsPluginPolicy(policy))
+        {
+            var parts = policy.Split('.');
+            var permissionName = parts.Length > 2 ? string.Join(' ', parts[2..]) : policy;
+            return $"⚠️ [Uninstalled Plugin] {Culture.TextInfo.ToTitleCase(permissionName)}";
+        }
+
+        return Policies.DisplayName(policy);
     }
 }

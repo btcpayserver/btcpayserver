@@ -70,6 +70,7 @@ namespace BTCPayServer.Controllers
         private readonly UriResolver _uriResolver;
         private readonly TransactionLinkProviders _transactionLinkProviders;
         private readonly LocalizerService _localizer;
+        private readonly LanguagePackUpdateService _languagePackUpdateService;
         private readonly EmailSenderFactory _emailSenderFactory;
         public IStringLocalizer StringLocalizer { get; }
         public ViewLocalizer ViewLocalizer { get; }
@@ -102,7 +103,8 @@ namespace BTCPayServer.Controllers
             LocalizerService localizer,
             IStringLocalizer stringLocalizer,
             ViewLocalizer viewLocalizer,
-            BTCPayServerEnvironment environment
+            BTCPayServerEnvironment environment,
+            LanguagePackUpdateService languagePackUpdateService
         )
         {
             _policiesSettings = policiesSettings;
@@ -130,6 +132,7 @@ namespace BTCPayServer.Controllers
             Html = html;
             _transactionLinkProviders = transactionLinkProviders;
             _localizer = localizer;
+            _languagePackUpdateService = languagePackUpdateService;
             Environment = environment;
             StringLocalizer = stringLocalizer;
             ViewLocalizer = viewLocalizer;

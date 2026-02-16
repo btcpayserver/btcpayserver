@@ -14,24 +14,24 @@ namespace BTCPayServer.Controllers
     public partial class UIServerController
     {
         [HttpGet("server/dictionaries")]
-        public async Task<IActionResult> ListDictionaries([FromServices] LanguagePackUpdateService languagePackUpdateService)
+        public async Task<IActionResult> ListDictionaries()
         {
             var dictionaries = await _localizer.GetDictionaries();
             var vm = new ListDictionariesViewModel();
             var downloadableLanguages = LanguagePackUpdateService.GetDownloadableLanguages();
-            
+
             foreach (var dictionary in dictionaries)
             {
                 var isSelected = _policiesSettings.LangDictionary == dictionary.DictionaryName ||
                                   (_policiesSettings.LangDictionary is null && dictionary.Source == "Default");
                 var isDownloadedPack = downloadableLanguages.Contains(dictionary.DictionaryName);
                 var updateAvailable = false;
-                
+
                 if (isDownloadedPack && dictionary.Source == "Custom")
                 {
-                    updateAvailable = await languagePackUpdateService.CheckForLanguagePackUpdateCached(dictionary.DictionaryName, dictionary.Metadata);
+                    updateAvailable = await _languagePackUpdateService.CheckForLanguagePackUpdateCached(dictionary.DictionaryName, dictionary.Metadata);
                 }
-                
+
                 var dict = new ListDictionariesViewModel.DictionaryViewModel
                 {
                     Editable = dictionary.Source == "Custom",
@@ -139,7 +139,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("server/dictionaries/download")]
-        public async Task<IActionResult> DownloadLanguagePack(string language, [FromServices] LanguagePackUpdateService languagePackUpdateService)
+        public async Task<IActionResult> DownloadLanguagePack(string language)
         {
             if (string.IsNullOrEmpty(language))
             {
@@ -170,16 +170,16 @@ namespace BTCPayServer.Controllers
             {
                 TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' updated successfully", language].Value;
             }
-            
+
             await _localizer.Save(existingDictionary, translations);
             await _localizer.UpdateVersion(language, version);
-            languagePackUpdateService.InvalidateCache(language);
+            _languagePackUpdateService.InvalidateCache(language);
             return RedirectToAction(nameof(ListDictionaries));
         }
 
         [HttpPost("server/dictionaries/{dictionary}/update")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateLanguagePack(string dictionary, [FromServices] LanguagePackUpdateService languagePackUpdateService)
+        public async Task<IActionResult> UpdateLanguagePack(string dictionary)
         {
             var existingDictionary = await _localizer.GetDictionary(dictionary);
             if (existingDictionary is null || !LanguagePackUpdateService.GetDownloadableLanguages().Contains(dictionary))
@@ -203,7 +203,7 @@ namespace BTCPayServer.Controllers
             var translations = Translations.CreateFromJson(translationsJson);
             await _localizer.Save(existingDictionary, translations);
             await _localizer.UpdateVersion(dictionary, version);
-            languagePackUpdateService.InvalidateCache(dictionary);
+            _languagePackUpdateService.InvalidateCache(dictionary);
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' updated successfully", dictionary].Value;
             return RedirectToAction(nameof(ListDictionaries));
         }
@@ -214,18 +214,18 @@ namespace BTCPayServer.Controllers
             {
                 throw new ArgumentException($"Language '{language}' is not a valid downloadable language pack.", nameof(language));
             }
-            
+
             var fileName = Uri.EscapeDataString(language.ToLowerInvariant());
             var url = $"https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/translations/{fileName}.json";
-            
+
             var httpClient = HttpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(30);
-            
+
             var translationsJson = await httpClient.GetStringAsync(url);
-            
+
             var hash = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(translationsJson));
             var version = Convert.ToHexString(hash);
-            
+
             return (translationsJson, version);
         }
 

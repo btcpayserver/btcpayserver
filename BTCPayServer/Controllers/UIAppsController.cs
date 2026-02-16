@@ -202,7 +202,7 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
 
-            return View("Confirm", new ConfirmModel(StringLocalizer["Delete app"], $"The app <strong>{Html.Encode(app.Name)}</strong> and its settings will be permanently deleted. Are you sure?", StringLocalizer["Delete"]));
+            return View("Confirm", new ConfirmModel(StringLocalizer["Delete app"], StringLocalizer["The app <strong>{0}</strong> and its settings will be permanently deleted. Are you sure?", Html.Encode(app.Name)], StringLocalizer["Delete"]));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -263,20 +263,20 @@ namespace BTCPayServer.Controllers
 
             if (!file.FileName.IsValidFileName())
             {
-                return Json(new { error = "Invalid file name" });
+                return Json(new { error = StringLocalizer["Invalid file name"].Value });
             }
             if (!file.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
             {
-                return Json(new { error = "The file needs to be an image" });
+                return Json(new { error = StringLocalizer["The file needs to be an image"].Value });
             }
             if (file.Length > 500_000)
             {
-                return Json(new { error = "The file size should be less than 0.5MB" });
+                return Json(new { error = StringLocalizer["The file size should be less than 0.5MB"].Value });
             }
             var formFile = await file.Bufferize();
             if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
             {
-                return Json(new { error = "The file needs to be an image" });
+                return Json(new { error = StringLocalizer["The file needs to be an image"].Value });
             }
             try
             {

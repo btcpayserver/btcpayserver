@@ -64,6 +64,7 @@ namespace BTCPayServer.Data
         public DbSet<CustomerData> Customers { get; set; }
 
         public DbSet<EmailRuleData> EmailRules { get; set; }
+        public DbSet<UserSettingData> UserSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -98,6 +99,7 @@ namespace BTCPayServer.Data
             StoreLabelData.OnModelCreating(builder);
             StoreLabelLinkData.OnModelCreating(builder);
             StoreSettingData.OnModelCreating(builder, Database);
+            UserSettingData.OnModelCreating(builder, Database);
             StoreWebhookData.OnModelCreating(builder);
             StoreData.OnModelCreating(builder, Database);
             U2FDevice.OnModelCreating(builder);

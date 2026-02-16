@@ -1,0 +1,94 @@
+@using BTCPayServer.Blazor.Dashboard
+@using BTCPayServer.Blazor.Dashboard.Models
+@using BTCPayServer.Client
+@using BTCPayServer.Services.Invoices
+@inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<StoreNumbersWidget.StoreNumbersConfig>
+
+@inject InvoiceRepository InvoiceRepository
+
+@if (!HasAccess)
+{
+    <div class="widget-body p-3">
+        <h6 class="text-muted">Store Numbers</h6>
+        <p class="text-secondary small">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
+    </div>
+}
+else if (Loading)
+{
+    <div class="widget-body p-3">
+        <h6 class="text-muted">Store Numbers</h6>
+        <div class="d-flex justify-content-center p-3">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+}
+else if (_error is not null)
+{
+    <div class="widget-body p-3">
+        <h6 class="text-muted">Store Numbers</h6>
+        <p class="text-danger small">@_error</p>
+    </div>
+}
+else
+{
+    var config = TypedConfig ?? new StoreNumbersConfig();
+    <div class="widget-body p-3">
+        <h6 class="mb-3">Store Numbers</h6>
+        <div class="d-flex align-items-baseline gap-2">
+            <span class="fs-2 fw-bold">@_invoiceCount</span>
+            <span class="text-muted">Invoices</span>
+        </div>
+        <p class="text-muted small mb-0">in last @config.TimeframeDays days</p>
+    </div>
+}
+
+@code {
+    public static readonly WidgetDescriptor Descriptor = new()
+    {
+        Type = "StoreNumbers",
+        Name = "Store Numbers",
+        Description = "Shows key store metrics such as invoice count",
+        Category = "Store",
+        ComponentType = typeof(StoreNumbersWidget),
+        Scope = WidgetScope.Store,
+        DefaultColumnSize = 6
+    };
+
+    public class StoreNumbersConfig
+    {
+        public int TimeframeDays { get; set; } = 7;
+    }
+
+    private string? _error;
+    private int _invoiceCount;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrEmpty(StoreId))
+            return;
+
+        Loading = true;
+        try
+        {
+            var config = TypedConfig ?? new StoreNumbersConfig();
+            var query = new InvoiceQuery
+            {
+                StoreId = new[] { StoreId },
+                StartDate = DateTimeOffset.UtcNow.AddDays(-config.TimeframeDays),
+                IncludeArchived = false
+            };
+            var invoices = await InvoiceRepository.GetInvoices(query);
+            _invoiceCount = invoices.Length;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+}

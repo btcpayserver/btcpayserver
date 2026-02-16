@@ -1,0 +1,104 @@
+@using BTCPayServer.Blazor.Dashboard
+@using BTCPayServer.Blazor.Dashboard.Models
+@using BTCPayServer.Client
+@inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<WalletBalanceWidget.WalletBalanceConfig>
+
+@inject DashboardJsInterop JsInterop
+
+@if (!HasAccess)
+{
+    <div class="widget-body p-3">
+        <h6 class="text-muted">Wallet Balance</h6>
+        <p class="text-secondary small">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
+    </div>
+}
+else if (Loading)
+{
+    <div class="widget-body p-3">
+        <h6 class="text-muted">Wallet Balance</h6>
+        <div class="d-flex justify-content-center p-3">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+}
+else if (_error is not null)
+{
+    <div class="widget-body p-3">
+        <h6 class="text-muted">Wallet Balance</h6>
+        <p class="text-danger small">@_error</p>
+    </div>
+}
+else
+{
+    var config = TypedConfig ?? new WalletBalanceConfig();
+    <div class="widget-body p-3">
+        <header class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0">Wallet Balance (@config.CryptoCode)</h6>
+            @if (Size > 6)
+            {
+                <span class="text-muted small">Period: @config.Period</span>
+            }
+        </header>
+
+        <div id="@_chartId" class="ct-chart ct-major-tenth"></div>
+        <p class="text-muted small mt-2">Chart loads here</p>
+    </div>
+}
+
+@code {
+    public static readonly WidgetDescriptor Descriptor = new()
+    {
+        Type = "WalletBalance",
+        Name = "Wallet Balance",
+        Description = "Displays wallet balance and history chart",
+        Category = "Store",
+        ComponentType = typeof(WalletBalanceWidget),
+        Scope = WidgetScope.Store,
+        DefaultColumnSize = 12,
+        RequiredPermissions = new[] { Policies.CanModifyStoreSettings },
+        RequiredStoreFeatures = new[] { "wallet" }
+    };
+
+    public class WalletBalanceConfig
+    {
+        public string CryptoCode { get; set; } = "BTC";
+        public string Period { get; set; } = "Week";
+    }
+
+    private string? _error;
+    private string _chartId = $"wallet-balance-chart-{Guid.NewGuid():N}";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrEmpty(StoreId))
+            return;
+
+        Loading = true;
+        try
+        {
+            // Wallet data fetching requires complex BTCPayWalletProvider / WalletHistogramService setup.
+            // For now this is a placeholder; chart interop will be wired up in a future iteration.
+            await Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _error is null && HasAccess)
+        {
+            // Placeholder: once real data is available, call:
+            // await JsInterop.RenderChart(_chartId, "line", labels, series);
+            await Task.CompletedTask;
+        }
+    }
+}

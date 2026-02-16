@@ -1,0 +1,99 @@
+@using BTCPayServer.Blazor.Dashboard.Models
+@using Newtonsoft.Json.Linq
+
+<div class="widget p-3">
+    @if (EditMode)
+    {
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="widget-drag-handle d-flex align-items-center gap-1">
+                <vc:icon symbol="actions-drag" />
+                <span class="small text-muted">@Descriptor.Name</span>
+            </div>
+            <div class="widget-controls">
+                <button class="btn btn-outline-secondary btn-sm" title="Decrease size"
+                        disabled="@(Placement.ColumnSize <= Descriptor.MinColumnSize)"
+                        @onclick="DecreaseSize">
+                    −
+                </button>
+                <span class="small text-muted">@Placement.ColumnSize</span>
+                <button class="btn btn-outline-secondary btn-sm" title="Increase size"
+                        disabled="@(Placement.ColumnSize >= Descriptor.MaxColumnSize)"
+                        @onclick="IncreaseSize">
+                    +
+                </button>
+                <button class="btn btn-outline-danger btn-sm" title="Remove widget"
+                        @onclick="OnRemove">
+                    ✕
+                </button>
+            </div>
+        </div>
+    }
+
+    <ErrorBoundary @ref="_errorBoundary">
+        <ChildContent>
+            <DynamicComponent @key="Placement.Id"
+                              Type="@Descriptor.ComponentType"
+                              Parameters="@GetWidgetParameters()" />
+        </ChildContent>
+        <ErrorContent Context="ex">
+            <div class="text-danger small p-2">
+                <strong>Widget error</strong>
+                <p class="mb-0">@ex.Message</p>
+                <button class="btn btn-link btn-sm p-0 mt-1" @onclick="RecoverFromError">Retry</button>
+            </div>
+        </ErrorContent>
+    </ErrorBoundary>
+</div>
+
+@code {
+    [Parameter] public WidgetPlacement Placement { get; set; } = null!;
+    [Parameter] public WidgetDescriptor Descriptor { get; set; } = null!;
+    [Parameter] public string StoreId { get; set; } = string.Empty;
+    [Parameter] public string UserId { get; set; } = string.Empty;
+    [Parameter] public bool EditMode { get; set; }
+    [Parameter] public bool WidgetEditMode { get; set; }
+    [Parameter] public EventCallback<JObject> OnConfigChanged { get; set; }
+    [Parameter] public EventCallback<bool> OnEditModeChanged { get; set; }
+    [Parameter] public EventCallback OnRemove { get; set; }
+    [Parameter] public EventCallback OnSizeChanged { get; set; }
+
+    private ErrorBoundary? _errorBoundary;
+
+    private Dictionary<string, object> GetWidgetParameters()
+    {
+        return new Dictionary<string, object>
+        {
+            { "StoreId", StoreId },
+            { "UserId", UserId },
+            { "Readonly", !EditMode || WidgetEditMode },
+            { "Size", Placement.ColumnSize },
+            { "Config", Placement.Config! },
+            { "ConfigChanged", EventCallback.Factory.Create<JObject>(this, config => OnConfigChanged.InvokeAsync(config)) },
+            { "EditModeChanged", EventCallback.Factory.Create<bool>(this, editing => OnEditModeChanged.InvokeAsync(editing)) },
+            { "OnRemove", EventCallback.Factory.Create(this, () => OnRemove.InvokeAsync()) }
+        };
+    }
+
+    private async Task IncreaseSize()
+    {
+        if (Placement.ColumnSize < Descriptor.MaxColumnSize)
+        {
+            Placement.ColumnSize++;
+            await OnSizeChanged.InvokeAsync();
+        }
+    }
+
+    private async Task DecreaseSize()
+    {
+        if (Placement.ColumnSize > Descriptor.MinColumnSize)
+        {
+            Placement.ColumnSize--;
+            await OnSizeChanged.InvokeAsync();
+        }
+    }
+
+    private void RecoverFromError()
+    {
+        _errorBoundary?.Recover();
+    }
+}

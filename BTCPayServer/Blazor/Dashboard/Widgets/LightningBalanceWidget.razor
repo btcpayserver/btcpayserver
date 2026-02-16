@@ -1,0 +1,81 @@
+@using BTCPayServer.Blazor.Dashboard
+@using BTCPayServer.Blazor.Dashboard.Models
+@using BTCPayServer.Client
+@inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<LightningBalanceWidget.LightningBalanceConfig>
+
+@if (!HasAccess)
+{
+    <div class="widget-body p-3">
+        <h6 class="text-muted">Lightning Balance</h6>
+        <p class="text-secondary small">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
+    </div>
+}
+else if (Loading)
+{
+    <div class="widget-body p-3">
+        <h6 class="text-muted">Lightning Balance</h6>
+        <div class="d-flex justify-content-center p-3">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+}
+else if (_error is not null)
+{
+    <div class="widget-body p-3">
+        <h6 class="text-muted">Lightning Balance</h6>
+        <p class="text-danger small">@_error</p>
+    </div>
+}
+else
+{
+    var config = TypedConfig ?? new LightningBalanceConfig();
+    <div class="widget-body p-3">
+        <h6 class="mb-3">Lightning Balance (@config.CryptoCode)</h6>
+        @if (Size > 6)
+        {
+            <p class="text-muted small">
+                Lightning node balance and channel information will be displayed here
+                once the Lightning client integration is wired up.
+            </p>
+        }
+        else
+        {
+            <p class="text-muted small">Lightning balance data</p>
+        }
+        <p class="text-secondary small fst-italic mb-0">Placeholder: Lightning client calls require complex resolution.</p>
+    </div>
+}
+
+@code {
+    public static readonly WidgetDescriptor Descriptor = new()
+    {
+        Type = "LightningBalance",
+        Name = "Lightning Balance",
+        Description = "Displays Lightning Network node balance and channel info",
+        Category = "Lightning",
+        ComponentType = typeof(LightningBalanceWidget),
+        Scope = WidgetScope.Store,
+        DefaultColumnSize = 12,
+        RequiredStoreFeatures = new[] { "lightning" }
+    };
+
+    public class LightningBalanceConfig
+    {
+        public string CryptoCode { get; set; } = "BTC";
+    }
+
+    private string? _error;
+
+    protected override Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrEmpty(StoreId))
+            return Task.CompletedTask;
+
+        // Lightning client integration requires complex resolution.
+        // This placeholder will be replaced in a future iteration.
+        Loading = false;
+        return Task.CompletedTask;
+    }
+}

@@ -1,0 +1,59 @@
+@using BTCPayServer.Blazor.Dashboard.Models
+@inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<NotesWidget.NotesConfig>
+
+@if (EditMode)
+{
+    <div>
+        <div class="form-group mb-2">
+            <label class="form-label">Title</label>
+            <input type="text" class="form-control form-control-sm" @bind="EditConfig.Title" />
+        </div>
+        <div class="form-group mb-2">
+            <label class="form-label">Content</label>
+            <textarea class="form-control form-control-sm" rows="6" @bind="EditConfig.Content"></textarea>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-sm" @onclick="SaveEdit">Save</button>
+            <button class="btn btn-outline-secondary btn-sm" @onclick="CancelEdit">Cancel</button>
+            <button class="btn btn-outline-danger btn-sm ms-auto" @onclick="Remove">Remove</button>
+        </div>
+    </div>
+}
+else
+{
+    <header class="mb-2">
+        <h6 class="mb-0">@(TypedConfig?.Title ?? "Notes")</h6>
+    </header>
+    @if (string.IsNullOrWhiteSpace(TypedConfig?.Content))
+    {
+        <p class="text-muted small mb-0">No notes yet.</p>
+    }
+    else
+    {
+        <div class="small" style="white-space: pre-wrap;">@TypedConfig.Content</div>
+    }
+    @if (!Readonly)
+    {
+        <button class="btn btn-link btn-sm p-0 mt-2" @onclick="EnterEdit">Edit</button>
+    }
+}
+
+@code {
+    public class NotesConfig
+    {
+        public string Title { get; set; } = "Notes";
+        public string Content { get; set; } = "";
+    }
+
+    public static readonly WidgetDescriptor Descriptor = new()
+    {
+        Type = "Notes",
+        Name = "Notes",
+        Description = "A simple text note",
+        Category = "Utility",
+        Scope = WidgetScope.Universal,
+        MinColumnSize = 2,
+        MaxColumnSize = 12,
+        DefaultColumnSize = 4
+    };
+}

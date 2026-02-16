@@ -1,0 +1,117 @@
+@using BTCPayServer.Blazor.Dashboard.Models
+@using Newtonsoft.Json.Linq
+@inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<TodoWidget.TodoConfig>
+
+@if (EditMode)
+{
+    <div>
+        <div class="form-group mb-2">
+            <label class="form-label">Title</label>
+            <input type="text" class="form-control form-control-sm" @bind="EditConfig.Title" />
+        </div>
+        <div class="form-group mb-2">
+            <label class="form-label">Items (one per line)</label>
+            <textarea class="form-control form-control-sm" rows="6" @bind="_editItemsText"></textarea>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-sm" @onclick="SaveTodoEdit">Save</button>
+            <button class="btn btn-outline-secondary btn-sm" @onclick="CancelEdit">Cancel</button>
+            <button class="btn btn-outline-danger btn-sm ms-auto" @onclick="Remove">Remove</button>
+        </div>
+    </div>
+}
+else
+{
+    <header class="mb-2">
+        <h6 class="mb-0">@(TypedConfig?.Title ?? "Todo")</h6>
+    </header>
+    @if (TypedConfig?.Items is null || TypedConfig.Items.Count == 0)
+    {
+        <p class="text-muted small mb-0">No items yet.</p>
+    }
+    else
+    {
+        <div class="list-group list-group-flush">
+            @foreach (var item in TypedConfig.Items)
+            {
+                var localItem = item;
+                <label class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-1 px-0 border-0 small">
+                    <input type="checkbox" class="form-check-input m-0"
+                           checked="@localItem.Completed"
+                           @onchange="() => ToggleItem(localItem)" />
+                    <span class="@(localItem.Completed ? "text-decoration-line-through text-muted" : "")">
+                        @localItem.Text
+                    </span>
+                </label>
+            }
+        </div>
+    }
+    @if (!Readonly)
+    {
+        <button class="btn btn-link btn-sm p-0 mt-2" @onclick="EnterEdit">Edit</button>
+    }
+}
+
+@code {
+    private string _editItemsText = "";
+
+    public class TodoItem
+    {
+        public string Text { get; set; } = "";
+        public bool Completed { get; set; }
+    }
+
+    public class TodoConfig
+    {
+        public string Title { get; set; } = "Todo";
+        public System.Collections.Generic.List<TodoItem> Items { get; set; } = new();
+    }
+
+    protected override System.Threading.Tasks.Task EnterEdit()
+    {
+        var result = base.EnterEdit();
+        if (EditConfig is not null)
+        {
+            _editItemsText = string.Join("\n", EditConfig.Items.Select(i => i.Text));
+        }
+        return result;
+    }
+
+    private async System.Threading.Tasks.Task SaveTodoEdit()
+    {
+        if (EditConfig is null) return;
+
+        var lines = _editItemsText.Split('\n', System.StringSplitOptions.RemoveEmptyEntries);
+        var existingItems = EditConfig.Items.ToDictionary(i => i.Text, i => i.Completed);
+
+        EditConfig.Items = lines.Select(line =>
+        {
+            var text = line.Trim();
+            return new TodoItem
+            {
+                Text = text,
+                Completed = existingItems.TryGetValue(text, out var completed) && completed
+            };
+        }).ToList();
+
+        await SaveEdit();
+    }
+
+    private async System.Threading.Tasks.Task ToggleItem(TodoItem item)
+    {
+        item.Completed = !item.Completed;
+        await ConfigChanged.InvokeAsync(Config);
+    }
+
+    public static readonly WidgetDescriptor Descriptor = new()
+    {
+        Type = "Todo",
+        Name = "Todo List",
+        Description = "A checklist to track tasks",
+        Category = "Utility",
+        Scope = WidgetScope.Universal,
+        MinColumnSize = 2,
+        MaxColumnSize = 12,
+        DefaultColumnSize = 4
+    };
+}

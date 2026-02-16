@@ -1,0 +1,274 @@
+@using BTCPayServer.Blazor.Dashboard.Models
+@using Newtonsoft.Json.Linq
+@inject DashboardService DashboardService
+@inject WidgetRegistry WidgetRegistry
+@inject DashboardJsInterop JsInterop
+@implements IAsyncDisposable
+
+<div class="dashboard-header d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <h3 class="mb-0">@(_activeDashboard?.Name ?? "Dashboard")</h3>
+        @if (_dashboards.Count > 1)
+        {
+            <div class="dropdown">
+                <button class="btn btn-link btn-sm dropdown-toggle p-0" type="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    Switch
+                </button>
+                <div class="dropdown-menu">
+                    @foreach (var db in _dashboards)
+                    {
+                        <button class="dropdown-item @(db.Id == _activeDashboard?.Id ? "active" : "")"
+                                @onclick="() => SwitchDashboard(db.Id)">
+                            @db.Name
+                            @if (db.IsDefault)
+                            {
+                                <span class="badge bg-light text-dark ms-1">Default</span>
+                            }
+                        </button>
+                    }
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item" @onclick="CreateNewDashboard">
+                        + New Dashboard
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="d-flex gap-2 align-items-center">
+        @if (EditMode)
+        {
+            <DashboardWidgetPicker Registry="WidgetRegistry"
+                                   DashboardScope="DashboardScope.Store"
+                                   IsAdmin="_isAdmin"
+                                   OnWidgetAdded="AddWidget" />
+            <button class="btn btn-outline-secondary btn-sm" @onclick="SaveAsCopy">Save As Copy</button>
+            <button class="btn btn-primary btn-sm" disabled="@_widgetEditMode" @onclick="ExitEditMode">Done</button>
+        }
+        else
+        {
+            <button class="btn btn-link btn-sm" @onclick="EnterEditMode">Edit</button>
+        }
+    </div>
+</div>
+
+<div @ref="_gridContainer" class="dashboard-grid @(EditMode ? "dashboard-edit" : "")">
+    @if (_activeDashboard is not null)
+    {
+        @foreach (var placement in _activeDashboard.Widgets.OrderBy(w => w.Order))
+        {
+            var descriptor = WidgetRegistry.GetDescriptor(placement.WidgetType);
+            <div class="dashboard-widget" style="grid-column: span @placement.ColumnSize;">
+                @if (descriptor is null)
+                {
+                    <WidgetUnavailable Placement="placement"
+                                       EditMode="EditMode"
+                                       OnRemove="() => RemoveWidget(placement)" />
+                }
+                else
+                {
+                    <WidgetContainer Placement="placement"
+                                     Descriptor="descriptor"
+                                     StoreId="@StoreId"
+                                     UserId="@UserId"
+                                     EditMode="EditMode"
+                                     WidgetEditMode="_widgetEditMode"
+                                     OnConfigChanged="(config) => OnWidgetConfigChanged(placement, config)"
+                                     OnEditModeChanged="(editing) => OnWidgetEditMode(editing)"
+                                     OnRemove="() => RemoveWidget(placement)"
+                                     OnSizeChanged="SaveDashboard" />
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public string StoreId { get; set; } = string.Empty;
+    [Parameter] public string UserId { get; set; } = string.Empty;
+
+    private DashboardDefinition? _activeDashboard;
+    private List<DashboardDefinition> _dashboards = new();
+    private bool _widgetEditMode;
+    private bool _isAdmin;
+    private DotNetObjectReference<DashboardPage>? _dotNetRef;
+    private ElementReference _gridContainer;
+
+    public bool EditMode { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var context = new DashboardTemplateContext
+        {
+            CryptoCode = "BTC",
+            WalletEnabled = true,
+            LightningEnabled = true
+        };
+
+        _activeDashboard = await DashboardService.ResolveActiveDashboard(UserId, StoreId, context);
+
+        // Load the collection for the dashboard switcher
+        if (!string.IsNullOrEmpty(StoreId))
+        {
+            var collection = await DashboardService.GetStoreDashboards(StoreId);
+            _dashboards = collection.Dashboards;
+            if (_dashboards.Count == 0 && _activeDashboard is not null)
+            {
+                _dashboards = new List<DashboardDefinition> { _activeDashboard };
+            }
+        }
+
+        await base.OnParametersSetAsync();
+    }
+
+    private async Task EnterEditMode()
+    {
+        EditMode = true;
+        _dotNetRef = DotNetObjectReference.Create(this);
+        StateHasChanged();
+        // SortableJS init happens after render
+        await Task.CompletedTask;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (EditMode && _dotNetRef is not null)
+        {
+            await JsInterop.InitSortable(_gridContainer, DotNetObjectReference.Create<object>(this));
+        }
+    }
+
+    private async Task ExitEditMode()
+    {
+        EditMode = false;
+        _widgetEditMode = false;
+        await JsInterop.DestroySortable();
+        await SaveDashboard();
+    }
+
+    [JSInvokable]
+    public async Task OnWidgetReordered(int oldIndex, int newIndex)
+    {
+        if (_activeDashboard is null) return;
+
+        var widgets = _activeDashboard.Widgets.OrderBy(w => w.Order).ToList();
+        if (oldIndex < 0 || oldIndex >= widgets.Count || newIndex < 0 || newIndex >= widgets.Count)
+            return;
+
+        var moved = widgets[oldIndex];
+        widgets.RemoveAt(oldIndex);
+        widgets.Insert(newIndex, moved);
+
+        for (int i = 0; i < widgets.Count; i++)
+            widgets[i].Order = i;
+
+        _activeDashboard.Widgets = widgets;
+        await SaveDashboard();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task AddWidget(WidgetDescriptor descriptor)
+    {
+        if (_activeDashboard is null) return;
+
+        var placement = new WidgetPlacement
+        {
+            WidgetType = descriptor.Type,
+            ColumnSize = descriptor.DefaultColumnSize,
+            Order = _activeDashboard.Widgets.Count
+        };
+        _activeDashboard.Widgets.Add(placement);
+        await SaveDashboard();
+    }
+
+    private async Task RemoveWidget(WidgetPlacement placement)
+    {
+        if (_activeDashboard is null) return;
+
+        _activeDashboard.Widgets.Remove(placement);
+        // Reorder remaining
+        var ordered = _activeDashboard.Widgets.OrderBy(w => w.Order).ToList();
+        for (int i = 0; i < ordered.Count; i++)
+            ordered[i].Order = i;
+        _activeDashboard.Widgets = ordered;
+        await SaveDashboard();
+    }
+
+    private async Task OnWidgetConfigChanged(WidgetPlacement placement, JObject config)
+    {
+        placement.Config = config;
+        await SaveDashboard();
+    }
+
+    private void OnWidgetEditMode(bool editing)
+    {
+        _widgetEditMode = editing;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SwitchDashboard(string dashboardId)
+    {
+        if (string.IsNullOrEmpty(StoreId)) return;
+        var collection = await DashboardService.GetStoreDashboards(StoreId);
+        collection.ActiveDashboardId = dashboardId;
+        await DashboardService.SaveStoreDashboards(StoreId, collection);
+
+        _activeDashboard = collection.Dashboards.FirstOrDefault(d => d.Id == dashboardId);
+        _dashboards = collection.Dashboards;
+    }
+
+    private async Task CreateNewDashboard()
+    {
+        if (string.IsNullOrEmpty(StoreId)) return;
+
+        var newDashboard = new DashboardDefinition
+        {
+            Name = $"Dashboard {_dashboards.Count + 1}",
+            Scope = DashboardScope.Store
+        };
+
+        var collection = await DashboardService.GetStoreDashboards(StoreId);
+        collection.Dashboards.Add(newDashboard);
+        collection.ActiveDashboardId = newDashboard.Id;
+        await DashboardService.SaveStoreDashboards(StoreId, collection);
+
+        _activeDashboard = newDashboard;
+        _dashboards = collection.Dashboards;
+    }
+
+    private async Task SaveAsCopy()
+    {
+        if (_activeDashboard is null || string.IsNullOrEmpty(StoreId)) return;
+
+        var copy = DashboardService.CopyDashboard(_activeDashboard, _activeDashboard.Name + " (Copy)");
+        var collection = await DashboardService.GetStoreDashboards(StoreId);
+        collection.Dashboards.Add(copy);
+        collection.ActiveDashboardId = copy.Id;
+        await DashboardService.SaveStoreDashboards(StoreId, collection);
+
+        _activeDashboard = copy;
+        _dashboards = collection.Dashboards;
+    }
+
+    private async Task SaveDashboard()
+    {
+        if (_activeDashboard is null || string.IsNullOrEmpty(StoreId)) return;
+
+        var collection = await DashboardService.GetStoreDashboards(StoreId);
+        var existing = collection.Dashboards.FirstOrDefault(d => d.Id == _activeDashboard.Id);
+        if (existing is not null)
+        {
+            collection.Dashboards.Remove(existing);
+        }
+        collection.Dashboards.Add(_activeDashboard);
+        collection.ActiveDashboardId = _activeDashboard.Id;
+        await DashboardService.SaveStoreDashboards(StoreId, collection);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _dotNetRef?.Dispose();
+        await JsInterop.DestroySortable();
+    }
+}

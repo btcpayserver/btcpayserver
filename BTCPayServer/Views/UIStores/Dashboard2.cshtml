@@ -1,8 +1,29 @@
-﻿@using BTCPayServer.Blazor
+@using BTCPayServer.Blazor.Dashboard
 @using BTCPayServer.Abstractions.Contracts
+@using Microsoft.AspNetCore.Identity
 @inject IScopeProvider ScopeProvider
+@inject UserManager<BTCPayServer.Data.ApplicationUser> UserManager
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData.SetActivePage(StoreNavPages.Dashboard);
+    this.ViewData.SetBlazorAllowed(true);
+}
 
-@(await Html.RenderComponentAsync<Dashboard>(RenderMode.ServerPrerendered, new
+@section PageHeadContent {
+    <link rel="stylesheet" href="~/vendor/chartist/chartist.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/vendor/chartist/chartist-plugin-tooltip.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+}
+
+@(await Html.RenderComponentAsync<DashboardPage>(RenderMode.ServerPrerendered, new
 {
-    StoreId = ScopeProvider.GetCurrentStoreId()
+    StoreId = ScopeProvider.GetCurrentStoreId(),
+    UserId = UserManager.GetUserId(User)
 }))
+
+@section PageFootContent {
+    <script src="~/vendor/vue-sortable/sortable.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/chartist/chartist.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/chartist/chartist-plugin-tooltip.js" asp-append-version="true"></script>
+    <script src="~/js/dashboard-interop.js" asp-append-version="true"></script>
+}

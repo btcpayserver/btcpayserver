@@ -18,6 +18,22 @@
     ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Roles), title).SetCategory(category));
     var storePolicies = Policies.AllPolicies.Where(Policies.IsStorePolicy).ToArray();
     var pluginPermissions = Model.PluginPermissions ?? new List<BTCPayServer.Abstractions.Contracts.PluginPermission>();
+    // Collect all child policy strings so we can identify top-level permissions
+    var allChildPolicies = new HashSet<string>(pluginPermissions.SelectMany(p => (p.ChildPolicies ?? new List<BTCPayServer.Abstractions.Contracts.PluginPermission>()).Select(c => c.Policy)));
+    // Walk deeper levels too
+    void CollectAllChildren(IEnumerable<BTCPayServer.Abstractions.Contracts.PluginPermission> perms, HashSet<string> set)
+    {
+        foreach (var p in perms)
+        {
+            foreach (var c in p.ChildPolicies ?? new List<BTCPayServer.Abstractions.Contracts.PluginPermission>())
+            {
+                set.Add(c.Policy);
+                CollectAllChildren(new[] { c }, set);
+            }
+        }
+    }
+    CollectAllChildren(pluginPermissions, allChildPolicies);
+    var topLevelPluginPermissions = pluginPermissions.Where(p => !allChildPolicies.Contains(p.Policy)).ToList();
     var orphanedPermissions = Model.Policies?
         .Where(p => Policies.IsPluginPolicy(p) && !pluginPermissions.Any(pp => pp.Policy == p))
         .ToList() ?? new List<string>();
@@ -97,16 +113,10 @@
             {
                 <h5 class="mt-4 mb-3">Plugin Permissions</h5>
                 <div class="list-group mb-2">
-                    @foreach (var pluginPermission in pluginPermissions)
+                    @foreach (var pluginPermission in topLevelPluginPermissions)
                     {
                         var isChecked = Model.Policies?.Contains(pluginPermission.Policy) ?? false;
-                        <div class="form-check mb-0">
-                            <input type="checkbox" class="form-check-input policy-cb" checked="@isChecked" value="@pluginPermission.Policy" id="Policy-@pluginPermission.Policy.Replace(".", "_")" />
-                            <label class="h5 fw-semibold form-check-label mb-1" for="Policy-@pluginPermission.Policy.Replace(".", "_")" data-bs-toggle="tooltip" title="@pluginPermission.Policy">
-                                @pluginPermission.DisplayName
-                            </label>
-                            <p class="text-muted">@pluginPermission.Description</p>
-                        </div>
+                        RenderPluginTree(pluginPermission, isChecked);
                     }
                 </div>
             }
@@ -172,6 +182,26 @@
                     {
                         var match = storePolicyMap.SingleOrDefault(pair => pair.Key == subPolicy);
                         RenderTree(match.Key is not null ? match : new KeyValuePair<string, HashSet<string>>(subPolicy, null), storePolicyMap, !isChecked && Model.Policies.Contains(subPolicy));
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    void RenderPluginTree(BTCPayServer.Abstractions.Contracts.PluginPermission permission, bool isChecked)
+    {
+        <div class="form-check mb-0">
+            <input type="checkbox" class="form-check-input policy-cb" checked="@isChecked" value="@permission.Policy" id="Policy-@permission.Policy.Replace(".", "_")" />
+            <label class="h5 fw-semibold form-check-label mb-1" for="Policy-@permission.Policy.Replace(".", "_")" data-bs-toggle="tooltip" title="@permission.Policy">
+                @permission.DisplayName
+            </label>
+            <p class="text-muted">@permission.Description</p>
+            @if (permission.ChildPolicies?.Any() is true)
+            {
+                <div class="list-group">
+                    @foreach (var child in permission.ChildPolicies)
+                    {
+                        RenderPluginTree(child, !isChecked && (Model.Policies?.Contains(child.Policy) ?? false));
                     }
                 </div>
             }

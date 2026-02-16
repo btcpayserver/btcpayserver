@@ -96,6 +96,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<IStringLocalizerFactory, LocalizerFactory>();
             services.TryAddSingleton<IHtmlLocalizerFactory, LocalizerFactory>();
             services.TryAddSingleton<LocalizerService>();
+            services.TryAddSingleton<LanguagePackUpdateService>();
             services.TryAddSingleton<ViewLocalizer>();
             services.TryAddSingleton<IStringLocalizer>(o => o.GetRequiredService<IStringLocalizerFactory>().Create("", ""));
             services.TryAddSingleton<DelayedTaskScheduler>();

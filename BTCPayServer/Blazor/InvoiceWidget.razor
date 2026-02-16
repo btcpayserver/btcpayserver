@@ -111,7 +111,7 @@ else
                         <a asp-controller="UIInvoice" asp-action="Invoice" asp-route-invoiceId="@invoice.Id" class="text-break">@invoice.Id</a>
                     </td>
                     <td>
-                        @invoice.Status.ToModernStatus()
+                        @invoice.Status
                     </td>
                     <td class="text-end">
                         <span data-sensitive>@DisplayFormatter.Currency(invoice.Price, invoice.Currency)</span>

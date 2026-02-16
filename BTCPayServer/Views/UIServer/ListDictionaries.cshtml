@@ -55,8 +55,8 @@
 						<div class="d-inline-flex align-items-center gap-3">
 							@if (v.IsDownloadedLanguagePack && v.UpdateAvailable)
 							{
-								<form method="post" asp-action="UpdateLanguagePack" asp-route-dictionary="@v.DictionaryName" class="d-inline">
-									<button type="submit" class="btn-link" text-translate="true">Update</button>
+								<form method="post" asp-action="UpdateLanguagePack" asp-route-dictionary="@v.DictionaryName" style="display:inline;">
+									<button type="submit" class="link-success" style="background:none;border:none;padding:0;cursor:pointer;font:inherit;" text-translate="true">Update</button>
 								</form>
 							}
 							<a asp-action="CreateDictionary" asp-route-fallback="@v.DictionaryName" text-translate="true">Clone</a>

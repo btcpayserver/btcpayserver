@@ -32,31 +32,5 @@ public class PluginPermission
     /// Child policies that are granted when this permission is granted
     /// Used for hierarchical permissions
     /// </summary>
-    public List<string> ChildPolicies { get; set; } = new();
-
-    /// <summary>
-    /// The scope of this permission (Store, Server, or User)
-    /// </summary>
-    public PermissionScope Scope { get; set; } = PermissionScope.Store;
-}
-
-/// <summary>
-/// Defines the scope of a permission
-/// </summary>
-public enum PermissionScope
-{
-    /// <summary>
-    /// Permission applies at the store level
-    /// </summary>
-    Store,
-
-    /// <summary>
-    /// Permission applies at the server level
-    /// </summary>
-    Server,
-
-    /// <summary>
-    /// Permission applies at the user level
-    /// </summary>
-    User
+    public List<PluginPermission> ChildPolicies { get; set; } = new();
 }

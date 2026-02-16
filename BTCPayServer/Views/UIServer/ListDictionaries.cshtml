@@ -55,9 +55,8 @@
 						<div class="d-inline-flex align-items-center gap-3">
 							@if (v.IsDownloadedLanguagePack && v.UpdateAvailable)
 							{
-								<a id="Update-@v.DictionaryName" href="#" onclick="document.getElementById('update-form-@v.DictionaryName').submit(); return false;" text-translate="true">Update</a>
-								<form id="update-form-@v.DictionaryName" method="post" asp-action="UpdateLanguagePack" asp-route-dictionary="@v.DictionaryName" style="display:none;">
-									@Html.AntiForgeryToken()
+								<form method="post" asp-action="UpdateLanguagePack" asp-route-dictionary="@v.DictionaryName" class="d-inline">
+									<button type="submit" class="btn-link" text-translate="true">Update</button>
 								</form>
 							}
 							<a asp-action="CreateDictionary" asp-route-fallback="@v.DictionaryName" text-translate="true">Clone</a>
@@ -99,21 +98,10 @@
 						<label for="language" class="form-label" text-translate="true">Select Language</label>
 						<select id="language" name="language" class="form-select" required>
 							<option value="" text-translate="true">Choose a language...</option>
-							<option value="Dutch">Dutch</option>
-							<option value="French">French</option>
-							<option value="German">German</option>
-							<option value="Hindi">Hindi</option>
-							<option value="Indonesian">Indonesian</option>
-							<option value="Italian">Italian</option>
-							<option value="Japanese">Japanese</option>
-							<option value="Norwegian">Norwegian</option>
-							<option value="Korean">Korean</option>
-							<option value="Portuguese (Brazil)">Portuguese (Brazil)</option>
-							<option value="Russian">Russian</option>
-							<option value="Serbian">Serbian</option>
-							<option value="Spanish">Spanish</option>
-							<option value="Thai">Thai</option>
-							<option value="Turkish">Turkish</option>
+							@foreach (var lang in BTCPayServer.Services.LanguagePackUpdateService.GetDownloadableLanguages())
+							{
+								<option value="@lang">@lang</option>
+							}
 						</select>
 					</div>
 				</div>

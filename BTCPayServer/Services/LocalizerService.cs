@@ -205,5 +205,13 @@ namespace BTCPayServer.Services
             await db.ExecuteAsync("UPDATE lang_dictionaries SET metadata = @metadata::jsonb WHERE dict_id = @dict_id",
                 new { dict_id = dictionary, metadata = metadata.ToString() });
         }
+
+        public async Task UpdateVersion(string dictionary, string version)
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            var db = ctx.Database.GetDbConnection();
+            await db.ExecuteAsync("UPDATE lang_dictionaries SET metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{version}', to_jsonb(@version::text)) WHERE dict_id = @dict_id",
+                new { dict_id = dictionary, version });
+        }
     }
 }

@@ -26,8 +26,7 @@ public class PluginPermissionRegistry
         {
             if (permission is null)
                 continue;
-            // Circular ChildPolicies will cause a StackOverflowException here.
-            // If you're a plugin author and you hit that - congrats - you defined circular dependencies. Fix your tree.
+            // Cycles in ChildPolicies are safe — TryAdd returns false on revisit, stopping recursion.
             FlattenTree(permission, map);
         }
 
@@ -38,13 +37,15 @@ public class PluginPermissionRegistry
 
     private void FlattenTree(PluginPermission permission, Dictionary<string, PluginPermission> map)
     {
+        if (string.IsNullOrEmpty(permission.Policy))
+            throw new ArgumentException("PluginPermission.Policy cannot be null or empty.", nameof(permission));
+
         if (!map.TryAdd(permission.Policy, permission))
-            return; // already visited
+            return; // already visited — also prevents infinite recursion on circular ChildPolicies
 
-        if (!_childMap.ContainsKey(permission.Policy))
-            _childMap[permission.Policy] = new HashSet<string>(StringComparer.Ordinal);
+        _childMap[permission.Policy] = new HashSet<string>(StringComparer.Ordinal);
 
-        foreach (var child in permission.ChildPolicies)
+        foreach (var child in permission.ChildPolicies ?? Enumerable.Empty<PluginPermission>())
         {
             _childMap[permission.Policy].Add(child.Policy);
             FlattenTree(child, map);

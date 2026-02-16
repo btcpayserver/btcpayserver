@@ -1,36 +1,56 @@
 @using BTCPayServer.Blazor.Dashboard.Models
+@using Microsoft.AspNetCore.Components.Authorization
 @using Newtonsoft.Json.Linq
 @inject DashboardService DashboardService
 @inject WidgetRegistry WidgetRegistry
 @inject DashboardJsInterop JsInterop
+@inject AuthenticationStateProvider AuthStateProvider
 @implements IAsyncDisposable
 
 <div class="dashboard-header d-flex justify-content-between align-items-center mb-4">
     <div class="d-flex align-items-center gap-3">
         <h3 class="mb-0">@(_activeDashboard?.Name ?? "Dashboard")</h3>
-        @if (_dashboards.Count > 1)
+        @if (_activeDashboard is not null)
+        {
+            <span class="badge bg-light text-dark">@_activeScope</span>
+        }
+        @if (_allDashboards.Count > 1 || _allDashboards.Count == 0)
         {
             <div class="dropdown">
                 <button class="btn btn-link btn-sm dropdown-toggle p-0" type="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
                     Switch
                 </button>
-                <div class="dropdown-menu">
-                    @foreach (var db in _dashboards)
+                <div class="dropdown-menu" style="min-width: 240px;">
+                    @foreach (var group in _allDashboards.GroupBy(d => d.Scope))
                     {
-                        <button class="dropdown-item @(db.Id == _activeDashboard?.Id ? "active" : "")"
-                                @onclick="() => SwitchDashboard(db.Id)">
-                            @db.Name
-                            @if (db.IsDefault)
-                            {
-                                <span class="badge bg-light text-dark ms-1">Default</span>
-                            }
-                        </button>
+                        <div class="dropdown-header small text-uppercase">@group.Key</div>
+                        @foreach (var db in group)
+                        {
+                            <button class="dropdown-item @(db.Id == _activeDashboard?.Id ? "active" : "")"
+                                    @onclick="() => SwitchDashboard(db)">
+                                @db.Name
+                                @if (db.IsDefault)
+                                {
+                                    <span class="badge bg-light text-dark ms-1">Default</span>
+                                }
+                            </button>
+                        }
                     }
                     <div class="dropdown-divider"></div>
-                    <button class="dropdown-item" @onclick="CreateNewDashboard">
-                        + New Dashboard
+                    <div class="dropdown-header small text-uppercase">New Dashboard</div>
+                    <button class="dropdown-item" @onclick="() => CreateNewDashboard(DashboardScope.Store)">
+                        + Store Dashboard
                     </button>
+                    <button class="dropdown-item" @onclick="() => CreateNewDashboard(DashboardScope.User)">
+                        + Personal Dashboard
+                    </button>
+                    @if (_isAdmin)
+                    {
+                        <button class="dropdown-item" @onclick="() => CreateNewDashboard(DashboardScope.Server)">
+                            + Server Dashboard
+                        </button>
+                    }
                 </div>
             </div>
         }
@@ -40,15 +60,37 @@
         @if (EditMode)
         {
             <DashboardWidgetPicker Registry="WidgetRegistry"
-                                   DashboardScope="DashboardScope.Store"
+                                   DashboardScope="@(_activeScope)"
                                    IsAdmin="_isAdmin"
                                    OnWidgetAdded="AddWidget" />
-            <button class="btn btn-outline-secondary btn-sm" @onclick="SaveAsCopy">Save As Copy</button>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown">
+                    Save As Copy
+                </button>
+                <div class="dropdown-menu dropdown-menu-end">
+                    <button class="dropdown-item" @onclick="() => SaveAsCopy(DashboardScope.Store)">
+                        To Store
+                    </button>
+                    <button class="dropdown-item" @onclick="() => SaveAsCopy(DashboardScope.User)">
+                        To Personal
+                    </button>
+                    @if (_isAdmin)
+                    {
+                        <button class="dropdown-item" @onclick="() => SaveAsCopy(DashboardScope.Server)">
+                            To Server
+                        </button>
+                    }
+                </div>
+            </div>
             <button class="btn btn-primary btn-sm" disabled="@_widgetEditMode" @onclick="ExitEditMode">Done</button>
         }
         else
         {
-            <button class="btn btn-link btn-sm" @onclick="EnterEditMode">Edit</button>
+            @if (CanEditActiveDashboard())
+            {
+                <button class="btn btn-link btn-sm" @onclick="EnterEditMode">Edit</button>
+            }
         }
     </div>
 </div>
@@ -89,7 +131,8 @@
     [Parameter] public string UserId { get; set; } = string.Empty;
 
     private DashboardDefinition? _activeDashboard;
-    private List<DashboardDefinition> _dashboards = new();
+    private DashboardScope _activeScope;
+    private List<DashboardDefinition> _allDashboards = new();
     private bool _widgetEditMode;
     private bool _isAdmin;
     private DotNetObjectReference<DashboardPage>? _dotNetRef;
@@ -99,6 +142,10 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        // Determine admin status
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _isAdmin = authState.User.IsInRole(Roles.ServerAdmin);
+
         var context = new DashboardTemplateContext
         {
             CryptoCode = "BTC",
@@ -106,20 +153,75 @@
             LightningEnabled = true
         };
 
+        // Load dashboards from all scopes and build the unified list
+        await LoadAllDashboards();
+
+        // Resolve active: user > store > server > code default
         _activeDashboard = await DashboardService.ResolveActiveDashboard(UserId, StoreId, context);
 
-        // Load the collection for the dashboard switcher
-        if (!string.IsNullOrEmpty(StoreId))
+        // Determine which scope the active dashboard came from
+        _activeScope = DetermineActiveScope(_activeDashboard);
+
+        // Ensure the active dashboard is in the list
+        if (_activeDashboard is not null && _allDashboards.All(d => d.Id != _activeDashboard.Id))
         {
-            var collection = await DashboardService.GetStoreDashboards(StoreId);
-            _dashboards = collection.Dashboards;
-            if (_dashboards.Count == 0 && _activeDashboard is not null)
-            {
-                _dashboards = new List<DashboardDefinition> { _activeDashboard };
-            }
+            _allDashboards.Add(_activeDashboard);
         }
 
         await base.OnParametersSetAsync();
+    }
+
+    private async Task LoadAllDashboards()
+    {
+        _allDashboards = new List<DashboardDefinition>();
+
+        // Server dashboards
+        var serverCollection = await DashboardService.GetServerDashboards();
+        foreach (var d in serverCollection.Dashboards)
+        {
+            d.Scope = DashboardScope.Server;
+            _allDashboards.Add(d);
+        }
+
+        // Store dashboards
+        if (!string.IsNullOrEmpty(StoreId))
+        {
+            var storeCollection = await DashboardService.GetStoreDashboards(StoreId);
+            foreach (var d in storeCollection.Dashboards)
+            {
+                d.Scope = DashboardScope.Store;
+                _allDashboards.Add(d);
+            }
+        }
+
+        // User dashboards
+        if (!string.IsNullOrEmpty(UserId))
+        {
+            var userCollection = await DashboardService.GetUserDashboards(UserId);
+            foreach (var d in userCollection.Dashboards)
+            {
+                d.Scope = DashboardScope.User;
+                _allDashboards.Add(d);
+            }
+        }
+    }
+
+    private DashboardScope DetermineActiveScope(DashboardDefinition? dashboard)
+    {
+        if (dashboard is null) return DashboardScope.Store;
+        return dashboard.Scope;
+    }
+
+    private bool CanEditActiveDashboard()
+    {
+        if (_activeDashboard is null) return false;
+        return _activeScope switch
+        {
+            DashboardScope.Server => _isAdmin,
+            DashboardScope.Store => true,  // store access already implied by being on the page
+            DashboardScope.User => true,
+            _ => false
+        };
     }
 
     private async Task EnterEditMode()
@@ -127,7 +229,6 @@
         EditMode = true;
         _dotNetRef = DotNetObjectReference.Create(this);
         StateHasChanged();
-        // SortableJS init happens after render
         await Task.CompletedTask;
     }
 
@@ -187,7 +288,6 @@
         if (_activeDashboard is null) return;
 
         _activeDashboard.Widgets.Remove(placement);
-        // Reorder remaining
         var ordered = _activeDashboard.Widgets.OrderBy(w => w.Order).ToList();
         for (int i = 0; i < ordered.Count; i++)
             ordered[i].Order = i;
@@ -207,63 +307,110 @@
         InvokeAsync(StateHasChanged);
     }
 
-    private async Task SwitchDashboard(string dashboardId)
+    private async Task SwitchDashboard(DashboardDefinition dashboard)
     {
-        if (string.IsNullOrEmpty(StoreId)) return;
-        var collection = await DashboardService.GetStoreDashboards(StoreId);
-        collection.ActiveDashboardId = dashboardId;
-        await DashboardService.SaveStoreDashboards(StoreId, collection);
+        _activeDashboard = dashboard;
+        _activeScope = dashboard.Scope;
 
-        _activeDashboard = collection.Dashboards.FirstOrDefault(d => d.Id == dashboardId);
-        _dashboards = collection.Dashboards;
+        // Persist the active selection in the relevant scope
+        switch (_activeScope)
+        {
+            case DashboardScope.Store when !string.IsNullOrEmpty(StoreId):
+                var storeCol = await DashboardService.GetStoreDashboards(StoreId);
+                storeCol.ActiveDashboardId = dashboard.Id;
+                await DashboardService.SaveStoreDashboards(StoreId, storeCol);
+                break;
+            case DashboardScope.User when !string.IsNullOrEmpty(UserId):
+                var userCol = await DashboardService.GetUserDashboards(UserId);
+                userCol.ActiveDashboardId = dashboard.Id;
+                await DashboardService.SaveUserDashboards(UserId, userCol);
+                break;
+            case DashboardScope.Server:
+                var serverCol = await DashboardService.GetServerDashboards();
+                serverCol.ActiveDashboardId = dashboard.Id;
+                await DashboardService.SaveServerDashboards(serverCol);
+                break;
+        }
     }
 
-    private async Task CreateNewDashboard()
+    private async Task CreateNewDashboard(DashboardScope scope)
     {
-        if (string.IsNullOrEmpty(StoreId)) return;
+        var scopeLabel = scope switch
+        {
+            DashboardScope.Server => "Server",
+            DashboardScope.User => "Personal",
+            _ => "Store"
+        };
 
         var newDashboard = new DashboardDefinition
         {
-            Name = $"Dashboard {_dashboards.Count + 1}",
-            Scope = DashboardScope.Store
+            Name = $"{scopeLabel} Dashboard {_allDashboards.Count(d => d.Scope == scope) + 1}",
+            Scope = scope
         };
 
-        var collection = await DashboardService.GetStoreDashboards(StoreId);
-        collection.Dashboards.Add(newDashboard);
-        collection.ActiveDashboardId = newDashboard.Id;
-        await DashboardService.SaveStoreDashboards(StoreId, collection);
+        await SaveDashboardToScope(newDashboard, scope);
 
         _activeDashboard = newDashboard;
-        _dashboards = collection.Dashboards;
+        _activeScope = scope;
+        _allDashboards.Add(newDashboard);
     }
 
-    private async Task SaveAsCopy()
+    private async Task SaveAsCopy(DashboardScope targetScope)
     {
-        if (_activeDashboard is null || string.IsNullOrEmpty(StoreId)) return;
+        if (_activeDashboard is null) return;
 
         var copy = DashboardService.CopyDashboard(_activeDashboard, _activeDashboard.Name + " (Copy)");
-        var collection = await DashboardService.GetStoreDashboards(StoreId);
-        collection.Dashboards.Add(copy);
-        collection.ActiveDashboardId = copy.Id;
-        await DashboardService.SaveStoreDashboards(StoreId, collection);
+        copy.Scope = targetScope;
+
+        await SaveDashboardToScope(copy, targetScope);
 
         _activeDashboard = copy;
-        _dashboards = collection.Dashboards;
+        _activeScope = targetScope;
+        _allDashboards.Add(copy);
     }
 
     private async Task SaveDashboard()
     {
-        if (_activeDashboard is null || string.IsNullOrEmpty(StoreId)) return;
+        if (_activeDashboard is null) return;
 
-        var collection = await DashboardService.GetStoreDashboards(StoreId);
-        var existing = collection.Dashboards.FirstOrDefault(d => d.Id == _activeDashboard.Id);
-        if (existing is not null)
+        await SaveDashboardToScope(_activeDashboard, _activeScope);
+    }
+
+    private async Task SaveDashboardToScope(DashboardDefinition dashboard, DashboardScope scope)
+    {
+        switch (scope)
         {
-            collection.Dashboards.Remove(existing);
+            case DashboardScope.Store when !string.IsNullOrEmpty(StoreId):
+            {
+                var collection = await DashboardService.GetStoreDashboards(StoreId);
+                UpsertDashboard(collection, dashboard);
+                await DashboardService.SaveStoreDashboards(StoreId, collection);
+                break;
+            }
+            case DashboardScope.User when !string.IsNullOrEmpty(UserId):
+            {
+                var collection = await DashboardService.GetUserDashboards(UserId);
+                UpsertDashboard(collection, dashboard);
+                await DashboardService.SaveUserDashboards(UserId, collection);
+                break;
+            }
+            case DashboardScope.Server:
+            {
+                var collection = await DashboardService.GetServerDashboards();
+                UpsertDashboard(collection, dashboard);
+                await DashboardService.SaveServerDashboards(collection);
+                break;
+            }
         }
-        collection.Dashboards.Add(_activeDashboard);
-        collection.ActiveDashboardId = _activeDashboard.Id;
-        await DashboardService.SaveStoreDashboards(StoreId, collection);
+    }
+
+    private static void UpsertDashboard(DashboardCollection collection, DashboardDefinition dashboard)
+    {
+        var existing = collection.Dashboards.FirstOrDefault(d => d.Id == dashboard.Id);
+        if (existing is not null)
+            collection.Dashboards.Remove(existing);
+        collection.Dashboards.Add(dashboard);
+        collection.ActiveDashboardId = dashboard.Id;
     }
 
     public async ValueTask DisposeAsync()

@@ -11,16 +11,14 @@ namespace BTCPayServer.Services;
 public class PluginPermissionRegistry
 {
     private readonly IReadOnlyDictionary<string, PluginPermission> _permissions;
-    private readonly IReadOnlyDictionary<string, HashSet<string>> _pluginPolicyMap;
-    private static readonly CultureInfo Culture = new(CultureInfo.InvariantCulture.Name);
+    private readonly IReadOnlyList<PluginPermission> _orderedPermissions;
+    private static readonly CultureInfo _culture = new(CultureInfo.InvariantCulture.Name);
 
     public PluginPermissionRegistry(IEnumerable<PluginPermission> permissions)
     {
         ArgumentNullException.ThrowIfNull(permissions);
 
         var permissionMap = new Dictionary<string, PluginPermission>(StringComparer.Ordinal);
-        var pluginPolicyMap = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
-
         foreach (var permission in permissions)
         {
             if (permission is null)
@@ -28,13 +26,11 @@ public class PluginPermissionRegistry
 
             ValidatePermission(permission);
             permissionMap[permission.Policy] = permission;
-
-            if (permission.ChildPolicies is { Count: > 0 })
-                pluginPolicyMap[permission.Policy] = permission.ChildPolicies.ToHashSet(StringComparer.Ordinal);
         }
 
         _permissions = new ReadOnlyDictionary<string, PluginPermission>(permissionMap);
-        _pluginPolicyMap = new ReadOnlyDictionary<string, HashSet<string>>(pluginPolicyMap);
+        _orderedPermissions = new ReadOnlyCollection<PluginPermission>(
+            permissionMap.Values.OrderBy(p => p.Policy, StringComparer.Ordinal).ToList());
     }
 
     private static void ValidatePermission(PluginPermission permission)
@@ -54,7 +50,7 @@ public class PluginPermissionRegistry
 
     public IEnumerable<PluginPermission> GetAllPluginPermissions()
     {
-        return _permissions.Values;
+        return _orderedPermissions;
     }
 
     public PluginPermission GetPermission(string policy)
@@ -63,19 +59,6 @@ public class PluginPermissionRegistry
             return null;
 
         return _permissions.TryGetValue(policy, out var permission) ? permission : null;
-    }
-
-    public Dictionary<string, HashSet<string>> GetPluginPolicyMap()
-    {
-        return _pluginPolicyMap.ToDictionary(
-            kvp => kvp.Key,
-            kvp => new HashSet<string>(kvp.Value, StringComparer.Ordinal),
-            StringComparer.Ordinal);
-    }
-
-    public bool IsRegisteredPluginPermission(string policy)
-    {
-        return !string.IsNullOrEmpty(policy) && _permissions.ContainsKey(policy);
     }
 
     public string GetDisplayName(string policy)
@@ -90,7 +73,7 @@ public class PluginPermissionRegistry
         {
             var parts = policy.Split('.');
             var permissionName = parts.Length > 2 ? string.Join(' ', parts[2..]) : policy;
-            return $"⚠️ [Uninstalled Plugin] {Culture.TextInfo.ToTitleCase(permissionName)}";
+            return $"⚠️ [Uninstalled Plugin] {_culture.TextInfo.ToTitleCase(permissionName)}";
         }
 
         return Policies.DisplayName(policy);

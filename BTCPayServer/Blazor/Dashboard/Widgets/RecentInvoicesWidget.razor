@@ -33,10 +33,15 @@ else
     var config = TypedConfig ?? new RecentInvoicesConfig();
     <header>
         <h3>Recent Invoices</h3>
+        @if (_invoices is not null && _invoices.Length > 0)
+        {
+            <a href="/invoices?storeId=@StoreId">View All</a>
+        }
     </header>
     @if (_invoices is null || _invoices.Length == 0)
     {
         <p class="text-secondary my-3">There are no recent invoices.</p>
+        <a href="/invoices/create?storeId=@StoreId" class="fw-semibold">Create Invoice</a>
     }
     else
     {
@@ -55,7 +60,9 @@ else
                     {
                         <tr>
                             <td class="text-nowrap">@invoice.InvoiceTime.ToTimeAgo()</td>
-                            <td class="text-break">@invoice.Id</td>
+                            <td>
+                                <a href="/invoices/@invoice.Id" class="text-break">@invoice.Id</a>
+                            </td>
                             <td>
                                 <span class="badge @GetStatusBadgeClass(invoice.Status)">
                                     @invoice.Status

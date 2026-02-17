@@ -33,23 +33,26 @@ else
     var config = TypedConfig ?? new StoreNumbersConfig();
     <div class="store-number">
         <header>
-            <h6>Paid Invoices</h6>
+            <h6>Paid invoices in the last @config.TimeframeDays days</h6>
+            @if (_paidInvoices > 0)
+            {
+                <a href="/invoices?storeId=@StoreId">View All</a>
+            }
         </header>
-        <div class="h3 number" data-sensitive>@_paidInvoices</div>
-        <div class="text-muted small">in last @config.TimeframeDays days</div>
+        <div class="h3">@_paidInvoices</div>
     </div>
     <div class="store-number">
         <header>
             <h6>Payouts Pending</h6>
+            <a href="/pull-payments/payouts?storeId=@StoreId">Manage</a>
         </header>
-        <div class="h3 number" data-sensitive>@_payoutsPending</div>
+        <div class="h3">@_payoutsPending</div>
     </div>
     <div class="store-number">
         <header>
             <h6>Refunds Issued</h6>
         </header>
-        <div class="h3 number" data-sensitive>@_refundsIssued</div>
-        <div class="text-muted small">in last @config.TimeframeDays days</div>
+        <div class="h3">@_refundsIssued</div>
     </div>
 }
 

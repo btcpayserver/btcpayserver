@@ -60,7 +60,7 @@ else if (_balance is not null)
                         <span class="currency">BTC</span> in channels
                     </span>
                 </div>
-                <div class="balance-details">
+                <div class="balance-details collapse" id="balanceDetailsOffchain">
                     @if (_balance.OffchainBalance.Opening != null)
                     {
                         <div class="mt-2 d-flex align-items-baseline gap-1">
@@ -109,7 +109,7 @@ else if (_balance is not null)
                         <span class="currency">BTC</span> on-chain
                     </span>
                 </div>
-                <div class="balance-details">
+                <div class="balance-details collapse" id="balanceDetailsOnchain">
                     @if (_balance.OnchainBalance.Confirmed != null)
                     {
                         <div class="mt-2 d-flex align-items-baseline gap-1">
@@ -139,6 +139,16 @@ else if (_balance is not null)
                     }
                 </div>
             </div>
+        }
+    </div>
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 @(_hasHistogram ? "my-3" : "mt-3")">
+        @if (_balance.OffchainBalance != null && _balance.OnchainBalance != null)
+        {
+            <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0 ms-n1" type="button"
+                    data-bs-toggle="collapse" data-bs-target=".balance-details"
+                    aria-expanded="false" aria-controls="balanceDetailsOffchain balanceDetailsOnchain">
+                <span class="ms-1">Details</span>
+            </button>
         }
     </div>
     @if (_hasHistogram)

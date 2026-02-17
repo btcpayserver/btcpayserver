@@ -45,20 +45,22 @@ else
         else
         {
             <div class="app-items">
-                @{ var i = 0; }
-                @foreach (var entry in _entries)
+                @for (var i = 0; i < _entries.Count; i++)
                 {
-                    <div class="app-item ct-series-@((char)('a' + i))">
+                    var entry = _entries[i];
+                    <div class="app-item ct-series-@i">
                         <span class="app-item-name">
                             <span class="app-item-point ct-point"></span>
-                            @(entry.Title ?? entry.ItemCode)
+                            @entry.Title
                         </span>
                         <span class="app-item-value" data-sensitive>
-                            <span class="text-muted">@entry.SalesCount sale(s), </span>
+                            <span class="text-muted">
+                                @entry.SalesCount
+                                @(entry.SalesCount == 1 ? "sale" : "sales"),
+                            </span>
                             @entry.TotalFormatted
                         </span>
                     </div>
-                    i++;
                 }
             </div>
         }

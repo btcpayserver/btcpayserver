@@ -37,12 +37,15 @@ else
     else
     {
         <header class="mb-3">
-            <h3>@(_appName ?? "App Sales")</h3>
+            <h3>@(_appName ?? "App") Sales</h3>
         </header>
         <header class="mb-3">
             <span><span class="sales-count">@_salesCount</span> Total Sales</span>
         </header>
-        <div id="@_chartId" class="ct-chart ct-major-tenth"></div>
+        @if (_hasSeries)
+        {
+            <div id="@_chartId" class="ct-chart ct-major-tenth"></div>
+        }
     }
 }
 
@@ -112,7 +115,7 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && _hasSeries && _series is not null && Size > 6)
+        if (firstRender && _hasSeries && _series is not null)
         {
             var items = _series.ToArray();
             var labels = items.Select(s => s.Label ?? s.Date.ToString("MMM dd")).ToArray();

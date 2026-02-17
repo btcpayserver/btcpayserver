@@ -41,6 +41,7 @@ else
 {
     <header class="mb-4">
         <h6>Lightning Services</h6>
+        <a href="/BTC/lightning/@StoreId/public" target="_blank">Node Info</a>
     </header>
     @if (_services is null || _services.Count == 0)
     {
@@ -48,25 +49,27 @@ else
     }
     else
     {
-        <div class="services-list d-flex flex-wrap">
+        <div id="Services" class="services-list">
             @foreach (var service in _services)
             {
                 @if (!string.IsNullOrEmpty(service.Error))
                 {
-                    <div class="service d-flex flex-column align-items-center text-center">
-                        <img src="/img/@(service.Type.ToLowerInvariant()).png" alt="@service.DisplayName"
-                             style="width: var(--service-width, 3rem); height: var(--service-width, 3rem);"
-                             onerror="this.style.display='none'" />
+                    <div class="service" id="Service-@service.ServiceName">
+                        <img src="/img/@(service.Type.ToLowerInvariant()).png" alt="@service.DisplayName" />
                         <small class="d-block mt-3 lh-sm fw-semibold text-danger">@service.Error</small>
                     </div>
                 }
+                else if (!string.IsNullOrEmpty(service.Link))
+                {
+                    <a title="@service.DisplayName" href="@service.Link" target="_blank" rel="noreferrer noopener"
+                       class="service" id="Service-@service.ServiceName">
+                        <img src="/img/@(service.Type.ToLowerInvariant()).png" alt="@service.DisplayName" />
+                    </a>
+                }
                 else
                 {
-                    <div class="service d-flex flex-column align-items-center text-center">
-                        <img src="/img/@(service.Type.ToLowerInvariant()).png" alt="@service.DisplayName"
-                             style="width: var(--service-width, 3rem); height: var(--service-width, 3rem);"
-                             onerror="this.style.display='none'" />
-                        <small class="d-block mt-3 lh-sm fw-semibold">@service.DisplayName</small>
+                    <div class="service" id="Service-@service.ServiceName">
+                        <img src="/img/@(service.Type.ToLowerInvariant()).png" alt="@service.DisplayName" />
                     </div>
                 }
             }
@@ -96,7 +99,9 @@ else
     private class ServiceViewModel
     {
         public string DisplayName { get; set; } = "";
+        public string ServiceName { get; set; } = "";
         public string Type { get; set; } = "";
+        public string? Link { get; set; }
         public string? Error { get; set; }
     }
 
@@ -136,6 +141,7 @@ else
                 services.Add(new ServiceViewModel
                 {
                     DisplayName = service.DisplayName,
+                    ServiceName = service.ServiceName,
                     Type = service.Type.ToString()
                 });
             }
@@ -147,6 +153,7 @@ else
                     services.Add(new ServiceViewModel
                     {
                         DisplayName = key,
+                        ServiceName = key,
                         Type = key.Replace(" ", "")
                     });
                 }

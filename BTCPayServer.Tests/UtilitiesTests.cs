@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.Razor.Language;
 using Microsoft.AspNetCore.Razor.Language.Intermediate;
 using Microsoft.AspNetCore.Razor.TagHelpers;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.FileSystemGlobbing;
@@ -200,6 +201,31 @@ namespace BTCPayServer.Tests
         }
 
         /// <summary>
+        /// Pre-release check to ensure UpdateDefaultTranslations has been run
+        /// </summary>
+        [Trait("PreReleaseCheck", "PreReleaseCheck")]
+        [Fact]
+        public async Task CheckDefaultTranslationsUpToDate()
+        {
+            var soldir = TestUtils.TryGetSolutionDirectoryInfo();
+            var path = Path.Combine(soldir.FullName, "BTCPayServer/Services/Translations.Default.cs");
+            var originalContent = File.ReadAllText(path);
+
+            try
+            {
+                await UpdateDefaultTranslationsCore();
+
+                // Check if file was modified
+                var newContent = File.ReadAllText(path);
+                Assert.True(originalContent == newContent, 
+                    "Default translations are out of date. Please run the UpdateDefaultTranslations test before building docker images.\n" +
+                    "You can run it with: dotnet test --filter \"FullyQualifiedName~UpdateDefaultTranslations\"");
+            }
+            finally
+            {
+                File.WriteAllText(path, originalContent);
+            }
+        }
         /// Pre-release check to ensure language packs list in ListDictionaries.cshtml is up to date
         /// </summary>
         [Trait("PreReleaseCheck", "PreReleaseCheck")]
@@ -245,6 +271,11 @@ namespace BTCPayServer.Tests
         [Fact]
         public async Task UpdateDefaultTranslations()
         {
+            await UpdateDefaultTranslationsCore();
+        }
+
+        private async Task UpdateDefaultTranslationsCore()
+        {
             var soldir = TestUtils.TryGetSolutionDirectoryInfo();
             List<string> defaultTranslatedKeys = new List<string>();
 
@@ -264,26 +295,28 @@ namespace BTCPayServer.Tests
             }
 
             // Go through all cshtml file, search for text-translate or ViewLocalizer usage
+            // Use the server's configured RazorProjectEngine to ensure tag helpers are properly discovered
             using (var tester = CreateServerTester(newDb: true))
             {
                 await tester.StartAsync();
                 var engine = tester.PayTester.GetService<RazorProjectEngine>();
-                var files = soldir.EnumerateFiles("*.cshtml", SearchOption.AllDirectories)
-                    .Union(soldir.EnumerateFiles("*.razor", SearchOption.AllDirectories));
+                var btcpayDir = Path.Combine(soldir.FullName, "BTCPayServer");
+                var btcpayDirInfo = new DirectoryInfo(btcpayDir);
+                var files = btcpayDirInfo.EnumerateFiles("*.cshtml", SearchOption.AllDirectories)
+                    .Union(btcpayDirInfo.EnumerateFiles("*.razor", SearchOption.AllDirectories));
                 foreach (var file in files)
                 {
                     var filePath = file.FullName;
                     var txt = File.ReadAllText(file.FullName);
                     AddLocalizers(defaultTranslatedKeys, txt);
 
-                    filePath = filePath.Replace(Path.Combine(soldir.FullName, "BTCPayServer"), "/");
+                    filePath = filePath.Replace(btcpayDir, "").Replace("\\", "/");
                     var item = engine.FileSystem.GetItem(filePath);
 
                     var node = (DocumentIntermediateNode)engine.Process(item).Items[typeof(DocumentIntermediateNode)];
                     var w = new TranslatedKeyNodeWalker(defaultTranslatedKeys, txt);
                     w.Visit(node);
                 }
-
             }
             defaultTranslatedKeys = defaultTranslatedKeys.Select(d => d.Trim().Replace("\r\n", "\n")).Distinct().OrderBy(o => o).ToList();
             JObject obj = new JObject();

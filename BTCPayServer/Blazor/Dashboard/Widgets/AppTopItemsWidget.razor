@@ -1,7 +1,11 @@
 @using BTCPayServer.Blazor.Dashboard
 @using BTCPayServer.Blazor.Dashboard.Models
 @using BTCPayServer.Client
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Services.Apps
 @inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<AppTopItemsWidget.AppTopItemsConfig>
+
+@inject AppService AppService
 
 @if (!HasAccess)
 {
@@ -32,20 +36,57 @@ else
 {
     var config = TypedConfig ?? new AppTopItemsConfig();
     <div class="widget-body p-3">
-        <h6 class="mb-3">App Top Items</h6>
-        @if (!string.IsNullOrEmpty(config.AppId))
+        @if (string.IsNullOrEmpty(config.AppId))
         {
-            <p class="text-muted small mb-0">Top selling items for app: <strong>@config.AppId</strong></p>
-            @if (Size > 6)
-            {
-                <p class="text-secondary small fst-italic mt-2 mb-0">
-                    Top items ranking will be displayed here once app data integration is complete.
-                </p>
-            }
+            <h6 class="text-muted">App Top Items</h6>
+            <p class="text-muted small mb-0">No app configured. Edit this widget to select an app.</p>
         }
         else
         {
-            <p class="text-muted small mb-0">No app configured. Edit this widget to select an app.</p>
+            <h6 class="mb-3">@(_appName ?? "App Top Items")</h6>
+
+            @if (_entries is null || _entries.Count == 0)
+            {
+                <p class="text-muted small mb-0">No item data yet.</p>
+            }
+            else if (Size > 6)
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th class="text-end">Sales</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var entry in _entries)
+                            {
+                                <tr>
+                                    <td class="small">@(entry.Title ?? entry.ItemCode)</td>
+                                    <td class="text-end small">@entry.SalesCount</td>
+                                    <td class="text-end small">@entry.TotalFormatted</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                @foreach (var entry in _entries.Take(3))
+                {
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="small text-truncate">@(entry.Title ?? entry.ItemCode)</span>
+                        <span class="small text-muted">@entry.SalesCount sales</span>
+                    </div>
+                }
+                @if (_entries.Count > 3)
+                {
+                    <p class="text-muted small mb-0">+@(_entries.Count - 3) more items</p>
+                }
+            }
         }
     </div>
 }
@@ -68,14 +109,42 @@ else
     }
 
     private string? _error;
+    private string? _appName;
+    private List<AppItemStats>? _entries;
 
-    protected override Task OnParametersSetAsync()
+    protected override async Task OnParametersSetAsync()
     {
         if (string.IsNullOrEmpty(StoreId))
-            return Task.CompletedTask;
+            return;
 
-        // App top items data fetching will be implemented in a future iteration.
-        Loading = false;
-        return Task.CompletedTask;
+        var config = TypedConfig ?? new AppTopItemsConfig();
+        if (string.IsNullOrEmpty(config.AppId))
+        {
+            Loading = false;
+            return;
+        }
+
+        Loading = true;
+        try
+        {
+            var app = await AppService.GetApp(config.AppId, null, includeStore: true);
+            if (app is null)
+            {
+                _error = "App not found.";
+                return;
+            }
+
+            _appName = $"Top Items - {app.Name}";
+            var entries = await AppService.GetItemStats(app);
+            _entries = entries.Take(5).ToList();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            Loading = false;
+        }
     }
 }

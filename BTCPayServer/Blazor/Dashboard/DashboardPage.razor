@@ -119,7 +119,7 @@
                                      OnConfigChanged="(config) => OnWidgetConfigChanged(placement, config)"
                                      OnEditModeChanged="(editing) => OnWidgetEditMode(editing)"
                                      OnRemove="() => RemoveWidget(placement)"
-                                     OnSizeChanged="SaveDashboard" />
+                                     OnSizeChanged="OnWidgetSizeChanged" />
                 }
             </div>
         }
@@ -299,6 +299,12 @@
     {
         placement.Config = config;
         await SaveDashboard();
+    }
+
+    private async Task OnWidgetSizeChanged(int newSize)
+    {
+        await SaveDashboard();
+        await InvokeAsync(StateHasChanged);
     }
 
     private void OnWidgetEditMode(bool editing)

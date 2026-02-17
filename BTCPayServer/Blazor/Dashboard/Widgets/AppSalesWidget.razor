@@ -1,7 +1,12 @@
 @using BTCPayServer.Blazor.Dashboard
 @using BTCPayServer.Blazor.Dashboard.Models
 @using BTCPayServer.Client
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Services.Apps
 @inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<AppSalesWidget.AppSalesConfig>
+
+@inject AppService AppService
+@inject DashboardJsInterop JsInterop
 
 @if (!HasAccess)
 {
@@ -32,20 +37,36 @@ else
 {
     var config = TypedConfig ?? new AppSalesConfig();
     <div class="widget-body p-3">
-        <h6 class="mb-3">App Sales</h6>
-        @if (!string.IsNullOrEmpty(config.AppId))
+        @if (string.IsNullOrEmpty(config.AppId))
         {
-            <p class="text-muted small mb-0">Sales data for app: <strong>@config.AppId</strong></p>
-            @if (Size > 6)
-            {
-                <p class="text-secondary small fst-italic mt-2 mb-0">
-                    Sales chart and totals will be displayed here once app data integration is complete.
-                </p>
-            }
+            <h6 class="text-muted">App Sales</h6>
+            <p class="text-muted small mb-0">No app configured. Edit this widget to select an app.</p>
         }
         else
         {
-            <p class="text-muted small mb-0">No app configured. Edit this widget to select an app.</p>
+            <header class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">@(_appName ?? "App Sales")</h6>
+                @if (_salesCount > 0)
+                {
+                    <span class="badge bg-primary">@_salesCount sales</span>
+                }
+            </header>
+
+            @if (_salesCount == 0)
+            {
+                <p class="text-muted small mb-0">No sales data yet.</p>
+            }
+            else if (Size > 6 && _hasSeries)
+            {
+                <div id="@_chartId" class="ct-chart ct-major-tenth"></div>
+            }
+            else
+            {
+                <div class="d-flex align-items-baseline gap-2">
+                    <span class="fs-2 fw-bold">@_salesCount</span>
+                    <span class="text-muted">total sales</span>
+                </div>
+            }
         }
     </div>
 }
@@ -65,17 +86,62 @@ else
     public class AppSalesConfig
     {
         public string AppId { get; set; } = "";
+        public int NumberOfDays { get; set; } = 7;
     }
 
     private string? _error;
+    private string? _appName;
+    private int _salesCount;
+    private bool _hasSeries;
+    private IEnumerable<AppSalesStatsItem>? _series;
+    private string _chartId = $"app-sales-chart-{Guid.NewGuid():N}";
 
-    protected override Task OnParametersSetAsync()
+    protected override async Task OnParametersSetAsync()
     {
         if (string.IsNullOrEmpty(StoreId))
-            return Task.CompletedTask;
+            return;
 
-        // App sales data fetching will be implemented in a future iteration.
-        Loading = false;
-        return Task.CompletedTask;
+        var config = TypedConfig ?? new AppSalesConfig();
+        if (string.IsNullOrEmpty(config.AppId))
+        {
+            Loading = false;
+            return;
+        }
+
+        Loading = true;
+        try
+        {
+            var app = await AppService.GetApp(config.AppId, null, includeStore: true);
+            if (app is null)
+            {
+                _error = "App not found.";
+                return;
+            }
+
+            _appName = app.Name;
+            var stats = await AppService.GetSalesStats(app, config.NumberOfDays);
+            _salesCount = stats.SalesCount;
+            _series = stats.Series;
+            _hasSeries = _series?.Any() == true;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _hasSeries && _series is not null && Size > 6)
+        {
+            var items = _series.ToArray();
+            var labels = items.Select(s => s.Label ?? s.Date.ToString("MMM dd")).ToArray();
+            var series = items.Select(s => (object)s.SalesCount).ToArray();
+            await JsInterop.RenderChart(_chartId, "bar", labels, new[] { series });
+        }
     }
 }

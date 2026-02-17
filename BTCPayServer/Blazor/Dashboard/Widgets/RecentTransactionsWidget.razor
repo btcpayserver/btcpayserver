@@ -1,7 +1,19 @@
 @using BTCPayServer.Blazor.Dashboard
 @using BTCPayServer.Blazor.Dashboard.Models
 @using BTCPayServer.Client
+@using BTCPayServer.Payments
+@using BTCPayServer.Payments.Bitcoin
+@using BTCPayServer.Services
+@using BTCPayServer.Services.Invoices
+@using BTCPayServer.Services.Stores
+@using BTCPayServer.Services.Wallets
 @inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<RecentTransactionsWidget.RecentTransactionsConfig>
+
+@inject StoreRepository StoreRepository
+@inject BTCPayWalletProvider WalletProvider
+@inject WalletRepository WalletRepository
+@inject PaymentMethodHandlerDictionary Handlers
+@inject TransactionLinkProviders TransactionLinkProviders
 
 @if (!HasAccess)
 {
@@ -28,23 +40,59 @@ else if (_error is not null)
         <p class="text-danger small">@_error</p>
     </div>
 }
+else if (_noWallet)
+{
+    <div class="widget-body p-3">
+        <h6 class="text-muted">Recent Transactions</h6>
+        <p class="text-muted small mb-0">No wallet configured for @(TypedConfig?.CryptoCode ?? "BTC").</p>
+    </div>
+}
 else
 {
     var config = TypedConfig ?? new RecentTransactionsConfig();
     <div class="widget-body p-3">
         <h6 class="mb-3">Recent Transactions (@config.CryptoCode)</h6>
-        @if (Size > 6)
+        @if (_transactions is null || _transactions.Count == 0)
         {
-            <p class="text-muted small">
-                Showing up to @config.Limit recent transactions.
-                Transaction data will be available once NBXplorer integration is wired up.
-            </p>
+            <p class="text-muted small mb-0">No recent transactions.</p>
+        }
+        else if (Size > 6)
+        {
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tx in _transactions)
+                        {
+                            <tr>
+                                <td class="text-muted small">@tx.Timestamp.ToTimeAgo()</td>
+                                <td class="small @(tx.Positive ? "text-success" : "")">
+                                    @(tx.Positive ? "+" : "")@tx.Balance @tx.Currency
+                                </td>
+                                <td>
+                                    <span class="badge @(tx.IsConfirmed ? "bg-success" : "bg-warning text-dark")">
+                                        @(tx.IsConfirmed ? "Confirmed" : "Unconfirmed")
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
         else
         {
-            <p class="text-muted small">@config.Limit most recent transactions</p>
+            <div class="d-flex align-items-baseline gap-2">
+                <span class="fs-2 fw-bold">@_transactions.Count</span>
+                <span class="text-muted">transactions</span>
+            </div>
         }
-        <p class="text-secondary small fst-italic mb-0">Placeholder: wallet transaction fetching requires NBXplorer integration.</p>
     </div>
 }
 
@@ -67,16 +115,75 @@ else
         public int Limit { get; set; } = 5;
     }
 
-    private string? _error;
+    private class TxViewModel
+    {
+        public string Id { get; set; } = "";
+        public bool Positive { get; set; }
+        public string Balance { get; set; } = "";
+        public string Currency { get; set; } = "";
+        public bool IsConfirmed { get; set; }
+        public string? Link { get; set; }
+        public DateTimeOffset Timestamp { get; set; }
+    }
 
-    protected override Task OnParametersSetAsync()
+    private string? _error;
+    private bool _noWallet;
+    private List<TxViewModel>? _transactions;
+
+    protected override async Task OnParametersSetAsync()
     {
         if (string.IsNullOrEmpty(StoreId))
-            return Task.CompletedTask;
+            return;
 
-        // Transaction fetching requires complex NBXplorer integration.
-        // This placeholder will be replaced in a future iteration.
-        Loading = false;
-        return Task.CompletedTask;
+        Loading = true;
+        try
+        {
+            var config = TypedConfig ?? new RecentTransactionsConfig();
+            var store = await StoreRepository.FindStore(StoreId);
+            if (store is null)
+            {
+                _error = "Store not found.";
+                return;
+            }
+
+            var derivationSettings = store.GetDerivationSchemeSettings(Handlers, config.CryptoCode);
+            if (derivationSettings?.AccountDerivation is null)
+            {
+                _noWallet = true;
+                return;
+            }
+
+            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(config.CryptoCode);
+            var network = ((IHasNetwork)Handlers[pmi]).Network;
+            var wallet = WalletProvider.GetWallet(network);
+            var allTransactions = await wallet.FetchTransactionHistory(
+                derivationSettings.AccountDerivation, 0, config.Limit,
+                TimeSpan.FromDays(31.0));
+            var walletId = new WalletId(store.Id, config.CryptoCode);
+            var walletTransactionsInfo = await WalletRepository.GetWalletTransactionsInfo(
+                walletId, allTransactions.Select(t => t.TransactionId.ToString()).ToArray());
+
+            _transactions = allTransactions.Select(tx =>
+            {
+                return new TxViewModel
+                {
+                    Id = tx.TransactionId.ToString(),
+                    Positive = tx.BalanceChange.GetValue(network) >= 0,
+                    Balance = tx.BalanceChange.ShowMoney(network),
+                    Currency = config.CryptoCode,
+                    IsConfirmed = tx.Confirmations != 0,
+                    Link = TransactionLinkProviders.GetTransactionLink(pmi, tx.TransactionId.ToString()),
+                    Timestamp = tx.SeenAt
+                };
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            Loading = false;
+        }
     }
 }

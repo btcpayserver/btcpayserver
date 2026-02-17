@@ -1,10 +1,14 @@
 @using BTCPayServer.Blazor.Dashboard
 @using BTCPayServer.Blazor.Dashboard.Models
 @using BTCPayServer.Client
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Data
 @using BTCPayServer.Services.Invoices
+@using Microsoft.EntityFrameworkCore
 @inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<StoreNumbersWidget.StoreNumbersConfig>
 
 @inject InvoiceRepository InvoiceRepository
+@inject ApplicationDbContextFactory DbContextFactory
 
 @if (!HasAccess)
 {
@@ -36,11 +40,40 @@ else
     var config = TypedConfig ?? new StoreNumbersConfig();
     <div class="widget-body p-3">
         <h6 class="mb-3">Store Numbers</h6>
-        <div class="d-flex align-items-baseline gap-2">
-            <span class="fs-2 fw-bold">@_invoiceCount</span>
-            <span class="text-muted">Invoices</span>
-        </div>
-        <p class="text-muted small mb-0">in last @config.TimeframeDays days</p>
+        @if (Size > 6)
+        {
+            <div class="row g-3">
+                <div class="col-4 text-center">
+                    <div class="fs-3 fw-bold">@_paidInvoices</div>
+                    <div class="text-muted small">Paid Invoices</div>
+                </div>
+                <div class="col-4 text-center">
+                    <div class="fs-3 fw-bold">@_payoutsPending</div>
+                    <div class="text-muted small">Pending Payouts</div>
+                </div>
+                <div class="col-4 text-center">
+                    <div class="fs-3 fw-bold">@_refundsIssued</div>
+                    <div class="text-muted small">Refunds</div>
+                </div>
+            </div>
+            <p class="text-muted small mt-2 mb-0">in last @config.TimeframeDays days</p>
+        }
+        else
+        {
+            <div class="d-flex align-items-baseline gap-2">
+                <span class="fs-2 fw-bold">@_paidInvoices</span>
+                <span class="text-muted">Paid Invoices</span>
+            </div>
+            @if (_payoutsPending > 0)
+            {
+                <div class="text-muted small">@_payoutsPending pending payouts</div>
+            }
+            @if (_refundsIssued > 0)
+            {
+                <div class="text-muted small">@_refundsIssued refunds</div>
+            }
+            <p class="text-muted small mb-0">in last @config.TimeframeDays days</p>
+        }
     </div>
 }
 
@@ -49,7 +82,7 @@ else
     {
         Type = "StoreNumbers",
         Name = "Store Numbers",
-        Description = "Shows key store metrics such as invoice count",
+        Description = "Shows key store metrics: paid invoices, pending payouts, and refunds",
         Category = "Store",
         ComponentType = typeof(StoreNumbersWidget),
         Scope = WidgetScope.Store,
@@ -62,7 +95,9 @@ else
     }
 
     private string? _error;
-    private int _invoiceCount;
+    private int _paidInvoices;
+    private int _payoutsPending;
+    private int _refundsIssued;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -73,14 +108,27 @@ else
         try
         {
             var config = TypedConfig ?? new StoreNumbersConfig();
-            var query = new InvoiceQuery
-            {
-                StoreId = new[] { StoreId },
-                StartDate = DateTimeOffset.UtcNow.AddDays(-config.TimeframeDays),
-                IncludeArchived = false
-            };
-            var invoices = await InvoiceRepository.GetInvoices(query);
-            _invoiceCount = invoices.Length;
+            var offset = DateTimeOffset.UtcNow.AddDays(-config.TimeframeDays);
+
+            _paidInvoices = await InvoiceRepository.GetInvoiceCount(
+                new InvoiceQuery
+                {
+                    StoreId = new[] { StoreId },
+                    StartDate = offset,
+                    Status = new[] { "paid", "confirmed" }
+                });
+
+            await using var ctx = DbContextFactory.CreateContext();
+            _payoutsPending = await ctx.Payouts
+                .Where(p => p.PullPaymentData.StoreId == StoreId
+                         && !p.PullPaymentData.Archived
+                         && p.State == PayoutState.AwaitingApproval)
+                .CountAsync();
+
+            _refundsIssued = await ctx.Invoices
+                .Where(i => i.StoreData.Id == StoreId && !i.Archived && i.Created >= offset)
+                .SelectMany(i => i.Refunds)
+                .CountAsync();
         }
         catch (Exception ex)
         {

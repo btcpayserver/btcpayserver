@@ -21,6 +21,7 @@
 
 .dashboard-widget {
     min-height: 80px;
+    position: relative;
 }
 
 .dashboard-widget .widget {
@@ -63,16 +64,67 @@
     font-size: 0.75rem;
 }
 
+/* Edge resize handle */
+.widget-resize-handle {
+    display: none;
+    position: absolute;
+    top: 0;
+    right: -6px;
+    width: 12px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 10;
+}
+
+.widget-resize-handle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 4px;
+    height: 32px;
+    border-radius: 2px;
+    background: var(--btcpay-body-text-muted);
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.dashboard-edit .widget-resize-handle {
+    display: block;
+}
+
+.dashboard-edit .dashboard-widget:hover .widget-resize-handle::after,
+.widget-resizing .widget-resize-handle::after {
+    opacity: 0.6;
+}
+
+.widget-resizing {
+    opacity: 0.85;
+    outline: 2px solid var(--btcpay-primary);
+    outline-offset: -1px;
+    border-radius: var(--btcpay-border-radius);
+}
+
 /* SortableJS states */
 .widget-ghost {
-    opacity: 0.4;
+    opacity: 0.3;
     border: 2px dashed var(--btcpay-primary);
     border-radius: var(--btcpay-border-radius);
 }
 
+.widget-ghost > * {
+    visibility: hidden;
+}
+
 .widget-drag {
-    opacity: 0.9;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    opacity: 0.95;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    border-radius: var(--btcpay-border-radius);
+}
+
+.widget-chosen {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Dashboard header */

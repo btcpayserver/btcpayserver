@@ -29,6 +29,13 @@ public class DashboardJsInterop : IAsyncDisposable
         await _jsRuntime.InvokeVoidAsync("DashboardInterop.destroySortable");
     }
 
+    public async Task InitResize(ElementReference widgetElement, string placementId, int currentColSpan, int minCol, int maxCol, DotNetObjectReference<object> dotNetHelper)
+    {
+        if (_jsRuntime.IsPreRendering())
+            return;
+        await _jsRuntime.InvokeVoidAsync("DashboardInterop.initResize", widgetElement, placementId, currentColSpan, minCol, maxCol, dotNetHelper);
+    }
+
     public async Task RenderChart(string elementId, string type, object labels, object series, object? options = null)
     {
         if (_jsRuntime.IsPreRendering())

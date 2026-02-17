@@ -1,7 +1,19 @@
 @using BTCPayServer.Blazor.Dashboard
 @using BTCPayServer.Blazor.Dashboard.Models
 @using BTCPayServer.Client
+@using BTCPayServer.Configuration
+@using BTCPayServer.Data
+@using BTCPayServer.Payments
+@using BTCPayServer.Payments.Lightning
+@using BTCPayServer.Services.Invoices
+@using BTCPayServer.Services.Stores
+@using Microsoft.Extensions.Options
 @inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<LightningServicesWidget.LightningServicesConfig>
+
+@inject StoreRepository StoreRepository
+@inject PaymentMethodHandlerDictionary Handlers
+@inject IOptions<LightningNetworkOptions> LightningNetworkOptions
+@inject IOptions<ExternalServicesOptions> ExternalServiceOptions
 
 @if (!HasAccess)
 {
@@ -28,23 +40,44 @@ else if (_error is not null)
         <p class="text-danger small">@_error</p>
     </div>
 }
+else if (!_isInternalNode)
+{
+    <div class="widget-body p-3">
+        <h6 class="text-muted">Lightning Services</h6>
+        <p class="text-muted small mb-0">Lightning services are only available for internal nodes.</p>
+    </div>
+}
 else
 {
     var config = TypedConfig ?? new LightningServicesConfig();
     <div class="widget-body p-3">
         <h6 class="mb-3">Lightning Services (@config.CryptoCode)</h6>
-        @if (Size > 6)
+        @if (_services is null || _services.Count == 0)
         {
-            <p class="text-muted small">
-                Lightning service links and management options will be displayed here
-                once the Lightning services integration is complete.
-            </p>
+            <p class="text-muted small mb-0">No Lightning services available.</p>
         }
         else
         {
-            <p class="text-muted small">Lightning services overview</p>
+            <div class="list-group list-group-flush">
+                @foreach (var service in _services)
+                {
+                    @if (!string.IsNullOrEmpty(service.Error))
+                    {
+                        <div class="list-group-item px-0 py-2">
+                            <span class="text-muted">@service.DisplayName</span>
+                            <span class="text-danger small ms-2">@service.Error</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group-item px-0 py-2">
+                            <span>@service.DisplayName</span>
+                            <span class="text-muted small ms-2">@service.Type</span>
+                        </div>
+                    }
+                }
+            </div>
         }
-        <p class="text-secondary small fst-italic mb-0">Placeholder: Lightning services require complex resolution.</p>
     </div>
 }
 
@@ -66,16 +99,74 @@ else
         public string CryptoCode { get; set; } = "BTC";
     }
 
-    private string? _error;
+    private class ServiceViewModel
+    {
+        public string DisplayName { get; set; } = "";
+        public string Type { get; set; } = "";
+        public string? Error { get; set; }
+    }
 
-    protected override Task OnParametersSetAsync()
+    private string? _error;
+    private bool _isInternalNode;
+    private List<ServiceViewModel>? _services;
+
+    protected override async Task OnParametersSetAsync()
     {
         if (string.IsNullOrEmpty(StoreId))
-            return Task.CompletedTask;
+            return;
 
-        // Lightning services integration requires complex resolution.
-        // This placeholder will be replaced in a future iteration.
-        Loading = false;
-        return Task.CompletedTask;
+        Loading = true;
+        try
+        {
+            var config = TypedConfig ?? new LightningServicesConfig();
+            var store = await StoreRepository.FindStore(StoreId);
+            if (store is null)
+            {
+                _error = "Store not found.";
+                return;
+            }
+
+            var id = PaymentTypes.LN.GetPaymentMethodId(config.CryptoCode);
+            var existing = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(id, Handlers);
+            _isInternalNode = existing?.IsInternalNode is true &&
+                LightningNetworkOptions.Value.InternalLightningByCryptoCode.ContainsKey(config.CryptoCode);
+
+            if (!_isInternalNode)
+                return;
+
+            // List Lightning-related external services
+            var services = new List<ServiceViewModel>();
+            foreach (var service in ExternalServiceOptions.Value.ExternalServices.ToList()
+                .Where(s => ExternalServices.LightningServiceTypes.Contains(s.Type)))
+            {
+                services.Add(new ServiceViewModel
+                {
+                    DisplayName = service.DisplayName,
+                    Type = service.Type.ToString()
+                });
+            }
+
+            foreach (var (key, _) in ExternalServiceOptions.Value.OtherExternalServices)
+            {
+                if (ExternalServices.LightningServiceNames.Contains(key))
+                {
+                    services.Add(new ServiceViewModel
+                    {
+                        DisplayName = key,
+                        Type = key.Replace(" ", "")
+                    });
+                }
+            }
+
+            _services = services;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            Loading = false;
+        }
     }
 }

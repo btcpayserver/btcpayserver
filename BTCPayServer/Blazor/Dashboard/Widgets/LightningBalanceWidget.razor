@@ -1,7 +1,24 @@
 @using BTCPayServer.Blazor.Dashboard
 @using BTCPayServer.Blazor.Dashboard.Models
 @using BTCPayServer.Client
+@using BTCPayServer.Configuration
+@using BTCPayServer.Data
+@using BTCPayServer.Lightning
+@using BTCPayServer.Payments
+@using BTCPayServer.Payments.Lightning
+@using BTCPayServer.Services
+@using BTCPayServer.Services.Invoices
+@using BTCPayServer.Services.Stores
+@using Microsoft.Extensions.Options
 @inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<LightningBalanceWidget.LightningBalanceConfig>
+
+@inject StoreRepository StoreRepository
+@inject BTCPayNetworkProvider NetworkProvider
+@inject LightningClientFactoryService LightningClientFactory
+@inject IOptions<LightningNetworkOptions> LightningNetworkOptions
+@inject PaymentMethodHandlerDictionary Handlers
+@inject LightningHistogramService LnHistogramService
+@inject DashboardJsInterop JsInterop
 
 @if (!HasAccess)
 {
@@ -28,23 +45,65 @@ else if (_error is not null)
         <p class="text-danger small">@_error</p>
     </div>
 }
+else if (_noLightning)
+{
+    <div class="widget-body p-3">
+        <h6 class="text-muted">Lightning Balance</h6>
+        <p class="text-muted small mb-0">No Lightning node configured.</p>
+    </div>
+}
 else
 {
     var config = TypedConfig ?? new LightningBalanceConfig();
     <div class="widget-body p-3">
-        <h6 class="mb-3">Lightning Balance (@config.CryptoCode)</h6>
-        @if (Size > 6)
+        <header class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0">Lightning Balance (@config.CryptoCode)</h6>
+        </header>
+
+        @if (_totalOffchain.HasValue || _totalOnchain.HasValue)
         {
-            <p class="text-muted small">
-                Lightning node balance and channel information will be displayed here
-                once the Lightning client integration is wired up.
-            </p>
+            @if (Size > 6)
+            {
+                <div class="row g-3">
+                    @if (_totalOffchain.HasValue)
+                    {
+                        <div class="col-6">
+                            <div class="text-muted small">Offchain</div>
+                            <div class="fw-semibold">@FormatSats(_totalOffchain.Value)</div>
+                        </div>
+                    }
+                    @if (_totalOnchain.HasValue)
+                    {
+                        <div class="col-6">
+                            <div class="text-muted small">Onchain</div>
+                            <div class="fw-semibold">@FormatSats(_totalOnchain.Value)</div>
+                        </div>
+                    }
+                </div>
+                @if (_hasHistogram)
+                {
+                    <div id="@_chartId" class="ct-chart ct-major-tenth mt-2"></div>
+                }
+            }
+            else
+            {
+                @if (_totalOffchain.HasValue)
+                {
+                    <div class="d-flex align-items-baseline gap-2">
+                        <span class="fs-3 fw-bold">@FormatSats(_totalOffchain.Value)</span>
+                        <span class="text-muted small">offchain</span>
+                    </div>
+                }
+                @if (_totalOnchain.HasValue)
+                {
+                    <div class="text-muted small">@FormatSats(_totalOnchain.Value) onchain</div>
+                }
+            }
         }
         else
         {
-            <p class="text-muted small">Lightning balance data</p>
+            <p class="text-muted small mb-0">Balance data unavailable.</p>
         }
-        <p class="text-secondary small fst-italic mb-0">Placeholder: Lightning client calls require complex resolution.</p>
     </div>
 }
 
@@ -67,15 +126,106 @@ else
     }
 
     private string? _error;
+    private bool _noLightning;
+    private long? _totalOnchain;
+    private long? _totalOffchain;
+    private bool _hasHistogram;
+    private List<decimal>? _series;
+    private List<DateTimeOffset>? _labels;
+    private string _chartId = $"ln-balance-chart-{Guid.NewGuid():N}";
 
-    protected override Task OnParametersSetAsync()
+    private static string FormatSats(long millisats)
+    {
+        var sats = millisats / 1000m;
+        return sats >= 1_000_000 ? $"{sats / 1_000_000m:N2} BTC" :
+               sats >= 1_000 ? $"{sats / 1_000m:N1}k sats" :
+               $"{sats:N0} sats";
+    }
+
+    protected override async Task OnParametersSetAsync()
     {
         if (string.IsNullOrEmpty(StoreId))
-            return Task.CompletedTask;
+            return;
 
-        // Lightning client integration requires complex resolution.
-        // This placeholder will be replaced in a future iteration.
-        Loading = false;
-        return Task.CompletedTask;
+        Loading = true;
+        try
+        {
+            var config = TypedConfig ?? new LightningBalanceConfig();
+            var store = await StoreRepository.FindStore(StoreId);
+            if (store is null)
+            {
+                _error = "Store not found.";
+                return;
+            }
+
+            var lightningClient = GetLightningClient(store, config.CryptoCode);
+            if (lightningClient is null)
+            {
+                _noLightning = true;
+                return;
+            }
+
+            using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var balance = await lightningClient.GetBalance(cts.Token);
+
+            _totalOnchain = balance.OnchainBalance != null
+                ? (long)((balance.OnchainBalance.Confirmed ?? 0L) + (balance.OnchainBalance.Reserved ?? 0L) +
+                  (balance.OnchainBalance.Unconfirmed ?? 0L))
+                : null;
+            _totalOffchain = balance.OffchainBalance != null
+                ? (long)((balance.OffchainBalance.Opening ?? 0) + (balance.OffchainBalance.Local ?? 0) +
+                  (balance.OffchainBalance.Closing ?? 0))
+                : null;
+
+            var data = await LnHistogramService.GetHistogram(lightningClient, Client.Models.HistogramType.Week, cts.Token);
+            if (data != null)
+            {
+                _series = data.Series;
+                _labels = data.Labels;
+                _hasHistogram = _series is { Count: > 0 };
+            }
+        }
+        catch (Exception ex) when (ex is NotImplementedException or NotSupportedException)
+        {
+            _error = "Your node does not support balance fetching.";
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+    private ILightningClient? GetLightningClient(StoreData store, string cryptoCode)
+    {
+        var network = NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+        if (network is null) return null;
+        var id = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);
+        var existing = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(id, Handlers);
+        if (existing == null) return null;
+
+        if (existing.GetExternalLightningUrl() is { } connectionString)
+        {
+            return LightningClientFactory.Create(connectionString, network);
+        }
+        if (existing.IsInternalNode &&
+            LightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var internalNode))
+        {
+            return internalNode;
+        }
+        return null;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _hasHistogram && _series is not null && _labels is not null)
+        {
+            var labels = _labels.Select(l => l.ToString("MMM dd")).ToArray();
+            var series = _series.Select(s => (object)s).ToArray();
+            await JsInterop.RenderChart(_chartId, "line", labels, new[] { series });
+        }
     }
 }

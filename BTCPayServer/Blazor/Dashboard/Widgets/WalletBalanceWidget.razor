@@ -1,8 +1,16 @@
 @using BTCPayServer.Blazor.Dashboard
 @using BTCPayServer.Blazor.Dashboard.Models
 @using BTCPayServer.Client
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Services.Invoices
+@using BTCPayServer.Services.Stores
+@using BTCPayServer.Services.Wallets
 @inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<WalletBalanceWidget.WalletBalanceConfig>
 
+@inject StoreRepository StoreRepository
+@inject WalletHistogramService WalletHistogramService
+@inject BTCPayWalletProvider WalletProvider
+@inject PaymentMethodHandlerDictionary Handlers
 @inject DashboardJsInterop JsInterop
 
 @if (!HasAccess)
@@ -30,20 +38,36 @@ else if (_error is not null)
         <p class="text-danger small">@_error</p>
     </div>
 }
+else if (_missingWalletConfig)
+{
+    <div class="widget-body p-3">
+        <h6 class="text-muted">Wallet Balance</h6>
+        <p class="text-muted small mb-0">No wallet configured for @(TypedConfig?.CryptoCode ?? "BTC").</p>
+    </div>
+}
 else
 {
     var config = TypedConfig ?? new WalletBalanceConfig();
     <div class="widget-body p-3">
         <header class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="mb-0">Wallet Balance (@config.CryptoCode)</h6>
-            @if (Size > 6)
+            @if (_balance.HasValue)
             {
-                <span class="text-muted small">Period: @config.Period</span>
+                <span class="fw-semibold">@_balance.Value.ToString("0.########") @config.CryptoCode</span>
             }
         </header>
 
-        <div id="@_chartId" class="ct-chart ct-major-tenth"></div>
-        <p class="text-muted small mt-2">Chart loads here</p>
+        @if (_hasHistogram)
+        {
+            <div id="@_chartId" class="ct-chart ct-major-tenth"></div>
+        }
+        else if (_balance.HasValue)
+        {
+            <div class="d-flex align-items-baseline gap-2">
+                <span class="fs-2 fw-bold">@_balance.Value.ToString("0.########")</span>
+                <span class="text-muted">@config.CryptoCode</span>
+            </div>
+        }
     </div>
 }
 
@@ -68,6 +92,11 @@ else
     }
 
     private string? _error;
+    private decimal? _balance;
+    private bool _hasHistogram;
+    private bool _missingWalletConfig;
+    private List<decimal>? _series;
+    private List<DateTimeOffset>? _labels;
     private string _chartId = $"wallet-balance-chart-{Guid.NewGuid():N}";
 
     protected override async Task OnParametersSetAsync()
@@ -78,9 +107,49 @@ else
         Loading = true;
         try
         {
-            // Wallet data fetching requires complex BTCPayWalletProvider / WalletHistogramService setup.
-            // For now this is a placeholder; chart interop will be wired up in a future iteration.
-            await Task.CompletedTask;
+            var config = TypedConfig ?? new WalletBalanceConfig();
+            var store = await StoreRepository.FindStore(StoreId);
+            if (store is null)
+            {
+                _error = "Store not found.";
+                return;
+            }
+
+            var walletId = new WalletId(store.Id, config.CryptoCode);
+            var histogramType = Enum.TryParse<HistogramType>(config.Period, out var ht) ? ht : HistogramType.Week;
+
+            var data = await WalletHistogramService.GetHistogram(store, walletId, histogramType);
+            if (data != null)
+            {
+                _balance = data.Balance;
+                _series = data.Series;
+                _labels = data.Labels;
+                _hasHistogram = _series is { Count: > 0 };
+            }
+            else
+            {
+                // Fallback: try to get just the balance
+                try
+                {
+                    var wallet = WalletProvider.GetWallet(config.CryptoCode);
+                    var derivation = store.GetDerivationSchemeSettings(Handlers, config.CryptoCode);
+                    var handler = Handlers.TryGetBitcoinHandler(config.CryptoCode);
+                    if (wallet is not null && derivation is not null && handler is not null)
+                    {
+                        using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(3));
+                        var balance = await wallet.GetBalance(derivation.AccountDerivation, cts.Token);
+                        _balance = balance.Available.GetValue(handler.Network);
+                    }
+                    else
+                    {
+                        _missingWalletConfig = true;
+                    }
+                }
+                catch
+                {
+                    _missingWalletConfig = true;
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -94,11 +163,11 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && _error is null && HasAccess)
+        if (firstRender && _hasHistogram && _error is null && HasAccess && _series is not null && _labels is not null)
         {
-            // Placeholder: once real data is available, call:
-            // await JsInterop.RenderChart(_chartId, "line", labels, series);
-            await Task.CompletedTask;
+            var labels = _labels.Select(l => l.ToString("MMM dd")).ToArray();
+            var series = _series.Select(s => (object)s).ToArray();
+            await JsInterop.RenderChart(_chartId, "line", labels, new[] { series });
         }
     }
 }

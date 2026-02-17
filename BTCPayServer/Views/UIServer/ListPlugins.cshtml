@@ -135,6 +135,7 @@
     </div>
 }
 
+<div id="plugins-installed"></div>
 @if (Model.Plugins.Any())
 {
     <h3 class="mb-4" text-translate="true">Installed Plugins</h3>
@@ -356,6 +357,7 @@
 
 </script>
 
+<div id="plugins-directory"></div>
 @if (!availableAndNotInstalled.Any())
 {
     <div class="row mb-4">

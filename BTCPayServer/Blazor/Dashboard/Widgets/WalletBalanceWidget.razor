@@ -15,60 +15,46 @@
 
 @if (!HasAccess)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Wallet Balance</h6>
-        <p class="text-secondary small">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
-    </div>
+    <h6>Wallet Balance</h6>
+    <p class="text-secondary">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
 }
 else if (Loading)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Wallet Balance</h6>
-        <div class="d-flex justify-content-center p-3">
-            <div class="spinner-border text-light" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+    <div class="loading d-flex justify-content-center p-3">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 }
 else if (_error is not null)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Wallet Balance</h6>
-        <p class="text-danger small">@_error</p>
-    </div>
+    <h6>Wallet Balance</h6>
+    <p class="text-danger">@_error</p>
 }
 else if (_missingWalletConfig)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Wallet Balance</h6>
-        <p class="text-muted small mb-0">No wallet configured for @(TypedConfig?.CryptoCode ?? "BTC").</p>
-    </div>
+    <h6>Wallet Balance</h6>
+    <p class="text-secondary">No wallet configured for @(TypedConfig?.CryptoCode ?? "BTC").</p>
 }
 else
 {
     var config = TypedConfig ?? new WalletBalanceConfig();
-    <div class="widget-body p-3">
-        <header class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="mb-0">Wallet Balance (@config.CryptoCode)</h6>
-            @if (_balance.HasValue)
-            {
-                <span class="fw-semibold">@_balance.Value.ToString("0.########") @config.CryptoCode</span>
-            }
-        </header>
-
-        @if (_hasHistogram)
+    <header class="d-flex gap-3 align-items-center justify-content-between mb-2">
+        <h6>Wallet Balance</h6>
+    </header>
+    <header class="mb-3">
+        @if (_balance.HasValue)
         {
-            <div id="@_chartId" class="ct-chart ct-major-tenth"></div>
-        }
-        else if (_balance.HasValue)
-        {
-            <div class="d-flex align-items-baseline gap-2">
-                <span class="fs-2 fw-bold">@_balance.Value.ToString("0.########")</span>
-                <span class="text-muted">@config.CryptoCode</span>
+            <div class="balance d-flex align-items-baseline gap-1">
+                <h3 data-sensitive>@_balance.Value.ToString("0.########")</h3>
+                <span class="text-secondary fw-semibold currency">@config.CryptoCode</span>
             </div>
         }
-    </div>
+    </header>
+    @if (_hasHistogram)
+    {
+        <div id="@_chartId" class="ct-chart ct-major-tenth"></div>
+    }
 }
 
 @code {
@@ -81,6 +67,7 @@ else
         ComponentType = typeof(WalletBalanceWidget),
         Scope = WidgetScope.Store,
         DefaultColumnSize = 12,
+        CssClass = "store-wallet-balance",
         RequiredPermissions = new[] { Policies.CanModifyStoreSettings },
         RequiredStoreFeatures = new[] { "wallet" }
     };

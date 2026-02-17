@@ -12,68 +12,44 @@
 
 @if (!HasAccess)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Store Numbers</h6>
-        <p class="text-secondary small">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
-    </div>
+    <h6>Store Numbers</h6>
+    <p class="text-secondary">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
 }
 else if (Loading)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Store Numbers</h6>
-        <div class="d-flex justify-content-center p-3">
-            <div class="spinner-border text-light" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+    <div class="loading d-flex justify-content-center p-3">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 }
 else if (_error is not null)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Store Numbers</h6>
-        <p class="text-danger small">@_error</p>
-    </div>
+    <h6>Store Numbers</h6>
+    <p class="text-danger">@_error</p>
 }
 else
 {
     var config = TypedConfig ?? new StoreNumbersConfig();
-    <div class="widget-body p-3">
-        <h6 class="mb-3">Store Numbers</h6>
-        @if (Size > 6)
-        {
-            <div class="row g-3">
-                <div class="col-4 text-center">
-                    <div class="fs-3 fw-bold">@_paidInvoices</div>
-                    <div class="text-muted small">Paid Invoices</div>
-                </div>
-                <div class="col-4 text-center">
-                    <div class="fs-3 fw-bold">@_payoutsPending</div>
-                    <div class="text-muted small">Pending Payouts</div>
-                </div>
-                <div class="col-4 text-center">
-                    <div class="fs-3 fw-bold">@_refundsIssued</div>
-                    <div class="text-muted small">Refunds</div>
-                </div>
-            </div>
-            <p class="text-muted small mt-2 mb-0">in last @config.TimeframeDays days</p>
-        }
-        else
-        {
-            <div class="d-flex align-items-baseline gap-2">
-                <span class="fs-2 fw-bold">@_paidInvoices</span>
-                <span class="text-muted">Paid Invoices</span>
-            </div>
-            @if (_payoutsPending > 0)
-            {
-                <div class="text-muted small">@_payoutsPending pending payouts</div>
-            }
-            @if (_refundsIssued > 0)
-            {
-                <div class="text-muted small">@_refundsIssued refunds</div>
-            }
-            <p class="text-muted small mb-0">in last @config.TimeframeDays days</p>
-        }
+    <div class="store-number">
+        <header>
+            <h6>Paid Invoices</h6>
+        </header>
+        <div class="h3 number" data-sensitive>@_paidInvoices</div>
+        <div class="text-muted small">in last @config.TimeframeDays days</div>
+    </div>
+    <div class="store-number">
+        <header>
+            <h6>Payouts Pending</h6>
+        </header>
+        <div class="h3 number" data-sensitive>@_payoutsPending</div>
+    </div>
+    <div class="store-number">
+        <header>
+            <h6>Refunds Issued</h6>
+        </header>
+        <div class="h3 number" data-sensitive>@_refundsIssued</div>
+        <div class="text-muted small">in last @config.TimeframeDays days</div>
     </div>
 }
 
@@ -86,7 +62,8 @@ else
         Category = "Store",
         ComponentType = typeof(StoreNumbersWidget),
         Scope = WidgetScope.Store,
-        DefaultColumnSize = 6
+        DefaultColumnSize = 6,
+        CssClass = "store-numbers"
     };
 
     public class StoreNumbersConfig

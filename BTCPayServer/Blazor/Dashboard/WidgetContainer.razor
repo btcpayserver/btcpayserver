@@ -1,13 +1,13 @@
 @using BTCPayServer.Blazor.Dashboard.Models
 @using Newtonsoft.Json.Linq
 
-<div class="widget p-3" @ref="_widgetElement">
+<div class="widget @(Descriptor.CssClass ?? "")" @ref="_widgetElement">
     @if (EditMode)
     {
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="widget-drag-handle d-flex align-items-center gap-1">
-                <vc:icon symbol="actions-drag" />
-                <span class="small text-muted">@Descriptor.Name</span>
+        <div class="widget-edit-header">
+            <div class="widget-drag-handle">
+                <span class="widget-grip-dots"></span>
+                <span class="small">@Descriptor.Name</span>
             </div>
             <div class="widget-controls">
                 <button class="btn btn-outline-danger btn-sm" title="Remove widget"
@@ -17,7 +17,6 @@
             </div>
         </div>
     }
-
     <ErrorBoundary @ref="_errorBoundary">
         <ChildContent>
             <DynamicComponent @key="Placement.Id"
@@ -36,7 +35,9 @@
 
 @if (EditMode)
 {
-    <div class="widget-resize-handle"></div>
+    <div class="widget-resize-left"></div>
+    <div class="widget-resize-right"></div>
+    <div class="widget-resize-bottom"></div>
 }
 
 @code {
@@ -49,7 +50,7 @@
     [Parameter] public EventCallback<JObject> OnConfigChanged { get; set; }
     [Parameter] public EventCallback<bool> OnEditModeChanged { get; set; }
     [Parameter] public EventCallback OnRemove { get; set; }
-    [Parameter] public EventCallback<int> OnSizeChanged { get; set; }
+    [Parameter] public EventCallback<(int cols, int rows)> OnSizeChanged { get; set; }
 
     [Inject] DashboardJsInterop JsInterop { get; set; } = null!;
 
@@ -77,18 +78,20 @@
         if (EditMode)
         {
             _resizeRef ??= DotNetObjectReference.Create<object>(this);
-            var parent = _widgetElement;
-            await JsInterop.InitResize(parent, Placement.Id, Placement.ColumnSize,
-                Descriptor.MinColumnSize, Descriptor.MaxColumnSize, _resizeRef);
+            await JsInterop.InitResize(_widgetElement, Placement.Id,
+                Placement.ColumnSize, Descriptor.MinColumnSize, Descriptor.MaxColumnSize,
+                Placement.RowSpan, Descriptor.MinRowSpan, Descriptor.MaxRowSpan,
+                _resizeRef);
         }
     }
 
     [JSInvokable]
-    public async Task OnWidgetResized(string placementId, int newSize)
+    public async Task OnWidgetResized(string placementId, int newColSize, int newRowSpan)
     {
         if (placementId != Placement.Id) return;
-        Placement.ColumnSize = newSize;
-        await OnSizeChanged.InvokeAsync(newSize);
+        Placement.ColumnSize = newColSize;
+        Placement.RowSpan = newRowSpan;
+        await OnSizeChanged.InvokeAsync((newColSize, newRowSpan));
         await InvokeAsync(StateHasChanged);
     }
 

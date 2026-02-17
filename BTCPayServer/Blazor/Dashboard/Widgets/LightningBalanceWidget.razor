@@ -22,89 +22,129 @@
 
 @if (!HasAccess)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Lightning Balance</h6>
-        <p class="text-secondary small">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
-    </div>
+    <h6>Lightning Balance</h6>
+    <p class="text-secondary">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
 }
 else if (Loading)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Lightning Balance</h6>
-        <div class="d-flex justify-content-center p-3">
-            <div class="spinner-border text-light" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+    <div class="loading d-flex justify-content-center p-3">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 }
 else if (_error is not null)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Lightning Balance</h6>
-        <p class="text-danger small">@_error</p>
-    </div>
+    <header class="d-flex gap-3 align-items-center justify-content-between mb-2">
+        <h6>Lightning Balance</h6>
+    </header>
+    <p class="text-danger">@_error</p>
 }
 else if (_noLightning)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Lightning Balance</h6>
-        <p class="text-muted small mb-0">No Lightning node configured.</p>
-    </div>
+    <h6>Lightning Balance</h6>
+    <p class="text-secondary">No Lightning node configured.</p>
 }
-else
+else if (_balance is not null)
 {
-    var config = TypedConfig ?? new LightningBalanceConfig();
-    <div class="widget-body p-3">
-        <header class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="mb-0">Lightning Balance (@config.CryptoCode)</h6>
-        </header>
-
-        @if (_totalOffchain.HasValue || _totalOnchain.HasValue)
+    <header class="d-flex gap-3 align-items-center justify-content-between mb-2">
+        <h6>Lightning Balance</h6>
+    </header>
+    <div class="balances d-flex flex-wrap">
+        @if (_balance.OffchainBalance != null)
         {
-            @if (Size > 6)
-            {
-                <div class="row g-3">
-                    @if (_totalOffchain.HasValue)
+            <div class="balance">
+                <div class="d-flex align-items-baseline gap-1">
+                    <h3 class="d-inline-block me-1" data-sensitive>@_totalOffchain</h3>
+                    <span class="text-secondary fw-semibold text-nowrap">
+                        <span class="currency">BTC</span> in channels
+                    </span>
+                </div>
+                <div class="balance-details">
+                    @if (_balance.OffchainBalance.Opening != null)
                     {
-                        <div class="col-6">
-                            <div class="text-muted small">Offchain</div>
-                            <div class="fw-semibold">@FormatSats(_totalOffchain.Value)</div>
+                        <div class="mt-2 d-flex align-items-baseline gap-1">
+                            <span class="fw-semibold" data-sensitive>@_balance.OffchainBalance.Opening</span>
+                            <span class="text-secondary text-nowrap">
+                                <span class="currency">BTC</span> opening channels
+                            </span>
                         </div>
                     }
-                    @if (_totalOnchain.HasValue)
+                    @if (_balance.OffchainBalance.Local != null)
                     {
-                        <div class="col-6">
-                            <div class="text-muted small">Onchain</div>
-                            <div class="fw-semibold">@FormatSats(_totalOnchain.Value)</div>
+                        <div class="mt-2 d-flex align-items-baseline gap-1">
+                            <span class="fw-semibold" data-sensitive>@_balance.OffchainBalance.Local</span>
+                            <span class="text-secondary text-nowrap">
+                                <span class="currency">BTC</span> local balance
+                            </span>
+                        </div>
+                    }
+                    @if (_balance.OffchainBalance.Remote != null)
+                    {
+                        <div class="mt-2 d-flex align-items-baseline gap-1">
+                            <span class="fw-semibold" data-sensitive>@_balance.OffchainBalance.Remote</span>
+                            <span class="text-secondary text-nowrap">
+                                <span class="currency">BTC</span> remote balance
+                            </span>
+                        </div>
+                    }
+                    @if (_balance.OffchainBalance.Closing != null)
+                    {
+                        <div class="mt-2 d-flex align-items-baseline gap-1">
+                            <span class="fw-semibold" data-sensitive>@_balance.OffchainBalance.Closing</span>
+                            <span class="text-secondary text-nowrap">
+                                <span class="currency">BTC</span> closing channels
+                            </span>
                         </div>
                     }
                 </div>
-                @if (_hasHistogram)
-                {
-                    <div id="@_chartId" class="ct-chart ct-major-tenth mt-2"></div>
-                }
-            }
-            else
-            {
-                @if (_totalOffchain.HasValue)
-                {
-                    <div class="d-flex align-items-baseline gap-2">
-                        <span class="fs-3 fw-bold">@FormatSats(_totalOffchain.Value)</span>
-                        <span class="text-muted small">offchain</span>
-                    </div>
-                }
-                @if (_totalOnchain.HasValue)
-                {
-                    <div class="text-muted small">@FormatSats(_totalOnchain.Value) onchain</div>
-                }
-            }
+            </div>
         }
-        else
+        @if (_balance.OnchainBalance != null)
         {
-            <p class="text-muted small mb-0">Balance data unavailable.</p>
+            <div class="balance">
+                <div class="d-flex align-items-baseline gap-1">
+                    <h3 class="d-inline-block me-1" data-sensitive>@_totalOnchain</h3>
+                    <span class="text-secondary fw-semibold text-nowrap">
+                        <span class="currency">BTC</span> on-chain
+                    </span>
+                </div>
+                <div class="balance-details">
+                    @if (_balance.OnchainBalance.Confirmed != null)
+                    {
+                        <div class="mt-2 d-flex align-items-baseline gap-1">
+                            <span class="fw-semibold" data-sensitive>@_balance.OnchainBalance.Confirmed</span>
+                            <span class="text-secondary text-nowrap">
+                                <span class="currency">BTC</span> confirmed
+                            </span>
+                        </div>
+                    }
+                    @if (_balance.OnchainBalance.Unconfirmed != null)
+                    {
+                        <div class="mt-2 d-flex align-items-baseline gap-1">
+                            <span class="fw-semibold" data-sensitive>@_balance.OnchainBalance.Unconfirmed</span>
+                            <span class="text-secondary text-nowrap">
+                                <span class="currency">BTC</span> unconfirmed
+                            </span>
+                        </div>
+                    }
+                    @if (_balance.OnchainBalance.Reserved != null)
+                    {
+                        <div class="mt-2 d-flex align-items-baseline gap-1">
+                            <span class="fw-semibold" data-sensitive>@_balance.OnchainBalance.Reserved</span>
+                            <span class="text-secondary text-nowrap">
+                                <span class="currency">BTC</span> reserved
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
         }
     </div>
+    @if (_hasHistogram)
+    {
+        <div id="@_chartId" class="ct-chart ct-major-tenth"></div>
+    }
 }
 
 @code {
@@ -117,6 +157,7 @@ else
         ComponentType = typeof(LightningBalanceWidget),
         Scope = WidgetScope.Store,
         DefaultColumnSize = 12,
+        CssClass = "store-lightning-balance",
         RequiredStoreFeatures = new[] { "lightning" }
     };
 
@@ -127,20 +168,13 @@ else
 
     private string? _error;
     private bool _noLightning;
-    private long? _totalOnchain;
-    private long? _totalOffchain;
+    private LightningNodeBalance? _balance;
+    private NBitcoin.Money? _totalOnchain;
+    private LightMoney? _totalOffchain;
     private bool _hasHistogram;
     private List<decimal>? _series;
     private List<DateTimeOffset>? _labels;
     private string _chartId = $"ln-balance-chart-{Guid.NewGuid():N}";
-
-    private static string FormatSats(long millisats)
-    {
-        var sats = millisats / 1000m;
-        return sats >= 1_000_000 ? $"{sats / 1_000_000m:N2} BTC" :
-               sats >= 1_000 ? $"{sats / 1_000m:N1}k sats" :
-               $"{sats:N0} sats";
-    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -166,15 +200,17 @@ else
             }
 
             using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(10));
-            var balance = await lightningClient.GetBalance(cts.Token);
+            _balance = await lightningClient.GetBalance(cts.Token);
 
-            _totalOnchain = balance.OnchainBalance != null
-                ? (long)((balance.OnchainBalance.Confirmed ?? 0L) + (balance.OnchainBalance.Reserved ?? 0L) +
-                  (balance.OnchainBalance.Unconfirmed ?? 0L))
+            _totalOnchain = _balance.OnchainBalance != null
+                ? (_balance.OnchainBalance.Confirmed ?? NBitcoin.Money.Zero) +
+                  (_balance.OnchainBalance.Reserved ?? NBitcoin.Money.Zero) +
+                  (_balance.OnchainBalance.Unconfirmed ?? NBitcoin.Money.Zero)
                 : null;
-            _totalOffchain = balance.OffchainBalance != null
-                ? (long)((balance.OffchainBalance.Opening ?? 0) + (balance.OffchainBalance.Local ?? 0) +
-                  (balance.OffchainBalance.Closing ?? 0))
+            _totalOffchain = _balance.OffchainBalance != null
+                ? (_balance.OffchainBalance.Opening ?? LightMoney.Zero) +
+                  (_balance.OffchainBalance.Local ?? LightMoney.Zero) +
+                  (_balance.OffchainBalance.Closing ?? LightMoney.Zero)
                 : null;
 
             var data = await LnHistogramService.GetHistogram(lightningClient, Client.Models.HistogramType.Week, cts.Token);

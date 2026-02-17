@@ -17,83 +17,74 @@
 
 @if (!HasAccess)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Recent Transactions</h6>
-        <p class="text-secondary small">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
-    </div>
+    <header><h3>Recent Transactions</h3></header>
+    <p class="text-secondary">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
 }
 else if (Loading)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Recent Transactions</h6>
-        <div class="d-flex justify-content-center p-3">
-            <div class="spinner-border text-light" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+    <div class="loading d-flex justify-content-center p-3">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 }
 else if (_error is not null)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Recent Transactions</h6>
-        <p class="text-danger small">@_error</p>
-    </div>
+    <header><h3>Recent Transactions</h3></header>
+    <p class="text-danger">@_error</p>
 }
 else if (_noWallet)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Recent Transactions</h6>
-        <p class="text-muted small mb-0">No wallet configured for @(TypedConfig?.CryptoCode ?? "BTC").</p>
-    </div>
+    <header><h3>Recent Transactions</h3></header>
+    <p class="text-secondary">No wallet configured for @(TypedConfig?.CryptoCode ?? "BTC").</p>
 }
 else
 {
     var config = TypedConfig ?? new RecentTransactionsConfig();
-    <div class="widget-body p-3">
-        <h6 class="mb-3">Recent Transactions (@config.CryptoCode)</h6>
-        @if (_transactions is null || _transactions.Count == 0)
-        {
-            <p class="text-muted small mb-0">No recent transactions.</p>
-        }
-        else if (Size > 6)
-        {
-            <div class="table-responsive">
-                <table class="table table-sm table-hover mb-0">
-                    <thead>
+    <header>
+        <h3>Recent Transactions</h3>
+    </header>
+    @if (_transactions is null || _transactions.Count == 0)
+    {
+        <p class="text-secondary mt-3 mb-0">There are no recent transactions.</p>
+    }
+    else
+    {
+        <div class="table-responsive mt-3 mb-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="w-125px">Date</th>
+                        <th class="text-nowrap">Transaction</th>
+                        <th class="text-end">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tx in _transactions)
+                    {
                         <tr>
-                            <th>Date</th>
-                            <th>Amount</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var tx in _transactions)
-                        {
-                            <tr>
-                                <td class="text-muted small">@tx.Timestamp.ToTimeAgo()</td>
-                                <td class="small @(tx.Positive ? "text-success" : "")">
+                            <td class="text-nowrap">@tx.Timestamp.ToTimeAgo()</td>
+                            <td class="text-nowrap">
+                                @if (!string.IsNullOrEmpty(tx.Link))
+                                {
+                                    <a href="@tx.Link" class="truncate-center-id" target="_blank" rel="noreferrer noopener">@tx.Id</a>
+                                }
+                                else
+                                {
+                                    <span class="truncate-center-id">@tx.Id</span>
+                                }
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <span data-sensitive class="@(tx.Positive ? "text-success" : "text-danger") @(!tx.IsConfirmed ? "opacity-50" : "")">
                                     @(tx.Positive ? "+" : "")@tx.Balance @tx.Currency
-                                </td>
-                                <td>
-                                    <span class="badge @(tx.IsConfirmed ? "bg-success" : "bg-warning text-dark")">
-                                        @(tx.IsConfirmed ? "Confirmed" : "Unconfirmed")
-                                    </span>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-        else
-        {
-            <div class="d-flex align-items-baseline gap-2">
-                <span class="fs-2 fw-bold">@_transactions.Count</span>
-                <span class="text-muted">transactions</span>
-            </div>
-        }
-    </div>
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 }
 
 @code {
@@ -106,6 +97,7 @@ else
         ComponentType = typeof(RecentTransactionsWidget),
         Scope = WidgetScope.Store,
         DefaultColumnSize = 6,
+        CssClass = "store-recent-transactions",
         RequiredStoreFeatures = new[] { "wallet" }
     };
 

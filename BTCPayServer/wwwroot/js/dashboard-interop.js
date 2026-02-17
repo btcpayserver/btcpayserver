@@ -1,7 +1,7 @@
 window.DashboardInterop = {
     _sortableInstance: null,
     _charts: {},
-    _resizeState: null,
+    _resizeCleanups: {},
 
     initSortable: function (containerElement, dotNetHelper) {
         if (!containerElement || typeof Sortable === 'undefined') return;
@@ -37,92 +37,132 @@ window.DashboardInterop = {
         }
     },
 
-    // --- Edge resize ---
-    initResize: function (widgetInnerElement, placementId, currentColSpan, minCol, maxCol, dotNetHelper) {
-        // Walk up from the inner .widget to the outer .dashboard-widget
+    // --- Multi-edge resize ---
+    initResize: function (widgetInnerElement, placementId, currentColSpan, minCol, maxCol, currentRowSpan, minRow, maxRow, dotNetHelper) {
         var widgetElement = widgetInnerElement.closest('.dashboard-widget');
         if (!widgetElement) return;
-        var handle = widgetElement.querySelector('.widget-resize-handle');
-        if (!handle) return;
-        // Avoid double-binding
-        if (handle._resizeBound) return;
-        handle._resizeBound = true;
+
+        // Clean up previous bindings for this placement
+        if (this._resizeCleanups[placementId]) {
+            this._resizeCleanups[placementId]();
+        }
 
         var self = this;
+        var abortControllers = [];
 
-        handle.addEventListener('mousedown', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
+        function setupEdge(handleSelector, axis) {
+            var handle = widgetElement.querySelector(handleSelector);
+            if (!handle) return;
 
-            var grid = widgetElement.closest('.dashboard-grid');
-            if (!grid) return;
+            var controller = new AbortController();
+            abortControllers.push(controller);
 
-            var gridRect = grid.getBoundingClientRect();
-            var gridStyle = window.getComputedStyle(grid);
-            var gridCols = 12;
-            var gap = parseFloat(gridStyle.gap) || parseFloat(gridStyle.columnGap) || 16;
-            var colWidth = (gridRect.width - (gap * (gridCols - 1))) / gridCols;
+            handle.addEventListener('mousedown', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
 
-            var startX = e.clientX;
-            var startSpan = currentColSpan;
+                var grid = widgetElement.closest('.dashboard-grid');
+                if (!grid) return;
 
-            self._resizeState = {
-                placementId: placementId,
-                startX: startX,
-                startSpan: startSpan,
-                colWidth: colWidth,
-                gap: gap,
-                minCol: minCol,
-                maxCol: maxCol,
-                widgetElement: widgetElement,
-                dotNetHelper: dotNetHelper
-            };
+                var gridRect = grid.getBoundingClientRect();
+                var gridStyle = window.getComputedStyle(grid);
+                var gridCols = 12;
+                var gap = parseFloat(gridStyle.gap) || parseFloat(gridStyle.columnGap) || 16;
+                var rowGap = parseFloat(gridStyle.gap) || parseFloat(gridStyle.rowGap) || 16;
+                var colWidth = (gridRect.width - (gap * (gridCols - 1))) / gridCols;
 
-            document.addEventListener('mousemove', self._onResizeMove);
-            document.addEventListener('mouseup', self._onResizeEnd);
-            document.body.style.cursor = 'col-resize';
-            document.body.style.userSelect = 'none';
-            widgetElement.classList.add('widget-resizing');
-        });
+                // Compute row height from the widget's current rendered height / rowSpan
+                var widgetRect = widgetElement.getBoundingClientRect();
+                var baseRowHeight = currentRowSpan > 1
+                    ? (widgetRect.height - rowGap * (currentRowSpan - 1)) / currentRowSpan
+                    : widgetRect.height;
+
+                var state = {
+                    axis: axis,
+                    startX: e.clientX,
+                    startY: e.clientY,
+                    startSpan: currentColSpan,
+                    startRowSpan: currentRowSpan,
+                    colWidth: colWidth,
+                    gap: gap,
+                    rowGap: rowGap,
+                    baseRowHeight: baseRowHeight,
+                    minCol: minCol,
+                    maxCol: maxCol,
+                    minRow: minRow,
+                    maxRow: maxRow,
+                    widgetElement: widgetElement,
+                    widgetStartLeft: widgetRect.left,
+                    gridLeft: gridRect.left,
+                    currentPreviewCol: currentColSpan,
+                    currentPreviewRow: currentRowSpan
+                };
+
+                var cursorStyle = axis === 'horizontal' ? 'col-resize' : 'row-resize';
+                document.body.style.cursor = cursorStyle;
+                document.body.style.userSelect = 'none';
+                widgetElement.classList.add('widget-resizing');
+
+                function onMove(ev) {
+                    if (axis === 'horizontal') {
+                        var dx = ev.clientX - state.startX;
+                        // For left handle, invert the delta
+                        var effectiveDx = (handleSelector === '.widget-resize-left') ? -dx : dx;
+                        var colDelta = Math.round(effectiveDx / (state.colWidth + state.gap));
+                        var newSpan = Math.max(state.minCol, Math.min(state.maxCol, state.startSpan + colDelta));
+                        if (newSpan !== state.currentPreviewCol) {
+                            state.currentPreviewCol = newSpan;
+                            widgetElement.style.gridColumn = 'span ' + newSpan;
+                        }
+                    } else {
+                        var dy = ev.clientY - state.startY;
+                        var rowDelta = Math.round(dy / (state.baseRowHeight + state.rowGap));
+                        var newRowSpan = Math.max(state.minRow, Math.min(state.maxRow, state.startRowSpan + rowDelta));
+                        if (newRowSpan !== state.currentPreviewRow) {
+                            state.currentPreviewRow = newRowSpan;
+                            widgetElement.style.gridRow = 'span ' + newRowSpan;
+                        }
+                    }
+                }
+
+                function onUp(ev) {
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onUp);
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                    widgetElement.classList.remove('widget-resizing');
+
+                    var finalCol = state.currentPreviewCol;
+                    var finalRow = state.currentPreviewRow;
+
+                    // Reset inline styles - Blazor will re-render
+                    widgetElement.style.gridColumn = '';
+                    widgetElement.style.gridRow = '';
+
+                    if (finalCol !== state.startSpan || finalRow !== state.startRowSpan) {
+                        dotNetHelper.invokeMethodAsync('OnWidgetResized', placementId, finalCol, finalRow);
+                    }
+                }
+
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onUp);
+            }, { signal: controller.signal });
+        }
+
+        setupEdge('.widget-resize-right', 'horizontal');
+        setupEdge('.widget-resize-left', 'horizontal');
+        setupEdge('.widget-resize-bottom', 'vertical');
+
+        this._resizeCleanups[placementId] = function () {
+            abortControllers.forEach(function (c) { c.abort(); });
+        };
     },
 
-    _onResizeMove: function (e) {
-        var state = window.DashboardInterop._resizeState;
-        if (!state) return;
-
-        var dx = e.clientX - state.startX;
-        var colDelta = Math.round(dx / (state.colWidth + state.gap));
-        var newSpan = Math.max(state.minCol, Math.min(state.maxCol, state.startSpan + colDelta));
-
-        if (newSpan !== state.currentPreview) {
-            state.currentPreview = newSpan;
-            state.widgetElement.style.gridColumn = 'span ' + newSpan;
+    cleanupResize: function (placementId) {
+        if (this._resizeCleanups[placementId]) {
+            this._resizeCleanups[placementId]();
+            delete this._resizeCleanups[placementId];
         }
-    },
-
-    _onResizeEnd: function (e) {
-        var self = window.DashboardInterop;
-        var state = self._resizeState;
-        if (!state) return;
-
-        document.removeEventListener('mousemove', self._onResizeMove);
-        document.removeEventListener('mouseup', self._onResizeEnd);
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-        state.widgetElement.classList.remove('widget-resizing');
-
-        var dx = e.clientX - state.startX;
-        var colDelta = Math.round(dx / (state.colWidth + state.gap));
-        var newSpan = Math.max(state.minCol, Math.min(state.maxCol, state.startSpan + colDelta));
-
-        // Reset inline style - Blazor will re-render with the correct span
-        state.widgetElement.style.gridColumn = '';
-
-        if (newSpan !== state.startSpan) {
-            state.dotNetHelper.invokeMethodAsync('OnWidgetResized', state.placementId, newSpan);
-        }
-
-        self._resizeState = null;
     },
 
     // --- Charts ---

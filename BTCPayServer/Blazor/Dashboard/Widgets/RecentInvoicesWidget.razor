@@ -12,80 +12,64 @@
 
 @if (!HasAccess)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Recent Invoices</h6>
-        <p class="text-secondary small">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
-    </div>
+    <header><h3>Recent Invoices</h3></header>
+    <p class="text-secondary">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
 }
 else if (Loading)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Recent Invoices</h6>
-        <div class="d-flex justify-content-center p-3">
-            <div class="spinner-border text-light" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+    <div class="loading d-flex justify-content-center p-3">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 }
 else if (_error is not null)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Recent Invoices</h6>
-        <p class="text-danger small">@_error</p>
-    </div>
+    <header><h3>Recent Invoices</h3></header>
+    <p class="text-danger">@_error</p>
 }
 else
 {
     var config = TypedConfig ?? new RecentInvoicesConfig();
-    <div class="widget-body p-3">
-        <h6 class="mb-3">Recent Invoices</h6>
-
-        @if (_invoices is null || _invoices.Length == 0)
-        {
-            <p class="text-muted small mb-0">No invoices in the last @config.LastDays days.</p>
-        }
-        else if (Size > 6)
-        {
-            <div class="table-responsive">
-                <table class="table table-sm table-hover mb-0">
-                    <thead>
+    <header>
+        <h3>Recent Invoices</h3>
+    </header>
+    @if (_invoices is null || _invoices.Length == 0)
+    {
+        <p class="text-secondary my-3">There are no recent invoices.</p>
+    }
+    else
+    {
+        <div class="table-responsive mt-3 mb-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="w-125px">Date</th>
+                        <th class="text-nowrap">Invoice Id</th>
+                        <th>Status</th>
+                        <th class="text-end">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var invoice in _invoices)
+                    {
                         <tr>
-                            <th>Date</th>
-                            <th>Invoice</th>
-                            <th>Status</th>
-                            <th class="text-end">Amount</th>
+                            <td class="text-nowrap">@invoice.InvoiceTime.ToTimeAgo()</td>
+                            <td class="text-break">@invoice.Id</td>
+                            <td>
+                                <span class="badge @GetStatusBadgeClass(invoice.Status)">
+                                    @invoice.Status
+                                </span>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <span data-sensitive>@DisplayFormatter.Currency(invoice.Price, invoice.Currency)</span>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var invoice in _invoices)
-                        {
-                            <tr>
-                                <td class="text-muted small">@invoice.InvoiceTime.ToTimeAgo()</td>
-                                <td class="small">@invoice.Id</td>
-                                <td>
-                                    <span class="badge @GetStatusBadgeClass(invoice.Status)">
-                                        @invoice.Status
-                                    </span>
-                                </td>
-                                <td class="text-end small">
-                                    @DisplayFormatter.Currency(invoice.Price, invoice.Currency)
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-        else
-        {
-            <div class="d-flex align-items-baseline gap-2">
-                <span class="fs-2 fw-bold">@_invoices.Length</span>
-                <span class="text-muted">invoices</span>
-            </div>
-            <p class="text-muted small mb-0">in last @config.LastDays days</p>
-        }
-    </div>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 }
 
 @code {
@@ -98,7 +82,8 @@ else
         ComponentType = typeof(RecentInvoicesWidget),
         Scope = WidgetScope.Store,
         DefaultColumnSize = 12,
-        MinColumnSize = 3
+        MinColumnSize = 3,
+        CssClass = "store-recent-invoices"
     };
 
     public class RecentInvoicesConfig

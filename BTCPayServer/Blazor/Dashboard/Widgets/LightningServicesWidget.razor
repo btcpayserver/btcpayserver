@@ -17,68 +17,61 @@
 
 @if (!HasAccess)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Lightning Services</h6>
-        <p class="text-secondary small">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
-    </div>
+    <h6>Lightning Services</h6>
+    <p class="text-secondary">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
 }
 else if (Loading)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Lightning Services</h6>
-        <div class="d-flex justify-content-center p-3">
-            <div class="spinner-border text-light" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+    <div class="loading d-flex justify-content-center p-3">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 }
 else if (_error is not null)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Lightning Services</h6>
-        <p class="text-danger small">@_error</p>
-    </div>
+    <h6>Lightning Services</h6>
+    <p class="text-danger">@_error</p>
 }
 else if (!_isInternalNode)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">Lightning Services</h6>
-        <p class="text-muted small mb-0">Lightning services are only available for internal nodes.</p>
-    </div>
+    @* Not an internal node - don't render anything, matching MVC behavior *@
 }
 else
 {
-    var config = TypedConfig ?? new LightningServicesConfig();
-    <div class="widget-body p-3">
-        <h6 class="mb-3">Lightning Services (@config.CryptoCode)</h6>
-        @if (_services is null || _services.Count == 0)
-        {
-            <p class="text-muted small mb-0">No Lightning services available.</p>
-        }
-        else
-        {
-            <div class="list-group list-group-flush">
-                @foreach (var service in _services)
+    <header class="mb-4">
+        <h6>Lightning Services</h6>
+    </header>
+    @if (_services is null || _services.Count == 0)
+    {
+        <p class="text-secondary">No Lightning services available.</p>
+    }
+    else
+    {
+        <div class="services-list d-flex flex-wrap">
+            @foreach (var service in _services)
+            {
+                @if (!string.IsNullOrEmpty(service.Error))
                 {
-                    @if (!string.IsNullOrEmpty(service.Error))
-                    {
-                        <div class="list-group-item px-0 py-2">
-                            <span class="text-muted">@service.DisplayName</span>
-                            <span class="text-danger small ms-2">@service.Error</span>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="list-group-item px-0 py-2">
-                            <span>@service.DisplayName</span>
-                            <span class="text-muted small ms-2">@service.Type</span>
-                        </div>
-                    }
+                    <div class="service d-flex flex-column align-items-center text-center">
+                        <img src="/img/@(service.Type.ToLowerInvariant()).png" alt="@service.DisplayName"
+                             style="width: var(--service-width, 3rem); height: var(--service-width, 3rem);"
+                             onerror="this.style.display='none'" />
+                        <small class="d-block mt-3 lh-sm fw-semibold text-danger">@service.Error</small>
+                    </div>
                 }
-            </div>
-        }
-    </div>
+                else
+                {
+                    <div class="service d-flex flex-column align-items-center text-center">
+                        <img src="/img/@(service.Type.ToLowerInvariant()).png" alt="@service.DisplayName"
+                             style="width: var(--service-width, 3rem); height: var(--service-width, 3rem);"
+                             onerror="this.style.display='none'" />
+                        <small class="d-block mt-3 lh-sm fw-semibold">@service.DisplayName</small>
+                    </div>
+                }
+            }
+        </div>
+    }
 }
 
 @code {
@@ -91,6 +84,7 @@ else
         ComponentType = typeof(LightningServicesWidget),
         Scope = WidgetScope.Store,
         DefaultColumnSize = 12,
+        CssClass = "store-lightning-services",
         RequiredStoreFeatures = new[] { "lightning" }
     };
 

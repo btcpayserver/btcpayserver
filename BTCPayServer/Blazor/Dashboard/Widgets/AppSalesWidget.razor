@@ -10,65 +10,40 @@
 
 @if (!HasAccess)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">App Sales</h6>
-        <p class="text-secondary small">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
-    </div>
+    <header><h3>App Sales</h3></header>
+    <p class="text-secondary">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
 }
 else if (Loading)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">App Sales</h6>
-        <div class="d-flex justify-content-center p-3">
-            <div class="spinner-border text-light" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+    <div class="loading d-flex justify-content-center p-3">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 }
 else if (_error is not null)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">App Sales</h6>
-        <p class="text-danger small">@_error</p>
-    </div>
+    <header><h3>App Sales</h3></header>
+    <p class="text-danger">@_error</p>
 }
 else
 {
     var config = TypedConfig ?? new AppSalesConfig();
-    <div class="widget-body p-3">
-        @if (string.IsNullOrEmpty(config.AppId))
-        {
-            <h6 class="text-muted">App Sales</h6>
-            <p class="text-muted small mb-0">No app configured. Edit this widget to select an app.</p>
-        }
-        else
-        {
-            <header class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="mb-0">@(_appName ?? "App Sales")</h6>
-                @if (_salesCount > 0)
-                {
-                    <span class="badge bg-primary">@_salesCount sales</span>
-                }
-            </header>
-
-            @if (_salesCount == 0)
-            {
-                <p class="text-muted small mb-0">No sales data yet.</p>
-            }
-            else if (Size > 6 && _hasSeries)
-            {
-                <div id="@_chartId" class="ct-chart ct-major-tenth"></div>
-            }
-            else
-            {
-                <div class="d-flex align-items-baseline gap-2">
-                    <span class="fs-2 fw-bold">@_salesCount</span>
-                    <span class="text-muted">total sales</span>
-                </div>
-            }
-        }
-    </div>
+    @if (string.IsNullOrEmpty(config.AppId))
+    {
+        <header><h3>App Sales</h3></header>
+        <p class="text-secondary">No app configured. Edit this widget to select an app.</p>
+    }
+    else
+    {
+        <header class="mb-3">
+            <h3>@(_appName ?? "App Sales")</h3>
+        </header>
+        <header class="mb-3">
+            <span><span class="sales-count">@_salesCount</span> Total Sales</span>
+        </header>
+        <div id="@_chartId" class="ct-chart ct-major-tenth"></div>
+    }
 }
 
 @code {
@@ -80,7 +55,8 @@ else
         Category = "Apps",
         ComponentType = typeof(AppSalesWidget),
         Scope = WidgetScope.Store,
-        DefaultColumnSize = 6
+        DefaultColumnSize = 6,
+        CssClass = "app-sales"
     };
 
     public class AppSalesConfig

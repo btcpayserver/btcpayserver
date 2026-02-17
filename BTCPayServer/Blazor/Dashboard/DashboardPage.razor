@@ -101,7 +101,7 @@
         @foreach (var placement in _activeDashboard.Widgets.OrderBy(w => w.Order))
         {
             var descriptor = WidgetRegistry.GetDescriptor(placement.WidgetType);
-            <div class="dashboard-widget" style="grid-column: span @placement.ColumnSize;">
+            <div class="dashboard-widget" style="grid-column: span @placement.ColumnSize;@(placement.RowSpan > 1 ? $" grid-row: span {placement.RowSpan};" : "")">
                 @if (descriptor is null)
                 {
                     <WidgetUnavailable Placement="placement"
@@ -119,7 +119,7 @@
                                      OnConfigChanged="(config) => OnWidgetConfigChanged(placement, config)"
                                      OnEditModeChanged="(editing) => OnWidgetEditMode(editing)"
                                      OnRemove="() => RemoveWidget(placement)"
-                                     OnSizeChanged="OnWidgetSizeChanged" />
+                                     OnSizeChanged="(size) => OnWidgetSizeChanged(size)" />
                 }
             </div>
         }
@@ -301,7 +301,7 @@
         await SaveDashboard();
     }
 
-    private async Task OnWidgetSizeChanged(int newSize)
+    private async Task OnWidgetSizeChanged((int cols, int rows) size)
     {
         await SaveDashboard();
         await InvokeAsync(StateHasChanged);

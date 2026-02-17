@@ -9,86 +9,60 @@
 
 @if (!HasAccess)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">App Top Items</h6>
-        <p class="text-secondary small">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
-    </div>
+    <header><h3>Top Items</h3></header>
+    <p class="text-secondary">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
 }
 else if (Loading)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">App Top Items</h6>
-        <div class="d-flex justify-content-center p-3">
-            <div class="spinner-border text-light" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+    <div class="loading d-flex justify-content-center p-3">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 }
 else if (_error is not null)
 {
-    <div class="widget-body p-3">
-        <h6 class="text-muted">App Top Items</h6>
-        <p class="text-danger small">@_error</p>
-    </div>
+    <header><h3>Top Items</h3></header>
+    <p class="text-danger">@_error</p>
 }
 else
 {
     var config = TypedConfig ?? new AppTopItemsConfig();
-    <div class="widget-body p-3">
-        @if (string.IsNullOrEmpty(config.AppId))
+    @if (string.IsNullOrEmpty(config.AppId))
+    {
+        <header><h3>Top Items</h3></header>
+        <p class="text-secondary">No app configured. Edit this widget to select an app.</p>
+    }
+    else
+    {
+        <header class="mb-3">
+            <h3>@(_appName ?? "Top Items")</h3>
+        </header>
+        @if (_entries is null || _entries.Count == 0)
         {
-            <h6 class="text-muted">App Top Items</h6>
-            <p class="text-muted small mb-0">No app configured. Edit this widget to select an app.</p>
+            <p class="text-secondary mt-3">No sales have been made yet.</p>
         }
         else
         {
-            <h6 class="mb-3">@(_appName ?? "App Top Items")</h6>
-
-            @if (_entries is null || _entries.Count == 0)
-            {
-                <p class="text-muted small mb-0">No item data yet.</p>
-            }
-            else if (Size > 6)
-            {
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>Item</th>
-                                <th class="text-end">Sales</th>
-                                <th class="text-end">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var entry in _entries)
-                            {
-                                <tr>
-                                    <td class="small">@(entry.Title ?? entry.ItemCode)</td>
-                                    <td class="text-end small">@entry.SalesCount</td>
-                                    <td class="text-end small">@entry.TotalFormatted</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
-            else
-            {
-                @foreach (var entry in _entries.Take(3))
+            <div class="app-items">
+                @{ var i = 0; }
+                @foreach (var entry in _entries)
                 {
-                    <div class="d-flex justify-content-between mb-1">
-                        <span class="small text-truncate">@(entry.Title ?? entry.ItemCode)</span>
-                        <span class="small text-muted">@entry.SalesCount sales</span>
+                    <div class="app-item ct-series-@((char)('a' + i))">
+                        <span class="app-item-name">
+                            <span class="app-item-point ct-point"></span>
+                            @(entry.Title ?? entry.ItemCode)
+                        </span>
+                        <span class="app-item-value" data-sensitive>
+                            <span class="text-muted">@entry.SalesCount sale(s), </span>
+                            @entry.TotalFormatted
+                        </span>
                     </div>
+                    i++;
                 }
-                @if (_entries.Count > 3)
-                {
-                    <p class="text-muted small mb-0">+@(_entries.Count - 3) more items</p>
-                }
-            }
+            </div>
         }
-    </div>
+    }
 }
 
 @code {
@@ -100,7 +74,8 @@ else
         Category = "Apps",
         ComponentType = typeof(AppTopItemsWidget),
         Scope = WidgetScope.Store,
-        DefaultColumnSize = 6
+        DefaultColumnSize = 6,
+        CssClass = "app-top-items"
     };
 
     public class AppTopItemsConfig
@@ -134,7 +109,7 @@ else
                 return;
             }
 
-            _appName = $"Top Items - {app.Name}";
+            _appName = $"Top Items";
             var entries = await AppService.GetItemStats(app);
             _entries = entries.Take(5).ToList();
         }

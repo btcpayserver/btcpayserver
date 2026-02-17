@@ -15,29 +15,26 @@
 @inject BTCPayServerOptions _BTCPayServerOptions
 @inject EventAggregator _EventAggregator
 
-<div id="Notifications">
-	@if (UnseenCount == "0")
-	{
-		<a href="@NotificationsUrl" id="NotificationsHandle" class="mainMenuButton" title="@StringLocalizer["Notifications"]">
-			<Icon Symbol="nav-notifications" />
-		</a>
-	}
-	else
-	{
-		<button id="NotificationsHandle" class="mainMenuButton" title="@StringLocalizer["Notifications"]" type="button" data-bs-toggle="dropdown">
-			<Icon Symbol="nav-notifications" />
+<div id="Notifications" class="dropdown">
+	<button id="NotificationsHandle" class="mainMenuButton dropdown-toggle" title="@StringLocalizer["Notifications"]" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside" aria-expanded="false">
+		<Icon Symbol="nav-notifications" />
+		@if (HasUnseenNotifications)
+		{
 			<span class="badge rounded-pill bg-danger p-1 ms-1" id="NotificationsBadge">@UnseenCount</span>
-		</button>
-	}
-	@if (UnseenCount != "0" && Last5 is not null)
-	{
-		<div class="dropdown-menu text-center" id="NotificationsDropdown" aria-labelledby="NotificationsHandle">
-			<div class="d-flex gap-3 align-items-center justify-content-between py-3 px-4 border-bottom border-light">
-				<h5 class="m-0" text-translate="true">Notifications</h5>
+		}
+	</button>
+	<div class="dropdown-menu text-center" id="NotificationsDropdown" aria-labelledby="NotificationsHandle">
+		<div class="d-flex gap-3 align-items-center justify-content-between py-3 px-4 border-bottom border-light">
+			<h5 class="m-0" text-translate="true">Notifications</h5>
+			@if (HasUnseenNotifications)
+			{
 				<a class="btn btn-link p-0" @onclick="MarkAllAsSeen" id="NotificationsMarkAllAsSeen" text-translate="true">Mark all as seen</a>
-			</div>
-			<div id="NotificationsList" v-pre>
-				@foreach (var n in Last5)
+			}
+		</div>
+		<div id="NotificationsList" v-pre>
+			@if (Last5 is { Count: > 0 })
+			{
+				foreach (var n in Last5)
 				{
                     <a href="@NotificationUrl(n.Id)" class="notification d-flex align-items-center dropdown-item border-bottom border-light py-3 px-4" @key="@n.Id">
 						<div class="me-3">
@@ -53,13 +50,16 @@
 						</div>
 					</a>
 				}
-			</div>
-
-			<div class="p-3">
-				<a href="@NotificationsUrl" text-translate="true">View all</a>
-			</div>
+			}
+			else
+			{
+				<div class="px-4 py-4 text-start text-muted" text-translate="true">No new notifications</div>
+			}
 		</div>
-	}
+		<div class="p-3 border-top border-light">
+			<a href="@NotificationsUrl" text-translate="true">View all</a>
+		</div>
+	</div>
 </div>
 
 @code {
@@ -67,6 +67,7 @@
 	string NotificationUrl(string notificationId) => _LinkGenerator.GetPathByAction("NotificationPassThrough", "UINotifications", values: new { id = notificationId }, pathBase: _BTCPayServerOptions.RootPath);
 	string UnseenCount;
 	List<NotificationViewModel> Last5;
+    bool HasUnseenNotifications => UnseenCount is not null && UnseenCount != "0";
 	IDisposable _EventAggregatorListener;
 	protected override void OnInitialized()
 	{

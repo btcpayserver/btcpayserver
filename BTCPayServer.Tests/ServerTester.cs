@@ -49,19 +49,23 @@ namespace BTCPayServer.Tests
                 int.Parse(GetEnvironment("TESTS_MAILPIT_HTTP", "34218")));
             TestLogs.LogInformation($"MailPit settings: http://{MailPitSettings.Hostname}:{MailPitSettings.HttpPort} (SMTP: {MailPitSettings.SmtpPort})");
             _NetworkProvider = networkProvider;
-            ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_BTCRPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork);
-            ExplorerNode.ScanRPCCapabilities();
+            var noDefaultNode = bool.Parse(GetEnvironment("BTCPAY_NODEFAULTCHAIN", "false"));
+            if (!noDefaultNode)
+            {
+                ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_BTCRPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork);
+                ExplorerNode.ScanRPCCapabilities();
 
-            ExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBXplorerNetwork, new Uri(GetEnvironment("TESTS_BTCNBXPLORERURL", "http://127.0.0.1:32838/")));
+                ExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBXplorerNetwork, new Uri(GetEnvironment("TESTS_BTCNBXPLORERURL", "http://127.0.0.1:32838/")));
+            }
 
             PayTester = new BTCPayServerTester(TestLogs, LoggerProvider, Path.Combine(_Directory, "pay"))
             {
-                NBXplorerUri = ExplorerClient.Address,
+                NBXplorerUri = !noDefaultNode ? ExplorerClient.Address : null,
                 // TODO: The fact that we use same conn string as development database can cause huge problems with tests
                 // since in dev we already can have some users / stores registered, while on CI database is being initalized
                 // for the first time and first registered user gets admin status by default
                 Postgres = GetEnvironment("TESTS_POSTGRES", DefaultConnectionString),
-                ExplorerPostgres = GetEnvironment("TESTS_EXPLORER_POSTGRES", "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer"),
+                ExplorerPostgres = !noDefaultNode ? GetEnvironment("TESTS_EXPLORER_POSTGRES", "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer") : null
             };
             if (newDb)
             {

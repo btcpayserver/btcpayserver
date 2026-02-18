@@ -74,12 +74,14 @@ public class DashboardService
     public async Task<DashboardDefinition> ResolveActiveDashboard(
         string? userId, string? storeId, DashboardTemplateContext context)
     {
+        var codeDefault = GetDefaultTemplate(DashboardScope.Store, context);
+
         // Priority: user > store > server > code default
         if (userId is not null)
         {
             var userCollection = await GetUserDashboards(userId);
             var active = FindActive(userCollection, storeId);
-            if (active is not null)
+            if (active is not null && !IsStaleAutoMaterialized(active, codeDefault))
                 return active;
         }
 
@@ -87,17 +89,47 @@ public class DashboardService
         {
             var storeCollection = await GetStoreDashboards(storeId);
             var active = FindActive(storeCollection);
-            if (active is not null)
+            if (active is not null && !IsStaleAutoMaterialized(active, codeDefault))
                 return active;
+
+            // If the saved dashboard is a stale auto-materialized copy, remove it
+            // so the fresh code default is used instead.
+            if (active is not null && IsStaleAutoMaterialized(active, codeDefault))
+            {
+                storeCollection.Dashboards.Remove(active);
+                if (storeCollection.ActiveDashboardId == active.Id)
+                    storeCollection.ActiveDashboardId = null;
+                await SaveStoreDashboards(storeId, storeCollection);
+            }
         }
 
         var serverCollection = await GetServerDashboards();
         var serverActive = FindActive(serverCollection);
-        if (serverActive is not null)
+        if (serverActive is not null && !IsStaleAutoMaterialized(serverActive, codeDefault))
             return serverActive;
 
         // Fall back to code-defined default
-        return GetDefaultTemplate(DashboardScope.Store, context);
+        return codeDefault;
+    }
+
+    /// <summary>
+    /// Returns true when the dashboard was auto-materialized from a code default
+    /// template and the template version has since been bumped. These stale copies
+    /// should be replaced by the fresh template.
+    /// Also handles legacy dashboards (TemplateVersion == 0) that were saved before
+    /// version tracking was introduced.
+    /// </summary>
+    private static bool IsStaleAutoMaterialized(DashboardDefinition saved, DashboardDefinition codeDefault)
+    {
+        // Explicitly auto-materialized dashboards with an older version
+        if (saved.AutoMaterialized && saved.TemplateVersion < codeDefault.TemplateVersion)
+            return true;
+        // Legacy: dashboards saved before version tracking was introduced
+        // have TemplateVersion == 0. Treat them as stale so the fresh default takes over.
+        if (saved.TemplateVersion == 0 && codeDefault.TemplateVersion > 0
+            && saved.IsDefault && saved.Name == "Default")
+            return true;
+        return false;
     }
 
     // --- Copy ---

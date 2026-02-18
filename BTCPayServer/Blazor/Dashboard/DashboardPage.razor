@@ -646,6 +646,12 @@ else
     {
         // Materialize code default on entering edit mode so modifications get persisted
         await MaterializeCodeDefault();
+        // Once the user enters edit mode, this is a manually customized dashboard.
+        // Clear AutoMaterialized so template version upgrades won't overwrite their changes.
+        if (_activeDashboard is not null && _activeDashboard.AutoMaterialized)
+        {
+            _activeDashboard.AutoMaterialized = false;
+        }
         EditMode = true;
         _dotNetRef = DotNetObjectReference.Create(this);
         StateHasChanged();
@@ -927,6 +933,7 @@ else
 
         // The code default gets persisted as a Store-scoped dashboard
         _activeDashboard.Scope = DashboardScope.Store;
+        _activeDashboard.AutoMaterialized = true;
         _activeScope = DashboardScope.Store;
         _isCodeDefault = false;
 

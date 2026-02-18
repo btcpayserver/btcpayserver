@@ -5,13 +5,10 @@
     gap: 1rem;
 }
 
+/* Below the lg breakpoint (< 1200px), widgets stack full-width.
+   This matches the MVC dashboard's flex-wrap behavior where widgets
+   use flex-basis min-widths to naturally wrap. */
 @media (max-width: 1199px) {
-    .dashboard-grid {
-        grid-template-columns: repeat(6, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 767px) {
     .dashboard-grid {
         grid-template-columns: 1fr;
     }
@@ -30,6 +27,15 @@
     height: 100%;
     display: flex;
     flex-direction: column;
+}
+
+/* Constrain wallet balance chart height — Chartist ct-major-tenth uses
+   padding-bottom: 40% aspect ratio which is too tall on the grid. Cap it. */
+.dashboard-widget .store-wallet-balance .ct-chart {
+    max-height: 160px;
+}
+.dashboard-widget .store-wallet-balance .ct-chart:before {
+    padding-bottom: 20%;
 }
 
 /* ── Edit mode header with drag handle ── */

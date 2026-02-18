@@ -7,6 +7,8 @@ namespace BTCPayServer.Blazor.Dashboard;
 
 public class DefaultUserDashboardTemplate : IDashboardTemplateProvider
 {
+    public const int CurrentVersion = 1;
+
     public string Name => "Default Personal Dashboard";
     public DashboardScope Scope => DashboardScope.User;
 
@@ -67,6 +69,7 @@ public class DefaultUserDashboardTemplate : IDashboardTemplateProvider
             Name = "My Dashboard",
             IsDefault = true,
             Scope = DashboardScope.User,
+            TemplateVersion = CurrentVersion,
             Widgets = widgets
         };
     }

@@ -7,6 +7,12 @@ namespace BTCPayServer.Blazor.Dashboard;
 
 public class DefaultStoreDashboardTemplate : IDashboardTemplateProvider
 {
+    /// <summary>
+    /// Bump this whenever the default layout changes so that auto-materialized
+    /// dashboards get refreshed on next load.
+    /// </summary>
+    public const int CurrentVersion = 2;
+
     public string Name => "Default Store Dashboard";
     public DashboardScope Scope => DashboardScope.Store;
 
@@ -118,6 +124,7 @@ public class DefaultStoreDashboardTemplate : IDashboardTemplateProvider
             Name = "Default",
             IsDefault = true,
             Scope = DashboardScope.Store,
+            TemplateVersion = CurrentVersion,
             Widgets = widgets
         };
     }

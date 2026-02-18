@@ -86,9 +86,17 @@ else
         Category = "Lightning",
         ComponentType = typeof(LightningServicesWidget),
         Scope = WidgetScope.Store,
-        DefaultColumnSize = 12,
+        DefaultColumnSize = 4,
+        MinColumnSize = 4,
+        MaxColumnSize = 12,
+        MinRowSpan = 1,
+        MaxRowSpan = 2,
         CssClass = "store-lightning-services",
-        RequiredStoreFeatures = new[] { "lightning" }
+        RequiredStoreFeatures = new[] { "lightning" },
+        ConfigSchema = new()
+        {
+            ["CryptoCode"] = new ConfigFieldSchema { Label = "Crypto", FieldType = ConfigFieldType.Text }
+        }
     };
 
     public class LightningServicesConfig

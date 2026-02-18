@@ -71,14 +71,7 @@ else
                         <tr>
                             <td class="align-middle">@tx.Timestamp.ToTimeAgo()</td>
                             <td class="align-middle">
-                                @if (!string.IsNullOrEmpty(tx.Link))
-                                {
-                                    <a href="@tx.Link" class="truncate-center-id" target="_blank" rel="noreferrer noopener">@tx.Id</a>
-                                }
-                                else
-                                {
-                                    <span class="truncate-center-id">@tx.Id</span>
-                                }
+                                <BTCPayServer.Blazor.Dashboard.TruncateCenter Text="@tx.Id" Link="@tx.Link" Classes="truncate-center-id" Padding="7" Copy="true" />
                             </td>
                             <td class="align-middle">
                                 @if (tx.Labels.Any())
@@ -114,9 +107,18 @@ else
         Category = "Store",
         ComponentType = typeof(RecentTransactionsWidget),
         Scope = WidgetScope.Store,
-        DefaultColumnSize = 6,
+        DefaultColumnSize = 8,
+        MinColumnSize = 4,
+        MaxColumnSize = 12,
+        MinRowSpan = 1,
+        MaxRowSpan = 3,
         CssClass = "store-recent-transactions",
-        RequiredStoreFeatures = new[] { "wallet" }
+        RequiredStoreFeatures = new[] { "wallet" },
+        ConfigSchema = new()
+        {
+            ["CryptoCode"] = new ConfigFieldSchema { Label = "Crypto", FieldType = ConfigFieldType.Text },
+            ["Limit"] = new ConfigFieldSchema { Label = "Max Items", FieldType = ConfigFieldType.Number, Min = 1, Max = 50 }
+        }
     };
 
     public class RecentTransactionsConfig

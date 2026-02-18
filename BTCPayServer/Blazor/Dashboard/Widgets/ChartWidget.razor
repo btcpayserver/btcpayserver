@@ -17,41 +17,12 @@ else if (Loading)
         <span class="small text-muted">Loading chart...</span>
     </div>
 }
-else if (EditMode)
-{
-    <div>
-        <div class="form-group mb-2">
-            <label class="form-label">Title</label>
-            <input type="text" class="form-control form-control-sm" @bind="EditConfig.Title" />
-        </div>
-        <div class="form-group mb-2">
-            <label class="form-label">Chart Type</label>
-            <select class="form-select form-select-sm" @bind="EditConfig.ChartType">
-                <option value="bar">Bar</option>
-                <option value="line">Line</option>
-            </select>
-        </div>
-        <div class="form-group mb-2">
-            <label class="form-label">Time Range (days)</label>
-            <input type="number" class="form-control form-control-sm" min="7" max="365" @bind="EditConfig.TimeRangeDays" />
-        </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-primary btn-sm" @onclick="SaveEdit">Save</button>
-            <button class="btn btn-outline-secondary btn-sm" @onclick="CancelEdit">Cancel</button>
-            <button class="btn btn-outline-danger btn-sm ms-auto" @onclick="Remove">Remove</button>
-        </div>
-    </div>
-}
 else
 {
     <header class="mb-2">
         <h6 class="mb-0">@(TypedConfig?.Title ?? "Chart")</h6>
     </header>
     <div id="@_chartId" class="ct-chart ct-major-tenth" style="min-height: 200px;"></div>
-    @if (!Readonly)
-    {
-        <button class="btn btn-link btn-sm p-0 mt-2" @onclick="EnterEdit">Edit</button>
-    }
 }
 
 @code {
@@ -140,6 +111,27 @@ else
         MinColumnSize = 4,
         MaxColumnSize = 12,
         DefaultColumnSize = 6,
-        RequiredPermissions = new[] { Policies.CanViewInvoices }
+        RequiredPermissions = new[] { Policies.CanViewInvoices },
+        ConfigSchema = new()
+        {
+            ["Title"] = new ConfigFieldSchema { Label = "Title", FieldType = ConfigFieldType.Text },
+            ["ChartType"] = new ConfigFieldSchema
+            {
+                Label = "Chart Type",
+                FieldType = ConfigFieldType.Select,
+                Options = new()
+                {
+                    ("bar", "Bar"),
+                    ("line", "Line")
+                }
+            },
+            ["TimeRangeDays"] = new ConfigFieldSchema
+            {
+                Label = "Time Range (days)",
+                FieldType = ConfigFieldType.Number,
+                Min = 7,
+                Max = 365
+            }
+        }
     };
 }

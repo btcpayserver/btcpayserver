@@ -17,31 +17,6 @@ else if (Loading)
         <span class="small text-muted">Loading...</span>
     </div>
 }
-else if (EditMode)
-{
-    <div>
-        <div class="form-group mb-2">
-            <label class="form-label">Label</label>
-            <input type="text" class="form-control form-control-sm" @bind="EditConfig.Label" />
-        </div>
-        <div class="form-group mb-2">
-            <label class="form-label">Metric</label>
-            <select class="form-select form-select-sm" @bind="EditConfig.Metric">
-                <option value="InvoiceCount">Invoice Count</option>
-                <option value="PaidInvoiceCount">Paid Invoice Count</option>
-            </select>
-        </div>
-        <div class="form-group mb-2">
-            <label class="form-label">Time Range (days)</label>
-            <input type="number" class="form-control form-control-sm" min="1" max="365" @bind="EditConfig.TimeRangeDays" />
-        </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-primary btn-sm" @onclick="SaveEdit">Save</button>
-            <button class="btn btn-outline-secondary btn-sm" @onclick="CancelEdit">Cancel</button>
-            <button class="btn btn-outline-danger btn-sm ms-auto" @onclick="Remove">Remove</button>
-        </div>
-    </div>
-}
 else
 {
     <div class="text-center">
@@ -49,10 +24,6 @@ else
         <div class="fs-3 fw-bold">@_value</div>
         <div class="small text-muted">last @(TypedConfig?.TimeRangeDays ?? 7) days</div>
     </div>
-    @if (!Readonly)
-    {
-        <button class="btn btn-link btn-sm p-0 mt-2 d-block mx-auto" @onclick="EnterEdit">Edit</button>
-    }
 }
 
 @code {
@@ -112,6 +83,27 @@ else
         MinColumnSize = 2,
         MaxColumnSize = 6,
         DefaultColumnSize = 3,
-        RequiredPermissions = new[] { Policies.CanViewInvoices }
+        RequiredPermissions = new[] { Policies.CanViewInvoices },
+        ConfigSchema = new()
+        {
+            ["Label"] = new ConfigFieldSchema { Label = "Label", FieldType = ConfigFieldType.Text },
+            ["Metric"] = new ConfigFieldSchema
+            {
+                Label = "Metric",
+                FieldType = ConfigFieldType.Select,
+                Options = new()
+                {
+                    ("InvoiceCount", "Invoice Count"),
+                    ("PaidInvoiceCount", "Paid Invoice Count")
+                }
+            },
+            ["TimeRangeDays"] = new ConfigFieldSchema
+            {
+                Label = "Time Range (days)",
+                FieldType = ConfigFieldType.Number,
+                Min = 1,
+                Max = 365
+            }
+        }
     };
 }

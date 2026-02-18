@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 
 namespace BTCPayServer.Blazor.Dashboard.Models;
 
@@ -9,6 +10,27 @@ public enum WidgetScope
     Store,      // Needs a store context, loads store-specific data
     User,       // User-level, no store needed
     Universal   // Works in any dashboard scope
+}
+
+public enum ConfigFieldType
+{
+    Text,
+    Textarea,
+    Number,
+    Select,
+    Checkbox,
+    Hidden
+}
+
+public class ConfigFieldSchema
+{
+    public string Label { get; set; } = string.Empty;
+    public ConfigFieldType FieldType { get; set; } = ConfigFieldType.Text;
+    /// <summary>For Select fields: list of (value, displayLabel) pairs.</summary>
+    public List<(string Value, string Label)> Options { get; set; } = new();
+    public int? Min { get; set; }
+    public int? Max { get; set; }
+    public int? Rows { get; set; }
 }
 
 public class WidgetDescriptor
@@ -28,6 +50,11 @@ public class WidgetDescriptor
     public string[] RequiredPermissions { get; set; } = Array.Empty<string>();
     public string[] RequiredStoreFeatures { get; set; } = Array.Empty<string>();
     public bool AllowMultiple { get; set; } = true;
+    public bool RequiresConfiguration { get; set; }
+    /// <summary>When true, the widget remains interactive (not readonly) even when the dashboard is not in edit mode.</summary>
+    public bool AlwaysInteractive { get; set; }
     public string? IconCssClass { get; set; }
     public string? CssClass { get; set; }
+    /// <summary>Per-property rendering hints for the config panel. Key = property name.</summary>
+    public Dictionary<string, ConfigFieldSchema> ConfigSchema { get; set; } = new();
 }

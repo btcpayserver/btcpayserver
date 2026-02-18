@@ -2,7 +2,10 @@
 @using BTCPayServer.Blazor.Dashboard.Models
 @using BTCPayServer.Client
 @using BTCPayServer.Client.Models
+@using BTCPayServer.Data
+@using BTCPayServer.Rating
 @using BTCPayServer.Services.Invoices
+@using BTCPayServer.Services.Rates
 @using BTCPayServer.Services.Stores
 @using BTCPayServer.Services.Wallets
 @inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<WalletBalanceWidget.WalletBalanceConfig>
@@ -11,6 +14,9 @@
 @inject WalletHistogramService WalletHistogramService
 @inject BTCPayWalletProvider WalletProvider
 @inject PaymentMethodHandlerDictionary Handlers
+@inject CurrencyNameTable CurrencyNameTable
+@inject RateFetcher RateFetcher
+@inject DefaultRulesCollection DefaultRules
 @inject DashboardJsInterop JsInterop
 
 @if (!HasAccess)
@@ -39,22 +45,55 @@ else if (_missingWalletConfig)
 else
 {
     var config = TypedConfig ?? new WalletBalanceConfig();
-    <header class="d-flex gap-3 align-items-center justify-content-between mb-2">
-        <h6>Wallet Balance</h6>
-    </header>
-    <header class="mb-3">
-        @if (_balance.HasValue)
+    <div id="@_widgetId">
+        <div class="d-flex gap-3 align-items-center justify-content-between mb-2">
+            <h6>Wallet Balance</h6>
+            @if (_defaultCurrency is not null && config.CryptoCode != _defaultCurrency)
+            {
+                <div class="btn-group btn-group-sm gap-0 currency-toggle" role="group">
+                    <input type="radio" class="btn-check" name="@($"WalletBalance-currency-{StoreId}-{config.CryptoCode}")"
+                           id="@($"WalletBalance-currency_{StoreId}-{config.CryptoCode}")"
+                           value="@config.CryptoCode" autocomplete="off" checked="@(!_showDefaultCurrency)"
+                           @onchange="@(() => SetCurrency(false))" />
+                    <label class="btn btn-outline-secondary px-2 py-1"
+                           for="@($"WalletBalance-currency_{StoreId}-{config.CryptoCode}")">@config.CryptoCode</label>
+                    <input type="radio" class="btn-check" name="@($"WalletBalance-currency-{StoreId}-{config.CryptoCode}")"
+                           id="@($"WalletBalance-currency_{StoreId}-{_defaultCurrency}-{config.CryptoCode}")"
+                           value="@_defaultCurrency" autocomplete="off" checked="@_showDefaultCurrency"
+                           @onchange="@(() => SetCurrency(true))" />
+                    <label class="btn btn-outline-secondary px-2 py-1"
+                           for="@($"WalletBalance-currency_{StoreId}-{_defaultCurrency}-{config.CryptoCode}")">@_defaultCurrency</label>
+                </div>
+            }
+        </div>
+        <header class="mb-3">
+            @if (_balance.HasValue)
+            {
+                <div class="balance d-flex align-items-baseline gap-1">
+                    <h3 class="d-inline-block me-1" data-balance="@_balance.Value" data-sensitive>@DisplayBalance()</h3>
+                    <span class="text-secondary fw-semibold currency">@DisplayCurrency()</span>
+                </div>
+            }
+            @if (_hasHistogram)
+            {
+                <div class="btn-group only-for-js mt-1" role="group" aria-label="Period">
+                    @foreach (var period in new[] { ("Week", "1W"), ("Month", "1M"), ("Year", "1Y") })
+                    {
+                        var isChecked = string.Equals(_activePeriod, period.Item1, StringComparison.OrdinalIgnoreCase);
+                        <input type="radio" class="btn-check" name="@($"WalletBalancePeriod-{StoreId}-{config.CryptoCode}")"
+                               id="@($"WalletBalancePeriod{period.Item1}-{StoreId}-{config.CryptoCode}")"
+                               value="@period.Item1" checked="@isChecked"
+                               @onchange="@(async () => await ChangePeriod(period.Item1))" />
+                        <label class="btn btn-link" for="@($"WalletBalancePeriod{period.Item1}-{StoreId}-{config.CryptoCode}")">@period.Item2</label>
+                    }
+                </div>
+            }
+        </header>
+        @if (_hasHistogram)
         {
-            <div class="balance d-flex align-items-baseline gap-1">
-                <h3 data-sensitive>@_balance.Value.ToString("0.########")</h3>
-                <span class="text-secondary fw-semibold currency">@config.CryptoCode</span>
-            </div>
+            <div id="@_chartId" class="ct-chart ct-major-tenth"></div>
         }
-    </header>
-    @if (_hasHistogram)
-    {
-        <div id="@_chartId" class="ct-chart ct-major-tenth"></div>
-    }
+    </div>
 }
 
 @code {
@@ -66,10 +105,29 @@ else
         Category = "Store",
         ComponentType = typeof(WalletBalanceWidget),
         Scope = WidgetScope.Store,
-        DefaultColumnSize = 12,
+        DefaultColumnSize = 8,
+        MinColumnSize = 6,
+        MaxColumnSize = 12,
+        MinRowSpan = 1,
+        MaxRowSpan = 2,
         CssClass = "store-wallet-balance",
         RequiredPermissions = new[] { Policies.CanModifyStoreSettings },
-        RequiredStoreFeatures = new[] { "wallet" }
+        RequiredStoreFeatures = new[] { "wallet" },
+        ConfigSchema = new()
+        {
+            ["CryptoCode"] = new ConfigFieldSchema { Label = "Crypto", FieldType = ConfigFieldType.Text },
+            ["Period"] = new ConfigFieldSchema
+            {
+                Label = "Period",
+                FieldType = ConfigFieldType.Select,
+                Options = new()
+                {
+                    ("Week", "1 Week"),
+                    ("Month", "1 Month"),
+                    ("Year", "1 Year")
+                }
+            }
+        }
     };
 
     public class WalletBalanceConfig
@@ -82,9 +140,20 @@ else
     private decimal? _balance;
     private bool _hasHistogram;
     private bool _missingWalletConfig;
+    private bool _chartRendered;
     private List<decimal>? _series;
     private List<DateTimeOffset>? _labels;
     private string _chartId = $"wallet-balance-chart-{Guid.NewGuid():N}";
+    private string _widgetId = $"WalletBalance-{Guid.NewGuid():N}";
+    private string _activePeriod = "Week";
+
+    // Currency toggle state
+    private string? _defaultCurrency;
+    private int _divisibility;
+    private bool _showDefaultCurrency;
+    private decimal? _rate;
+
+    private Data.StoreData? _store;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -92,20 +161,26 @@ else
             return;
 
         Loading = true;
+        _chartRendered = false;
         try
         {
             var config = TypedConfig ?? new WalletBalanceConfig();
-            var store = await StoreRepository.FindStore(StoreId);
-            if (store is null)
+            _activePeriod = config.Period;
+            _store = await StoreRepository.FindStore(StoreId);
+            if (_store is null)
             {
                 _error = "Store not found.";
                 return;
             }
 
-            var walletId = new WalletId(store.Id, config.CryptoCode);
-            var histogramType = Enum.TryParse<HistogramType>(config.Period, out var ht) ? ht : HistogramType.Week;
+            _defaultCurrency = _store.GetStoreBlob().DefaultCurrency;
+            var currencyData = CurrencyNameTable.GetCurrencyData(_defaultCurrency, true);
+            _divisibility = currencyData.Divisibility;
 
-            var data = await WalletHistogramService.GetHistogram(store, walletId, histogramType);
+            var walletId = new WalletId(_store.Id, config.CryptoCode);
+            var histogramType = Enum.TryParse<HistogramType>(_activePeriod, out var ht) ? ht : HistogramType.Week;
+
+            var data = await WalletHistogramService.GetHistogram(_store, walletId, histogramType);
             if (data != null)
             {
                 _balance = data.Balance;
@@ -119,7 +194,7 @@ else
                 try
                 {
                     var wallet = WalletProvider.GetWallet(config.CryptoCode);
-                    var derivation = store.GetDerivationSchemeSettings(Handlers, config.CryptoCode);
+                    var derivation = _store.GetDerivationSchemeSettings(Handlers, config.CryptoCode);
                     var handler = Handlers.TryGetBitcoinHandler(config.CryptoCode);
                     if (wallet is not null && derivation is not null && handler is not null)
                     {
@@ -150,11 +225,79 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && _hasHistogram && _error is null && HasAccess && _series is not null && _labels is not null)
+        if (!_chartRendered && !Loading && _hasHistogram && _error is null && HasAccess && _series is not null && _labels is not null)
         {
-            var labels = _labels.Select(l => l.ToString("MMM dd")).ToArray();
+            _chartRendered = true;
+            await JsInterop.DestroyChart(_chartId);
+            var labels = _labels.Select(l => l.ToString("o")).ToArray();
             var series = _series.Select(s => (object)s).ToArray();
             await JsInterop.RenderChart(_chartId, "line", labels, new[] { series });
         }
+    }
+
+    private async Task ChangePeriod(string period)
+    {
+        if (string.IsNullOrEmpty(StoreId) || _store is null)
+            return;
+
+        _activePeriod = period;
+        _chartRendered = false;
+        var config = TypedConfig ?? new WalletBalanceConfig();
+        var walletId = new WalletId(_store.Id, config.CryptoCode);
+        var histogramType = Enum.TryParse<HistogramType>(period, out var ht) ? ht : HistogramType.Week;
+
+        try
+        {
+            var data = await WalletHistogramService.GetHistogram(_store, walletId, histogramType);
+            if (data != null)
+            {
+                _balance = data.Balance;
+                _series = data.Series;
+                _labels = data.Labels;
+                _hasHistogram = _series is { Count: > 0 };
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+    }
+
+    private async Task SetCurrency(bool showDefault)
+    {
+        _showDefaultCurrency = showDefault;
+        if (showDefault && !_rate.HasValue && _store is not null && _defaultCurrency is not null)
+        {
+            var config = TypedConfig ?? new WalletBalanceConfig();
+            var pair = new CurrencyPair(config.CryptoCode, _defaultCurrency);
+            var blob = _store.GetStoreBlob();
+            var rules = blob.GetRateRules(DefaultRules);
+            try
+            {
+                var result = await RateFetcher.FetchRate(pair, rules, new StoreIdRateContext(_store.Id), default);
+                _rate = result.BidAsk?.Bid;
+            }
+            catch
+            {
+                // Silently fail - just show crypto amount
+            }
+        }
+    }
+
+    private string DisplayBalance()
+    {
+        if (!_balance.HasValue) return "";
+        if (_showDefaultCurrency && _rate.HasValue)
+        {
+            var converted = Math.Round(_balance.Value * _rate.Value, _divisibility);
+            return converted.ToString($"N{_divisibility}");
+        }
+        return _balance.Value.ToString("0.########");
+    }
+
+    private string DisplayCurrency()
+    {
+        var config = TypedConfig ?? new WalletBalanceConfig();
+        return _showDefaultCurrency && _defaultCurrency is not null ? _defaultCurrency : config.CryptoCode;
     }
 }

@@ -1,13 +1,20 @@
 #nullable enable
 using System;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
+using BTCPayServer.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Blazor.Dashboard;
 
 public abstract class BaseWidgetComponent<TConfig> : ComponentBase where TConfig : class, new()
 {
+    [Inject] private IAuthorizationService AuthorizationService { get; set; } = null!;
+    [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = null!;
+
     public bool Loading
     {
         get => _loading;
@@ -25,6 +32,7 @@ public abstract class BaseWidgetComponent<TConfig> : ComponentBase where TConfig
         set
         {
             _typedConfig = value;
+            _cachedConfig = value is null ? null : JObject.FromObject(value);
             InvokeAsync(StateHasChanged);
             InvokeAsync(TypedConfigChanged);
         }
@@ -35,12 +43,12 @@ public abstract class BaseWidgetComponent<TConfig> : ComponentBase where TConfig
     [Parameter]
     public virtual JObject? Config
     {
-        get => TypedConfig is null ? null : JObject.FromObject(TypedConfig);
+        get => _cachedConfig;
         set
         {
-            if (Config is null && value is null)
+            if (_cachedConfig is null && value is null)
                 return;
-            if (Config is not null && value is not null && JToken.DeepEquals(Config, value))
+            if (_cachedConfig is not null && value is not null && JToken.DeepEquals(_cachedConfig, value))
                 return;
             TypedConfig = value is null ? default : value.ToObject<TConfig?>();
         }
@@ -50,10 +58,12 @@ public abstract class BaseWidgetComponent<TConfig> : ComponentBase where TConfig
     [Parameter] public string StoreId { get; set; } = string.Empty;
     [Parameter] public string UserId { get; set; } = string.Empty;
     [Parameter] public bool Readonly { get; set; }
+    [Parameter] public string[] RequiredPermissions { get; set; } = Array.Empty<string>();
 
     [Parameter] public EventCallback<JObject> ConfigChanged { get; set; }
     [Parameter] public EventCallback<bool> EditModeChanged { get; set; }
     [Parameter] public EventCallback OnRemove { get; set; }
+    [Parameter] public EventCallback RequestConfigure { get; set; }
 
     // Access control
     protected bool HasAccess { get; set; } = true;
@@ -75,7 +85,52 @@ public abstract class BaseWidgetComponent<TConfig> : ComponentBase where TConfig
 
     private bool _editMode;
     private bool _loading;
+    private bool _accessChecked;
     private TConfig? _typedConfig;
+    private JObject? _cachedConfig;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (RequiredPermissions.Length > 0)
+        {
+            _accessChecked = true;
+            await CheckAccess();
+        }
+    }
+
+    private async Task CheckAccess()
+    {
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            foreach (var permission in RequiredPermissions)
+            {
+                // Store-scoped policies pass storeId as resource so
+                // CookieAuthorizationHandler can resolve the store context.
+                // Server-scoped policies pass null.
+                object? resource = Policies.IsStorePolicy(permission) && !string.IsNullOrEmpty(StoreId)
+                    ? StoreId
+                    : null;
+
+                var result = await AuthorizationService.AuthorizeAsync(
+                    user, resource, new PolicyRequirement(permission));
+
+                if (!result.Succeeded)
+                {
+                    HasAccess = false;
+                    AccessDeniedMessage = "You do not have permission to view this widget.";
+                    return;
+                }
+            }
+        }
+        catch
+        {
+            // If authorization check fails (e.g. during prerender), allow access
+            HasAccess = true;
+        }
+    }
 
     protected virtual Task EnterEdit()
     {

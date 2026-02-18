@@ -1,0 +1,140 @@
+@using BTCPayServer.Blazor.Dashboard.Models
+@using BTCPayServer.Data
+@using BTCPayServer.Payments
+@using BTCPayServer.Payments.Bitcoin
+@using BTCPayServer.Payments.Lightning
+@using BTCPayServer.Services
+@using BTCPayServer.Services.Invoices
+@using BTCPayServer.Services.Stores
+@inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<SetupGuideWidget.SetupGuideConfig>
+
+@inject BTCPayNetworkProvider NetworkProvider
+@inject PaymentMethodHandlerDictionary Handlers
+@inject StoreRepository StoreRepository
+
+@if (!HasAccess || _allDone)
+{
+    return;
+}
+
+<header>
+    <h5 class="mb-4 text-muted">This store is ready to accept transactions, good job!</h5>
+</header>
+<div class="list-group">
+    @if (_walletEnabled)
+    {
+        <div class="list-group-item d-flex align-items-center">
+            <svg role="img" class="icon icon-done me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#done"></use></svg>
+            <div class="content">
+                <h5 class="mb-0 text-success">Set up a wallet</h5>
+            </div>
+        </div>
+    }
+    else
+    {
+        <a href="/stores/@StoreId/onchain/@_cryptoCode"
+           class="list-group-item list-group-item-action d-flex align-items-center">
+            <svg role="img" class="icon icon-wallet-new me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#wallet-new"></use></svg>
+            <div class="content flex-fill">
+                <h5 class="mb-0">Set up a wallet</h5>
+            </div>
+            <svg role="img" class="icon icon-caret-right" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#caret-right"></use></svg>
+        </a>
+    }
+    @if (_lightningEnabled)
+    {
+        <div class="list-group-item d-flex align-items-center">
+            <svg role="img" class="icon icon-done me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#done"></use></svg>
+            <div class="content">
+                <h5 class="mb-0 text-success">Set up a Lightning node</h5>
+            </div>
+        </div>
+    }
+    else if (_lightningSupported)
+    {
+        <a href="/stores/@StoreId/lightning/@_cryptoCode/setup"
+           class="list-group-item list-group-item-action d-flex align-items-center">
+            <svg role="img" class="icon icon-wallet-new me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#wallet-new"></use></svg>
+            <div class="content flex-fill">
+                <h5 class="mb-0">Set up a Lightning node</h5>
+            </div>
+            <svg role="img" class="icon icon-caret-right" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#caret-right"></use></svg>
+        </a>
+    }
+</div>
+
+@code {
+    public class SetupGuideConfig { }
+
+    private bool _walletEnabled;
+    private bool _lightningEnabled;
+    private bool _lightningSupported;
+    private string _cryptoCode = "BTC";
+    private bool _allDone;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrEmpty(StoreId))
+            return;
+
+        Loading = true;
+        try
+        {
+            _cryptoCode = NetworkProvider.DefaultCryptoCode;
+            _lightningSupported = NetworkProvider.GetNetwork<BTCPayNetwork>(_cryptoCode)?.SupportLightning is true;
+
+            var store = await StoreRepository.FindStore(StoreId);
+            if (store is null)
+            {
+                _allDone = true;
+                return;
+            }
+
+            var storeBlob = store.GetStoreBlob();
+            var excludeFilters = storeBlob.GetExcludedPaymentMethods();
+
+            // Check wallet
+            var derivations = store.GetPaymentMethodConfigs<DerivationSchemeSettings>(Handlers);
+            _walletEnabled = derivations.Any(kv =>
+            {
+                var pretty = kv.Value?.ToPrettyString();
+                return !string.IsNullOrEmpty(pretty) && !excludeFilters.Match(kv.Key);
+            });
+
+            // Check lightning
+            var lightningConfigs = store.GetPaymentMethodConfigs(Handlers)
+                .Where(c => c.Value is LightningPaymentMethodConfig);
+            _lightningEnabled = lightningConfigs.Any(kv =>
+            {
+                var config = (LightningPaymentMethodConfig)kv.Value;
+                return !string.IsNullOrEmpty(config.GetDisplayableConnectionString())
+                       && !excludeFilters.Match(kv.Key);
+            });
+
+            _allDone = _walletEnabled && (_lightningEnabled || !_lightningSupported);
+        }
+        catch
+        {
+            _allDone = true; // Hide on error
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+    public static readonly WidgetDescriptor Descriptor = new()
+    {
+        Type = "SetupGuide",
+        Name = "Setup Guide",
+        Description = "Shows setup steps for wallet and Lightning configuration",
+        Category = "Utility",
+        Scope = WidgetScope.Store,
+        DefaultColumnSize = 8,
+        MinColumnSize = 4,
+        MaxColumnSize = 12,
+        MinRowSpan = 1,
+        MaxRowSpan = 2,
+        CssClass = "setup-guide"
+    };
+}

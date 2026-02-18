@@ -10,9 +10,13 @@
                 <span class="small">@Descriptor.Name</span>
             </div>
             <div class="widget-controls">
-                <button class="btn btn-outline-danger btn-sm" title="Remove widget"
+                <button class="widget-control-btn" title="Configure widget"
+                        @onclick="() => OnConfigure.InvokeAsync()">
+                    <svg role="img" class="icon icon-settings"><use href="/img/icon-sprite.svg#settings"></use></svg>
+                </button>
+                <button class="widget-control-btn widget-control-btn--danger" title="Remove widget"
                         @onclick="OnRemove">
-                    ✕
+                    <svg role="img" class="icon icon-cross"><use href="/img/icon-sprite.svg#cross"></use></svg>
                 </button>
             </div>
         </div>
@@ -35,7 +39,6 @@
 
 @if (EditMode)
 {
-    <div class="widget-resize-left"></div>
     <div class="widget-resize-right"></div>
     <div class="widget-resize-bottom"></div>
 }
@@ -51,12 +54,16 @@
     [Parameter] public EventCallback<bool> OnEditModeChanged { get; set; }
     [Parameter] public EventCallback OnRemove { get; set; }
     [Parameter] public EventCallback<(int cols, int rows)> OnSizeChanged { get; set; }
+    [Parameter] public EventCallback OnConfigure { get; set; }
 
     [Inject] DashboardJsInterop JsInterop { get; set; } = null!;
 
     private ErrorBoundary? _errorBoundary;
     private ElementReference _widgetElement;
     private DotNetObjectReference<object>? _resizeRef;
+    private int _lastInitCol;
+    private int _lastInitRow;
+    private bool _resizeInitialized;
 
     private Dictionary<string, object> GetWidgetParameters()
     {
@@ -64,12 +71,14 @@
         {
             { "StoreId", StoreId },
             { "UserId", UserId },
-            { "Readonly", !EditMode || WidgetEditMode },
+            { "Readonly", Descriptor.AlwaysInteractive ? false : (!EditMode || WidgetEditMode) },
             { "Size", Placement.ColumnSize },
             { "Config", Placement.Config! },
+            { "RequiredPermissions", Descriptor.RequiredPermissions },
             { "ConfigChanged", EventCallback.Factory.Create<JObject>(this, config => OnConfigChanged.InvokeAsync(config)) },
             { "EditModeChanged", EventCallback.Factory.Create<bool>(this, editing => OnEditModeChanged.InvokeAsync(editing)) },
-            { "OnRemove", EventCallback.Factory.Create(this, () => OnRemove.InvokeAsync()) }
+            { "OnRemove", EventCallback.Factory.Create(this, () => OnRemove.InvokeAsync()) },
+            { "RequestConfigure", EventCallback.Factory.Create(this, () => OnConfigure.InvokeAsync()) }
         };
     }
 
@@ -77,11 +86,22 @@
     {
         if (EditMode)
         {
-            _resizeRef ??= DotNetObjectReference.Create<object>(this);
-            await JsInterop.InitResize(_widgetElement, Placement.Id,
-                Placement.ColumnSize, Descriptor.MinColumnSize, Descriptor.MaxColumnSize,
-                Placement.RowSpan, Descriptor.MinRowSpan, Descriptor.MaxRowSpan,
-                _resizeRef);
+            // Only re-init resize handlers when size actually changed or first time
+            if (!_resizeInitialized || _lastInitCol != Placement.ColumnSize || _lastInitRow != Placement.RowSpan)
+            {
+                _resizeRef ??= DotNetObjectReference.Create<object>(this);
+                _lastInitCol = Placement.ColumnSize;
+                _lastInitRow = Placement.RowSpan;
+                _resizeInitialized = true;
+                await JsInterop.InitResize(_widgetElement, Placement.Id,
+                    Placement.ColumnSize, Descriptor.MinColumnSize, Descriptor.MaxColumnSize,
+                    Placement.RowSpan, Descriptor.MinRowSpan, Descriptor.MaxRowSpan,
+                    _resizeRef);
+            }
+        }
+        else
+        {
+            _resizeInitialized = false;
         }
     }
 

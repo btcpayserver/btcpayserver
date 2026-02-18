@@ -16,6 +16,7 @@ public class DashboardService
     private readonly SettingsRepository _settingsRepository;
     private readonly UserSettingsRepository _userSettingsRepository;
     private readonly IEnumerable<IDashboardTemplateProvider> _templateProviders;
+    private readonly IEnumerable<IDashboardWidgetContributor> _widgetContributors;
 
     private const string SettingName = "DashboardCollection";
 
@@ -23,12 +24,14 @@ public class DashboardService
         StoreRepository storeRepository,
         SettingsRepository settingsRepository,
         UserSettingsRepository userSettingsRepository,
-        IEnumerable<IDashboardTemplateProvider> templateProviders)
+        IEnumerable<IDashboardTemplateProvider> templateProviders,
+        IEnumerable<IDashboardWidgetContributor> widgetContributors)
     {
         _storeRepository = storeRepository;
         _settingsRepository = settingsRepository;
         _userSettingsRepository = userSettingsRepository;
         _templateProviders = templateProviders;
+        _widgetContributors = widgetContributors;
     }
 
     // --- Server-level ---
@@ -125,12 +128,33 @@ public class DashboardService
     public DashboardDefinition GetDefaultTemplate(DashboardScope scope, DashboardTemplateContext context)
     {
         var provider = _templateProviders.FirstOrDefault(p => p.Scope == scope);
-        return provider?.GetTemplate(context) ?? new DashboardDefinition
+        var template = provider?.GetTemplate(context) ?? new DashboardDefinition
         {
             Name = "Empty Dashboard",
             Scope = scope,
             IsDefault = true
         };
+
+        // Append plugin-contributed widgets
+        var nextOrder = template.Widgets.Count > 0
+            ? template.Widgets.Max(w => w.Order) + 1
+            : 0;
+
+        foreach (var contributor in _widgetContributors)
+        {
+            if (!contributor.ApplicableScopes.Contains(scope))
+                continue;
+
+            foreach (var placement in contributor.GetWidgets(scope, context))
+            {
+                placement.Order = nextOrder++;
+                if (string.IsNullOrEmpty(placement.Id))
+                    placement.Id = Guid.NewGuid().ToString();
+                template.Widgets.Add(placement);
+            }
+        }
+
+        return template;
     }
 
     private static DashboardDefinition? FindActive(DashboardCollection collection, string? storeId = null)

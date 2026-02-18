@@ -24,7 +24,15 @@ else if (Loading)
 else if (_error is not null)
 {
     <header><h3>App Sales</h3></header>
-    <p class="text-danger">@_error</p>
+    <p class="text-warning">@_error</p>
+    @if (!Readonly)
+    {
+        <button class="btn btn-sm btn-outline-secondary" @onclick="() => RequestConfigure.InvokeAsync()">Configure</button>
+    }
+    else
+    {
+        <p class="text-secondary small">Enter edit mode to configure this widget.</p>
+    }
 }
 else
 {
@@ -32,7 +40,15 @@ else
     @if (string.IsNullOrEmpty(config.AppId))
     {
         <header><h3>App Sales</h3></header>
-        <p class="text-secondary">No app configured. Edit this widget to select an app.</p>
+        <p class="text-secondary">No app configured.</p>
+        @if (!Readonly)
+        {
+            <button class="btn btn-sm btn-primary" @onclick="() => RequestConfigure.InvokeAsync()">Select App</button>
+        }
+        else
+        {
+            <p class="text-secondary small">Enter edit mode to configure this widget.</p>
+        }
     }
     else
     {
@@ -58,8 +74,24 @@ else
         Category = "Apps",
         ComponentType = typeof(AppSalesWidget),
         Scope = WidgetScope.Store,
-        DefaultColumnSize = 6,
-        CssClass = "app-sales"
+        DefaultColumnSize = 8,
+        MinColumnSize = 4,
+        MaxColumnSize = 12,
+        MinRowSpan = 1,
+        MaxRowSpan = 2,
+        CssClass = "app-sales",
+        RequiresConfiguration = true,
+        ConfigSchema = new()
+        {
+            ["AppId"] = new ConfigFieldSchema { Label = "App ID", FieldType = ConfigFieldType.Text },
+            ["NumberOfDays"] = new ConfigFieldSchema
+            {
+                Label = "Number of Days",
+                FieldType = ConfigFieldType.Number,
+                Min = 1,
+                Max = 365
+            }
+        }
     };
 
     public class AppSalesConfig
@@ -72,6 +104,7 @@ else
     private string? _appName;
     private int _salesCount;
     private bool _hasSeries;
+    private bool _chartRendered;
     private IEnumerable<AppSalesStatsItem>? _series;
     private string _chartId = $"app-sales-chart-{Guid.NewGuid():N}";
 
@@ -88,6 +121,7 @@ else
         }
 
         Loading = true;
+        _chartRendered = false;
         try
         {
             var app = await AppService.GetApp(config.AppId, null, includeStore: true);
@@ -115,8 +149,10 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && _hasSeries && _series is not null)
+        if (!_chartRendered && !Loading && _hasSeries && _series is not null)
         {
+            _chartRendered = true;
+            await JsInterop.DestroyChart(_chartId);
             var items = _series.ToArray();
             var labels = items.Select(s => s.Label ?? s.Date.ToString("MMM dd")).ToArray();
             var series = items.Select(s => (object)s.SalesCount).ToArray();

@@ -65,8 +65,16 @@ else
         Category = "Store",
         ComponentType = typeof(StoreNumbersWidget),
         Scope = WidgetScope.Store,
-        DefaultColumnSize = 6,
-        CssClass = "store-numbers"
+        DefaultColumnSize = 4,
+        MinColumnSize = 3,
+        MaxColumnSize = 12,
+        MinRowSpan = 1,
+        MaxRowSpan = 1,
+        CssClass = "store-numbers",
+        ConfigSchema = new()
+        {
+            ["TimeframeDays"] = new ConfigFieldSchema { Label = "Time Range (days)", FieldType = ConfigFieldType.Number, Min = 1, Max = 365 }
+        }
     };
 
     public class StoreNumbersConfig

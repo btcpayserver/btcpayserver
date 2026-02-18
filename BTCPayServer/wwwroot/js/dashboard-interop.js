@@ -70,12 +70,12 @@ window.DashboardInterop = {
                 var gap = parseFloat(gridStyle.gap) || parseFloat(gridStyle.columnGap) || 16;
                 var rowGap = parseFloat(gridStyle.gap) || parseFloat(gridStyle.rowGap) || 16;
                 var colWidth = (gridRect.width - (gap * (gridCols - 1))) / gridCols;
-
-                // Compute row height from the widget's current rendered height / rowSpan
                 var widgetRect = widgetElement.getBoundingClientRect();
-                var baseRowHeight = currentRowSpan > 1
-                    ? (widgetRect.height - rowGap * (currentRowSpan - 1)) / currentRowSpan
-                    : widgetRect.height;
+
+                // Row height: use 120px as the snap unit (matches CSS grid-auto-rows min).
+                // With minmax(120px, auto), actual rows may be taller than 120px due to
+                // content, but we snap resize in 120px increments for predictable behavior.
+                var baseRowHeight = 120;
 
                 var state = {
                     axis: axis,
@@ -106,9 +106,7 @@ window.DashboardInterop = {
                 function onMove(ev) {
                     if (axis === 'horizontal') {
                         var dx = ev.clientX - state.startX;
-                        // For left handle, invert the delta
-                        var effectiveDx = (handleSelector === '.widget-resize-left') ? -dx : dx;
-                        var colDelta = Math.round(effectiveDx / (state.colWidth + state.gap));
+                        var colDelta = Math.round(dx / (state.colWidth + state.gap));
                         var newSpan = Math.max(state.minCol, Math.min(state.maxCol, state.startSpan + colDelta));
                         if (newSpan !== state.currentPreviewCol) {
                             state.currentPreviewCol = newSpan;
@@ -150,7 +148,6 @@ window.DashboardInterop = {
         }
 
         setupEdge('.widget-resize-right', 'horizontal');
-        setupEdge('.widget-resize-left', 'horizontal');
         setupEdge('.widget-resize-bottom', 'vertical');
 
         this._resizeCleanups[placementId] = function () {
@@ -174,16 +171,46 @@ window.DashboardInterop = {
             this._charts[elementId].detach();
         }
 
-        var chartData = { labels: labels, series: [series] };
+        // series is already an array of arrays from C# (e.g. [[1,2,3]])
+        var chartData = { labels: labels, series: series };
+
+        // Compute low value from data for better chart scaling
+        var low = 0;
+        if (type === 'line' && series.length > 0) {
+            var flatValues = series[0];
+            if (flatValues && flatValues.length > 0) {
+                var min = Math.min.apply(null, flatValues);
+                var max = Math.max.apply(null, flatValues);
+                low = Math.max(min - ((max - min) / 5), 0);
+            }
+        }
+
+        var labelCount = 6;
+        var pointCount = labels.length;
+        var labelEvery = pointCount / labelCount;
+        var dateFormatter = new Intl.DateTimeFormat('default', { month: 'short', day: 'numeric' });
+
+        var tooltip = (typeof Chartist.plugins !== 'undefined' && Chartist.plugins.tooltip2)
+            ? Chartist.plugins.tooltip2({
+                template: '<div class="chartist-tooltip-value">{{value}}</div><div class="chartist-tooltip-line"></div>',
+                offset: { x: 0, y: -16 }
+            })
+            : null;
+
         var defaultOptions = {
-            low: 0,
+            low: low,
             showArea: type === 'line',
             fullWidth: true,
-            axisX: { showGrid: false },
-            axisY: { showGrid: true, offset: 40 },
-            plugins: typeof Chartist.plugins !== 'undefined' && Chartist.plugins.tooltip2
-                ? [Chartist.plugins.tooltip2()]
-                : []
+            axisX: {
+                labelInterpolationFnc: function (date, i) {
+                    return i % Math.ceil(labelEvery) === 0 ? dateFormatter.format(new Date(date)) : null;
+                }
+            },
+            axisY: {
+                showLabel: false,
+                offset: 0
+            },
+            plugins: tooltip ? [tooltip] : []
         };
 
         var mergedOptions = Object.assign({}, defaultOptions, options || {});
@@ -200,5 +227,31 @@ window.DashboardInterop = {
             this._charts[elementId].detach();
             delete this._charts[elementId];
         }
+    },
+
+    // --- Export/Import ---
+    downloadJson: function (filename, json) {
+        var blob = new Blob([json], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    },
+
+    readFileAsText: function (inputElement) {
+        return new Promise(function (resolve) {
+            if (!inputElement || !inputElement.files || inputElement.files.length === 0) {
+                resolve(null);
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function () { resolve(reader.result); };
+            reader.onerror = function () { resolve(null); };
+            reader.readAsText(inputElement.files[0]);
+        });
     }
 };

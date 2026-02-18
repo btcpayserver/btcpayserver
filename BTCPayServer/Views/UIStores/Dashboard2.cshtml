@@ -18,7 +18,13 @@
 @(await Html.RenderComponentAsync<DashboardPage>(RenderMode.ServerPrerendered, new
 {
     StoreId = ScopeProvider.GetCurrentStoreId(),
-    UserId = UserManager.GetUserId(User)
+    UserId = UserManager.GetUserId(User),
+    DashboardId = ViewData["DashboardId"] as string,
+    IsSetUp = ViewData["IsSetUp"] is true,
+    WalletEnabled = ViewData["WalletEnabled"] is true,
+    LightningEnabled = ViewData["LightningEnabled"] is true,
+    LightningSupported = ViewData["LightningSupported"] is true,
+    CryptoCode = ViewData["CryptoCode"] as string ?? "BTC"
 }))
 
 @section PageFootContent {

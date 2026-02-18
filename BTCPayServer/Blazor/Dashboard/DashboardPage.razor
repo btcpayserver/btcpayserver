@@ -1,27 +1,116 @@
 @using BTCPayServer.Blazor.Dashboard.Models
+@using BTCPayServer.Data
+@using BTCPayServer.Payments
+@using BTCPayServer.Payments.Bitcoin
+@using BTCPayServer.Payments.Lightning
+@using BTCPayServer.Services.Apps
+@using BTCPayServer.Services.Invoices
+@using BTCPayServer.Services.Stores
 @using Microsoft.AspNetCore.Components.Authorization
+@using Newtonsoft.Json
 @using Newtonsoft.Json.Linq
 @inject DashboardService DashboardService
 @inject WidgetRegistry WidgetRegistry
 @inject DashboardJsInterop JsInterop
 @inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+@inject StoreRepository StoreRepository
+@inject BTCPayNetworkProvider NetworkProvider
+@inject PaymentMethodHandlerDictionary Handlers
+@inject AppService AppService
 @implements IAsyncDisposable
+
+@if (!IsSetUp)
+{
+    <p class="lead text-secondary mt-2">To start accepting payments, set up a wallet or a Lightning node.</p>
+    <div class="list-group" id="SetupGuide" style="max-width: 30em;">
+        <div class="list-group-item d-flex align-items-center">
+            <svg role="img" class="icon icon-done me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#done"></use></svg>
+            <div class="content">
+                <h5 class="mb-0 text-success">Create your store</h5>
+            </div>
+        </div>
+        @if (!WalletEnabled)
+        {
+            <a href="/stores/@StoreId/onchain/@CryptoCode"
+               class="list-group-item list-group-item-action d-flex align-items-center">
+                <svg role="img" class="icon icon-wallet-new me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#wallet-new"></use></svg>
+                <div class="content flex-fill">
+                    <h5 class="mb-0">Set up a wallet</h5>
+                </div>
+                <svg role="img" class="icon icon-caret-right" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#caret-right"></use></svg>
+            </a>
+        }
+        else
+        {
+            <div class="list-group-item d-flex align-items-center">
+                <svg role="img" class="icon icon-done me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#done"></use></svg>
+                <div class="content">
+                    <h5 class="mb-0 text-success">Set up a wallet</h5>
+                </div>
+            </div>
+        }
+        @if (LightningSupported)
+        {
+            @if (!LightningEnabled)
+            {
+                <a href="/stores/@StoreId/lightning/@CryptoCode/setup"
+                   class="list-group-item list-group-item-action d-flex align-items-center">
+                    <svg role="img" class="icon icon-wallet-new me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#wallet-new"></use></svg>
+                    <div class="content flex-fill">
+                        <h5 class="mb-0">Set up a Lightning node</h5>
+                    </div>
+                    <svg role="img" class="icon icon-caret-right" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#caret-right"></use></svg>
+                </a>
+            }
+            else
+            {
+                <div class="list-group-item d-flex align-items-center">
+                    <svg role="img" class="icon icon-done me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#done"></use></svg>
+                    <div class="content">
+                        <h5 class="mb-0 text-success">Set up a Lightning node</h5>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+}
+else
+{
 
 <div class="dashboard-header d-flex justify-content-between align-items-center mb-4">
     <div class="d-flex align-items-center gap-3">
-        <h3 class="mb-0">@(_activeDashboard?.Name ?? "Dashboard")</h3>
+        @if (EditMode && _activeDashboard is not null)
+        {
+            <input type="text" class="form-control form-control-sm fw-bold fs-5"
+                   style="width: auto; min-width: 150px; max-width: 300px;"
+                   value="@_activeDashboard.Name"
+                   @onchange="OnDashboardNameChanged" />
+        }
+        else
+        {
+            <h3 class="mb-0">@(_activeDashboard?.Name ?? "Dashboard")</h3>
+        }
         @if (_activeDashboard is not null)
         {
             <span class="badge bg-light text-dark">@_activeScope</span>
+            @if (_isCodeDefault)
+            {
+                <span class="badge bg-secondary text-white" title="This is the auto-generated default layout. It updates automatically when plugins add new widgets. Editing will create a saved copy.">Auto</span>
+            }
+            else if (_activeDashboard.IsDefault)
+            {
+                <span class="badge bg-info text-white">Default</span>
+            }
         }
-        @if (_allDashboards.Count > 1 || _allDashboards.Count == 0)
-        {
-            <div class="dropdown">
-                <button class="btn btn-link btn-sm dropdown-toggle p-0" type="button"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                    Switch
-                </button>
-                <div class="dropdown-menu" style="min-width: 240px;">
+        <div class="dropdown">
+            <button class="btn btn-link btn-sm dropdown-toggle p-0" type="button"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                Switch
+            </button>
+            <div class="dropdown-menu" style="min-width: 260px;">
+                @if (_allDashboards.Count > 0)
+                {
                     @foreach (var group in _allDashboards.GroupBy(d => d.Scope))
                     {
                         <div class="dropdown-header small text-uppercase">@group.Key</div>
@@ -38,22 +127,39 @@
                         }
                     }
                     <div class="dropdown-divider"></div>
-                    <div class="dropdown-header small text-uppercase">New Dashboard</div>
-                    <button class="dropdown-item" @onclick="() => CreateNewDashboard(DashboardScope.Store)">
+                }
+                <div class="dropdown-header small text-uppercase">New Empty Dashboard</div>
+                <button class="dropdown-item" @onclick="() => CreateNewDashboard(DashboardScope.Store, false)">
+                    + Store Dashboard
+                </button>
+                <button class="dropdown-item" @onclick="() => CreateNewDashboard(DashboardScope.User, false)">
+                    + Personal Dashboard
+                </button>
+                @if (_isAdmin)
+                {
+                    <button class="dropdown-item" @onclick="() => CreateNewDashboard(DashboardScope.Server, false)">
+                        + Server Dashboard
+                    </button>
+                }
+                @if (_activeDashboard is not null && _activeDashboard.Widgets.Count > 0)
+                {
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-header small text-uppercase">Copy Current Layout To</div>
+                    <button class="dropdown-item" @onclick="() => CreateNewDashboard(DashboardScope.Store, true)">
                         + Store Dashboard
                     </button>
-                    <button class="dropdown-item" @onclick="() => CreateNewDashboard(DashboardScope.User)">
+                    <button class="dropdown-item" @onclick="() => CreateNewDashboard(DashboardScope.User, true)">
                         + Personal Dashboard
                     </button>
                     @if (_isAdmin)
                     {
-                        <button class="dropdown-item" @onclick="() => CreateNewDashboard(DashboardScope.Server)">
+                        <button class="dropdown-item" @onclick="() => CreateNewDashboard(DashboardScope.Server, true)">
                             + Server Dashboard
                         </button>
                     }
-                </div>
+                }
             </div>
-        }
+        </div>
     </div>
 
     <div class="d-flex gap-2 align-items-center">
@@ -63,26 +169,43 @@
                                    DashboardScope="@(_activeScope)"
                                    IsAdmin="_isAdmin"
                                    OnWidgetAdded="AddWidget" />
-            <div class="dropdown">
-                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button"
-                        data-bs-toggle="dropdown">
-                    Save As Copy
-                </button>
-                <div class="dropdown-menu dropdown-menu-end">
-                    <button class="dropdown-item" @onclick="() => SaveAsCopy(DashboardScope.Store)">
-                        To Store
+            @if (_confirmDelete)
+            {
+                <span class="text-danger small me-1">Delete this dashboard?</span>
+                <button class="btn btn-danger btn-sm" @onclick="DeleteDashboard">Yes, Delete</button>
+                <button class="btn btn-outline-secondary btn-sm" @onclick="() => _confirmDelete = false">Cancel</button>
+            }
+            else
+            {
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" disabled="@_widgetEditMode">
+                        Actions
                     </button>
-                    <button class="dropdown-item" @onclick="() => SaveAsCopy(DashboardScope.User)">
-                        To Personal
-                    </button>
-                    @if (_isAdmin)
-                    {
-                        <button class="dropdown-item" @onclick="() => SaveAsCopy(DashboardScope.Server)">
-                            To Server
+                    <div class="dropdown-menu dropdown-menu-end">
+                        @if (_activeDashboard is not null && !_activeDashboard.IsDefault)
+                        {
+                            <button class="dropdown-item" @onclick="SetAsDefault">Set as Default</button>
+                        }
+                        <button class="dropdown-item" @onclick="CopyDashboardLink">
+                            @(_linkCopied ? "Copied!" : "Copy Link")
                         </button>
-                    }
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item" @onclick="ExportDashboard">Export</button>
+                        <label class="dropdown-item mb-0" style="cursor: pointer;">
+                            Import
+                            <input type="file" accept=".json" @ref="_importFileInput" @onchange="ImportDashboard" hidden />
+                        </label>
+                        @if (_activeDashboard is not null && _activeDashboard.Widgets.Count > 0)
+                        {
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item" @onclick="ResetToDefaultLayout">Reset to Default</button>
+                        }
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item text-danger" @onclick="() => _confirmDelete = true">Delete Dashboard</button>
+                    </div>
                 </div>
-            </div>
+            }
             <button class="btn btn-primary btn-sm" disabled="@_widgetEditMode" @onclick="ExitEditMode">Done</button>
         }
         else
@@ -96,12 +219,13 @@
 </div>
 
 <div @ref="_gridContainer" class="dashboard-grid @(EditMode ? "dashboard-edit" : "")">
-    @if (_activeDashboard is not null)
+    @if (_activeDashboard is not null && _activeDashboard.Widgets.Count > 0)
     {
         @foreach (var placement in _activeDashboard.Widgets.OrderBy(w => w.Order))
         {
             var descriptor = WidgetRegistry.GetDescriptor(placement.WidgetType);
-            <div class="dashboard-widget" style="grid-column: span @placement.ColumnSize;@(placement.RowSpan > 1 ? $" grid-row: span {placement.RowSpan};" : "")">
+            var isConfiguring = _configuringPlacement?.Id == placement.Id;
+            <div class="dashboard-widget @(isConfiguring ? "widget-configuring" : "")" style="grid-column: span @placement.ColumnSize;@(placement.RowSpan > 1 ? $" grid-row: span {placement.RowSpan};" : "")">
                 @if (descriptor is null)
                 {
                     <WidgetUnavailable Placement="placement"
@@ -119,24 +243,58 @@
                                      OnConfigChanged="(config) => OnWidgetConfigChanged(placement, config)"
                                      OnEditModeChanged="(editing) => OnWidgetEditMode(editing)"
                                      OnRemove="() => RemoveWidget(placement)"
-                                     OnSizeChanged="(size) => OnWidgetSizeChanged(size)" />
+                                     OnSizeChanged="(size) => OnWidgetSizeChanged(size)"
+                                     OnConfigure="() => OpenConfigPanel(placement, descriptor)" />
                 }
             </div>
         }
     }
+    else if (_activeDashboard is not null)
+    {
+        <div class="dashboard-empty text-center py-5" style="grid-column: 1 / -1;">
+            <h5 class="text-muted mb-3">This dashboard is empty</h5>
+            <p class="text-secondary mb-3">Add widgets manually or start with the default layout.</p>
+            <button class="btn btn-primary" @onclick="PopulateDefaultLayout">Populate Default Layout</button>
+        </div>
+    }
 </div>
+
+<WidgetConfigPanel Visible="_configuringPlacement is not null"
+                   Descriptor="_configuringDescriptor"
+                   Placement="_configuringPlacement"
+                   OnSave="SaveWidgetConfig"
+                   OnClose="CloseConfigPanel" />
+
+} @* end of IsSetUp else block *@
 
 @code {
     [Parameter] public string StoreId { get; set; } = string.Empty;
     [Parameter] public string UserId { get; set; } = string.Empty;
+    [Parameter] public string? DashboardId { get; set; }
+    [Parameter] public bool IsSetUp { get; set; }
+    [Parameter] public bool WalletEnabled { get; set; }
+    [Parameter] public bool LightningEnabled { get; set; }
+    [Parameter] public bool LightningSupported { get; set; }
+    [Parameter] public string CryptoCode { get; set; } = "BTC";
 
     private DashboardDefinition? _activeDashboard;
     private DashboardScope _activeScope;
     private List<DashboardDefinition> _allDashboards = new();
     private bool _widgetEditMode;
+    private bool _confirmDelete;
+    private bool _linkCopied;
     private bool _isAdmin;
+    private bool _isCodeDefault; // true when active dashboard is a freshly generated code default (not persisted)
+    private List<BTCPayServer.Data.AppData> _apps = new(); // store apps for template context
     private DotNetObjectReference<DashboardPage>? _dotNetRef;
     private ElementReference _gridContainer;
+    private ElementReference _importFileInput;
+    private bool _sortableInitialized;
+
+    // Widget config panel state
+    private WidgetPlacement? _configuringPlacement;
+    private WidgetDescriptor? _configuringDescriptor;
+    private bool _pendingConfiguration; // true when a newly added widget requires config before saving
 
     public bool EditMode { get; set; }
 
@@ -146,29 +304,135 @@
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         _isAdmin = authState.User.IsInRole(Roles.ServerAdmin);
 
-        var context = new DashboardTemplateContext
-        {
-            CryptoCode = "BTC",
-            WalletEnabled = true,
-            LightningEnabled = true
-        };
+        // Fetch store configuration directly instead of relying on parameters,
+        // which may lose their values across Blazor circuit reconnection.
+        await RefreshStoreConfig();
+
+        var context = BuildTemplateContext();
 
         // Load dashboards from all scopes and build the unified list
         await LoadAllDashboards();
 
-        // Resolve active: user > store > server > code default
-        _activeDashboard = await DashboardService.ResolveActiveDashboard(UserId, StoreId, context);
+        _isCodeDefault = false;
+
+        // If a specific dashboard was requested via query parameter, use it
+        if (!string.IsNullOrEmpty(DashboardId))
+        {
+            _activeDashboard = _allDashboards.FirstOrDefault(d => d.Id == DashboardId);
+        }
+
+        // Otherwise resolve active: user > store > server > code default
+        if (_activeDashboard is null)
+        {
+            _activeDashboard = await DashboardService.ResolveActiveDashboard(UserId, StoreId, context);
+            // If the resolved dashboard isn't in any saved collection, it's a code-generated default.
+            // This means it was freshly generated from templates + plugin contributors and will
+            // always reflect the latest plugin additions on each page load.
+            _isCodeDefault = _activeDashboard is not null
+                             && _allDashboards.All(d => d.Id != _activeDashboard.Id);
+        }
 
         // Determine which scope the active dashboard came from
         _activeScope = DetermineActiveScope(_activeDashboard);
 
-        // Ensure the active dashboard is in the list
+        // Ensure the active dashboard is in the list (for the switcher UI)
         if (_activeDashboard is not null && _allDashboards.All(d => d.Id != _activeDashboard.Id))
         {
             _allDashboards.Add(_activeDashboard);
         }
 
         await base.OnParametersSetAsync();
+    }
+
+    /// <summary>
+    /// Fetches the store's actual payment method configuration to determine
+    /// WalletEnabled, LightningEnabled, IsSetUp, CryptoCode, and Apps.
+    /// This ensures the dashboard always reflects the current store state,
+    /// regardless of parameter serialization across Blazor circuit reconnection.
+    /// </summary>
+    private async Task RefreshStoreConfig()
+    {
+        if (string.IsNullOrEmpty(StoreId)) return;
+
+        var store = await StoreRepository.FindStore(StoreId);
+        if (store is null) return;
+
+        var storeBlob = store.GetStoreBlob();
+        CryptoCode = NetworkProvider.DefaultCryptoCode;
+
+        // Detect wallet (on-chain) configuration
+        var derivationByCryptoCode = store
+            .GetPaymentMethodConfigs<DerivationSchemeSettings>(Handlers)
+            .ToDictionary(
+                c => ((IHasNetwork)Handlers[c.Key]).Network.CryptoCode,
+                c => c.Value);
+        var excludeFilters = storeBlob.GetExcludedPaymentMethods();
+
+        WalletEnabled = false;
+        foreach (var handler in Handlers)
+        {
+            if (handler is BitcoinLikePaymentHandler { Network: var network })
+            {
+                derivationByCryptoCode.TryGetValue(network.CryptoCode, out var strategy);
+                if (strategy != null && !excludeFilters.Match(handler.PaymentMethodId))
+                {
+                    WalletEnabled = true;
+                    break;
+                }
+            }
+        }
+
+        // Detect Lightning configuration
+        var lightningByCryptoCode = store
+            .GetPaymentMethodConfigs(Handlers)
+            .Where(c => c.Value is LightningPaymentMethodConfig)
+            .ToDictionary(
+                c => ((IHasNetwork)Handlers[c.Key]).Network.CryptoCode,
+                c => (LightningPaymentMethodConfig)c.Value);
+
+        LightningEnabled = false;
+        foreach (var handler in Handlers)
+        {
+            if (handler is LightningLikePaymentHandler)
+            {
+                var lnNetwork = ((IHasNetwork)handler).Network;
+                lightningByCryptoCode.TryGetValue(lnNetwork.CryptoCode, out var lightning);
+                if (lightning != null && !excludeFilters.Match(handler.PaymentMethodId))
+                {
+                    LightningEnabled = true;
+                    break;
+                }
+            }
+        }
+
+        LightningSupported = NetworkProvider.GetNetwork<BTCPayNetwork>(CryptoCode)?.SupportLightning is true;
+
+        // Any payment method at all
+        IsSetUp = WalletEnabled || LightningEnabled
+                  || store.GetPaymentMethodConfigs(onlyEnabled: true).Count > 0;
+
+        // Load apps for the template context
+        _apps.Clear();
+        if (!string.IsNullOrEmpty(UserId))
+        {
+            var apps = await AppService.GetAllApps(UserId, false, StoreId);
+            foreach (var app in apps)
+            {
+                if (app.App is not null)
+                    _apps.Add(app.App);
+            }
+        }
+    }
+
+    private DashboardTemplateContext BuildTemplateContext()
+    {
+        return new DashboardTemplateContext
+        {
+            CryptoCode = CryptoCode,
+            WalletEnabled = WalletEnabled,
+            LightningEnabled = LightningEnabled,
+            Apps = _apps
+        };
     }
 
     private async Task LoadAllDashboards()
@@ -224,18 +488,174 @@
         };
     }
 
+    private async Task SetAsDefault()
+    {
+        if (_activeDashboard is null) return;
+
+        // Clear IsDefault on all dashboards in the same scope, then set on current
+        foreach (var d in _allDashboards.Where(d => d.Scope == _activeScope))
+            d.IsDefault = false;
+        _activeDashboard.IsDefault = true;
+
+        // Persist the change to the scope's collection
+        switch (_activeScope)
+        {
+            case DashboardScope.Store when !string.IsNullOrEmpty(StoreId):
+            {
+                var collection = await DashboardService.GetStoreDashboards(StoreId);
+                foreach (var d in collection.Dashboards) d.IsDefault = false;
+                var target = collection.Dashboards.FirstOrDefault(d => d.Id == _activeDashboard.Id);
+                if (target is not null) target.IsDefault = true;
+                collection.ActiveDashboardId = _activeDashboard.Id;
+                await DashboardService.SaveStoreDashboards(StoreId, collection);
+                break;
+            }
+            case DashboardScope.User when !string.IsNullOrEmpty(UserId):
+            {
+                var collection = await DashboardService.GetUserDashboards(UserId);
+                foreach (var d in collection.Dashboards) d.IsDefault = false;
+                var target = collection.Dashboards.FirstOrDefault(d => d.Id == _activeDashboard.Id);
+                if (target is not null) target.IsDefault = true;
+                collection.ActiveDashboardId = _activeDashboard.Id;
+                await DashboardService.SaveUserDashboards(UserId, collection);
+                break;
+            }
+            case DashboardScope.Server:
+            {
+                var collection = await DashboardService.GetServerDashboards();
+                foreach (var d in collection.Dashboards) d.IsDefault = false;
+                var target = collection.Dashboards.FirstOrDefault(d => d.Id == _activeDashboard.Id);
+                if (target is not null) target.IsDefault = true;
+                collection.ActiveDashboardId = _activeDashboard.Id;
+                await DashboardService.SaveServerDashboards(collection);
+                break;
+            }
+        }
+    }
+
+    private async Task PopulateDefaultLayout()
+    {
+        await ApplyDefaultTemplate();
+    }
+
+    private async Task ResetToDefaultLayout()
+    {
+        await ApplyDefaultTemplate();
+    }
+
+    private async Task ApplyDefaultTemplate()
+    {
+        if (_activeDashboard is null) return;
+
+        var template = DashboardService.GetDefaultTemplate(_activeScope, BuildTemplateContext());
+        _activeDashboard.Widgets = template.Widgets;
+        await SaveDashboard();
+    }
+
+    private async Task CopyDashboardLink()
+    {
+        if (_activeDashboard is null) return;
+        var uri = new Uri(NavigationManager.Uri);
+        var link = $"{uri.GetLeftPart(UriPartial.Path)}?dashboardId={_activeDashboard.Id}";
+        await JsInterop.CopyToClipboard(link);
+        _linkCopied = true;
+        StateHasChanged();
+
+        // Reset "Copied!" text after 2 seconds
+        _ = Task.Delay(2000).ContinueWith(_ =>
+        {
+            _linkCopied = false;
+            InvokeAsync(StateHasChanged);
+        });
+    }
+
+    private async Task ExportDashboard()
+    {
+        if (_activeDashboard is null) return;
+
+        // Create a clean export object without internal state
+        var export = new
+        {
+            Version = 1,
+            _activeDashboard.Name,
+            _activeDashboard.Description,
+            Widgets = _activeDashboard.Widgets.OrderBy(w => w.Order).Select(w => new
+            {
+                w.WidgetType,
+                w.ColumnSize,
+                w.RowSpan,
+                w.Order,
+                w.Config
+            })
+        };
+
+        var json = JsonConvert.SerializeObject(export, Formatting.Indented);
+        var safeName = _activeDashboard.Name.Replace(" ", "-").ToLowerInvariant();
+        await JsInterop.DownloadJson($"dashboard-{safeName}.json", json);
+    }
+
+    private async Task ImportDashboard()
+    {
+        var json = await JsInterop.ReadFileAsText(_importFileInput);
+        if (string.IsNullOrWhiteSpace(json)) return;
+
+        try
+        {
+            var imported = JObject.Parse(json);
+
+            var name = imported["Name"]?.Value<string>() ?? "Imported Dashboard";
+            var description = imported["Description"]?.Value<string>();
+            var widgetsArray = imported["Widgets"] as JArray;
+
+            var dashboard = new DashboardDefinition
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = name,
+                Description = description,
+                Scope = _activeScope
+            };
+
+            if (widgetsArray is not null)
+            {
+                var order = 0;
+                foreach (var w in widgetsArray)
+                {
+                    dashboard.Widgets.Add(new WidgetPlacement
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        WidgetType = w["WidgetType"]?.Value<string>() ?? "",
+                        ColumnSize = w["ColumnSize"]?.Value<int>() ?? 6,
+                        RowSpan = w["RowSpan"]?.Value<int>() ?? 1,
+                        Order = order++,
+                        Config = w["Config"] as JObject
+                    });
+                }
+            }
+
+            await SaveDashboardToScope(dashboard, _activeScope);
+            _activeDashboard = dashboard;
+            _allDashboards.Add(dashboard);
+        }
+        catch
+        {
+            // Invalid JSON — silently ignore
+        }
+    }
+
     private async Task EnterEditMode()
     {
+        // Materialize code default on entering edit mode so modifications get persisted
+        await MaterializeCodeDefault();
         EditMode = true;
         _dotNetRef = DotNetObjectReference.Create(this);
         StateHasChanged();
-        await Task.CompletedTask;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (EditMode && _dotNetRef is not null)
+        if (EditMode && _dotNetRef is not null && !_sortableInitialized)
         {
+            _sortableInitialized = true;
             await JsInterop.InitSortable(_gridContainer, DotNetObjectReference.Create<object>(this));
         }
     }
@@ -244,8 +664,73 @@
     {
         EditMode = false;
         _widgetEditMode = false;
+        _confirmDelete = false;
+        _sortableInitialized = false;
         await JsInterop.DestroySortable();
         await SaveDashboard();
+    }
+
+    private async Task DeleteDashboard()
+    {
+        if (_activeDashboard is null) return;
+
+        var dashboardId = _activeDashboard.Id;
+        var scope = _activeScope;
+
+        // Remove from the appropriate scope's collection
+        switch (scope)
+        {
+            case DashboardScope.Store when !string.IsNullOrEmpty(StoreId):
+            {
+                var collection = await DashboardService.GetStoreDashboards(StoreId);
+                collection.Dashboards.RemoveAll(d => d.Id == dashboardId);
+                if (collection.ActiveDashboardId == dashboardId)
+                    collection.ActiveDashboardId = null;
+                await DashboardService.SaveStoreDashboards(StoreId, collection);
+                break;
+            }
+            case DashboardScope.User when !string.IsNullOrEmpty(UserId):
+            {
+                var collection = await DashboardService.GetUserDashboards(UserId);
+                collection.Dashboards.RemoveAll(d => d.Id == dashboardId);
+                if (collection.ActiveDashboardId == dashboardId)
+                    collection.ActiveDashboardId = null;
+                await DashboardService.SaveUserDashboards(UserId, collection);
+                break;
+            }
+            case DashboardScope.Server:
+            {
+                var collection = await DashboardService.GetServerDashboards();
+                collection.Dashboards.RemoveAll(d => d.Id == dashboardId);
+                if (collection.ActiveDashboardId == dashboardId)
+                    collection.ActiveDashboardId = null;
+                await DashboardService.SaveServerDashboards(collection);
+                break;
+            }
+        }
+
+        // Remove from local list
+        _allDashboards.RemoveAll(d => d.Id == dashboardId);
+
+        // Exit edit mode
+        EditMode = false;
+        _widgetEditMode = false;
+        _confirmDelete = false;
+        _sortableInitialized = false;
+        await JsInterop.DestroySortable();
+
+        // Switch to another dashboard or fall back to default template
+        _activeDashboard = await DashboardService.ResolveActiveDashboard(UserId, StoreId, BuildTemplateContext());
+        _activeScope = DetermineActiveScope(_activeDashboard);
+
+        // Check if we fell back to a code-generated default
+        _isCodeDefault = _activeDashboard is not null
+                         && _allDashboards.All(d => d.Id != _activeDashboard.Id);
+
+        if (_activeDashboard is not null && _allDashboards.All(d => d.Id != _activeDashboard.Id))
+        {
+            _allDashboards.Add(_activeDashboard);
+        }
     }
 
     [JSInvokable]
@@ -273,14 +758,30 @@
     {
         if (_activeDashboard is null) return;
 
+        // Shift all existing widgets down by one
+        foreach (var w in _activeDashboard.Widgets)
+            w.Order++;
+
         var placement = new WidgetPlacement
         {
             WidgetType = descriptor.Type,
             ColumnSize = descriptor.DefaultColumnSize,
-            Order = _activeDashboard.Widgets.Count
+            RowSpan = descriptor.DefaultRowSpan,
+            Order = 0
         };
         _activeDashboard.Widgets.Add(placement);
-        await SaveDashboard();
+
+        if (descriptor.RequiresConfiguration)
+        {
+            // Don't save yet — open config panel and mark as pending
+            _pendingConfiguration = true;
+            _configuringPlacement = placement;
+            _configuringDescriptor = descriptor;
+        }
+        else
+        {
+            await SaveDashboard();
+        }
     }
 
     private async Task RemoveWidget(WidgetPlacement placement)
@@ -304,13 +805,47 @@
     private async Task OnWidgetSizeChanged((int cols, int rows) size)
     {
         await SaveDashboard();
-        await InvokeAsync(StateHasChanged);
     }
 
     private void OnWidgetEditMode(bool editing)
     {
         _widgetEditMode = editing;
         InvokeAsync(StateHasChanged);
+    }
+
+    private void OpenConfigPanel(WidgetPlacement placement, WidgetDescriptor descriptor)
+    {
+        _configuringPlacement = placement;
+        _configuringDescriptor = descriptor;
+    }
+
+    private async Task SaveWidgetConfig(JObject config)
+    {
+        if (_configuringPlacement is not null)
+        {
+            _configuringPlacement.Config = config;
+            _pendingConfiguration = false;
+            _configuringPlacement = null;
+            _configuringDescriptor = null;
+            await SaveDashboard();
+        }
+    }
+
+    private async Task CloseConfigPanel()
+    {
+        if (_pendingConfiguration && _configuringPlacement is not null && _activeDashboard is not null)
+        {
+            // User cancelled config for a newly added widget — remove it
+            _activeDashboard.Widgets.Remove(_configuringPlacement);
+            var ordered = _activeDashboard.Widgets.OrderBy(w => w.Order).ToList();
+            for (int i = 0; i < ordered.Count; i++)
+                ordered[i].Order = i;
+            _activeDashboard.Widgets = ordered;
+        }
+        _pendingConfiguration = false;
+        _configuringPlacement = null;
+        _configuringDescriptor = null;
+        await Task.CompletedTask;
     }
 
     private async Task SwitchDashboard(DashboardDefinition dashboard)
@@ -339,7 +874,18 @@
         }
     }
 
-    private async Task CreateNewDashboard(DashboardScope scope)
+    private async Task OnDashboardNameChanged(ChangeEventArgs e)
+    {
+        if (_activeDashboard is null) return;
+        var newName = e.Value?.ToString()?.Trim();
+        if (!string.IsNullOrEmpty(newName))
+        {
+            _activeDashboard.Name = newName;
+            await SaveDashboard();
+        }
+    }
+
+    private async Task CreateNewDashboard(DashboardScope scope, bool copyFromCurrent)
     {
         var scopeLabel = scope switch
         {
@@ -348,11 +894,20 @@
             _ => "Store"
         };
 
-        var newDashboard = new DashboardDefinition
+        DashboardDefinition newDashboard;
+        if (copyFromCurrent && _activeDashboard is not null)
         {
-            Name = $"{scopeLabel} Dashboard {_allDashboards.Count(d => d.Scope == scope) + 1}",
-            Scope = scope
-        };
+            newDashboard = DashboardService.CopyDashboard(_activeDashboard,
+                $"{_activeDashboard.Name} ({scopeLabel} Copy)");
+        }
+        else
+        {
+            newDashboard = new DashboardDefinition
+            {
+                Name = $"{scopeLabel} Dashboard {_allDashboards.Count(d => d.Scope == scope) + 1}"
+            };
+        }
+        newDashboard.Scope = scope;
 
         await SaveDashboardToScope(newDashboard, scope);
 
@@ -361,23 +916,30 @@
         _allDashboards.Add(newDashboard);
     }
 
-    private async Task SaveAsCopy(DashboardScope targetScope)
+    /// <summary>
+    /// If the active dashboard is a code-generated default, materializes it into a real
+    /// persisted dashboard in the Store scope. After this call, _isCodeDefault is false
+    /// and subsequent saves go to storage normally.
+    /// </summary>
+    private async Task MaterializeCodeDefault()
     {
-        if (_activeDashboard is null) return;
+        if (!_isCodeDefault || _activeDashboard is null) return;
 
-        var copy = DashboardService.CopyDashboard(_activeDashboard, _activeDashboard.Name + " (Copy)");
-        copy.Scope = targetScope;
+        // The code default gets persisted as a Store-scoped dashboard
+        _activeDashboard.Scope = DashboardScope.Store;
+        _activeScope = DashboardScope.Store;
+        _isCodeDefault = false;
 
-        await SaveDashboardToScope(copy, targetScope);
-
-        _activeDashboard = copy;
-        _activeScope = targetScope;
-        _allDashboards.Add(copy);
+        await SaveDashboardToScope(_activeDashboard, _activeScope);
     }
 
     private async Task SaveDashboard()
     {
         if (_activeDashboard is null) return;
+
+        // Code-generated defaults are never auto-saved — they stay fresh.
+        // They only get persisted when explicitly materialized via MaterializeCodeDefault().
+        if (_isCodeDefault) return;
 
         await SaveDashboardToScope(_activeDashboard, _activeScope);
     }

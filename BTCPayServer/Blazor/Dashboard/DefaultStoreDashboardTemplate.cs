@@ -12,39 +12,59 @@ public class DefaultStoreDashboardTemplate : IDashboardTemplateProvider
 
     public DashboardDefinition GetTemplate(DashboardTemplateContext context)
     {
+        // Mirrors the original MVC Dashboard.cshtml layout exactly.
+        // The MVC dashboard uses flexbox rows:
+        //   Row 1 (wallet-balances): WalletBalance (8 cols)
+        //   Row 2 (secondary):       RecentTransactions (8) + StoreNumbers (4) — side by side
+        //   Row 3 (tertiary):        RecentInvoices (12)
+        //   Row 4:                   LightningBalance (8) + LightningServices (4)
+        //   Per-app:                 AppSales (8) + AppTopItems (4)
+
         var widgets = new List<WidgetPlacement>();
         var order = 0;
 
+        // Row 1: Wallet balance (full row) — or setup guide when not configured
         if (context.WalletEnabled)
         {
             widgets.Add(new WidgetPlacement
             {
                 WidgetType = "WalletBalance",
-                ColumnSize = 12,
+                ColumnSize = 8,
                 Order = order++,
                 Config = JObject.FromObject(new { CryptoCode = context.CryptoCode, Period = "Week" })
+            });
+        }
+        else
+        {
+            widgets.Add(new WidgetPlacement
+            {
+                WidgetType = "SetupGuide",
+                ColumnSize = 8,
+                Order = order++
+            });
+        }
+
+        // Row 2: Recent transactions (8 cols) + Store numbers (4 cols) — side by side
+        if (context.WalletEnabled)
+        {
+            widgets.Add(new WidgetPlacement
+            {
+                WidgetType = "RecentTransactions",
+                ColumnSize = 8,
+                Order = order++,
+                Config = JObject.FromObject(new { CryptoCode = context.CryptoCode, Limit = 5 })
             });
         }
 
         widgets.Add(new WidgetPlacement
         {
             WidgetType = "StoreNumbers",
-            ColumnSize = context.WalletEnabled ? 6 : 12,
+            ColumnSize = 4,
             Order = order++,
             Config = JObject.FromObject(new { TimeframeDays = 7 })
         });
 
-        if (context.WalletEnabled)
-        {
-            widgets.Add(new WidgetPlacement
-            {
-                WidgetType = "RecentTransactions",
-                ColumnSize = 6,
-                Order = order++,
-                Config = JObject.FromObject(new { CryptoCode = context.CryptoCode, Limit = 5 })
-            });
-        }
-
+        // Row 3: Recent invoices (full width)
         widgets.Add(new WidgetPlacement
         {
             WidgetType = "RecentInvoices",
@@ -53,12 +73,13 @@ public class DefaultStoreDashboardTemplate : IDashboardTemplateProvider
             Config = JObject.FromObject(new { Limit = 5 })
         });
 
+        // Row 4: Lightning balance (8 cols) + Lightning services (4 cols)
         if (context.LightningEnabled)
         {
             widgets.Add(new WidgetPlacement
             {
                 WidgetType = "LightningBalance",
-                ColumnSize = 12,
+                ColumnSize = 8,
                 Order = order++,
                 Config = JObject.FromObject(new { CryptoCode = context.CryptoCode })
             });
@@ -66,18 +87,19 @@ public class DefaultStoreDashboardTemplate : IDashboardTemplateProvider
             widgets.Add(new WidgetPlacement
             {
                 WidgetType = "LightningServices",
-                ColumnSize = 12,
+                ColumnSize = 4,
                 Order = order++,
                 Config = JObject.FromObject(new { CryptoCode = context.CryptoCode })
             });
         }
 
+        // Per-app rows: App sales (8 cols) + App top items (4 cols)
         foreach (var app in context.Apps)
         {
             widgets.Add(new WidgetPlacement
             {
                 WidgetType = "AppSales",
-                ColumnSize = 6,
+                ColumnSize = 8,
                 Order = order++,
                 Config = JObject.FromObject(new { AppId = app.Id })
             });
@@ -85,7 +107,7 @@ public class DefaultStoreDashboardTemplate : IDashboardTemplateProvider
             widgets.Add(new WidgetPlacement
             {
                 WidgetType = "AppTopItems",
-                ColumnSize = 6,
+                ColumnSize = 4,
                 Order = order++,
                 Config = JObject.FromObject(new { AppId = app.Id })
             });

@@ -23,7 +23,15 @@ else if (Loading)
 else if (_error is not null)
 {
     <header><h3>Top Items</h3></header>
-    <p class="text-danger">@_error</p>
+    <p class="text-warning">@_error</p>
+    @if (!Readonly)
+    {
+        <button class="btn btn-sm btn-outline-secondary" @onclick="() => RequestConfigure.InvokeAsync()">Configure</button>
+    }
+    else
+    {
+        <p class="text-secondary small">Enter edit mode to configure this widget.</p>
+    }
 }
 else
 {
@@ -31,7 +39,15 @@ else
     @if (string.IsNullOrEmpty(config.AppId))
     {
         <header><h3>Top Items</h3></header>
-        <p class="text-secondary">No app configured. Edit this widget to select an app.</p>
+        <p class="text-secondary">No app configured.</p>
+        @if (!Readonly)
+        {
+            <button class="btn btn-sm btn-primary" @onclick="() => RequestConfigure.InvokeAsync()">Select App</button>
+        }
+        else
+        {
+            <p class="text-secondary small">Enter edit mode to configure this widget.</p>
+        }
     }
     else
     {
@@ -76,8 +92,17 @@ else
         Category = "Apps",
         ComponentType = typeof(AppTopItemsWidget),
         Scope = WidgetScope.Store,
-        DefaultColumnSize = 6,
-        CssClass = "app-top-items"
+        DefaultColumnSize = 4,
+        MinColumnSize = 3,
+        MaxColumnSize = 12,
+        MinRowSpan = 1,
+        MaxRowSpan = 3,
+        CssClass = "app-top-items",
+        RequiresConfiguration = true,
+        ConfigSchema = new()
+        {
+            ["AppId"] = new ConfigFieldSchema { Label = "App ID", FieldType = ConfigFieldType.Text }
+        }
     };
 
     public class AppTopItemsConfig

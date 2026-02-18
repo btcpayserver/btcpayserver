@@ -21,12 +21,15 @@ public class WidgetRegistry
 
     public IEnumerable<WidgetDescriptor> GetAvailableFor(DashboardScope dashboardScope, bool isAdmin = false)
     {
+        // The dashboard page always has a store context (from the URL), so store-scoped
+        // widgets are available on all dashboard scopes — the scope of a dashboard only
+        // determines where it's persisted, not what data it can access.
         return Descriptors.Where(d =>
         {
             return d.Scope switch
             {
                 WidgetScope.Universal => true,
-                WidgetScope.Store => dashboardScope == DashboardScope.Store,
+                WidgetScope.Store => true,
                 WidgetScope.Server => isAdmin,
                 WidgetScope.User => true,
                 _ => false

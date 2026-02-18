@@ -29,6 +29,8 @@ namespace BTCPayServer.Blazor
             services.AddScoped<DashboardService>();
             services.AddScoped<DashboardJsInterop>();
             services.AddSingleton<IDashboardTemplateProvider, DefaultStoreDashboardTemplate>();
+            services.AddSingleton<IDashboardTemplateProvider, DefaultUserDashboardTemplate>();
+            services.AddSingleton<IDashboardTemplateProvider, DefaultServerDashboardTemplate>();
 
             // Parity widgets (matching existing MVC dashboard)
             services.AddDashboardWidget<WalletBalanceWidget>(WalletBalanceWidget.Descriptor);
@@ -43,6 +45,7 @@ namespace BTCPayServer.Blazor
             // Utility widgets
             services.AddDashboardWidget<NotesWidget>(NotesWidget.Descriptor);
             services.AddDashboardWidget<TodoWidget>(TodoWidget.Descriptor);
+            services.AddDashboardWidget<SetupGuideWidget>(SetupGuideWidget.Descriptor);
 
             // Data widgets
             services.AddDashboardWidget<StatsCardWidget>(StatsCardWidget.Descriptor);
@@ -60,6 +63,17 @@ namespace BTCPayServer.Blazor
         {
             descriptor.ComponentType = typeof(TComponent);
             services.AddSingleton(descriptor);
+            return services;
+        }
+
+        /// <summary>
+        /// Registers a plugin's widget contributor that appends widgets to default dashboard templates.
+        /// </summary>
+        public static IServiceCollection AddDashboardWidgetContributor<T>(
+            this IServiceCollection services)
+            where T : class, IDashboardWidgetContributor
+        {
+            services.AddSingleton<IDashboardWidgetContributor, T>();
             return services;
         }
     }

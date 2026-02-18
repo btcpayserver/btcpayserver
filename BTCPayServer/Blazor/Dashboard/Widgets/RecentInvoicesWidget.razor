@@ -89,8 +89,16 @@ else
         ComponentType = typeof(RecentInvoicesWidget),
         Scope = WidgetScope.Store,
         DefaultColumnSize = 12,
-        MinColumnSize = 3,
-        CssClass = "store-recent-invoices"
+        MinColumnSize = 4,
+        MaxColumnSize = 12,
+        MinRowSpan = 1,
+        MaxRowSpan = 3,
+        CssClass = "store-recent-invoices",
+        ConfigSchema = new()
+        {
+            ["Limit"] = new ConfigFieldSchema { Label = "Max Items", FieldType = ConfigFieldType.Number, Min = 1, Max = 50 },
+            ["LastDays"] = new ConfigFieldSchema { Label = "Time Range (days)", FieldType = ConfigFieldType.Number, Min = 1, Max = 365 }
+        }
     };
 
     public class RecentInvoicesConfig

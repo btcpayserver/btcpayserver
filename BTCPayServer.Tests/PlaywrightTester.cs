@@ -47,11 +47,16 @@ namespace BTCPayServer.Tests
             builder.AddUserSecrets("AB0AC1DD-9D26-485B-9416-56A33F268117");
             var conf = builder.Build();
             var playwright = await Playwright.CreateAsync();
+            var slowMo = 0;
+            if (int.TryParse(conf["PLAYWRIGHT_SLOWMO"], out var parsedSlowMo))
+            {
+                slowMo = parsedSlowMo;
+            }
             Browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
                 Headless = Server.PayTester.InContainer || conf["PLAYWRIGHT_HEADLESS"] == "true",
                 ExecutablePath = conf["PLAYWRIGHT_EXECUTABLE"],
-                SlowMo = 0, // 50 if you want to slow down
+                SlowMo = slowMo,
                 Args = ["--disable-frame-rate-limit"] // Fix slowness on linux (https://github.com/microsoft/playwright/issues/34625#issuecomment-2822015672)
             });
             var context = await Browser.NewContextAsync();
@@ -126,7 +131,9 @@ namespace BTCPayServer.Tests
                 if (walletPage is not null)
                     walletId = WalletId.Parse(walletPage);
                 walletId ??= WalletId;
-                if (walletId is not null && walletId.ToString() != walletPage)
+                if (walletId is null && StoreId is not null)
+                    walletId = new WalletId(StoreId, "BTC");
+                if (walletId is not null && (walletId.ToString() != walletPage || !Page.Url.Contains("/wallets/", StringComparison.OrdinalIgnoreCase)))
                     await GoToUrl($"wallets/{walletId}");
             }
             // If not, we browse to the wallet before going to subpages
@@ -139,6 +146,18 @@ namespace BTCPayServer.Tests
             if (navPages is null)
             {
                 await Page.GetByTestId("Wallet-" + cryptoCode).Locator("a").ClickAsync();
+            }
+            else if (navPages == WalletsNavPages.Transactions && walletId is not null)
+            {
+                await GoToUrl($"wallets/{walletId}");
+            }
+            else if (navPages == WalletsNavPages.Send && walletId is not null)
+            {
+                await GoToUrl($"wallets/{walletId}/send");
+            }
+            else if (navPages == WalletsNavPages.Receive && walletId is not null)
+            {
+                await GoToUrl($"wallets/{walletId}/receive");
             }
             else if (navPages == WalletsNavPages.PSBT)
             {
@@ -268,9 +287,19 @@ namespace BTCPayServer.Tests
             ScriptPubKeyType format = ScriptPubKeyType.Segwit)
         {
             var isImport = !string.IsNullOrEmpty(seed);
-            await GoToWalletSettings(cryptoCode);
-            // Replace previous wallet case
-            var isSettings = Page.Url.EndsWith("/settings");
+            var walletExists = WalletId != null &&
+                               WalletId.StoreId == StoreId &&
+                               WalletId.CryptoCode == cryptoCode;
+            if (walletExists)
+            {
+                await GoToWalletSettings(cryptoCode);
+            }
+            else
+            {
+                await GoToUrl($"/stores/{StoreId}/onchain/{cryptoCode}");
+            }
+
+            var isSettings = Page.Url.EndsWith("/settings", StringComparison.Ordinal);
             if (isSettings)
             {
                 TestLogs.LogInformation($"Replacing the wallet");
@@ -283,8 +312,16 @@ namespace BTCPayServer.Tests
             if (isImport)
             {
                 TestLogs.LogInformation("Progressing with existing seed");
-                await Page.ClickAsync("#ImportWalletOptionsLink");
-                await Page.ClickAsync("#ImportSeedLink");
+                await GoToUrl($"/stores/{StoreId}/onchain/{cryptoCode}/import/seed");
+                var seedInput = Page.Locator("#ExistingMnemonic");
+                if (!await seedInput.IsVisibleAsync())
+                {
+                    var content = await Page.ContentAsync();
+                    const string deniedMarker = "- Denied</h";
+                    var denied = content.Contains(deniedMarker, StringComparison.Ordinal);
+                    Assert.True(false,
+                        $"ExistingMnemonic not visible at {Page.Url}. Denied={denied}");
+                }
                 await Page.FillAsync("#ExistingMnemonic", seed);
                 await Page.Locator("#SavePrivateKeys").SetCheckedAsync(isHotWallet);
             }
@@ -292,7 +329,16 @@ namespace BTCPayServer.Tests
             {
                 var option = isHotWallet ? "Hotwallet" : "Watchonly";
                 TestLogs.LogInformation($"Generating new seed ({option})");
-                await Page.ClickAsync("#GenerateWalletLink");
+                var generateWalletLink = Page.Locator("#GenerateWalletLink");
+                if (!await generateWalletLink.IsVisibleAsync())
+                {
+                    var content = await Page.ContentAsync();
+                    const string deniedMarker = "- Denied</h";
+                    var denied = content.Contains(deniedMarker, StringComparison.Ordinal);
+                    Assert.True(false,
+                        $"GenerateWalletLink not visible at {Page.Url}. Denied={denied}");
+                }
+                await generateWalletLink.ClickAsync();
                 await Page.ClickAsync($"#Generate{option}Link");
             }
 
@@ -337,8 +383,18 @@ namespace BTCPayServer.Tests
 
         public async Task Logout()
         {
-            await Page.Locator("#menu-item-Account").ClickAsync();
-            await Page.Locator("#Nav-Logout").ClickAsync();
+            // Ensure we're on a page with the account menu before attempting logout.
+            await GoToHome();
+            try
+            {
+                await Page.WaitForSelectorAsync("#menu-item-Account", new() { Timeout = 5000 });
+                await Page.Locator("#menu-item-Account").ClickAsync();
+                await Page.Locator("#Nav-Logout").ClickAsync();
+            }
+            catch (TimeoutException)
+            {
+                await GoToUrl("/logout");
+            }
         }
 
         public Task SkipWizard() => Page.ClickAsync("#SkipWizard");
@@ -362,7 +418,10 @@ namespace BTCPayServer.Tests
             }
 
             await Page.FillAsync("#Email", email);
-            await Page.SelectOptionAsync("#Role", role);
+            var selected = await Page.SelectOptionAsync(
+                "#Role",
+                new[] { new SelectOptionValue { Label = role } });
+            Assert.NotEmpty(selected);
             await Page.ClickAsync("#AddUser");
             await FindAlertMessage(partialText: "The user has been added successfully");
         }
@@ -443,15 +502,21 @@ namespace BTCPayServer.Tests
                         .ToString()! + "-[legacy]";
             }
 
-            if (!(await Page.ContentAsync()).Contains($"Setup {cryptoCode} Wallet"))
-                await GoToWalletSettings(cryptoCode);
-
-            await Page.Locator("#ImportWalletOptionsLink").ClickAsync();
-            await Page.Locator("#ImportXpubLink").ClickAsync();
+            await GoToUrl($"/stores/{StoreId}/onchain/{cryptoCode}/import/xpub");
+            var derivationInput = Page.Locator("#DerivationScheme");
+            if (!await derivationInput.IsVisibleAsync())
+            {
+                var content = await Page.ContentAsync();
+                const string deniedMarker = "- Denied</h";
+                var denied = content.Contains(deniedMarker, StringComparison.Ordinal);
+                Assert.True(false,
+                    $"DerivationScheme not visible at {Page.Url}. Denied={denied}");
+            }
             await Page.FillAsync("#DerivationScheme", derivationScheme);
             await Page.Locator("#Continue").ClickAsync();
             await Page.Locator("#Confirm").ClickAsync();
             await FindAlertMessage();
+            WalletId = new WalletId(StoreId, cryptoCode);
         }
 
         public async Task AddLightningNode(string connectionType = null, bool test = true)
@@ -884,7 +949,8 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain("404 - Page not found", content);
             if (shouldHaveAccess)
             {
-                Assert.DoesNotContain("- Denied</h", content);
+                Assert.True(!content.Contains("- Denied</h", StringComparison.Ordinal),
+                    $"Expected access to {url} but got denied.");
                 // check associated link is active if present
                 var hrefToMatch = new Uri(Link(url), UriKind.Absolute).AbsolutePath.TrimEnd('/');
                 var sidebarLink = Page.Locator($"#mainNav a[href=\"{hrefToMatch}\"], #mainNav a[href=\"{hrefToMatch}/\"]");
@@ -896,8 +962,24 @@ namespace BTCPayServer.Tests
             }
             else
             {
-                Assert.Contains("- Denied</h", content);
+                Assert.True(content.Contains("- Denied</h", StringComparison.Ordinal),
+                    $"Expected denied for {url} but got access.");
             }
+        }
+
+        public async Task AssertPageDeniedOrLogin(string url)
+        {
+            await GoToUrl(url);
+            await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+            var content = await Page.ContentAsync();
+            Assert.DoesNotContain("404 - Page not found", content);
+            if (content.Contains("- Denied</h", StringComparison.Ordinal))
+                return;
+            if (Page.Url.Contains("/login", StringComparison.OrdinalIgnoreCase))
+                return;
+            if (await Page.Locator("form[action*=\"/login\"]").CountAsync() > 0)
+                return;
+            Assert.Fail($"Expected denied or login for {url} but got access.");
         }
 
         public Task FastReloadAsync()

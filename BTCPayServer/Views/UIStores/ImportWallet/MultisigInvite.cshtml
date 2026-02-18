@@ -1,0 +1,75 @@
+@using BTCPayServer.Blazor
+@using BTCPayServer.Blazor.VaultBridge
+@model BTCPayServer.Models.StoreViewModels.MultisigInviteViewModel
+@{
+    Layout = "~/Views/Shared/_LayoutSimple.cshtml";
+    ViewData["Title"] = "Submit multisig signer key";
+    this.ViewData.SetBlazorAllowed(true);
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 col-lg-7">
+        <div class="card">
+            <div class="card-body p-4">
+                <h3 class="mb-3">Submit multisig signer key</h3>
+                <p class="text-secondary mb-4">
+                    Request <span class="font-monospace">@Model.RequestId</span> - @Model.RequiredSigners/@Model.TotalSigners (@Model.ScriptType.ToUpperInvariant()).
+                </p>
+
+                @if (Model.Submitted)
+                {
+                    <div class="alert alert-success mb-3">Your signer key is already submitted.</div>
+                    <p class="text-secondary mb-0">You can close this page now. The wallet owner will receive your submission and will notify next steps.</p>
+                }
+                else
+                {
+                    <div class="mb-4">
+                        <h5 class="mb-2">Extract from BTCPay Server Vault</h5>
+                        <p class="text-secondary mb-3">Use your hardware wallet to auto-fill account key, fingerprint, and key path.</p>
+                        <component type="typeof(VaultBridgeUI)"
+                                   param-Controller="@(new GetMultisigAccountKeyController
+                                                      {
+                                                          CryptoCode = Model.CryptoCode,
+                                                          ScriptType = Model.ScriptType
+                                                      })"
+                                   render-mode="Server" />
+                    </div>
+
+                    <form method="post">
+                        <div asp-validation-summary="ModelOnly" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
+                        <div class="mb-3">
+                            <label asp-for="AccountKey" class="form-label">Account key (xpub/tpub)</label>
+                            <input asp-for="AccountKey" class="form-control font-monospace" />
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label asp-for="MasterFingerprint" class="form-label">Master fingerprint</label>
+                                <input asp-for="MasterFingerprint" class="form-control font-monospace" placeholder="d90c6a4f" />
+                            </div>
+                            <div class="col-md-8">
+                                <label asp-for="AccountKeyPath" class="form-label">Account key path</label>
+                                <input asp-for="AccountKeyPath" class="form-control font-monospace" placeholder="m/48'/1'/0'/2'" />
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-4">Submit signer key</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section PageFootContent
+{
+    <script src="~/js/vaultbridge.js" asp-append-version="true"></script>
+    <script>
+        vault.setMultisigInviteXPub = function (data) {
+            const accountKey = document.getElementById("AccountKey");
+            const masterFingerprint = document.getElementById("MasterFingerprint");
+            const accountKeyPath = document.getElementById("AccountKeyPath");
+            if (accountKey) accountKey.value = data.accountKey || "";
+            if (masterFingerprint) masterFingerprint.value = data.masterFingerprint || "";
+            if (accountKeyPath) accountKeyPath.value = data.accountKeyPath || "";
+        }
+    </script>
+}

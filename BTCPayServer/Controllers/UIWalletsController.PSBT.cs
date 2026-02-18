@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Data;
 using BTCPayServer.ModelBinders;
@@ -74,6 +75,8 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> WalletSign([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletPSBTViewModel vm, string command = null)
         {
+            if (!await AuthorizeWalletAsync(walletId, Policies.CanSignWalletTransactions))
+                return Forbid();
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
 
@@ -92,7 +95,7 @@ namespace BTCPayServer.Controllers
                 case "vault":
                     return ViewVault(walletId, vm);
                 case "seed":
-                    return SignWithSeed(walletId, vm.SigningContext, vm.ReturnUrl, vm.BackUrl);
+                    return await SignWithSeed(walletId, vm.SigningContext, vm.ReturnUrl, vm.BackUrl);
                 case "decode":
                     return await WalletPSBT(walletId, vm, "decode");
             }
@@ -129,6 +132,8 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> WalletPSBT([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, string returnUrl)
         {
+            if (!await HasAnyWalletTransactionPermission(walletId))
+                return Forbid();
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             var referer = HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath;
             var vm = new WalletPSBTViewModel
@@ -151,6 +156,8 @@ namespace BTCPayServer.Controllers
             WalletId walletId,
             WalletPSBTViewModel vm, string command)
         {
+            if (!await HasAnyWalletTransactionPermission(walletId))
+                return Forbid();
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             vm.CryptoCode = network.CryptoCode;
 
@@ -175,11 +182,18 @@ namespace BTCPayServer.Controllers
             switch (command)
             {
                 case "createpending":
-                    await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl());
+                    if (!await AuthorizeWalletAsync(walletId, Policies.CanCreateWalletTransactions))
+                        return Forbid();
+                    var pending = await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl());
+                    await NotifyMultisigSignersOfPendingTransaction(walletId, pending);
                     return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                 case "sign":
+                    if (!await AuthorizeWalletAsync(walletId, Policies.CanSignWalletTransactions))
+                        return Forbid();
                     return await WalletSign(walletId, vm);
                 case "collect" when vm.SigningContext.PendingTransactionId is not null:
+                    if (!await AuthorizeWalletAsync(walletId, Policies.CanSignWalletTransactions))
+                        return Forbid();
                     return await RedirectToWalletPSBTReady(walletId,
                         new WalletPSBTReadyViewModel
                         {
@@ -193,6 +207,8 @@ namespace BTCPayServer.Controllers
                     return View("WalletPSBTDecoded", vm);
 
                 case "save-psbt":
+                    if (!await AuthorizeWalletAsync(walletId, Policies.CanCreateWalletTransactions))
+                        return Forbid();
                     return FilePSBT(psbt, vm.FileName);
 
                 case "update":
@@ -212,6 +228,8 @@ namespace BTCPayServer.Controllers
                     });
 
                 case "combine":
+                    if (!await AuthorizeWalletAsync(walletId, Policies.CanSignWalletTransactions))
+                        return Forbid();
                     ModelState.Remove(nameof(vm.PSBT));
                     return View(nameof(WalletPSBTCombine), new WalletPSBTCombineViewModel
                     {
@@ -221,6 +239,8 @@ namespace BTCPayServer.Controllers
                     });
 
                 case "broadcast":
+                    if (!await AuthorizeWalletAsync(walletId, Policies.CanBroadcastWalletTransactions))
+                        return Forbid();
                     return await RedirectToWalletPSBTReady(walletId, new WalletPSBTReadyViewModel
                     {
                         SigningContext = new SigningContextModel(psbt),
@@ -440,6 +460,8 @@ namespace BTCPayServer.Controllers
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletPSBTViewModel vm, string command, CancellationToken cancellationToken = default)
         {
+            if (!await HasAnyWalletTransactionPermission(walletId))
+                return Forbid();
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             PSBT psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
             if (vm.InvalidPSBT || psbt is null)
@@ -457,6 +479,8 @@ namespace BTCPayServer.Controllers
             switch (command)
             {
                 case "payjoin":
+                    if (!await AuthorizeWalletAsync(walletId, Policies.CanSignWalletTransactions))
+                        return Forbid();
                     string error;
                     try
                     {
@@ -528,6 +552,8 @@ namespace BTCPayServer.Controllers
                     vm.SetErrors(errors);
                     return View(nameof(WalletPSBT), vm);
                 case "broadcast":
+                    if (!await AuthorizeWalletAsync(walletId, Policies.CanBroadcastWalletTransactions))
+                        return Forbid();
                     {
                         var transaction = psbt.ExtractTransaction();
                         try
@@ -607,6 +633,8 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> WalletPSBTCombine([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletPSBTCombineViewModel vm)
         {
+            if (!await AuthorizeWalletAsync(walletId, Policies.CanSignWalletTransactions))
+                return Forbid();
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
             if (psbt == null)

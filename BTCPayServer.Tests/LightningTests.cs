@@ -747,7 +747,7 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         var storeController = user.GetController<UIStoresController>();
         var storeResponse = await storeController.GeneralSettings(user.StoreId);
         Assert.IsType<ViewResult>(storeResponse);
-        Assert.IsType<ViewResult>(storeController.SetupLightningNode(user.StoreId, "BTC"));
+        Assert.IsType<ViewResult>(await storeController.SetupLightningNode(user.StoreId, "BTC"));
 
         await storeController.SetupLightningNode(user.StoreId, new LightningNodeViewModel
         {
@@ -769,7 +769,7 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
             new LightningNodeViewModel { ConnectionString = tester.MerchantCharge.Client.Uri.AbsoluteUri },
             "save", "BTC"));
 
-        storeResponse = storeController.LightningSettings(user.StoreId, "BTC");
+        storeResponse = await storeController.LightningSettings(user.StoreId, "BTC");
         var storeVm =
             Assert.IsType<LightningSettingsViewModel>(Assert
                 .IsType<ViewResult>(storeResponse).Model);
@@ -789,7 +789,7 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         var cryptoCode = "BTC";
         user.GrantAccess(true);
         user.RegisterLightningNode(cryptoCode);
-        user.SetLNUrl(cryptoCode, false);
+        await user.SetLNUrl(cryptoCode, false);
         var vm = await user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModelAsync<CheckoutAppearanceViewModel>();
         var criteria = Assert.Single(vm.PaymentMethodCriteria);
         Assert.Equal(PaymentTypes.LN.GetPaymentMethodId(cryptoCode).ToString(), criteria.PaymentMethod);
@@ -809,7 +809,7 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
 
         // Activating LNUrl, we should still have only 1 payment criteria that can be set.
         user.RegisterLightningNode(cryptoCode);
-        user.SetLNUrl(cryptoCode, true);
+        await user.SetLNUrl(cryptoCode, true);
         vm = await user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModelAsync<CheckoutAppearanceViewModel>();
         criteria = Assert.Single(vm.PaymentMethodCriteria);
         Assert.Equal(PaymentTypes.LN.GetPaymentMethodId(cryptoCode).ToString(), criteria.PaymentMethod);

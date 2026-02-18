@@ -6,13 +6,13 @@
 @model WalletSetupViewModel
 
 @{
-    Layout = "_LayoutWalletSetup";
+    Layout = "~/Views/UIStores/_LayoutWalletSetup.cshtml";
     ViewData.SetTitle(StringLocalizer["Connect your hardware wallet"]);
     this.ViewData.SetBlazorAllowed(true);
 }
 
 @section Navbar {
-    <a asp-controller="UIStores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
+    <a asp-controller="UIStoreOnChainWallets" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
         <vc:icon symbol="back" />
     </a>
 }
@@ -33,7 +33,7 @@
     </div>
 </div>
 
-<form id="walletInfo" method="post" asp-controller="UIStores" asp-action="UpdateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+<form id="walletInfo" method="post" asp-controller="UIStoreOnChainWallets" asp-action="UpdateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
     <input asp-for="Config" type="hidden" />
     <input asp-for="Confirmation" type="hidden" value="true" />
 </form>
@@ -48,4 +48,3 @@
         }
     </script>
 }
-

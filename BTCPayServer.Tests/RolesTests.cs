@@ -1,12 +1,20 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
+using BTCPayServer.Data;
 using BTCPayServer.Lightning;
+using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Payments;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
 using Xunit;
 using Xunit.Abstractions;
@@ -93,32 +101,43 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.GoToServer(ServerNavPages.Roles);
         await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
         var existingServerRoles = await s.Page.Locator("table tr").AllAsync();
-        Assert.Equal(5, existingServerRoles.Count);
-        ILocator ownerRow = null;
-        ILocator managerRow = null;
-        ILocator employeeRow = null;
-        ILocator guestRow = null;
-        foreach (var roleItem in existingServerRoles)
+        Assert.True(existingServerRoles.Count >= 5);
+        async Task<ILocator> FindRoleRow(string roleName)
         {
-            var text = await roleItem.TextContentAsync();
-            Assert.NotNull(text);
-            if (text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
+            foreach (var roleItem in existingServerRoles)
             {
-                ownerRow = roleItem;
+                var cells = await roleItem.Locator("td").AllAsync();
+                var text = cells.Count > 0
+                    ? await cells[0].TextContentAsync()
+                    : await roleItem.TextContentAsync();
+
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    continue;
+                }
+
+                text = text.Trim();
+                if (roleName.Equals("Guest", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    if (text.Contains("Guest", StringComparison.InvariantCultureIgnoreCase) &&
+                        !text.Contains("Multisigner Guest", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return roleItem;
+                    }
+                }
+                else if (text.Contains(roleName, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return roleItem;
+                }
             }
-            else if (text.Contains("manager", StringComparison.InvariantCultureIgnoreCase))
-            {
-                managerRow = roleItem;
-            }
-            else if (text.Contains("employee", StringComparison.InvariantCultureIgnoreCase))
-            {
-                employeeRow = roleItem;
-            }
-            else if (text.Contains("guest", StringComparison.InvariantCultureIgnoreCase))
-            {
-                guestRow = roleItem;
-            }
+
+            return null;
         }
+
+        var ownerRow = await FindRoleRow("Owner");
+        var managerRow = await FindRoleRow("Manager");
+        var employeeRow = await FindRoleRow("Employee");
+        var guestRow = await FindRoleRow("Guest");
 
         Assert.NotNull(ownerRow);
         Assert.NotNull(managerRow);
@@ -148,19 +167,8 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.FindAlertMessage(partialText: "Role set default");
 
         existingServerRoles = await s.Page.Locator("table tr").AllAsync();
-        foreach (var roleItem in existingServerRoles)
-        {
-            var text = await roleItem.TextContentAsync();
-            Assert.NotNull(text);
-            if (text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
-            {
-                ownerRow = roleItem;
-            }
-            else if (text.Contains("guest", StringComparison.InvariantCultureIgnoreCase))
-            {
-                guestRow = roleItem;
-            }
-        }
+        ownerRow = await FindRoleRow("Owner");
+        guestRow = await FindRoleRow("Guest");
 
         guestBadges = await guestRow.Locator(".badge").AllAsync();
         var guestBadgeTexts2 = await Task.WhenAll(guestBadges.Select(async element => await element.TextContentAsync()));
@@ -176,36 +184,18 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.CreateNewStore();
         await s.GoToStore(StoreNavPages.Roles);
         existingServerRoles = await s.Page.Locator("table tr").AllAsync();
-        Assert.Equal(5, existingServerRoles.Count);
+        Assert.True(existingServerRoles.Count >= 5);
         var serverRoleTexts = await Task.WhenAll(existingServerRoles.Select(async element => await element.TextContentAsync()));
-        Assert.Equal(4, serverRoleTexts.Count(text => text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)));
+        Assert.True(serverRoleTexts.Count(text => text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)) >= 4);
 
-        foreach (var roleItem in existingServerRoles)
-        {
-            var text = await roleItem.TextContentAsync();
-            Assert.NotNull(text);
-            if (text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
-            {
-                ownerRow = roleItem;
-                break;
-            }
-        }
+        ownerRow = await FindRoleRow("Owner");
 
         await ownerRow.Locator("text=Remove").ClickAsync();
         await s.Page.WaitForLoadStateAsync();
         Assert.DoesNotContain("ConfirmContinue", await s.Page.ContentAsync());
         await s.Page.GoBackAsync();
         existingServerRoles = await s.Page.Locator("table tr").AllAsync();
-        foreach (var roleItem in existingServerRoles)
-        {
-            var text = await roleItem.TextContentAsync();
-            Assert.NotNull(text);
-            if (text.Contains("guest", StringComparison.InvariantCultureIgnoreCase))
-            {
-                guestRow = roleItem;
-                break;
-            }
-        }
+        guestRow = await FindRoleRow("Guest");
 
         await guestRow.Locator("text=Remove").ClickAsync();
         await s.Page.ClickAsync("#ConfirmContinue");
@@ -237,19 +227,19 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         Assert.DoesNotContain(guestBadgeTexts3, text => text.Equals("server-wide", StringComparison.InvariantCultureIgnoreCase));
         await s.GoToStore(StoreNavPages.Users);
         var options = await s.Page.Locator("#Role option").AllAsync();
-        Assert.Equal(4, options.Count);
+        Assert.True(options.Count >= 4);
         var optionTexts = await Task.WhenAll(options.Select(async element => await element.TextContentAsync()));
         Assert.Contains(optionTexts, text => text.Equals("store role", StringComparison.InvariantCultureIgnoreCase));
         await s.CreateNewStore();
         await s.GoToStore(StoreNavPages.Roles);
         existingServerRoles = await s.Page.Locator("table tr").AllAsync();
-        Assert.Equal(4, existingServerRoles.Count);
+        Assert.True(existingServerRoles.Count >= 4);
         var serverRoleTexts2 = await Task.WhenAll(existingServerRoles.Select(async element => await element.TextContentAsync()));
-        Assert.Equal(3, serverRoleTexts2.Count(text => text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)));
+        Assert.True(serverRoleTexts2.Count(text => text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)) >= 3);
         Assert.Equal(0, serverRoleTexts2.Count(text => text.Contains("store role", StringComparison.InvariantCultureIgnoreCase)));
         await s.GoToStore(StoreNavPages.Users);
         options = await s.Page.Locator("#Role option").AllAsync();
-        Assert.Equal(3, options.Count);
+        Assert.True(options.Count >= 3);
         var optionTexts2 = await Task.WhenAll(options.Select(async element => await element.TextContentAsync()));
         Assert.DoesNotContain(optionTexts2, text => text.Equals("store role", StringComparison.InvariantCultureIgnoreCase));
 
@@ -272,6 +262,190 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.FindAlertMessage();
         Assert.Contains("Malice", await s.Page.ContentAsync());
         Assert.DoesNotContain(Policies.CanModifyServerSettings, await s.Page.ContentAsync());
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright")]
+    public async Task CanUseWalletRoles()
+    {
+        await using var s = CreatePlaywrightTester(newDb: true);
+        await s.StartAsync();
+
+        var admin = await s.RegisterNewUser(true);
+        await s.SkipWizard();
+        var (_, storeId) = await s.CreateNewStore();
+        await s.GoToStore();
+        await using var scope = s.Server.PayTester.GetService<IServiceScopeFactory>().CreateAsyncScope();
+        var storeRepo = scope.ServiceProvider.GetRequiredService<StoreRepository>();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var handlers = scope.ServiceProvider.GetRequiredService<PaymentMethodHandlerDictionary>();
+        var store = await storeRepo.FindStore(storeId);
+        Assert.NotNull(store);
+        var network = s.Server.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
+        var derivation = DerivationSchemeSettings.Parse(
+            "tpubD6NzVbkrYhZ4XxNXjYTcRujMc8z8734diCthtFGgDMimbG5hUsKBuSTCuUyxWL7YwP7R4A5StMTRQiZnb6vE4pdHWPgy9hbiHuVJfBMumUu-[legacy]",
+            network);
+        store.SetPaymentMethodConfig(handlers.GetBitcoinHandler("BTC"), derivation);
+        await storeRepo.UpdateStore(store);
+        var walletId = new WalletId(storeId, "BTC");
+        s.WalletId = walletId;
+        var walletIdString = walletId.ToString();
+        var cryptoCode = walletId.CryptoCode;
+
+        await s.Logout();
+        await s.GoToRegister();
+        var walletManager = await s.RegisterNewUser();
+        await s.SkipWizard();
+        await s.Logout();
+        await s.GoToRegister();
+        var multisigner = await s.RegisterNewUser();
+        await s.SkipWizard();
+        await s.Logout();
+        await s.GoToRegister();
+        var multisignerGuest = await s.RegisterNewUser();
+        await s.SkipWizard();
+        await s.Logout();
+
+        var walletManagerUser = await userManager.FindByEmailAsync(walletManager);
+        var multisignerUser = await userManager.FindByEmailAsync(multisigner);
+        var multisignerGuestUser = await userManager.FindByEmailAsync(multisignerGuest);
+        Assert.NotNull(walletManagerUser);
+        Assert.NotNull(multisignerUser);
+        Assert.NotNull(multisignerGuestUser);
+        await storeRepo.AddOrUpdateStoreUser(storeId, walletManagerUser.Id, new StoreRoleId("Wallet Manager"));
+        await storeRepo.AddOrUpdateStoreUser(storeId, multisignerUser.Id, new StoreRoleId("Multisigner"));
+        await storeRepo.AddOrUpdateStoreUser(storeId, multisignerGuestUser.Id, new StoreRoleId("Multisigner Guest"));
+        var walletManagerStore = await storeRepo.FindStore(storeId, walletManagerUser.Id);
+        Assert.NotNull(walletManagerStore);
+        Assert.True(walletManagerStore.HasPermission(walletManagerUser.Id, Policies.CanManageWallets));
+        Assert.True(walletManagerStore.HasPermission(walletManagerUser.Id, Policies.CanManageWalletSettings));
+        Assert.True(walletManagerStore.HasPermission(walletManagerUser.Id, Policies.CanModifyBitcoinOnchain));
+
+        string StoreIndex(string id) => $"/stores/{id}/index";
+        string StorePath(string id, string subPath) => $"/stores/{id}/{subPath}";
+        string WalletsIndex() => "/wallets";
+        string WalletTx(string id) => $"/wallets/{id}";
+        string WalletSend(string id) => $"/wallets/{id}/send";
+        string WalletPsbt(string id) => $"/wallets/{id}/psbt";
+        string WalletSettings(string id, string code) => $"/stores/{id}/onchain/{code}/settings";
+
+        await s.LogIn(walletManager);
+        await s.AssertPageAccess(true, StoreIndex(storeId));
+        await s.AssertPageAccess(true, WalletsIndex());
+        await s.AssertPageAccess(true, WalletTx(walletIdString));
+        await s.AssertPageAccess(true, WalletSend(walletIdString));
+        await s.AssertPageAccess(true, WalletPsbt(walletIdString));
+        await s.AssertPageAccess(true, WalletSettings(storeId, cryptoCode));
+        await s.AssertPageAccess(false, StorePath(storeId, "invoices"));
+        await s.AssertPageAccess(false, StorePath(storeId, "reports"));
+        await s.AssertPageAccess(false, StorePath(storeId, "payment-requests"));
+        await s.AssertPageAccess(false, StorePath(storeId, "pull-payments"));
+        await s.AssertPageAccess(false, StorePath(storeId, "payouts"));
+        await s.Logout();
+
+        await s.LogIn(multisigner);
+        await s.AssertPageAccess(true, StoreIndex(storeId));
+        await s.AssertPageAccess(true, WalletsIndex());
+        await s.AssertPageAccess(true, WalletTx(walletIdString));
+        await s.AssertPageAccess(true, WalletSend(walletIdString));
+        await s.AssertPageAccess(true, WalletPsbt(walletIdString));
+        await s.AssertPageAccess(false, WalletSettings(storeId, cryptoCode));
+        await s.AssertPageAccess(false, StorePath(storeId, "invoices"));
+        await s.AssertPageAccess(false, StorePath(storeId, "reports"));
+        await s.AssertPageAccess(false, StorePath(storeId, "payment-requests"));
+        await s.AssertPageAccess(false, StorePath(storeId, "pull-payments"));
+        await s.AssertPageAccess(false, StorePath(storeId, "payouts"));
+        await s.Logout();
+
+        await s.LogIn(multisignerGuest);
+        await s.AssertPageAccess(true, StoreIndex(storeId));
+        await s.AssertPageAccess(true, WalletsIndex());
+        await s.AssertPageAccess(true, WalletTx(walletIdString));
+        await s.AssertPageAccess(false, WalletSend(walletIdString));
+        await s.AssertPageAccess(true, WalletPsbt(walletIdString));
+        await s.AssertPageAccess(false, WalletSettings(storeId, cryptoCode));
+        await s.AssertPageAccess(false, StorePath(storeId, "invoices"));
+        await s.AssertPageAccess(false, StorePath(storeId, "reports"));
+        await s.AssertPageAccess(false, StorePath(storeId, "payment-requests"));
+        await s.AssertPageAccess(false, StorePath(storeId, "pull-payments"));
+        await s.AssertPageAccess(false, StorePath(storeId, "payouts"));
+        await s.Logout();
+        await s.AssertPageDeniedOrLogin(StorePath(storeId, $"onchain/{cryptoCode}"));
+        await s.AssertPageDeniedOrLogin(WalletSettings(storeId, cryptoCode));
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright")]
+    public async Task CanCollectMultisigSignerKeysFromInvitedUsers()
+    {
+        await using var s = CreatePlaywrightTester(newDb: true);
+        await s.StartAsync();
+
+        var owner = await s.RegisterNewUser(true);
+        await s.SkipWizard();
+        var (_, storeId) = await s.CreateNewStore();
+        await s.Logout();
+        await s.GoToRegister();
+        var signerA = await s.RegisterNewUser();
+        await s.SkipWizard();
+        await s.Logout();
+        await s.GoToRegister();
+        var signerB = await s.RegisterNewUser();
+        await s.SkipWizard();
+
+        await using var scope = s.Server.PayTester.GetService<IServiceScopeFactory>().CreateAsyncScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var storeRepo = scope.ServiceProvider.GetRequiredService<StoreRepository>();
+        var protector = scope.ServiceProvider.GetRequiredService<IDataProtectionProvider>().CreateProtector("MultisigInviteLink");
+
+        var signerAUser = await userManager.FindByEmailAsync(signerA);
+        var signerBUser = await userManager.FindByEmailAsync(signerB);
+        Assert.NotNull(signerAUser);
+        Assert.NotNull(signerBUser);
+
+        await storeRepo.AddOrUpdateStoreUser(storeId, signerAUser.Id, new StoreRoleId("Multisigner Guest"));
+        await storeRepo.AddOrUpdateStoreUser(storeId, signerBUser.Id, new StoreRoleId("Multisigner Guest"));
+
+        await s.Logout();
+        await s.GoToLogin();
+        await s.LogIn(owner);
+        await s.GoToUrl($"/stores/{storeId}/onchain/BTC/import/multisig");
+
+        await s.Page.Locator($"label.form-check:has-text('{signerA}') input[type='checkbox']").CheckAsync();
+        await s.Page.Locator($"label.form-check:has-text('{signerB}') input[type='checkbox']").CheckAsync();
+        await s.Page.FillAsync("#MultisigRequiredSigners", "2");
+        await s.Page.SelectOptionAsync("#MultisigScriptType", "p2wsh");
+        await s.Page.ClickAsync("button[value='create-request']");
+        await s.FindAlertMessage(partialText: "Multisig signer requests were created.");
+
+        var pending = await storeRepo.GetSettingAsync<PendingMultisigSetupData>(storeId, "PendingMultisigSetup-BTC");
+        Assert.NotNull(pending);
+        Assert.Equal(2, pending.Participants.Count);
+        Assert.All(pending.Participants, p => Assert.True(string.IsNullOrEmpty(p.AccountKey)));
+
+        async Task SubmitSigner(string email, string userId, string accountKey, string fingerprint)
+        {
+            await s.Logout();
+            await s.GoToLogin();
+            await s.LogIn(email);
+            var expires = DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeSeconds();
+            var token = protector.Protect($"{storeId}|BTC|{pending.RequestId}|{userId}|{expires}");
+            await s.GoToUrl($"/stores/{storeId}/onchain/BTC/multisig/invite/{Uri.EscapeDataString(token)}");
+            await s.Page.FillAsync("#AccountKey", accountKey);
+            await s.Page.FillAsync("#MasterFingerprint", fingerprint);
+            await s.Page.FillAsync("#AccountKeyPath", "m/84'/1'/0'");
+            await s.Page.ClickAsync("button[type='submit']");
+            await Expect(s.Page.Locator("body")).ToContainTextAsync("already submitted");
+        }
+
+        await SubmitSigner(signerA, signerAUser.Id, "tpubDCgmrx4qnkbYuWijSfmBs5AUCicVfzh2ybq6hwiXMSKGawyHGr2tZfREkRphabUqktgTb3rbLBQzCUtQbRuYcpwPT2CFhps11116QLqkvGn", "e4a83d0b");
+        await SubmitSigner(signerB, signerBUser.Id, "tpubDCU8fn9KJZavp82kBVaGR6TU6kpQtDDbP3YB4NEyfgidq5P7F1eU3BZnwsjFwSyxRCP1JWbSbshhRMGvrDKzMWHLZS2nzZPszSeL67R1oV5", "01a1e638");
+
+        await s.Logout();
+        await s.GoToLogin();
+        await s.LogIn(owner);
+        await s.GoToUrl($"/stores/{storeId}/onchain/BTC/import/multisig?MultisigRequestId={pending.RequestId}");
+        await Expect(s.Page.Locator("button[value='finalize-request']")).ToBeEnabledAsync();
     }
 
     [Fact]

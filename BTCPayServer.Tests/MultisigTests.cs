@@ -9,8 +9,10 @@ using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Wallets;
 using BTCPayServer.Views.Wallets;
 using NBitcoin;
+using NBitcoin.RPC;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Xunit;
@@ -41,7 +43,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
                                        $"[{resp2.AccountKeyPath}]{resp2.DerivationScheme}/0/*," +
                                        $"[{resp3.AccountKeyPath}]{resp3.DerivationScheme}/0/*))";
 
-        var strategy = UIStoresController.ParseDerivationStrategy(multisigDerivationScheme, network);
+        var strategy = UIStoreOnChainWalletsController.ParseDerivationStrategy(multisigDerivationScheme, network);
         strategy.Source = "ManualDerivationScheme";
         var derivationScheme = strategy.AccountDerivation;
 
@@ -73,7 +75,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
                                        $"[{resp2.AccountKeyPath}]{resp2.DerivationScheme}/0/*," +
                                        $"[{resp3.AccountKeyPath}]{resp3.DerivationScheme}/0/*))";
 
-        var strategy = UIStoresController.ParseDerivationStrategy(multisigDerivationScheme, network);
+        var strategy = UIStoreOnChainWalletsController.ParseDerivationStrategy(multisigDerivationScheme, network);
         strategy.Source = "ManualDerivationScheme";
         var derivationScheme = strategy.AccountDerivation;
         await s.CreateNewStore();
@@ -83,17 +85,36 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Page.FillAsync("#DerivationScheme", multisigDerivationScheme);
         await s.Page.ClickAsync("#Continue");
         await s.Page.ClickAsync("#Confirm");
+        await s.FindAlertMessage(partialText: "Wallet settings for BTC have been updated.");
         s.TestLogs.LogInformation($"Multisig wallet setup: {multisigDerivationScheme}");
 
-        // fetch address from receive page
-        await s.GoToWallet(navPages: WalletsNavPages.Receive);
+        // fetch address from backend to avoid flaky receive UI timing
+        var walletId = new WalletId(s.StoreId, cryptoCode);
+        var walletReceiveService = s.Server.PayTester.GetService<WalletReceiveService>();
+        KeyPathInformation receiveInfo = null;
+        for (var i = 0; i < 20 && receiveInfo == null; i++)
+        {
+            receiveInfo = await walletReceiveService.GetOrGenerate(walletId);
+            if (receiveInfo == null)
+                await Task.Delay(500);
+        }
+        Assert.NotNull(receiveInfo);
+        var address = receiveInfo!.Address.ToString();
 
-        var addressElement = s.Page.Locator("#Address");
-        await addressElement.ClickAsync();
-        var address = await addressElement.GetAttributeAsync("data-text");
-        Assert.NotNull(address);
-        await s.Page.ClickAsync("//button[@value='fill-wallet']");
-        await s.Page.ClickAsync("#CancelWizard");
+        var addressObj = BitcoinAddress.Create(address, network.NBitcoinNetwork);
+        bool mined = false;
+        retry:
+        try
+        {
+            await s.Server.ExplorerNode.SendToAddressAsync(addressObj, Money.Coins(1.0m));
+        }
+        catch (RPCException) when (!mined)
+        {
+            mined = true;
+            await s.Server.ExplorerNode.GenerateAsync(1);
+            goto retry;
+        }
+        await s.Server.ExplorerNode.GenerateAsync(1);
 
         // we are creating a pending transaction
         await s.GoToWallet(navPages: WalletsNavPages.Send);

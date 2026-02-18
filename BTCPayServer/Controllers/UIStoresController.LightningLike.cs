@@ -25,9 +25,10 @@ namespace BTCPayServer.Controllers;
 public partial class UIStoresController
 {
     [HttpGet("{storeId}/lightning/{cryptoCode}")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public IActionResult Lightning(string storeId, string cryptoCode)
+    public async Task<IActionResult> Lightning(string storeId, string cryptoCode)
     {
+        if (!await AuthorizeLightningWalletSettingsAsync(storeId))
+            return Forbid();
         var store = HttpContext.GetStoreData();
         if (store == null)
             return NotFound();
@@ -86,10 +87,11 @@ public partial class UIStoresController
         return View(vm);
     }
 
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [HttpGet("{storeId}/lightning/{cryptoCode}/dashboard/balance")]
-    public IActionResult LightningBalanceDashboard(string storeId, string cryptoCode)
+    public async Task<IActionResult> LightningBalanceDashboard(string storeId, string cryptoCode)
     {
+        if (!await AuthorizeLightningWalletSettingsAsync(storeId))
+            return Forbid();
         var store = HttpContext.GetStoreData();
         if (store == null)
             return NotFound();
@@ -98,9 +100,10 @@ public partial class UIStoresController
     }
 
     [HttpGet("{storeId}/lightning/{cryptoCode}/dashboard/balance/{type}")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> LightningBalanceDashboard(string storeId, string cryptoCode, HistogramType type)
     {
+        if (!await AuthorizeLightningWalletSettingsAsync(storeId))
+            return Forbid();
         var store = HttpContext.GetStoreData();
         if (store == null)
             return NotFound();
@@ -113,9 +116,10 @@ public partial class UIStoresController
     }
 
     [HttpGet("{storeId}/lightning/{cryptoCode}/setup")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public IActionResult SetupLightningNode(string storeId, string cryptoCode)
+    public async Task<IActionResult> SetupLightningNode(string storeId, string cryptoCode)
     {
+        if (!await AuthorizeLightningWalletSettingsAsync(storeId))
+            return Forbid();
         var store = HttpContext.GetStoreData();
         if (store == null)
             return NotFound();
@@ -130,9 +134,10 @@ public partial class UIStoresController
     }
 
     [HttpPost("{storeId}/lightning/{cryptoCode}/setup")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> SetupLightningNode(string storeId, LightningNodeViewModel vm, string command, string cryptoCode)
     {
+        if (!await AuthorizeLightningWalletSettingsAsync(storeId))
+            return Forbid();
         vm.CryptoCode = cryptoCode;
         var store = HttpContext.GetStoreData();
         if (store == null)
@@ -220,9 +225,10 @@ public partial class UIStoresController
     }
 
     [HttpGet("{storeId}/lightning/{cryptoCode}/settings")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public IActionResult LightningSettings(string storeId, string cryptoCode)
+    public async Task<IActionResult> LightningSettings(string storeId, string cryptoCode)
     {
+        if (!await AuthorizeLightningWalletSettingsAsync(storeId))
+            return Forbid();
         var store = HttpContext.GetStoreData();
         if (store == null)
             return NotFound();
@@ -263,9 +269,10 @@ public partial class UIStoresController
     }
 
     [HttpPost("{storeId}/lightning/{cryptoCode}/settings")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> LightningSettings(LightningSettingsViewModel vm)
     {
+        if (!await AuthorizeLightningWalletSettingsAsync(vm.StoreId))
+            return Forbid();
         var store = HttpContext.GetStoreData();
         if (store == null)
             return NotFound();

@@ -1,4 +1,5 @@
 ﻿@using BTCPayServer.Client
+@using System
 @model BTCPayServer.Models.WalletViewModels.ListWalletsViewModel
 @{
     ViewData.SetLayoutModel(new(nameof(WalletsNavPages.Index), StringLocalizer["Wallets"]));
@@ -43,19 +44,23 @@
                     <tbody>
                     @foreach (var wallet in Model.Wallets)
                     {
+                    var walletTypePolicy = wallet.CryptoCode.Equals("BTC", StringComparison.OrdinalIgnoreCase)
+                        ? Policies.CanModifyBitcoinOnchain
+                        : Policies.CanModifyOtherWallets;
+                    var walletPermission = $"{walletTypePolicy},{Policies.CanViewWallet}";
                     <tr>
 
                         <td>
                             <a
-                                permission="@Policies.CanModifyStoreSettings"
+                                permission="@Policies.CanViewStoreSettings"
                                 asp-action="GeneralSettings" asp-controller="UIStores" asp-route-storeId="@wallet.StoreId">
                                 @wallet.StoreName
                             </a>
-                            <span not-permission="@Policies.CanModifyStoreSettings">@wallet.StoreName</span>
+                            <span not-permission="@Policies.CanViewStoreSettings">@wallet.StoreName</span>
                         </td>
 
                         <td>@wallet.CryptoCode</td>
-                        <td><span permission="@Policies.CanModifyStoreSettings">@wallet.Balance</span></td>
+                        <td><span permission="@walletPermission" and-mode="true">@wallet.Balance</span></td>
                         <td class="text-end">
                             <a asp-action="WalletTransactions" asp-route-walletId="@wallet.Id" text-translate="true">Manage</a>
                         </td>

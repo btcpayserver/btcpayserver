@@ -1,11 +1,11 @@
 @model WalletSetupViewModel
 @{
-    Layout = "_LayoutWalletSetup";
+    Layout = "~/Views/UIStores/_LayoutWalletSetup.cshtml";
     ViewData.SetTitle(StringLocalizer["Confirm addresses"]);
 }
 
 @section Navbar {
-    <a asp-controller="UIStores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="@Model.Method">
+    <a asp-controller="UIStoreOnChainWallets" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="@Model.Method">
         <vc:icon symbol="back" />
     </a>
 }
@@ -15,7 +15,7 @@
     <p class="lead text-secondary mt-3" text-translate="true">Please check that your wallet is generating the same addresses as below.</p>
 </header>
 
-<form method="post" asp-controller="UIStores" asp-action="UpdateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+<form method="post" asp-controller="UIStoreOnChainWallets" asp-action="UpdateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
     <input asp-for="Config" type="hidden"/>
     <input asp-for="Confirmation" type="hidden"/>
     <input asp-for="AccountKey" type="hidden" />
@@ -46,5 +46,4 @@
         <button name="command" type="submit" class="btn btn-primary" value="save" id="Confirm" text-translate="true">Confirm</button>
     </div>
 </form>
-
 

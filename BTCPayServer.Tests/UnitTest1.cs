@@ -1649,11 +1649,11 @@ namespace BTCPayServer.Tests
 
             // enable unified QR code in settings
             var vm = Assert.IsType<LightningSettingsViewModel>(Assert
-                .IsType<ViewResult>(user.GetController<UIStoresController>().LightningSettings(user.StoreId, cryptoCode)).Model
+                .IsType<ViewResult>(await user.GetController<UIStoresController>().LightningSettings(user.StoreId, cryptoCode)).Model
             );
             vm.OnChainWithLnInvoiceFallback = true;
             Assert.IsType<RedirectToActionResult>(
-                user.GetController<UIStoresController>().LightningSettings(vm).Result
+                await user.GetController<UIStoresController>().LightningSettings(vm)
             );
 
             // validate that QR code now has both onchain and offchain payment urls

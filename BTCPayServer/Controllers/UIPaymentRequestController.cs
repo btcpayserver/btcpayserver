@@ -681,7 +681,7 @@ namespace BTCPayServer.Controllers
             {
                 Severity = StatusMessageModel.StatusSeverity.Error,
                 Html =
-                    $"To create a payment request, you need to <a href='{Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode = _networkProvider.DefaultNetwork.CryptoCode, storeId })}' class='alert-link'>set up a wallet</a> first",
+                    $"To create a payment request, you need to <a href='{Url.Action(nameof(UIStoreOnChainWalletsController.SetupWallet), "UIStoreOnChainWallets", new { cryptoCode = _networkProvider.DefaultNetwork.CryptoCode, storeId })}' class='alert-link'>set up a wallet</a> first",
                 AllowDismiss = false
             });
             return RedirectToAction(nameof(GetPaymentRequests), new { storeId });

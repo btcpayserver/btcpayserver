@@ -1,11 +1,11 @@
 @model WalletSetupViewModel
 @{
-    Layout = "_LayoutWalletSetup";
+    Layout = "~/Views/UIStores/_LayoutWalletSetup.cshtml";
     ViewData.SetTitle(StringLocalizer["Import your wallet file"]);
 }
 
 @section Navbar {
-    <a asp-controller="UIStores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
+    <a asp-controller="UIStoreOnChainWallets" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
         <vc:icon symbol="back" />
     </a>
 }

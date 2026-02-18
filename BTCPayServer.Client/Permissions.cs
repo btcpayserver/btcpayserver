@@ -24,6 +24,17 @@ namespace BTCPayServer.Client
         public const string CanViewInvoices = "btcpay.store.canviewinvoices";
         public const string CanCreateInvoice = "btcpay.store.cancreateinvoice";
         public const string CanModifyInvoices = "btcpay.store.canmodifyinvoices";
+        public const string CanManageWallets = "btcpay.store.canmanagewallets";
+        public const string CanModifyBitcoinOnchain = "btcpay.store.canmodifybitcoinonchain";
+        public const string CanModifyBitcoinLightning = "btcpay.store.canmodifybitcoinlightning";
+        public const string CanModifyOtherWallets = "btcpay.store.canmodifyotherwallets";
+        public const string CanViewWallet = "btcpay.store.canviewwallet";
+        public const string CanManageWalletSettings = "btcpay.store.canmanagewalletsettings";
+        public const string CanManageWalletTransactions = "btcpay.store.canmanagewallettransactions";
+        public const string CanCreateWalletTransactions = "btcpay.store.cancreatetransactions";
+        public const string CanSignWalletTransactions = "btcpay.store.cansigntransactions";
+        public const string CanBroadcastWalletTransactions = "btcpay.store.canbroadcasttransactions";
+        public const string CanCancelWalletTransactions = "btcpay.store.cancanceltransactions";
         public const string CanViewPaymentRequests = "btcpay.store.canviewpaymentrequests";
         public const string CanModifyPaymentRequests = "btcpay.store.canmodifypaymentrequests";
         public const string CanModifyProfile = "btcpay.user.canmodifyprofile";
@@ -53,6 +64,17 @@ namespace BTCPayServer.Client
                 yield return CanViewInvoices;
                 yield return CanCreateInvoice;
                 yield return CanModifyInvoices;
+                yield return CanManageWallets;
+                yield return CanModifyBitcoinOnchain;
+                yield return CanModifyBitcoinLightning;
+                yield return CanModifyOtherWallets;
+                yield return CanViewWallet;
+                yield return CanManageWalletSettings;
+                yield return CanManageWalletTransactions;
+                yield return CanCreateWalletTransactions;
+                yield return CanSignWalletTransactions;
+                yield return CanBroadcastWalletTransactions;
+                yield return CanCancelWalletTransactions;
                 yield return CanModifyWebhooks;
                 yield return CanModifyServerSettings;
                 yield return CanModifyStoreSettings;
@@ -270,7 +292,21 @@ namespace BTCPayServer.Client
                 Policies.CanModifyPaymentRequests,
                 Policies.CanManagePayouts,
                 Policies.CanModifyOfferings,
+                Policies.CanManageWallets,
                 Policies.CanUseLightningNodeInStore);
+
+            PolicyHasChild(policyMap, Policies.CanManageWallets,
+                Policies.CanModifyBitcoinOnchain,
+                Policies.CanModifyBitcoinLightning,
+                Policies.CanModifyOtherWallets,
+                Policies.CanViewWallet,
+                Policies.CanManageWalletSettings,
+                Policies.CanManageWalletTransactions);
+            PolicyHasChild(policyMap, Policies.CanManageWalletTransactions,
+                Policies.CanCreateWalletTransactions,
+                Policies.CanSignWalletTransactions,
+                Policies.CanBroadcastWalletTransactions,
+                Policies.CanCancelWalletTransactions);
 
             PolicyHasChild(policyMap,Policies.CanManageUsers, Policies.CanCreateUser);
             PolicyHasChild(policyMap,Policies.CanManagePullPayments, Policies.CanCreatePullPayments, Policies.CanArchivePullPayments);

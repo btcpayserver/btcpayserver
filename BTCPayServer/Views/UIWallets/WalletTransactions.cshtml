@@ -3,6 +3,7 @@
 @using BTCPayServer.Components
 @using BTCPayServer.Components.WalletNav
 @using BTCPayServer.TagHelpers
+@using System
 @using Microsoft.AspNetCore.Html
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model ListTransactionsViewModel
@@ -14,6 +15,13 @@
     var labelFilter = Context.Request.Query["labelFilter"].ToString();
     var wallet = walletId != null ? WalletId.Parse(walletId) : new WalletId(storeId, cryptoCode);
     storeId = wallet.StoreId;
+    var walletTypePolicy = wallet.CryptoCode.Equals("BTC", StringComparison.OrdinalIgnoreCase)
+        ? Policies.CanModifyBitcoinOnchain
+        : Policies.CanModifyOtherWallets;
+    var walletViewPermission = $"{walletTypePolicy},{Policies.CanViewWallet}";
+    var walletCreateTxPermission = $"{walletTypePolicy},{Policies.CanCreateWalletTransactions}";
+    var walletBroadcastTxPermission = $"{walletTypePolicy},{Policies.CanBroadcastWalletTransactions}";
+    var walletCancelTxPermission = $"{walletTypePolicy},{Policies.CanCancelWalletTransactions}";
 
     ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Transactions)}-{Model.CryptoCode}", StringLocalizer["{0} Transactions", Model.CryptoCode])
         .SetCategory(WellKnownCategories.ForWallet(Model.CryptoCode)));
@@ -159,7 +167,7 @@
         </div>
     }
 
-    <div class="dropdown d-inline-flex align-items-center gap-3 ms-auto" id="Export">
+    <div class="dropdown d-inline-flex align-items-center gap-3 ms-auto" id="Export" permission="@walletViewPermission" and-mode="true">
         <a
             id="view-report"
             permission="@Policies.CanViewReports"
@@ -204,11 +212,25 @@
                     <td><span id="Sigs_@(index)__Collected">@ptblob?.SignaturesCollected</span></td>
                     <td><span id="Sigs_@(index)__Scheme">@ptblob?.SignaturesNeeded/@ptblob?.SignaturesTotal</span></td>
                     <td>
-                        <a asp-action="ViewPendingTransaction" asp-route-walletId="@walletId"
-                           asp-route-pendingTransactionId="@pendingTransaction.Id">@(pendingTransaction.State == PendingTransactionState.Signed ? "Broadcast" : "View")</a>
-                        -
-                        <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId"
-                           asp-route-pendingTransactionId="@pendingTransaction.Id">Abort</a>
+                        @if (pendingTransaction.State == PendingTransactionState.Signed)
+                        {
+                            <a permission="@walletBroadcastTxPermission" and-mode="true"
+                               asp-action="ViewPendingTransaction" asp-route-walletId="@walletId"
+                               asp-route-pendingTransactionId="@pendingTransaction.Id">Broadcast</a>
+                            <a not-permission="@walletBroadcastTxPermission" and-mode="true"
+                               asp-action="ViewPendingTransaction" asp-route-walletId="@walletId"
+                               asp-route-pendingTransactionId="@pendingTransaction.Id">View</a>
+                        }
+                        else
+                        {
+                            <a asp-action="ViewPendingTransaction" asp-route-walletId="@walletId"
+                               asp-route-pendingTransactionId="@pendingTransaction.Id">View</a>
+                        }
+                        <span permission="@walletCancelTxPermission" and-mode="true">
+                            -
+                            <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId"
+                               asp-route-pendingTransactionId="@pendingTransaction.Id">Abort</a>
+                        </span>
                     </td>
                 </tr>
             }
@@ -254,7 +276,7 @@
                         <strong class="mass-action-selected-count">0</strong>
                             <span text-translate="true">selected</span>
                     </div>
-                    <form id="WalletActions" method="post" asp-action="WalletActions" asp-route-walletId="@walletId" permission="@Policies.CanModifyStoreSettings" class="d-inline-flex align-items-center gap-3">
+                    <form id="WalletActions" method="post" asp-action="WalletActions" asp-route-walletId="@walletId" permission="@walletCreateTxPermission" and-mode="true" class="d-inline-flex align-items-center gap-3">
                         <button id="BumpFee" name="command" type="submit" value="cpfp" class="btn btn-link">
                             <vc:icon symbol="actions-send" />
                             <span text-translate="true">Bump fee</span>

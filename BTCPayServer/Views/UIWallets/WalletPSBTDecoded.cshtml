@@ -1,8 +1,14 @@
 @using BTCPayServer.Controllers
+@using BTCPayServer.Client
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model WalletPSBTViewModel
 @{
 	var walletId = Context.GetRouteValue("walletId").ToString();
+    var walletTypePolicy = Model.CryptoCode?.Equals("BTC", StringComparison.OrdinalIgnoreCase) is true
+        ? BTCPayServer.Client.Policies.CanModifyBitcoinOnchain
+        : BTCPayServer.Client.Policies.CanModifyOtherWallets;
+    var walletExportPermission = $"{walletTypePolicy},{BTCPayServer.Client.Policies.CanCreateWalletTransactions}";
+    var walletBroadcastPermission = $"{walletTypePolicy},{BTCPayServer.Client.Policies.CanBroadcastWalletTransactions}";
 	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
 	var isReady = !Model.HasErrors;
     var isSignable = !isReady;
@@ -114,7 +120,7 @@
 }
 else if (isReady)
 {
-    <form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@walletId" class="my-5">
+    <form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@walletId" class="my-5" permission="@walletBroadcastPermission" and-mode="true">
         <input type="hidden" asp-for="SigningKey" />
         <input type="hidden" asp-for="SigningKeyPath" />
         <partial name="SigningContext" for="SigningContext" />
@@ -133,6 +139,7 @@ else if (isReady)
             }
         </div>
     </form>
+    <p class="lead text-secondary mt-5" not-permission="@walletBroadcastPermission" and-mode="true" text-translate="true">Transaction is fully signed, but broadcasting is restricted for your role.</p>
 }
 else
 {
@@ -140,7 +147,7 @@ else
 }
 
 <div class="accordion" id="PSBTOptions">
-    <div class="accordion-item">
+    <div class="accordion-item" permission="@walletExportPermission" and-mode="true">
         <h2 class="accordion-header" id="PSBTOptionsExportHeader">
             <button type="button" class="accordion-button @(needsExport ? "" : "collapsed")" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsExportContent" aria-controls="PSBTOptionsExportContent" aria-expanded="@(needsExport ? "true" : "false")">
                 <span class="h5">Export PSBT @(isReady ? "" : "for signing")</span>
@@ -187,6 +194,11 @@ else
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+    <div class="accordion-item" not-permission="@walletExportPermission" and-mode="true">
+        <div class="accordion-body text-secondary">
+            <span text-translate="true">PSBT export is restricted for your role.</span>
         </div>
     </div>
     @if (!isReady)

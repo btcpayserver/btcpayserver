@@ -2,20 +2,20 @@
 @{
 	var isHotWallet = Model.Method == WalletSetupMethod.HotWallet;
 	var title = isHotWallet ? StringLocalizer["Create {0} Hot Wallet", Model.CryptoCode] : StringLocalizer["Create {0} Watch-Only Wallet", Model.CryptoCode];
-	Layout = "_LayoutWalletSetup";
+	Layout = "~/Views/UIStores/_LayoutWalletSetup.cshtml";
 	ViewData.SetTitle(title);
 	Model.SetViewData(ViewData);
 }
 
 @section Navbar {
-    <a asp-controller="UIStores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
+    <a asp-controller="UIStoreOnChainWallets" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
         <vc:icon symbol="back" />
     </a>
 }
 
 <h1 class="text-center">@ViewData["Title"]</h1>
 <br>
-<partial name="_GenerateWalletForm" model="Model.SetupRequest" />
+        <partial name="~/Views/UIStores/_GenerateWalletForm.cshtml" model="Model.SetupRequest" />
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />

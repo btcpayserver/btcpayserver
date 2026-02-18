@@ -1,0 +1,357 @@
+@model WalletSetupViewModel
+@{
+    Layout = "~/Views/UIStores/_LayoutWalletSetup.cshtml";
+    ViewData.SetTitle(StringLocalizer["Multisig setup"]);
+    var pending = Model.MultisigPendingSetup;
+    var hasPending = pending is not null;
+    var pendingComplete = hasPending &&
+                          pending.Participants.Count == pending.TotalSigners &&
+                          pending.Participants.All(p => !string.IsNullOrWhiteSpace(p.AccountKey));
+    var invitedIds = hasPending
+        ? pending.Participants
+            .Select(p => p.UserId)
+            .ToHashSet(StringComparer.Ordinal)
+        : new HashSet<string>(StringComparer.Ordinal);
+    var submittedIds = hasPending
+        ? pending.Participants
+            .Where(p => !string.IsNullOrWhiteSpace(p.AccountKey))
+            .Select(p => p.UserId)
+            .ToHashSet(StringComparer.Ordinal)
+        : new HashSet<string>(StringComparer.Ordinal);
+}
+
+@section Navbar {
+    <a asp-controller="UIStoreOnChainWallets" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+        <vc:icon symbol="back" />
+    </a>
+}
+
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3" text-translate="true">Build your multisig derivation using guided inputs, then import it in one step.</p>
+</header>
+
+<form asp-controller="UIStoreOnChainWallets" asp-action="UpdateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="multisig" method="post" class="my-5">
+    <input asp-for="CryptoCode" type="hidden" />
+    <input asp-for="Method" type="hidden" />
+    <input asp-for="MultisigRequestId" type="hidden" />
+    <input asp-for="MultisigRemoveUserId" type="hidden" />
+
+    <div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label asp-for="MultisigRequiredSigners" class="form-label" text-translate="true">Required signatures (M)</label>
+            <input asp-for="MultisigRequiredSigners" class="form-control" type="number" min="1" max="15" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="MultisigTotalSigners" class="form-label" text-translate="true">Total signers (N)</label>
+            <input asp-for="MultisigTotalSigners" class="form-control" type="number" min="1" max="15" id="MultisigTotalSigners" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="MultisigScriptType" class="form-label" text-translate="true">Script type</label>
+            <select asp-for="MultisigScriptType" class="form-select" id="MultisigScriptType">
+                <option value="p2wsh">P2WSH</option>
+                <option value="p2sh-p2wsh">P2SH-P2WSH</option>
+                <option value="p2sh">P2SH</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="mt-4 border rounded p-3">
+        <h4 class="mb-2" text-translate="true">Invite store users to submit signer keys</h4>
+        <p class="text-secondary mb-3" text-translate="true">Select users and send email requests. You can finalize setup once all keys are submitted.</p>
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <span class="small text-secondary">
+                <span id="SelectedSignerCount">0</span> selected ·
+                <span id="SelectedSignerSummary">0/@(Model.MultisigTotalSigners ?? 0)</span> total signers
+            </span>
+        </div>
+        <div class="row g-2 mb-3">
+            <div class="col-md-8">
+                <input id="SignerSearch" class="form-control" placeholder="Search by name or email" />
+            </div>
+            <div class="col-md-4">
+                <select id="SignerFilter" class="form-select">
+                    <option value="all">All users</option>
+                    <option value="selected">Selected</option>
+                    <option value="submitted">Submitted key</option>
+                    <option value="pending">Pending key</option>
+                </select>
+            </div>
+        </div>
+        <div id="SignerList" class="d-flex flex-column gap-2" style="max-height: 360px; overflow: auto;">
+            @foreach (var user in Model.MultisigStoreUsers)
+            {
+                var displayName = !string.IsNullOrWhiteSpace(user.Name) ? user.Name : user.Email;
+                var isInvited = invitedIds.Contains(user.UserId);
+                var isSubmitted = submittedIds.Contains(user.UserId);
+                <label class="border rounded p-3 d-flex align-items-center gap-3 multisig-signer-item"
+                       data-name="@displayName.ToLowerInvariant()"
+                       data-email="@user.Email.ToLowerInvariant()"
+                       data-invited="@(isInvited ? "true" : "false")"
+                       data-submitted="@(isSubmitted ? "true" : "false")">
+                    <input class="form-check-input m-0 multisig-signer-checkbox" type="checkbox" name="MultisigParticipantUserIds" value="@user.UserId" @(user.Selected ? "checked" : "") style="transform: scale(1.2);" />
+                    <span class="d-flex flex-column flex-grow-1">
+                        <span class="fw-semibold">@displayName</span>
+                        <span class="text-secondary small">@user.Email</span>
+                    </span>
+                    @if (hasPending)
+                    {
+                        if (isSubmitted)
+                        {
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">Submitted</span>
+                        }
+                        else if (isInvited)
+                        {
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Pending</span>
+                        }
+                    }
+                </label>
+            }
+        </div>
+        <div class="mt-2">
+            <button type="button" id="ToggleMoreSigners" class="btn btn-link px-0 py-1 d-none"></button>
+        </div>
+        <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
+            <button id="CreateSignerRequest" name="command" type="submit" value="create-request" class="btn btn-outline-primary text-nowrap">Send requests</button>
+            @if (hasPending)
+            {
+                <button name="command" type="submit" value="reset-request" class="btn btn-secondary text-nowrap">Clear request</button>
+            }
+        </div>
+        @if (hasPending)
+        {
+            <div class="mt-3">
+                <div class="small text-secondary mb-1">Request id: <span class="font-monospace">@pending.RequestId</span></div>
+                <ul class="mb-3">
+                    @foreach (var participant in pending.Participants)
+                    {
+                        var participantName = !string.IsNullOrWhiteSpace(participant.Name) ? participant.Name : participant.Email;
+                        <li>
+                            @participantName -
+                            @if (!string.IsNullOrWhiteSpace(participant.AccountKey))
+                            {
+                                <span class="text-success">submitted</span>
+                            }
+                            else
+                            {
+                                <span class="text-warning">pending</span>
+                            }
+                            @if (Model.MultisigInviteLinks.TryGetValue(participant.UserId, out var inviteLink))
+                            {
+                                <button type="button"
+                                        class="btn btn-link btn-sm text-secondary p-0 ms-2 multisig-copy-invite"
+                                        data-invite-link="@inviteLink"
+                                        title="Copy invite link"
+                                        aria-label="Copy invite link">
+                                    <vc:icon symbol="actions-copy" />
+                                </button>
+                            }
+                            <button type="submit"
+                                    name="command"
+                                    value="remove-signer"
+                                    class="btn btn-link btn-sm text-danger p-0 ms-2 multisig-remove-signer"
+                                    data-user-id="@participant.UserId"
+                                    title="Remove signer"
+                                    aria-label="Remove signer">
+                                <vc:icon symbol="actions-trash" />
+                            </button>
+                        </li>
+                    }
+                </ul>
+                <div class="d-flex justify-content-end">
+                    <button name="command" type="submit" value="finalize-request" class="btn btn-primary text-nowrap" disabled="@(!pendingComplete)">Create multisig</button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="mt-4">
+        <label class="form-label" text-translate="true">Preview</label>
+        <textarea id="MultisigPreview" class="form-control font-monospace" rows="3" readonly></textarea>
+        <small class="form-text text-secondary" text-translate="true">Preview is built from submitted signer keys.</small>
+    </div>
+
+    <div class="d-flex gap-3 mt-4">
+        <a asp-controller="UIStoreOnChainWallets" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="xpub" class="btn btn-secondary" text-translate="true">Use manual xpub entry</a>
+    </div>
+</form>
+
+<script>
+    (function () {
+        const maxSigners = 15;
+        const requiredInput = document.getElementById("MultisigRequiredSigners");
+        const totalInput = document.getElementById("MultisigTotalSigners");
+        const scriptTypeInput = document.getElementById("MultisigScriptType");
+        const preview = document.getElementById("MultisigPreview");
+        const createRequestButton = document.getElementById("CreateSignerRequest");
+        const selectedSignerCount = document.getElementById("SelectedSignerCount");
+        const selectedSignerSummary = document.getElementById("SelectedSignerSummary");
+        const signerCheckboxes = Array.from(document.querySelectorAll(".multisig-signer-checkbox"));
+        const signerItems = Array.from(document.querySelectorAll(".multisig-signer-item"));
+        const searchInput = document.getElementById("SignerSearch");
+        const filterSelect = document.getElementById("SignerFilter");
+        const toggleMoreButton = document.getElementById("ToggleMoreSigners");
+        const removeUserInput = document.getElementById("MultisigRemoveUserId");
+        const removeButtons = Array.from(document.querySelectorAll(".multisig-remove-signer"));
+        const copyInviteButtons = Array.from(document.querySelectorAll(".multisig-copy-invite"));
+        const defaultVisibleRows = 8;
+        let showAllRows = false;
+        const pendingParticipants = @Json.Serialize((pending?.Participants ?? []).Select(p => new
+        {
+            accountKey = p.AccountKey,
+            masterFingerprint = p.MasterFingerprint,
+            accountKeyPath = p.AccountKeyPath
+        }));
+
+        function parseCount(value, fallback) {
+            const parsed = parseInt(value, 10);
+            if (Number.isNaN(parsed) || parsed < 1) return fallback;
+            return Math.min(parsed, maxSigners);
+        }
+
+        function getSuffix(scriptType) {
+            if (scriptType === "p2sh-p2wsh") return "-[p2sh]";
+            if (scriptType === "p2sh") return "-[legacy]";
+            return "";
+        }
+
+        function refreshPreview() {
+            const required = parseCount(requiredInput.value, 1);
+            const total = parseCount(totalInput.value, 1);
+            const keys = pendingParticipants
+                .map(p => (p.accountKey || "").trim())
+                .filter(Boolean);
+            const fps = pendingParticipants.map(p => (p.masterFingerprint || "").trim());
+            const paths = pendingParticipants.map(p => (p.accountKeyPath || "").trim());
+            const placeholders = [];
+            for (let i = keys.length; i < total; i++) placeholders.push(`xpub${i + 1}...`);
+            const allKeys = keys.concat(placeholders).slice(0, total);
+
+            const hasAllOriginInfo = allKeys.every((_, i) => fps[i] && paths[i]);
+            if (!hasAllOriginInfo) {
+                preview.value = `${required}-of-${allKeys.join("-")}${getSuffix(scriptTypeInput.value)}`;
+                return;
+            }
+
+            const normalizedKeys = allKeys.map((key, i) => {
+                const path = paths[i].replace(/^m\//i, "");
+                return `[${fps[i].toLowerCase()}/${path}]${key}/0/*`;
+            });
+            const inner = `multi(${required},${normalizedKeys.join(",")})`;
+            if (scriptTypeInput.value === "p2sh-p2wsh") {
+                preview.value = `sh(wsh(${inner}))`;
+            } else if (scriptTypeInput.value === "p2sh") {
+                preview.value = `sh(${inner})`;
+            } else {
+                preview.value = `wsh(${inner})`;
+            }
+        }
+
+        function refreshSelectedSigners() {
+            const selected = signerCheckboxes.filter(c => c.checked).length;
+            selectedSignerCount.textContent = selected.toString();
+            selectedSignerSummary.textContent = `${selected}/${parseCount(totalInput.value, 1)}`;
+            if (createRequestButton) {
+                createRequestButton.disabled = selected === 0;
+            }
+            signerItems.forEach(item => {
+                const checkbox = item.querySelector(".multisig-signer-checkbox");
+                item.dataset.selected = checkbox && checkbox.checked ? "true" : "false";
+            });
+            applySignerListState();
+        }
+
+        function applySignerListState() {
+            const search = (searchInput.value || "").trim().toLowerCase();
+            const filter = filterSelect.value;
+
+            signerItems
+                .sort((a, b) => {
+                    const aSelected = a.dataset.selected === "true" ? 1 : 0;
+                    const bSelected = b.dataset.selected === "true" ? 1 : 0;
+                    if (aSelected !== bSelected) return bSelected - aSelected;
+                    const aSubmitted = a.dataset.submitted === "true" ? 1 : 0;
+                    const bSubmitted = b.dataset.submitted === "true" ? 1 : 0;
+                    if (aSubmitted !== bSubmitted) return bSubmitted - aSubmitted;
+                    return (a.dataset.name || "").localeCompare(b.dataset.name || "");
+                })
+                .forEach(item => item.parentNode.appendChild(item));
+
+            const filtered = signerItems.filter(item => {
+                const name = item.dataset.name || "";
+                const email = item.dataset.email || "";
+                if (search && !name.includes(search) && !email.includes(search)) return false;
+                if (filter === "selected" && item.dataset.selected !== "true") return false;
+                if (filter === "submitted" && item.dataset.submitted !== "true") return false;
+                if (filter === "pending" && !(item.dataset.invited === "true" && item.dataset.submitted !== "true")) return false;
+                return true;
+            });
+
+            signerItems.forEach(item => item.classList.add("d-none"));
+            const visible = showAllRows ? filtered : filtered.slice(0, defaultVisibleRows);
+            visible.forEach(item => item.classList.remove("d-none"));
+
+            const hiddenCount = filtered.length - visible.length;
+            if (hiddenCount > 0) {
+                toggleMoreButton.classList.remove("d-none");
+                toggleMoreButton.textContent = showAllRows
+                    ? "Show fewer users"
+                    : `Show ${hiddenCount} more users`;
+            } else {
+                toggleMoreButton.classList.add("d-none");
+            }
+        }
+
+        totalInput.addEventListener("input", refreshPreview);
+        requiredInput.addEventListener("input", () => {
+            refreshPreview();
+            refreshSelectedSigners();
+        });
+        scriptTypeInput.addEventListener("change", refreshPreview);
+        signerCheckboxes.forEach(c => c.addEventListener("change", refreshSelectedSigners));
+        searchInput.addEventListener("input", () => {
+            showAllRows = false;
+            applySignerListState();
+        });
+        filterSelect.addEventListener("change", () => {
+            showAllRows = false;
+            applySignerListState();
+        });
+        toggleMoreButton.addEventListener("click", () => {
+            showAllRows = !showAllRows;
+            applySignerListState();
+        });
+        signerItems.forEach(item => {
+            const checkbox = item.querySelector(".multisig-signer-checkbox");
+            item.dataset.selected = checkbox && checkbox.checked ? "true" : "false";
+        });
+        removeButtons.forEach(button => {
+            button.addEventListener("click", () => {
+                if (removeUserInput) {
+                    removeUserInput.value = button.dataset.userId || "";
+                }
+            });
+        });
+        copyInviteButtons.forEach(button => {
+            button.addEventListener("click", async () => {
+                const link = button.dataset.inviteLink || "";
+                if (!link) return;
+                try {
+                    await navigator.clipboard.writeText(link);
+                    button.classList.remove("text-secondary");
+                    button.classList.add("text-success");
+                    setTimeout(() => {
+                        button.classList.remove("text-success");
+                        button.classList.add("text-secondary");
+                    }, 1200);
+                } catch {
+                    // Ignore clipboard errors.
+                }
+            });
+        });
+        refreshSelectedSigners();
+        refreshPreview();
+    })();
+</script>

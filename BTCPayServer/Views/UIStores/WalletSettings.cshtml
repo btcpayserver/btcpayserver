@@ -48,7 +48,7 @@
                 {
                     <a asp-action="WalletSeed" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="dropdown-item" id="ViewSeed" text-translate="true">View seed</a>
                 }
-                <a asp-controller="UIStores" asp-action="ReplaceWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode"
+                <a asp-controller="UIStoreOnChainWallets" asp-action="ReplaceWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode"
                    id="ChangeWalletLink"
                    class="dropdown-item"
                    data-bs-toggle="modal"
@@ -83,7 +83,7 @@
 </div>
 
 <partial name="_StatusMessage" />
-<form id="walletSettingsForm" method="post" asp-action="UpdateWalletSettings" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+<form id="walletSettingsForm" method="post" asp-controller="UIStoreOnChainWallets" asp-action="UpdateWalletSettings" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
     <div class="form-group my-4">
         <div class="d-flex align-items-center">
             <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-3"/>

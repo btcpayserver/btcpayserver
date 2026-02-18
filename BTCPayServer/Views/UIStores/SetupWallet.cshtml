@@ -3,7 +3,7 @@
 @inject Microsoft.Extensions.Localization.IStringLocalizer StringLocalizer
 
 @{
-	Layout = "_LayoutWalletSetup";
+	Layout = "~/Views/UIStores/_LayoutWalletSetup.cshtml";
     ViewData.SetTitle(StringLocalizer["Setup {0} Wallet", Model.CryptoCode]);
 }
 
@@ -11,7 +11,7 @@
 <br>
 <div class="mt-5">
     <div class="list-group">
-        <a asp-controller="UIStores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="ImportWalletOptionsLink" class="list-group-item list-group-item-action">
+        <a asp-controller="UIStoreOnChainWallets" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="ImportWalletOptionsLink" class="list-group-item list-group-item-action">
             <div class="image">
                 <vc:icon symbol="wallet-existing"/>
             </div>
@@ -29,7 +29,7 @@
     <br>
     <div class="mt-5">
         <div class="list-group">
-            <a asp-controller="UIStores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="GenerateWalletLink" class="list-group-item list-group-item-action">
+            <a asp-controller="UIStoreOnChainWallets" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="GenerateWalletLink" class="list-group-item list-group-item-action">
                 <div class="image">
                     <vc:icon symbol="wallet-new"/>
                 </div>
@@ -42,3 +42,19 @@
         </div>
     </div>
 }
+
+<br>
+<div class="mt-5">
+    <div class="list-group">
+        <a asp-controller="UIStoreOnChainWallets" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="multisig" id="ImportMultisigWizardLink" class="list-group-item list-group-item-action">
+            <div class="image">
+                <vc:icon symbol="wallet-xpub"/>
+            </div>
+            <div class="content">
+                <h4 text-translate="true">Multisig setup</h4>
+                <p class="mb-0 text-secondary" text-translate="true">Invite signers, collect account keys, and create the multisig wallet</p>
+            </div>
+            <vc:icon symbol="caret-right" />
+        </a>
+    </div>
+</div>

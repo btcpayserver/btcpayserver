@@ -1,11 +1,11 @@
 @model WalletSetupViewModel
 @{
-    Layout = "_LayoutWalletSetup";
+    Layout = "~/Views/UIStores/_LayoutWalletSetup.cshtml";
     ViewData.SetTitle(StringLocalizer["Enter the wallet seed"]);
 }
 
 @section Navbar {
-    <a asp-controller="UIStores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
+    <a asp-controller="UIStoreOnChainWallets" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
         <vc:icon symbol="back" />
     </a>
 }
@@ -19,7 +19,7 @@
     @if (Model.CanUseHotWallet)
     {
 		Model.SetViewData(ViewData);
-        <partial name="_GenerateWalletForm" model="Model.SetupRequest" />
+        <partial name="~/Views/UIStores/_GenerateWalletForm.cshtml" model="Model.SetupRequest" />
     }
     else
     {

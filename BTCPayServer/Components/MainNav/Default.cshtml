@@ -8,6 +8,7 @@
 @using BTCPayServer.Views.Apps
 @using BTCPayServer.Configuration
 @using BTCPayServer.Plugins.Emails
+@using System
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContext;
 @inject BTCPayServerOptions BtcPayServerOptions
 @inject BTCPayServerEnvironment Env
@@ -75,26 +76,32 @@
                     </div>
                 </div>
                 <div class="accordion-item">
-                    <header class="accordion-header" id="Nav-Wallets-Header" permission="@Policies.CanModifyStoreSettings">
+                    <header class="accordion-header" id="Nav-Wallets-Header" permission="@Policies.CanViewWallet">
                         <div text-translate="true" class="accordion-button">Wallets</div>
                     </header>
-                    <div id="Nav-Wallets" class="accordion-collapse" aria-labelledby="Nav-Wallets-Header" permission="@Policies.CanModifyStoreSettings">
+                    <div id="Nav-Wallets" class="accordion-collapse" aria-labelledby="Nav-Wallets-Header" permission="@Policies.CanViewWallet">
                         <div class="accordion-body">
                             <ul class="navbar-nav">
                                 @foreach (var scheme in Model.DerivationSchemes.OrderBy(scheme => scheme.Collapsed))
                                 {
                                     var isSetUp = !string.IsNullOrWhiteSpace(scheme.Value);
+                                    var walletTypePolicy = scheme.Crypto.Equals("BTC", StringComparison.OrdinalIgnoreCase)
+                                        ? Policies.CanModifyBitcoinOnchain
+                                        : Policies.CanModifyOtherWallets;
+                                    var walletViewPermission = $"{walletTypePolicy},{Policies.CanViewWallet}";
+                                    var walletCreatePermission = $"{walletTypePolicy},{Policies.CanCreateWalletTransactions}";
+                                    var walletSettingsPermission = $"{walletTypePolicy},{Policies.CanManageWalletSettings}";
                                     <li class="nav-item" data-testid="Wallet-@scheme.Crypto">
                                         @if (isSetUp && scheme.WalletSupported)
                                         {
-                                            <a layout-menu-item="@nameof(WalletsNavPages.Transactions)-@scheme.Crypto" asp-area="" asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@scheme.WalletId">
+                                            <a layout-menu-item="@nameof(WalletsNavPages.Transactions)-@scheme.Crypto" asp-area="" asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@scheme.WalletId" permission="@walletViewPermission" and-mode="true">
                                                 <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "pending")"></span>
                                                 <span>@PrettyName.PrettyName(scheme.PaymentMethodId)</span>
                                             </a>
                                         }
                                         else
                                         {
-                                            <a layout-menu-item="@nameof(WalletsNavPages.Transactions)-@scheme.Crypto" asp-area="" asp-controller="UIStores" asp-action="SetupWallet" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Model.Store.Id">
+                                            <a layout-menu-item="@nameof(WalletsNavPages.Transactions)-@scheme.Crypto" asp-area="" asp-controller="UIStoreOnChainWallets" asp-action="SetupWallet" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Model.Store.Id" permission="@walletSettingsPermission" and-mode="true">
                                                 <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "pending")"></span>
                                                 <span>@PrettyName.PrettyName(scheme.PaymentMethodId)</span>
                                             </a>
@@ -106,7 +113,7 @@
                                         {
                                             <li class="nav-item nav-item-sub">
                                                 <a layout-menu-item="@nameof(WalletsNavPages.Send)-@scheme.Crypto"
-                                                   asp-area="" asp-controller="UIWallets" asp-action="WalletSend" asp-route-walletId="@scheme.WalletId" text-translate="true">Send</a>
+                                                   asp-area="" asp-controller="UIWallets" asp-action="WalletSend" asp-route-walletId="@scheme.WalletId" text-translate="true" permission="@walletCreatePermission" and-mode="true">Send</a>
                                             </li>
                                         }
 
@@ -114,13 +121,13 @@
                                         <li class="nav-item nav-item-sub">
                                             <a
                                                 layout-menu-item="@nameof(WalletsNavPages.Receive)-@scheme.Crypto"
-                                                asp-area="" asp-controller="UIWallets" asp-action="WalletReceive" asp-route-walletId="@scheme.WalletId" text-translate="true">Receive</a>
+                                                asp-area="" asp-controller="UIWallets" asp-action="WalletReceive" asp-route-walletId="@scheme.WalletId" text-translate="true" permission="@walletViewPermission" and-mode="true">Receive</a>
                                         </li>
 
                                         <li class="nav-item nav-item-sub">
                                             <a
                                                 layout-menu-item="@nameof(WalletsNavPages.Settings)-@scheme.Crypto"
-                                                asp-area="" asp-controller="UIStores" asp-action="WalletSettings" asp-route-cryptoCode="@scheme.WalletId.CryptoCode" asp-route-storeId="@scheme.WalletId.StoreId" text-translate="true">Settings</a>
+                                                asp-area="" asp-controller="UIStoreOnChainWallets" asp-action="WalletSettings" asp-route-cryptoCode="@scheme.WalletId.CryptoCode" asp-route-storeId="@scheme.WalletId.StoreId" text-translate="true" permission="@walletSettingsPermission" and-mode="true">Settings</a>
                                         </li>
                                         <vc:ui-extension-point location="wallet-nav" model="@Model" />
                                     }
@@ -137,7 +144,7 @@
                                             <a
                                                 data-testid="Lightning-@scheme.CryptoCode"
                                                 layout-menu-item="@nameof(StoreNavPages.Lightning)-@scheme.CryptoCode"
-                                                asp-area="" asp-controller="UIStores" asp-action="Lightning" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id">
+                                                asp-area="" asp-controller="UIStores" asp-action="Lightning" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" permission="@($"{Policies.CanModifyBitcoinLightning},{Policies.CanManageWalletSettings}")" and-mode="true">
                                                 <span class="me-2 btcpay-status btcpay-status--@status"></span>
                                                 <span>@PrettyName.PrettyName(scheme.PaymentMethodId)</span>
                                             </a>
@@ -147,7 +154,7 @@
                                             <a
                                                 data-testid="Lightning-@scheme.CryptoCode"
                                                 layout-menu-item="@nameof(StoreNavPages.LightningSettings)-@scheme.CryptoCode"
-                                                asp-area="" asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id">
+                                                asp-area="" asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" permission="@($"{Policies.CanModifyBitcoinLightning},{Policies.CanManageWalletSettings}")" and-mode="true">
                                                 <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "pending")"></span>
                                                 <span>@PrettyName.PrettyName(scheme.PaymentMethodId)</span>
                                             </a>
@@ -156,7 +163,7 @@
                                     @if (ViewData.IsCategory(WellKnownCategories.ForLightning(scheme.CryptoCode)))
                                     {
                                         <li class="nav-item nav-item-sub">
-                                            <a layout-menu-item="@(nameof(StoreNavPages.LightningSettings))-@scheme.CryptoCode" asp-controller="UIStores" asp-action="LightningSettings" asp-route-storeId="@Model.Store.Id" asp-route-cryptoCode="@scheme.CryptoCode" text-translate="true">Settings</a>
+                                            <a layout-menu-item="@(nameof(StoreNavPages.LightningSettings))-@scheme.CryptoCode" asp-controller="UIStores" asp-action="LightningSettings" asp-route-storeId="@Model.Store.Id" asp-route-cryptoCode="@scheme.CryptoCode" text-translate="true" permission="@($"{Policies.CanModifyBitcoinLightning},{Policies.CanManageWalletSettings}")" and-mode="true">Settings</a>
                                         </li>
                                         <vc:ui-extension-point location="lightning-nav" model="@Model"/>
                                     }
@@ -165,7 +172,9 @@
                             </ul>
                         </div>
                     </div>
-                    <div class="accordion-item">
+                    <div class="accordion-item"
+                         permission="@($"{Policies.CanViewInvoices},{Policies.CanViewReports},{Policies.CanViewPaymentRequests},{Policies.CanViewPullPayments},{Policies.CanViewPayouts}")"
+                         permission-resource="@Model.Store?.Id">
                         <header class="accordion-header" id="Nav-Payments-Header">
                             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Payments" aria-expanded="true" aria-controls="Nav-Payments">
                                 <span text-translate="true">Payments</span>
@@ -216,7 +225,9 @@
                     </div>
                 </div>
             }
-            <div class="accordion-item">
+            <div class="accordion-item"
+                 permission="@($"{Policies.CanViewStoreSettings},{Policies.CanModifyServerSettings}")"
+                 permission-resource="@Model.Store?.Id">
                 <header class="accordion-header" id="Nav-Plugins-Header">
                     <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Plugins" aria-expanded="true" aria-controls="Nav-Plugins">
                         <span text-translate="true">Plugins</span>

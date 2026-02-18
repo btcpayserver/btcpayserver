@@ -1,0 +1,103 @@
+@using System
+@using NBitcoin
+@inherits VaultElement
+
+<div id="vault-xpub" class="mt-4">
+    <div class="form-group">
+        <label class="form-label">@ui.StringLocalizer["Script type"]</label>
+        <input class="form-control" value="@ScriptTypeLabel" readonly style="max-width:24ch;" />
+    </div>
+
+    <div class="form-check mt-3 mb-2">
+        <input id="useCustomKeyPath" class="form-check-input" type="checkbox" @bind="UseCustomPath" />
+        <label class="form-check-label" for="useCustomKeyPath">@ui.StringLocalizer["Use custom key path"]</label>
+    </div>
+
+    @if (UseCustomPath)
+    {
+        <div class="form-group">
+            <label for="customKeyPath" class="form-label">@ui.StringLocalizer["Key path"]</label>
+            <input id="customKeyPath" @bind="CustomKeyPath" class="form-control font-monospace" type="text" style="max-width:36ch;"
+                   placeholder="m/48'/1'/0'/2'" />
+            @if (!string.IsNullOrEmpty(Error))
+            {
+                <span class="text-danger">@Error</span>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="form-group">
+            <label for="accountNumber" class="form-label">@ui.StringLocalizer["Account"]</label>
+            <input id="accountNumber" @bind="AccountNumber" class="form-control" type="number" min="0" step="1" style="max-width:12ch;" />
+        </div>
+    }
+</div>
+
+<button id="vault-confirm" class="btn btn-primary mt-4" type="button" @onclick="OnConfirm">@ui.StringLocalizer["Confirm"]</button>
+
+@code {
+    private readonly VaultBridgeUI ui;
+
+    public MultisigXPubSelect(VaultBridgeUI ui, string scriptType)
+    {
+        this.ui = ui;
+        ScriptType = scriptType?.ToLowerInvariant() switch
+        {
+            "p2sh-p2wsh" => "p2sh-p2wsh",
+            "p2sh" => "p2sh",
+            _ => "p2wsh"
+        };
+    }
+
+    public string ScriptType { get; }
+    public int AccountNumber { get; set; }
+    public bool UseCustomPath { get; set; }
+    public string CustomKeyPath { get; set; }
+    public KeyPath CustomParsedKeyPath { get; private set; }
+    public string Error { get; private set; } = string.Empty;
+
+    public string ScriptTypeLabel => ScriptType switch
+    {
+        "p2sh-p2wsh" => "P2SH-P2WSH",
+        "p2sh" => "P2SH",
+        _ => "P2WSH"
+    };
+
+    TaskCompletionSource<MultisigXPubSelect> _tcs;
+
+    public Task<MultisigXPubSelect> GetSelection()
+    {
+        ui.ShowFeedback(FeedbackType.Loading, ui.StringLocalizer["Select account settings"]);
+        ui.AddElement(this);
+        _tcs = new TaskCompletionSource<MultisigXPubSelect>(TaskCreationOptions.RunContinuationsAsynchronously);
+        return _tcs.Task;
+    }
+
+    public void OnConfirm()
+    {
+        if (UseCustomPath)
+        {
+            var normalizedPath = (CustomKeyPath ?? string.Empty).Trim();
+            normalizedPath = normalizedPath.StartsWith("m/", StringComparison.OrdinalIgnoreCase) ? normalizedPath[2..] : normalizedPath;
+            if (!KeyPath.TryParse(normalizedPath, out var parsed))
+            {
+                Error = ui.StringLocalizer["Invalid keypath"].Value;
+                ui.StateHasChanged();
+                return;
+            }
+            CustomParsedKeyPath = parsed;
+        }
+
+        ui.Elements.Remove(this);
+        ui.Elements.RemoveAt(ui.Elements.Count - 1);
+        ui.StateHasChanged();
+        _tcs?.TrySetResult(this);
+        _tcs = null;
+    }
+
+    public void Dispose()
+    {
+        _tcs?.TrySetCanceled();
+    }
+}

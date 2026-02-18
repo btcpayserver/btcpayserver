@@ -18,6 +18,7 @@ using BTCPayServer.Lightning.Tests;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
@@ -2209,7 +2210,9 @@ namespace BTCPayServer.Tests
             await s.RegisterNewUser();
             var (_, storeId) = await s.CreateNewStore();
             await s.GoToStore();
-            await s.GenerateWallet(isHotWallet: true);
+            await s.GenerateWallet(
+                seed: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+                isHotWallet: false);
             await s.AddLightningNode(LightningConnectionType.CLightning, false);
 
             // Add apps

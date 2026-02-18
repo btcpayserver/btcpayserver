@@ -93,11 +93,13 @@ namespace BTCPayServer
 
         private static SSHCommandResult CreateSSHCommandResult(SshCommand sshCommand)
         {
+            if (sshCommand.ExitStatus is null)
+                throw new InvalidOperationException("ExitStatus is null");
             return new SSHCommandResult()
             {
                 Output = sshCommand.Result,
                 Error = sshCommand.Error,
-                ExitStatus = sshCommand.ExitStatus
+                ExitStatus = sshCommand.ExitStatus.Value
             };
         }
 

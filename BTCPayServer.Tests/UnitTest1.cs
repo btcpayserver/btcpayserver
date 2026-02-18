@@ -585,9 +585,10 @@ namespace BTCPayServer.Tests
                 }
                 else
                 {
+                    Assert.Null(rescan.PreviousError);
                     Assert.Null(rescan.TimeOfScan);
-                    Assert.NotNull(rescan.RemainingTime);
                     Assert.NotNull(rescan.Progress);
+                    Assert.NotNull(rescan.RemainingTime);
                     Thread.Sleep(100);
                 }
             }

@@ -193,11 +193,6 @@ namespace BTCPayServer.Hosting
             .AddDataAnnotationsLocalization()
             .AddControllersAsServices();
 
-#if !RAZOR_COMPILE_ON_BUILD
-            mvcBuilder.AddRazorRuntimeCompilation();
-#endif
-
-
             services.AddServerSideBlazor().AddHubOptions(o =>
             {
                 // PSBT with previous transactions could become

@@ -15,21 +15,15 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Services;
-using ExchangeSharp;
-using Microsoft.AspNetCore.Html;
-using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.Razor.Language;
 using Microsoft.AspNetCore.Razor.Language.Intermediate;
-using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.Extensions.FileSystemGlobbing;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace BTCPayServer.Tests
 {
@@ -259,6 +253,7 @@ namespace BTCPayServer.Tests
             // Go through all cshtml file, search for text-translate or ViewLocalizer usage
             using (var tester = CreateServerTester(newDb: true))
             {
+                tester.PayTester.RuntimeCompilation = true;
                 await tester.StartAsync();
                 var engine = tester.PayTester.GetService<RazorProjectEngine>();
                 var files = soldir.EnumerateFiles("*.cshtml", SearchOption.AllDirectories)

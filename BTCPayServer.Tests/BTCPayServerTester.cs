@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
-using BTCPayServer.Controllers;
 using BTCPayServer.Hosting;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
@@ -220,6 +219,8 @@ namespace BTCPayServer.Tests
                         .UseStartup<Startup>()
                         .ConfigureServices(services =>
                         {
+                            if (RuntimeCompilation)
+                                services.AddMvcCore().AddRazorRuntimeCompilation();
                             services.TryAddSingleton<IFeeProviderFactory>(
                                 new BTCPayServer.Services.Fees.FixedFeeProvider(new FeeRate(100L, 1)));
                         });
@@ -365,6 +366,7 @@ namespace BTCPayServer.Tests
         public string SSHConnection { get; set; }
         public bool NoCSP { get; set; }
         public string HostEnvironment { get; set; } = Environments.Development;
+        public bool RuntimeCompilation { get; set; }
 
         public T GetController<T>(string userId = null, string storeId = null, bool isAdmin = false) where T : Controller
         {

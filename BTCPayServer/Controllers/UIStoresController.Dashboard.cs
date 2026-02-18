@@ -70,6 +70,12 @@ public partial class UIStoresController
         return View(vm);
     }
 
+    [HttpGet("{storeId}/2")]
+    public async Task<IActionResult> Dashboard2()
+    {
+        return View();
+    }
+
     [HttpGet("{storeId}/dashboard/{cryptoCode}/lightning/balance")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult LightningBalance(string storeId, string cryptoCode)

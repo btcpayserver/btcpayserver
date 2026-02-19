@@ -650,13 +650,17 @@
         </text>
     }
 
-    document.querySelector("#autoRenewal").addEventListener('change', function (e) {
-        e.preventDefault();
-        fetch(this.form.action, {
-            method: 'POST',
-            body: new FormData(this.form)
+    var autoRenewal = document.querySelector("#autoRenewal");
+    if (autoRenewal)
+    {
+        autoRenewal.addEventListener('change', function (e) {
+            e.preventDefault();
+            fetch(this.form.action, {
+                method: 'POST',
+                body: new FormData(this.form)
+            });
         });
-    });
+    }
 
     (function () {
         const changePlanModal = document.getElementById('changePlanModal');

@@ -67,6 +67,12 @@ namespace BTCPayServer.Security
                 explicitResource = true;
                 storeId = s;
             }
+            else if (context.Resource is StoreData storeData)
+            {
+                explicitResource = true;
+                storeId = storeData.Id;
+                store = storeData;
+            }
             else
             {
                 storeId = _httpContext.GetImplicitStoreId();

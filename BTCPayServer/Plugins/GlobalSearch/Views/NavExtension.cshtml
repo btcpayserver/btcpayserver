@@ -1,0 +1,63 @@
+@using BTCPayServer.Plugins.GlobalSearch
+@using BTCPayServer.Plugins.GlobalSearch.Views
+
+@inject IEnumerable<ResultItemViewModel> SearchResultItems
+
+@{
+    var searchUrl = Url.Action("Global", "UISearch", new { area = GlobalSearchPlugin.Area });
+}
+
+<button id="globalSearchMobileToggle"
+        class="globalNav-btn d-lg-none"
+        type="button"
+        aria-label="@StringLocalizer["Search"]"
+        title="@StringLocalizer["Search"]"
+        data-bs-trigger="hover"
+        data-bs-placement="bottom"
+        data-global-nav-tooltip="1">
+    <vc:icon symbol="actions-search" />
+</button>
+<div id="globalSearchShell" data-search-url="@searchUrl" class="globalSearch-shell">
+    <div class="globalSearch-bar">
+        <button id="globalSearchBack" type="button" class="globalSearch-back d-lg-none" aria-label="@StringLocalizer["Back"]">
+            <vc:icon symbol="back" />
+        </button>
+        <vc:icon symbol="actions-search" />
+        <input id="globalSearchInput"
+               class="globalSearch-input"
+               type="search"
+               autocomplete="off"
+               placeholder="@StringLocalizer["Search…"]"
+               aria-label="@StringLocalizer["Search"]" />
+        <span class="globalSearch-shortcut d-none d-xl-inline">/</span>
+        <button id="globalSearchClear" type="button" class="globalSearch-clear" aria-label="@StringLocalizer["Close search"]">
+            <vc:icon symbol="close" />
+        </button>
+    </div>
+    <div id="globalSearchResults" class="globalSearch-panel" hidden aria-live="polite"></div>
+</div>
+
+<template id="search-item-template">
+    <li class="globalSearch-item-wrapper">
+        <a
+            type="button"
+            class="globalSearch-item globalSearch-item-button"
+            data-search-suggestion=""
+        >
+            <span class="globalSearch-item-title">
+                <span class="globalSearch-item-category"></span>
+            </span>
+            <div class="globalSearch-item-subtitle"></div>
+        </a>
+    </li>
+</template>
+
+<script>
+    window.globalSearch =
+    {
+        serverResultItems: @Safe.Json(SearchResultItems),
+        pageCategory: @Safe.Json(StringLocalizer["Page"])
+    };
+</script>
+<script src="~/plugins/GlobalSearch/global-search.js" asp-append-version="true"></script>
+

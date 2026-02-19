@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BTCPayServer;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
+using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Security;
 using BTCPayServer.Services.GlobalSearch;
@@ -17,7 +18,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace BTCPayServer.Controllers
+namespace BTCPayServer.Plugins.GlobalSearch
 {
     [Route("search")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -359,97 +360,7 @@ namespace BTCPayServer.Controllers
         {
             var results = new List<GlobalSearchResult>();
 
-            var canModifyServer = await IsAuthorized(Policies.CanModifyServerSettings);
-            var canViewProfile = await IsAuthorized(Policies.CanViewProfile);
-            var canViewNotifications = await IsAuthorized(Policies.CanViewNotificationsForUser);
 
-            if (store != null)
-            {
-                var canViewStoreSettings = await IsAuthorized(Policies.CanViewStoreSettings, store.Id);
-                var canModifyStoreSettings = await IsAuthorized(Policies.CanModifyStoreSettings, store.Id);
-                var canViewInvoices = await IsAuthorized(Policies.CanViewInvoices, store.Id);
-                var canViewReports = await IsAuthorized(Policies.CanViewReports, store.Id);
-                var canViewPaymentRequests = await IsAuthorized(Policies.CanViewPaymentRequests, store.Id);
-                var canViewPullPayments = await IsAuthorized(Policies.CanViewPullPayments, store.Id);
-                var canViewPayouts = await IsAuthorized(Policies.CanViewPayouts, store.Id);
-
-                if (canModifyStoreSettings)
-                {
-                    AddPage(results, query, "Dashboard", Url.Action(nameof(UIStoresController.Dashboard), "UIStores", new { storeId = store.Id }), "Store");
-                }
-                if (canViewStoreSettings)
-                {
-                    AddPage(results, query, "Store Settings", Url.Action(nameof(UIStoresController.GeneralSettings), "UIStores", new { storeId = store.Id }), "Store", "general settings branding");
-                    AddPage(results, query, "Rates", Url.Action(nameof(UIStoresController.Rates), "UIStores", new { storeId = store.Id }), "Store", "exchange");
-                    AddPage(results, query, "Checkout Appearance", Url.Action(nameof(UIStoresController.CheckoutAppearance), "UIStores", new { storeId = store.Id }), "Store", "checkout");
-                    AddPage(results, query, "Access Tokens", Url.Action(nameof(UIStoresController.ListTokens), "UIStores", new { storeId = store.Id }), "Store", "tokens api");
-                    AddPage(results, query, "Store Users", Url.Action(nameof(UIStoresController.StoreUsers), "UIStores", new { storeId = store.Id }), "Store", "users");
-                    AddPage(results, query, "Store Roles", Url.Action(nameof(UIStoresController.ListRoles), "UIStores", new { storeId = store.Id }), "Store", "roles");
-                    AddPage(results, query, "Webhooks", Url.Action("Webhooks", "UIStoreWebhooks", new { area = "Webhooks", storeId = store.Id }), "Store", "webhooks");
-                    AddPage(results, query, "Payout Processors", Url.Action("ConfigureStorePayoutProcessors", "UIPayoutProcessors", new { storeId = store.Id }), "Store", "payout processors");
-                    AddPage(results, query, "Forms", Url.Action("FormsList", "UIForms", new { storeId = store.Id }), "Store", "forms");
-                }
-                if (canViewInvoices)
-                {
-                    AddPage(results, query, "Invoices", Url.Action(nameof(UIInvoiceController.ListInvoices), "UIInvoice", new { storeId = store.Id }), "Payments", "payments");
-                    AddPage(results, query, "Create Invoice", Url.Action(nameof(UIInvoiceController.CreateInvoice), "UIInvoice", new { storeId = store.Id }), "Payments", "invoice");
-                }
-                if (canViewReports)
-                {
-                    AddPage(results, query, "Reporting", Url.Action(nameof(UIReportsController.StoreReports), "UIReports", new { storeId = store.Id }), "Payments", "reports");
-                }
-                if (canViewPaymentRequests)
-                {
-                    AddPage(results, query, "Payment Requests", Url.Action(nameof(UIPaymentRequestController.GetPaymentRequests), "UIPaymentRequest", new { storeId = store.Id }), "Payments", "payment requests");
-                }
-                if (canViewPullPayments)
-                {
-                    AddPage(results, query, "Pull Payments", Url.Action("PullPayments", "UIStorePullPayments", new { storeId = store.Id }), "Payments", "pull payments");
-                }
-                if (canViewPayouts)
-                {
-                    AddPage(results, query, "Payouts", Url.Action("Payouts", "UIStorePullPayments", new { storeId = store.Id }), "Payments", "payouts");
-                }
-            }
-
-            if (canModifyServer)
-            {
-                AddPage(results, query, "Server Settings", Url.Action(nameof(UIServerController.Policies), "UIServer"), "Server", "server settings policies");
-                AddPage(results, query, "Users", Url.Action(nameof(UIServerController.ListUsers), "UIServer"), "Server", "server settings users");
-                AddPage(results, query, "Roles", Url.Action(nameof(UIServerController.ListRoles), "UIServer"), "Server", "server settings roles");
-                AddPage(results, query, "Services", Url.Action(nameof(UIServerController.Services), "UIServer"), "Server", "server settings services");
-                AddPage(results, query, "Branding", Url.Action(nameof(UIServerController.Branding), "UIServer"), "Server", "server settings branding");
-                AddPage(results, query, "Translations", Url.Action(nameof(UIServerController.ListDictionaries), "UIServer"), "Server", "server settings translations");
-                AddPage(results, query, "Maintenance", Url.Action(nameof(UIServerController.Maintenance), "UIServer"), "Server", "server settings maintenance");
-                AddPage(results, query, "Logs", Url.Action(nameof(UIServerController.LogsView), "UIServer"), "Server", "server settings logs");
-                AddPage(results, query, "Files", Url.Action(nameof(UIServerController.Files), "UIServer"), "Server", "server settings files storage");
-
-                var pluginsUrl = Url.Action(nameof(UIServerController.ListPlugins), "UIServer");
-                AddPage(results, query, "Manage Plugins", pluginsUrl, "Server", "plugins");
-                if (!string.IsNullOrEmpty(pluginsUrl))
-                {
-                    AddPage(results, query, "Installed Plugins", $"{pluginsUrl}#plugins-installed", "Server", "plugins installed");
-                    AddPage(results, query, "Plugin Directory", $"{pluginsUrl}#plugins-directory", "Server", "plugins directory");
-                }
-            }
-
-            if (canViewProfile)
-            {
-                AddPage(results, query, "Manage Account", Url.Action(nameof(UIManageController.Index), "UIManage"), "Account", "profile account");
-                AddPage(results, query, "Password", Url.Action(nameof(UIManageController.ChangePassword), "UIManage"), "Account", "password");
-                AddPage(results, query, "Two-Factor Authentication", Url.Action(nameof(UIManageController.TwoFactorAuthentication), "UIManage"), "Account", "2fa security");
-                AddPage(results, query, "API Keys", Url.Action(nameof(UIManageController.APIKeys), "UIManage"), "Account", "api keys");
-                AddPage(results, query, "Notification Settings", Url.Action(nameof(UIManageController.NotificationSettings), "UIManage"), "Account", "notifications");
-                AddPage(results, query, "Login Codes", Url.Action(nameof(UIManageController.LoginCodes), "UIManage"), "Account", "login codes");
-            }
-
-            if (canViewNotifications)
-            {
-                AddPage(results, query, "Notifications", Url.Action(nameof(UINotificationsController.Index), "UINotifications"), "Account", "notifications");
-            }
-
-            AddPage(results, query, "Home", Url.Action(nameof(UIHomeController.Index), "UIHome"), "General", "dashboard overview");
-            AddPage(results, query, "Stores", Url.Action(nameof(UIUserStoresController.ListStores), "UIUserStores"), "General", "stores");
 
             return results.ToArray();
         }
@@ -502,19 +413,6 @@ namespace BTCPayServer.Controllers
                 results.Add(result);
         }
 
-        private static void AddPage(ICollection<GlobalSearchResult> results, string query, string title, string url, string category, string keywords = null)
-        {
-            if (string.IsNullOrEmpty(url) || !Matches(query, title, category, keywords))
-                return;
-
-            results.Add(new GlobalSearchResult
-            {
-                Category = category,
-                Title = title,
-                Url = url,
-                Keywords = keywords
-            });
-        }
 
         private static bool Matches(string query, params string[] values)
         {

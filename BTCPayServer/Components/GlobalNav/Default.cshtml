@@ -4,11 +4,11 @@
 @using BTCPayServer.Services
 @using BTCPayServer.Plugins.Emails
 @inject ThemeSettings Theme
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 @model BTCPayServer.Components.GlobalNav.GlobalNavViewModel
 
 @{
-    var searchUrl = Url.Action("Global", "UISearch");
     var pluginsUrl = Url.Action("ListPlugins", "UIServer");
     var loginName = User.Identity?.Name;
     var accountDisplayName = string.IsNullOrEmpty(Model.UserName)
@@ -18,38 +18,10 @@
             : $"{Model.UserName} ({loginName})";
 }
 
-<div id="globalNav" data-search-url="@searchUrl" data-store-id="@Model.CurrentStoreId">
-    <button id="globalSearchMobileToggle"
-            class="globalNav-btn d-lg-none"
-            type="button"
-            aria-label="@StringLocalizer["Search"]"
-            title="@StringLocalizer["Search"]"
-            data-bs-trigger="hover"
-            data-bs-placement="bottom"
-            data-global-nav-tooltip="1">
-        <vc:icon symbol="actions-search" />
-    </button>
-    <div id="globalSearchShell" class="globalSearch-shell">
-        <div class="globalSearch-bar">
-            <button id="globalSearchBack" type="button" class="globalSearch-back d-lg-none" aria-label="@StringLocalizer["Back"]">
-                <vc:icon symbol="back" />
-            </button>
-            <vc:icon symbol="actions-search" />
-            <input id="globalSearchInput"
-                   class="globalSearch-input"
-                   type="search"
-                   autocomplete="off"
-                   placeholder="@StringLocalizer["Search..."]"
-                   aria-label="@StringLocalizer["Search"]" />
-            <span class="globalSearch-shortcut d-none d-xl-inline">/</span>
-            <button id="globalSearchClear" type="button" class="globalSearch-clear" aria-label="@StringLocalizer["Close search"]">
-                <vc:icon symbol="close" />
-            </button>
-        </div>
-        <div id="globalSearchResults" class="globalSearch-panel" hidden aria-live="polite"></div>
-    </div>
-
+<div id="globalNav" data-store-id="@Model.CurrentStoreId">
+    <vc:ui-extension-point location="global-nav" model="Model"></vc:ui-extension-point>
     <div id="mainNavSettings" class="d-flex align-items-center gap-1">
+        <vc:ui-extension-point location="global-nav-icons" model="Model"></vc:ui-extension-point>
         <component type="typeof(BTCPayServer.Blazor.NotificationsDropDown)" render-mode="ServerPrerendered" />
 
         <div class="dropdown" permission="@Policies.CanModifyServerSettings">
@@ -167,7 +139,7 @@
                 @if (!Theme.CustomTheme)
                 {
                     <li class="py-1 px-3">
-                        <vc:theme-switch css-class="w-100 pt-2"/>
+                        <vc:theme-switch css-class="w-100 pt-2" />
                     </li>
                 }
                 <li class="py-1 px-3">

@@ -60,10 +60,12 @@ else
 
     private async System.Threading.Tasks.Task AddItem()
     {
-        if (string.IsNullOrWhiteSpace(_newItemText) || TypedConfig is null) return;
-        TypedConfig.Items.Add(new TodoItem { Text = _newItemText.Trim() });
+        if (string.IsNullOrWhiteSpace(_newItemText)) return;
+        var config = TypedConfig ?? new TodoConfig();
+        config.Items.Add(new TodoItem { Text = _newItemText.Trim() });
         _newItemText = "";
-        await ConfigChanged.InvokeAsync(JObject.FromObject(TypedConfig));
+        TypedConfig = config;
+        await ConfigChanged.InvokeAsync(JObject.FromObject(config));
     }
 
     private async System.Threading.Tasks.Task OnAddKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)

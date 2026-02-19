@@ -53,6 +53,7 @@ else if (_noLightning)
 else if (_balance is not null)
 {
     var config = TypedConfig ?? new LightningBalanceConfig();
+    var currencyLabel = _showDefaultCurrency && _rate.HasValue ? _defaultCurrency! : config.CryptoCode;
     <header class="d-flex gap-3 align-items-center justify-content-between mb-2">
         <h6>Lightning Balance</h6>
         @if (_defaultCurrency is not null && config.CryptoCode != _defaultCurrency)
@@ -78,45 +79,45 @@ else if (_balance is not null)
         {
             <div class="balance">
                 <div class="d-flex align-items-baseline gap-1">
-                    <h3 class="d-inline-block me-1" data-sensitive>@_totalOffchain</h3>
+                    <h3 class="d-inline-block me-1" data-sensitive>@FormatLightMoney(_totalOffchain)</h3>
                     <span class="text-secondary fw-semibold text-nowrap">
-                        <span class="currency">BTC</span> in channels
+                        <span class="currency">@currencyLabel</span> in channels
                     </span>
                 </div>
                 <div class="balance-details collapse" id="balanceDetailsOffchain">
                     @if (_balance.OffchainBalance.Opening != null)
                     {
                         <div class="mt-2 d-flex align-items-baseline gap-1">
-                            <span class="fw-semibold" data-sensitive>@_balance.OffchainBalance.Opening</span>
+                            <span class="fw-semibold" data-sensitive>@FormatLightMoney(_balance.OffchainBalance.Opening)</span>
                             <span class="text-secondary text-nowrap">
-                                <span class="currency">BTC</span> opening channels
+                                <span class="currency">@currencyLabel</span> opening channels
                             </span>
                         </div>
                     }
                     @if (_balance.OffchainBalance.Local != null)
                     {
                         <div class="mt-2 d-flex align-items-baseline gap-1">
-                            <span class="fw-semibold" data-sensitive>@_balance.OffchainBalance.Local</span>
+                            <span class="fw-semibold" data-sensitive>@FormatLightMoney(_balance.OffchainBalance.Local)</span>
                             <span class="text-secondary text-nowrap">
-                                <span class="currency">BTC</span> local balance
+                                <span class="currency">@currencyLabel</span> local balance
                             </span>
                         </div>
                     }
                     @if (_balance.OffchainBalance.Remote != null)
                     {
                         <div class="mt-2 d-flex align-items-baseline gap-1">
-                            <span class="fw-semibold" data-sensitive>@_balance.OffchainBalance.Remote</span>
+                            <span class="fw-semibold" data-sensitive>@FormatLightMoney(_balance.OffchainBalance.Remote)</span>
                             <span class="text-secondary text-nowrap">
-                                <span class="currency">BTC</span> remote balance
+                                <span class="currency">@currencyLabel</span> remote balance
                             </span>
                         </div>
                     }
                     @if (_balance.OffchainBalance.Closing != null)
                     {
                         <div class="mt-2 d-flex align-items-baseline gap-1">
-                            <span class="fw-semibold" data-sensitive>@_balance.OffchainBalance.Closing</span>
+                            <span class="fw-semibold" data-sensitive>@FormatLightMoney(_balance.OffchainBalance.Closing)</span>
                             <span class="text-secondary text-nowrap">
-                                <span class="currency">BTC</span> closing channels
+                                <span class="currency">@currencyLabel</span> closing channels
                             </span>
                         </div>
                     }
@@ -127,36 +128,36 @@ else if (_balance is not null)
         {
             <div class="balance">
                 <div class="d-flex align-items-baseline gap-1">
-                    <h3 class="d-inline-block me-1" data-sensitive>@_totalOnchain</h3>
+                    <h3 class="d-inline-block me-1" data-sensitive>@FormatMoney(_totalOnchain)</h3>
                     <span class="text-secondary fw-semibold text-nowrap">
-                        <span class="currency">BTC</span> on-chain
+                        <span class="currency">@currencyLabel</span> on-chain
                     </span>
                 </div>
                 <div class="balance-details collapse" id="balanceDetailsOnchain">
                     @if (_balance.OnchainBalance.Confirmed != null)
                     {
                         <div class="mt-2 d-flex align-items-baseline gap-1">
-                            <span class="fw-semibold" data-sensitive>@_balance.OnchainBalance.Confirmed</span>
+                            <span class="fw-semibold" data-sensitive>@FormatMoney(_balance.OnchainBalance.Confirmed)</span>
                             <span class="text-secondary text-nowrap">
-                                <span class="currency">BTC</span> confirmed
+                                <span class="currency">@currencyLabel</span> confirmed
                             </span>
                         </div>
                     }
                     @if (_balance.OnchainBalance.Unconfirmed != null)
                     {
                         <div class="mt-2 d-flex align-items-baseline gap-1">
-                            <span class="fw-semibold" data-sensitive>@_balance.OnchainBalance.Unconfirmed</span>
+                            <span class="fw-semibold" data-sensitive>@FormatMoney(_balance.OnchainBalance.Unconfirmed)</span>
                             <span class="text-secondary text-nowrap">
-                                <span class="currency">BTC</span> unconfirmed
+                                <span class="currency">@currencyLabel</span> unconfirmed
                             </span>
                         </div>
                     }
                     @if (_balance.OnchainBalance.Reserved != null)
                     {
                         <div class="mt-2 d-flex align-items-baseline gap-1">
-                            <span class="fw-semibold" data-sensitive>@_balance.OnchainBalance.Reserved</span>
+                            <span class="fw-semibold" data-sensitive>@FormatMoney(_balance.OnchainBalance.Reserved)</span>
                             <span class="text-secondary text-nowrap">
-                                <span class="currency">BTC</span> reserved
+                                <span class="currency">@currencyLabel</span> reserved
                             </span>
                         </div>
                     }
@@ -227,6 +228,9 @@ else if (_balance is not null)
 
     protected override async Task OnParametersSetAsync()
     {
+        if (!DataParametersChanged)
+            return;
+
         if (string.IsNullOrEmpty(StoreId))
             return;
 
@@ -326,12 +330,41 @@ else if (_balance is not null)
             catch
             {
                 // Silently fail - just show crypto amount
+                _showDefaultCurrency = false;
             }
         }
+        StateHasChanged();
+    }
+
+    private string FormatLightMoney(LightMoney? value)
+    {
+        if (value is null) return "0";
+        if (_showDefaultCurrency && _rate.HasValue)
+        {
+            var btc = value.ToDecimal(LightMoneyUnit.BTC);
+            var fiat = btc * _rate.Value;
+            return fiat.ToString($"N{_divisibility}");
+        }
+        return value.ToString();
+    }
+
+    private string FormatMoney(NBitcoin.Money? value)
+    {
+        if (value is null) return "0";
+        if (_showDefaultCurrency && _rate.HasValue)
+        {
+            var btc = value.ToDecimal(NBitcoin.MoneyUnit.BTC);
+            var fiat = btc * _rate.Value;
+            return fiat.ToString($"N{_divisibility}");
+        }
+        return value.ToString();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (SizeChanged && _chartRendered)
+            _chartRendered = false;
+
         if (!_chartRendered && !Loading && _hasHistogram && _series is not null && _labels is not null)
         {
             _chartRendered = true;

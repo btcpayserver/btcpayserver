@@ -1,165 +1,92 @@
 window.DashboardInterop = {
-    _sortableInstance: null,
+    _grid: null,
     _charts: {},
-    _resizeCleanups: {},
+    _dotNetHelper: null,
+    _changeBatch: null,
 
-    initSortable: function (containerElement, dotNetHelper) {
-        if (!containerElement || typeof Sortable === 'undefined') return;
-        if (this._sortableInstance) {
-            this._sortableInstance.destroy();
-        }
-        this._sortableInstance = new Sortable(containerElement, {
-            animation: 200,
-            handle: '.widget-drag-handle',
-            ghostClass: 'widget-ghost',
-            dragClass: 'widget-drag',
-            chosenClass: 'widget-chosen',
-            forceFallback: false,
-            swapThreshold: 0.65,
-            direction: 'vertical',
-            onEnd: function (evt) {
-                // Revert the DOM change - let Blazor handle the reorder
-                var parent = evt.from;
-                if (evt.oldIndex < evt.newIndex) {
-                    parent.insertBefore(evt.item, parent.children[evt.oldIndex]);
-                } else {
-                    parent.insertBefore(evt.item, parent.children[evt.oldIndex + 1]);
-                }
-                dotNetHelper.invokeMethodAsync('OnWidgetReordered', evt.oldIndex, evt.newIndex);
-            }
-        });
-    },
-
-    destroySortable: function () {
-        if (this._sortableInstance) {
-            this._sortableInstance.destroy();
-            this._sortableInstance = null;
-        }
-    },
-
-    // --- Multi-edge resize ---
-    initResize: function (widgetInnerElement, placementId, currentColSpan, minCol, maxCol, currentRowSpan, minRow, maxRow, dotNetHelper) {
-        var widgetElement = widgetInnerElement.closest('.dashboard-widget');
-        if (!widgetElement) return;
-
-        // Clean up previous bindings for this placement
-        if (this._resizeCleanups[placementId]) {
-            this._resizeCleanups[placementId]();
-        }
+    // --- Gridstack integration ---
+    initGrid: function (containerElement, dotNetHelper, editMode) {
+        if (!containerElement || typeof GridStack === 'undefined') return;
+        this.destroyGrid();
+        this._dotNetHelper = dotNetHelper;
 
         var self = this;
-        var abortControllers = [];
+        var grid = GridStack.init({
+            column: 12,
+            cellHeight: 146,
+            margin: 8,
+            float: false,
+            animate: true,
+            draggable: { handle: '.widget-drag-handle' },
+            resizable: { handles: 'e,se,s,sw,w' },
+            staticGrid: !editMode,
+            disableOneColumnMode: true
+        }, containerElement);
 
-        function setupEdge(handleSelector, axis) {
-            var handle = widgetElement.querySelector(handleSelector);
-            if (!handle) return;
+        // Batch change events with a short debounce to avoid multiple rapid calls
+        grid.on('change', function (event, items) {
+            if (!items || !self._dotNetHelper) return;
+            // Debounce: collect changes, send once after 100ms of no activity
+            if (self._changeBatch) clearTimeout(self._changeBatch);
+            self._changeBatch = setTimeout(function () {
+                self._changeBatch = null;
+                var changes = [];
+                var allNodes = grid.getGridItems();
+                allNodes.forEach(function (el) {
+                    var node = el.gridstackNode;
+                    if (!node) return;
+                    changes.push({
+                        id: node.id || '',
+                        x: node.x || 0,
+                        y: node.y || 0,
+                        w: node.w || 1,
+                        h: node.h || 1
+                    });
+                });
+                self._dotNetHelper.invokeMethodAsync('OnGridChanged', JSON.stringify(changes));
+            }, 100);
+        });
 
-            var controller = new AbortController();
-            abortControllers.push(controller);
-
-            handle.addEventListener('mousedown', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                var grid = widgetElement.closest('.dashboard-grid');
-                if (!grid) return;
-
-                var gridRect = grid.getBoundingClientRect();
-                var gridStyle = window.getComputedStyle(grid);
-                var gridCols = 12;
-                var gap = parseFloat(gridStyle.gap) || parseFloat(gridStyle.columnGap) || 16;
-                var rowGap = parseFloat(gridStyle.gap) || parseFloat(gridStyle.rowGap) || 16;
-                var colWidth = (gridRect.width - (gap * (gridCols - 1))) / gridCols;
-                var widgetRect = widgetElement.getBoundingClientRect();
-
-                // Row height: use 120px as the snap unit (matches CSS grid-auto-rows min).
-                // With minmax(120px, auto), actual rows may be taller than 120px due to
-                // content, but we snap resize in 120px increments for predictable behavior.
-                var baseRowHeight = 120;
-
-                var state = {
-                    axis: axis,
-                    startX: e.clientX,
-                    startY: e.clientY,
-                    startSpan: currentColSpan,
-                    startRowSpan: currentRowSpan,
-                    colWidth: colWidth,
-                    gap: gap,
-                    rowGap: rowGap,
-                    baseRowHeight: baseRowHeight,
-                    minCol: minCol,
-                    maxCol: maxCol,
-                    minRow: minRow,
-                    maxRow: maxRow,
-                    widgetElement: widgetElement,
-                    widgetStartLeft: widgetRect.left,
-                    gridLeft: gridRect.left,
-                    currentPreviewCol: currentColSpan,
-                    currentPreviewRow: currentRowSpan
-                };
-
-                var cursorStyle = axis === 'horizontal' ? 'col-resize' : 'row-resize';
-                document.body.style.cursor = cursorStyle;
-                document.body.style.userSelect = 'none';
-                widgetElement.classList.add('widget-resizing');
-
-                function onMove(ev) {
-                    if (axis === 'horizontal') {
-                        var dx = ev.clientX - state.startX;
-                        var colDelta = Math.round(dx / (state.colWidth + state.gap));
-                        var newSpan = Math.max(state.minCol, Math.min(state.maxCol, state.startSpan + colDelta));
-                        if (newSpan !== state.currentPreviewCol) {
-                            state.currentPreviewCol = newSpan;
-                            widgetElement.style.gridColumn = 'span ' + newSpan;
-                        }
-                    } else {
-                        var dy = ev.clientY - state.startY;
-                        var rowDelta = Math.round(dy / (state.baseRowHeight + state.rowGap));
-                        var newRowSpan = Math.max(state.minRow, Math.min(state.maxRow, state.startRowSpan + rowDelta));
-                        if (newRowSpan !== state.currentPreviewRow) {
-                            state.currentPreviewRow = newRowSpan;
-                            widgetElement.style.gridRow = 'span ' + newRowSpan;
-                        }
-                    }
+        // Destroy charts on resize start to prevent SVG artifacts
+        grid.on('resizestart', function (event, el) {
+            var chartElements = el.querySelectorAll('.ct-chart');
+            chartElements.forEach(function (chartEl) {
+                if (chartEl.id && self._charts[chartEl.id]) {
+                    self._charts[chartEl.id].detach();
+                    delete self._charts[chartEl.id];
+                    chartEl.innerHTML = '';
                 }
+            });
+        });
 
-                function onUp(ev) {
-                    document.removeEventListener('mousemove', onMove);
-                    document.removeEventListener('mouseup', onUp);
-                    document.body.style.cursor = '';
-                    document.body.style.userSelect = '';
-                    widgetElement.classList.remove('widget-resizing');
-
-                    var finalCol = state.currentPreviewCol;
-                    var finalRow = state.currentPreviewRow;
-
-                    // Reset inline styles - Blazor will re-render
-                    widgetElement.style.gridColumn = '';
-                    widgetElement.style.gridRow = '';
-
-                    if (finalCol !== state.startSpan || finalRow !== state.startRowSpan) {
-                        dotNetHelper.invokeMethodAsync('OnWidgetResized', placementId, finalCol, finalRow);
-                    }
-                }
-
-                document.addEventListener('mousemove', onMove);
-                document.addEventListener('mouseup', onUp);
-            }, { signal: controller.signal });
-        }
-
-        setupEdge('.widget-resize-right', 'horizontal');
-        setupEdge('.widget-resize-bottom', 'vertical');
-
-        this._resizeCleanups[placementId] = function () {
-            abortControllers.forEach(function (c) { c.abort(); });
-        };
+        this._grid = grid;
     },
 
-    cleanupResize: function (placementId) {
-        if (this._resizeCleanups[placementId]) {
-            this._resizeCleanups[placementId]();
-            delete this._resizeCleanups[placementId];
+    setEditMode: function (editMode) {
+        if (!this._grid) return;
+        this._grid.setStatic(!editMode);
+    },
+
+    destroyGrid: function () {
+        if (this._changeBatch) {
+            clearTimeout(this._changeBatch);
+            this._changeBatch = null;
         }
+        if (this._grid) {
+            this._grid.destroy(false); // false = don't remove DOM elements (Blazor owns them)
+            this._grid = null;
+        }
+        this._dotNetHelper = null;
+    },
+
+    addGridWidget: function (element) {
+        if (!this._grid || !element) return;
+        this._grid.makeWidget(element);
+    },
+
+    removeGridWidget: function (element) {
+        if (!this._grid || !element) return;
+        this._grid.removeWidget(element, false); // false = don't remove DOM
     },
 
     // --- Charts ---
@@ -171,10 +98,8 @@ window.DashboardInterop = {
             this._charts[elementId].detach();
         }
 
-        // series is already an array of arrays from C# (e.g. [[1,2,3]])
         var chartData = { labels: labels, series: series };
 
-        // Compute low value from data for better chart scaling
         var low = 0;
         if (type === 'line' && series.length > 0) {
             var flatValues = series[0];

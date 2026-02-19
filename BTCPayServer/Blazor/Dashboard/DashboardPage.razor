@@ -18,6 +18,7 @@
 @inject BTCPayNetworkProvider NetworkProvider
 @inject PaymentMethodHandlerDictionary Handlers
 @inject AppService AppService
+@inject IEnumerable<BTCPayServer.Abstractions.Contracts.IStoreSetupStepProvider> SetupStepProviders
 @implements IAsyncDisposable
 
 @if (!IsSetUp)
@@ -30,47 +31,27 @@
                 <h5 class="mb-0 text-success">Create your store</h5>
             </div>
         </div>
-        @if (!WalletEnabled)
+        @foreach (var step in _setupSteps.OrderBy(s => s.Order))
         {
-            <a href="/stores/@StoreId/onchain/@CryptoCode"
-               class="list-group-item list-group-item-action d-flex align-items-center">
-                <svg role="img" class="icon icon-wallet-new me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#wallet-new"></use></svg>
-                <div class="content flex-fill">
-                    <h5 class="mb-0">Set up a wallet</h5>
-                </div>
-                <svg role="img" class="icon icon-caret-right" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#caret-right"></use></svg>
-            </a>
-        }
-        else
-        {
-            <div class="list-group-item d-flex align-items-center">
-                <svg role="img" class="icon icon-done me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#done"></use></svg>
-                <div class="content">
-                    <h5 class="mb-0 text-success">Set up a wallet</h5>
-                </div>
-            </div>
-        }
-        @if (LightningSupported)
-        {
-            @if (!LightningEnabled)
-            {
-                <a href="/stores/@StoreId/lightning/@CryptoCode/setup"
-                   class="list-group-item list-group-item-action d-flex align-items-center">
-                    <svg role="img" class="icon icon-wallet-new me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#wallet-new"></use></svg>
-                    <div class="content flex-fill">
-                        <h5 class="mb-0">Set up a Lightning node</h5>
-                    </div>
-                    <svg role="img" class="icon icon-caret-right" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#caret-right"></use></svg>
-                </a>
-            }
-            else
+            @if (step.IsComplete)
             {
                 <div class="list-group-item d-flex align-items-center">
                     <svg role="img" class="icon icon-done me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#done"></use></svg>
                     <div class="content">
-                        <h5 class="mb-0 text-success">Set up a Lightning node</h5>
+                        <h5 class="mb-0 text-success">@step.Title</h5>
                     </div>
                 </div>
+            }
+            else if (!string.IsNullOrEmpty(step.SetupUrl))
+            {
+                <a href="@step.SetupUrl"
+                   class="list-group-item list-group-item-action d-flex align-items-center order-1">
+                    <svg role="img" class="icon icon-@step.IconSymbol me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#@step.IconSymbol"></use></svg>
+                    <div class="content flex-fill">
+                        <h5 class="mb-0">@step.Title</h5>
+                    </div>
+                    <svg role="img" class="icon icon-caret-right" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#caret-right"></use></svg>
+                </a>
             }
         }
     </div>
@@ -218,40 +199,49 @@ else
     </div>
 </div>
 
-<div @ref="_gridContainer" class="dashboard-grid @(EditMode ? "dashboard-edit" : "")">
+<div @ref="_gridContainer" class="grid-stack @(EditMode ? "dashboard-edit" : "")">
     @if (_activeDashboard is not null && _activeDashboard.Widgets.Count > 0)
     {
-        @foreach (var placement in _activeDashboard.Widgets.OrderBy(w => w.Order))
+        @foreach (var wp in ComputeGridPositions())
         {
-            var descriptor = WidgetRegistry.GetDescriptor(placement.WidgetType);
-            var isConfiguring = _configuringPlacement?.Id == placement.Id;
-            <div class="dashboard-widget @(isConfiguring ? "widget-configuring" : "")" style="grid-column: span @placement.ColumnSize;@(placement.RowSpan > 1 ? $" grid-row: span {placement.RowSpan};" : "")">
-                @if (descriptor is null)
-                {
-                    <WidgetUnavailable Placement="placement"
-                                       EditMode="EditMode"
-                                       OnRemove="() => RemoveWidget(placement)" />
-                }
-                else
-                {
-                    <WidgetContainer Placement="placement"
-                                     Descriptor="descriptor"
-                                     StoreId="@StoreId"
-                                     UserId="@UserId"
-                                     EditMode="EditMode"
-                                     WidgetEditMode="_widgetEditMode"
-                                     OnConfigChanged="(config) => OnWidgetConfigChanged(placement, config)"
-                                     OnEditModeChanged="(editing) => OnWidgetEditMode(editing)"
-                                     OnRemove="() => RemoveWidget(placement)"
-                                     OnSizeChanged="(size) => OnWidgetSizeChanged(size)"
-                                     OnConfigure="() => OpenConfigPanel(placement, descriptor)" />
-                }
+            var descriptor = WidgetRegistry.GetDescriptor(wp.Placement.WidgetType);
+            var isConfiguring = _configuringPlacement?.Id == wp.Placement.Id;
+            <div @key="wp.Placement.Id"
+                 class="grid-stack-item @(isConfiguring ? "widget-configuring" : "")"
+                 gs-id="@wp.Placement.Id"
+                 gs-x="@wp.X"
+                 gs-y="@wp.Y"
+                 gs-w="@wp.W"
+                 gs-h="@wp.Placement.RowSpan">
+                <div class="grid-stack-item-content">
+                    @if (descriptor is null)
+                    {
+                        <WidgetUnavailable Placement="wp.Placement"
+                                           EditMode="EditMode"
+                                           OnRemove="() => RemoveWidget(wp.Placement)" />
+                    }
+                    else
+                    {
+                        <WidgetContainer Placement="wp.Placement"
+                                         Descriptor="descriptor"
+                                         StoreId="@StoreId"
+                                         UserId="@UserId"
+                                         EditMode="EditMode"
+                                         WidgetEditMode="_widgetEditMode"
+                                         ActiveStoreFeatures="_activeStoreFeatures"
+                                         OnConfigChanged="(config) => OnWidgetConfigChanged(wp.Placement, config)"
+                                         OnEditModeChanged="(editing) => OnWidgetEditMode(editing)"
+                                         OnRemove="() => RemoveWidget(wp.Placement)"
+                                         OnSizeChanged="(size) => OnWidgetSizeChanged(size)"
+                                         OnConfigure="() => OpenConfigPanel(wp.Placement, descriptor)" />
+                    }
+                </div>
             </div>
         }
     }
     else if (_activeDashboard is not null)
     {
-        <div class="dashboard-empty text-center py-5" style="grid-column: 1 / -1;">
+        <div class="dashboard-empty text-center py-5">
             <h5 class="text-muted mb-3">This dashboard is empty</h5>
             <p class="text-secondary mb-3">Add widgets manually or start with the default layout.</p>
             <button class="btn btn-primary" @onclick="PopulateDefaultLayout">Populate Default Layout</button>
@@ -285,16 +275,19 @@ else
     private bool _linkCopied;
     private bool _isAdmin;
     private bool _isCodeDefault; // true when active dashboard is a freshly generated code default (not persisted)
+    private HashSet<string> _activeStoreFeatures = new(); // e.g. "wallet", "lightning"
     private List<BTCPayServer.Data.AppData> _apps = new(); // store apps for template context
     private DotNetObjectReference<DashboardPage>? _dotNetRef;
     private ElementReference _gridContainer;
     private ElementReference _importFileInput;
-    private bool _sortableInitialized;
+    private bool _gridInitialized;
 
     // Widget config panel state
     private WidgetPlacement? _configuringPlacement;
     private WidgetDescriptor? _configuringDescriptor;
     private bool _pendingConfiguration; // true when a newly added widget requires config before saving
+    private bool _editDirty; // true when the user has made changes during the current edit session
+    private List<BTCPayServer.Abstractions.Contracts.StoreSetupStep> _setupSteps = new(); // setup guide steps
 
     public bool EditMode { get; set; }
 
@@ -411,6 +404,11 @@ else
         IsSetUp = WalletEnabled || LightningEnabled
                   || store.GetPaymentMethodConfigs(onlyEnabled: true).Count > 0;
 
+        // Build active store features set for widget availability checks
+        _activeStoreFeatures.Clear();
+        if (WalletEnabled) _activeStoreFeatures.Add("wallet");
+        if (LightningEnabled) _activeStoreFeatures.Add("lightning");
+
         // Load apps for the template context
         _apps.Clear();
         if (!string.IsNullOrEmpty(UserId))
@@ -420,6 +418,46 @@ else
             {
                 if (app.App is not null)
                     _apps.Add(app.App);
+            }
+        }
+
+        // Build setup steps for the inline setup guide (shown when !IsSetUp)
+        _setupSteps.Clear();
+        _setupSteps.Add(new BTCPayServer.Abstractions.Contracts.StoreSetupStep
+        {
+            Title = "Set up a wallet",
+            SetupUrl = $"/stores/{StoreId}/onchain/{CryptoCode}",
+            IsComplete = WalletEnabled,
+            Order = 10,
+            IconSymbol = "wallet-new"
+        });
+        if (LightningSupported)
+        {
+            _setupSteps.Add(new BTCPayServer.Abstractions.Contracts.StoreSetupStep
+            {
+                Title = "Set up a Lightning node",
+                SetupUrl = $"/stores/{StoreId}/lightning/{CryptoCode}/setup",
+                IsComplete = LightningEnabled,
+                Order = 20,
+                IconSymbol = "wallet-new"
+            });
+        }
+        // Plugin-contributed setup steps
+        var setupContext = new BTCPayServer.Abstractions.Contracts.StoreSetupStepContext
+        {
+            StoreId = StoreId,
+            CryptoCode = CryptoCode
+        };
+        foreach (var provider in SetupStepProviders)
+        {
+            try
+            {
+                var pluginSteps = await provider.GetStepsAsync(setupContext);
+                _setupSteps.AddRange(pluginSteps);
+            }
+            catch
+            {
+                // Don't let a faulty plugin break the setup guide
             }
         }
     }
@@ -550,6 +588,7 @@ else
         var template = DashboardService.GetDefaultTemplate(_activeScope, BuildTemplateContext());
         _activeDashboard.Widgets = template.Widgets;
         await SaveDashboard();
+        await ResetGrid();
     }
 
     private async Task CopyDashboardLink()
@@ -584,6 +623,7 @@ else
                 w.WidgetType,
                 w.ColumnSize,
                 w.RowSpan,
+                w.Offset,
                 w.Order,
                 w.Config
             })
@@ -626,6 +666,7 @@ else
                         WidgetType = w["WidgetType"]?.Value<string>() ?? "",
                         ColumnSize = w["ColumnSize"]?.Value<int>() ?? 6,
                         RowSpan = w["RowSpan"]?.Value<int>() ?? 1,
+                        Offset = w["Offset"]?.Value<int>() ?? 0,
                         Order = order++,
                         Config = w["Config"] as JObject
                     });
@@ -635,6 +676,7 @@ else
             await SaveDashboardToScope(dashboard, _activeScope);
             _activeDashboard = dashboard;
             _allDashboards.Add(dashboard);
+            await ResetGrid();
         }
         catch
         {
@@ -644,25 +686,32 @@ else
 
     private async Task EnterEditMode()
     {
-        // Materialize code default on entering edit mode so modifications get persisted
-        await MaterializeCodeDefault();
-        // Once the user enters edit mode, this is a manually customized dashboard.
-        // Clear AutoMaterialized so template version upgrades won't overwrite their changes.
-        if (_activeDashboard is not null && _activeDashboard.AutoMaterialized)
-        {
-            _activeDashboard.AutoMaterialized = false;
-        }
+        _editDirty = false;
         EditMode = true;
-        _dotNetRef = DotNetObjectReference.Create(this);
-        StateHasChanged();
+        await JsInterop.SetEditMode(true);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (EditMode && _dotNetRef is not null && !_sortableInitialized)
+        if (!_gridInitialized && IsSetUp && _activeDashboard is not null)
         {
-            _sortableInitialized = true;
-            await JsInterop.InitSortable(_gridContainer, DotNetObjectReference.Create<object>(this));
+            _gridInitialized = true;
+            _dotNetRef ??= DotNetObjectReference.Create(this);
+            await JsInterop.InitGrid(_gridContainer, DotNetObjectReference.Create<object>(this), EditMode);
+        }
+    }
+
+    /// <summary>
+    /// Destroys the current gridstack instance and marks it for re-initialization
+    /// on the next render. Call this whenever the dashboard widgets change wholesale
+    /// (reset, delete, switch, import, create).
+    /// </summary>
+    private async Task ResetGrid()
+    {
+        if (_gridInitialized)
+        {
+            await JsInterop.DestroyGrid();
+            _gridInitialized = false;
         }
     }
 
@@ -671,9 +720,21 @@ else
         EditMode = false;
         _widgetEditMode = false;
         _confirmDelete = false;
-        _sortableInitialized = false;
-        await JsInterop.DestroySortable();
-        await SaveDashboard();
+        await JsInterop.SetEditMode(false);
+
+        // Only materialize and save if the user actually made changes
+        if (_editDirty)
+        {
+            // Materialize code default on first real change so it gets persisted
+            await MaterializeCodeDefault();
+            // Clear AutoMaterialized so template upgrades don't overwrite user edits
+            if (_activeDashboard is not null && _activeDashboard.AutoMaterialized)
+            {
+                _activeDashboard.AutoMaterialized = false;
+            }
+            await SaveDashboard();
+        }
+        _editDirty = false;
     }
 
     private async Task DeleteDashboard()
@@ -722,8 +783,7 @@ else
         EditMode = false;
         _widgetEditMode = false;
         _confirmDelete = false;
-        _sortableInitialized = false;
-        await JsInterop.DestroySortable();
+        await ResetGrid();
 
         // Switch to another dashboard or fall back to default template
         _activeDashboard = await DashboardService.ResolveActiveDashboard(UserId, StoreId, BuildTemplateContext());
@@ -740,24 +800,74 @@ else
     }
 
     [JSInvokable]
-    public async Task OnWidgetReordered(int oldIndex, int newIndex)
+    public async Task OnGridChanged(string changesJson)
     {
         if (_activeDashboard is null) return;
 
-        var widgets = _activeDashboard.Widgets.OrderBy(w => w.Order).ToList();
-        if (oldIndex < 0 || oldIndex >= widgets.Count || newIndex < 0 || newIndex >= widgets.Count)
-            return;
+        var changes = JsonConvert.DeserializeObject<List<GridChange>>(changesJson);
+        if (changes is null || changes.Count == 0) return;
 
-        var moved = widgets[oldIndex];
-        widgets.RemoveAt(oldIndex);
-        widgets.Insert(newIndex, moved);
+        foreach (var change in changes)
+        {
+            var placement = _activeDashboard.Widgets.FirstOrDefault(w => w.Id == change.Id);
+            if (placement is null) continue;
+            placement.Offset = change.X;
+            placement.Order = change.Y;
+            placement.ColumnSize = change.W;
+            placement.RowSpan = change.H;
+        }
 
-        for (int i = 0; i < widgets.Count; i++)
-            widgets[i].Order = i;
-
-        _activeDashboard.Widgets = widgets;
         await SaveDashboard();
         await InvokeAsync(StateHasChanged);
+    }
+
+    private class GridChange
+    {
+        [JsonProperty("id")] public string Id { get; set; } = "";
+        [JsonProperty("x")] public int X { get; set; }
+        [JsonProperty("y")] public int Y { get; set; }
+        [JsonProperty("w")] public int W { get; set; }
+        [JsonProperty("h")] public int H { get; set; }
+    }
+
+    private record struct WidgetPosition(WidgetPlacement Placement, int X, int Y, int W);
+
+    /// <summary>
+    /// Computes gridstack x/y positions by packing widgets into rows.
+    /// Widgets with an explicit Offset are placed at that column; otherwise
+    /// they auto-flow from the current cursor position within the row.
+    /// When a widget doesn't fit on the current row, a new row starts.
+    /// </summary>
+    private List<WidgetPosition> ComputeGridPositions()
+    {
+        var result = new List<WidgetPosition>();
+        if (_activeDashboard is null) return result;
+
+        var colCursor = 0;
+        var row = 0;
+        var rowHeight = 0; // track tallest widget in current row
+
+        foreach (var p in _activeDashboard.Widgets.OrderBy(w => w.Order))
+        {
+            var w = p.ColumnSize;
+
+            // If the widget has an explicit offset and it fits, use it
+            var x = p.Offset > 0 ? p.Offset : colCursor;
+
+            // Wrap to next row if it doesn't fit
+            if (x + w > 12)
+            {
+                row += Math.Max(rowHeight, 1);
+                rowHeight = 0;
+                x = 0;
+            }
+
+            result.Add(new WidgetPosition(p, x, row, w));
+            colCursor = x + w;
+            rowHeight = Math.Max(rowHeight, p.RowSpan);
+        }
+
+        return result;
     }
 
     private async Task AddWidget(WidgetDescriptor descriptor)
@@ -795,10 +905,10 @@ else
         if (_activeDashboard is null) return;
 
         _activeDashboard.Widgets.Remove(placement);
+        // Re-index order values in-place
         var ordered = _activeDashboard.Widgets.OrderBy(w => w.Order).ToList();
         for (int i = 0; i < ordered.Count; i++)
             ordered[i].Order = i;
-        _activeDashboard.Widgets = ordered;
         await SaveDashboard();
     }
 
@@ -858,6 +968,7 @@ else
     {
         _activeDashboard = dashboard;
         _activeScope = dashboard.Scope;
+        await ResetGrid();
 
         // Persist the active selection in the relevant scope
         switch (_activeScope)
@@ -920,6 +1031,7 @@ else
         _activeDashboard = newDashboard;
         _activeScope = scope;
         _allDashboards.Add(newDashboard);
+        await ResetGrid();
     }
 
     /// <summary>
@@ -943,6 +1055,9 @@ else
     private async Task SaveDashboard()
     {
         if (_activeDashboard is null) return;
+
+        // Track that a change happened during this edit session
+        if (EditMode) _editDirty = true;
 
         // Code-generated defaults are never auto-saved — they stay fresh.
         // They only get persisted when explicitly materialized via MaterializeCodeDefault().
@@ -991,6 +1106,6 @@ else
     public async ValueTask DisposeAsync()
     {
         _dotNetRef?.Dispose();
-        await JsInterop.DestroySortable();
+        await JsInterop.DestroyGrid();
     }
 }

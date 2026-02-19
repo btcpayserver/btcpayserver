@@ -110,6 +110,9 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
+        if (!DataParametersChanged)
+            return;
+
         if (string.IsNullOrEmpty(StoreId))
             return;
 
@@ -149,6 +152,9 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (SizeChanged && _chartRendered)
+            _chartRendered = false;
+
         if (!_chartRendered && !Loading && _hasSeries && _series is not null)
         {
             _chartRendered = true;

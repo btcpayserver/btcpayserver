@@ -71,6 +71,23 @@ public abstract class BaseWidgetComponent<TConfig> : ComponentBase where TConfig
 
     protected TConfig? EditConfig { get; set; }
 
+    /// <summary>
+    /// True when data-relevant parameters (StoreId, Config) have changed since the last render,
+    /// meaning the widget should re-fetch its data. Widgets should check this at the top of
+    /// OnParametersSetAsync and skip expensive data loading when false.
+    /// </summary>
+    protected bool DataParametersChanged { get; private set; }
+
+    /// <summary>
+    /// True when the Size parameter changed, meaning chart widgets should re-render their charts.
+    /// </summary>
+    protected bool SizeChanged { get; private set; }
+
+    /// <summary>
+    /// True only on the very first OnParametersSetAsync call (initial load).
+    /// </summary>
+    protected bool IsFirstLoad => !_hasLoadedOnce;
+
     protected bool EditMode
     {
         get => _editMode;
@@ -85,15 +102,45 @@ public abstract class BaseWidgetComponent<TConfig> : ComponentBase where TConfig
 
     private bool _editMode;
     private bool _loading;
-    private bool _accessChecked;
     private TConfig? _typedConfig;
     private JObject? _cachedConfig;
+    private bool _hasLoadedOnce;
+
+    public override Task SetParametersAsync(ParameterView parameters)
+    {
+        // Snapshot previous values before Blazor applies new ones
+        var oldStoreId = StoreId;
+        var oldUserId = UserId;
+        var oldConfig = _cachedConfig;
+        var oldSize = Size;
+
+        // Determine if data-relevant parameters changed by peeking at incoming values.
+        // We check before base.SetParametersAsync because OnParametersSetAsync runs inside it.
+        var newStoreId = parameters.TryGetValue<string>("StoreId", out var s) ? s : oldStoreId;
+        var newUserId = parameters.TryGetValue<string>("UserId", out var u) ? u : oldUserId;
+        var newSize = parameters.TryGetValue<int>("Size", out var sz) ? sz : oldSize;
+        // For Config (JObject), any new instance means potential change
+        var configChanged = parameters.TryGetValue<JObject>("Config", out var newConfig)
+            && !ReferenceEquals(newConfig, oldConfig);
+
+        DataParametersChanged = !_hasLoadedOnce
+            || oldStoreId != newStoreId
+            || oldUserId != newUserId
+            || configChanged;
+
+        SizeChanged = oldSize != newSize;
+
+        if (DataParametersChanged)
+            _hasLoadedOnce = true;
+
+        // Now let Blazor apply parameters and run OnParametersSetAsync
+        return base.SetParametersAsync(parameters);
+    }
 
     protected override async Task OnInitializedAsync()
     {
         if (RequiredPermissions.Length > 0)
         {
-            _accessChecked = true;
             await CheckAccess();
         }
     }

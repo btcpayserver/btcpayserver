@@ -445,6 +445,12 @@ namespace BTCPayServer
 #pragma warning restore CS0618 // Type or member is obsolete
             return services;
         }
+        public static IServiceCollection AddStoreSetupStepProvider<T>(this IServiceCollection services)
+            where T : class, BTCPayServer.Abstractions.Contracts.IStoreSetupStepProvider
+        {
+            services.AddSingleton<BTCPayServer.Abstractions.Contracts.IStoreSetupStepProvider, T>();
+            return services;
+        }
         public static void AddSettingsAccessor<T>(this IServiceCollection services) where T : class, new()
         {
             services.TryAddSingleton<ISettingsAccessor<T>, SettingsAccessor<T>>();

@@ -45,7 +45,7 @@ public class WidgetDescriptor
     public int DefaultColumnSize { get; set; } = 6;
     public int MinRowSpan { get; set; } = 1;
     public int MaxRowSpan { get; set; } = 4;
-    public int DefaultRowSpan { get; set; } = 1;
+    public int DefaultRowSpan { get; set; } = 2;
     public WidgetScope Scope { get; set; } = WidgetScope.Store;
     public string[] RequiredPermissions { get; set; } = Array.Empty<string>();
     public string[] RequiredStoreFeatures { get; set; } = Array.Empty<string>();

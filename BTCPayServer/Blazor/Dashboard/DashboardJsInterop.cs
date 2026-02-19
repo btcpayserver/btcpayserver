@@ -15,38 +15,44 @@ public class DashboardJsInterop : IAsyncDisposable
         _jsRuntime = jsRuntime;
     }
 
-    public async Task InitSortable(ElementReference container, DotNetObjectReference<object> dotNetHelper)
+    // --- Gridstack integration ---
+
+    public async Task InitGrid(ElementReference container, DotNetObjectReference<object> dotNetHelper, bool editMode)
     {
         if (_jsRuntime.IsPreRendering())
             return;
-        await _jsRuntime.InvokeVoidAsync("DashboardInterop.initSortable", container, dotNetHelper);
+        await _jsRuntime.InvokeVoidAsync("DashboardInterop.initGrid", container, dotNetHelper, editMode);
     }
 
-    public async Task DestroySortable()
+    public async Task SetEditMode(bool editMode)
     {
         if (_jsRuntime.IsPreRendering())
             return;
-        await _jsRuntime.InvokeVoidAsync("DashboardInterop.destroySortable");
+        await _jsRuntime.InvokeVoidAsync("DashboardInterop.setEditMode", editMode);
     }
 
-    public async Task InitResize(ElementReference widgetElement, string placementId,
-        int currentColSpan, int minCol, int maxCol,
-        int currentRowSpan, int minRow, int maxRow,
-        DotNetObjectReference<object> dotNetHelper)
+    public async Task DestroyGrid()
     {
         if (_jsRuntime.IsPreRendering())
             return;
-        await _jsRuntime.InvokeVoidAsync("DashboardInterop.initResize",
-            widgetElement, placementId, currentColSpan, minCol, maxCol,
-            currentRowSpan, minRow, maxRow, dotNetHelper);
+        await _jsRuntime.InvokeVoidAsync("DashboardInterop.destroyGrid");
     }
 
-    public async Task CleanupResize(string placementId)
+    public async Task AddGridWidget(ElementReference element)
     {
         if (_jsRuntime.IsPreRendering())
             return;
-        await _jsRuntime.InvokeVoidAsync("DashboardInterop.cleanupResize", placementId);
+        await _jsRuntime.InvokeVoidAsync("DashboardInterop.addGridWidget", element);
     }
+
+    public async Task RemoveGridWidget(ElementReference element)
+    {
+        if (_jsRuntime.IsPreRendering())
+            return;
+        await _jsRuntime.InvokeVoidAsync("DashboardInterop.removeGridWidget", element);
+    }
+
+    // --- Charts ---
 
     public async Task RenderChart(string elementId, string type, object labels, object series, object? options = null)
     {
@@ -61,6 +67,8 @@ public class DashboardJsInterop : IAsyncDisposable
             return;
         await _jsRuntime.InvokeVoidAsync("DashboardInterop.destroyChart", elementId);
     }
+
+    // --- Utilities ---
 
     public async Task CopyToClipboard(string text)
     {

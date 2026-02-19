@@ -11,7 +11,7 @@ public class DefaultStoreDashboardTemplate : IDashboardTemplateProvider
     /// Bump this whenever the default layout changes so that auto-materialized
     /// dashboards get refreshed on next load.
     /// </summary>
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 1;
 
     public string Name => "Default Store Dashboard";
     public DashboardScope Scope => DashboardScope.Store;
@@ -29,7 +29,14 @@ public class DefaultStoreDashboardTemplate : IDashboardTemplateProvider
         var widgets = new List<WidgetPlacement>();
         var order = 0;
 
-        // Row 1: Wallet balance (full row) — or setup guide when not configured
+        // Row 1: Setup guide (4 cols) + Wallet balance (8 cols) side by side
+        widgets.Add(new WidgetPlacement
+        {
+            WidgetType = "SetupGuide",
+            ColumnSize = context.WalletEnabled ? 4 : 8,
+            Order = order++
+        });
+
         if (context.WalletEnabled)
         {
             widgets.Add(new WidgetPlacement
@@ -38,15 +45,6 @@ public class DefaultStoreDashboardTemplate : IDashboardTemplateProvider
                 ColumnSize = 8,
                 Order = order++,
                 Config = JObject.FromObject(new { CryptoCode = context.CryptoCode, Period = "Week" })
-            });
-        }
-        else
-        {
-            widgets.Add(new WidgetPlacement
-            {
-                WidgetType = "SetupGuide",
-                ColumnSize = 8,
-                Order = order++
             });
         }
 

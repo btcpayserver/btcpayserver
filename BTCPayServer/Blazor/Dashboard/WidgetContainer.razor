@@ -1,7 +1,7 @@
 @using BTCPayServer.Blazor.Dashboard.Models
 @using Newtonsoft.Json.Linq
 
-<div class="widget @(Descriptor.CssClass ?? "")" @ref="_widgetElement">
+<div class="widget @(Descriptor.CssClass ?? "") @(_featureUnavailable ? "widget-feature-unavailable" : "")">
     @if (EditMode)
     {
         <div class="widget-edit-header">
@@ -21,26 +21,35 @@
             </div>
         </div>
     }
-    <ErrorBoundary @ref="_errorBoundary">
-        <ChildContent>
-            <DynamicComponent @key="Placement.Id"
-                              Type="@Descriptor.ComponentType"
-                              Parameters="@GetWidgetParameters()" />
-        </ChildContent>
-        <ErrorContent Context="ex">
-            <div class="text-danger small p-2">
-                <strong>Widget error</strong>
-                <p class="mb-0">@ex.Message</p>
-                <button class="btn btn-link btn-sm p-0 mt-1" @onclick="RecoverFromError">Retry</button>
-            </div>
-        </ErrorContent>
-    </ErrorBoundary>
+    @if (_featureUnavailable)
+    {
+        <div class="widget-unavailable-overlay">
+            <h6 class="mb-1">@Descriptor.Name</h6>
+            <p class="mb-0 small">@_featureMessage</p>
+        </div>
+    }
+    else
+    {
+        <ErrorBoundary @ref="_errorBoundary">
+            <ChildContent>
+                <DynamicComponent @key="Placement.Id"
+                                  Type="@Descriptor.ComponentType"
+                                  Parameters="@GetWidgetParameters()" />
+            </ChildContent>
+            <ErrorContent Context="ex">
+                <div class="text-danger small p-2">
+                    <strong>Widget error</strong>
+                    <p class="mb-0">@ex.Message</p>
+                    <button class="btn btn-link btn-sm p-0 mt-1" @onclick="RecoverFromError">Retry</button>
+                </div>
+            </ErrorContent>
+        </ErrorBoundary>
+    }
 </div>
 
 @if (EditMode)
 {
-    <div class="widget-resize-right"></div>
-    <div class="widget-resize-bottom"></div>
+    <div class="widget-debug-label">@Placement.Offset,@Placement.Order,@(Placement.ColumnSize)c,@(Placement.RowSpan)r</div>
 }
 
 @code {
@@ -50,22 +59,72 @@
     [Parameter] public string UserId { get; set; } = string.Empty;
     [Parameter] public bool EditMode { get; set; }
     [Parameter] public bool WidgetEditMode { get; set; }
+    /// <summary>Set of active store features (e.g. "wallet", "lightning") for the current store.</summary>
+    [Parameter] public HashSet<string> ActiveStoreFeatures { get; set; } = new();
     [Parameter] public EventCallback<JObject> OnConfigChanged { get; set; }
     [Parameter] public EventCallback<bool> OnEditModeChanged { get; set; }
     [Parameter] public EventCallback OnRemove { get; set; }
     [Parameter] public EventCallback<(int cols, int rows)> OnSizeChanged { get; set; }
     [Parameter] public EventCallback OnConfigure { get; set; }
 
-    [Inject] DashboardJsInterop JsInterop { get; set; } = null!;
-
     private ErrorBoundary? _errorBoundary;
-    private ElementReference _widgetElement;
-    private DotNetObjectReference<object>? _resizeRef;
-    private int _lastInitCol;
-    private int _lastInitRow;
-    private bool _resizeInitialized;
 
-    private Dictionary<string, object> GetWidgetParameters()
+    private bool _featureUnavailable;
+    private string _featureMessage = string.Empty;
+
+    // Cached parameters to avoid rebuilding on every render
+    private Dictionary<string, object>? _cachedParameters;
+    private string _lastStoreId = string.Empty;
+    private string _lastUserId = string.Empty;
+    private bool _lastReadonly;
+    private int _lastSize;
+    private JObject? _lastConfig;
+
+    protected override void OnParametersSet()
+    {
+        _featureUnavailable = false;
+        _featureMessage = string.Empty;
+
+        if (Descriptor.RequiredStoreFeatures.Length > 0)
+        {
+            foreach (var feature in Descriptor.RequiredStoreFeatures)
+            {
+                if (!ActiveStoreFeatures.Contains(feature))
+                {
+                    _featureUnavailable = true;
+                    var featureLabel = feature switch
+                    {
+                        "wallet" => "an on-chain wallet",
+                        "lightning" => "a Lightning node",
+                        _ => feature
+                    };
+                    _featureMessage = $"Requires {featureLabel} to be configured.";
+                    break;
+                }
+            }
+        }
+
+        // Invalidate cached parameters when inputs change
+        var currentReadonly = Descriptor.AlwaysInteractive ? false : (!EditMode || WidgetEditMode);
+        if (_cachedParameters is null
+            || _lastStoreId != StoreId
+            || _lastUserId != UserId
+            || _lastReadonly != currentReadonly
+            || _lastSize != Placement.ColumnSize
+            || !ReferenceEquals(_lastConfig, Placement.Config))
+        {
+            _lastStoreId = StoreId;
+            _lastUserId = UserId;
+            _lastReadonly = currentReadonly;
+            _lastSize = Placement.ColumnSize;
+            _lastConfig = Placement.Config;
+            _cachedParameters = BuildWidgetParameters();
+        }
+    }
+
+    private Dictionary<string, object> GetWidgetParameters() => _cachedParameters ??= BuildWidgetParameters();
+
+    private Dictionary<string, object> BuildWidgetParameters()
     {
         return new Dictionary<string, object>
         {
@@ -80,39 +139,6 @@
             { "OnRemove", EventCallback.Factory.Create(this, () => OnRemove.InvokeAsync()) },
             { "RequestConfigure", EventCallback.Factory.Create(this, () => OnConfigure.InvokeAsync()) }
         };
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (EditMode)
-        {
-            // Only re-init resize handlers when size actually changed or first time
-            if (!_resizeInitialized || _lastInitCol != Placement.ColumnSize || _lastInitRow != Placement.RowSpan)
-            {
-                _resizeRef ??= DotNetObjectReference.Create<object>(this);
-                _lastInitCol = Placement.ColumnSize;
-                _lastInitRow = Placement.RowSpan;
-                _resizeInitialized = true;
-                await JsInterop.InitResize(_widgetElement, Placement.Id,
-                    Placement.ColumnSize, Descriptor.MinColumnSize, Descriptor.MaxColumnSize,
-                    Placement.RowSpan, Descriptor.MinRowSpan, Descriptor.MaxRowSpan,
-                    _resizeRef);
-            }
-        }
-        else
-        {
-            _resizeInitialized = false;
-        }
-    }
-
-    [JSInvokable]
-    public async Task OnWidgetResized(string placementId, int newColSize, int newRowSpan)
-    {
-        if (placementId != Placement.Id) return;
-        Placement.ColumnSize = newColSize;
-        Placement.RowSpan = newRowSpan;
-        await OnSizeChanged.InvokeAsync((newColSize, newRowSpan));
-        await InvokeAsync(StateHasChanged);
     }
 
     private void RecoverFromError()

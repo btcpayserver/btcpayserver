@@ -1,3 +1,4 @@
+@using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Blazor.Dashboard.Models
 @using BTCPayServer.Data
 @using BTCPayServer.Payments
@@ -11,55 +12,60 @@
 @inject BTCPayNetworkProvider NetworkProvider
 @inject PaymentMethodHandlerDictionary Handlers
 @inject StoreRepository StoreRepository
+@inject IEnumerable<IStoreSetupStepProvider> SetupStepProviders
 
-@if (!HasAccess || _allDone)
+@if (!HasAccess)
 {
     return;
 }
 
-<header>
-    <h5 class="mb-4 text-muted">This store is ready to accept transactions, good job!</h5>
-</header>
-<div class="list-group">
-    @if (_walletEnabled)
-    {
-        <div class="list-group-item d-flex align-items-center">
-            <svg role="img" class="icon icon-done me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#done"></use></svg>
-            <div class="content">
-                <h5 class="mb-0 text-success">Set up a wallet</h5>
-            </div>
+@if (_allDone)
+{
+    <header>
+        <h5 class="mb-3 text-muted">Your store is fully set up!</h5>
+    </header>
+}
+else if (_anyPaymentMethodEnabled)
+{
+    <header>
+        <h5 class="mb-3 text-muted">This store is ready to accept transactions, good job!</h5>
+    </header>
+}
+else
+{
+    <p class="lead text-secondary mb-3">To start accepting payments, set up a wallet or a Lightning node.</p>
+}
+<div class="list-group" id="SetupGuide">
+    @* "Create your store" — always completed *@
+    <div class="list-group-item d-flex align-items-center">
+        <svg role="img" class="icon icon-done me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#done"></use></svg>
+        <div class="content">
+            <h5 class="mb-0 text-success">Create your store</h5>
         </div>
-    }
-    else
+    </div>
+    @* Built-in and plugin setup steps, sorted by order *@
+    @foreach (var step in _steps.OrderBy(s => s.Order))
     {
-        <a href="/stores/@StoreId/onchain/@_cryptoCode"
-           class="list-group-item list-group-item-action d-flex align-items-center">
-            <svg role="img" class="icon icon-wallet-new me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#wallet-new"></use></svg>
-            <div class="content flex-fill">
-                <h5 class="mb-0">Set up a wallet</h5>
+        @if (step.IsComplete)
+        {
+            <div class="list-group-item d-flex align-items-center">
+                <svg role="img" class="icon icon-done me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#done"></use></svg>
+                <div class="content">
+                    <h5 class="mb-0 text-success">@step.Title</h5>
+                </div>
             </div>
-            <svg role="img" class="icon icon-caret-right" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#caret-right"></use></svg>
-        </a>
-    }
-    @if (_lightningEnabled)
-    {
-        <div class="list-group-item d-flex align-items-center">
-            <svg role="img" class="icon icon-done me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#done"></use></svg>
-            <div class="content">
-                <h5 class="mb-0 text-success">Set up a Lightning node</h5>
-            </div>
-        </div>
-    }
-    else if (_lightningSupported)
-    {
-        <a href="/stores/@StoreId/lightning/@_cryptoCode/setup"
-           class="list-group-item list-group-item-action d-flex align-items-center">
-            <svg role="img" class="icon icon-wallet-new me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#wallet-new"></use></svg>
-            <div class="content flex-fill">
-                <h5 class="mb-0">Set up a Lightning node</h5>
-            </div>
-            <svg role="img" class="icon icon-caret-right" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#caret-right"></use></svg>
-        </a>
+        }
+        else if (!string.IsNullOrEmpty(step.SetupUrl))
+        {
+            <a href="@step.SetupUrl"
+               class="list-group-item list-group-item-action d-flex align-items-center order-1">
+                <svg role="img" class="icon icon-@step.IconSymbol me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#@step.IconSymbol"></use></svg>
+                <div class="content flex-fill">
+                    <h5 class="mb-0">@step.Title</h5>
+                </div>
+                <svg role="img" class="icon icon-caret-right" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#caret-right"></use></svg>
+            </a>
+        }
     }
 </div>
 
@@ -69,11 +75,16 @@
     private bool _walletEnabled;
     private bool _lightningEnabled;
     private bool _lightningSupported;
+    private bool _anyPaymentMethodEnabled;
     private string _cryptoCode = "BTC";
     private bool _allDone;
+    private List<StoreSetupStep> _steps = new();
 
     protected override async Task OnParametersSetAsync()
     {
+        if (!DataParametersChanged)
+            return;
+
         if (string.IsNullOrEmpty(StoreId))
             return;
 
@@ -85,10 +96,7 @@
 
             var store = await StoreRepository.FindStore(StoreId);
             if (store is null)
-            {
-                _allDone = true;
                 return;
-            }
 
             var storeBlob = store.GetStoreBlob();
             var excludeFilters = storeBlob.GetExcludedPaymentMethods();
@@ -111,11 +119,55 @@
                        && !excludeFilters.Match(kv.Key);
             });
 
-            _allDone = _walletEnabled && (_lightningEnabled || !_lightningSupported);
+            _anyPaymentMethodEnabled = _walletEnabled || _lightningEnabled;
+
+            // Build the steps list
+            _steps.Clear();
+
+            // Wallet step
+            _steps.Add(new StoreSetupStep
+            {
+                Title = "Set up a wallet",
+                SetupUrl = $"/stores/{StoreId}/onchain/{_cryptoCode}",
+                IsComplete = _walletEnabled,
+                Order = 10,
+                IconSymbol = "wallet-new"
+            });
+
+            // Lightning step (only if supported)
+            if (_lightningSupported)
+            {
+                _steps.Add(new StoreSetupStep
+                {
+                    Title = "Set up a Lightning node",
+                    SetupUrl = $"/stores/{StoreId}/lightning/{_cryptoCode}/setup",
+                    IsComplete = _lightningEnabled,
+                    Order = 20,
+                    IconSymbol = "wallet-new"
+                });
+            }
+
+            // Plugin-contributed steps
+            var context = new StoreSetupStepContext { StoreId = StoreId, CryptoCode = _cryptoCode };
+            foreach (var provider in SetupStepProviders)
+            {
+                try
+                {
+                    var pluginSteps = await provider.GetStepsAsync(context);
+                    _steps.AddRange(pluginSteps);
+                }
+                catch
+                {
+                    // Don't let a faulty plugin break the setup guide
+                }
+            }
+
+            _allDone = _steps.All(s => s.IsComplete);
         }
         catch
         {
-            _allDone = true; // Hide on error
+            // On error, steps list stays empty — widget will just show "fully set up"
+            _allDone = true;
         }
         finally
         {
@@ -130,8 +182,8 @@
         Description = "Shows setup steps for wallet and Lightning configuration",
         Category = "Utility",
         Scope = WidgetScope.Store,
-        DefaultColumnSize = 8,
-        MinColumnSize = 4,
+        DefaultColumnSize = 4,
+        MinColumnSize = 3,
         MaxColumnSize = 12,
         MinRowSpan = 1,
         MaxRowSpan = 2,

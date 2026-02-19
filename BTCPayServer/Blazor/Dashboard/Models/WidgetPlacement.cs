@@ -10,7 +10,7 @@ public class WidgetPlacement
     public string WidgetType { get; set; } = string.Empty;
     public int Order { get; set; }
     public int ColumnSize { get; set; } = 6;
-    public int RowSpan { get; set; } = 1;
+    public int RowSpan { get; set; } = 2;
     public int Offset { get; set; }
     public JObject? Config { get; set; }
 }

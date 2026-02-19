@@ -149,7 +149,7 @@ public partial class UIStoresController : Controller
 
         var store = await _storeRepo.FindStore(storeId, userId);
         if (store is null)
-            return Forbid();
+            return NotFound();
 
         if ((await _authorizationService.AuthorizeAsync(User, Policies.CanModifyStoreSettings)).Succeeded)
         {

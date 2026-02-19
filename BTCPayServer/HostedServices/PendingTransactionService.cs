@@ -179,30 +179,24 @@ public class PendingTransactionService(
         var newWorkingCopyPsbt = dbPsbt.Clone(); // Clone before modifying
         newWorkingCopyPsbt.Combine(psbt);
 
-        // Check if new signatures were actually added
         var oldPubKeys = dbPsbt.Inputs
             .SelectMany(input => input.PartialSigs.Keys)
             .ToHashSet();
-
         var newPubKeys = newWorkingCopyPsbt.Inputs
             .SelectMany(input => input.PartialSigs.Keys)
             .ToHashSet();
-
         newPubKeys.ExceptWith(oldPubKeys);
-
         var newSignatures = newPubKeys.Count;
+
         if (newSignatures > 0)
         {
-            // TODO: For now we're going with estimation of how many signatures were collected until we find better way
-            // so for example if we have 4 new signatures and only 2 inputs - number of collected signatures will be 2
-            blob.SignaturesCollected += newSignatures / newWorkingCopyPsbt.Inputs.Count;
             blob.CollectedSignatures.Add(new CollectedSignature
             {
                 ReceivedPSBT = newPsbtBase64,
                 Timestamp = DateTimeOffset.UtcNow
             });
-            pendingTransaction.SetBlob(blob);
         }
+        blob.SignaturesCollected = Math.Min(blob.SignaturesTotal ?? int.MaxValue, blob.CollectedSignatures.Count);
 
         if (newWorkingCopyPsbt.TryFinalize(out _))
         {
@@ -212,6 +206,7 @@ public class PendingTransactionService(
 
             pendingTransaction.State = PendingTransactionState.Signed;
         }
+        pendingTransaction.SetBlob(blob);
 
         await ctx.SaveChangesAsync(cancellationToken);
         EventAggregator.Publish(new PendingTransactionEvent

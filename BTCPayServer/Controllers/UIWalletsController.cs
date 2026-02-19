@@ -2051,15 +2051,37 @@ namespace BTCPayServer.Controllers
         {
             if (walletId?.StoreId is null)
                 return false;
+            if (await EnsureWalletStoreContextAsync(walletId) is null)
+                return false;
             var requiredPolicies = new List<string> { GetWalletTypePolicy(walletId) };
             if (policies?.Length > 0)
                 requiredPolicies.AddRange(policies.Where(p => !string.IsNullOrWhiteSpace(p)));
             foreach (var policy in requiredPolicies.Distinct(StringComparer.OrdinalIgnoreCase))
             {
-                if (!(await _authorizationService.AuthorizeAsync(User, policy)).Succeeded)
+                if (!(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, policy)).Succeeded)
                     return false;
             }
             return true;
+        }
+
+        private async Task<StoreData?> EnsureWalletStoreContextAsync(WalletId walletId)
+        {
+            if (walletId?.StoreId is null)
+                return null;
+            var currentStore = HttpContext.GetStoreData();
+            if (currentStore?.Id == walletId.StoreId)
+                return currentStore;
+
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                return null;
+
+            var store = await Repository.FindStore(walletId.StoreId, userId);
+            if (store is null)
+                return null;
+
+            HttpContext.SetStoreData(store);
+            return store;
         }
 
         private async Task<bool> HasAnyWalletTransactionPermission(WalletId walletId)
@@ -2076,7 +2098,7 @@ namespace BTCPayServer.Controllers
             };
             foreach (var policy in txPolicies)
             {
-                if ((await _authorizationService.AuthorizeAsync(User, policy)).Succeeded)
+                if ((await _authorizationService.AuthorizeAsync(User, walletId.StoreId, policy)).Succeeded)
                     return true;
             }
             return false;

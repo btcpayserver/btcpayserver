@@ -33,7 +33,6 @@
 
         const {searchUrl, storeId} = nav.dataset;
         const localIndexTmp = [];
-        collectGlobalSearchLinks(localIndexTmp);
         window.globalSearch.serverResultItems.forEach(item => localIndexTmp.push(item));
         const localIndex = removeDups(localIndexTmp);
 
@@ -200,7 +199,7 @@
             if (result.query)
                 button.dataset.searchSuggestion = result.query;
             else
-                button.dataset.searchSuggestion = null;
+                delete button.dataset.searchSuggestion;
 
             title.firstChild.textContent = result.title;
 
@@ -230,29 +229,30 @@
         };
 
         const renderGroup = (title, entries, actionLabel = null, actionDataAttribute = null) => {
-            if (!entries.length) return null;
-            const group = document.createElement('div');
-            group.className = 'globalSearch-group';
-            const headingRow = document.createElement('div');
-            headingRow.className = 'globalSearch-group-header';
-            const heading = document.createElement('span');
-            heading.className = 'globalSearch-group-title';
-            heading.textContent = title;
-            headingRow.appendChild(heading);
+            if (!entries?.length) return null;
+
+            const template = document.getElementById('globalSearch-group-template');
+            const fragment = template.content.cloneNode(true);
+
+            const group = fragment.querySelector('.globalSearch-group');
+            const titleEl = fragment.querySelector('.globalSearch-group-title');
+            const actionBtn = fragment.querySelector('.globalSearch-group-action');
+            const list = fragment.querySelector('.globalSearch-list');
+
+            titleEl.textContent = title;
+
+            // Optional action button
             if (actionLabel && actionDataAttribute) {
-                const action = document.createElement('button');
-                action.type = 'button';
-                action.className = 'globalSearch-group-action';
-                action.textContent = actionLabel;
-                action.setAttribute(actionDataAttribute, '1');
-                headingRow.appendChild(action);
+                actionBtn.textContent = actionLabel;
+                actionBtn.setAttribute(actionDataAttribute, '1');
+            } else {
+                actionBtn.remove();
             }
-            const list = document.createElement('ul');
-            list.className = 'globalSearch-list';
-            entries.forEach(entry => {
+
+            for (const entry of entries) {
                 list.appendChild(createResultItem(entry));
-            });
-            group.append(headingRow, list);
+            }
+
             return group;
         };
 
@@ -271,7 +271,7 @@
                 if (!local) return entry;
                 return {
                     title: local.title || entry.title,
-                    subtitle: local.subtitle || entry.subtitle || '',
+                    subtitle: local.subtitle || entry.subtitle,
                     category: local.category || entry.category,
                     url: entry.url
                 };
@@ -302,16 +302,18 @@
         const searchLocal = query => {
             if (!query) return [];
             const normalized = query.toLowerCase();
+            var total = 0;
             return localIndex
                 .filter(item => {
+                    if (total > 12)
+                        return false;
                     const title = (item.title || '');
                     const keywords = (item.keywords || []);
                     var all = [];
                     keywords.forEach(keyword => { all.push(keyword.toLowerCase()); })
-                    keywords.push(title.toLowerCase());
-                    return all.includes(normalized);
-                })
-                .slice(0, 12);
+                    all.push(title.toLowerCase());
+                    return all.some(item => item.startsWith(normalized));
+                });
         };
 
         const searchRemote = async query => {
@@ -468,37 +470,6 @@
         if (!element) return false;
         const tagName = (element.tagName || '').toLowerCase();
         return tagName === 'input' || tagName === 'textarea' || tagName === 'select' || element.isContentEditable;
-    };
-
-    const collectGlobalSearchLinks = (localIndex) => {
-        const selectors = [
-            '.nav-link[href]',
-            '.notification[href]'
-        ];
-        document.querySelectorAll(selectors.join(',')).forEach(anchor => {
-            const href = anchor.getAttribute('href');
-            const text = anchor.textContent ? anchor.textContent.replace(/\s+/g, ' ').trim() : '';
-            if (!href || !text) return;
-            if (href.startsWith('#') || href.includes('/logout')) return;
-            let absoluteHref;
-            try {
-                absoluteHref = new URL(href, window.location.href);
-            } catch {
-                return;
-            }
-            if (absoluteHref.protocol === 'javascript:') return;
-            const isHttpLike = absoluteHref.protocol === 'http:' || absoluteHref.protocol === 'https:';
-            const isSameOriginHttp = isHttpLike && absoluteHref.origin === window.location.origin;
-            localIndex.push({
-                title: text,
-                subtitle: '',
-                category: window.pageCategory,
-                url: isSameOriginHttp
-                    ? `${absoluteHref.pathname}${absoluteHref.search}${absoluteHref.hash}`
-                    : absoluteHref.toString(),
-                keywords: [text, absoluteHref.pathname, absoluteHref.hostname]
-            });
-        });
     };
 
     const GLOBAL_SEARCH_RECENTS_KEY = 'btcpay-global-search-recents';

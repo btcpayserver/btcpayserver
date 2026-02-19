@@ -14,5 +14,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
     {
         services.AddUIExtension("global-nav", "/Plugins/GlobalSearch/Views/NavExtension.cshtml");
         services.AddSearchResultItemProvider<StaticSearchResultProvider>();
+        services.AddSearchResultItemProvider<DefaultSearchResultProvider>();
+        services.AddScoped<SearchResultItemProviders>();
     }
 }

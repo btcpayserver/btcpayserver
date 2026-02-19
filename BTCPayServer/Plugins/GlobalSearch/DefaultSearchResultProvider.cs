@@ -36,63 +36,63 @@ public class DefaultSearchResultProvider : ISearchResultItemProvider
             if (canViewStoreSettings)
             {
                 AddPage(results, "Store Settings", context.Url.Action(nameof(UIStoresController.GeneralSettings), "UIStores", new { storeId = store.Id }), "Store",
-                    "general settings branding");
-                AddPage(results, "Rates", context.Url.Action(nameof(UIStoresController.Rates), "UIStores", new { storeId = store.Id }), "Store", "Exchange");
+                    ["General", "Settings", "Branding"]);
+                AddPage(results, "Rates", context.Url.Action(nameof(UIStoresController.Rates), "UIStores", new { storeId = store.Id }), "Store", ["Exchange"]);
                 AddPage(results, "Checkout Appearance", context.Url.Action(nameof(UIStoresController.CheckoutAppearance), "UIStores", new { storeId = store.Id }),
-                    "Store", "checkout");
+                    "Store", ["Checkout", "Appearance"]);
                 AddPage(results, "Access Tokens", context.Url.Action(nameof(UIStoresController.ListTokens), "UIStores", new { storeId = store.Id }), "Store",
-                    "tokens api");
-                AddPage(results, "Store Users", context.Url.Action(nameof(UIStoresController.StoreUsers), "UIStores", new { storeId = store.Id }), "Store", "users");
-                AddPage(results, "Store Roles", context.Url.Action(nameof(UIStoresController.ListRoles), "UIStores", new { storeId = store.Id }), "Store", "roles");
-                AddPage(results, "Webhooks", context.Url.Action("Webhooks", "UIStoreWebhooks", new { area = "Webhooks", storeId = store.Id }), "Store", "webhooks");
+                    ["Tokens"]);
+                AddPage(results, "Store Users", context.Url.Action(nameof(UIStoresController.StoreUsers), "UIStores", new { storeId = store.Id }), "Store", ["Users"]);
+                AddPage(results, "Store Roles", context.Url.Action(nameof(UIStoresController.ListRoles), "UIStores", new { storeId = store.Id }), "Store", ["Roles"]);
+                AddPage(results, "Webhooks", context.Url.Action("Webhooks", "UIStoreWebhooks", new { area = "Webhooks", storeId = store.Id }), "Store", ["Webhooks"]);
                 AddPage(results, "Payout Processors", context.Url.Action("ConfigureStorePayoutProcessors", "UIPayoutProcessors", new { storeId = store.Id }), "Store",
-                    "payout processors");
-                AddPage(results, "Forms", context.Url.Action("FormsList", "UIForms", new { storeId = store.Id }), "Store", "forms");
+                    ["Payout", "Processors"]);
+                AddPage(results, "Forms", context.Url.Action("FormsList", "UIForms", new { storeId = store.Id }), "Store", ["Forms"]);
             }
 
             if (canViewInvoices)
             {
                 AddPage(results, "Invoices", context.Url.Action(nameof(UIInvoiceController.ListInvoices), "UIInvoice", new { storeId = store.Id }), "Payments",
-                    "payments");
+                    ["Payments"]);
                 AddPage(results, "Create Invoice", context.Url.Action(nameof(UIInvoiceController.CreateInvoice), "UIInvoice", new { storeId = store.Id }), "Payments",
-                    "invoice");
+                    ["Invoice"]);
             }
 
             if (canViewReports)
             {
                 AddPage(results, "Reporting", context.Url.Action(nameof(UIReportsController.StoreReports), "UIReports", new { storeId = store.Id }), "Payments",
-                    "reports");
+                    ["Reports"]);
             }
 
             if (canViewPaymentRequests)
             {
                 AddPage(results, "Payment Requests",
                     context.Url.Action(nameof(UIPaymentRequestController.GetPaymentRequests), "UIPaymentRequest", new { storeId = store.Id }), "Payments",
-                    "payment requests");
+                    ["Payment", "Requests"]);
             }
 
             if (canViewPullPayments)
             {
-                AddPage(results, "Pull Payments", context.Url.Action("PullPayments", "UIStorePullPayments", new { storeId = store.Id }), "Payments", ["pull payments", "pull"]);
+                AddPage(results, "Pull Payments", context.Url.Action("PullPayments", "UIStorePullPayments", new { storeId = store.Id }), "Payments", ["Pull Payments", "Pull"]);
             }
 
             if (canViewPayouts)
             {
-                AddPage(results, "Payouts", context.Url.Action("Payouts", "UIStorePullPayments", new { storeId = store.Id }), "Payments", "payouts");
+                AddPage(results, "Payouts", context.Url.Action("Payouts", "UIStorePullPayments", new { storeId = store.Id }), "Payments", ["Payouts"]);
             }
         }
 
         if (canModifyServer)
         {
-            AddPage(results, "Server Settings", context.Url.Action(nameof(UIServerController.Policies), "UIServer"), "Server", "server settings policies");
-            AddPage(results, "Users", context.Url.Action(nameof(UIServerController.ListUsers), "UIServer"), "Server", "server settings users");
-            AddPage(results, "Roles", context.Url.Action(nameof(UIServerController.ListRoles), "UIServer"), "Server", "server settings roles");
-            AddPage(results, "Services", context.Url.Action(nameof(UIServerController.Services), "UIServer"), "Server", "server settings services");
-            AddPage(results, "Branding", context.Url.Action(nameof(UIServerController.Branding), "UIServer"), "Server", "server settings branding");
-            AddPage(results, "Translations", context.Url.Action(nameof(UIServerController.ListDictionaries), "UIServer"), "Server", "server settings translations");
-            AddPage(results, "Maintenance", context.Url.Action(nameof(UIServerController.Maintenance), "UIServer"), "Server", "server settings maintenance");
-            AddPage(results, "Logs", context.Url.Action(nameof(UIServerController.LogsView), "UIServer"), "Server", "server settings logs");
-            AddPage(results, "Files", context.Url.Action(nameof(UIServerController.Files), "UIServer"), "Server", "server settings files storage");
+            AddPage(results, "Server Settings", context.Url.Action(nameof(UIServerController.Policies), "UIServer"), "Server", ["Server", "Settings", "Policies"]);
+            AddPage(results, "Users", context.Url.Action(nameof(UIServerController.ListUsers), "UIServer"), "Server", ["Server", "Settings", "Users"]);
+            AddPage(results, "Roles", context.Url.Action(nameof(UIServerController.ListRoles), "UIServer"), "Server", ["Server", "Settings", "Roles"]);
+            AddPage(results, "Services", context.Url.Action(nameof(UIServerController.Services), "UIServer"), "Server", ["Server", "Settings", "Services"]);
+            AddPage(results, "Branding", context.Url.Action(nameof(UIServerController.Branding), "UIServer"), "Server", ["Server", "Settings", "Branding"]);
+            AddPage(results, "Translations", context.Url.Action(nameof(UIServerController.ListDictionaries), "UIServer"), "Server", ["Server", "Settings", "Translations"]);
+            AddPage(results, "Maintenance", context.Url.Action(nameof(UIServerController.Maintenance), "UIServer"), "Server", ["Server", "Settings", "Maintenance"]);
+            AddPage(results, "Logs", context.Url.Action(nameof(UIServerController.LogsView), "UIServer"), "Server", ["Server", "Settings", "Logs"]);
+            AddPage(results, "Files", context.Url.Action(nameof(UIServerController.Files), "UIServer"), "Server", ["Server", "Settings", "Files", "Storage"]);
 
             var pluginsUrl = context.Url.Action(nameof(UIServerController.ListPlugins), "UIServer");
             AddPage(results, "Manage Plugins", pluginsUrl, "Server", ["Plugins"]);
@@ -108,10 +108,10 @@ public class DefaultSearchResultProvider : ISearchResultItemProvider
             AddPage(results, "Manage Account", context.Url.Action(nameof(UIManageController.Index), "UIManage"), "Account", ["Profile", "Account"]);
             AddPage(results, "Password", context.Url.Action(nameof(UIManageController.ChangePassword), "UIManage"), "Account", ["Password"]);
             AddPage(results, "Two-Factor Authentication", context.Url.Action(nameof(UIManageController.TwoFactorAuthentication), "UIManage"), "Account",
-                ["2fa security"]);
-            AddPage(results, "API Keys", context.Url.Action(nameof(UIManageController.APIKeys), "UIManage"), "Account", ["Api Keys"]);
+                ["2FA Security"]);
+            AddPage(results, "API Keys", context.Url.Action(nameof(UIManageController.APIKeys), "UIManage"), "Account", ["API Keys"]);
             AddPage(results, "Notification Settings", context.Url.Action(nameof(UIManageController.NotificationSettings), "UIManage"), "Account", ["Notifications"]);
-            AddPage(results, "Login Codes", context.Url.Action(nameof(UIManageController.LoginCodes), "UIManage"), "Account", ["Login", "Codes", "Login codes"]);
+            AddPage(results, "Login Codes", context.Url.Action(nameof(UIManageController.LoginCodes), "UIManage"), "Account", ["Login", "Codes", "Login Codes"]);
         }
 
         if (canViewNotifications)
@@ -120,7 +120,8 @@ public class DefaultSearchResultProvider : ISearchResultItemProvider
         }
 
         AddPage(results, "Home", context.Url.Action(nameof(UIHomeController.Index), "UIHome"), "General", ["Dashboard", "Overview"]);
-        AddPage(results, "Stores", context.Url.Action(nameof(UIUserStoresController.ListStores), "UIUserStores"), "General", ["Stores"]);
+        AddPage(results, "Stores list", context.Url.Action(nameof(UIUserStoresController.ListStores), "UIUserStores"), "General", ["Stores", "List"]);
+        AddPage(results, "API Docs", context.Url.Action(nameof(UIHomeController.SwaggerDocs), "UIHome"), "General", ["Documentation", "API", "Docs"]);
     }
 
 

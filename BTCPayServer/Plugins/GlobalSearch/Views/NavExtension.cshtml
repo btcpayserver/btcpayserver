@@ -4,7 +4,7 @@
 
 @{
     var searchUrl = Url.Action("Global", "UISearch", new { area = GlobalSearchPlugin.Area });
-    var searchItems = await SearchResultItemProviders.GetResultItemViewModel(this.User, this.Context.GetStoreData(), this.Url);
+    var vm = await SearchResultItemProviders.GetViewModel(this.User, this.Context.GetStoreData(), this.Url);
 }
 
 <button id="globalSearchMobileToggle"
@@ -17,7 +17,7 @@
         data-global-nav-tooltip="1">
     <vc:icon symbol="actions-search" />
 </button>
-<div id="globalSearchShell" data-search-url="@searchUrl" class="globalSearch-shell">
+<div id="globalSearchShell" class="globalSearch-shell">
     <div class="globalSearch-bar">
         <button id="globalSearchBack" type="button" class="globalSearch-back d-lg-none" aria-label="@StringLocalizer["Back"]">
             <vc:icon symbol="back" />
@@ -64,11 +64,8 @@
 </template>
 
 <script>
-    window.globalSearch =
-    {
-        serverResultItems: @Safe.Json(searchItems),
-        pageCategory: @Safe.Json(StringLocalizer["Page"].Value)
-    };
+    window.globalSearch = @Safe.Json(vm);
 </script>
+<link href="~/plugins/GlobalSearch/global-search.css" rel="stylesheet" asp-append-version="true" />
 <script src="~/plugins/GlobalSearch/global-search.js" asp-append-version="true"></script>
 

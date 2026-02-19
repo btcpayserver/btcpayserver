@@ -52,8 +52,8 @@ public class DefaultSearchResultProvider : ISearchResultItemProvider
 
             if (canViewInvoices)
             {
-                AddPage(results, "Invoices", context.Url.Action(nameof(UIInvoiceController.ListInvoices), "UIInvoice", new { storeId = store.Id }), "Payments",
-                    ["Payments"]);
+                AddPage(results, "Invoices list", context.Url.Action(nameof(UIInvoiceController.ListInvoices), "UIInvoice", new { storeId = store.Id }), "Payments",
+                    ["Payments", "List"]);
                 AddPage(results, "Create Invoice", context.Url.Action(nameof(UIInvoiceController.CreateInvoice), "UIInvoice", new { storeId = store.Id }), "Payments",
                     ["Invoice"]);
             }

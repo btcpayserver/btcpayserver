@@ -66,7 +66,7 @@ public class BitcoinLikeSearchResultProvider(
                 Title = prefix + StringLocalizer["Settings"].Value,
                 Category = "Wallets",
                 Url = context.Url.WalletSettings(walletId),
-                Keywords = ["Settings", "List", "Wallets", network.CryptoCode, translated, untranslated]
+                Keywords = ["Settings", "Wallets", network.CryptoCode, translated, untranslated]
             });
         }
     }

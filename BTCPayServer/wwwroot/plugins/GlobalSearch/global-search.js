@@ -1,4 +1,6 @@
 (function () {
+    var vm = window.globalSearch;
+
     const initGlobalSearch = () => {
         // removeDups remove returns an array with no duplicates.
         // it also merges the keywords of the same item.
@@ -29,11 +31,10 @@
         const clearButton = document.getElementById('globalSearchClear');
         const backButton = document.getElementById('globalSearchBack');
         const resultsElement = document.getElementById('globalSearchResults');
-        if (!nav || !shell || !input || !resultsElement) return;
+        if (!shell || !input || !resultsElement) return;
 
-        const {searchUrl, storeId} = nav.dataset;
         const localIndexTmp = [];
-        window.globalSearch.serverResultItems.forEach(item => localIndexTmp.push(item));
+        vm.items.forEach(item => localIndexTmp.push(item));
         const localIndex = removeDups(localIndexTmp);
 
 
@@ -317,13 +318,13 @@
         };
 
         const searchRemote = async query => {
-            if (!searchUrl || !query || query.length < 2) return [];
-            const cacheKey = `${query}|${storeId || ''}`;
+            if (!query || query.length < 2) return [];
+            const cacheKey = `${query}|${vm.storeId || ''}`;
             const cached = getCachedRemoteResults(cacheKey);
             if (cached) return cached;
-            const url = new URL(searchUrl, window.location.origin);
+            const url = new URL(vm.searchUrl, window.location.origin);
             url.searchParams.set('q', query);
-            if (storeId) url.searchParams.set('storeId', storeId);
+            if (vm.storeId) url.searchParams.set('storeId', vm.storeId);
             url.searchParams.set('take', '25');
             const response = await fetch(url.toString(), {credentials: 'include'});
             if (!response.ok) return [];
@@ -381,14 +382,14 @@
             const token = ++latestSearchToken;
             const localMatches = searchLocal(query);
             renderResults(localMatches);
-            let remoteMatches = [];
-            try {
-                remoteMatches = await searchRemote(query);
-            } catch {
-                remoteMatches = [];
-            }
-            if (token !== latestSearchToken || !panelOpen) return;
-            renderResults(mergeResults(remoteMatches, localMatches));
+            // let remoteMatches = [];
+            // try {
+            //     remoteMatches = await searchRemote(query);
+            // } catch {
+            //     remoteMatches = [];
+            // }
+            // if (token !== latestSearchToken || !panelOpen) return;
+            // renderResults(mergeResults(remoteMatches, localMatches));
         };
 
         mobileToggle?.addEventListener('click', () => {
@@ -408,7 +409,7 @@
         });
         input.addEventListener('input', () => {
             syncSearchActionState();
-            debounce('global-search-input', runSearch, 120);
+            runSearch();
         });
         resultsElement.addEventListener('click', e => {
             const clearHistory = e.target.closest('[data-clear-search-history]');

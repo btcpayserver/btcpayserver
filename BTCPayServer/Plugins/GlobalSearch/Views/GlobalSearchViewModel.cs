@@ -1,17 +1,21 @@
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Plugins.GlobalSearch.Views;
 
+public class GlobalSearchViewModel
+{
+    public List<ResultItemViewModel> Items { get; set; }
+    public string StoreId { get; set; }
+    public string SearchUrl { get; set; }
+}
 public class ResultItemViewModel
 {
-    [JsonProperty("title")]
     public string Title { get; set; }
-    [JsonProperty("subtitle")]
     public string SubTitle { get; set; }
-    [JsonProperty("category")]
     public string Category { get; set; }
-    [JsonProperty("url")]
     public string Url { get; set; }
-    [JsonProperty("keywords")]
     public string[] Keywords { get; set; }
 }
+
+

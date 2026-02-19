@@ -372,8 +372,8 @@ namespace BTCPayServer.Services.Invoices
             }
             if (paymentMethodId is null)
             {
-                var defaultBTC = PaymentTypes.CHAIN.GetPaymentMethodId(networkProvider.DefaultNetwork.CryptoCode);
-                var defaultLNURLPay = PaymentTypes.LNURL.GetPaymentMethodId(networkProvider.DefaultNetwork.CryptoCode);
+                var defaultBTC = PaymentTypes.CHAIN.GetPaymentMethodId(networkProvider.DefaultCryptoCode);
+                var defaultLNURLPay = PaymentTypes.LNURL.GetPaymentMethodId(networkProvider.DefaultCryptoCode);
                 paymentMethodId = authorized.FirstOrDefault(e => e == defaultBTC) ??
                                   authorized.FirstOrDefault(e => e == defaultLNURLPay) ??
                                   authorized.FirstOrDefault();

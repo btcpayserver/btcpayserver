@@ -20,7 +20,7 @@
         </div>
         <script>
             (async () => {
-                const url = @Safe.Json(Url.Action("RecentInvoices", "UIStores", new { storeId = Model.StoreId, cryptoCode = Model.CryptoCode }));
+                const url = @Safe.Json(Url.Action("RecentInvoices", "UIStores", new { storeId = Model.StoreId }));
                 const storeId = @Safe.Json(Model.StoreId);
                 const response = await fetch(url);
                 if (response.ok) {

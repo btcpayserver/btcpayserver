@@ -175,7 +175,7 @@ namespace BTCPayServer.Controllers
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             var pendingTransaction =
                 await _pendingTransactionService.GetPendingTransaction(GetPendingTxId(walletId, pendingTransactionId));
-            if (pendingTransaction is null)
+            if (pendingTransaction is null || network is null)
                 return NotFound();
             var blob = pendingTransaction.GetBlob();
             if (blob?.PSBT is null)
@@ -1412,7 +1412,10 @@ namespace BTCPayServer.Controllers
         {
             if (vm.SigningContext.PendingTransactionId is not null)
             {
-                var psbt = PSBT.Parse(vm.SigningContext.PSBT, NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode).NBitcoinNetwork);
+                var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode)?.NBitcoinNetwork;
+                if (network is null)
+                    return NotFound();
+                var psbt = PSBT.Parse(vm.SigningContext.PSBT, network);
                 var pendingTransaction = await _pendingTransactionService.CollectSignature(GetPendingTxId(walletId, vm.SigningContext.PendingTransactionId), psbt, CancellationToken.None);
 
                 if (pendingTransaction != null)

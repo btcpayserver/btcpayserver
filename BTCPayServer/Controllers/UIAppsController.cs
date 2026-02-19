@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Localization;
 
@@ -32,6 +33,7 @@ namespace BTCPayServer.Controllers
             IFileService fileService,
             AppService appService,
             IStringLocalizer stringLocalizer,
+            ViewLocalizer viewLocalizer,
             IHtmlHelper html)
         {
             _userManager = userManager;
@@ -42,6 +44,7 @@ namespace BTCPayServer.Controllers
             _appService = appService;
             Html = html;
             StringLocalizer = stringLocalizer;
+            ViewLocalizer = viewLocalizer;
         }
 
         private readonly UserManager<ApplicationUser> _userManager;
@@ -54,6 +57,7 @@ namespace BTCPayServer.Controllers
         public string CreatedAppId { get; set; }
         public IHtmlHelper Html { get; }
         public IStringLocalizer StringLocalizer { get; }
+        public ViewLocalizer ViewLocalizer { get; }
 
         public class AppUpdated
         {
@@ -146,10 +150,16 @@ namespace BTCPayServer.Controllers
             }
             if (!store.AnyPaymentMethodAvailable(_handlers))
             {
+                object text = _networkProvider.DefaultNetwork?.CryptoCode switch
+                {
+                    null => StringLocalizer["To create a {0} app, you need to set up a wallet first", vm.AppType],
+                    {} cryptoCode => ViewLocalizer["To create a {0} app, you need to <a href='{1}' class='alert-link'>set up a wallet</a> first", vm.AppType, Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode, storeId })!]
+                };
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Html = $"To create a {vm.AppType} app, you need to <a href='{Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode = _networkProvider.DefaultNetwork.CryptoCode, storeId })}' class='alert-link'>set up a wallet</a> first",
+                    LocalizedHtml = text as LocalizedHtmlString,
+                    LocalizedMessage = text as LocalizedString,
                     AllowDismiss = false
                 });
                 return View(vm);
@@ -192,7 +202,7 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
 
-            return View("Confirm", new ConfirmModel(StringLocalizer["Delete app"], $"The app <strong>{Html.Encode(app.Name)}</strong> and its settings will be permanently deleted. Are you sure?", StringLocalizer["Delete"]));
+            return View("Confirm", new ConfirmModel(StringLocalizer["Delete app"], StringLocalizer["The app <strong>{0}</strong> and its settings will be permanently deleted. Are you sure?", Html.Encode(app.Name)], StringLocalizer["Delete"]));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -253,20 +263,20 @@ namespace BTCPayServer.Controllers
 
             if (!file.FileName.IsValidFileName())
             {
-                return Json(new { error = "Invalid file name" });
+                return Json(new { error = StringLocalizer["Invalid file name"].Value });
             }
             if (!file.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
             {
-                return Json(new { error = "The file needs to be an image" });
+                return Json(new { error = StringLocalizer["The file needs to be an image"].Value });
             }
             if (file.Length > 500_000)
             {
-                return Json(new { error = "The file size should be less than 0.5MB" });
+                return Json(new { error = StringLocalizer["The file size should be less than 0.5MB"].Value });
             }
             var formFile = await file.Bufferize();
             if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
             {
-                return Json(new { error = "The file needs to be an image" });
+                return Json(new { error = StringLocalizer["The file needs to be an image"].Value });
             }
             try
             {

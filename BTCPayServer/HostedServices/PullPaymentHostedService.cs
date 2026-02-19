@@ -430,9 +430,11 @@ namespace BTCPayServer.HostedServices
 
         public bool SupportsLNURL(PullPaymentData pp, PullPaymentBlob blob = null)
         {
+            var cryptoCode = _networkProvider.DefaultNetwork?.CryptoCode;
+            if (cryptoCode is null) return false;
             blob ??= pp.GetBlob();
             var pms = blob.SupportedPayoutMethods.FirstOrDefault(id =>
-                PayoutTypes.LN.GetPayoutMethodId(_networkProvider.DefaultNetwork.CryptoCode)
+                PayoutTypes.LN.GetPayoutMethodId(cryptoCode)
                 == id);
             return pms is not null && _lnurlSupportedCurrencies.Contains(pp.Currency);
         }

@@ -122,7 +122,7 @@
         window.lnurlEndpoint = @Safe.Json(Url.Action("GetLNUrlForStore", "UILNURL", new
                                {
                                    storeId = Model.StoreId,
-                                   cryptoCode = NetworkProvider.DefaultNetwork.CryptoCode
+                                   cryptoCode = NetworkProvider.DefaultCryptoCode
                                }, "lnurlp", Context.Request.Host.ToString()));
         const srvModel = @Safe.Json(Model);
         const payButtonCtrl = new Vue({

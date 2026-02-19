@@ -15,6 +15,7 @@
 @inject BTCPayServerOptions _BTCPayServerOptions
 @inject EventAggregator _EventAggregator
 
+<<<<<<< search-tobar-prototype
 <div id="Notifications" class="dropdown">
 	<button id="NotificationsHandle"
             class="mainMenuButton dropdown-toggle"
@@ -30,6 +31,19 @@
 		<Icon Symbol="nav-notifications" />
 		@if (HasUnseenNotifications)
 		{
+=======
+<div id="Notifications"  class="@(!_JSRuntime.IsPreRendering() ? "rendered" : "")">
+	@if (UnseenCount == "0")
+	{
+		<a href="@NotificationsUrl" id="NotificationsHandle" class="mainMenuButton" title="@StringLocalizer["Notifications"]">
+			<Icon Symbol="nav-notifications" />
+		</a>
+	}
+	else
+	{
+		<button id="NotificationsHandle" class="mainMenuButton" title="@StringLocalizer["Notifications"]" type="button" data-bs-toggle="dropdown">
+			<Icon Symbol="nav-notifications" />
+>>>>>>> master
 			<span class="badge rounded-pill bg-danger p-1 ms-1" id="NotificationsBadge">@UnseenCount</span>
 		}
 	</button>

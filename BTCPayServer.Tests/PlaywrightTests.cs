@@ -1538,6 +1538,7 @@ namespace BTCPayServer.Tests
             await s.LogIn(admin.RegisterDetails.Email, admin.RegisterDetails.Password);
             await s.GoToHome();
 
+            await Expect(s.Page.Locator("#Notifications.rendered")).ToBeVisibleAsync();
             await Expect(s.Page.Locator("#NotificationsBadge")).ToContainTextAsync("1");
             await s.Page.ClickAsync("#NotificationsHandle");
             await Expect(s.Page.Locator("#NotificationsList .notification")).ToContainTextAsync($"New user {unapproved.RegisterDetails.Email} requires approval");

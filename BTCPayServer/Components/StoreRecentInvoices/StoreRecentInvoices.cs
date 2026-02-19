@@ -32,12 +32,11 @@ public class StoreRecentInvoices : ViewComponent
         _dbContextFactory = dbContextFactory;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync(StoreData store, string cryptoCode, bool initialRendering)
+    public async Task<IViewComponentResult> InvokeAsync(StoreData store, bool initialRendering)
     {
         var vm = new StoreRecentInvoicesViewModel
         {
             StoreId = store.Id,
-            CryptoCode = cryptoCode,
             InitialRendering = initialRendering
         };
 
@@ -58,11 +57,11 @@ public class StoreRecentInvoices : ViewComponent
             let state = invoice.GetInvoiceState()
             select new StoreRecentInvoiceViewModel
             {
-                Date = invoice.InvoiceTime, 
-                Status = state, 
-                HasRefund = invoice.Refunds.Any(), 
+                Date = invoice.InvoiceTime,
+                Status = state,
+                HasRefund = invoice.Refunds.Any(),
                 InvoiceId = invoice.Id,
-                OrderId = invoice.Metadata.OrderId ?? string.Empty, 
+                OrderId = invoice.Metadata.OrderId ?? string.Empty,
                 Amount = invoice.Price,
                 Currency = invoice.Currency,
                 Details = new InvoiceDetailsModel

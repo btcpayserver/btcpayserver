@@ -535,7 +535,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = LongRunningTestTimeout)]
+        [Fact]
         [Trait("Integration", "Integration")]
         public async Task CanRescanWallet()
         {
@@ -585,9 +585,10 @@ namespace BTCPayServer.Tests
                 }
                 else
                 {
+                    Assert.Null(rescan.PreviousError);
                     Assert.Null(rescan.TimeOfScan);
-                    Assert.NotNull(rescan.RemainingTime);
                     Assert.NotNull(rescan.Progress);
+                    Assert.NotNull(rescan.RemainingTime);
                     Thread.Sleep(100);
                 }
             }

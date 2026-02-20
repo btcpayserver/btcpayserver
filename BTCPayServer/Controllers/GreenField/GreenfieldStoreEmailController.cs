@@ -16,7 +16,7 @@ namespace BTCPayServer.Controllers.GreenField
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     [EnableCors(CorsPolicies.All)]
-    public class GreenfieldStoreEmailController : Controller
+    public class GreenfieldStoreEmailController : ControllerBase
     {
         private readonly EmailSenderFactory _emailSenderFactory;
         private readonly StoreRepository _storeRepository;

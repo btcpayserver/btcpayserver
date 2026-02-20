@@ -33,7 +33,7 @@ namespace BTCPayServer.Controllers.Greenfield
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     [EnableCors(CorsPolicies.All)]
-    public class GreenfieldInvoiceController : Controller
+    public class GreenfieldInvoiceController : ControllerBase
     {
         private readonly UIInvoiceController _invoiceController;
         private readonly InvoiceRepository _invoiceRepository;

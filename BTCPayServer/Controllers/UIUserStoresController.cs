@@ -19,7 +19,6 @@ using Microsoft.Extensions.Localization;
 namespace BTCPayServer.Controllers
 {
     [Route("stores")]
-    [AutoValidateAntiforgeryToken]
     public class UIUserStoresController : Controller
     {
         private readonly StoreRepository _repo;

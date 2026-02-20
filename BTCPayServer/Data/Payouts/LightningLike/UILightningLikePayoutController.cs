@@ -24,7 +24,6 @@ using Microsoft.Extensions.Options;
 namespace BTCPayServer.Data.Payouts.LightningLike
 {
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [AutoValidateAntiforgeryToken]
     public class UILightningLikePayoutController : Controller
     {
         private readonly ApplicationDbContextFactory _applicationDbContextFactory;

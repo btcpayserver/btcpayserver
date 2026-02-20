@@ -19,7 +19,6 @@ namespace BTCPayServer.Plugins.Webhooks.Controllers;
 [Route("stores")]
 [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-[AutoValidateAntiforgeryToken]
 [Area(WebhooksPlugin.Area)]
 public class UIStoreWebhooksController(
     StoreRepository storeRepo,

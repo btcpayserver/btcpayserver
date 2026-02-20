@@ -2948,7 +2948,7 @@ namespace BTCPayServer.Tests
         private async Task<StoreReportResponse> GetReport(TestAccount acc, StoreReportRequest req)
         {
             var controller = acc.GetController<UIReportsController>();
-            return (await controller.StoreReportsJson(acc.StoreId, req)).AssertType<JsonResult>()
+            return (await controller.StoreReportsJson(acc.StoreId, req)).AssertType<OkObjectResult>()
                 .Value
                 .AssertType<StoreReportResponse>();
         }

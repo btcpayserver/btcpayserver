@@ -28,7 +28,6 @@ using StoreData = BTCPayServer.Data.StoreData;
 namespace BTCPayServer.Controllers
 {
     [Authorize(Policy = Policies.CanViewPullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [AutoValidateAntiforgeryToken]
     public class UIStorePullPaymentsController : Controller
     {
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;

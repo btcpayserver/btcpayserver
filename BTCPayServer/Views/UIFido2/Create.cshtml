@@ -1,7 +1,9 @@
 @using Newtonsoft.Json.Linq
 @model Fido2NetLib.CredentialCreateOptions
 @{
-    ViewData.SetLayoutModel(new(nameof(ManageNavPages.TwoFactorAuthentication), StringLocalizer["Register your security device"]));
+    var isPasskey = ViewData.ContainsKey("IsPasskey") && (bool)ViewData["IsPasskey"];
+    var pageTitle = isPasskey ? StringLocalizer["Register your passkey"] : StringLocalizer["Register your security device"];
+    ViewData.SetLayoutModel(new(nameof(ManageNavPages.TwoFactorAuthentication), pageTitle));
 }
 
 <div class="sticky-header">
@@ -10,18 +12,30 @@
             <li class="breadcrumb-item">
                 <a asp-controller="UIManage" asp-action="TwoFactorAuthentication" text-translate="true">Two Factor Authentication</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page" text-translate="true">Register Device</li>
+            <li class="breadcrumb-item active" aria-current="page">@(isPasskey ? StringLocalizer["Register Passkey"] : StringLocalizer["Register Device"])</li>
         </ol>
         <h2>@ViewData["Title"]</h2>
     </nav>
 </div>
 <partial name="_StatusMessage" />
 
-<p text-translate="true">Insert your security device and proceed.</p>
+@if (isPasskey)
+{
+    <div class="alert alert-info mb-3">
+        <strong text-translate="true">What is a passkey?</strong>
+        <p class="mb-0" text-translate="true">Passkeys let you sign in without a password using biometrics (fingerprint, face recognition) or your device's screen lock. Once registered, you can use your passkey instead of entering your email and password.</p>
+    </div>
+    <p text-translate="true">Use your fingerprint, face recognition, or security key to register a new passkey.</p>
+}
+else
+{
+    <p text-translate="true">Insert your security device and proceed.</p>
+}
 
-<form asp-action="CreateResponse" id="registerForm">
+<form asp-controller="UIFido2" asp-action="CreateResponse" method="post" id="registerForm">
     <input type="hidden" name="data" id="data"/>
     <input type="hidden" name="name" id="name" value="@(ViewData.ContainsKey("CredentialName") ? ViewData["CredentialName"] : string.Empty)"/>
+    <input type="hidden" name="isPasskey" id="isPasskey" value="@(isPasskey ? "true" : "false")"/>
 </form>
 <div class="row">
     <div class="col-xl-8">

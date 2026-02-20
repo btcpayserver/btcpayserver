@@ -42,10 +42,32 @@
                 </button>
             </div>
         </div>
+
+        <!-- Passkey Login Section -->
+        <div class="text-center my-3 text-secondary only-for-js" id="passkey-separator" style="display:none;">
+            <span text-translate="true">or</span>
+        </div>
+        <button type="button" class="btn btn-outline-secondary w-100 only-for-js" id="passkey-login-btn" style="display:none;">
+            <vc:icon symbol="key" />
+            <span text-translate="true">Sign in with Passkey</span>
+        </button>
+        <div class="text-center mt-2 only-for-js" id="passkey-loading" style="display:none;">
+            <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <span class="ms-2 text-secondary" text-translate="true">Waiting for passkey...</span>
+        </div>
+        <div class="alert alert-danger mt-2 only-for-js" id="passkey-error" style="display:none;"></div>
     </fieldset>
 </form>
 <form asp-action="LoginWithCode" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" id="logincode-form">
     <input asp-for="LoginCode" type="hidden" class="form-control"/>
+</form>
+
+<!-- Passkey Login Form (hidden, submitted via JS) -->
+<form asp-action="LoginWithPasskey" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" id="passkey-form" style="display:none;">
+    <input type="hidden" name="Response" id="PasskeyResponse" />
+    <input type="hidden" name="RememberMe" id="PasskeyRememberMe" value="false" />
 </form>
 @if (!PoliciesSettings.LockSubscription)
 {
@@ -62,6 +84,10 @@
     <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
 
     <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
+
+    <!-- Passkey/WebAuthn scripts -->
+    <script src="~/js/webauthn/helpers.js" asp-append-version="true"></script>
+    <script src="~/js/webauthn/passkey-login.js" asp-append-version="true"></script>
 
     <script type="text/javascript">
         window.addEventListener("load", async () => {

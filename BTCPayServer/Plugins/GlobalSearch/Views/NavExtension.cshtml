@@ -62,9 +62,16 @@
         </a>
     </li>
 </template>
+<template id="globalSearch-empty-template">
+    <div class="globalSearch-empty"></div>
+</template>
 
 <script>
     window.globalSearch = @Safe.Json(vm);
+    window.globalSearch.translate = {
+        "Type to search": @Safe.Json(StringLocalizer["Type to search"].Value),
+        "No matches found": @Safe.Json(StringLocalizer["No matches found"].Value),
+    };
 </script>
 <link href="~/plugins/GlobalSearch/global-search.css" rel="stylesheet" asp-append-version="true" />
 <script src="~/plugins/GlobalSearch/global-search.js" asp-append-version="true"></script>

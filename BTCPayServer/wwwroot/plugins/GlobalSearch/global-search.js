@@ -1,5 +1,6 @@
 (function () {
     var vm = window.globalSearch;
+    var currentMatches = [];
 
     const initGlobalSearch = () => {
         // removeDups remove returns an array with no duplicates.
@@ -258,9 +259,10 @@
         };
 
         const renderEmpty = text => {
-            const empty = document.createElement('div');
-            empty.className = 'globalSearch-empty';
-            empty.textContent = text;
+            const template = document.getElementById('globalSearch-empty-template');
+            const fragment = template.content.cloneNode(true);
+            const empty = fragment.querySelector('.globalSearch-empty');
+            empty.textContent = vm.translate[text];
             resultsElement.innerHTML = '';
             resultsElement.appendChild(empty);
         };
@@ -300,9 +302,13 @@
             }
         };
 
+        // This is a case-insensitive search.
+        // The query is split, and all the parts need to match the item.
+        // For example, "Bit wall" can match "Bitcoin wallet", but so does "wall bit"
         const searchLocal = query => {
             if (!query) return [];
-            const normalized = query.toLowerCase();
+            var normalized = query.toLowerCase().split(/\s+/);
+
             var total = 0;
             return localIndex
                 .filter(item => {
@@ -313,7 +319,7 @@
                     var all = [];
                     keywords.forEach(keyword => { all.push(keyword.toLowerCase()); })
                     all.push(title.toLowerCase());
-                    return all.some(item => item.startsWith(normalized));
+                    return normalized.every(n => all.some(a => a.startsWith(n)));
                 });
         };
 
@@ -382,6 +388,7 @@
             const token = ++latestSearchToken;
             const localMatches = searchLocal(query);
             renderResults(localMatches);
+            currentMatches = localMatches
             // let remoteMatches = [];
             // try {
             //     remoteMatches = await searchRemote(query);

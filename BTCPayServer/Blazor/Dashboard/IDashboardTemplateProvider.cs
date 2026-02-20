@@ -9,6 +9,8 @@ public class DashboardTemplateContext
 {
     public bool WalletEnabled { get; set; }
     public bool LightningEnabled { get; set; }
+    /// <summary>True when the server has an internal Lightning node configured (independent of store config).</summary>
+    public bool HasInternalLightningNode { get; set; }
     public List<AppData> Apps { get; set; } = new();
     public string CryptoCode { get; set; } = "BTC";
 }

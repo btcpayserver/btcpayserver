@@ -7,6 +7,7 @@
 @using BTCPayServer.Services.Invoices
 @using BTCPayServer.Services.Stores
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.Extensions.Options
 @using Newtonsoft.Json
 @using Newtonsoft.Json.Linq
 @inject DashboardService DashboardService
@@ -19,6 +20,7 @@
 @inject PaymentMethodHandlerDictionary Handlers
 @inject AppService AppService
 @inject IEnumerable<BTCPayServer.Abstractions.Contracts.IStoreSetupStepProvider> SetupStepProviders
+@inject IOptions<BTCPayServer.Configuration.LightningNetworkOptions> LightningNetworkOptions
 @implements IAsyncDisposable
 
 @if (!IsSetUp)
@@ -226,6 +228,7 @@ else
                                          Descriptor="descriptor"
                                          StoreId="@StoreId"
                                          UserId="@UserId"
+                                         DashboardScope="_activeScope"
                                          EditMode="EditMode"
                                          WidgetEditMode="_widgetEditMode"
                                          ActiveStoreFeatures="_activeStoreFeatures"
@@ -469,6 +472,7 @@ else
             CryptoCode = CryptoCode,
             WalletEnabled = WalletEnabled,
             LightningEnabled = LightningEnabled,
+            HasInternalLightningNode = LightningNetworkOptions.Value.InternalLightningByCryptoCode.ContainsKey(CryptoCode),
             Apps = _apps
         };
     }

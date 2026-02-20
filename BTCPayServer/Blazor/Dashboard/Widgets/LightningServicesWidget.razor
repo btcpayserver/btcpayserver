@@ -35,7 +35,8 @@ else if (_error is not null)
 }
 else if (!_isInternalNode)
 {
-    @* Not an internal node - don't render anything, matching MVC behavior *@
+    <h6>Lightning Services</h6>
+    <p class="text-secondary">Lightning services are only available when using the internal Lightning node.</p>
 }
 else
 {
@@ -136,10 +137,19 @@ else
                 return;
             }
 
-            var id = PaymentTypes.LN.GetPaymentMethodId(config.CryptoCode);
-            var existing = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(id, Handlers);
-            _isInternalNode = existing?.IsInternalNode is true &&
-                LightningNetworkOptions.Value.InternalLightningByCryptoCode.ContainsKey(config.CryptoCode);
+            if (DashboardScope == DashboardScope.Server)
+            {
+                // Server scope: check if internal node exists at server level
+                _isInternalNode = LightningNetworkOptions.Value.InternalLightningByCryptoCode.ContainsKey(config.CryptoCode);
+            }
+            else
+            {
+                // Store/User scope: check store's LN configuration
+                var id = PaymentTypes.LN.GetPaymentMethodId(config.CryptoCode);
+                var existing = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(id, Handlers);
+                _isInternalNode = existing?.IsInternalNode is true &&
+                    LightningNetworkOptions.Value.InternalLightningByCryptoCode.ContainsKey(config.CryptoCode);
+            }
 
             if (!_isInternalNode)
                 return;

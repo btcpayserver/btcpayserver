@@ -297,6 +297,16 @@ else if (_balance is not null)
     {
         var network = NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
         if (network is null) return null;
+
+        // Server scope: always use the internal node directly
+        if (DashboardScope == DashboardScope.Server)
+        {
+            return LightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var serverNode)
+                ? serverNode
+                : null;
+        }
+
+        // Store/User scope: use the store's configured LN payment method
         var id = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);
         var existing = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(id, Handlers);
         if (existing == null) return null;

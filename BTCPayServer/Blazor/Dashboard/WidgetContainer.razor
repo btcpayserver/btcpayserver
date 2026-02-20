@@ -66,6 +66,7 @@
     [Parameter] public EventCallback OnRemove { get; set; }
     [Parameter] public EventCallback<(int cols, int rows)> OnSizeChanged { get; set; }
     [Parameter] public EventCallback OnConfigure { get; set; }
+    [Parameter] public DashboardScope DashboardScope { get; set; }
 
     private ErrorBoundary? _errorBoundary;
 
@@ -79,13 +80,14 @@
     private bool _lastReadonly;
     private int _lastSize;
     private JObject? _lastConfig;
+    private DashboardScope _lastDashboardScope;
 
     protected override void OnParametersSet()
     {
         _featureUnavailable = false;
         _featureMessage = string.Empty;
 
-        if (Descriptor.RequiredStoreFeatures.Length > 0)
+        if (Descriptor.RequiredStoreFeatures.Length > 0 && DashboardScope != DashboardScope.Server)
         {
             foreach (var feature in Descriptor.RequiredStoreFeatures)
             {
@@ -111,12 +113,14 @@
             || _lastUserId != UserId
             || _lastReadonly != currentReadonly
             || _lastSize != Placement.ColumnSize
+            || _lastDashboardScope != DashboardScope
             || !ReferenceEquals(_lastConfig, Placement.Config))
         {
             _lastStoreId = StoreId;
             _lastUserId = UserId;
             _lastReadonly = currentReadonly;
             _lastSize = Placement.ColumnSize;
+            _lastDashboardScope = DashboardScope;
             _lastConfig = Placement.Config;
             _cachedParameters = BuildWidgetParameters();
         }
@@ -130,6 +134,7 @@
         {
             { "StoreId", StoreId },
             { "UserId", UserId },
+            { "DashboardScope", DashboardScope },
             { "Readonly", Descriptor.AlwaysInteractive ? false : (!EditMode || WidgetEditMode) },
             { "Size", Placement.ColumnSize },
             { "Config", Placement.Config! },

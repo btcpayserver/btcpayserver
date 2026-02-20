@@ -47,7 +47,7 @@ public class DefaultServerDashboardTemplate : IDashboardTemplateProvider
             });
         }
 
-        if (context.LightningEnabled)
+        if (context.HasInternalLightningNode)
         {
             widgets.Add(new WidgetPlacement
             {

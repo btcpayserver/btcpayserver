@@ -33,7 +33,7 @@ public class DefaultStoreDashboardTemplate : IDashboardTemplateProvider
         widgets.Add(new WidgetPlacement
         {
             WidgetType = "SetupGuide",
-            ColumnSize = context.WalletEnabled ? 4 : 8,
+            ColumnSize = 4 ,
             Order = order++
         });
 

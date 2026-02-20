@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Threading.Tasks;
+using BTCPayServer.Blazor.Dashboard.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -59,6 +60,7 @@ public abstract class BaseWidgetComponent<TConfig> : ComponentBase where TConfig
     [Parameter] public string UserId { get; set; } = string.Empty;
     [Parameter] public bool Readonly { get; set; }
     [Parameter] public string[] RequiredPermissions { get; set; } = Array.Empty<string>();
+    [Parameter] public DashboardScope DashboardScope { get; set; } = DashboardScope.Store;
 
     [Parameter] public EventCallback<JObject> ConfigChanged { get; set; }
     [Parameter] public EventCallback<bool> EditModeChanged { get; set; }
@@ -113,12 +115,14 @@ public abstract class BaseWidgetComponent<TConfig> : ComponentBase where TConfig
         var oldUserId = UserId;
         var oldConfig = _cachedConfig;
         var oldSize = Size;
+        var oldDashboardScope = DashboardScope;
 
         // Determine if data-relevant parameters changed by peeking at incoming values.
         // We check before base.SetParametersAsync because OnParametersSetAsync runs inside it.
         var newStoreId = parameters.TryGetValue<string>("StoreId", out var s) ? s : oldStoreId;
         var newUserId = parameters.TryGetValue<string>("UserId", out var u) ? u : oldUserId;
         var newSize = parameters.TryGetValue<int>("Size", out var sz) ? sz : oldSize;
+        var newDashboardScope = parameters.TryGetValue<DashboardScope>("DashboardScope", out var ds) ? ds : oldDashboardScope;
         // For Config (JObject), any new instance means potential change
         var configChanged = parameters.TryGetValue<JObject>("Config", out var newConfig)
             && !ReferenceEquals(newConfig, oldConfig);
@@ -126,6 +130,7 @@ public abstract class BaseWidgetComponent<TConfig> : ComponentBase where TConfig
         DataParametersChanged = !_hasLoadedOnce
             || oldStoreId != newStoreId
             || oldUserId != newUserId
+            || oldDashboardScope != newDashboardScope
             || configChanged;
 
         SizeChanged = oldSize != newSize;

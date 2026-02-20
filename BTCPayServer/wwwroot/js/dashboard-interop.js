@@ -15,12 +15,16 @@ window.DashboardInterop = {
             column: 12,
             cellHeight: 146,
             margin: 8,
-            float: false,
+            float: true,
             animate: true,
             draggable: { handle: '.widget-drag-handle' },
             resizable: { handles: 'e,se,s,sw,w' },
             staticGrid: !editMode,
-            disableOneColumnMode: true
+            columnOpts: {
+                breakpoints: [{ w: 992, c: 1 }],
+                breakpointForWindow: true,
+                columnMax: 12
+            }
         }, containerElement);
 
         // Batch change events with a short debounce to avoid multiple rapid calls

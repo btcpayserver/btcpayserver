@@ -1,0 +1,196 @@
+@using BTCPayServer.Views.Server
+@using BTCPayServer.Views.Manage
+@using BTCPayServer.Client
+@using BTCPayServer.Services
+@using BTCPayServer.Plugins.Emails
+@inject ThemeSettings Theme
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@model BTCPayServer.Components.GlobalNav.GlobalNavViewModel
+
+@{
+    var pluginsUrl = Url.Action("ListPlugins", "UIServer");
+    var loginName = User.Identity?.Name;
+    var accountDisplayName = string.IsNullOrEmpty(Model.UserName)
+        ? loginName ?? string.Empty
+        : string.IsNullOrEmpty(loginName)
+            ? Model.UserName
+            : $"{Model.UserName} ({loginName})";
+}
+
+<div id="globalNav" data-store-id="@Model.CurrentStoreId">
+    <vc:ui-extension-point location="global-nav" model="Model"></vc:ui-extension-point>
+    <div id="mainNavSettings" class="d-flex align-items-center gap-1">
+        <vc:ui-extension-point location="global-nav-icons" model="Model"></vc:ui-extension-point>
+        <component type="typeof(BTCPayServer.Blazor.NotificationsDropDown)" render-mode="ServerPrerendered" />
+
+        <div class="dropdown" permission="@Policies.CanModifyServerSettings">
+            <button id="globalNavPluginsToggle"
+                    class="globalNav-btn"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    title="@StringLocalizer["Plugins"]"
+                    data-bs-trigger="hover"
+                    data-bs-placement="bottom"
+                    data-global-nav-tooltip="1">
+                <vc:icon symbol="nav-plugin" />
+            </button>
+            <ul id="globalNavPluginsMenu" class="dropdown-menu dropdown-menu-end py-0">
+                @if (!string.IsNullOrEmpty(pluginsUrl))
+                {
+                    <li class="py-1 px-3">
+                        <a layout-menu-item="@nameof(ServerNavPages.Plugins)" asp-area="" asp-controller="UIServer" asp-action="ListPlugins" text-translate="true">Manage Plugins</a>
+                    </li>
+                    <li class="py-1 px-3">
+                        <a class="dropdown-item nav-link" asp-area="" asp-controller="UIServer" asp-action="ListPlugins" asp-fragment="plugins-installed" text-translate="true">Installed Plugins</a>
+                    </li>
+                    <li class="py-1 px-3">
+                        <a class="dropdown-item nav-link" asp-area="" asp-controller="UIServer" asp-action="ListPlugins" asp-fragment="plugins-directory" text-translate="true">Plugin Directory</a>
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <div class="dropdown" permission="@Policies.CanModifyServerSettings">
+            <button id="globalNavServerToggle"
+                    class="globalNav-btn"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    title="@StringLocalizer["Server Settings"]"
+                    data-bs-trigger="hover"
+                    data-bs-placement="bottom"
+                    data-global-nav-tooltip="1">
+                <vc:icon symbol="nav-server-settings" />
+            </button>
+            <ul id="globalNavServerMenu" class="dropdown-menu dropdown-menu-end py-0">
+                <li class="py-1 px-3">
+                    <a layout-menu-item="@nameof(ServerNavPages.Policies)" asp-area="" asp-controller="UIServer" asp-action="Policies" text-translate="true">Policies</a>
+                </li>
+                <li class="py-1 px-3">
+                    <a layout-menu-item="@nameof(ServerNavPages.Users)" asp-controller="UIServer" asp-action="ListUsers" text-translate="true">Users</a>
+                </li>
+                <li class="py-1 px-3">
+                    <a layout-menu-item="@nameof(ServerNavPages.Roles)" asp-controller="UIServer" asp-action="ListRoles" text-translate="true">Roles</a>
+                </li>
+                <li class="py-1 px-3">
+                    <a layout-menu-item="Server-@nameof(ServerNavPages.Emails)" asp-area="@EmailsPlugin.Area" asp-controller="UIServerEmail" asp-action="ServerEmailSettings" text-translate="true">Emails</a>
+                </li>
+                <li class="py-1 px-3">
+                    <a layout-menu-item="@nameof(ServerNavPages.Services)" asp-controller="UIServer" asp-action="Services" text-translate="true">Services</a>
+                </li>
+                <li class="py-1 px-3">
+                    <a layout-menu-item="@nameof(ServerNavPages.Branding)" asp-controller="UIServer" asp-action="Branding" text-translate="true">Branding</a>
+                </li>
+                <li class="py-1 px-3">
+                    <a layout-menu-item="@nameof(ServerNavPages.Translations)" asp-controller="UIServer" asp-action="ListDictionaries" text-translate="true">Translations</a>
+                </li>
+                @if (Model.DockerDeployment)
+                {
+                    <li class="py-1 px-3">
+                        <a layout-menu-item="@nameof(ServerNavPages.Maintenance)" asp-controller="UIServer" asp-action="Maintenance" text-translate="true">Maintenance</a>
+                    </li>
+                }
+                <li class="py-1 px-3">
+                    <a layout-menu-item="@nameof(ServerNavPages.Logs)" asp-controller="UIServer" asp-action="LogsView" text-translate="true">Logs</a>
+                </li>
+                <li class="py-1 px-3">
+                    <a layout-menu-item="@nameof(ServerNavPages.Files)" asp-controller="UIServer" asp-action="Files" text-translate="true">Files</a>
+                </li>
+                <vc:ui-extension-point location="server-nav" model="@Model.MainNav" />
+            </ul>
+        </div>
+
+        <div class="dropdown">
+            <button id="menu-item-Account"
+                    class="globalNav-btn menu-item nav-link"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    data-bs-auto-close="outside"
+                    aria-expanded="false"
+                    title="@StringLocalizer["Account"]"
+                    data-bs-trigger="hover"
+                    data-bs-placement="bottom"
+                    data-global-nav-tooltip="1">
+                @if (!string.IsNullOrEmpty(Model.UserImageUrl))
+                {
+                    <img src="@Model.UserImageUrl" alt="Profile picture" class="profile-picture" style="--profile-picture-size:1.5rem" />
+                }
+                else
+                {
+                    <vc:icon symbol="nav-account" />
+                }
+            </button>
+            <ul id="globalNavAccountMenu" class="dropdown-menu dropdown-menu-end py-0" aria-labelledby="menu-item-Account">
+                <li class="p-3 border-bottom d-flex align-items-center gap-2">
+                    @if (!string.IsNullOrEmpty(Model.UserImageUrl))
+                    {
+                        <img src="@Model.UserImageUrl" alt="Profile picture" class="profile-picture" />
+                    }
+                    <div>
+                        <strong class="d-block text-truncate" style="max-width:@(string.IsNullOrEmpty(Model.UserImageUrl) ? "195px" : "160px")" title="@accountDisplayName">@accountDisplayName</strong>
+                        @if (User.IsInRole(Roles.ServerAdmin))
+                        {
+                            <div class="text-secondary" text-translate="true">Administrator</div>
+                        }
+                    </div>
+                </li>
+                @if (!Theme.CustomTheme)
+                {
+                    <li class="py-1 px-3">
+                        <vc:theme-switch css-class="w-100 pt-2" />
+                    </li>
+                }
+                <li class="py-1 px-3">
+                    <label class="d-flex align-items-center justify-content-between gap-3 nav-link">
+                        <span class="fw-semibold" text-translate="true">Hide Sensitive Info</span>
+                        <input id="HideSensitiveInfo" name="HideSensitiveInfo" type="checkbox" class="btcpay-toggle" />
+                    </label>
+                    <script>
+                        document.getElementById('HideSensitiveInfo').checked = window.localStorage.getItem('btcpay-hide-sensitive-info') === 'true';
+                    </script>
+                </li>
+                <li class="border-top py-1 px-3">
+                    <a asp-area="" asp-controller="UIManage" asp-action="Index" class="nav-link" id="Nav-ManageAccount">
+                        <span text-translate="true">Manage Account</span>
+                    </a>
+                </li>
+                <li class="border-top py-1 px-3 d-lg-none" permission="@Policies.CanModifyServerSettings">
+                    <a asp-area="" asp-controller="UIServer" asp-action="Policies" class="nav-link" id="Nav-ServerSettingsMobile">
+                        <span text-translate="true">Server Settings</span>
+                    </a>
+                </li>
+                <li class="border-top py-1 px-3">
+                    <a layout-menu-item="@nameof(ManageNavPages.ChangePassword)" asp-controller="UIManage" asp-action="ChangePassword" text-translate="true">Password</a>
+                </li>
+                <li class="py-1 px-3">
+                    <a layout-menu-item="@nameof(ManageNavPages.TwoFactorAuthentication)" asp-controller="UIManage" asp-action="TwoFactorAuthentication" text-translate="true">Two-Factor Authentication</a>
+                </li>
+                <li class="py-1 px-3">
+                    <a layout-menu-item="@nameof(ManageNavPages.APIKeys)" asp-controller="UIManage" asp-action="APIKeys" text-translate="true">API Keys</a>
+                </li>
+                <li class="py-1 px-3">
+                    <a layout-menu-item="@nameof(ManageNavPages.Notifications)" asp-controller="UIManage" asp-action="NotificationSettings" text-translate="true">Notifications</a>
+                </li>
+                <li class="py-1 px-3">
+                    <a layout-menu-item="@nameof(ManageNavPages.LoginCodes)" asp-controller="UIManage" asp-action="LoginCodes" text-translate="true">Login Codes</a>
+                </li>
+                <vc:ui-extension-point location="user-nav" model="@Model.MainNav" />
+                @if (!string.IsNullOrWhiteSpace(Model.ContactUrl))
+                {
+                    <li class="py-1 px-3 border-top">
+                        <a href="@Model.ContactUrl" class="nav-link" id="Nav-ContactUs">
+                            <span text-translate="true">Contact Us</span>
+                        </a>
+                    </li>
+                }
+                <li class="border-top py-1 px-3">
+                    <a asp-area="" asp-controller="UIAccount" asp-action="Logout" class="nav-link text-danger" id="Nav-Logout">
+                        <span text-translate="true">Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

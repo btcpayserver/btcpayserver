@@ -257,8 +257,57 @@ const reinsertSvgUseElements = () => {
     });
 };
 
+const initGlobalNavTooltips = () => {
+    const header = document.getElementById('mainMenuHead');
+    if (!header) return;
+
+    if (window.bootstrap?.Dropdown) {
+        header.addEventListener('show.bs.dropdown', event => {
+            const source = event.target;
+            if (!(source instanceof Element)) return;
+
+            const currentToggle = source.matches('[data-bs-toggle="dropdown"]')
+                ? source
+                : source.querySelector('[data-bs-toggle="dropdown"]');
+            if (!(currentToggle instanceof Element)) return;
+
+            header.querySelectorAll('[data-bs-toggle="dropdown"][aria-expanded="true"]').forEach(openToggle => {
+                if (openToggle === currentToggle) return;
+                window.bootstrap.Dropdown.getOrCreateInstance(openToggle).hide();
+            });
+        });
+    }
+
+    if (!window.bootstrap?.Tooltip) return;
+    const tooltipTargets = Array.from(header.querySelectorAll('[data-global-nav-tooltip]'));
+    if (!tooltipTargets.length) return;
+
+    const getTooltipOptions = target => ({
+        trigger: target.dataset.bsTrigger || 'hover',
+        placement: target.dataset.bsPlacement || 'bottom'
+    });
+    const hideAllTooltips = () => {
+        tooltipTargets.forEach(target => {
+            window.bootstrap.Tooltip.getInstance(target)?.hide();
+        });
+    };
+
+    tooltipTargets.forEach(target => {
+        window.bootstrap.Tooltip.getOrCreateInstance(target, getTooltipOptions(target));
+    });
+
+    header.addEventListener('click', event => {
+        const target = event.target;
+        if (!(target instanceof Element) || !target.closest('[data-global-nav-tooltip]')) return;
+        window.requestAnimationFrame(hideAllTooltips);
+    });
+    header.addEventListener('shown.bs.dropdown', hideAllTooltips);
+    header.addEventListener('hide.bs.dropdown', hideAllTooltips);
+};
+
 document.addEventListener("DOMContentLoaded", () => {
     reinsertSvgUseElements();
+    initGlobalNavTooltips();
     // sticky header
     const stickyHeader = document.querySelector('#mainContent > section .sticky-header');
     if (stickyHeader) {
@@ -445,8 +494,45 @@ document.addEventListener("DOMContentLoaded", () => {
         })
     }
 
-    // Menu collapses
     const mainNav = document.getElementById('mainNav')
+    const closeMobileNav = () => {
+        if (!mainNav || !window.matchMedia('(max-width: 991px)').matches || !mainNav.classList.contains('show')) return;
+        if (window.bootstrap?.Offcanvas) {
+            window.bootstrap.Offcanvas.getOrCreateInstance(mainNav).hide();
+        }
+    }
+
+    if (mainNav) {
+        delegate('click', '#mainNav a[href]', closeMobileNav)
+
+        let startX = 0;
+        let startY = 0;
+        let trackingSwipe = false;
+
+        mainNav.addEventListener('touchstart', e => {
+            if (!mainNav.classList.contains('show') || !e.touches[0]) return;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            trackingSwipe = true;
+        }, { passive: true });
+
+        mainNav.addEventListener('touchmove', e => {
+            if (!trackingSwipe || !e.touches[0]) return;
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            const deltaX = currentX - startX;
+            const deltaY = currentY - startY;
+            if (Math.abs(deltaX) < 64 || Math.abs(deltaX) < Math.abs(deltaY)) return;
+            if (deltaX < 0) closeMobileNav();
+            trackingSwipe = false;
+        }, { passive: true });
+
+        mainNav.addEventListener('touchend', () => {
+            trackingSwipe = false;
+        }, { passive: true });
+    }
+
+    // Menu collapses
     if (mainNav) {
         const COLLAPSED_KEY = 'btcpay-nav-collapsed'
         delegate('show.bs.collapse', '#mainNav', (e) => {

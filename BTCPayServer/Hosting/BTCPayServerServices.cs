@@ -72,6 +72,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Payouts;
+using BTCPayServer.Plugins.Bitcoin;
 using ExchangeSharp;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
@@ -649,6 +650,7 @@ namespace BTCPayServer.Hosting
 
         public static IServiceCollection AddBTCPayNetwork(this IServiceCollection services, BTCPayNetwork network)
         {
+            services.AddSearchResultItemProvider<BitcoinLikeSearchResultProvider>();
             services.AddSingleton(new DefaultRules(network.DefaultRateRules));
             // BTC
             {

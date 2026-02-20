@@ -696,7 +696,7 @@ namespace BTCPayServer.Tests
             acc.RegisterDerivationScheme("BTC");
 
             var rateController = acc.GetController<BitpayRateController>();
-            var GetBaseCurrencyRatesResult = JObject.Parse(((JsonResult)rateController
+            var GetBaseCurrencyRatesResult = JObject.Parse(((OkObjectResult)rateController
                 .GetBaseCurrencyRates("BTC", default)
                 .GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate[]>>();
             Assert.NotNull(GetBaseCurrencyRatesResult);
@@ -704,7 +704,7 @@ namespace BTCPayServer.Tests
             var rate = Assert.Single(GetBaseCurrencyRatesResult.Data);
             Assert.Equal("BTC", rate.Code);
 
-            var GetRatesResult = JObject.Parse(((JsonResult)rateController.GetRates(null, default)
+            var GetRatesResult = JObject.Parse(((OkObjectResult)rateController.GetRates(null, default)
                 .GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate[]>>();
             // We don't have any default currencies, so this should be failing
             Assert.Null(GetRatesResult?.Data);
@@ -715,14 +715,14 @@ namespace BTCPayServer.Tests
             await store.Rates(ratesVM);
             store = acc.GetController<UIStoresController>();
             rateController = acc.GetController<BitpayRateController>();
-            GetRatesResult = JObject.Parse(((JsonResult)rateController.GetRates(null, default)
+            GetRatesResult = JObject.Parse(((OkObjectResult)rateController.GetRates(null, default)
                 .GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate[]>>();
             // Now we should have a result
             Assert.NotNull(GetRatesResult);
             Assert.NotNull(GetRatesResult.Data);
             Assert.Equal(2, GetRatesResult.Data.Length);
 
-            var GetCurrencyPairRateResult = JObject.Parse(((JsonResult)rateController
+            var GetCurrencyPairRateResult = JObject.Parse(((OkObjectResult)rateController
                 .GetCurrencyPairRate("BTC", "LTC", default)
                 .GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate>>();
 
@@ -3270,7 +3270,7 @@ namespace BTCPayServer.Tests
         private async Task<StoreReportResponse> GetReport(TestAccount acc, StoreReportRequest req)
         {
             var controller = acc.GetController<UIReportsController>();
-            return (await controller.StoreReportsJson(acc.StoreId, req)).AssertType<JsonResult>()
+            return (await controller.StoreReportsJson(acc.StoreId, req)).AssertType<OkObjectResult>()
                 .Value
                 .AssertType<StoreReportResponse>();
         }

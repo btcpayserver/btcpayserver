@@ -17,7 +17,6 @@ namespace BTCPayServer.Plugins.Translations.Controllers;
 [Authorize(Policy = Client.Policies.CanModifyServerSettings,
     AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [Area(TranslationsPlugin.Area)]
-[AutoValidateAntiforgeryToken]
 public class UITranslationController(
     PoliciesSettings policiesSettings,
     IStringLocalizer stringLocalizer,

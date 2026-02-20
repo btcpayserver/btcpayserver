@@ -12,7 +12,7 @@ namespace BTCPayServer.Controllers
 {
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Bitpay)]
     [BitpayAPIConstraint()]
-    public class BitpayAccessTokenController : Controller
+    public class BitpayAccessTokenController : ControllerBase
     {
         readonly TokenRepository _TokenRepository;
         public BitpayAccessTokenController(TokenRepository tokenRepository)

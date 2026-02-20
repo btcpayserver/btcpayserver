@@ -28,7 +28,6 @@ using DisplayFormatter = BTCPayServer.Services.DisplayFormatter;
 namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 
 [Authorize(Policy = Policies.CanViewOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-[AutoValidateAntiforgeryToken]
 [Area(SubscriptionsPlugin.Area)]
 public partial class UIOfferingController(
     ApplicationDbContextFactory dbContextFactory,

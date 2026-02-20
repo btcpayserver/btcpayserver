@@ -44,7 +44,6 @@ using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Plugins.PointOfSale.Controllers
 {
-    [AutoValidateAntiforgeryToken]
     [Route("apps")]
     public class UIPointOfSaleController : Controller
     {

@@ -13,20 +13,13 @@ namespace BTCPayServer.Controllers.Greenfield
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     [EnableCors(CorsPolicies.All)]
-    public class GreenfieldPayoutProcessorsController : ControllerBase
+    public class GreenfieldPayoutProcessorsController(IEnumerable<IPayoutProcessorFactory> factories) : ControllerBase
     {
-        private readonly IEnumerable<IPayoutProcessorFactory> _factories;
-
-        public GreenfieldPayoutProcessorsController(IEnumerable<IPayoutProcessorFactory> factories)
-        {
-            _factories = factories;
-        }
-
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/payout-processors")]
         public IActionResult GetPayoutProcessors()
         {
-            return Ok(_factories.Select(factory => new PayoutProcessorData()
+            return Ok(factories.Select(factory => new PayoutProcessorData()
             {
                 Name = factory.Processor,
                 FriendlyName = factory.FriendlyName,

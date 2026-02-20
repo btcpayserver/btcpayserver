@@ -13,7 +13,7 @@ namespace BTCPayServer.Controllers.Greenfield
 {
     [ApiController]
     [EnableCors(CorsPolicies.All)]
-    public class GreenfieldServerInfoController : Controller
+    public class GreenfieldServerInfoController : ControllerBase
     {
         private readonly BTCPayServerEnvironment _env;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;

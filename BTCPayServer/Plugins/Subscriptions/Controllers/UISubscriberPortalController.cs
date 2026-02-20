@@ -23,7 +23,6 @@ using Microsoft.Extensions.Localization;
 namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 
 [AllowAnonymous]
-[AutoValidateAntiforgeryToken]
 [Area(SubscriptionsPlugin.Area)]
 [Route("subscriber-portal/{portalSessionId}")]
 public class UISubscriberPortalController(

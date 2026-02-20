@@ -368,7 +368,7 @@ namespace BTCPayServer.Tests
         public string HostEnvironment { get; set; } = Environments.Development;
         public bool RuntimeCompilation { get; set; }
 
-        public T GetController<T>(string userId = null, string storeId = null, bool isAdmin = false) where T : Controller
+        public T GetController<T>(string userId = null, string storeId = null, bool isAdmin = false) where T : ControllerBase
         {
             var context = new DefaultHttpContext();
             context.Request.Host = new HostString("127.0.0.1", Port);

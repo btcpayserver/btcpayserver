@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Services
+namespace BTCPayServer.Plugins.Translations
 {
     public partial class Translations : IEnumerable<KeyValuePair<string, string>>
     {

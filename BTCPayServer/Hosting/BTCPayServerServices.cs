@@ -93,12 +93,6 @@ namespace BTCPayServer.Hosting
         public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration, Logs logs)
         {
             services.TryAddScoped<CallbackGenerator>();
-            services.TryAddSingleton<IStringLocalizerFactory, LocalizerFactory>();
-            services.TryAddSingleton<IHtmlLocalizerFactory, LocalizerFactory>();
-            services.TryAddSingleton<LocalizerService>();
-            services.TryAddSingleton<LanguagePackUpdateService>();
-            services.TryAddSingleton<ViewLocalizer>();
-            services.TryAddSingleton<IStringLocalizer>(o => o.GetRequiredService<IStringLocalizerFactory>().Create("", ""));
             services.TryAddSingleton<DelayedTaskScheduler>();
             services.TryAddSingleton<UIExtensionsRegistry>();
 
@@ -180,7 +174,6 @@ namespace BTCPayServer.Hosting
 
             services.AddStartupTask<BlockExplorerLinkStartupTask>();
             services.AddStartupTask<LoadCurrencyNameTableStartupTask>();
-            services.AddStartupTask<LoadTranslationsStartupTask>();
             services.TryAddSingleton<InvoiceRepository>();
             services.AddSingleton<PaymentService>();
             services.AddSingleton<BTCPayServerEnvironment>();

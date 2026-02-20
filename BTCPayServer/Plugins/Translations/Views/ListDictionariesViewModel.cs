@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace BTCPayServer.Models.ServerViewModels;
+namespace BTCPayServer.Plugins.Translations.Views;
 
 public class ListDictionariesViewModel
 {

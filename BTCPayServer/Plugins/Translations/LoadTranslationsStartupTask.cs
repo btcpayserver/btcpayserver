@@ -6,32 +6,23 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
-using BTCPayServer.Data;
-using BTCPayServer.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Hosting
+namespace BTCPayServer.Plugins.Translations
 {
-    public class LoadTranslationsStartupTask : IStartupTask
+    public class LoadTranslationsStartupTask(
+        ILogger<LoadTranslationsStartupTask> logger,
+        LocalizerService localizerService,
+        IOptions<DataDirectories> dataDirectories)
+        : IStartupTask
     {
-        public LoadTranslationsStartupTask(
-            ILogger<LoadTranslationsStartupTask> logger,
-            LocalizerService localizerService,
-            IOptions<DataDirectories> dataDirectories)
-        {
-            DataDirectories = dataDirectories.Value;
-            Logger = logger;
-            LocalizerService = localizerService;
-        }
-
-        public DataDirectories DataDirectories { get; }
-        public ILogger<LoadTranslationsStartupTask> Logger { get; }
-        public LocalizerService LocalizerService { get; }
+        public DataDirectories DataDirectories { get; } = dataDirectories.Value;
+        public ILogger<LoadTranslationsStartupTask> Logger { get; } = logger;
+        public LocalizerService LocalizerService { get; } = localizerService;
 
         class DictionaryFileMetadata
         {
@@ -52,7 +43,7 @@ namespace BTCPayServer.Hosting
                 {
                     Logger.LogInformation("Loading language files...");
                     var dictionaries = await LocalizerService.GetDictionaries();
-                    foreach (var file in Directory.GetFiles(DataDirectories.LangsDir))
+                    foreach (var file in files)
                     {
                         var langName = Path.GetFileName(file);
                         var dictionary = dictionaries.FirstOrDefault(d => d.DictionaryName == langName);
@@ -64,7 +55,7 @@ namespace BTCPayServer.Hosting
                             continue;
                         }
                         var savedHash = dictionary.Metadata.ToObject<DictionaryFileMetadata>().Hash;
-                        var translations = Translations.CreateFromJson(File.ReadAllText(file));
+                        var translations = Translations.CreateFromJson(await File.ReadAllTextAsync(file, cancellationToken));
                         var currentHash = new uint256(SHA256.HashData(Encoding.UTF8.GetBytes(translations.ToJsonFormat())));
 
                         if (savedHash != currentHash)

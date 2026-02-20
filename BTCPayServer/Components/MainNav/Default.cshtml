@@ -8,6 +8,7 @@
 @using BTCPayServer.Views.Apps
 @using BTCPayServer.Configuration
 @using BTCPayServer.Plugins.Emails
+@using BTCPayServer.Plugins.Translations
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContext;
 @inject BTCPayServerOptions BtcPayServerOptions
 @inject BTCPayServerEnvironment Env
@@ -323,7 +324,7 @@
                     <a layout-menu-item="@nameof(ServerNavPages.Branding)" asp-controller="UIServer" asp-action="Branding" text-translate="true">Branding</a>
                 </li>
                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
-                    <a layout-menu-item="@nameof(ServerNavPages.Translations)" asp-controller="UIServer" asp-action="ListDictionaries" text-translate="true">Translations</a>
+                    <a layout-menu-item="@nameof(ServerNavPages.Translations)" asp-area="@TranslationsPlugin.Area" asp-controller="UITranslation" asp-action="ListDictionaries" text-translate="true">Translations</a>
                 </li>
                 @if (BtcPayServerOptions.DockerDeployment)
                 {

@@ -1,3 +1,4 @@
+@using BTCPayServer.Views.Server
 @model ListDictionariesViewModel
 @{
     ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Translations), StringLocalizer["Dictionaries"])
@@ -34,35 +35,40 @@
 			@foreach (var v in Model.Dictionaries)
 			{
 				<tr>
-					<td class="d-flex flex-wrap align-items-center gap-2">
-						@if (!v.Editable)
-						{
-							<span >@v.DictionaryName</span>
-						}
-						else
-						{
-							<a asp-action="EditDictionary" asp-route-dictionary="@v.DictionaryName">@v.DictionaryName</a>
-						}
-                        @if (v.IsSelected)
-                        {
-                            <span class="badge bg-info" text-translate="true">
-                                In use
-                            </span>
-                        }
-					</td>
+                    <td>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            @if (!v.Editable)
+                            {
+                                <span >@v.DictionaryName</span>
+                            }
+                            else
+                            {
+                                <a asp-action="EditDictionary" asp-route-dictionary="@v.DictionaryName">@v.DictionaryName</a>
+                            }
+                            @if (v.IsSelected)
+                            {
+                                <span class="badge bg-info" text-translate="true">
+                                    In use
+                                </span>
+                            }
+                        </div>
+                    </td>
 					<td>@v.Fallback</td>
 					<td class="actions-col">
 						<div class="d-inline-flex align-items-center gap-3">
 							@if (v.IsDownloadedLanguagePack && v.UpdateAvailable)
 							{
-								<form method="post" asp-action="UpdateLanguagePack" asp-route-dictionary="@v.DictionaryName" style="display:inline;">
-									<button type="submit" class="link-success" style="background:none;border:none;padding:0;cursor:pointer;font:inherit;" text-translate="true">Update</button>
+								<form method="post" asp-action="DownloadLanguagePack" asp-route-language="@v.DictionaryName" class="d-inline">
+									<button type="submit" class="btn btn-link p-0">Update</button>
 								</form>
 							}
 							<a asp-action="CreateDictionary" asp-route-fallback="@v.DictionaryName" text-translate="true">Clone</a>
 							@if (!v.IsSelected)
 							{
-								<a id="Select-@v.DictionaryName" asp-action="SelectDictionary" asp-route-dictionary="@v.DictionaryName" text-translate="true">Select</a>
+                                <form method="post" asp-action="SelectDictionary" asp-route-dictionary="@v.DictionaryName" class="d-inline">
+                                    <button id="Select-@v.DictionaryName" type="submit" class="btn btn-link p-0" text-translate="true">Select
+                                    </button>
+                                </form>
 							}
 							@if (v.Editable && !v.IsSelected)
 							{
@@ -98,7 +104,7 @@
 						<label for="language" class="form-label" text-translate="true">Select Language</label>
 						<select id="language" name="language" class="form-select" required>
 							<option value="" text-translate="true">Choose a language...</option>
-							@foreach (var lang in BTCPayServer.Services.LanguagePackUpdateService.GetDownloadableLanguages())
+							@foreach (var lang in LanguagePackUpdateService.GetDownloadableLanguages())
 							{
 								<option value="@lang">@lang</option>
 							}

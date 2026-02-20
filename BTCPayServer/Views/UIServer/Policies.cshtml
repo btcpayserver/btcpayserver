@@ -1,5 +1,6 @@
 @using BTCPayServer.Services
 @using BTCPayServer.Plugins.Emails.Services
+@using BTCPayServer.Plugins.Translations
 @model BTCPayServer.Services.PoliciesSettings
 @inject EmailSenderFactory EmailSenderFactory
 @inject TransactionLinkProviders TransactionLinkProviders
@@ -156,7 +157,7 @@
 						</select>
 						<span asp-validation-for="LangDictionary" class="text-danger"></span>
                         <div class="form-text">
-                            <span text-translate="true">Add or customize translations</span> <a asp-action="ListDictionaries" text-translate="true">here</a>.
+                            <span text-translate="true">Add or customize translations</span> <a asp-area="@TranslationsPlugin.Area" asp-controller="UITranslation" asp-action="ListDictionaries" text-translate="true">here</a>.
                         </div>
 					</div>
                     <div class="form-group d-flex">

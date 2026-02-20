@@ -1,7 +1,6 @@
-using System;
 using System.Collections.Generic;
 
-namespace BTCPayServer.Services
+namespace BTCPayServer.Plugins.Translations
 {
     public partial class Translations
     {
@@ -514,7 +513,6 @@ namespace BTCPayServer.Services
   "Dictionary": "",
   "Dictionary {0} deleted": "",
   "Dictionary created": "",
-  "Dictionary not found or not a downloadable language pack": "",
   "Dictionary updated": "",
   "Direct integration": "",
   "Disable": "",
@@ -668,7 +666,6 @@ namespace BTCPayServer.Services
   "Failed to archive the app.": "",
   "Failed to download language pack: {0}": "",
   "Failed to unarchive the app.": "",
-  "Failed to update language pack: {0}": "",
   "Fallback": "",
   "Fallback rate source": "",
   "Fallback rates will be used in case the primary rates are not available.": "",
@@ -2104,12 +2101,12 @@ namespace BTCPayServer.Services
         }
 
         /// <summary>
-        /// Translations which are already in the Default aren't saved into database.
-        /// This allows us to automatically update the english version if the translations didn't changed.
+        /// Translations which are already in the Default aren't saved into the database.
+        /// This allows us to automatically update the English version if the translations didn't change.
         ///
-        /// We only save into database the key/values that differ from Default
+        /// We only save into a database the key/values that differ from Default
         /// </summary>
         public static Translations Default;
-        public readonly static string DefaultLanguage = "English";
+        public static readonly string DefaultLanguage = "English";
     }
 }

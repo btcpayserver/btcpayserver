@@ -4,7 +4,7 @@ using System.Linq;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace BTCPayServer.Models.ServerViewModels;
+namespace BTCPayServer.Plugins.Translations.Views;
 public class CreateDictionaryViewModel
 {
     [Required(AllowEmptyStrings = false)]

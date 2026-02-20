@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using BTCPayServer.Services;
 
-namespace BTCPayServer.Models.ServerViewModels;
+namespace BTCPayServer.Plugins.Translations.Views;
 
 public class EditDictionaryViewModel
 {

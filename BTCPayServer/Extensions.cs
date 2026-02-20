@@ -45,7 +45,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
 using NBitcoin;
 using NBitcoin.Payment;
 using NBitcoin.RPC;
@@ -57,7 +56,7 @@ using InvoiceCryptoInfo = BTCPayServer.Services.Invoices.InvoiceCryptoInfo;
 
 namespace BTCPayServer
 {
-    public static class Extensions
+    public static partial class Extensions
     {
         public static string GetNiceModelName(this HwiDeviceClient device)
         => device.Model switch
@@ -422,22 +421,6 @@ namespace BTCPayServer
             }
         }
 
-#nullable enable
-        public static IServiceCollection AddDefaultTranslations(this IServiceCollection services, params string[] keyValues)
-        {
-            return services.AddDefaultTranslations(keyValues.Select(k => KeyValuePair.Create<string, string?>(k, string.Empty)).ToArray());
-        }
-        public static IServiceCollection AddDefaultPrettyName(this IServiceCollection services, PaymentMethodId paymentMethodId, string defaultPrettyName)
-        {
-			services.AddSingleton<PrettyNameProvider.UntranslatedPrettyName>(new PrettyNameProvider.UntranslatedPrettyName(paymentMethodId, defaultPrettyName));
-			return services.AddDefaultTranslations(KeyValuePair.Create<string, string?>(PrettyNameProvider.GetTranslationKey(paymentMethodId), defaultPrettyName));
-        }
-        public static IServiceCollection AddDefaultTranslations(this IServiceCollection services, params KeyValuePair<string, string?>[] keyValues)
-        {
-            services.AddSingleton<IDefaultTranslationProvider>(new InMemoryDefaultTranslationProvider(keyValues));
-            return services;
-        }
-#nullable restore
         public static IServiceCollection AddUIExtension(this IServiceCollection services, string location, string partialViewName)
         {
 #pragma warning disable CS0618 // Type or member is obsolete

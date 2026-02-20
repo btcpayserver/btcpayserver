@@ -14,6 +14,7 @@ using Amazon.Runtime.Internal;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
+using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Razor.Language;
 using Microsoft.AspNetCore.Razor.Language.Intermediate;
@@ -280,7 +281,7 @@ namespace BTCPayServer.Tests
                 obj.Add(v, "");
             }
 
-            var path = Path.Combine(soldir.FullName, "BTCPayServer/Services/Translations.Default.cs");
+            var path = Path.Combine(soldir.FullName, "BTCPayServer/Plugins/Translations/Translations.Default.cs");
             var defaultTranslation = File.ReadAllText(path);
             var startIdx = defaultTranslation.IndexOf("\"\"\"");
             var endIdx = defaultTranslation.LastIndexOf("\"\"\"");

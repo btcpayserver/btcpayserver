@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 using BTCPayServer.Logging;
 using Microsoft.AspNetCore.Mvc.Localization;
-using Microsoft.AspNetCore.Mvc.TagHelpers;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 
-namespace BTCPayServer.Services
+namespace BTCPayServer.Plugins.Translations
 {
     public class LocalizerFactory : IStringLocalizerFactory, IHtmlLocalizerFactory
     {

@@ -23,7 +23,7 @@ public class GreenfieldFilesController(
     UserManager<ApplicationUser> userManager,
     IFileService fileService,
     StoredFileRepository fileRepository)
-    : Controller
+    : ControllerBase
 {
     [HttpGet("~/api/v1/files")]
     public async Task<IActionResult> GetFiles()

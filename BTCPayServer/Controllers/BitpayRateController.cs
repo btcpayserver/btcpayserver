@@ -24,7 +24,7 @@ namespace BTCPayServer.Controllers
 {
     [EnableCors(CorsPolicies.All)]
     [Authorize(Policy = ServerPolicies.CanGetRates.Key, AuthenticationSchemes = AuthenticationSchemes.Bitpay)]
-    public class BitpayRateController : Controller
+    public class BitpayRateController : ControllerBase
     {
 
         readonly RateFetcher _rateProviderFactory;
@@ -71,8 +71,8 @@ namespace BTCPayServer.Controllers
             var currencypairs = BuildCurrencyPairs(currencyCodes, baseCurrency);
 
             var result = await GetRates2(currencypairs, null, cryptoCode, cancellationToken);
-            var rates = (result as JsonResult)?.Value as Rate[];
-            return rates == null ? result : Json(new DataWrapper<Rate[]>(rates));
+            var rates = (result as OkObjectResult)?.Value as Rate[];
+            return rates == null ? result : Ok(new DataWrapper<Rate[]>(rates));
         }
 
         [HttpGet("rates/{baseCurrency}/{currency}")]
@@ -80,9 +80,9 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> GetCurrencyPairRate(string baseCurrency, string currency, string cryptoCode = null, CancellationToken cancellationToken = default)
         {
             var result = await GetRates2($"{baseCurrency}_{currency}", null, cryptoCode, cancellationToken);
-            return (result as JsonResult)?.Value is not Rate[] rates
+            return (result as OkObjectResult)?.Value is not Rate[] rates
                 ? result
-                : Json(new DataWrapper<Rate>(rates.First()));
+                : Ok(new DataWrapper<Rate>(rates.First()));
         }
 
         [HttpGet("rates")]
@@ -90,9 +90,9 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> GetRates(string currencyPairs, string storeId = null, string cryptoCode = null, CancellationToken cancellationToken = default)
         {
             var result = await GetRates2(currencyPairs, storeId, cryptoCode, cancellationToken);
-            return (result as JsonResult)?.Value is not Rate[] rates
+            return (result as OkObjectResult)?.Value is not Rate[] rates
                 ? result
-                : Json(new DataWrapper<Rate[]>(rates));
+                : Ok(new DataWrapper<Rate[]>(rates));
         }
 
         [AllowAnonymous]
@@ -102,7 +102,7 @@ namespace BTCPayServer.Controllers
             var store = CurrentStore ?? await _storeRepo.FindStore(storeId);
             if (store == null)
             {
-                var err = Json(new BitpayErrorsModel { Error = "Store not found" });
+                var err = Ok(new BitpayErrorsModel { Error = "Store not found" });
                 err.StatusCode = 404;
                 return err;
             }
@@ -116,7 +116,7 @@ namespace BTCPayServer.Controllers
                 }
                 if (string.IsNullOrEmpty(currencyPairs))
                 {
-                    var result = Json(new BitpayErrorsModel() { Error = "You need to setup the default currency pairs in 'Store Settings / Rates' or specify 'currencyPairs' query parameter (eg. BTC_USD,LTC_CAD)." });
+                    var result = Ok(new BitpayErrorsModel() { Error = "You need to setup the default currency pairs in 'Store Settings / Rates' or specify 'currencyPairs' query parameter (eg. BTC_USD,LTC_CAD)." });
                     result.StatusCode = 400;
                     return result;
                 }
@@ -128,7 +128,7 @@ namespace BTCPayServer.Controllers
             {
                 if (!CurrencyPair.TryParse(currency, out var pair))
                 {
-                    var result = Json(new BitpayErrorsModel() { Error = $"Currency pair {currency} uncorrectly formatted" });
+                    var result = Ok(new BitpayErrorsModel() { Error = $"Currency pair {currency} uncorrectly formatted" });
                     result.StatusCode = 400;
                     return result;
                 }
@@ -137,7 +137,7 @@ namespace BTCPayServer.Controllers
 
             var fetching = _rateProviderFactory.FetchRates(pairs, rules, new StoreIdRateContext(storeId), cancellationToken);
             await Task.WhenAll(fetching.Select(f => f.Value).ToArray());
-            return Json(pairs
+            return Ok(pairs
                             .Select(r => (Pair: r, Value: fetching[r].GetAwaiter().GetResult().BidAsk?.Bid))
                             .Where(r => r.Value.HasValue)
                             .Select(r =>

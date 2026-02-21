@@ -157,7 +157,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<LnurlAuthService>();
             services.AddSingleton<LightningAddressService>();
             var mvcBuilder = services.AddMvc(o =>
-             {
+                {
                  o.Filters.Add(new XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.Deny));
                  o.Filters.Add(new XContentTypeOptionsAttribute("nosniff"));
                  o.Filters.Add(new XXSSProtectionAttribute());
@@ -167,6 +167,7 @@ namespace BTCPayServer.Hosting
                      o.Filters.Add(new ContentSecurityPolicyAttribute(CSPTemplate.AntiXSS));
                  o.Filters.Add(new JsonHttpExceptionFilter());
                  o.Filters.Add(new JsonObjectExceptionFilter());
+                 o.Filters.Add(new UIControllerAntiforgeryTokenAttribute());
              })
             .ConfigureApiBehaviorOptions(options =>
             {

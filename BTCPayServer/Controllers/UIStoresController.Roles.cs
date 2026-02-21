@@ -48,22 +48,31 @@ public partial class UIStoresController
     public async Task<IActionResult> CreateOrEditRole(
         string storeId,
         [FromServices] StoreRepository storeRepository,
+        [FromServices] Services.PluginPermissionRegistry pluginPermissionRegistry,
         string role)
     {
+        var viewModel = new UpdateRoleViewModel();
+        
+        // Populate plugin permissions from registry
+        if (pluginPermissionRegistry != null)
+        {
+            viewModel.PluginPermissions = pluginPermissionRegistry.GetAllPluginPermissions().ToList();
+        }
+        
         if (role == "create")
         {
             ModelState.Remove(nameof(role));
-            return View(new UpdateRoleViewModel());
+            return View(viewModel);
         }
 
         var roleData = await storeRepository.GetStoreRole(new StoreRoleId(storeId, role));
         if (roleData == null)
             return NotFound();
-        return View(new UpdateRoleViewModel
-        {
-            Policies = roleData.Permissions,
-            Role = roleData.Role
-        });
+        
+        viewModel.Policies = roleData.Permissions;
+        viewModel.Role = roleData.Role;
+        
+        return View(viewModel);
     }
 
     [HttpPost("{storeId}/roles/{role}")]
@@ -71,6 +80,7 @@ public partial class UIStoresController
     public async Task<IActionResult> CreateOrEditRole(
         string storeId,
         [FromServices] StoreRepository storeRepository,
+        [FromServices] Services.PluginPermissionRegistry pluginPermissionRegistry,
         [FromRoute] string role, UpdateRoleViewModel viewModel)
     {
         string successMessage;
@@ -92,6 +102,8 @@ public partial class UIStoresController
 
         if (!ModelState.IsValid)
         {
+            if (pluginPermissionRegistry != null)
+                viewModel.PluginPermissions = pluginPermissionRegistry.GetAllPluginPermissions().ToList();
             return View(viewModel);
         }
 
@@ -103,6 +115,8 @@ public partial class UIStoresController
                 Severity = StatusMessageModel.StatusSeverity.Error,
                 Message = StringLocalizer["Role could not be updated"].Value
             });
+            if (pluginPermissionRegistry != null)
+                viewModel.PluginPermissions = pluginPermissionRegistry.GetAllPluginPermissions().ToList();
             return View(viewModel);
         }
 

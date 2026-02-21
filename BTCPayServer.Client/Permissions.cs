@@ -90,7 +90,16 @@ namespace BTCPayServer.Client
         }
         public static bool IsValidPolicy(string policy)
         {
-            return AllPolicies.Any(p => p.Equals(policy, StringComparison.OrdinalIgnoreCase));
+            // Core policies
+            if (AllPolicies.Any(p => p.Equals(policy, StringComparison.OrdinalIgnoreCase)))
+                return true;
+
+            // Plugin policies - accept any btcpay.plugin.* policy (even if plugin is uninstalled)
+            // This prevents crashes when loading roles with orphaned plugin permissions
+            if (IsPluginPolicy(policy))
+                return true;
+
+            return false;
         }
 
         public static bool IsStorePolicy(string policy)
@@ -119,9 +128,11 @@ namespace BTCPayServer.Client
         {
             var p = policy.Split(".");
             if (p.Length < 3 || p[0] != "btcpay") return policy;
+
+            // Core permission display name
             var constName = typeof(Policies).GetFields().Select(f => f.Name).FirstOrDefault(f => f.Equals(p[^1], StringComparison.OrdinalIgnoreCase));
-            var perm = string.IsNullOrEmpty(constName) ? string.Join(' ', p[2..]) : Regex.Replace(constName, "([A-Z])", " $1", RegexOptions.Compiled).Trim();
-            return $"{_culture.TextInfo.ToTitleCase(p[1])}: {_culture.TextInfo.ToTitleCase(perm)}";
+            var permName = string.IsNullOrEmpty(constName) ? string.Join(' ', p[2..]) : Regex.Replace(constName, "([A-Z])", " $1", RegexOptions.Compiled).Trim();
+            return $"{_culture.TextInfo.ToTitleCase(p[1])}: {_culture.TextInfo.ToTitleCase(permName)}";
         }
     }
 

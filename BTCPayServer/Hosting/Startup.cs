@@ -127,6 +127,9 @@ namespace BTCPayServer.Hosting
             services.AddBTCPayServer(Configuration, Logs);
             services.AddProviderStorage();
             services.AddSession();
+            
+            // Register plugin permission registry
+            services.AddSingleton<BTCPayServer.Services.PluginPermissionRegistry>();
             services.AddSignalR().AddNewtonsoftJsonProtocol(options =>
             {
                 NBitcoin.JsonConverters.Serializer.RegisterFrontConverters(options.PayloadSerializerSettings);
@@ -375,6 +378,14 @@ namespace BTCPayServer.Hosting
                 endpoints.MapControllerRoute("default", "{controller:validate=UIHome}/{action:lowercase=Index}/{id?}");
             });
             app.UsePlugins();
+            
+            // Resolve plugin permissions once to validate and log startup state.
+            var pluginRegistry = prov.GetService<BTCPayServer.Services.PluginPermissionRegistry>();
+            if (pluginRegistry != null)
+            {
+                var pluginPermissionCount = pluginRegistry.GetAllPluginPermissions().Count();
+                Logs.Configuration.LogInformation($"Registered {pluginPermissionCount} plugin permissions");
+            }
         }
 
         private static void LongCache(Microsoft.AspNetCore.StaticFiles.StaticFileResponseContext ctx)

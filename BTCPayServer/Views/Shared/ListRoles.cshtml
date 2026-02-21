@@ -3,6 +3,7 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Client
 @model BTCPayServer.Models.ServerViewModels.RolesViewModel
+@inject BTCPayServer.Services.PluginPermissionRegistry PluginPermissionRegistry
 @{
     var storeId = Context.GetRouteValue("storeId") as string;
     var controller = ViewContext.RouteData.Values["controller"].ToString().TrimEnd("Controller", StringComparison.InvariantCultureIgnoreCase);
@@ -21,6 +22,10 @@
     var sortByDesc = StringLocalizer["Sort by name descending..."];
     var sortByAsc = StringLocalizer["Sort by name ascending..."];
     var showInUseColumn = !Model.Roles.Any(r => r.IsUsed is null);
+
+    // We resolve display names through a helper because core and plugin permissions currently come from different sources.
+    string GetPermissionDisplayName(string policy) =>
+        (PluginPermissionRegistry?.GetDisplayName(policy)) ?? Policies.DisplayName(policy);
 }
 
 <div class="sticky-header">
@@ -95,7 +100,7 @@
                     {
                         @foreach (var policy in role.Permissions)
                         {
-                            <code class="d-block text-break">@Policies.DisplayName(policy)</code>
+                            <code class="d-block text-break">@GetPermissionDisplayName(policy)</code>
                         }
                     }
                 </td>

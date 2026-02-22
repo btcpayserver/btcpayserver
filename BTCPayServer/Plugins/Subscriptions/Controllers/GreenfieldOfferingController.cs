@@ -363,7 +363,11 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             var session = await ctx.PortalSessions.GetById(portalSessionId);
             if (session is null)
                 return PortalSessionNotFound();
-            await ctx.Plans.FetchPlanFeaturesAsync(session.Subscriber.Plan);
+
+            var offering = await ctx.Offerings.GetOfferingData(session.Subscriber.OfferingId);
+            if (offering is null)
+                return PortalSessionNotFound();
+            await ctx.Plans.FetchPlanFeaturesAsync(offering.Plans);
             return Ok(Mapper.MapPortalSession(session));
         }
 

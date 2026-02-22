@@ -314,12 +314,13 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             SuccessRedirectUrl = "https://google.com",
             Features = new()
             {
-                new() { Id = "can-access", Description = "Can access the subscription API" }
+                new() { Id = "can-access", Description = "Can access the subscription API" },
+                new() { Id = "can-access2", Description = "Can access the subscription API" }
             }
         });
         Assert.Equal("Test", offering.AppName);
         Assert.Equal("https://google.com", offering.SuccessRedirectUrl);
-        Assert.Single(offering.Features);
+        Assert.Equal(2, offering.Features.Count);
         Assert.Equal("can-access", offering.Features[0].Id);
 
         var plan = await client.CreateOfferingPlan(user.StoreId, offering.Id, new()
@@ -328,17 +329,24 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             Price = 10m,
             Features = ["can-access"]
         });
+        await client.CreateOfferingPlan(user.StoreId, offering.Id, new()
+        {
+            Name = "2NewPlan2",
+            Price = 100m,
+            Features = ["can-access2"]
+        });
         Assert.Equal(("NewPlan", 10m, "USD"), (plan.Name, plan.Price, plan.Currency));
         plan = await client.GetOfferingPlan(user.StoreId, offering.Id, plan.Id);
         Assert.Equal(("NewPlan", 10m, "USD"), (plan.Name, plan.Price, plan.Currency));
         Assert.Contains("can-access", plan.Features);
 
         offering = await client.GetOffering(offering.StoreId, offering.Id);
+        Assert.Equal(2, offering.Plans.Count);
         var offering2 = (await client.GetOfferings(offering.StoreId))[0];
         Assert.Equal(offering.Id, offering2.Id);
         Assert.Equal(offering.AppName, offering2.AppName);
         Assert.Equal(offering.SuccessRedirectUrl, offering2.SuccessRedirectUrl);
-        Assert.Single(offering2.Features);
+        Assert.Equal(2, offering2.Features.Count);
         Assert.Equal("can-access", offering2.Features[0].Id);
         Assert.Equal("can-access", offering.Features[0].Id);
 
@@ -416,8 +424,9 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             CustomerSelector = "test@gmail.com",
             DurationMinutes = TimeSpan.FromMinutes(3.0)
         });
-
+        Assert.Equal(2, session.Subscriber.Offering.Plans.Count);
         session = await client.GetPortalSession(session.Id);
+        Assert.Equal(2, session.Subscriber.Offering.Plans.Count);
         Assert.True(session.Expiration < DateTimeOffset.UtcNow + TimeSpan.FromMinutes(5.0));
         Assert.True(session.Expiration > DateTimeOffset.UtcNow + TimeSpan.FromMinutes(2.0));
         Assert.NotNull(session.Subscriber);

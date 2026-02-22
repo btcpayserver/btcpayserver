@@ -37,15 +37,17 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
         {
             OfferingData[] offerings;
             if (offeringId is null)
+            {
                 offerings = await ctx.Offerings.IncludeAll().Where(o => o.App.StoreDataId == storeId).ToArrayAsync();
+                await ctx.Plans.FetchPlanFeaturesAsync(offerings.SelectMany(p => p.Plans).ToArray());
+            }
             else
             {
-                var offering = await ctx.Offerings.GetOfferingData(offeringId, storeId);
+                var offering = await ctx.Offerings.GetOfferingData(offeringId, storeId, fetchPlanFeatures: true);
                 if (offering is null)
                     return OfferingNotFound();
                 offerings = new[] { offering };
             }
-            await ctx.Plans.FetchPlanFeaturesAsync(offerings.SelectMany(p => p.Plans).ToArray());
             if (offeringId is not null)
                 return Ok(Mapper.MapOffering(offerings[0]));
             return Ok(offerings.Select(Mapper.MapOffering).ToArray());
@@ -288,7 +290,6 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
             if (checkout is null)
                 return CheckoutNotFound();
-            await ctx.Plans.FetchPlanFeaturesAsync(checkout.Plan);
             return Ok(Mapper.MapPlanCheckout(checkout));
         }
 
@@ -363,7 +364,6 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             var session = await ctx.PortalSessions.GetById(portalSessionId);
             if (session is null)
                 return PortalSessionNotFound();
-            await ctx.Plans.FetchPlanFeaturesAsync(session.Subscriber.Plan);
             return Ok(Mapper.MapPortalSession(session));
         }
 

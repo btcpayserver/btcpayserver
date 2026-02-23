@@ -230,7 +230,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 app.Archived = request.Archived.Value;
             }
-            app.SetSettings(ToCrowdfundSettings(request));
+            app.SetSettings(ToCrowdfundSettings(request, settings));
 
             await _appService.UpdateOrCreateApp(app);
 
@@ -374,6 +374,47 @@ namespace BTCPayServer.Controllers.Greenfield
                 HtmlMetaTags = request.HtmlMetaTags,
                 HtmlLang  = request.HtmlLang,
                 FormId = request.FormId
+            };
+        }
+
+        /// <summary>
+        /// Merges request into existing settings; only overwrites properties when present in request (non-null).
+        /// </summary>
+        private CrowdfundSettings ToCrowdfundSettings(CrowdfundAppRequest request, CrowdfundSettings existing)
+        {
+            var parsedSounds = request.Sounds != null ? ValidateStringArray(request.Sounds) : null;
+            var parsedColors = request.AnimationColors != null ? ValidateStringArray(request.AnimationColors) : null;
+            if (request.HtmlMetaTags is not null)
+                request.HtmlMetaTags = Safe.RawMeta(request.HtmlMetaTags, out _);
+
+            return new CrowdfundSettings
+            {
+                Title = request.Title != null ? request.Title.Trim() : (request.AppName ?? existing.Title),
+                Enabled = request.Enabled ?? existing.Enabled,
+                EnforceTargetAmount = request.EnforceTargetAmount ?? existing.EnforceTargetAmount,
+                StartDate = request.StartDate.HasValue ? request.StartDate.Value.UtcDateTime : existing.StartDate,
+                EndDate = request.EndDate.HasValue ? request.EndDate.Value.UtcDateTime : existing.EndDate,
+                TargetCurrency = request.TargetCurrency?.Trim() ?? existing.TargetCurrency,
+                Description = request.Description?.Trim() ?? existing.Description,
+                TargetAmount = request.TargetAmount ?? existing.TargetAmount,
+                MainImageUrl = request.MainImageUrl != null ? UnresolvedUri.Create(request.MainImageUrl) : existing.MainImageUrl,
+                NotificationUrl = request.NotificationUrl != null ? request.NotificationUrl.Trim() : existing.NotificationUrl,
+                Tagline = request.Tagline != null ? request.Tagline.Trim() : existing.Tagline,
+                PerksTemplate = request.PerksTemplate is not null ? AppService.SerializeTemplate(AppService.Parse(request.PerksTemplate.Trim())) : existing.PerksTemplate,
+                DisqusEnabled = request.DisqusShortname != null ? !string.IsNullOrEmpty(request.DisqusShortname.Trim()) : existing.DisqusEnabled,
+                DisqusShortname = request.DisqusShortname?.Trim() ?? existing.DisqusShortname,
+                SoundsEnabled = request.SoundsEnabled ?? existing.SoundsEnabled,
+                AnimationsEnabled = request.AnimationsEnabled ?? existing.AnimationsEnabled,
+                ResetEveryAmount = request.ResetEveryAmount ?? existing.ResetEveryAmount,
+                ResetEvery = request.ResetEvery.HasValue ? (BTCPayServer.Services.Apps.CrowdfundResetEvery)request.ResetEvery.Value : existing.ResetEvery,
+                DisplayPerksValue = request.DisplayPerksValue ?? existing.DisplayPerksValue,
+                DisplayPerksRanking = request.DisplayPerksRanking ?? existing.DisplayPerksRanking,
+                SortPerksByPopularity = request.SortPerksByPopularity ?? existing.SortPerksByPopularity,
+                Sounds = parsedSounds ?? existing.Sounds,
+                AnimationColors = parsedColors ?? existing.AnimationColors,
+                HtmlMetaTags = request.HtmlMetaTags ?? existing.HtmlMetaTags,
+                HtmlLang = request.HtmlLang ?? existing.HtmlLang,
+                FormId = request.FormId ?? existing.FormId
             };
         }
 

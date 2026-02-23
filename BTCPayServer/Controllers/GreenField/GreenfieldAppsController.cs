@@ -209,8 +209,6 @@ namespace BTCPayServer.Controllers.Greenfield
 
             // This is not obvious, but we must have a non-null currency or else request validation may not work correctly
             request.TargetCurrency ??= settings.TargetCurrency;
-            // Preserve description when omitted (partial update) - prevents overwriting with null
-            request.Description ??= settings.Description;
 
             ValidateCrowdfundAppRequest(request);
             if (!string.IsNullOrEmpty(request.AppName))
@@ -221,6 +219,9 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return this.CreateValidationError(ModelState);
             }
+
+            // Preserve description when client omitted it (partial update) - after validation to avoid failing legacy apps with empty descriptions
+            request.Description ??= settings.Description;
 
             if (!string.IsNullOrEmpty(request.AppName))
             {
@@ -389,7 +390,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             return new CrowdfundSettings
             {
-                Title = request.Title != null ? request.Title.Trim() : (request.AppName ?? existing.Title),
+                Title = request.Title != null ? request.Title.Trim() : (existing.Title ?? request.AppName),
                 Enabled = request.Enabled ?? existing.Enabled,
                 EnforceTargetAmount = request.EnforceTargetAmount ?? existing.EnforceTargetAmount,
                 StartDate = request.StartDate.HasValue ? request.StartDate.Value.UtcDateTime : existing.StartDate,
@@ -596,7 +597,8 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private void ValidateCrowdfundAppRequest(CrowdfundAppRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Description))
+            // Only reject when Description is explicitly provided but empty (skip when omitted for partial update)
+            if (request.Description != null && string.IsNullOrWhiteSpace(request.Description))
             {
                 ModelState.AddModelError(nameof(request.Description), "Description cannot be empty");
             }

@@ -144,6 +144,60 @@
                     "$ref": "#/components/parameters/AppId"
                 }
             ],
+            "put": {
+                "operationId": "Apps_PutCrowdfundApp",
+                "summary": "Update a Crowdfund app",
+                "description": "Use this endpoint for updating the properties of a Crowdfund app",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CrowdfundAppRequest"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "App details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CrowdfundAppData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Crowdfund app with specified ID was not found"
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Apps",
+                    "Crowdfund"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
             "get": {
                 "tags": [
                     "Apps",

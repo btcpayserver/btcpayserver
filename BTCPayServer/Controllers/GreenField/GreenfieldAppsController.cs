@@ -195,6 +195,48 @@ namespace BTCPayServer.Controllers.Greenfield
             return app == null ? AppNotFound() : Ok(ToPointOfSaleModel(app));
         }
 
+        [HttpPut("~/api/v1/apps/crowdfund/{appId}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> UpdateCrowdfundApp(string appId, CrowdfundAppRequest request)
+        {
+            var app = await _appService.GetApp(appId, CrowdfundAppType.AppType, includeArchived: true);
+            if (app == null)
+            {
+                return AppNotFound();
+            }
+
+            var settings = app.GetSettings<CrowdfundSettings>();
+
+            // This is not obvious, but we must have a non-null currency or else request validation may not work correctly
+            request.TargetCurrency ??= settings.TargetCurrency;
+            // Preserve description when omitted (partial update) - prevents overwriting with null
+            request.Description ??= settings.Description;
+
+            ValidateCrowdfundAppRequest(request);
+            if (!string.IsNullOrEmpty(request.AppName))
+            {
+                ValidateAppRequest(request);
+            }
+            if (!ModelState.IsValid)
+            {
+                return this.CreateValidationError(ModelState);
+            }
+
+            if (!string.IsNullOrEmpty(request.AppName))
+            {
+                app.Name = request.AppName;
+            }
+            if (request.Archived != null)
+            {
+                app.Archived = request.Archived.Value;
+            }
+            app.SetSettings(ToCrowdfundSettings(request));
+
+            await _appService.UpdateOrCreateApp(app);
+
+            return Ok(await ToCrowdfundModel(app));
+        }
+
         [HttpGet("~/api/v1/apps/crowdfund/{appId}")]
         public async Task<IActionResult> GetCrowdfundApp(string appId)
         {
@@ -513,6 +555,11 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private void ValidateCrowdfundAppRequest(CrowdfundAppRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request.Description))
+            {
+                ModelState.AddModelError(nameof(request.Description), "Description cannot be empty");
+            }
+
             if (request.TargetCurrency != null && _currencies.GetCurrencyData(request.TargetCurrency, false) == null)
             {
                 ModelState.AddModelError(nameof(request.TargetCurrency), "Invalid currency");

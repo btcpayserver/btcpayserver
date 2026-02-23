@@ -222,6 +222,20 @@ namespace BTCPayServer.Controllers.Greenfield
             request.TargetCurrency ??= settings.TargetCurrency;
 
             ValidateCrowdfundAppRequest(request);
+            // Extra validation when patching reset-related fields without specifying ResetEvery
+            if (!request.ResetEvery.HasValue && (request.ResetEveryAmount.HasValue || request.StartDate.HasValue))
+            {
+                if (Enum.TryParse(settings.ResetEvery.ToString(), true, out CrowdfundResetEvery effectiveResetEvery) &&
+                    effectiveResetEvery != CrowdfundResetEvery.Never)
+                {
+                    var effectiveStartDate = request.StartDate?.UtcDateTime ?? settings.StartDate;
+                    var effectiveResetEveryAmount = request.ResetEveryAmount ?? settings.ResetEveryAmount;
+                    if (effectiveStartDate == null)
+                        ModelState.AddModelError(nameof(request.StartDate), "A start date is needed when the goal resets every X amount of time");
+                    if (effectiveResetEveryAmount <= 0)
+                        ModelState.AddModelError(nameof(request.ResetEveryAmount), "You must reset the goal at a minimum of 1");
+                }
+            }
             if (!string.IsNullOrEmpty(request.AppName))
             {
                 ValidateAppRequest(request);

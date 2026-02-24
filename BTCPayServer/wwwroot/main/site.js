@@ -245,6 +245,65 @@ const initLabelManagers = () => {
     });
 }
 
+const initLabelFilterDropdowns = () => {
+    document.querySelectorAll('.label-filter-dropdown').forEach(dropdown => {
+        const searchInput = dropdown.querySelector('.label-filter-search-input');
+        const items = dropdown.querySelectorAll('.label-filter-item');
+        const hint = dropdown.querySelector('.label-filter-hint');
+        const noResults = dropdown.querySelector('.label-filter-no-results');
+        if (!searchInput || !items.length) return;
+
+        const updateVisibility = () => {
+            const query = searchInput.value.toLowerCase().trim();
+            let visibleCount = 0;
+
+            items.forEach(item => {
+                const li = item.closest('li');
+                if (!query) {
+                    // No query: hide all label items
+                    if (li) li.style.display = 'none';
+                } else {
+                    const text = item.textContent.toLowerCase();
+                    const match = text.includes(query);
+                    if (li) li.style.display = match ? '' : 'none';
+                    if (match) visibleCount++;
+                }
+            });
+
+            // Show hint when no query, "no results" when query matches nothing
+            if (hint) hint.style.display = query ? 'none' : '';
+            if (noResults) noResults.style.display = (query && visibleCount === 0) ? 'block' : 'none';
+        };
+
+        // Hide all label items on init
+        items.forEach(item => {
+            const li = item.closest('li');
+            if (li) li.style.display = 'none';
+        });
+
+        searchInput.addEventListener('input', updateVisibility);
+
+        // Prevent dropdown from closing when typing in search
+        searchInput.addEventListener('click', e => e.stopPropagation());
+        searchInput.addEventListener('keydown', e => e.stopPropagation());
+
+        // Focus search input when dropdown opens, reset on close
+        const parent = dropdown.closest('.dropdown, .btn-group');
+        if (parent) {
+            const toggle = parent.querySelector('[data-bs-toggle="dropdown"]');
+            if (toggle) {
+                toggle.addEventListener('shown.bs.dropdown', () => {
+                    searchInput.focus();
+                });
+                toggle.addEventListener('hidden.bs.dropdown', () => {
+                    searchInput.value = '';
+                    updateVisibility();
+                });
+            }
+        }
+    });
+};
+
 // Remove this hack when browser fix bug https://github.com/btcpayserver/btcpayserver/issues/7003
 const reinsertSvgUseElements = () => {
     document.querySelectorAll('svg use').forEach(useElement => {
@@ -280,6 +339,7 @@ document.addEventListener("DOMContentLoaded", () => {
     formatDateTimes();
 
     initLabelManagers();
+    initLabelFilterDropdowns();
 
     function updateTimeAgo(){
         var timeagoElements = $("[data-timeago-unixms]");

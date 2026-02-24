@@ -1050,6 +1050,36 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     padding-left: var(--btcpay-space-m);
 }
 
+/* Label filter dropdown */
+.label-filter-dropdown {
+    max-height: 320px;
+    overflow-y: auto;
+    min-width: 220px;
+}
+
+.label-filter-dropdown .label-filter-search {
+    position: sticky;
+    top: 0;
+    background: var(--btcpay-dropdown-bg);
+    z-index: 1;
+    padding: var(--btcpay-space-s);
+}
+
+/* Hide label items by default — shown dynamically via JS when searching */
+
+.label-filter-dropdown .label-filter-hint {
+    padding: var(--btcpay-space-s) var(--btcpay-space-m);
+    color: var(--btcpay-body-text-muted);
+    font-size: var(--btcpay-font-size-s);
+}
+
+.label-filter-dropdown .label-filter-no-results {
+    display: none;
+    padding: var(--btcpay-space-s) var(--btcpay-space-m);
+    color: var(--btcpay-body-text-muted);
+    font-size: var(--btcpay-font-size-s);
+}
+
 /* Truncated text */
 .truncate-center {
     display: inline-flex;

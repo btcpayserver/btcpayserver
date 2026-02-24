@@ -246,6 +246,8 @@ const initLabelManagers = () => {
 }
 
 const initLabelFilterDropdowns = () => {
+    const DEFAULT_VISIBLE = 10;
+
     document.querySelectorAll('.label-filter-dropdown').forEach(dropdown => {
         const searchInput = dropdown.querySelector('.label-filter-search-input');
         const items = dropdown.querySelectorAll('.label-filter-item');
@@ -253,33 +255,40 @@ const initLabelFilterDropdowns = () => {
         const noResults = dropdown.querySelector('.label-filter-no-results');
         if (!searchInput || !items.length) return;
 
+        const showDefaultSubset = () => {
+            items.forEach((item, index) => {
+                const li = item.closest('li');
+                if (li) li.style.display = index < DEFAULT_VISIBLE ? '' : 'none';
+            });
+        };
+
         const updateVisibility = () => {
             const query = searchInput.value.toLowerCase().trim();
             let visibleCount = 0;
 
-            items.forEach(item => {
-                const li = item.closest('li');
-                if (!query) {
-                    // No query: hide all label items
-                    if (li) li.style.display = 'none';
-                } else {
+            if (!query) {
+                // No query: show first DEFAULT_VISIBLE items
+                showDefaultSubset();
+                visibleCount = Math.min(items.length, DEFAULT_VISIBLE);
+            } else {
+                items.forEach(item => {
+                    const li = item.closest('li');
                     const text = item.textContent.toLowerCase();
                     const match = text.includes(query);
                     if (li) li.style.display = match ? '' : 'none';
                     if (match) visibleCount++;
-                }
-            });
+                });
+            }
 
-            // Show hint when no query, "no results" when query matches nothing
-            if (hint) hint.style.display = query ? 'none' : '';
+            // Show hint only when there are more labels than the default visible count and no query
+            if (hint) hint.style.display = (!query && items.length > DEFAULT_VISIBLE) ? '' : 'none';
             if (noResults) noResults.style.display = (query && visibleCount === 0) ? 'block' : 'none';
         };
 
-        // Hide all label items on init
-        items.forEach(item => {
-            const li = item.closest('li');
-            if (li) li.style.display = 'none';
-        });
+        // Show first DEFAULT_VISIBLE label items on init
+        showDefaultSubset();
+        // Hide the hint if total labels fit within the default visible count
+        if (hint && items.length <= DEFAULT_VISIBLE) hint.style.display = 'none';
 
         searchInput.addEventListener('input', updateVisibility);
 

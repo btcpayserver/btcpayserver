@@ -1538,6 +1538,10 @@ namespace BTCPayServer.Controllers
             {
                 var psbt = PSBT.Parse(vm.SigningContext.PSBT, NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode).NBitcoinNetwork);
                 var pendingTransaction = await _pendingTransactionService.CollectSignature(GetPendingTxId(walletId, vm.SigningContext.PendingTransactionId), psbt, CancellationToken.None);
+                if (pendingTransaction is not null)
+                {
+                    await NotifyPendingTransactionSignatureCollected(walletId, pendingTransaction, GetUserId());
+                }
 
                 if (pendingTransaction != null)
                     return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
@@ -2233,7 +2237,64 @@ namespace BTCPayServer.Controllers
                         MimeKit.MailboxAddress.Parse(recipient),
                         $"Pending multisig transaction requires signatures ({walletId.CryptoCode})",
                         $"A pending multisig transaction was created and needs signatures.<br/>" +
-                        $"Transaction id: <code>{pendingTransaction.TransactionId}</code><br/>" +
+                        $"<a href=\"{pendingLink}\">Open pending transaction</a>");
+                }
+                catch
+                {
+                    // Ignore per-recipient delivery failures and continue notifying others.
+                }
+            }
+        }
+
+        private async Task NotifyPendingTransactionSignatureCollected(WalletId walletId, PendingTransaction pendingTransaction, string? signerUserId)
+        {
+            if (walletId?.StoreId is null || pendingTransaction is null)
+                return;
+
+            var derivation = GetDerivationSchemeSettings(walletId);
+            if (derivation?.AccountKeySettings is null || derivation.AccountKeySettings.Length <= 1)
+                return;
+
+            var emailSenderFactory = ServiceProvider.GetService<EmailSenderFactory>();
+            if (emailSenderFactory is null || !await emailSenderFactory.IsComplete(walletId.StoreId))
+                return;
+
+            var walletTypePolicy = GetWalletTypePolicy(walletId);
+            var users = await Repository.GetStoreUsers(walletId.StoreId);
+            var recipients = users
+                .Where(u => u?.StoreRole?.Permissions is { } perms
+                            && perms.Contains(walletTypePolicy)
+                            && perms.Contains(Policies.CanViewWallet)
+                            && (perms.Contains(Policies.CanCreateWalletTransactions) || perms.Contains(Policies.CanManageWalletTransactions))
+                            && !string.Equals(u.Id, signerUserId, StringComparison.Ordinal))
+                .Select(u => u.Email)
+                .Where(email => !string.IsNullOrWhiteSpace(email))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            if (recipients.Length == 0)
+                return;
+
+            var sender = await emailSenderFactory.GetEmailSender(walletId.StoreId);
+            var pendingLink = Url.Action(
+                nameof(ViewPendingTransaction),
+                "UIWallets",
+                new { walletId = walletId.ToString(), pendingTransactionId = pendingTransaction.Id },
+                Request.Scheme);
+            var blob = pendingTransaction.GetBlob();
+            var progress = blob is null
+                ? "Signature was collected."
+                : $"Progress: <b>{blob.SignaturesCollected}/{blob.SignaturesNeeded ?? blob.SignaturesTotal ?? 0}</b> signatures.";
+
+            foreach (var recipient in recipients)
+            {
+                try
+                {
+                    sender.SendEmail(
+                        MimeKit.MailboxAddress.Parse(recipient),
+                        $"Multisig signature collected ({walletId.CryptoCode})",
+                        $"A signer submitted a signature for the pending multisig transaction.<br/>" +
+                        $"{progress}<br/>" +
                         $"<a href=\"{pendingLink}\">Open pending transaction</a>");
                 }
                 catch

@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Text;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Linq;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Services.Stores;
@@ -172,14 +174,39 @@ public class UIMultisigInviteController(
 
     private async Task NotifyRequesterOfSubmission(string storeId, string cryptoCode, PendingMultisigSetupData pending, PendingMultisigSetupParticipantData participant)
     {
-        if (_emailSenderFactory is null || string.IsNullOrWhiteSpace(pending.RequestedByEmail))
+        if (_emailSenderFactory is null)
             return;
         if (!await _emailSenderFactory.IsComplete(storeId))
             return;
         try
         {
             var sender = await _emailSenderFactory.GetEmailSender(storeId);
-            var receiver = MailboxAddress.Parse(pending.RequestedByEmail);
+            var recipientEmails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (!string.IsNullOrWhiteSpace(pending.RequestedByEmail))
+            {
+                recipientEmails.Add(pending.RequestedByEmail);
+            }
+
+            // Fallback for legacy/incomplete pending payloads: notify store users that can manage wallet setup.
+            var walletTypePolicy = cryptoCode.Equals("BTC", StringComparison.OrdinalIgnoreCase)
+                ? Policies.CanModifyBitcoinOnchain
+                : Policies.CanModifyOtherWallets;
+            var managerEmails = (await storeRepo.GetStoreUsers(storeId))
+                .Where(u => u?.StoreRole?.Permissions is { } perms
+                            && perms.Contains(walletTypePolicy)
+                            && (perms.Contains(Policies.CanManageWalletSettings)
+                                || perms.Contains(Policies.CanManageWallets)
+                                || perms.Contains(Policies.CanModifyStoreSettings)))
+                .Select(u => u.Email)
+                .Where(email => !string.IsNullOrWhiteSpace(email));
+            foreach (var email in managerEmails)
+            {
+                recipientEmails.Add(email);
+            }
+
+            if (recipientEmails.Count == 0)
+                return;
+
             var submitted = pending.Participants.Count(p => !string.IsNullOrWhiteSpace(p.AccountKey));
             var total = pending.Participants.Count;
             var signerDisplay = !string.IsNullOrWhiteSpace(participant.Name) ? participant.Name : participant.Email;
@@ -188,10 +215,13 @@ public class UIMultisigInviteController(
                 "UIStoreOnChainWallets",
                 new { storeId, cryptoCode, method = "multisig", multisigRequestId = pending.RequestId },
                 Request.Scheme);
-            sender.SendEmail(
-                receiver,
-                $"Multisig signer submitted ({cryptoCode})",
-                $"Signer <b>{signerDisplay}</b> submitted their account key.<br/>Progress: <b>{submitted}/{total}</b>.<br/><a href=\"{setupLink}\">Open multisig setup</a>");
+            foreach (var recipientEmail in recipientEmails)
+            {
+                sender.SendEmail(
+                    MailboxAddress.Parse(recipientEmail),
+                    $"Multisig signer submitted ({cryptoCode})",
+                    $"Signer <b>{signerDisplay}</b> submitted their account key.<br/>Progress: <b>{submitted}/{total}</b>.<br/><a href=\"{setupLink}\">Open multisig setup</a>");
+            }
         }
         catch
         {

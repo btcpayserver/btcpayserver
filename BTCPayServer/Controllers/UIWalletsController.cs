@@ -18,6 +18,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.PayJoin;
@@ -33,6 +34,7 @@ using BTCPayServer.Services.Wallets.Export;
 using BTCPayServer.Plugins.Emails.Services;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -81,6 +83,7 @@ namespace BTCPayServer.Controllers
         private readonly InvoiceRepository _invoiceRepository;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
         private readonly WalletHistogramService _walletHistogramService;
+        private readonly IDataProtector _multisigInviteProtector;
 
         private readonly PendingTransactionService _pendingTransactionService;
         readonly CurrencyNameTable _currencyTable;
@@ -93,6 +96,7 @@ namespace BTCPayServer.Controllers
             CurrencyNameTable currencyTable,
             BTCPayNetworkProvider networkProvider,
             UserManager<ApplicationUser> userManager,
+            IDataProtectionProvider dataProtectionProvider,
             NBXplorerDashboard dashboard,
             WalletHistogramService walletHistogramService,
             RateFetcher rateProvider,
@@ -130,6 +134,7 @@ namespace BTCPayServer.Controllers
             NetworkProvider = networkProvider;
             _userManager = userManager;
             _dashboard = dashboard;
+            _multisigInviteProtector = dataProtectionProvider.CreateProtector("MultisigInviteLink");
             ExplorerClientProvider = explorerProvider;
             _feeRateProvider = feeRateProvider;
             _walletProvider = walletProvider;
@@ -576,6 +581,7 @@ namespace BTCPayServer.Controllers
             }
             var wallets = new ListWalletsViewModel();
             var stores = await Repository.GetStoresByUserId(userId);
+            wallets.MultisigInProgress = await GetMultisigInProgress(stores, userId);
 
             var onChainWallets = stores
                 .SelectMany(s => s.GetPaymentMethodConfigs<DerivationSchemeSettings>(_handlers)
@@ -619,6 +625,86 @@ namespace BTCPayServer.Controllers
             }
 
             return View(wallets);
+        }
+
+        private async Task<List<MultisigInProgressViewModel>> GetMultisigInProgress(IEnumerable<StoreData> stores, string userId)
+        {
+            var result = new List<MultisigInProgressViewModel>();
+            var storesById = stores.ToDictionary(s => s.Id, s => s, StringComparer.Ordinal);
+            var storeNames = storesById.ToDictionary(s => s.Key, s => s.Value.StoreName, StringComparer.Ordinal);
+            var storeIds = storesById.Keys.ToHashSet(StringComparer.Ordinal);
+            if (storeIds.Count == 0)
+                return result;
+
+            var cryptoCodes = _handlers.OfType<BitcoinLikePaymentHandler>()
+                .Select(h => h.Network.CryptoCode)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            foreach (var cryptoCode in cryptoCodes)
+            {
+                var settings = await Repository.GetSettingsAsync<PendingMultisigSetupData>(
+                    UIStoreOnChainWalletsController.GetPendingMultisigSettingName(cryptoCode));
+                foreach (var (storeId, pending) in settings)
+                {
+                    if (!storeIds.Contains(storeId) || pending is null)
+                        continue;
+                    if (pending.ExpiresAt < DateTimeOffset.UtcNow || pending.Finalized)
+                        continue;
+
+                    var participant = pending.Participants.FirstOrDefault(p =>
+                        string.Equals(p.UserId, userId, StringComparison.Ordinal));
+                    if (participant is null)
+                        continue;
+                    var yourKeySubmitted = !string.IsNullOrWhiteSpace(participant.AccountKey);
+
+                    var requestedCryptoCode = pending.CryptoCode ?? cryptoCode;
+                    var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(requestedCryptoCode);
+                    if (storesById.TryGetValue(storeId, out var storeData) &&
+                        _handlers.Support(paymentMethodId))
+                    {
+                        var existingWalletConfig = storeData.GetPaymentMethodConfig<DerivationSchemeSettings>(paymentMethodId, _handlers);
+                        if (existingWalletConfig is not null)
+                            continue;
+                    }
+
+                    var submittedSigners = pending.Participants.Count(p => !string.IsNullOrWhiteSpace(p.AccountKey));
+                    var token = CreateMultisigInviteToken(storeId, requestedCryptoCode, pending.RequestId, userId, pending.ExpiresAt);
+                    var inviteUrl = Url.Action(
+                        nameof(UIMultisigInviteController.SubmitMultisigSigner),
+                        "UIMultisigInvite",
+                        new { storeId, cryptoCode = requestedCryptoCode, token },
+                        Request.Scheme);
+
+                    result.Add(new MultisigInProgressViewModel
+                    {
+                        StoreId = storeId,
+                        StoreName = storeNames.TryGetValue(storeId, out var storeName) ? storeName : storeId,
+                        CryptoCode = requestedCryptoCode,
+                        RequestId = pending.RequestId,
+                        ScriptType = pending.ScriptType,
+                        RequiredSigners = pending.RequiredSigners,
+                        TotalSigners = pending.TotalSigners,
+                        SubmittedSigners = submittedSigners,
+                        YourKeySubmitted = yourKeySubmitted,
+                        ExpiresAt = pending.ExpiresAt,
+                        InviteUrl = inviteUrl
+                    });
+                }
+            }
+
+            return result
+                .OrderBy(m => m.YourKeySubmitted)
+                .ThenBy(m => m.ExpiresAt)
+                .ThenBy(m => m.StoreName)
+                .ToList();
+        }
+
+        private string CreateMultisigInviteToken(string storeId, string cryptoCode, string requestId, string userId, DateTimeOffset expiresAt)
+        {
+            var payload = $"{storeId}|{cryptoCode}|{requestId}|{userId}|{expiresAt.ToUnixTimeSeconds()}";
+            var protectedPayload = _multisigInviteProtector.Protect(payload);
+            return WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(protectedPayload));
         }
 
         [HttpGet("{walletId}")]

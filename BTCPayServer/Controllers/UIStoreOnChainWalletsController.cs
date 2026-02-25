@@ -140,10 +140,21 @@ public class UIStoreOnChainWalletsController : Controller
             vm.MultisigSigners ??= Enumerable.Repeat(string.Empty, vm.MultisigTotalSigners.Value).ToArray();
             vm.MultisigSignerFingerprints ??= Enumerable.Repeat(string.Empty, vm.MultisigTotalSigners.Value).ToArray();
             vm.MultisigSignerKeyPaths ??= Enumerable.Repeat(string.Empty, vm.MultisigTotalSigners.Value).ToArray();
-            await PopulateMultisigStoreUsers(vm);
             vm.MultisigPendingSetup = string.IsNullOrEmpty(vm.MultisigRequestId)
                 ? await GetLatestPendingMultisigSetup(vm.StoreId, vm.CryptoCode)
                 : await GetPendingMultisigSetup(vm.StoreId, vm.CryptoCode, vm.MultisigRequestId);
+            if (vm.MultisigPendingSetup is not null)
+            {
+                vm.MultisigRequiredSigners = vm.MultisigPendingSetup.RequiredSigners;
+                vm.MultisigTotalSigners = vm.MultisigPendingSetup.TotalSigners;
+                vm.MultisigScriptType = vm.MultisigPendingSetup.ScriptType;
+                vm.MultisigParticipantUserIds = vm.MultisigPendingSetup.Participants?
+                    .Select(p => p.UserId)
+                    .Where(id => !string.IsNullOrWhiteSpace(id))
+                    .Distinct(StringComparer.Ordinal)
+                    .ToArray();
+            }
+            await PopulateMultisigStoreUsers(vm);
             vm.MultisigRequestId ??= vm.MultisigPendingSetup?.RequestId;
             PopulateMultisigInviteLinks(vm);
         }
@@ -204,10 +215,59 @@ public class UIStoreOnChainWalletsController : Controller
                 return StoreView(vm.ViewName, vm);
             }
 
+            var requestedRequired = vm.MultisigRequiredSigners ?? pending.RequiredSigners;
+            var requestedTotal = vm.MultisigTotalSigners ?? pending.TotalSigners;
+            var requestedScriptType = (vm.MultisigScriptType ?? pending.ScriptType ?? "p2wsh").Trim();
+            var pendingScriptType = (pending.ScriptType ?? "p2wsh").Trim();
+            var requiredMismatch = requestedRequired != pending.RequiredSigners;
+            var scriptMismatch = !string.Equals(requestedScriptType, pendingScriptType, StringComparison.OrdinalIgnoreCase);
+            var totalReduced = requestedTotal < pending.TotalSigners;
+            var totalExpanded = requestedTotal > pending.TotalSigners;
+            if (requiredMismatch || scriptMismatch || totalReduced || totalExpanded)
+            {
+                var configLabel = $"{pending.RequiredSigners}-of-{pending.TotalSigners} ({pendingScriptType.ToUpperInvariant()})";
+                string message;
+                if (scriptMismatch)
+                {
+                    message = $"This request is {configLabel}. Reset request to change script type.";
+                }
+                else if (totalReduced)
+                {
+                    message = $"This request is {configLabel}. Reset request to reduce total signers.";
+                }
+                else if (totalExpanded)
+                {
+                    var missing = requestedTotal - pending.TotalSigners;
+                    var signerWord = missing == 1 ? "signer" : "signers";
+                    message = $"This request is {configLabel}. To continue with {requestedRequired}-of-{requestedTotal} add {missing} more {signerWord}.";
+                }
+                else
+                {
+                    message = $"This request is {configLabel}. To continue with {requestedRequired}-of-{requestedTotal}, click \"Send requests\".";
+                }
+                ModelState.AddModelError(nameof(vm.MultisigRequestId), message);
+                vm.MultisigPendingSetup = pending;
+                vm.MultisigRequestId = pending.RequestId;
+                return StoreView(vm.ViewName, vm);
+            }
+
             if (pending.Participants.Count != pending.TotalSigners || !pending.Participants.All(p => !string.IsNullOrWhiteSpace(p.AccountKey)))
             {
                 ModelState.AddModelError(nameof(vm.MultisigRequestId), "Complete signer collection before creating the multisig wallet.");
                 vm.MultisigPendingSetup = pending;
+                return StoreView(vm.ViewName, vm);
+            }
+            var selectedIds = (vm.MultisigParticipantUserIds ?? Array.Empty<string>())
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Distinct(StringComparer.Ordinal)
+                .ToHashSet(StringComparer.Ordinal);
+            if (selectedIds.Count != pending.TotalSigners ||
+                pending.Participants.Any(p => !selectedIds.Contains(p.UserId)))
+            {
+                ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds),
+                    $"Select exactly {pending.TotalSigners} signers from this request before creating the multisig wallet.");
+                vm.MultisigPendingSetup = pending;
+                vm.MultisigRequestId = pending.RequestId;
                 return StoreView(vm.ViewName, vm);
             }
 
@@ -322,6 +382,11 @@ public class UIStoreOnChainWalletsController : Controller
             ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer["Please provide your extended public key"]);
             return StoreView(vm.ViewName, vm);
         }
+        if (vm.Method == WalletSetupMethod.Multisig)
+        {
+            strategy.IsMultiSigOnServer = true;
+            strategy.DefaultIncludeNonWitnessUtxo = true;
+        }
 
         vm.Config = _dataProtector.ProtectString(JToken.FromObject(strategy, handler.Serializer).ToString());
         ModelState.Remove(nameof(vm.Config));
@@ -343,6 +408,11 @@ public class UIStoreOnChainWalletsController : Controller
                 return StoreView(vm.ViewName, vm);
             }
             await _storeRepo.UpdateStore(store);
+            if (vm.Method == WalletSetupMethod.Multisig && finalizedMultisigRequest is null && !string.IsNullOrEmpty(vm.MultisigRequestId))
+            {
+                finalizedMultisigRequest = await GetPendingMultisigSetup(vm.StoreId, vm.CryptoCode, vm.MultisigRequestId)
+                                          ?? await GetLatestPendingMultisigSetup(vm.StoreId, vm.CryptoCode);
+            }
             if (vm.Method == WalletSetupMethod.Multisig && finalizedMultisigRequest is not null)
             {
                 await SendMultisigWalletCreatedEmails(vm.StoreId, vm.CryptoCode, finalizedMultisigRequest);
@@ -974,12 +1044,32 @@ public class UIStoreOnChainWalletsController : Controller
                 ExpiresAt = DateTimeOffset.UtcNow.AddDays(7)
             };
         }
-        else if (pending.TotalSigners != totalSigners)
+        else
         {
-            ModelState.AddModelError(nameof(vm.MultisigTotalSigners), $"This request is configured for {pending.TotalSigners} signers. Reset request to change N.");
-            vm.MultisigPendingSetup = pending;
-            vm.MultisigRequestId ??= pending.RequestId;
-            return StoreView(vm.ViewName, vm);
+            var requestedScriptType = (vm.MultisigScriptType ?? pending.ScriptType ?? "p2wsh").Trim();
+            var pendingScriptType = (pending.ScriptType ?? "p2wsh").Trim();
+            if (!string.Equals(requestedScriptType, pendingScriptType, StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError(nameof(vm.MultisigScriptType),
+                    $"This request is configured for {pendingScriptType.ToUpperInvariant()}. Reset request to change script type.");
+                vm.MultisigPendingSetup = pending;
+                vm.MultisigRequestId ??= pending.RequestId;
+                return StoreView(vm.ViewName, vm);
+            }
+
+            if (totalSigners < pending.TotalSigners)
+            {
+                ModelState.AddModelError(nameof(vm.MultisigTotalSigners),
+                    $"This request is configured for {pending.TotalSigners} signers. Reset request to reduce N.");
+                vm.MultisigPendingSetup = pending;
+                vm.MultisigRequestId ??= pending.RequestId;
+                return StoreView(vm.ViewName, vm);
+            }
+
+            if (totalSigners > pending.TotalSigners)
+            {
+                pending.TotalSigners = totalSigners;
+            }
         }
 
         if (pending.Participants is null)
@@ -1024,6 +1114,16 @@ public class UIStoreOnChainWalletsController : Controller
         if (pending.Participants.Count == 0)
         {
             ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), "Select at least one signer.");
+            return StoreView(vm.ViewName, vm);
+        }
+
+        if (pending.Participants.Count != pending.TotalSigners)
+        {
+            var missing = pending.TotalSigners - pending.Participants.Count;
+            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds),
+                $"Select exactly {pending.TotalSigners} signers for this request. Missing {missing} signer(s).");
+            vm.MultisigPendingSetup = pending;
+            vm.MultisigRequestId ??= pending.RequestId;
             return StoreView(vm.ViewName, vm);
         }
 
@@ -1147,20 +1247,41 @@ public class UIStoreOnChainWalletsController : Controller
             return;
 
         var sender = await _emailSenderFactory.GetEmailSender(storeId);
+        var walletId = new WalletId(storeId, cryptoCode).ToString();
         var walletLink = Url.Action(
-            nameof(WalletSettings),
-            "UIStoreOnChainWallets",
-            new { storeId, cryptoCode },
+            nameof(UIWalletsController.WalletTransactions),
+            "UIWallets",
+            new { walletId },
             Request.Scheme);
         if (string.IsNullOrEmpty(walletLink))
             return;
 
-        foreach (var participant in pending.Participants.Where(p => !string.IsNullOrWhiteSpace(p.AccountKey)))
+        var walletTypePolicy = cryptoCode.Equals("BTC", StringComparison.OrdinalIgnoreCase)
+            ? Policies.CanModifyBitcoinOnchain
+            : Policies.CanModifyOtherWallets;
+        var participantIds = pending.Participants
+            .Select(p => p.UserId)
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .ToHashSet(StringComparer.Ordinal);
+
+        var recipients = (await _storeRepo.GetStoreUsers(storeId))
+            .Where(u => u?.StoreRole?.Permissions is { } perms
+                        && participantIds.Contains(u.Id)
+                        && perms.Contains(walletTypePolicy)
+                        && (perms.Contains(Policies.CanCreateWalletTransactions)
+                            || perms.Contains(Policies.CanManageWalletTransactions)
+                            || perms.Contains(Policies.CanViewWallet)))
+            .Select(u => u.Email)
+            .Where(email => !string.IsNullOrWhiteSpace(email))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        foreach (var recipient in recipients)
         {
             try
             {
                 sender.SendEmail(
-                    MailboxAddress.Parse(participant.Email),
+                    MailboxAddress.Parse(recipient),
                     $"Multisig wallet created for {cryptoCode}",
                     $"The multisig wallet setup is complete.<br/>Open wallet: <a href=\"{walletLink}\">{walletLink}</a>");
             }

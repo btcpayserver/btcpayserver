@@ -18,6 +18,8 @@
 <form method="post" asp-controller="UIStoreOnChainWallets" asp-action="UpdateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
     <input asp-for="Config" type="hidden"/>
     <input asp-for="Confirmation" type="hidden"/>
+    <input asp-for="Method" type="hidden" />
+    <input asp-for="MultisigRequestId" type="hidden" />
     <input asp-for="AccountKey" type="hidden" />
     <input asp-for="RootFingerprint" type="hidden" />
     <input asp-for="KeyPath" type="hidden" />
@@ -46,4 +48,3 @@
         <button name="command" type="submit" class="btn btn-primary" value="save" id="Confirm" text-translate="true">Confirm</button>
     </div>
 </form>
-

@@ -15,7 +15,7 @@ public class GetMultisigAccountKeyController : HWIController
 
     protected override async Task Run(VaultBridgeUI ui, HwiClient hwi, HwiDeviceClient device, HDFingerprint fingerprint, BTCPayNetwork network, CancellationToken cancellationToken)
     {
-        var selector = new MultisigXPubSelect(ui, ScriptType);
+        var selector = new MultisigXPubSelect(ui, ScriptType, network.CoinType);
         var selection = await selector.GetSelection();
         ui.ShowFeedback(FeedbackType.Loading, ui.StringLocalizer["Fetching public keys..."]);
 

@@ -94,6 +94,7 @@ public partial class UIStoresController : Controller
         _html = html;
         _defaultRules = defaultRules;
         _dataProtector = dataProtector.CreateProtector("ConfigProtector");
+        _multisigInviteProtector = dataProtector.CreateProtector("MultisigInviteLink");
         _lightningNetworkOptions = lightningNetworkOptions.Value;
         _lnHistogramService = lnHistogramService;
         _lightningClientFactory = lightningClientFactory;
@@ -129,6 +130,7 @@ public partial class UIStoresController : Controller
     private readonly IHtmlHelper _html;
     private readonly LightningNetworkOptions _lightningNetworkOptions;
     private readonly IDataProtector _dataProtector;
+    private readonly IDataProtector _multisigInviteProtector;
     private readonly LightningHistogramService _lnHistogramService;
     private readonly LightningClientFactoryService _lightningClientFactory;
     private readonly StoreLabelRepository _storeLabelRepository;
@@ -150,6 +152,9 @@ public partial class UIStoresController : Controller
         var store = await _storeRepo.FindStore(storeId, userId);
         if (store is null)
             return NotFound();
+        // Keep selected store in context/cookie even for limited roles that will be redirected
+        // away from dashboard to wallets.
+        HttpContext.SetStoreData(store);
 
         if ((await _authorizationService.AuthorizeAsync(User, Policies.CanModifyStoreSettings)).Succeeded)
         {

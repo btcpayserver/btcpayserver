@@ -8,40 +8,50 @@
         <input class="form-control" value="@ScriptTypeLabel" readonly style="max-width:24ch;" />
     </div>
 
-    <div class="form-check mt-3 mb-2">
-        <input id="useCustomKeyPath" class="form-check-input" type="checkbox" @bind="UseCustomPath" />
-        <label class="form-check-label" for="useCustomKeyPath">@ui.StringLocalizer["Use custom key path"]</label>
+    <div class="form-group mt-3">
+        <label for="pathMode" class="form-label">@ui.StringLocalizer["Path mode"]</label>
+        <select id="pathMode" @bind="PathMode" class="form-select w-auto">
+            <option value="standard">@ui.StringLocalizer["Standard (Recommended)"]</option>
+            <option value="custom">@ui.StringLocalizer["Custom (Advanced)"]</option>
+        </select>
+        <small class="text-secondary d-block mt-1">@ui.StringLocalizer["Custom mode overrides the standard path completely."]</small>
     </div>
 
-    @if (UseCustomPath)
-    {
-        <div class="form-group">
-            <label for="customKeyPath" class="form-label">@ui.StringLocalizer["Key path"]</label>
-            <input id="customKeyPath" @bind="CustomKeyPath" class="form-control font-monospace" type="text" style="max-width:36ch;"
-                   placeholder="m/48'/1'/0'/2'" />
-            @if (!string.IsNullOrEmpty(Error))
-            {
-                <span class="text-danger">@Error</span>
-            }
-        </div>
-    }
-    else
+    @if (!UseCustomPath)
     {
         <div class="form-group">
             <label for="accountNumber" class="form-label">@ui.StringLocalizer["Account"]</label>
             <input id="accountNumber" @bind="AccountNumber" class="form-control" type="number" min="0" step="1" style="max-width:12ch;" />
         </div>
     }
+
+    <div class="form-group">
+        <label for="keyPath" class="form-label">@ui.StringLocalizer["Key path"]</label>
+        <input id="keyPath"
+               class="form-control font-monospace"
+               type="text"
+               style="max-width:36ch;"
+               placeholder="m/48'/1'/0'/2'"
+               value="@DisplayedKeyPath"
+               @oninput="OnKeyPathInput"
+               readonly="@(!UseCustomPath)" />
+        @if (!string.IsNullOrEmpty(CustomPathValidationError))
+        {
+            <span class="text-danger">@CustomPathValidationError</span>
+        }
+    </div>
 </div>
 
 <button id="vault-confirm" class="btn btn-primary mt-4" type="button" @onclick="OnConfirm">@ui.StringLocalizer["Confirm"]</button>
 
 @code {
     private readonly VaultBridgeUI ui;
+    private readonly KeyPath coinType;
 
-    public MultisigXPubSelect(VaultBridgeUI ui, string scriptType)
+    public MultisigXPubSelect(VaultBridgeUI ui, string scriptType, KeyPath coinType)
     {
         this.ui = ui;
+        this.coinType = coinType;
         ScriptType = scriptType?.ToLowerInvariant() switch
         {
             "p2sh-p2wsh" => "p2sh-p2wsh",
@@ -52,10 +62,32 @@
 
     public string ScriptType { get; }
     public int AccountNumber { get; set; }
-    public bool UseCustomPath { get; set; }
+    public bool UseCustomPath { get; private set; }
+
+    public string PathMode
+    {
+        get => UseCustomPath ? "custom" : "standard";
+        set
+        {
+            var useCustom = string.Equals(value, "custom", StringComparison.OrdinalIgnoreCase);
+            if (UseCustomPath == useCustom)
+                return;
+            UseCustomPath = useCustom;
+            if (useCustom)
+                CustomKeyPath = string.Empty;
+            ui.StateHasChanged();
+        }
+    }
+
     public string CustomKeyPath { get; set; }
     public KeyPath CustomParsedKeyPath { get; private set; }
-    public string Error { get; private set; } = string.Empty;
+    public string CustomPathValidationError =>
+        UseCustomPath && !string.IsNullOrWhiteSpace(CustomKeyPath) && !TryGetCustomPath(out _, out var error) ? error : string.Empty;
+
+    public string DisplayedKeyPath =>
+        UseCustomPath
+            ? CustomKeyPath
+            : $"m/{BuildDefaultPath(coinType, ScriptType, AccountNumber)}";
 
     public string ScriptTypeLabel => ScriptType switch
     {
@@ -78,14 +110,12 @@
     {
         if (UseCustomPath)
         {
-            var normalizedPath = (CustomKeyPath ?? string.Empty).Trim();
-            normalizedPath = normalizedPath.StartsWith("m/", StringComparison.OrdinalIgnoreCase) ? normalizedPath[2..] : normalizedPath;
-            if (!KeyPath.TryParse(normalizedPath, out var parsed))
+            if (!TryGetCustomPath(out var parsed, out _))
             {
-                Error = ui.StringLocalizer["Invalid keypath"].Value;
                 ui.StateHasChanged();
                 return;
             }
+
             CustomParsedKeyPath = parsed;
         }
 
@@ -99,5 +129,49 @@
     public void Dispose()
     {
         _tcs?.TrySetCanceled();
+    }
+
+    private void OnKeyPathInput(ChangeEventArgs e)
+    {
+        if (!UseCustomPath)
+            return;
+        CustomKeyPath = e.Value?.ToString() ?? string.Empty;
+    }
+
+    private static KeyPath BuildDefaultPath(KeyPath coinType, string scriptType, int accountNumber)
+    {
+        accountNumber = Math.Max(0, accountNumber);
+        return scriptType switch
+        {
+            "p2sh-p2wsh" => new KeyPath("48'").Derive(coinType).Derive(accountNumber, true).Derive(1, true),
+            "p2sh" => new KeyPath("45'").Derive(coinType).Derive(accountNumber, true),
+            _ => new KeyPath("48'").Derive(coinType).Derive(accountNumber, true).Derive(2, true)
+        };
+    }
+
+    private bool TryGetCustomPath(out KeyPath parsedPath, out string error)
+    {
+        parsedPath = null;
+        if (string.IsNullOrWhiteSpace(CustomKeyPath))
+        {
+            error = ui.StringLocalizer["Key path is required"].Value;
+            return false;
+        }
+
+        var normalizedPath = (CustomKeyPath ?? string.Empty).Trim()
+            .Replace("’", "'")
+            .Replace("`", "'")
+            .Replace("′", "'")
+            .Replace(" ", string.Empty);
+        normalizedPath = System.Text.RegularExpressions.Regex.Replace(normalizedPath, @"([0-9]+)[hH]", "$1'");
+        normalizedPath = normalizedPath.StartsWith("m/", StringComparison.OrdinalIgnoreCase) ? normalizedPath[2..] : normalizedPath;
+        if (!KeyPath.TryParse(normalizedPath, out parsedPath))
+        {
+            error = ui.StringLocalizer["Invalid keypath"].Value;
+            return false;
+        }
+
+        error = string.Empty;
+        return true;
     }
 }

@@ -7,6 +7,37 @@
 
 <partial name="_StatusMessage" />
 
+@if (Model.MultisigInProgress.Any())
+{
+    <h3 class="h5 mb-2" text-translate="true">Multisig setup in progress</h3>
+    <div class="table-responsive-md mb-4" id="Wallets-MultisigInProgress">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th text-translate="true">Store Name</th>
+                <th text-translate="true">Wallet</th>
+                <th text-translate="true">Status</th>
+                <th class="text-end" text-translate="true">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var multisig in Model.MultisigInProgress)
+            {
+                var keyStatus = multisig.YourKeySubmitted ? "Your key submitted" : "Your key missing";
+                <tr>
+                    <td>@multisig.StoreName</td>
+                    <td>@($"{multisig.RequiredSigners}-of-{multisig.TotalSigners} {multisig.CryptoCode}")</td>
+                    <td class="text-secondary">@($"{multisig.SubmittedSigners}/{multisig.TotalSigners} submitted · {keyStatus}")</td>
+                    <td class="text-end">
+                        <a href="@multisig.InviteUrl" text-translate="true">Continue</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+
 <div class="d-sm-flex justify-content-between mb-2">
     <h2 class="mb-0">
         @ViewData["Title"]

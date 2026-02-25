@@ -161,7 +161,7 @@
                     }
                 </ul>
                 <div class="d-flex justify-content-end">
-                    <button name="command" type="submit" value="finalize-request" class="btn btn-primary text-nowrap" disabled="@(!pendingComplete)">Create multisig</button>
+                    <button id="FinalizeMultisig" name="command" type="submit" value="finalize-request" class="btn btn-primary text-nowrap" disabled="@(!pendingComplete)">Create multisig</button>
                 </div>
             </div>
         }
@@ -186,6 +186,7 @@
         const scriptTypeInput = document.getElementById("MultisigScriptType");
         const preview = document.getElementById("MultisigPreview");
         const createRequestButton = document.getElementById("CreateSignerRequest");
+        const finalizeButton = document.getElementById("FinalizeMultisig");
         const selectedSignerCount = document.getElementById("SelectedSignerCount");
         const selectedSignerSummary = document.getElementById("SelectedSignerSummary");
         const signerCheckboxes = Array.from(document.querySelectorAll(".multisig-signer-checkbox"));
@@ -197,6 +198,10 @@
         const removeButtons = Array.from(document.querySelectorAll(".multisig-remove-signer"));
         const copyInviteButtons = Array.from(document.querySelectorAll(".multisig-copy-invite"));
         const defaultVisibleRows = 8;
+        const pendingComplete = @Json.Serialize(pendingComplete);
+        const pendingTotalSigners = @Json.Serialize(pending?.TotalSigners ?? 0);
+        const pendingRequiredSigners = @Json.Serialize(pending?.RequiredSigners ?? 0);
+        const pendingScriptType = @Json.Serialize((pending?.ScriptType ?? string.Empty).ToLowerInvariant());
         let showAllRows = false;
         const pendingParticipants = @Json.Serialize((pending?.Participants ?? []).Select(p => new
         {
@@ -252,9 +257,17 @@
         function refreshSelectedSigners() {
             const selected = signerCheckboxes.filter(c => c.checked).length;
             selectedSignerCount.textContent = selected.toString();
-            selectedSignerSummary.textContent = `${selected}/${parseCount(totalInput.value, 1)}`;
+            const expectedTotal = parseCount(totalInput.value, 1);
+            selectedSignerSummary.textContent = `${selected}/${expectedTotal}`;
             if (createRequestButton) {
                 createRequestButton.disabled = selected === 0;
+            }
+            if (finalizeButton) {
+                const totalMatchesPending = parseCount(totalInput.value, 1) === pendingTotalSigners;
+                const requiredMatchesPending = parseCount(requiredInput.value, 1) === pendingRequiredSigners;
+                const scriptMatchesPending = (scriptTypeInput.value || "").toLowerCase() === (pendingScriptType || "");
+                const configMatchesPending = totalMatchesPending && requiredMatchesPending && scriptMatchesPending;
+                finalizeButton.disabled = !pendingComplete || !configMatchesPending || selected !== pendingTotalSigners;
             }
             signerItems.forEach(item => {
                 const checkbox = item.querySelector(".multisig-signer-checkbox");
@@ -304,12 +317,18 @@
             }
         }
 
-        totalInput.addEventListener("input", refreshPreview);
+        totalInput.addEventListener("input", () => {
+            refreshPreview();
+            refreshSelectedSigners();
+        });
         requiredInput.addEventListener("input", () => {
             refreshPreview();
             refreshSelectedSigners();
         });
-        scriptTypeInput.addEventListener("change", refreshPreview);
+        scriptTypeInput.addEventListener("change", () => {
+            refreshPreview();
+            refreshSelectedSigners();
+        });
         signerCheckboxes.forEach(c => c.addEventListener("change", refreshSelectedSigners));
         searchInput.addEventListener("input", () => {
             showAllRows = false;

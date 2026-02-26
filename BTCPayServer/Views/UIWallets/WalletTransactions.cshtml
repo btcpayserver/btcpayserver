@@ -103,6 +103,7 @@
             const filterUrl = @Safe.Json(Url.Action("WalletTransactions", new { walletId, labelFilter = "LABEL_PLACEHOLDER" }));
             const activeLabel = @Safe.Json(labelFilter);
             const $menu = document.getElementById('LabelDropdownMenu');
+            const maxVisibleLabels = @maxVisibleLabels;
 
             function renderLabelItems(labels) {
                 $menu.querySelectorAll('.label-filter-item').forEach(el => el.remove());

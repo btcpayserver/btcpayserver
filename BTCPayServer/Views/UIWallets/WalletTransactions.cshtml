@@ -15,6 +15,7 @@
     var wallet = walletId != null ? WalletId.Parse(walletId) : new WalletId(storeId, cryptoCode);
     storeId = wallet.StoreId;
     var sortedLabels = Model.Labels.OrderBy(l => l.Text, StringComparer.OrdinalIgnoreCase).ToList();
+    const int maxVisibleLabels = 20;
 
     ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Transactions)}-{Model.CryptoCode}", StringLocalizer["{0} Transactions", Model.CryptoCode])
         .SetCategory(WellKnownCategories.ForWallet(Model.CryptoCode)));
@@ -91,7 +92,6 @@
         const $list = document.getElementById('WalletTransactionsList');
         const $dropdowns = document.getElementById('Dropdowns');
         const $indicator = document.getElementById('LoadingIndicator');
-        const maxVisibleLabels = 20;
 
         delegate('click', '#GoToTop', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -217,16 +217,16 @@
                 }
             </button>
             @{
-                var visibleLabels = sortedLabels.Take(20);
+                var visibleLabels = sortedLabels.Take(maxVisibleLabels);
             }
             <ul class="dropdown-menu mt-1 py-0" id="LabelDropdownMenu" style="min-width:280px">
-                <li class="px-2 pt-2 pb-2@(sortedLabels.Count() > 20 ? "" : " d-none")" id="LabelSearchContainer">
+                <li class="px-2 pt-2 pb-2@(sortedLabels.Count() > maxVisibleLabels ? "" : " d-none")" id="LabelSearchContainer">
                     <div class="input-group border rounded">
                         <span class="input-group-text border-0 text-muted px-2" style="background:transparent">
                             <vc:icon symbol="actions-search" />
                         </span>
                         <input type="text" class="form-control border-0 shadow-none ps-0 bg-transparent" id="LabelSearch"
-                            placeholder="Search labels..." autocomplete="off" aria-label="Search labels" />
+                            placeholder="Search labels..." autocomplete="off" aria-label="Search labels"/>
                     </div>
                 </li>
 

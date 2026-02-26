@@ -227,3 +227,88 @@
 body.global-search-open {
     overflow: hidden;
 }
+
+@media (max-width: 991px) {
+    body.global-search-open .tooltip {
+        display: none !important;
+    }
+}
+
+@media (max-width: 991px) {
+    #globalNav .globalSearch-shell {
+        display: none;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: 100vw;
+        min-width: 100vw;
+        max-width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        box-sizing: border-box;
+        z-index: 1048;
+        padding:
+            calc(env(safe-area-inset-top, 0px) + var(--btcpay-space-s))
+            calc(env(safe-area-inset-right, 0px) + var(--btcpay-space-m))
+            calc(env(safe-area-inset-bottom, 0px) + var(--btcpay-space-m))
+            calc(env(safe-area-inset-left, 0px) + var(--btcpay-space-m));
+        background: var(--btcpay-body-bg);
+        overflow: hidden;
+    }
+
+    #globalNav.globalSearch-mobile-open .globalSearch-shell {
+        display: flex;
+        flex-direction: column;
+    }
+
+    #globalNav.globalSearch-mobile-open #mainNavSettings,
+    #globalNav.globalSearch-mobile-open #globalSearchMobileToggle {
+        display: none !important;
+    }
+
+    #globalNav .globalSearch-bar {
+        min-height: calc(var(--mobile-header-height) - (2 * var(--btcpay-space-s)));
+        width: 100%;
+        flex: 0 0 auto;
+        gap: var(--btcpay-space-xs);
+        padding: 0 var(--btcpay-space-s);
+    }
+
+    #globalNav .globalSearch-input {
+        /* Prevent iOS zoom on focus while keeping desktop font-size unchanged */
+        font-size: 16px;
+    }
+
+    #globalNav .globalSearch-panel {
+        position: relative;
+        top: auto;
+        right: auto;
+        left: auto;
+        flex: 1 1 auto;
+        width: 100%;
+        min-height: 0;
+        max-height: none;
+        margin-top: var(--btcpay-space-s);
+        border: 1px solid var(--btcpay-body-border-light);
+        border-radius: var(--btcpay-border-radius-l);
+        box-shadow: none;
+        padding: var(--btcpay-space-s);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #globalNav .globalSearch-group-title {
+        margin: 0;
+    }
+
+    #globalNav .globalSearch-group-header {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    #globalNav .globalSearch-item {
+        padding: .65rem var(--btcpay-space-s);
+    }
+}

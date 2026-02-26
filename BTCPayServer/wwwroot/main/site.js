@@ -279,8 +279,12 @@ const initGlobalNavTooltips = () => {
     }
 
     if (!window.bootstrap?.Tooltip) return;
-    const tooltipTargets = Array.from(header.querySelectorAll('[data-global-nav-tooltip]'));
+    const tooltipTargets = Array.from(header.querySelectorAll('[data-global-nav-tooltip]'))
+        // Bootstrap supports only one component instance per element.
+        // Dropdown toggles therefore cannot also be Bootstrap tooltips.
+        .filter(target => (target.dataset.bsToggle || '').toLowerCase() !== 'dropdown');
     if (!tooltipTargets.length) return;
+    const tooltipTargetSet = new Set(tooltipTargets);
 
     const getTooltipOptions = target => ({
         trigger: target.dataset.bsTrigger || 'hover',
@@ -298,7 +302,9 @@ const initGlobalNavTooltips = () => {
 
     header.addEventListener('click', event => {
         const target = event.target;
-        if (!(target instanceof Element) || !target.closest('[data-global-nav-tooltip]')) return;
+        if (!(target instanceof Element)) return;
+        const tooltipTarget = target.closest('[data-global-nav-tooltip]');
+        if (!(tooltipTarget instanceof Element) || !tooltipTargetSet.has(tooltipTarget)) return;
         window.requestAnimationFrame(hideAllTooltips);
     });
     header.addEventListener('shown.bs.dropdown', hideAllTooltips);

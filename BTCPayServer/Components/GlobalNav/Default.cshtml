@@ -143,10 +143,10 @@
                     </li>
                 }
                 <li class="py-1 px-3">
-                    <label class="d-flex align-items-center justify-content-between gap-3 nav-link">
-                        <span class="fw-semibold" text-translate="true">Hide Sensitive Info</span>
+                    <div class="d-flex align-items-center justify-content-between gap-3 nav-link">
+                        <label for="HideSensitiveInfo" class="fw-semibold mb-0 cursor-pointer" text-translate="true">Hide Sensitive Info</label>
                         <input id="HideSensitiveInfo" name="HideSensitiveInfo" type="checkbox" class="btcpay-toggle" />
-                    </label>
+                    </div>
                     <script>
                         document.getElementById('HideSensitiveInfo').checked = window.localStorage.getItem('btcpay-hide-sensitive-info') === 'true';
                     </script>

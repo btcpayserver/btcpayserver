@@ -1260,7 +1260,7 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             await s.RegisterNewUser(true);
             await s.CreateNewStore();
-            await s.GenerateWallet("BTC", "", true);
+            await s.GenerateWallet();
 
             // Create a payment request
             await s.GoToStore();
@@ -1443,7 +1443,7 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             await s.RegisterNewUser(true);
             await s.CreateNewStore();
-            await s.GenerateWallet("BTC", "", true);
+            await s.GenerateWallet();
 
             await s.GoToStore();
             await s.Page.ClickAsync("#menu-item-PaymentRequests");

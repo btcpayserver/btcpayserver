@@ -10,8 +10,8 @@ namespace BTCPayServer.Plugins.Translations.Controllers;
 
 [AllowAnonymous]
 [Area(TranslationsPlugin.Area)]
-public class UICheatTranslationController(
-    IEnumerable<IDefaultTranslationProvider> defaultTranslationProviders) : Controller
+public class CheatTranslationController(
+    IEnumerable<IDefaultTranslationProvider> defaultTranslationProviders) : ControllerBase
 {
     [HttpGet("cheat/translations/default-en")]
     [CheatModeRoute]

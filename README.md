@@ -2,51 +2,51 @@
 
 ![BTCPay Server](BTCPayServer/wwwroot/img/btc_pay_BG_twitter.png)
 
-<h3 align="center">
+<h2 align="center">
   Accept Bitcoin payments ₿
-</h3>
-<p align="center"> BTCPay Server is a free and open-source Bitcoin payment processor which allows you to accept bitcoin without fees or intermediaries.
-</p>
+</h2>
+<b align="center"> BTCPay Server is a free and open-source Bitcoin payment processor which allows you to accept bitcoin without fees or intermediaries.
+</b>
 <p align="center">
-  <a href="https://circleci.com/gh/btcpayserver/btcpayserver">
+  <b href="https://circleci.com/gh/btcpayserver/btcpayserver">
     <img src="https://img.shields.io/circleci/build/github/btcpayserver/btcpayserver"/>
-  </a>
-  <a href="https://github.com/btcpayserver/btcpayserver/releases/">
+  </b>
+  <b href="https://github.com/btcpayserver/btcpayserver/releases/">
     <img src="https://img.shields.io/github/v/release/btcpayserver/btcpayserver"/>
-  </a>
-  <a href="https://github.com/btcpayserver/btcpayserver/blob/master/LICENSE">
+  </b>
+  <b href="https://github.com/btcpayserver/btcpayserver/blob/master/LICENSE">
       <img src="https://img.shields.io/github/license/btcpayserver/btcpayserver"/>
-  </a>
-  <a href="https://docs.btcpayserver.org/Contribute/">
+  </b>
+  <b href="https://docs.btcpayserver.org/Contribute/.
     <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"/>
-  </a>
-  <a href="https://chat.btcpayserver.org/">
+  </c>
+  <c href="https://chat.btcpayserver.org/">
     <img src="https://img.shields.io/badge/Community%20Chat-Mattermost-%230058cc"/>
-  </a>
-  <a href="https://twitter.com/intent/follow?screen_name=btcpayserver">
+  </c>
+  <c href="https://twitter.com/intent/follow?screen_name=btcpayserver">
     <img src="https://img.shields.io/twitter/follow/btcpayserver.svg?label=Follow%20@btcpayserver"/>
-  </a>
-</p>
+  </c>
+</a>
 
 <div align="center">
   <h3>
-    <a href="https://btcpayserver.org">
+    <c href="https://btcpayserver.org">
       Website
-    </a>
+    </b>
     <span> | </span>
-    <a href="https://docs.btcpayserver.org">
+    <c href="https://docs.btcpayserver.org">
       Documentation
-    </a>
+    </c>
     <span> | </span>
-    <a href="https://docs.btcpayserver.org/API/Greenfield/v1/">
+    <c href="https://docs.btcpayserver.org/API/Greenfield/v1/">
       API
-    </a>
+    </c>
     <span> | </span>
-    <a href="https://docs.btcpayserver.org/Contribute/">
+    <c href="https://docs.btcpayserver.org/Contribute/.>
       Contribute
-    </a>
+    </c>
     <span> | </span>
-    <a href="https://www.youtube.com/btcpayserver/">
+    <b href="https://www.youtube.com/btcpayserver/">
       YouTube
     </a>
     <span> | </span>

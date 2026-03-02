@@ -227,13 +227,13 @@
                             <vc:icon symbol="actions-search" />
                         </span>
                         <input type="text" class="form-control border-0 shadow-none ps-0 bg-transparent" id="LabelSearch"
-                            placeholder="@StringLocalizer["Search labels..."]" autocomplete="off" aria-label="@StringLocalizer["Search labels..."]"/>
+                            placeholder="@StringLocalizer["Search labels…"]" autocomplete="off" aria-label="@StringLocalizer["Search labels…"]"/>
                     </div>
                 </li>
 
                 @foreach (var label in visibleLabels)
                 {
-                    <li class="label-filter-item"><a href="@Url.Action("WalletTransactions", new { walletId, labelFilter = label.Text })" class="dropdown-item transaction-label-text@(labelFilter == label.Text ? " active" : string.Empty)" style="--btcpay-dropdown-link-active-bg:@label.Color;--btcpay-dropdown-link-active-color:@label.TextColor;">@label.Text</a></li>
+                    <li class="label-filter-item"><a asp-route-labelFilter="@label.Text" class="dropdown-item transaction-label-text@(labelFilter == label.Text ? " active" : string.Empty)" style="--btcpay-dropdown-link-active-bg:@label.Color;--btcpay-dropdown-link-active-color:@label.TextColor;">@label.Text</a></li>
                 }
                 @if (!string.IsNullOrEmpty(labelFilter))
                 {

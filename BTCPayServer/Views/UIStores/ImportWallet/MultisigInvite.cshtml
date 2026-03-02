@@ -4,7 +4,7 @@
 @{
     Layout = "~/Views/Shared/_LayoutSimple.cshtml";
     ViewData["Title"] = "Submit multisig signer key";
-    this.ViewData.SetBlazorAllowed(true);
+    ViewData.SetBlazorAllowed(true);
     var hasPrefilledValues = !string.IsNullOrWhiteSpace(Model.AccountKey) ||
                              !string.IsNullOrWhiteSpace(Model.MasterFingerprint) ||
                              !string.IsNullOrWhiteSpace(Model.AccountKeyPath);
@@ -102,12 +102,10 @@
                 return;
             }
 
-            let hardwareFetched = false;
+            let currentMode = initialMode;
 
-            function hasAllSignerValues() {
-                return !!(accountKey.value && accountKey.value.trim() &&
-                          masterFingerprint.value && masterFingerprint.value.trim() &&
-                          accountKeyPath.value && accountKeyPath.value.trim());
+            function hasRequiredSignerValues() {
+                return !!(accountKey.value && accountKey.value.trim());
             }
 
             function setReadonly(readonly) {
@@ -116,8 +114,18 @@
                 accountKeyPath.readOnly = readonly;
             }
 
+            function refreshHardwareState() {
+                const ready = hasRequiredSignerValues();
+                signerFields.classList.toggle("d-none", !ready);
+                if (hardwareHint) {
+                    hardwareHint.classList.toggle("d-none", ready);
+                }
+                submitButton.disabled = !ready;
+            }
+
             function setMode(mode) {
                 const useHardware = mode === "hardware";
+                currentMode = mode;
                 hardwareButton.classList.toggle("active", useHardware);
                 manualButton.classList.toggle("active", !useHardware);
                 hardwareButton.setAttribute("aria-selected", useHardware ? "true" : "false");
@@ -126,12 +134,7 @@
                 setReadonly(useHardware);
 
                 if (useHardware) {
-                    const ready = hardwareFetched && hasAllSignerValues();
-                    signerFields.classList.toggle("d-none", !ready);
-                    if (hardwareHint) {
-                        hardwareHint.classList.toggle("d-none", ready);
-                    }
-                    submitButton.disabled = !ready;
+                    refreshHardwareState();
                 } else {
                     signerFields.classList.remove("d-none");
                     if (hardwareHint) {
@@ -152,11 +155,42 @@
 
             setMode(initialMode);
 
+            function parseAccountOrigin() {
+                const raw = (accountKey.value || "").trim();
+                const match = raw.match(/^\[([0-9a-fA-F]{8})(\/[0-9hH'\/]+)\](.+)$/);
+                if (!match) {
+                    return;
+                }
+
+                const fingerprint = match[1].toLowerCase();
+                const path = match[2].replace(/[hH]/g, "'");
+                const xpub = (match[3] || "").trim();
+                if (!xpub) {
+                    return;
+                }
+
+                accountKey.value = xpub;
+                masterFingerprint.value = fingerprint;
+                accountKeyPath.value = `m${path}`;
+            }
+
+            accountKey.addEventListener("input", () => {
+                parseAccountOrigin();
+                if (currentMode === "hardware") {
+                    refreshHardwareState();
+                }
+            });
+            accountKey.addEventListener("change", () => {
+                parseAccountOrigin();
+                if (currentMode === "hardware") {
+                    refreshHardwareState();
+                }
+            });
+
             vault.setMultisigInviteXPub = function (data) {
                 accountKey.value = data.accountKey || "";
                 masterFingerprint.value = data.masterFingerprint || "";
                 accountKeyPath.value = data.accountKeyPath || "";
-                hardwareFetched = hasAllSignerValues();
                 setMode("hardware");
             };
         })();

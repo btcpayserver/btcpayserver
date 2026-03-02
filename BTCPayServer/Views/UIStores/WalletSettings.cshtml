@@ -150,6 +150,13 @@
     @for (var i = 0; i < Model.AccountKeys.Count; i++)
     {
         <h4 class="mt-5 mb-3">@StringLocalizer["Account Key"] @i</h4>
+        @if (!string.IsNullOrWhiteSpace(Model.AccountKeys[i].SignerDisplay))
+        {
+            <div class="text-secondary mb-2">
+                <span class="fw-semibold">@StringLocalizer["Signer"]:</span>
+                <span>@Model.AccountKeys[i].SignerDisplay</span>
+            </div>
+        }
         <div class="form-group">
             <div class="d-flex align-items-center justify-content-between">
                 <label asp-for="@Model.AccountKeys[i].AccountKey" class="form-label"></label>

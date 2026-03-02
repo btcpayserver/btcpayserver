@@ -90,10 +90,8 @@ public partial class UIStoresController
 
             var participant = pending.Participants.FirstOrDefault(p =>
                 string.Equals(p.UserId, userId, StringComparison.Ordinal));
-            if (participant is null)
-                continue;
-            if (!string.IsNullOrWhiteSpace(participant.AccountKey))
-                continue;
+            var didParticipate = participant is not null;
+            var yourKeySubmitted = !string.IsNullOrWhiteSpace(participant?.AccountKey);
 
             var requestedCryptoCode = pending.CryptoCode ?? cryptoCode;
             var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(requestedCryptoCode);
@@ -105,11 +103,28 @@ public partial class UIStoresController
             }
 
             var submittedSigners = pending.Participants.Count(p => !string.IsNullOrWhiteSpace(p.AccountKey));
-            var token = CreateMultisigInviteToken(store.Id, requestedCryptoCode, pending.RequestId, userId, pending.ExpiresAt);
-            var inviteUrl = Url.Action(
-                nameof(UIMultisigInviteController.SubmitMultisigSigner),
-                "UIMultisigInvite",
-                new { storeId = store.Id, cryptoCode = requestedCryptoCode, token },
+            var inviteUrl = didParticipate
+                ? Url.Action(
+                    nameof(UIMultisigInviteController.SubmitMultisigSigner),
+                    "UIMultisigInvite",
+                    new
+                    {
+                        storeId = store.Id,
+                        cryptoCode = requestedCryptoCode,
+                        token = CreateMultisigInviteToken(store.Id, requestedCryptoCode, pending.RequestId, userId, pending.ExpiresAt)
+                    },
+                    Request.Scheme)
+                : null;
+            var setupUrl = Url.Action(
+                nameof(UIStoreOnChainWalletsController.ImportWallet),
+                "UIStoreOnChainWallets",
+                new
+                {
+                    storeId = store.Id,
+                    cryptoCode = requestedCryptoCode,
+                    method = "multisig",
+                    multisigRequestId = pending.RequestId
+                },
                 Request.Scheme);
 
             result.Add(new MultisigInProgressViewModel
@@ -122,14 +137,17 @@ public partial class UIStoresController
                 RequiredSigners = pending.RequiredSigners,
                 TotalSigners = pending.TotalSigners,
                 SubmittedSigners = submittedSigners,
-                YourKeySubmitted = false,
+                DidParticipate = didParticipate,
+                YourKeySubmitted = yourKeySubmitted,
                 ExpiresAt = pending.ExpiresAt,
-                InviteUrl = inviteUrl
+                InviteUrl = inviteUrl,
+                SetupUrl = setupUrl
             });
         }
 
         return result
-            .OrderBy(m => m.YourKeySubmitted)
+            .OrderBy(m => m.ReadyToCreateWallet ? 0 : 1)
+            .ThenBy(m => m.CanSubmitSignerKey ? 0 : 1)
             .ThenBy(m => m.ExpiresAt)
             .ToList();
     }

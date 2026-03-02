@@ -21,7 +21,15 @@
     {
         <div class="form-group">
             <label for="accountNumber" class="form-label">@ui.StringLocalizer["Account"]</label>
-            <input id="accountNumber" @bind="AccountNumber" class="form-control" type="number" min="0" step="1" style="max-width:12ch;" />
+            <input id="accountNumber"
+                   class="form-control"
+                   type="text"
+                   inputmode="numeric"
+                   pattern="[0-9]*"
+                   style="max-width:12ch;"
+                   value="@AccountInput"
+                   @oninput="OnAccountNumberInput"
+                   @onchange="OnAccountNumberInput" />
         </div>
     }
 
@@ -62,6 +70,7 @@
 
     public string ScriptType { get; }
     public int AccountNumber { get; set; }
+    public string AccountInput { get; set; } = "0";
     public bool UseCustomPath { get; private set; }
 
     public string PathMode
@@ -118,6 +127,10 @@
 
             CustomParsedKeyPath = parsed;
         }
+        else
+        {
+            SetAccountNumberFromRaw(AccountInput);
+        }
 
         ui.Elements.Remove(this);
         ui.Elements.RemoveAt(ui.Elements.Count - 1);
@@ -136,6 +149,31 @@
         if (!UseCustomPath)
             return;
         CustomKeyPath = e.Value?.ToString() ?? string.Empty;
+        ui.StateHasChanged();
+    }
+
+    private void OnAccountNumberInput(ChangeEventArgs e)
+    {
+        if (UseCustomPath)
+            return;
+        var raw = e.Value?.ToString() ?? string.Empty;
+        AccountInput = raw;
+        SetAccountNumberFromRaw(raw);
+        ui.StateHasChanged();
+    }
+
+    private void SetAccountNumberFromRaw(string raw)
+    {
+        if (int.TryParse(raw, out var account))
+        {
+            AccountNumber = Math.Max(0, account);
+            AccountInput = AccountNumber.ToString();
+        }
+        else if (string.IsNullOrWhiteSpace(raw))
+        {
+            AccountNumber = 0;
+            AccountInput = "0";
+        }
     }
 
     private static KeyPath BuildDefaultPath(KeyPath coinType, string scriptType, int accountNumber)

@@ -386,6 +386,17 @@ public class UIStoreOnChainWalletsController : Controller
         {
             strategy.IsMultiSigOnServer = true;
             strategy.DefaultIncludeNonWitnessUtxo = true;
+
+            if (finalizedMultisigRequest is null && !string.IsNullOrEmpty(vm.MultisigRequestId))
+            {
+                finalizedMultisigRequest = await GetPendingMultisigSetup(vm.StoreId, vm.CryptoCode, vm.MultisigRequestId)
+                                          ?? await GetLatestPendingMultisigSetup(vm.StoreId, vm.CryptoCode);
+            }
+
+            if (finalizedMultisigRequest is not null)
+            {
+                ApplyMultisigSignerIdentities(finalizedMultisigRequest, strategy, network);
+            }
         }
 
         vm.Config = _dataProtector.ProtectString(JToken.FromObject(strategy, handler.Serializer).ToString());
@@ -656,7 +667,10 @@ public class UIStoreOnChainWalletsController : Controller
                 {
                     AccountKey = e.AccountKey.ToString(),
                     MasterFingerprint = e.RootFingerprint is { } fp ? fp.ToString() : null,
-                    AccountKeyPath = e.AccountKeyPath == null ? "" : $"m/{e.AccountKeyPath}"
+                    AccountKeyPath = e.AccountKeyPath == null ? "" : $"m/{e.AccountKeyPath}",
+                    SignerUserId = e.SignerUserId,
+                    SignerEmail = e.SignerEmail,
+                    SignerName = e.SignerName
                 }).ToList(),
             Config = _dataProtector.ProtectString(JToken.FromObject(derivation, handler.Serializer).ToString()),
             PayJoinEnabled = storeBlob.PayJoinEnabled,
@@ -1438,6 +1452,47 @@ public class UIStoreOnChainWalletsController : Controller
 
             strategy.AccountKeySettings[i].AccountKeyPath = parsedPath;
             strategy.AccountKeySettings[i].RootFingerprint = new HDFingerprint(Encoders.Hex.DecodeData(fp));
+        }
+    }
+
+    private static void ApplyMultisigSignerIdentities(PendingMultisigSetupData pending, DerivationSchemeSettings strategy, BTCPayNetwork network)
+    {
+        if (pending?.Participants is null || pending.Participants.Count == 0 || strategy.AccountKeySettings is null || strategy.AccountKeySettings.Length == 0)
+            return;
+
+        var participantsByKey = new Dictionary<string, PendingMultisigSetupParticipantData>(StringComparer.Ordinal);
+        foreach (var participant in pending.Participants)
+        {
+            var key = NormalizeAccountKey(participant.AccountKey, network);
+            if (string.IsNullOrEmpty(key) || participantsByKey.ContainsKey(key))
+                continue;
+            participantsByKey[key] = participant;
+        }
+
+        foreach (var accountSettings in strategy.AccountKeySettings)
+        {
+            var key = NormalizeAccountKey(accountSettings.AccountKey?.ToString(), network);
+            if (string.IsNullOrEmpty(key) || !participantsByKey.TryGetValue(key, out var participant))
+                continue;
+
+            accountSettings.SignerUserId = participant.UserId;
+            accountSettings.SignerEmail = participant.Email;
+            accountSettings.SignerName = participant.Name;
+        }
+    }
+
+    private static string NormalizeAccountKey(string accountKey, BTCPayNetwork network)
+    {
+        if (string.IsNullOrWhiteSpace(accountKey))
+            return null;
+
+        try
+        {
+            return new BitcoinExtPubKey(accountKey.Trim(), network.NBitcoinNetwork).ToString();
+        }
+        catch
+        {
+            return null;
         }
     }
 

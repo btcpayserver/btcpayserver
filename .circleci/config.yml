@@ -63,7 +63,7 @@ jobs:
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined
   docker:
     docker:
-      - image: cimg/base:stable
+      - image: cimg/base:2024.11
     steps:
       - setup_remote_docker
       - checkout
@@ -77,7 +77,8 @@ jobs:
             LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
             GIT_COMMIT=$(git rev-parse HEAD)
             #
-            docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
+            docker version
+            echo "$DOCKERHUB_PASS" | docker login --username "$DOCKERHUB_USER" --password-stdin
             docker buildx create --use
             DOCKER_BUILDX_OPTS="--platform linux/amd64,linux/arm64,linux/arm/v7 --build-arg GIT_COMMIT=${GIT_COMMIT} --push"
             docker buildx build $DOCKER_BUILDX_OPTS -t $DOCKERHUB_REPO:$LATEST_TAG .

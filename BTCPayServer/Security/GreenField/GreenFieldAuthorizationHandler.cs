@@ -17,17 +17,20 @@ namespace BTCPayServer.Security.Greenfield
         private readonly HttpContext _httpContext;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly StoreRepository _storeRepository;
+        private readonly APIKeyRepository _apiKeyRepository;
         private readonly IPluginHookService _pluginHookService;
 
         public GreenfieldAuthorizationHandler(IHttpContextAccessor httpContextAccessor,
             UserManager<ApplicationUser> userManager,
             StoreRepository storeRepository,
-            IPluginHookService pluginHookService)
+            IPluginHookService pluginHookService,
+            APIKeyRepository apiKeyRepository)
         {
             _httpContext = httpContextAccessor.HttpContext;
             _userManager = userManager;
             _storeRepository = storeRepository;
             _pluginHookService = pluginHookService;
+            _apiKeyRepository = apiKeyRepository;
         }
 
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context,
@@ -108,6 +111,10 @@ namespace BTCPayServer.Security.Greenfield
 
             if (success)
             {
+                if (_httpContext.GetAPIKey(out var apiKey))
+                {
+                    _ = _apiKeyRepository.RecordPermissionUsage(apiKey, Permission.Create(policy));
+                }
                 context.Succeed(requirement);
             }
             _httpContext.Items[RequestedPermissionKey] = policy;

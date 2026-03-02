@@ -7,9 +7,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace BTCPayServer.Migrations
 {
+
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250605063018_IncludeAPIKeyPermissionUsageTable")]
-    public partial class IncludeAPIKeyPermissionUsageTable : Migration
+    [Migration("20260302142959_includeApiKeyUsage")]
+    public partial class includeApiKeyUsage : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -19,8 +20,8 @@ namespace BTCPayServer.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
-                    ApiKey = table.Column<string>(type: "text", nullable: false),
-                    Permission = table.Column<string>(type: "text", nullable: false),
+                    ApiKey = table.Column<string>(type: "text", nullable: true),
+                    Permission = table.Column<string>(type: "text", nullable: true),
                     LastUsed = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UsageCount = table.Column<int>(type: "integer", nullable: false)
                 },
@@ -28,24 +29,6 @@ namespace BTCPayServer.Migrations
                 {
                     table.PrimaryKey("PK_ApiKeyPermissionUsages", x => x.Id);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ApiKeyPermissionUsages_ApiKey",
-                table: "ApiKeyPermissionUsages",
-                column: "ApiKey");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ApiKeyPermissionUsages_ApiKey_Permission",
-                table: "ApiKeyPermissionUsages",
-                columns: new[] { "ApiKey", "Permission" });
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_ApiKeyPermissionUsages_ApiKeys_ApiKey",
-                table: "ApiKeyPermissionUsages",
-                column: "ApiKey",
-                principalTable: "ApiKeys",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
         }
 
         /// <inheritdoc />

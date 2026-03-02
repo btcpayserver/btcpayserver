@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
-using BTCPayServer.Data.Data;
 using BTCPayServer.Plugins.Shopify.ApiModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;

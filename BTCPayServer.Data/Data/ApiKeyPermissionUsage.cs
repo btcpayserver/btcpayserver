@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace BTCPayServer.Data.Data
+namespace BTCPayServer.Data
 {
     public class ApiKeyPermissionUsage
     {

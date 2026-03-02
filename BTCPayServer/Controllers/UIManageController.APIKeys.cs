@@ -290,46 +290,6 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(APIKeys));
         }
 
-        [HttpGet("~/api-keys/{id}/edit")]
-        public async Task<IActionResult> EditAPIKey(string id)
-        {
-            var key = await _apiKeyRepository.GetKey(id);
-            if (key == null || key.UserId != _userManager.GetUserId(User))
-            {
-                return NotFound();
-            }
-            var viewModel = new EditApiKeyViewModel { Label = key.Label, Id = key.Id };
-            await SetViewModelValues(viewModel);
-            var existingPermissions = Permission.ToPermissions(key.GetBlob().Permissions);
-            foreach (var permissionItem in viewModel.PermissionValues)
-            {
-                var permissionInKey = existingPermissions.FirstOrDefault(p => p.Policy == permissionItem.Permission);
-                bool hasPermission = permissionInKey != null;
-                permissionItem.Value = hasPermission;
-                permissionItem.StoreMode = hasPermission && !string.IsNullOrEmpty(permissionInKey.Scope) ? EditApiKeyViewModel.ApiKeyStoreMode.Specific : EditApiKeyViewModel.ApiKeyStoreMode.AllStores;
-                permissionItem.SpecificStores = hasPermission && !string.IsNullOrEmpty(permissionInKey.Scope) ? new List<string> { permissionInKey.Scope } : new List<string>();
-            }
-            return View(viewModel);
-        }
-
-        [HttpPost("~/api-keys/{id}/edit")]
-        public async Task<IActionResult> EditAPIKey(string id, EditApiKeyViewModel viewModel)
-        {
-            await SetViewModelValues(viewModel);
-            var ar = HandleCommands(viewModel);
-            if (ar != null)
-                return ar;
-
-            var permissions = GetPermissionsFromViewModel(viewModel).Distinct().ToArray();
-            await _apiKeyRepository.UpdateKey(id, permissions, viewModel.Label, _userManager.GetUserId(User));
-            TempData.SetStatusMessageModel(new StatusMessageModel
-            {
-                Severity = StatusMessageModel.StatusSeverity.Success,
-                Message = "API key updated successfully"
-            });
-            return RedirectToAction(nameof(APIKeys));
-        }
-
         private async Task<APIKeyData> CheckForMatchingApiKey(IEnumerable<Permission> requestedPermissions, AuthorizeApiKeysViewModel vm)
         {
             if (string.IsNullOrEmpty(vm.ApplicationIdentifier) || vm.RedirectUrl == null)

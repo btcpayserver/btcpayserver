@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -134,7 +134,7 @@ public class SubscriberData : BaseEntityData
     {
         NextPlan:
         {
-            Status: Data.Subscriptions.PlanData.PlanStatus.Active
+            Status: PlanData.PlanStatus.Active
         },
         IsSuspended: false
     }
@@ -143,7 +143,7 @@ public class SubscriberData : BaseEntityData
     && (newSubscriber || this.PlanId != this.NextPlan.Id || this.IsNextPlanRenewable);
 
     [NotMapped]
-    public bool IsNextPlanRenewable => this.NextPlan is { Renewable: true, Status: Data.Subscriptions.PlanData.PlanStatus.Active };
+    public bool IsNextPlanRenewable => this.NextPlan is { Renewable: true, Status: PlanData.PlanStatus.Active };
 
     public PhaseTypes GetExpectedPhase(DateTimeOffset time)
         => this switch

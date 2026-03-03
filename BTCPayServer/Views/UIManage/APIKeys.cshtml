@@ -80,6 +80,8 @@
                                     <a asp-action="DeleteAPIKey" asp-route-id="@keyData.Id" asp-controller="UIManage" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Any application using the API key <strong>@Html.Encode(keyData.Label ?? keyData.Id)</strong> will immediately lose access." data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Delete</a>
                                     <span>-</span>
                                     <button type="button" class="btn btn-link only-for-js p-0" data-qr="@index" text-translate="true">Show QR</button>
+                                    <span>-</span>
+                                    <a id="viewusage-@keyData.Id" asp-action="APIKeyPermissionAnalysis" asp-route-id="@keyData.Id" asp-controller="UIManage" text-translate="true">View Usage</a>
                                 </div>
                             </td>
                         </tr>

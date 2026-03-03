@@ -84,6 +84,8 @@ namespace BTCPayServer.Security.Greenfield
                     data => data.Id == id && data.UserId == getUserId);
                 if (key == null)
                     return false;
+
+                await context.ApiKeyPermissionUsages.Where(u => u.ApiKey == id).ExecuteDeleteAsync();
                 context.ApiKeys.Remove(key);
                 await context.SaveChangesAsync();
             }

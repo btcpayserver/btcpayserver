@@ -458,7 +458,7 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public async Task CanCreateReadAndDeleteCrowdfundApp()
+        public async Task CanCreateReadUpdateAndDeleteCrowdfundApp()
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();
@@ -630,6 +630,49 @@ namespace BTCPayServer.Tests
             Assert.Equal(app.Title, retrievedCfApp.Title);
             Assert.Equal("test description", retrievedCfApp.Description);
             Assert.False(retrievedCfApp.Archived);
+
+            // Test that we can update the crowdfund app
+            retrievedCfApp = await client.UpdateCrowdfundApp(
+                app.Id,
+                new CrowdfundAppRequest
+                {
+                    AppName = "updated app name",
+                    Title = "updated title",
+                    Description = "updated description",
+                    Archived = true
+                }
+            );
+            Assert.Equal("updated app name", retrievedCfApp.AppName);
+            Assert.Equal("updated title", retrievedCfApp.Title);
+            Assert.Equal("updated description", retrievedCfApp.Description);
+            Assert.True(retrievedCfApp.Archived);
+
+            // Test partial update preserves omitted fields
+            retrievedCfApp = await client.UpdateCrowdfundApp(
+                app.Id,
+                new CrowdfundAppRequest
+                {
+                    AppName = "partial update name",
+                    Archived = false
+                }
+            );
+            Assert.Equal("partial update name", retrievedCfApp.AppName);
+            Assert.Equal("updated title", retrievedCfApp.Title);
+            Assert.Equal("updated description", retrievedCfApp.Description);
+            Assert.False(retrievedCfApp.Archived);
+
+            // Test validation: empty Description is rejected
+            await AssertValidationError(new[] { "Description" },
+                async () => await client.UpdateCrowdfundApp(app.Id,
+                    new CrowdfundAppRequest
+                    {
+                        AppName = "updated app name",
+                        Title = "updated title",
+                        Description = " ",
+                        Archived = false
+                    }
+                )
+            );
 
             // Make sure we return a 404 if we try to delete an app that doesn't exist
             await AssertHttpError(404, async () =>

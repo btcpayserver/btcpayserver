@@ -26,7 +26,7 @@ public partial class UIStoresController
         var store = CurrentStore;
         if (store is null)
             return NotFound();
-
+        HttpContext.SetPreferredStoreId(store.Id);
         var storeBlob = store.GetStoreBlob();
 
         AddPaymentMethods(store, storeBlob,

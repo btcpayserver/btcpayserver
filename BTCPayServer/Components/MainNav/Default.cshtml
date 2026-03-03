@@ -20,6 +20,15 @@
 
 @model BTCPayServer.Components.MainNav.MainNavViewModel
 
+@{
+    // The store's context in navigation might be different
+    // from the rest of the page.
+    // For example, if on the Server settings page, GetStoreData should be
+    // null, but the navigation menu should show the last selected store.
+    var oldStore = Context.GetStoreData();
+    Context.SetStoreData(Context.GetNavStoreData());
+}
+
 <nav id="mainNav" class="d-flex flex-column justify-content-between">
     <div class="accordion px-3 px-lg-4">
         @if (SignInManager.IsSignedIn(User))
@@ -432,3 +441,7 @@
         if (activeEl) activeEl.scrollIntoView({ block: 'center', inline: 'center' })
     })()
 </script>
+
+@{
+    Context.SetStoreData(oldStore);
+}

@@ -60,7 +60,7 @@ namespace BTCPayServer.Security.Greenfield
                     applicationUser.NormalizedUserName == userManager.NormalizeName(username));
 
             // We disable throttling for new accounts to give time to create API keys via greenfield API.
-            if (user.Created is not {} created ||
+            if (user?.Created is not {} created ||
                 (DateTimeOffset.UtcNow - created) > TimeSpan.FromMinutes(5))
             {
                 if (Context.Connection.RemoteIpAddress?.ToString() is string ip)
@@ -73,6 +73,8 @@ namespace BTCPayServer.Security.Greenfield
             {
                 return Fail($"Basic authentication failed: {loggingContext.Failures[0].Text.Value}");
             }
+            if (user is null)
+                return Fail($"Basic authentication failed");
             if (user.Fido2Credentials.Any())
             {
                 return Fail("Cannot use Basic authentication when multi-factor is enabled.");

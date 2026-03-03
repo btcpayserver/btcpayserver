@@ -654,7 +654,7 @@ namespace BTCPayServer.Controllers
                     var explorer = network is null ? null : _ExplorerClients.GetExplorerClient(network);
                     if (explorer is null || network is null)
                         return NotSupported(StringLocalizer["This feature is only available to BTC wallets"]);
-                    if (!GetCurrentStore().HasPermission(GetUserId(), Policies.CanModifyStoreSettings))
+                    if (!GetCurrentStore().HasPolicy(GetUserId(), Policies.CanModifyStoreSettings, _permissionService))
                         return Forbid();
 
                     var derivationScheme = GetCurrentStore().GetDerivationSchemeSettings(_handlers, network.CryptoCode)?.AccountDerivation;

@@ -15,6 +15,7 @@ using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Tests.PMO;
 using BTCPayServer.Views.Server;
@@ -361,7 +362,8 @@ goodies:
             pos.HttpContext.SetAppData(appData);
             Assert.Single(appList.Apps);
             Assert.Equal("test", app.AppName);
-            Assert.True(app.Role.ToPermissionSet(appList.Apps[0].StoreId).Contains(Policies.CanModifyStoreSettings, app.StoreId));
+            var permissionService = tester.PayTester.GetService<PermissionService>();
+            Assert.True(app.Role.ToPermissionSet(appList.Apps[0].StoreId).HasPermission(Permission.Create(Policies.CanModifyStoreSettings, app.StoreId), permissionService));
             Assert.Equal(user.StoreId, app.StoreId);
             Assert.False(app.Archived);
             // Archive
@@ -386,6 +388,36 @@ goodies:
             Assert.Equal(nameof(UIStoresController.Dashboard), redirectToAction.ActionName);
             appList = await apps.ListApps(user.StoreId).AssertViewModelAsync<ListAppsViewModel>();
             Assert.Empty(appList.Apps);
+
+            // Quick tests on permissions
+            Assert.True(permissionService.Contains(Permission.Create(Policies.CanModifyServerSettings),
+                Permission.Create(Policies.CanModifyServerSettings)));
+            Assert.True(permissionService.Contains(Permission.Create(Policies.CanModifyProfile),
+                Permission.Create(Policies.CanViewProfile)));
+            Assert.True(permissionService.Contains(Permission.Create(Policies.CanModifyStoreSettings),
+                Permission.Create(Policies.CanViewStoreSettings)));
+            Assert.False(permissionService.Contains(Permission.Create(Policies.CanViewStoreSettings),
+                Permission.Create(Policies.CanModifyStoreSettings)));
+            Assert.False(permissionService.Contains(Permission.Create(Policies.CanModifyServerSettings),
+                Permission.Create(Policies.CanModifyStoreSettings)));
+            Assert.True(permissionService.Contains(Permission.Create(Policies.Unrestricted),
+                Permission.Create(Policies.CanModifyStoreSettings)));
+            Assert.True(permissionService.Contains(Permission.Create(Policies.Unrestricted),
+                Permission.Create(Policies.CanModifyStoreSettings, "abc")));
+
+            Assert.True(permissionService.Contains(Permission.Create(Policies.CanViewStoreSettings),
+                Permission.Create(Policies.CanViewStoreSettings, "abcd")));
+            Assert.False(permissionService.Contains(Permission.Create(Policies.CanModifyStoreSettings, "abcd"),
+                Permission.Create(Policies.CanModifyStoreSettings)));
+
+            foreach (var def in permissionService.Definitions.Values)
+            {
+                Assert.NotNull(def?.Display);
+                if (def.Type is PolicyType.Store)
+                {
+                    Assert.NotNull(def?.ScopeDisplay);
+                }
+            }
         }
 
         [Fact]

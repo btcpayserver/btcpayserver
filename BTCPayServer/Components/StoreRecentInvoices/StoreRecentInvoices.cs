@@ -12,24 +12,15 @@ namespace BTCPayServer.Components.StoreRecentInvoices;
 
 public class StoreRecentInvoices : ViewComponent
 {
-    private readonly StoreRepository _storeRepo;
     private readonly InvoiceRepository _invoiceRepo;
-    private readonly CurrencyNameTable _currencyNameTable;
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly ApplicationDbContextFactory _dbContextFactory;
 
     public StoreRecentInvoices(
-        StoreRepository storeRepo,
         InvoiceRepository invoiceRepo,
-        CurrencyNameTable currencyNameTable,
-        UserManager<ApplicationUser> userManager,
-        ApplicationDbContextFactory dbContextFactory)
+        UserManager<ApplicationUser> userManager)
     {
-        _storeRepo = storeRepo;
         _invoiceRepo = invoiceRepo;
         _userManager = userManager;
-        _currencyNameTable = currencyNameTable;
-        _dbContextFactory = dbContextFactory;
     }
 
     public async Task<IViewComponentResult> InvokeAsync(StoreData store, bool initialRendering)

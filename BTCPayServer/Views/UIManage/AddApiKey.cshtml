@@ -64,7 +64,7 @@
                     {
                         <div class="list-group-item py-3">
                             <input type="hidden" asp-for="PermissionValues[i].Permission" />
-                            @if (Policies.IsStorePolicy(Model.PermissionValues[i].Permission))
+                            @if (Model.PermissionValues[i].IsStorePolicy)
                             {
                                 <input type="hidden" asp-for="PermissionValues[i].StoreMode" value="@Model.PermissionValues[i].StoreMode" />
                                 @if (Model.PermissionValues[i].StoreMode == UIManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores)

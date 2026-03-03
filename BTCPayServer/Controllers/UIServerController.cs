@@ -368,7 +368,7 @@ namespace BTCPayServer.Controllers
             if (command == "SetTemplate")
             {
                 ModelState.Clear();
-                var storeId = this.HttpContext.GetStoreData()?.Id;
+                var storeId = this.HttpContext.GetNavStoreData()?.Id;
                 if (storeId is null)
                 {
                     this.TempData.SetStatusMessageModel(new()
@@ -380,7 +380,7 @@ namespace BTCPayServer.Controllers
                 else
                 {
                     await _StoreRepository.SetDefaultStoreTemplate(storeId, GetUserId());
-                    this.TempData.SetStatusSuccess(StringLocalizer["Store template created from store '{0}'. New stores will inherit these settings.", HttpContext.GetStoreData().StoreName]);
+                    this.TempData.SetStatusSuccess(StringLocalizer["Store template created from store '{0}'. New stores will inherit these settings.", HttpContext.GetNavStoreData().StoreName]);
                 }
                 return RedirectToAction(nameof(Policies));
             }

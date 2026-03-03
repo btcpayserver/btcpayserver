@@ -43,10 +43,10 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettingsUnscoped)]
-        public async Task<IActionResult> ListStores(bool archived = false)
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewStoreSettings)]
+        public IActionResult ListStores(bool archived = false)
         {
-            var stores = await _repo.GetStoresByUserId(GetUserId());
+            var stores = HttpContext.GetStoresData();
             var vm = new ListStoresViewModel
             {
                 Stores = stores

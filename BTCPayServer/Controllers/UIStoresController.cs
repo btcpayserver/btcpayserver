@@ -135,16 +135,18 @@ public partial class UIStoresController : Controller
         if (string.IsNullOrEmpty(userId))
             return Forbid();
 
-        var store = await _storeRepo.FindStore(storeId);
+        var store = await _storeRepo.FindStore(storeId, userId);
         if (store is null)
             return NotFound();
 
         if ((await _authorizationService.AuthorizeAsync(User, Policies.CanModifyStoreSettings)).Succeeded)
         {
+            HttpContext.SetPreferredStoreId(storeId);
             return RedirectToAction("Dashboard", new { storeId });
         }
         if ((await _authorizationService.AuthorizeAsync(User, Policies.CanViewInvoices)).Succeeded)
         {
+            HttpContext.SetPreferredStoreId(storeId);
             return RedirectToAction("ListInvoices", "UIInvoice", new { storeId });
         }
         return Forbid();

@@ -9,27 +9,17 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Components.StoreSelector
 {
-    public class StoreSelector : ViewComponent
+    public class StoreSelector(
+        StoreRepository storeRepo,
+        UriResolver uriResolver,
+        UserManager<ApplicationUser> userManager)
+        : ViewComponent
     {
-        private readonly StoreRepository _storeRepo;
-        private readonly UriResolver _uriResolver;
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        public StoreSelector(
-            StoreRepository storeRepo,
-            UriResolver uriResolver,
-            UserManager<ApplicationUser> userManager)
-        {
-            _storeRepo = storeRepo;
-            _uriResolver = uriResolver;
-            _userManager = userManager;
-        }
-
         public async Task<IViewComponentResult> InvokeAsync()
         {
-            var userId = _userManager.GetUserId(UserClaimsPrincipal);
-            var stores = await _storeRepo.GetStoresByUserId(userId);
-            var currentStore = ViewContext.HttpContext.GetStoreData();
+            var userId = userManager.GetUserId(UserClaimsPrincipal);
+            var stores = await storeRepo.GetStoresByUserId(userId ?? "");
+            var currentStore = ViewContext.HttpContext.GetNavStoreData();
             var archivedCount = stores.Count(s => s.Archived);
             var options = stores
                 .Where(store => !store.Archived)
@@ -49,7 +39,7 @@ namespace BTCPayServer.Components.StoreSelector
                 Options = options,
                 CurrentStoreId = currentStore?.Id,
                 CurrentDisplayName = currentStore?.StoreName,
-                CurrentStoreLogoUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), blob?.LogoUrl),
+                CurrentStoreLogoUrl = await uriResolver.Resolve(Request.GetAbsoluteRootUri(), blob?.LogoUrl),
                 ArchivedCount = archivedCount
             };
 

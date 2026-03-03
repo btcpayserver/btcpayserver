@@ -17,16 +17,11 @@ using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {
-    public class ApiKeysTests : UnitTestBase
+    public class ApiKeysTests(ITestOutputHelper helper) : UnitTestBase(helper)
     {
-        public const int TestTimeout = 120_000;
-
         public const string TestApiPath = "api/test/apikey";
-        public ApiKeysTests(ITestOutputHelper helper) : base(helper)
-        {
-        }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact]
         [Trait("Playwright", "Playwright-2")]
         public async Task CanCreateApiKeys()
         {

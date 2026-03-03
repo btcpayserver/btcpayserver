@@ -11,6 +11,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Lightning;
+using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
@@ -987,6 +988,8 @@ namespace BTCPayServer.Tests
             var adminAcc = tester.NewAccount();
             adminAcc.UserId = admin.Id;
             adminAcc.IsAdmin = true;
+            adminAcc.RegisterDetails = new RegisterViewModel() { Email = "admin@gmail.com",
+                Password = "abceudhqw" };
             var adminClient = await adminAcc.CreateClient(Policies.CanModifyProfile);
 
             // We should be forbidden to create a new user without proper admin permissions
@@ -1023,6 +1026,7 @@ namespace BTCPayServer.Tests
             var user1Acc = tester.NewAccount();
             user1Acc.UserId = user1.Id;
             user1Acc.IsAdmin = false;
+            user1Acc.RegisterDetails = new RegisterViewModel() { Email = "test@gmail.com", Password = "abceudhqw" };
             var user1Client = await user1Acc.CreateClient(Policies.CanModifyServerSettings);
 
             // User1 trying to get server management would still fail to create user
@@ -1080,6 +1084,7 @@ namespace BTCPayServer.Tests
             var adminAcc = tester.NewAccount();
             adminAcc.UserId = admin.Id;
             adminAcc.IsAdmin = true;
+            adminAcc.RegisterDetails = new RegisterViewModel() { Email = "admin@gmail.com", Password = "abceudhqw"};
             var adminClient = await adminAcc.CreateClient(Policies.CanModifyProfile);
 
             // Invalid email
@@ -1311,6 +1316,9 @@ namespace BTCPayServer.Tests
 
             //remove store
             await client.RemoveStore(newStore.Id);
+            // Can still access, because the user is admin!
+            await client.GetStore(newStore.Id);
+            await user.MakeAdmin(false);
             await AssertHttpError(403, async () =>
             {
                 await client.GetStore(newStore.Id);
@@ -3178,6 +3186,7 @@ namespace BTCPayServer.Tests
             await employeeClient.RemoveStoreUser(user.StoreId, user.UserId);
 
             //test no access to api when unrelated to store at all
+            await user.MakeAdmin(false);
             await AssertPermissionError(Policies.CanViewStoreSettings, async () => await client.GetStore(user.StoreId));
             await AssertPermissionError(Policies.CanViewStoreSettings, async () => await client.GetStoreUsers(user.StoreId));
             await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await client.AddStoreUser(user.StoreId, new StoreUserData()));
@@ -3249,11 +3258,14 @@ namespace BTCPayServer.Tests
             {
                 await unapprovedUserBasicAuthClient.GetCurrentUser();
             });
+            await adminClient.ApproveUser(unapprovedUser.UserId, true, CancellationToken.None);
             var unapprovedUserApiKeyClient = await unapprovedUser.CreateClient(Policies.Unrestricted);
+            await adminClient.ApproveUser(unapprovedUser.UserId, false, CancellationToken.None);
             await AssertAPIError("unauthenticated", async () =>
             {
                 await unapprovedUserApiKeyClient.GetCurrentUser();
             });
+
             Assert.True((await adminClient.GetUserByIdOrEmail(unapprovedUser.UserId)).RequiresApproval);
             Assert.False((await adminClient.GetUserByIdOrEmail(unapprovedUser.UserId)).Approved);
             Assert.Single(await adminClient.GetNotifications(false));

@@ -466,6 +466,23 @@ namespace BTCPayServer
             return services;
         }
 
+        public static IServiceCollection AddPolicyDefinitions(this IServiceCollection services, params PolicyDefinition[] definitions)
+        {
+            if (definitions == null)
+                return services;
+            foreach (var definition in definitions)
+            {
+                if (definition != null)
+                    services.AddSingleton(definition);
+            }
+            var strings = definitions
+                .SelectMany(d => new[] {d.Display?.Title, d.Display?.Description, d.ScopeDisplay?.Title, d.ScopeDisplay?.Description})
+                .Where(d => d is not null)
+                .ToArray();
+            services.AddDefaultTranslations(strings);
+            return services;
+        }
+
         public static async Task CloseSocket(this WebSocket webSocket)
         {
             try
@@ -714,7 +731,7 @@ namespace BTCPayServer
             ctx.Response.Cookies.Delete(nameof(UserPrefsCookie));
         }
 
-        private static void SetCurrentStoreId(this HttpContext ctx, string storeId)
+        public static void SetPreferredStoreId(this HttpContext ctx, string storeId)
         {
             var prefCookie = ctx.GetUserPrefsCookie();
             if (prefCookie.CurrentStoreId != storeId)
@@ -724,32 +741,23 @@ namespace BTCPayServer
             }
         }
 
-        public static string GetCurrentStoreId(this HttpContext ctx)
-        {
-            return ctx.GetImplicitStoreId() ?? ctx.GetUserPrefsCookie()?.CurrentStoreId;
-        }
+        public static StoreData GetNavStoreData(this HttpContext ctx)
+            => ctx.Items.TryGet("BTCPAY.NAVSTOREDATA") as StoreData;
+        public static void SetNavStoreData(this HttpContext ctx, StoreData storeData)
+            => ctx.Items["BTCPAY.NAVSTOREDATA"] = storeData;
+
 
         public static StoreData GetStoreData(this HttpContext ctx)
-        {
-            return ctx.Items.TryGet("BTCPAY.STOREDATA") as StoreData;
-        }
-
+            => ctx.Items.TryGet("BTCPAY.STOREDATA") as StoreData;
         public static void SetStoreData(this HttpContext ctx, StoreData storeData)
-        {
-            ctx.Items["BTCPAY.STOREDATA"] = storeData;
-
-            SetCurrentStoreId(ctx, storeData.Id);
-        }
+            => ctx.Items["BTCPAY.STOREDATA"] = storeData;
+        public static string GetCurrentStoreId(this HttpContext ctx)
+            => GetStoreData(ctx)?.Id;
 
         public static StoreData[] GetStoresData(this HttpContext ctx)
-        {
-            return ctx.Items.TryGet("BTCPAY.STORESDATA") as StoreData[];
-        }
-
+            => ctx.Items.TryGet("BTCPAY.STORESDATA") as StoreData[];
         public static void SetStoresData(this HttpContext ctx, StoreData[] storeData)
-        {
-            ctx.Items["BTCPAY.STORESDATA"] = storeData;
-        }
+            => ctx.Items["BTCPAY.STORESDATA"] = storeData;
 
         public static InvoiceEntity GetInvoiceData(this HttpContext ctx)
         {

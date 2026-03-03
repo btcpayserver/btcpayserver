@@ -30,10 +30,10 @@ public abstract class GreenfieldAuthenticationHandler(
 
     protected override async Task HandleForbiddenAsync(AuthenticationProperties properties)
     {
-        if (Context.Items.TryGetValue(GreenfieldAuthorizationHandler.RequestedPermissionKey, out var p) &&
-            p is string policy)
+        if (Context.Items.TryGetValue(PermissionAuthorizationHandler.PolicyRequirementKey, out var p) &&
+            p is PolicyRequirement policy)
         {
-            await WriteError(new GreenfieldPermissionAPIError(policy), 403);
+            await WriteError(new GreenfieldPermissionAPIError(policy.Policy), 403);
         }
         else
         {

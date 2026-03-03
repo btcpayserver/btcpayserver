@@ -8,10 +8,6 @@ namespace BTCPayServer.Security
 {
     public static class SecurityExtensions
     {
-        public static bool HasScopes(this AuthorizationHandlerContext context, params string[] scopes)
-        {
-            return scopes.All(s => context.User.HasClaim(c => c.Type.Equals("scope", StringComparison.InvariantCultureIgnoreCase) && c.Value.Split(' ').Contains(s)));
-        }
 
         public static string GetImplicitStoreId(this HttpContext httpContext)
         {

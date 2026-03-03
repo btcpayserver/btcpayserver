@@ -100,7 +100,6 @@
         const $labelSearch = document.getElementById('LabelSearch');
         if ($labelSearch) {
             let allLabels = @Safe.Json(sortedLabels.Select(label => new { text = label.Text, color = label.Color, textColor = label.TextColor }));
-            const filterUrl = @Safe.Json(Url.Action("WalletTransactions", new { walletId, labelFilter = "LABEL_PLACEHOLDER" }));
             const activeLabel = @Safe.Json(labelFilter);
             const $menu = document.getElementById('LabelDropdownMenu');
             const maxVisibleLabels = @maxVisibleLabels;
@@ -109,18 +108,17 @@
                 $menu.querySelectorAll('.label-filter-item').forEach(el => el.remove());
                 const divider = $menu.querySelector('.label-filter-divider');
                 const fragment = document.createDocumentFragment();
+                const $template = document.getElementById('label-filter-item-template');
 
                 labels.forEach(label => {
-                    const li = document.createElement('li');
-                    li.className = 'label-filter-item';
-                    const a = document.createElement('a');
-                    a.href = filterUrl.replace('LABEL_PLACEHOLDER', encodeURIComponent(label.text));
-                    a.className = 'dropdown-item transaction-label-text' + (label.text === activeLabel ? ' active' : '');
+                    const labelFilterItem = $template.content.cloneNode(true);
+                    const a = labelFilterItem.querySelector('a');
+                    a.href = a.getAttribute('href').replace('LABEL_PLACEHOLDER', encodeURIComponent(label.text));
+                    if (label.text === activeLabel) a.classList.add('active');
                     a.style.setProperty('--btcpay-dropdown-link-active-bg', label.color);
                     a.style.setProperty('--btcpay-dropdown-link-active-color', label.textColor);
                     a.textContent = label.text;
-                    li.appendChild(a);
-                    fragment.appendChild(li);
+                    fragment.appendChild(labelFilterItem);
                 });
 
                 if (divider) {
@@ -241,6 +239,11 @@
                     <li class="label-filter-clear"><a class="dropdown-item" asp-route-labelFilter="" text-translate="true">Clear filter</a></li>
                 }
             </ul>
+            <template id="label-filter-item-template">
+                <li class="label-filter-item">
+                    <a asp-route-labelFilter="LABEL_PLACEHOLDER" class="dropdown-item transaction-label-text"></a>
+                </li>
+            </template>
         </div>
     }
 

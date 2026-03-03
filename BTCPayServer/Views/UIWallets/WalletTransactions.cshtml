@@ -14,8 +14,10 @@
     var labelFilter = Context.Request.Query["labelFilter"].ToString();
     var wallet = walletId != null ? WalletId.Parse(walletId) : new WalletId(storeId, cryptoCode);
     storeId = wallet.StoreId;
-    var sortedLabels = Model.Labels.OrderBy(l => l.Text, StringComparer.OrdinalIgnoreCase).ToList();
     const int maxVisibleLabels = 20;
+    var sortedLabels = Model.Labels.OrderBy(l => l.Text, StringComparer.OrdinalIgnoreCase).ToList();
+    var popularLabels = Model.PopularLabels.OrderBy(l => l.Text, StringComparer.OrdinalIgnoreCase).ToList();
+    var initialLabels = popularLabels.Any() ? popularLabels : sortedLabels.Take(maxVisibleLabels).ToList();
 
     ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Transactions)}-{Model.CryptoCode}", StringLocalizer["{0} Transactions", Model.CryptoCode])
         .SetCategory(WellKnownCategories.ForWallet(Model.CryptoCode)));
@@ -63,6 +65,17 @@
             padding-top: 0.75rem;
             padding-bottom: 0.75rem;
         }
+        #LabelDropdownMenu .label-filter-item .label-filter-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+        #LabelDropdownMenu .label-filter-item .label-filter-count {
+            margin-left: auto;
+            text-align: right;
+            opacity: 0.75;
+        }
 
         /* pull actions area, so that it is besides the search form */
         @@media (min-width: 1200px) {
@@ -99,10 +112,10 @@
 
         const $labelSearch = document.getElementById('LabelSearch');
         if ($labelSearch) {
-            let allLabels = @Safe.Json(sortedLabels.Select(label => new { text = label.Text, color = label.Color, textColor = label.TextColor }));
+            let allLabels = @Safe.Json(sortedLabels.Select(label => new { text = label.Text, color = label.Color, textColor = label.TextColor, usageCount = label.UsageCount }));
+            const initialLabels = @Safe.Json(initialLabels.Select(label => new { text = label.Text, color = label.Color, textColor = label.TextColor, usageCount = label.UsageCount }));
             const activeLabel = @Safe.Json(labelFilter);
             const $menu = document.getElementById('LabelDropdownMenu');
-            const maxVisibleLabels = @maxVisibleLabels;
 
             function renderLabelItems(labels) {
                 $menu.querySelectorAll('.label-filter-item').forEach(el => el.remove());
@@ -113,11 +126,20 @@
                 labels.forEach(label => {
                     const labelFilterItem = $template.content.cloneNode(true);
                     const a = labelFilterItem.querySelector('a');
+                    const labelText = a.querySelector('.label-filter-text');
+                    const labelCount = a.querySelector('.label-filter-count');
                     a.href = a.getAttribute('href').replace('LABEL_PLACEHOLDER', encodeURIComponent(label.text));
                     if (label.text === activeLabel) a.classList.add('active');
                     a.style.setProperty('--btcpay-dropdown-link-active-bg', label.color);
                     a.style.setProperty('--btcpay-dropdown-link-active-color', label.textColor);
-                    a.textContent = label.text;
+                    labelText.textContent = label.text;
+                    if (label.usageCount > 0) {
+                        labelCount.classList.remove('d-none');
+                        labelCount.textContent = label.usageCount;
+                    } else {
+                        labelCount.classList.add('d-none');
+                        labelCount.textContent = '';
+                    }
                     fragment.appendChild(labelFilterItem);
                 });
 
@@ -132,7 +154,7 @@
             $labelSearch.addEventListener('click', e => e.stopPropagation());
             $labelSearch.addEventListener('input', () => {
                 const query = $labelSearch.value.toLowerCase().trim();
-                renderLabelItems(query ? allLabels.filter(label => label.text.toLowerCase().includes(query)) : allLabels.slice(0, maxVisibleLabels));
+                renderLabelItems(query ? allLabels.filter(label => label.text.toLowerCase().includes(query)) : initialLabels);
             });
         }
 
@@ -216,7 +238,7 @@
                 }
             </button>
             @{
-                var visibleLabels = sortedLabels.Take(maxVisibleLabels);
+                var visibleLabels = initialLabels;
             }
             <ul class="dropdown-menu mt-1 py-0" id="LabelDropdownMenu" style="min-width:280px">
                 <li class="px-2 pt-2 pb-2@(sortedLabels.Count() > maxVisibleLabels ? "" : " d-none")" id="LabelSearchContainer">
@@ -231,7 +253,12 @@
 
                 @foreach (var label in visibleLabels)
                 {
-                    <li class="label-filter-item"><a asp-route-labelFilter="@label.Text" class="dropdown-item transaction-label-text@(labelFilter == label.Text ? " active" : string.Empty)" style="--btcpay-dropdown-link-active-bg:@label.Color;--btcpay-dropdown-link-active-color:@label.TextColor;">@label.Text</a></li>
+                    <li class="label-filter-item">
+                        <a asp-route-labelFilter="@label.Text" class="dropdown-item transaction-label-text label-filter-link@(labelFilter == label.Text ? " active" : string.Empty)" style="--btcpay-dropdown-link-active-bg:@label.Color;--btcpay-dropdown-link-active-color:@label.TextColor;">
+                            <span class="label-filter-text">@label.Text</span>
+                            <small class="label-filter-count@(label.UsageCount > 0 ? string.Empty : " d-none")">@label.UsageCount</small>
+                        </a>
+                    </li>
                 }
                 @if (!string.IsNullOrEmpty(labelFilter))
                 {
@@ -241,7 +268,10 @@
             </ul>
             <template id="label-filter-item-template">
                 <li class="label-filter-item">
-                    <a asp-route-labelFilter="LABEL_PLACEHOLDER" class="dropdown-item transaction-label-text"></a>
+                    <a asp-route-labelFilter="LABEL_PLACEHOLDER" class="dropdown-item transaction-label-text label-filter-link">
+                        <span class="label-filter-text"></span>
+                        <small class="label-filter-count d-none"></small>
+                    </a>
                 </li>
             </template>
         </div>

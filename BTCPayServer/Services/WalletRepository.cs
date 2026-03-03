@@ -72,6 +72,8 @@ namespace BTCPayServer.Services
 #nullable restore
     public class WalletRepository
     {
+        public record WalletLabelUsage(string Label, string Color, long UsageCount);
+
         private readonly ApplicationDbContextFactory _ContextFactory;
 
         public WalletRepository(ApplicationDbContextFactory contextFactory)
@@ -307,27 +309,58 @@ namespace BTCPayServer.Services
 
         public async Task<(string Label, string Color)[]> GetWalletLabelsByLinkedType(WalletId walletId, string linkedType)
         {
+            return (await GetWalletLabelsByLinkedTypeWithUsage(walletId, linkedType))
+                .Select(l => (l.Label, l.Color))
+                .ToArray();
+        }
+
+        public async Task<WalletLabelUsage[]> GetWalletLabelsByLinkedTypeWithUsage(WalletId walletId, string linkedType, bool includeUnusedLabels = false)
+        {
             await using var ctx = _ContextFactory.CreateContext();
+            await using var conn = ctx.Database.GetDbConnection();
+            await conn.OpenAsync();
 
             const string sql = """
-                               SELECT DISTINCT
-                                   wo.*,
-                                   wo.xmin AS "xmin"
-                               FROM "WalletObjectLinks" AS wol
-                               INNER JOIN "WalletObjects" AS wo
+                               SELECT
+                                   wo."Id" AS "Label",
+                                   wo."Data"->>'color' AS "Color",
+                                   COUNT(wol."BId")::bigint AS "UsageCount"
+                               FROM "WalletObjects" AS wo
+                               LEFT JOIN "WalletObjectLinks" AS wol
                                    ON wol."WalletId" = wo."WalletId"
-                                  AND wol."AType" = wo."Type"
+                                  AND wol."AType" = @LabelType
                                   AND wol."AId" = wo."Id"
-                               WHERE wol."WalletId" = {0}
-                                 AND wol."AType" = {2}
-                                 AND wol."BType" = {1};
+                                  AND wol."BType" = @LinkedType
+                               WHERE wo."WalletId" = @WalletId
+                                 AND wo."Type" = @LabelType
+                               GROUP BY wo."Id", wo."Data";
                                """;
 
-            var labelObjects = await ctx.WalletObjects
-                .FromSqlRaw(sql, walletId.ToString(), linkedType, WalletObjectData.Types.Label)
-                .AsNoTracking()
-                .ToArrayAsync();
-            return labelObjects.Select(FormatToLabel).ToArray();
+            var rows = await conn.QueryAsync<WalletLabelUsageRow>(sql,
+                new
+                {
+                    WalletId = walletId.ToString(),
+                    LabelType = WalletObjectData.Types.Label,
+                    LinkedType = linkedType
+                });
+            var result = rows.Select(r => new WalletLabelUsage(
+                    r.Label,
+                    string.IsNullOrEmpty(r.Color) ? ColorPalette.Default.DeterministicColor(r.Label) : r.Color,
+                    r.UsageCount))
+                .ToArray();
+            if (includeUnusedLabels)
+            {
+                return result;
+            }
+
+            return result.Where(r => r.UsageCount > 0).ToArray();
+        }
+
+        private class WalletLabelUsageRow
+        {
+            public string Label { get; set; } = string.Empty;
+            public string? Color { get; set; }
+            public long UsageCount { get; set; }
         }
 
         public async Task<Dictionary<string, (string Label, string Color)[]>> GetWalletLabelsForObjects(

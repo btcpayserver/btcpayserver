@@ -607,6 +607,7 @@ namespace BTCPayServer.Controllers
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId,
             string? labelFilter = null,
+            string? searchQuery = null,
             int skip = 0,
             int count = 50,
             bool loadTransactions = false,
@@ -641,6 +642,11 @@ namespace BTCPayServer.Controllers
             {
                 model.PaginationQuery = new Dictionary<string, object> { { "labelFilter", labelFilter } };
             }
+            if (searchQuery != null)
+            {
+                model.PaginationQuery = model.PaginationQuery ?? new Dictionary<string, object>();
+                model.PaginationQuery["searchQuery"] = searchQuery;
+            }
             if (transactions == null || walletTransactionsInfo is null)
             {
                 model.Transactions = new List<ListTransactionsViewModel.TransactionViewModel>();
@@ -674,7 +680,14 @@ namespace BTCPayServer.Controllers
 
                     if (labelFilter == null ||
                         vm.Tags.Any(l => l.Text.Equals(labelFilter, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        // Apply search filter if provided
+                        if (searchQuery != null &&
+                            !vm.Id.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
+                            continue;
+
                         model.Transactions.Add(vm);
+                    }
                 }
 
                 var trackedCurrencies = GetCurrentStore().GetStoreBlob().GetTrackedRates();

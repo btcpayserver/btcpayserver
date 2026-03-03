@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Invoices;
@@ -603,6 +604,94 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.ClickPagePrimary();
         await s.Page.ClickAsync("#BroadcastTransaction");
         await w.AssertHasLabels("RBF");
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanSearchLabelFilterInWalletTransactions()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.Server.ExplorerNode.GenerateAsync(1);
+        await s.RegisterNewUser(true);
+        await s.CreateNewStore();
+        await s.GenerateWallet(isHotWallet: true);
+
+        await s.GoToWallet(s.WalletId, WalletsNavPages.Receive);
+        var addressStr = await s.Page.GetAttributeAsync("#Address", "data-text");
+        var address = BitcoinAddress.Create(addressStr!, ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
+
+        const int txCount = 22;
+        const int distinctLabelCount = 21;
+        for (var i = 0; i < txCount; i++)
+        {
+            await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(0.001m + i * 0.0001m));
+        }
+        await s.Server.ExplorerNode.GenerateAsync(1);
+
+        var client = await s.AsTestAccount().CreateClient();
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            var txs = await client.ShowOnChainWalletTransactions(s.StoreId, "BTC");
+            Assert.True(txs.Count() >= txCount);
+        });
+
+        const string targetLabel = "zz-smoke-popular-target";
+        var labels = Enumerable.Range(0, distinctLabelCount - 1)
+            .Select(i => $"smoke-alpha-{i:00}")
+            .ToArray();
+        var transactions = (await client.ShowOnChainWalletTransactions(s.StoreId, "BTC")).Take(txCount).ToArray();
+        for (var i = 0; i < transactions.Length; i++)
+        {
+            var label = i < 2 ? targetLabel : labels[i - 2];
+            await client.PatchOnChainWalletTransaction(
+                s.StoreId,
+                "BTC",
+                transactions[i].TransactionHash.ToString(),
+                new PatchOnChainTransactionRequest
+                {
+                    Labels = new List<string> { label }
+                });
+        }
+
+        await s.GoToWalletTransactions(s.WalletId);
+        await s.Page.ClickAsync("#Filter button.dropdown-toggle");
+        await s.Page.Locator("#LabelDropdownMenu").WaitForAsync();
+        await s.Page.Locator("#LabelSearch").WaitForAsync();
+
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            Assert.Equal(20, await s.Page.Locator("#LabelDropdownMenu .label-filter-item").CountAsync());
+            Assert.True(await s.Page.Locator($"#LabelDropdownMenu .label-filter-item a:has-text('{targetLabel}')").IsVisibleAsync());
+
+            var targetItem = s.Page
+                .Locator("#LabelDropdownMenu .label-filter-item")
+                .Filter(new() { Has = s.Page.Locator($".label-filter-text:text-is('{targetLabel}')") });
+            Assert.Equal("2", (await targetItem.Locator(".label-filter-count").InnerTextAsync()).Trim());
+
+            var singleUseLabel = labels[0];
+            var singleUseItem = s.Page
+                .Locator("#LabelDropdownMenu .label-filter-item")
+                .Filter(new() { Has = s.Page.Locator($".label-filter-text:text-is('{singleUseLabel}')") });
+            Assert.Equal("1", (await singleUseItem.Locator(".label-filter-count").InnerTextAsync()).Trim());
+        });
+
+        await s.Page.FillAsync("#LabelSearch", "target");
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            var items = await s.Page.Locator("#LabelDropdownMenu .label-filter-item").CountAsync();
+            Assert.Equal(1, items);
+            Assert.Equal("2", (await s.Page.Locator("#LabelDropdownMenu .label-filter-item .label-filter-count").InnerTextAsync()).Trim());
+        });
+
+        await s.Page.ClickAsync($"#LabelDropdownMenu .label-filter-item a:has-text('{targetLabel}')");
+        await TestUtils.EventuallyAsync(() =>
+        {
+            Assert.Contains($"labelFilter={targetLabel}", s.Page.Url);
+            return Task.CompletedTask;
+        });
+
+        await s.InWalletTransactions().AssertHasLabels(targetLabel);
     }
 
     private async Task CreateInvoices(PlaywrightTester tester)

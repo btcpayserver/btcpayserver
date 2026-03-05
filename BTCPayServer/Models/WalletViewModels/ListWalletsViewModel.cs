@@ -16,5 +16,6 @@ namespace BTCPayServer.Models.WalletViewModels
 
         public Dictionary<BTCPayNetwork, IMoney> BalanceForCryptoCode { get; set; } = new Dictionary<BTCPayNetwork, IMoney>();
         public List<WalletViewModel> Wallets { get; set; } = new List<WalletViewModel>();
+        public List<MultisigInProgressViewModel> MultisigInProgress { get; set; } = new();
     }
 }

@@ -149,18 +149,18 @@ namespace BTCPayServer.Controllers
             }
             if (!store.AnyPaymentMethodAvailable(_handlers))
             {
-                object text = _networkProvider.DefaultNetwork?.CryptoCode switch
-                {
-                    null => StringLocalizer["To create a {0} app, you need to set up a wallet first", vm.AppType],
-                    {} cryptoCode => ViewLocalizer["To create a {0} app, you need to <a href='{1}' class='alert-link'>set up a wallet</a> first", vm.AppType, Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode, storeId })!]
-                };
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    LocalizedHtml = text as LocalizedHtmlString,
-                    LocalizedMessage = text as LocalizedString,
-                    AllowDismiss = false
-                });
+            object text = _networkProvider.DefaultNetwork?.CryptoCode switch
+            {
+                null => StringLocalizer["To create a {0} app, you need to set up a wallet first", vm.AppType],
+                {} cryptoCode => ViewLocalizer["To create a {0} app, you need to <a href='{1}' class='alert-link'>set up a wallet</a> first", vm.AppType, Url.Action(nameof(UIStoreOnChainWalletsController.SetupWallet), "UIStoreOnChainWallets", new { cryptoCode, storeId })!]
+            };
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Severity = StatusMessageModel.StatusSeverity.Error,
+                LocalizedHtml = text as LocalizedHtmlString,
+                LocalizedMessage = text as LocalizedString,
+                AllowDismiss = false
+            });
                 return View(vm);
             }
             vm.StoreId = store.Id;

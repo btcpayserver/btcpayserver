@@ -28,5 +28,6 @@ public class StoreDashboardViewModel
     
     public List<string> EnabledWalletCryptos { get; set; } = new();
     public List<AppData> Apps { get; set; } = new();
+    public List<MultisigInProgressViewModel> MultisigInProgress { get; set; } = new();
     public BTCPayNetworkBase Network { get; set; }
 }

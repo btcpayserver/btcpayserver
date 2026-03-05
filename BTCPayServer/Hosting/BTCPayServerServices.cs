@@ -357,6 +357,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<NBXplorerDashboard>();
             services.AddSingleton<ISyncSummaryProvider, NBXSyncSummaryProvider>();
             services.TryAddSingleton<StoreRepository>();
+            services.TryAddSingleton<MultisigRecipientsService>();
             services.TryAddSingleton<StoreLabelRepository>();
             services.TryAddSingleton<PaymentRequestRepository>();
             services.TryAddSingleton<BTCPayWalletProvider>();

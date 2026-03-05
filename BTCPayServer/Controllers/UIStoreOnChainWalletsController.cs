@@ -29,6 +29,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer;
@@ -58,7 +59,8 @@ public class UIStoreOnChainWalletsController : Controller
         IDataProtectionProvider dataProtector,
         IStringLocalizer stringLocalizer,
         EmailSenderFactory emailSenderFactory,
-        MultisigRecipientsService multisigRecipientsService)
+        MultisigRecipientsService multisigRecipientsService,
+        ILogger<UIStoreOnChainWalletsController> logger)
     {
         _btcPayEnv = btcpayEnv;
         _storeRepo = storeRepo;
@@ -74,6 +76,7 @@ public class UIStoreOnChainWalletsController : Controller
         _multisigInviteProtector = dataProtector.CreateProtector("MultisigInviteLink");
         _emailSenderFactory = emailSenderFactory;
         _multisigRecipientsService = multisigRecipientsService;
+        _logger = logger;
         StringLocalizer = stringLocalizer;
     }
 
@@ -91,6 +94,7 @@ public class UIStoreOnChainWalletsController : Controller
     private readonly IDataProtector _multisigInviteProtector;
     private readonly EmailSenderFactory _emailSenderFactory;
     private readonly MultisigRecipientsService _multisigRecipientsService;
+    private readonly ILogger<UIStoreOnChainWalletsController> _logger;
     private const string PendingMultisigSettingPrefix = "PendingMultisigSetup";
 
     public IStringLocalizer StringLocalizer { get; }
@@ -1244,10 +1248,16 @@ public class UIStoreOnChainWalletsController : Controller
             if (string.IsNullOrEmpty(link))
                 continue;
 
-            sender.SendEmail(
-                MailboxAddress.Parse(participant.Email),
+            if (!TrySendMultisigEmail(
+                sender,
+                participant.Email,
                 $"Multisig signer request for {cryptoCode}",
-                $"A multisig wallet setup requires your account key.<br/>Open this link and submit your signer key:<br/><a href=\"{link}\">{link}</a>");
+                $"A multisig wallet setup requires your account key.<br/>Open this link and submit your signer key:<br/><a href=\"{link}\">{link}</a>",
+                storeId,
+                participant.UserId))
+            {
+                continue;
+            }
         }
     }
 
@@ -1284,10 +1294,46 @@ public class UIStoreOnChainWalletsController : Controller
 
         foreach (var recipient in recipients)
         {
-            sender.SendEmail(
-                MailboxAddress.Parse(recipient),
+            TrySendMultisigEmail(
+                sender,
+                recipient,
                 $"Multisig wallet created for {cryptoCode}",
-                $"The multisig wallet setup is complete.<br/>Open wallet: <a href=\"{walletLink}\">{walletLink}</a>");
+                $"The multisig wallet setup is complete.<br/>Open wallet: <a href=\"{walletLink}\">{walletLink}</a>",
+                storeId);
+        }
+    }
+
+    private bool TrySendMultisigEmail(
+        IEmailSender sender,
+        string recipient,
+        string subject,
+        string body,
+        string storeId,
+        string userId = null)
+    {
+        if (!MailboxAddressValidator.TryParse(recipient, out var mailboxAddress))
+        {
+            _logger.LogWarning(
+                "Skipping multisig email for store {StoreId} and user {UserId}: invalid email '{Email}'",
+                storeId,
+                userId ?? string.Empty,
+                recipient);
+            return false;
+        }
+
+        try
+        {
+            sender.SendEmail(mailboxAddress, subject, body);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Failed to send multisig email for store {StoreId} and user {UserId}",
+                storeId,
+                userId ?? string.Empty);
+            return false;
         }
     }
 

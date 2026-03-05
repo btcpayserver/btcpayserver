@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -7,6 +8,8 @@ using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -132,26 +135,45 @@ public partial class UIStoresController : Controller
     [HttpGet("{storeId}/index")]
     public async Task<IActionResult> Index(string storeId)
     {
-        var store = await _storeRepo.FindStore(storeId, User.GetId());
+        var userId = User.GetId();
+        var store = await _storeRepo.FindStore(storeId, userId);
         if (store is null)
             return NotFound();
         // Keep selected store in context/cookie even for limited roles that will be redirected
         // away from dashboard to wallets.
         HttpContext.SetStoreData(store);
+        HttpContext.SetPreferredStoreId(storeId);
 
         if ((await _authorizationService.AuthorizeAsync(User, Policies.CanModifyStoreSettings)).Succeeded)
         {
-            HttpContext.SetPreferredStoreId(storeId);
             return RedirectToAction("Dashboard", new { storeId });
         }
         if ((await _authorizationService.AuthorizeAsync(User, Policies.CanViewInvoices)).Succeeded)
         {
-            HttpContext.SetPreferredStoreId(storeId);
             return RedirectToAction("ListInvoices", "UIInvoice", new { storeId });
         }
         var permissionSet = store.GetPermissionSet(userId);
         if (permissionSet.Contains(Policies.CanViewWallet, store.Id))
         {
+            var walletId = _handlers.OfType<BitcoinLikePaymentHandler>()
+                .Select(handler => handler.Network.CryptoCode)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(cryptoCode => !cryptoCode.Equals("BTC", StringComparison.OrdinalIgnoreCase))
+                .Select(cryptoCode => new
+                {
+                    CryptoCode = cryptoCode,
+                    HasWallet = store.GetPaymentMethodConfig<DerivationSchemeSettings>(PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode), _handlers) is not null,
+                    WalletTypePolicy = cryptoCode.Equals("BTC", StringComparison.OrdinalIgnoreCase)
+                        ? Policies.CanModifyBitcoinOnchain
+                        : Policies.CanModifyOtherWallets
+                })
+                .Where(wallet => wallet.HasWallet && permissionSet.Contains(wallet.WalletTypePolicy, store.Id))
+                .Select(wallet => new WalletId(storeId, wallet.CryptoCode).ToString())
+                .FirstOrDefault();
+
+            if (walletId is not null)
+                return RedirectToAction(nameof(UIWalletsController.WalletTransactions), "UIWallets", new { walletId });
+
             return RedirectToAction("ListWallets", "UIWallets");
         }
         return Forbid();

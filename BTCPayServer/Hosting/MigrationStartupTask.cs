@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -511,8 +510,7 @@ namespace BTCPayServer.Hosting
 
                             break;
                         case "price":
-                            if (decimal.TryParse(scalarValue?.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out var price) ||
-                                decimal.TryParse(scalarValue?.Value, NumberStyles.Number, CultureInfo.CurrentCulture, out price))
+                            if (decimal.TryParse(scalarValue?.Value, out var price))
                             {
                                 currentItem.Price = price;
                             }

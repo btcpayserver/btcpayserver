@@ -190,8 +190,7 @@
                         </div>
                     </div>
                     <div class="accordion-item"
-                         permission="@($"{Policies.CanViewInvoices},{Policies.CanViewReports},{Policies.CanViewPaymentRequests},{Policies.CanViewPullPayments},{Policies.CanViewPayouts}")"
-                         permission-resource="@Model.Store?.Id">
+                         permission="@($"{Policies.CanViewInvoices},{Policies.CanViewReports},{Policies.CanViewPaymentRequests},{Policies.CanViewPullPayments},{Policies.CanViewPayouts}")">
                         <header class="accordion-header" id="Nav-Payments-Header">
                             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Payments" aria-expanded="true" aria-controls="Nav-Payments">
                                 <span text-translate="true">Payments</span>
@@ -243,8 +242,7 @@
                 </div>
             }
             <div class="accordion-item"
-                 permission="@($"{Policies.CanViewStoreSettings},{Policies.CanModifyServerSettings}")"
-                 permission-resource="@Model.Store?.Id">
+                 permission="@($"{Policies.CanViewStoreSettings},{Policies.CanModifyServerSettings}")">
                 <header class="accordion-header" id="Nav-Plugins-Header">
                     <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Nav-Plugins" aria-expanded="true" aria-controls="Nav-Plugins">
                         <span text-translate="true">Plugins</span>

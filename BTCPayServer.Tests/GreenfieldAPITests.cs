@@ -2989,7 +2989,7 @@ namespace BTCPayServer.Tests
             });
 
             var roles = await client.GetServerRoles();
-            Assert.Equal(4, roles.Count);
+            Assert.Equal(7, roles.Count);
 #pragma warning disable CS0618
             var ownerRole = roles.Single(data => data.Role == StoreRoles.Owner);
             var managerRole = roles.Single(data => data.Role == StoreRoles.Manager);

@@ -1,13 +1,12 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model WalletSetupViewModel
 @{
-	Layout = "_LayoutWalletSetup";
     ViewData.SetTitle(StringLocalizer["Scan QR code"]);
 	Csp.UnsafeEval();
 }
 
 @section Navbar {
-    <a asp-controller="UIStores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
+    <a asp-controller="UIStoreOnChainWallets" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
         <vc:icon symbol="back" />
     </a>
 }

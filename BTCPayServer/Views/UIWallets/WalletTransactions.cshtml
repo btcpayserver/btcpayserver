@@ -12,6 +12,7 @@
     var storeId = Context.GetRouteValue("storeId")?.ToString();
     var cryptoCode = Context.GetRouteValue("cryptoCode")?.ToString();
     var labelFilter = Context.Request.Query["labelFilter"].ToString();
+    var searchQuery = Context.Request.Query["searchQuery"].ToString();
     var wallet = walletId != null ? WalletId.Parse(walletId) : new WalletId(storeId, cryptoCode);
     storeId = wallet.StoreId;
 
@@ -72,7 +73,7 @@
 
         const count = @Safe.Json(Model.Count);
         const skipInitial = @Safe.Json(Model.Skip);
-		const loadMoreUrl = @Safe.Json(Url.Action("WalletTransactions", new {walletId, labelFilter, skip = Model.Skip, count = Model.Count, loadTransactions = true}));
+		const loadMoreUrl = @Safe.Json(Url.Action("WalletTransactions", new {walletId, labelFilter, searchQuery, skip = Model.Skip, count = Model.Count, loadTransactions = true}));
 		// The next time we load transactions, skip will become 0
         let skip = @Safe.Json(Model.Skip) - count;
 
@@ -158,6 +159,33 @@
             </ul>
         </div>
     }
+
+    <div class="d-inline-flex" id="Search">
+        <form method="get" class="d-inline-flex">
+            <input type="hidden" name="walletId" value="@walletId" />
+            @if (!string.IsNullOrEmpty(labelFilter))
+            {
+                <input type="hidden" name="labelFilter" value="@labelFilter" />
+            }
+            <div class="input-group">
+                <input type="text"
+                       name="searchQuery"
+                       class="form-control"
+                       placeholder="@StringLocalizer["Search by transaction ID"]"
+                       value="@Context.Request.Query["searchQuery"]"
+                       autocomplete="off" />
+                @if (!string.IsNullOrEmpty(Context.Request.Query["searchQuery"]))
+                {
+                    <a asp-action="WalletTransactions"
+                       asp-route-walletId="@walletId"
+                       asp-route-labelFilter="@labelFilter"
+                       class="btn btn-secondary input-group-text">
+                        <vc:icon symbol="actions-clear" />
+                    </a>
+                }
+            </div>
+        </form>
+    </div>
 
     <div class="dropdown d-inline-flex align-items-center gap-3 ms-auto" id="Export">
         <a

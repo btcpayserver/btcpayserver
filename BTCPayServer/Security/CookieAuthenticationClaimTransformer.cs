@@ -11,7 +11,8 @@ public class CookieAuthenticationClaimTransformer : IClaimsTransformation
 {
     public Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
     {
-        if (principal.Identity is { AuthenticationType : AuthenticationSchemes.Cookie } and ClaimsIdentity claimsIdentity)
+        if (principal.Identity is { AuthenticationType : AuthenticationSchemes.Cookie } and ClaimsIdentity claimsIdentity
+            && !claimsIdentity.HasClaim(c => c.Type == GreenfieldConstants.ClaimTypes.Permission))
         {
             claimsIdentity.AddClaim(new Claim(GreenfieldConstants.ClaimTypes.Permission,
                 Permission.Create(Policies.Unrestricted).ToString()));

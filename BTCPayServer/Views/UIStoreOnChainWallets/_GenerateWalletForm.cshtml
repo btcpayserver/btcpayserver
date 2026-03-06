@@ -19,7 +19,7 @@
     </div>
 }
 
-<form id="generate-wallet-form" method="post" asp-action="GenerateWallet" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")" asp-route-method="@method">
+<form id="generate-wallet-form" method="post" asp-controller="UIStoreOnChainWallets" asp-action="GenerateWallet" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")" asp-route-method="@method">
     @if (isImport)
     {
         <div class="form-group">

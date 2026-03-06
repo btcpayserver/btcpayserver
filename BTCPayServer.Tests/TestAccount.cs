@@ -160,7 +160,7 @@ namespace BTCPayServer.Tests
 
         public async Task ModifyOnchainPaymentSettings(Action<WalletSettingsViewModel> modify)
         {
-            var storeController = GetController<UIStoresController>();
+            var storeController = GetController<UIStoreOnChainWalletsController>();
             var response = await storeController.WalletSettings(StoreId, "BTC");
             WalletSettingsViewModel walletSettings = (WalletSettingsViewModel)((ViewResult)response).Model;
             modify(walletSettings);
@@ -198,7 +198,7 @@ namespace BTCPayServer.Tests
             if (StoreId is null)
                 await CreateStoreAsync();
             SupportedNetwork = parent.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            var store = parent.PayTester.GetController<UIStoresController>(UserId, StoreId, true);
+            var store = parent.PayTester.GetController<UIStoreOnChainWalletsController>(UserId, StoreId, true);
 
             var generateRequest = new WalletSetupRequest
             {
@@ -220,11 +220,13 @@ namespace BTCPayServer.Tests
             get => GenerateWalletResponseV.DerivationScheme;
         }
 
-        public void SetLNUrl(string cryptoCode, bool activated)
+        public async Task SetLNUrl(string cryptoCode, bool activated)
         {
-            var lnSettingsVm = GetController<UIStoresController>().LightningSettings(StoreId, cryptoCode).AssertViewModel<LightningSettingsViewModel>();
+            var lnSettingsVm = await GetController<UIStoresController>()
+                .LightningSettings(StoreId, cryptoCode)
+                .AssertViewModelAsync<LightningSettingsViewModel>();
             lnSettingsVm.LNURLEnabled = activated;
-            Assert.IsType<RedirectToActionResult>(GetController<UIStoresController>().LightningSettings(lnSettingsVm).Result);
+            Assert.IsType<RedirectToActionResult>(await GetController<UIStoresController>().LightningSettings(lnSettingsVm));
         }
 
         public async Task RegisterAsync(bool isAdmin = false)

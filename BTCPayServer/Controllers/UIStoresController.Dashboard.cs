@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
@@ -7,11 +8,15 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
@@ -52,13 +57,15 @@ public partial class UIStoresController
                 .ToList()
         };
 
-        // Widget data
-        if (vm is { WalletEnabled: false, LightningEnabled: false })
-            return View(vm);
-
         var userId = GetUserId();
         if (userId is null)
             return NotFound();
+
+        vm.MultisigInProgress = await GetMultisigInProgressForStore(store, userId);
+
+        // Widget data
+        if (vm is { WalletEnabled: false, LightningEnabled: false })
+            return View(vm);
 
         var apps = await _appService.GetAllApps(userId, false, store.Id);
         foreach (var app in apps)
@@ -68,6 +75,93 @@ public partial class UIStoresController
         }
 
         return View(vm);
+    }
+
+    private async Task<List<MultisigInProgressViewModel>> GetMultisigInProgressForStore(StoreData store, string userId)
+    {
+        var result = new List<MultisigInProgressViewModel>();
+        var cryptoCodes = _handlers.OfType<BitcoinLikePaymentHandler>()
+            .Select(h => h.Network.CryptoCode)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        foreach (var cryptoCode in cryptoCodes)
+        {
+            var pending = await _storeRepo.GetSettingAsync<PendingMultisigSetupData>(
+                store.Id,
+                UIStoreOnChainWalletsController.GetPendingMultisigSettingName(cryptoCode));
+            if (pending is null || pending.ExpiresAt < DateTimeOffset.UtcNow || pending.Finalized)
+                continue;
+
+            var participant = pending.Participants.FirstOrDefault(p =>
+                string.Equals(p.UserId, userId, StringComparison.Ordinal));
+            var didParticipate = participant is not null;
+            var yourKeySubmitted = !string.IsNullOrWhiteSpace(participant?.AccountKey);
+
+            var requestedCryptoCode = pending.CryptoCode ?? cryptoCode;
+            var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(requestedCryptoCode);
+            if (_handlers.Support(paymentMethodId))
+            {
+                var existingWalletConfig = store.GetPaymentMethodConfig<DerivationSchemeSettings>(paymentMethodId, _handlers);
+                if (existingWalletConfig is not null)
+                    continue;
+            }
+
+            var submittedSigners = pending.Participants.Count(p => !string.IsNullOrWhiteSpace(p.AccountKey));
+            var inviteUrl = didParticipate
+                ? Url.Action(
+                    nameof(UIMultisigInviteController.SubmitMultisigSigner),
+                    "UIMultisigInvite",
+                    new
+                    {
+                        storeId = store.Id,
+                        cryptoCode = requestedCryptoCode,
+                        token = CreateMultisigInviteToken(store.Id, requestedCryptoCode, pending.RequestId, userId, pending.ExpiresAt)
+                    },
+                    Request.Scheme)
+                : null;
+            var setupUrl = Url.Action(
+                nameof(UIStoreOnChainWalletsController.ImportWallet),
+                "UIStoreOnChainWallets",
+                new
+                {
+                    storeId = store.Id,
+                    cryptoCode = requestedCryptoCode,
+                    method = "multisig",
+                    multisigRequestId = pending.RequestId
+                },
+                Request.Scheme);
+
+            result.Add(new MultisigInProgressViewModel
+            {
+                StoreId = store.Id,
+                StoreName = store.StoreName,
+                CryptoCode = requestedCryptoCode,
+                RequestId = pending.RequestId,
+                ScriptType = pending.ScriptType,
+                RequiredSigners = pending.RequiredSigners,
+                TotalSigners = pending.TotalSigners,
+                SubmittedSigners = submittedSigners,
+                DidParticipate = didParticipate,
+                YourKeySubmitted = yourKeySubmitted,
+                ExpiresAt = pending.ExpiresAt,
+                InviteUrl = inviteUrl,
+                SetupUrl = setupUrl
+            });
+        }
+
+        return result
+            .OrderBy(m => m.ReadyToCreateWallet ? 0 : 1)
+            .ThenBy(m => m.CanSubmitSignerKey ? 0 : 1)
+            .ThenBy(m => m.ExpiresAt)
+            .ToList();
+    }
+
+    private string CreateMultisigInviteToken(string storeId, string cryptoCode, string requestId, string userId, DateTimeOffset expiresAt)
+    {
+        var payload = $"{storeId}|{cryptoCode}|{requestId}|{userId}|{expiresAt.ToUnixTimeSeconds()}";
+        var protectedPayload = _multisigInviteProtector.Protect(payload);
+        return WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(protectedPayload));
     }
 
     [HttpGet("{storeId}/dashboard/{cryptoCode}/lightning/balance")]

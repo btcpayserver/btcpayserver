@@ -60,7 +60,7 @@ public class BuiltInPermissionScopeProvider(
                 if (storeId == null)
                 {
                     if (httpContext.Request.HasFormContentType &&
-                        httpContext.Request.Form.TryGetValue("storeId", out var sv))
+                        (await httpContext.Request.ReadFormAsync()).TryGetValue("storeId", out var sv))
                     {
                         storeId = sv.FirstOrDefault();
                     }

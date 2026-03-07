@@ -743,12 +743,19 @@ namespace BTCPayServer
         }
 
 #nullable enable
-        public static string GetUserId(this IPrincipal? principal)
+        /// <summary>
+        /// Returns the user ID or empty string
+        /// </summary>
+        /// <param name="principal"></param>
+        /// <returns></returns>
+        public static string GetId(this IPrincipal? principal)
+        => GetIdOrNull(principal) ?? "";
+        public static string? GetIdOrNull(this IPrincipal? principal)
         {
             var claimsPrincipal = principal as ClaimsPrincipal;
             if (claimsPrincipal is null)
-                return "";
-            return claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+                return null;
+            return claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier) ?? null;
         }
 
         public static StoreData AddCachedStoreData(this HttpContext ctx, StoreData storeData)

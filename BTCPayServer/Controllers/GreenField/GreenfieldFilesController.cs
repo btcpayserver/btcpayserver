@@ -20,7 +20,6 @@ namespace BTCPayServer.Controllers.Greenfield;
 [EnableCors(CorsPolicies.All)]
 [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
 public class GreenfieldFilesController(
-    UserManager<ApplicationUser> userManager,
     IFileService fileService,
     StoredFileRepository fileRepository)
     : ControllerBase
@@ -47,16 +46,16 @@ public class GreenfieldFilesController(
     [HttpPost("~/api/v1/files")]
     public async Task<IActionResult> UploadFile(IFormFile file)
     {
+        var userId = User.GetIdOrNull();
         if (file is null)
             ModelState.AddModelError(nameof(file), "Invalid file");
         else if (!file.FileName.IsValidFileName())
             ModelState.AddModelError(nameof(file.FileName), "Invalid filename");
-        if (!ModelState.IsValid)
+        if (!ModelState.IsValid || userId is null)
             return this.CreateValidationError(ModelState);
 
         try
         {
-            var userId = userManager.GetUserId(User)!;
             var newFile = await fileService.AddFile(file!, userId);
             return Ok(await ToFileData(newFile));
         }

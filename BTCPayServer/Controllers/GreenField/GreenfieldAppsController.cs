@@ -36,7 +36,6 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly UriResolver _uriResolver;
         private readonly StoreRepository _storeRepository;
         private readonly CurrencyNameTable _currencies;
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IFileService _fileService;
 
         public Safe Safe { get; }
@@ -47,7 +46,6 @@ namespace BTCPayServer.Controllers.Greenfield
             StoreRepository storeRepository,
             CurrencyNameTable currencies,
             IFileService fileService,
-            UserManager<ApplicationUser> userManager,
             Safe safe
         )
         {
@@ -56,7 +54,6 @@ namespace BTCPayServer.Controllers.Greenfield
             _storeRepository = storeRepository;
             _currencies = currencies;
             _fileService = fileService;
-            _userManager = userManager;
             Safe = safe;
         }
 
@@ -172,7 +169,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetAllApps()
         {
-            var apps = await _appService.GetAllApps(_userManager.GetUserId(User), includeArchived: true);
+            var apps = await _appService.GetAllApps(User.GetId(), includeArchived: true);
 
             return Ok(apps.Select(ToModel).ToArray());
         }
@@ -181,7 +178,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetAllApps(string storeId)
         {
-            var apps = await _appService.GetAllApps(_userManager.GetUserId(User), false, storeId, true);
+            var apps = await _appService.GetAllApps(User.GetId(), false, storeId, true);
 
             return Ok(apps.Select(ToModel).ToArray());
         }
@@ -242,9 +239,10 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var app = await _appService.GetApp(appId, null, includeArchived: true);
             if (app == null) return AppNotFound();
-
             var stats = (await _appService.GetItemStats(app)).ToList();
-            var max = Math.Min(count, stats.Count - offset); 
+            if (stats.Count < offset)
+                offset = stats.Count;
+            var max = Math.Min(count, stats.Count - offset);
             var items = stats.GetRange(offset, max);
             return Ok(items);
         }
@@ -254,9 +252,9 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> UploadAppItemImage(string appId, IFormFile? file)
         {
             var app = await _appService.GetApp(appId, null, includeArchived: true);
-            var userId = _userManager.GetUserId(User);
+            var userId = User.GetIdOrNull();
             if (app == null || userId == null) return AppNotFound();
-            
+
             UploadImageResultModel? upload = null;
             if (file is null)
                 ModelState.AddModelError(nameof(file), "Invalid file");
@@ -268,7 +266,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            
+
             try
             {
                 var storedFile = upload!.StoredFile!;
@@ -294,12 +292,12 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> DeleteAppItemImage(string appId, string fileId)
         {
             var app = await _appService.GetApp(appId, null, includeArchived: true);
-            var userId = _userManager.GetUserId(User);
+            var userId = User.GetIdOrNull();
             if (app == null || userId == null) return AppNotFound();
             if (!string.IsNullOrEmpty(fileId)) await _fileService.RemoveFile(fileId, userId);
             return Ok();
         }
-        
+
         private IActionResult AppNotFound()
         {
             return this.CreateAPIError(404, "app-not-found", "The app with specified ID was not found");
@@ -408,7 +406,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var settings = appData.GetSettings<PointOfSaleSettings>();
             Enum.TryParse<PosViewType>(settings.DefaultView.ToString(), true, out var defaultView);
             var items = AppService.Parse(settings.Template);
-            
+
             return new PointOfSaleAppData
             {
                 Id = appData.Id,
@@ -552,7 +550,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     ModelState.AddModelError(nameof(request.ResetEveryAmount), "You must reset the goal at a minimum of 1");
                 }
             }
-            
+
             if (request.Sounds != null && ValidateStringArray(request.Sounds) == null)
             {
                 ModelState.AddModelError(nameof(request.Sounds), "Sounds must be a non-empty array of non-empty strings");

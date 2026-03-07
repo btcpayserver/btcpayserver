@@ -59,7 +59,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             DisplayFormatter displayFormatter,
             IRateLimitService rateLimitService,
             IAuthorizationService authorizationService,
-            UserManager<ApplicationUser> userManager,
             HtmlSanitizer htmlSanitizer,
             Safe safe)
         {
@@ -72,7 +71,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             _displayFormatter = displayFormatter;
             _rateLimitService = rateLimitService;
             _authorizationService = authorizationService;
-            _userManager = userManager;
             _htmlSanitizer = htmlSanitizer;
             _safe = safe;
             StringLocalizer = stringLocalizer;
@@ -88,7 +86,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly DisplayFormatter _displayFormatter;
         private readonly IRateLimitService _rateLimitService;
         private readonly IAuthorizationService _authorizationService;
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly HtmlSanitizer _htmlSanitizer;
         private readonly Safe _safe;
         public FormDataService FormDataService { get; }
@@ -752,7 +749,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var users = await _storeRepository.GetStoreUsers(GetCurrentStore().Id);
 
             if (!User.IsInRole(Roles.ServerAdmin))
-                users = users.Where(u => u.Id == _userManager.GetUserId(User)).ToArray();
+                users = users.Where(u => u.Id == User.GetId()).ToArray();
 
             vm.StoreUsers = users.Select(u => (u.Id, u.Email, u.StoreRole.Role))
                 .ToDictionary(u => u.Id, u => $"{u.Email} ({u.Role})");

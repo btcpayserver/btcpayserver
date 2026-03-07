@@ -92,9 +92,8 @@ public class BuiltInPermissionHandler(
                 store.UserStores.Any(u => u.ApplicationUserId == permContext.UserId))
                 return store;
         }
-        store = await storeRepository.FindStore(storeId, permContext.UserId);
-        if (store is null && isAdmin)
-            store = await storeRepository.FindStore(storeId);
+        if (store is null)
+            store = await storeRepository.FindStore(storeId, permContext.HttpContext.User, true);
         if (store is not null)
             permContext.HttpContext.AddCachedStoreData(store);
         return store;

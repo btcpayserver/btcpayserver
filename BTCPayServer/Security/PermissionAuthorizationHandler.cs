@@ -21,8 +21,8 @@ public class PermissionAuthorizationHandler(
     {
         if (context.User.Identity is not ({ AuthenticationType: AuthenticationSchemes.Cookie } or { AuthenticationType: GreenfieldConstants.AuthenticationType }))
             return;
-        var userId = context.User.GetUserId();
-        if (httpContext.HttpContext is null)
+        var userId = context.User.GetIdOrNull();
+        if (httpContext.HttpContext is null || userId is null)
             return;
         httpContext.HttpContext.Items[PolicyRequirementKey] = requirement;
 

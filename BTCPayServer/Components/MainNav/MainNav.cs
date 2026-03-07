@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Linq;
 using System.Threading;
@@ -10,7 +11,6 @@ using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -26,8 +26,7 @@ namespace BTCPayServer.Components.MainNav
         SettingsRepository settingsRepository,
         IMemoryCache cache,
         UriResolver uriResolver,
-        PoliciesSettings policiesSettings,
-        StoreRepository storeRepository)
+        PoliciesSettings policiesSettings)
         : ViewComponent
     {
         public PoliciesSettings PoliciesSettings { get; } = policiesSettings;
@@ -85,7 +84,7 @@ namespace BTCPayServer.Components.MainNav
                 vm.LightningNodes = lightningNodes;
 
                 // Apps
-                var apps = await appService.GetAllApps(UserId, false, navStore.Id, true);
+                var apps = await appService.GetAllApps(HttpContext.User.GetIdOrNull(), false, navStore.Id, true);
                 vm.Apps = apps
                     .Where(a => !a.Archived)
                     .Select(a => new StoreApp
@@ -111,7 +110,5 @@ namespace BTCPayServer.Components.MainNav
 
             return View(vm);
         }
-
-        private string UserId => userManager.GetUserId(HttpContext.User);
     }
 }

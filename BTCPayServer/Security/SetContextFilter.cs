@@ -21,7 +21,7 @@ public class SetContextFilter(
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         var httpContext = context.HttpContext;
-        var userId = context.HttpContext.User.GetUserId();
+        var userId = context.HttpContext.User.GetId();
         var isCookie = context.HttpContext.User.Identity is { AuthenticationType: AuthenticationSchemes.Cookie };
 
         if (httpContext.Items.TryGetValue(BuiltInPermissionHandler.StoreKey, out var oo) && oo is StoreData store)
@@ -35,7 +35,7 @@ public class SetContextFilter(
             var nav = httpContext.GetCachedStoreData(preferredStoreId);
             if (nav is null)
             {
-                nav = await storeRepository.FindStore(preferredStoreId, httpContext.User.GetUserId());
+                nav = await storeRepository.FindStore(preferredStoreId, httpContext.User, true);
                 if (nav is not null)
                     httpContext.AddCachedStoreData(nav);
             }

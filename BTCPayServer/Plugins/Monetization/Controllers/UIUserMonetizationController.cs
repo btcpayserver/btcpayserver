@@ -21,7 +21,6 @@ public class UIUserMonetizationController(
     ApplicationDbContext ctx,
     MonetizationSettings settings,
     PoliciesSettings policies,
-    UserManager<ApplicationUser> userManager,
     LinkGenerator linkGenerator
     ) : Controller
 {
@@ -55,7 +54,7 @@ public class UIUserMonetizationController(
     {
         if (settings.OfferingId is not { } offeringId)
             return NotFound();
-        var userId = userManager.GetUserId(User);
+        var userId = User.GetId();
         var sub = await ctx.Subscribers.GetBySelector(offeringId, CustomerSelector.ByIdentity(SubscriberDataExtensions.IdentityType, userId));
         if (sub is null)
             return NotFound();

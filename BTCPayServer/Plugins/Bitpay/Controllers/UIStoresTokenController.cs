@@ -32,14 +32,13 @@ public class UIStoresTokenController(
     BitpayAccessTokenController tokenController,
     IStringLocalizer stringLocalizer,
     StoreRepository storeRepository,
-    UserManager<ApplicationUser> userManager,
     IHtmlHelper html,
     PaymentMethodHandlerDictionary handlers,
     PermissionService permissionService) : Controller
 {
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
     public StoreData CurrentStore => HttpContext.GetStoreData() ?? throw new InvalidOperationException("Store not found");
-    private string? GetUserId() => userManager.GetUserId(User);
+    private string? GetUserId() => User.GetIdOrNull();
 
     [TempData]
     public bool StoreNotConfigured { get; set; }

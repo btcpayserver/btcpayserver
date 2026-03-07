@@ -4,21 +4,19 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Components.StoreSelector
 {
     public class StoreSelector(
         StoreRepository storeRepo,
-        UriResolver uriResolver,
-        UserManager<ApplicationUser> userManager)
+        UriResolver uriResolver)
         : ViewComponent
     {
         public async Task<IViewComponentResult> InvokeAsync()
         {
-            var userId = userManager.GetUserId(UserClaimsPrincipal);
-            var stores = await storeRepo.GetStoresByUserId(userId ?? "");
+            var userId = UserClaimsPrincipal.GetId();
+            var stores = await storeRepo.GetStoresByUserId(userId);
             var currentStore = ViewContext.HttpContext.GetNavStoreData();
             var archivedCount = stores.Count(s => s.Archived);
             var options = stores

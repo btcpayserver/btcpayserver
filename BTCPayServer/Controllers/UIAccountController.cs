@@ -636,8 +636,6 @@ namespace BTCPayServer.Controllers
         [HttpGet("/logout")]
         public async Task<IActionResult> Logout()
         {
-            var userId = signInManager.UserManager.GetUserId(HttpContext.User);
-            var user = await userManager.FindByIdAsync(userId);
             await signInManager.SignOutAsync();
             HttpContext.DeleteUserPrefsCookie();
             return RedirectToAction(nameof(Login));

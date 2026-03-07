@@ -10,19 +10,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Components.StoreRecentInvoices;
 
-public class StoreRecentInvoices : ViewComponent
+public class StoreRecentInvoices(
+    InvoiceRepository invoiceRepo) : ViewComponent
 {
-    private readonly InvoiceRepository _invoiceRepo;
-    private readonly UserManager<ApplicationUser> _userManager;
-
-    public StoreRecentInvoices(
-        InvoiceRepository invoiceRepo,
-        UserManager<ApplicationUser> userManager)
-    {
-        _invoiceRepo = invoiceRepo;
-        _userManager = userManager;
-    }
-
     public async Task<IViewComponentResult> InvokeAsync(StoreData store, bool initialRendering)
     {
         var vm = new StoreRecentInvoicesViewModel
@@ -34,8 +24,8 @@ public class StoreRecentInvoices : ViewComponent
         if (vm.InitialRendering)
             return View(vm);
 
-        var userId = _userManager.GetUserId(UserClaimsPrincipal);
-        var invoiceEntities = await _invoiceRepo.GetInvoices(new InvoiceQuery
+        var userId = UserClaimsPrincipal.GetIdOrNull();
+        var invoiceEntities = await invoiceRepo.GetInvoices(new InvoiceQuery
         {
             UserId = userId,
             StoreId = [store.Id],

@@ -53,6 +53,9 @@ namespace BTCPayServer.Services.Stores
         public async Task<StoreData?> FindStore(string storeId, string userId)
         {
             ArgumentNullException.ThrowIfNull(userId);
+            if (string.IsNullOrEmpty(storeId) ||
+                string.IsNullOrEmpty(userId) || userId == "???")
+                return null;
             await using var ctx = _ContextFactory.CreateContext();
             return await ctx
                 .UserStore

@@ -6,6 +6,7 @@ using BTCPayServer.Security;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 
 namespace BTCPayServer.Plugins.Bitpay.Security;
 
@@ -17,6 +18,9 @@ public class BitpayAuthorizationHandler(
 {
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PolicyRequirement requirement)
     {
+        if (httpContextAccessor.HttpContext is null)
+            return;
+        var httpContext = httpContextAccessor.HttpContext;
         string storeId = null;
         if (context.User.Identity is { AuthenticationType: BitpayAuthenticationTypes.ApiKeyAuthentication })
         {
@@ -30,7 +34,16 @@ public class BitpayAuthorizationHandler(
         }
         else if (context.User.Identity is { AuthenticationType: BitpayAuthenticationTypes.Anonymous })
         {
-            storeId = httpContextAccessor.HttpContext.GetImplicitStoreId();
+            if (httpContext.GetRouteData().Values.TryGetValue("storeId", out var v))
+                storeId = v as string;
+
+            if (storeId == null)
+            {
+                if (httpContext.Request.Query.TryGetValue("storeId", out var sv))
+                {
+                    storeId = sv.FirstOrDefault();
+                }
+            }
         }
 
         if (storeId == null)

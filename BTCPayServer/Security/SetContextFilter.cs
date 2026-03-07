@@ -14,31 +14,37 @@ namespace BTCPayServer.Security;
 
 public class SetContextFilter(
     PaymentRequestRepository paymentRequestRepository,
-    StoreRepository storeRepository,
     InvoiceRepository invoiceRepository,
     AppService appService,
-    UserManager<ApplicationUser> userManager) : IAsyncActionFilter
+    StoreRepository storeRepository) : IAsyncActionFilter
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         var httpContext = context.HttpContext;
-        var userId = userManager.GetUserId(context.HttpContext.User) ?? "??";
+        var userId = context.HttpContext.User.GetUserId();
         var isCookie = context.HttpContext.User.Identity is { AuthenticationType: AuthenticationSchemes.Cookie };
+
         if (httpContext.Items.TryGetValue(BuiltInPermissionHandler.StoreKey, out var oo) && oo is StoreData store)
         {
             httpContext.SetStoreData(store);
             if (isCookie)
                 httpContext.SetNavStoreData(store);
         }
-        else if (isCookie && httpContext.GetUserPrefsCookie()?.CurrentStoreId is { } preferredStoreId)
+        else if (isCookie && httpContext.GetUserPrefsCookie()?.CurrentStoreId is string preferredStoreId)
         {
-            httpContext.SetNavStoreData(await storeRepository.FindStore(preferredStoreId, userId));
+            var nav = httpContext.GetCachedStoreData(preferredStoreId);
+            if (nav is null)
+            {
+                nav = await storeRepository.FindStore(preferredStoreId, httpContext.User.GetUserId());
+                if (nav is not null)
+                    httpContext.AddCachedStoreData(nav);
+            }
+            httpContext.SetNavStoreData(nav);
         }
 
         if (httpContext.Items.TryGetValue(BuiltInPermissionHandler.StoresKey, out var ooo) && ooo is StoreData[] stores)
-        {
             httpContext.SetStoresData(stores);
-        }
+
         if (httpContext.Items.TryGetValue(BuiltInPermissionScopeProvider.AdditionalScopeKey, out var o) && o is IEnumerable<BuiltInPermissionScopeProvider.AdditionalScope> additionalScopes)
         {
             foreach (var additionalScope in additionalScopes)

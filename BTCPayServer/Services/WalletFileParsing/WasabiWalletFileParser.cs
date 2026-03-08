@@ -1,12 +1,10 @@
 #nullable enable
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using BTCPayServer;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+
 namespace BTCPayServer.Services.WalletFileParsing;
 public class WasabiWalletFileParser : IWalletFileParser
 {

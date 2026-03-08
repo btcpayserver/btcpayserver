@@ -17,7 +17,6 @@ using BTCPayServer.Views.Stores;
 using Dapper;
 using LNURL;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Playwright;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Xunit;

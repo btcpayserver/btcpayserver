@@ -1,7 +1,6 @@
 using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
-using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer
 {

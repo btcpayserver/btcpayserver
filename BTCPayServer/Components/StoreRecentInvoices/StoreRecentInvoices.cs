@@ -3,9 +3,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
-using BTCPayServer.Services.Stores;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Components.StoreRecentInvoices;

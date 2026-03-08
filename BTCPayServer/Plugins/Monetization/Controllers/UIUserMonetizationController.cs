@@ -8,7 +8,6 @@ using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Plugins.Subscriptions;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;

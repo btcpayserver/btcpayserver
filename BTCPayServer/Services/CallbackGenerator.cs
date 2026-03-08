@@ -1,20 +1,14 @@
 #nullable enable
 using System;
-using System.Reflection.Emit;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Abstractions.Extensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using NBitcoin.Altcoins.ArgoneumInternals;
 using BTCPayServer.Controllers;
-using Microsoft.AspNetCore.Mvc.Routing;
-using Microsoft.AspNetCore.Http.Extensions;
 using NBitcoin.DataEncoders;
-using System.Runtime.CompilerServices;
 using BTCPayServer.Abstractions;
 
 namespace BTCPayServer.Services

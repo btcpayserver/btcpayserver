@@ -1,15 +1,8 @@
 ﻿#nullable enable
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
-using BTCPayServer.Filters;
-using BTCPayServer.Plugins.Subscriptions;
 using BTCPayServer.Views.UIStoreMembership;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

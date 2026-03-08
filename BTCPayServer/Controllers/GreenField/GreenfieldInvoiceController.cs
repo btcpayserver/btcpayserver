@@ -1,7 +1,6 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -154,9 +153,9 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpPut("~/api/v1/stores/{storeId}/invoices/{invoiceId}")]
         public async Task<IActionResult> UpdateInvoice(string storeId, string invoiceId, UpdateInvoiceRequest request)
         {
-            var invoice = HttpContext.GetInvoiceData();
-            if (invoice is null)
+            if (HttpContext.GetInvoiceData() is null)
                 return InvoiceNotFound();
+            var invoice = await _invoiceRepository.UpdateInvoiceMetadata(invoiceId, storeId, request.Metadata);
             return Ok(ToModel(invoice));
         }
 

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using BTCPayServer.Client.Models;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
 using Newtonsoft.Json;

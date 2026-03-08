@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
-using BTCPayServer.Payments;
 using BTCPayServer.Payouts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;

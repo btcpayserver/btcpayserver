@@ -12,7 +12,6 @@ using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Views.UIStoreMembership;
-using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;

@@ -36,7 +36,7 @@ public class UIStoresTokenController(
     PermissionService permissionService) : Controller
 {
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
-    public StoreData CurrentStore => HttpContext.GetStoreData() ?? throw new InvalidOperationException("Store not found");
+    public StoreData CurrentStore => HttpContext.GetStoreDataOrNull() ?? throw new InvalidOperationException("Store not found");
     private string? GetUserId() => User.GetIdOrNull();
 
     [TempData]
@@ -188,7 +188,7 @@ public class UIStoresTokenController(
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> GenerateAPIKey(string storeId, string command = "")
     {
-        var store = HttpContext.GetStoreData();
+        var store = HttpContext.GetStoreDataOrNull();
         if (store == null)
             return NotFound();
         if (command == "revoke")

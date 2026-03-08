@@ -162,6 +162,7 @@ namespace BTCPayServer.Hosting
                  if (!Configuration.GetOrDefault<bool>("nocsp", false))
                      o.Filters.Add(new ContentSecurityPolicyAttribute(CSPTemplate.AntiXSS));
                  o.Filters.Add(new JsonHttpExceptionFilter());
+                 // Note: Plugins should rather put controller-specific filters rather than this global one
                  o.Filters.Add<Security.SetContextFilter>();
                  o.Filters.Add(new JsonObjectExceptionFilter());
                  o.Filters.Add(new UIControllerAntiforgeryTokenAttribute());

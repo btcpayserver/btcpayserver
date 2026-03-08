@@ -38,7 +38,7 @@ namespace BTCPayServer.Controllers.Greenfield
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldStoreOnChainWalletsController : ControllerBase
     {
-        private StoreData Store => HttpContext.GetStoreDataOrThrow();
+        private StoreData Store => HttpContext.GetStoreData();
 
         public PoliciesSettings PoliciesSettings { get; }
 

@@ -36,7 +36,7 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetStoreRates([FromQuery] string[]? currencyPair)
         {
-            var data = HttpContext.GetStoreDataOrThrow();
+            var data = HttpContext.GetStoreData();
             var blob = data.GetStoreBlob();
             var parsedCurrencyPairs = new HashSet<CurrencyPair>();
 

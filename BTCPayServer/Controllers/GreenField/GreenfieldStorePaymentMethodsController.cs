@@ -28,7 +28,7 @@ namespace BTCPayServer.Controllers.Greenfield
         IAuthorizationService authorizationService)
         : ControllerBase
     {
-        private StoreData Store => HttpContext.GetStoreDataOrThrow();
+        private StoreData Store => HttpContext.GetStoreData();
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}")]

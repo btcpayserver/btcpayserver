@@ -740,7 +740,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
 
-        private AppData GetCurrentApp() => HttpContext.GetAppData();
+        private AppData GetCurrentApp() => HttpContext.GetAppDataOrNull();
 
         private async Task FillUsers(UpdatePointOfSaleViewModel vm)
         {

@@ -50,7 +50,10 @@ public class BitpayInvoiceController : ControllerBase
     {
         if (invoice == null)
             throw new BitpayHttpException(400, "Invalid invoice");
-        return await CreateInvoiceCore(invoice, HttpContext.GetStoreData(), HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
+        var store = HttpContext.GetStoreDataOrNull();
+        if (store == null)
+            throw new BitpayHttpException(404, "Store not found");
+        return await CreateInvoiceCore(invoice, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
     }
 
     [HttpGet]

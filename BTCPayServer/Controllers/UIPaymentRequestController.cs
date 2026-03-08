@@ -673,7 +673,7 @@ namespace BTCPayServer.Controllers
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
 
-        private PaymentRequestData GetCurrentPaymentRequest() => HttpContext.GetPaymentRequestData();
+        private PaymentRequestData GetCurrentPaymentRequest() => HttpContext.GetPaymentRequestDataOrNull();
 
         private IActionResult NoPaymentMethodResult(string storeId)
         {

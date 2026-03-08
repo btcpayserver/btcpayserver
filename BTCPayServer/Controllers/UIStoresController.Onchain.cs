@@ -702,7 +702,7 @@ public partial class UIStoresController
 
     private ActionResult IsAvailable(string cryptoCode, out StoreData store, out BTCPayNetwork network)
     {
-        store = HttpContext.GetStoreData();
+        store = HttpContext.GetStoreDataOrNull();
         network = cryptoCode == null ? null : _explorerProvider.GetNetwork(cryptoCode);
         return store == null || network == null ? NotFound() : null;
     }

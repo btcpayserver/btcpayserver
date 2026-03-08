@@ -59,10 +59,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreateCrowdfundApp(string storeId, CrowdfundAppRequest request)
         {
-            var store = await _storeRepository.FindStore(storeId);
-            if (store == null)
-                return this.CreateAPIError(404, "store-not-found", "The store was not found");
-
+            var store = HttpContext.GetStoreData();
             // This is not obvious, but we must have a non-null currency or else request validation may not work correctly
             request.TargetCurrency ??= store.GetStoreBlob().DefaultCurrency;
 
@@ -93,10 +90,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreatePointOfSaleApp(string storeId, PointOfSaleAppRequest request)
         {
-            var store = await _storeRepository.FindStore(storeId);
-            if (store == null)
-                return this.CreateAPIError(404, "store-not-found", "The store was not found");
-
+            var store = HttpContext.GetStoreData();
             // This is not obvious, but we must have a non-null currency or else request validation may not work correctly
             request.Currency ??= store.GetStoreBlob().DefaultCurrency;
 

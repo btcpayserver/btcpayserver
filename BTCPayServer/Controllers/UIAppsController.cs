@@ -86,7 +86,7 @@ namespace BTCPayServer.Controllers
             bool archived = false
         )
         {
-            var store = GetCurrentStore();
+            var store = HttpContext.GetStoreData();
             var apps = (await _appService.GetAllApps(GetUserId(), false, store.Id, archived))
                 .Where(app => app.Archived == archived);
 
@@ -138,11 +138,7 @@ namespace BTCPayServer.Controllers
         [HttpPost("/stores/{storeId}/apps/create/{appType?}")]
         public async Task<IActionResult> CreateApp(string storeId, CreateAppViewModel vm)
         {
-            var store = GetCurrentStore();
-            if (store == null)
-            {
-                return NotFound();
-            }
+            var store = HttpContext.GetStoreData();
             if (!store.AnyPaymentMethodAvailable(_handlers))
             {
                 object text = _networkProvider.DefaultNetwork?.CryptoCode switch
@@ -298,8 +294,6 @@ namespace BTCPayServer.Controllers
 
         private string GetUserId() => User.GetId();
 
-        private StoreData GetCurrentStore() => HttpContext.GetStoreData();
-
-        private AppData GetCurrentApp() => HttpContext.GetAppData();
+        private AppData GetCurrentApp() => HttpContext.GetAppDataOrNull();
     }
 }

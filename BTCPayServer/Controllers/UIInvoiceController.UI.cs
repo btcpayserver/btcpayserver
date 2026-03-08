@@ -296,7 +296,7 @@ namespace BTCPayServer.Controllers
                                 new { pullPaymentId = ppId });
             }
 
-            var payoutMethodIds = _payoutHandlers.GetSupportedPayoutMethods(this.GetCurrentStore());
+            var payoutMethodIds = _payoutHandlers.GetSupportedPayoutMethods(HttpContext.GetStoreData());
             if (!payoutMethodIds.Any())
             {
                 var vm = new RefundModel { Title = StringLocalizer["No matching payment method"] };
@@ -332,12 +332,12 @@ namespace BTCPayServer.Controllers
         {
             await using var ctx = _dbContextFactory.CreateContext();
 
-            var invoice = HttpContext.GetInvoiceData();
+            var invoice = HttpContext.GetInvoiceDataOrNull();
 
             if (invoice?.GetInvoiceState().CanRefund() is not true)
                 return NotFound();
 
-            var store = GetCurrentStore();
+            var store = HttpContext.GetStoreData();
             var pmi = PayoutMethodId.Parse(model.SelectedPayoutMethod);
             var cdCurrency = _CurrencyNameTable.GetCurrencyData(invoice.Currency, true);
             RateRulesCollection rules;
@@ -627,6 +627,8 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.ErrorMessage] = err;
                 return RedirectToAction(nameof(ListInvoices), new { storeId });
             }
+
+            var store = HttpContext.GetStoreData();
             if (selectedItems.Length == 0)
                 return NotSupported(StringLocalizer["No invoice has been selected"]);
 
@@ -650,10 +652,10 @@ namespace BTCPayServer.Controllers
                     var explorer = network is null ? null : _ExplorerClients.GetExplorerClient(network);
                     if (explorer is null || network is null)
                         return NotSupported(StringLocalizer["This feature is only available to BTC wallets"]);
-                    if (!GetCurrentStore().HasPolicy(User.GetId(), Policies.CanModifyStoreSettings, _permissionService))
+                    if (!store.HasPolicy(User.GetId(), Policies.CanModifyStoreSettings, _permissionService))
                         return Forbid();
 
-                    var derivationScheme = GetCurrentStore().GetDerivationSchemeSettings(_handlers, network.CryptoCode)?.AccountDerivation;
+                    var derivationScheme = store.GetDerivationSchemeSettings(_handlers, network.CryptoCode)?.AccountDerivation;
                     if (derivationScheme is null)
                         return NotSupported("This feature is only available to BTC wallets");
                     var btc = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
@@ -1174,7 +1176,7 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanCreateInvoice, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> CreateInvoice(CreateInvoiceModel model, CancellationToken cancellationToken)
         {
-            var store = HttpContext.GetStoreDataOrThrow();
+            var store = HttpContext.GetStoreData();
             if (!store.AnyPaymentMethodAvailable(_handlers))
             {
                 return NoPaymentMethodResult(store.Id);
@@ -1291,8 +1293,6 @@ namespace BTCPayServer.Controllers
             public bool NotFound { get; set; }
             public string? StatusString { get; set; }
         }
-
-        private StoreData GetCurrentStore() => HttpContext.GetStoreDataOrThrow();
 
         // Let server admin lookup invoices from users, see #6489
         private string? GetUserIdForInvoiceQuery() => User.IsInRole(Roles.ServerAdmin) ? null : User.GetIdOrNull();

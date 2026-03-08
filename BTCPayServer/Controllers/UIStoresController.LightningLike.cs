@@ -28,7 +28,7 @@ public partial class UIStoresController
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult Lightning(string storeId, string cryptoCode)
     {
-        var store = HttpContext.GetStoreData();
+        var store = HttpContext.GetStoreDataOrNull();
         if (store == null)
             return NotFound();
 
@@ -90,7 +90,7 @@ public partial class UIStoresController
     [HttpGet("{storeId}/lightning/{cryptoCode}/dashboard/balance")]
     public IActionResult LightningBalanceDashboard(string storeId, string cryptoCode)
     {
-        var store = HttpContext.GetStoreData();
+        var store = HttpContext.GetStoreDataOrNull();
         if (store == null)
             return NotFound();
 
@@ -101,7 +101,7 @@ public partial class UIStoresController
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> LightningBalanceDashboard(string storeId, string cryptoCode, HistogramType type)
     {
-        var store = HttpContext.GetStoreData();
+        var store = HttpContext.GetStoreDataOrNull();
         if (store == null)
             return NotFound();
         var lightningClient = await GetLightningClient(store, cryptoCode);
@@ -116,7 +116,7 @@ public partial class UIStoresController
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult SetupLightningNode(string storeId, string cryptoCode)
     {
-        var store = HttpContext.GetStoreData();
+        var store = HttpContext.GetStoreDataOrNull();
         if (store == null)
             return NotFound();
 
@@ -134,7 +134,7 @@ public partial class UIStoresController
     public async Task<IActionResult> SetupLightningNode(string storeId, LightningNodeViewModel vm, string command, string cryptoCode)
     {
         vm.CryptoCode = cryptoCode;
-        var store = HttpContext.GetStoreData();
+        var store = HttpContext.GetStoreDataOrNull();
         if (store == null)
             return NotFound();
 
@@ -149,7 +149,7 @@ public partial class UIStoresController
             return View(vm);
         }
 
-            
+
         var paymentMethodId = PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode);
 
         LightningPaymentMethodConfig? paymentMethod;
@@ -223,7 +223,7 @@ public partial class UIStoresController
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult LightningSettings(string storeId, string cryptoCode)
     {
-        var store = HttpContext.GetStoreData();
+        var store = HttpContext.GetStoreDataOrNull();
         if (store == null)
             return NotFound();
 
@@ -266,7 +266,7 @@ public partial class UIStoresController
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> LightningSettings(LightningSettingsViewModel vm)
     {
-        var store = HttpContext.GetStoreData();
+        var store = HttpContext.GetStoreDataOrNull();
         if (store == null)
             return NotFound();
 
@@ -279,21 +279,21 @@ public partial class UIStoresController
         var network = _explorerProvider.GetNetwork(vm.CryptoCode);
         var lnId = PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode);
         var lnurlId = PaymentTypes.LNURL.GetPaymentMethodId(network.CryptoCode);
-        
+
         var lightning = GetConfig<LightningPaymentMethodConfig>(lnId, store);
         if (lightning == null)
             return NotFound();
-        
+
         var needUpdate = false;
         var blob = store.GetStoreBlob();
         blob.LightningDescriptionTemplate = vm.LightningDescriptionTemplate ?? string.Empty;
         blob.LightningAmountInSatoshi = vm.LightningAmountInSatoshi;
         blob.LightningPrivateRouteHints = vm.LightningPrivateRouteHints;
         blob.OnChainWithLnInvoiceFallback = vm.OnChainWithLnInvoiceFallback;
-        
+
         // Lightning
         blob.SetExcluded(lnId, !vm.Enabled);
-        
+
         // LNURL
         blob.SetExcluded(lnurlId, !vm.LNURLEnabled || !vm.Enabled);
 

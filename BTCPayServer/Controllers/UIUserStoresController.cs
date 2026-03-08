@@ -116,7 +116,7 @@ namespace BTCPayServer.Controllers
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
         public IActionResult DeleteStore(string storeId)
         {
-            var store = HttpContext.GetStoreData();
+            var store = HttpContext.GetStoreDataOrNull();
             if (store == null)
                 return NotFound();
             return View("Confirm", new ConfirmModel(StringLocalizer["Delete store {0}", store.StoreName], StringLocalizer["This store will still be accessible to users sharing it"], StringLocalizer["Delete"]));
@@ -126,7 +126,7 @@ namespace BTCPayServer.Controllers
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
         public async Task<IActionResult> DeleteStorePost(string storeId)
         {
-            var store = HttpContext.GetStoreData();
+            var store = HttpContext.GetStoreDataOrNull();
             if (store == null)
                 return NotFound();
             await _repo.RemoveStore(storeId, User.GetId());

@@ -66,13 +66,7 @@ namespace BTCPayServer.Plugins.Shopify
             _jsonHelper = jsonHelper;
             _clientFactory = clientFactory;
         }
-        public StoreData CurrentStore
-        {
-            get
-            {
-                return this.HttpContext.GetStoreData();
-            }
-        }
+        public StoreData CurrentStore => this.HttpContext.GetStoreData();
         private static string _cachedShopifyJavascript;
 
         private async Task<string> GetJavascript()

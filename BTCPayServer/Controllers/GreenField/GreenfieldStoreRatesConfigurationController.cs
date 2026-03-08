@@ -53,7 +53,7 @@ namespace BTCPayServer.Controllers.GreenField
         [NonAction]
         private IActionResult GetStoreRateConfigurationCore(bool? fallback)
         {
-            var data = HttpContext.GetStoreDataOrThrow();
+            var data = HttpContext.GetStoreData();
             var storeBlob = data.GetStoreBlob();
             var blob = storeBlob.GetRateSettings(fallback ?? false);
             if (blob is null)
@@ -92,7 +92,7 @@ namespace BTCPayServer.Controllers.GreenField
         [NonAction]
         private async Task<IActionResult> UpdateStoreRateConfigurationCore(StoreRateConfiguration configuration, bool fallback)
         {
-            var storeData = HttpContext.GetStoreDataOrThrow();
+            var storeData = HttpContext.GetStoreData();
             var storeBlob = storeData.GetStoreBlob();
             var blob = storeBlob.GetRateSettings(fallback);
 
@@ -124,7 +124,7 @@ namespace BTCPayServer.Controllers.GreenField
         public async Task<IActionResult> PreviewUpdateStoreRateConfiguration(
             StoreRateConfiguration configuration, [FromQuery] string[]? currencyPair)
         {
-            var data = HttpContext.GetStoreDataOrThrow();
+            var data = HttpContext.GetStoreData();
             var storeBlob = data.GetStoreBlob();
             // Fallback or not, the preview will be the same
             var blob = storeBlob.GetOrCreateRateSettings(true);

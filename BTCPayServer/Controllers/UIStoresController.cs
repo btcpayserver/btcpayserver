@@ -148,7 +148,7 @@ public partial class UIStoresController : Controller
         return Forbid();
     }
 
-    public StoreData CurrentStore => HttpContext.GetStoreDataOrThrow();
+    public StoreData CurrentStore => HttpContext.GetStoreData();
 
     public PaymentMethodOptionViewModel.Format[] GetEnabledPaymentMethodChoices(StoreData storeData)
     {

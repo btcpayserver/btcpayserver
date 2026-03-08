@@ -783,29 +783,29 @@ namespace BTCPayServer
 
         public static IDisposable SwitchStoreData(this HttpContext ctx, StoreData? storeData)
         {
-            var old = ctx.GetStoreData();
+            var old = ctx.GetStoreDataOrNull();
             ctx.SetStoreData(storeData);
             return new ActionDisposable(() => { ctx.SetStoreData(old); });
         }
 
         /// <summary>
-        /// Set after authorization succeed. If your route is authorized, this is guaranted to not be null.
+        /// Set after authorization succeed. If your route is authorized, this is guaranteed to not be null.
         /// </summary>
         /// <param name="ctx"></param>
         /// <returns></returns>
-        public static StoreData? GetStoreData(this HttpContext ctx)
+        public static StoreData? GetStoreDataOrNull(this HttpContext ctx)
             => ctx.Items.TryGet("BTCPAY.STOREDATA") as StoreData;
         /// <summary>
-        /// Set after authorization succeed. If your route is authorized, this is guaranted to not throw.
+        /// Set after authorization succeed. If your route is authorized, this is guaranteed to not throw.
         /// </summary>
         /// <param name="ctx"></param>
         /// <returns></returns>
-        public static StoreData GetStoreDataOrThrow(this HttpContext ctx)
-            => GetStoreData(ctx) ?? throw new InvalidOperationException("StoreData is not set");
+        public static StoreData GetStoreData(this HttpContext ctx)
+            => GetStoreDataOrNull(ctx) ?? throw new InvalidOperationException("StoreData is not set");
         public static void SetStoreData(this HttpContext ctx, StoreData? storeData)
             => ctx.Items["BTCPAY.STOREDATA"] = storeData;
         public static string? GetCurrentStoreId(this HttpContext ctx)
-            => GetStoreData(ctx)?.Id;
+            => GetStoreDataOrNull(ctx)?.Id;
 
         public static StoreData[] GetStoresData(this HttpContext ctx)
             => ctx.Items.TryGet("BTCPAY.STORESDATA") as StoreData[] ?? Array.Empty<StoreData>();
@@ -816,14 +816,14 @@ namespace BTCPayServer
         /// </summary>
         /// <param name="ctx"></param>
         /// <returns></returns>
-        public static InvoiceEntity? GetInvoiceData(this HttpContext ctx)
+        public static InvoiceEntity? GetInvoiceDataOrNull(this HttpContext ctx)
         => ctx.Items.TryGet("BTCPAY.INVOICEDATA") as InvoiceEntity;
 
 
         public static void SetInvoiceData(this HttpContext ctx, InvoiceEntity? invoiceEntity)
         => ctx.Items["BTCPAY.INVOICEDATA"] = invoiceEntity;
 
-        public static PaymentRequestData? GetPaymentRequestData(this HttpContext ctx)
+        public static PaymentRequestData? GetPaymentRequestDataOrNull(this HttpContext ctx)
         => ctx.Items.TryGet("BTCPAY.PAYMENTREQUESTDATA") as PaymentRequestData;
 
         public static void SetPaymentRequestData(this HttpContext ctx, PaymentRequestData? paymentRequestData)
@@ -831,7 +831,7 @@ namespace BTCPayServer
             ctx.Items["BTCPAY.PAYMENTREQUESTDATA"] = paymentRequestData;
         }
 
-        public static AppData? GetAppData(this HttpContext ctx)
+        public static AppData? GetAppDataOrNull(this HttpContext ctx)
         => ctx.Items.TryGet("BTCPAY.APPDATA") as AppData;
 
         public static void SetAppData(this HttpContext ctx, AppData? appData)

@@ -3,7 +3,7 @@
 @{
     BTCPayServer.Plugins.PluginExceptionHandler.SetDisablePluginIfCrash(Context);
     ViewData.SetLayoutModel(new(nameof(StoreNavPages.Dashboard), Model.StoreName));
-    var store = ViewContext.HttpContext.GetStoreData();
+    var store = ViewContext.HttpContext.GetStoreDataOrNull();
 }
 
 <partial name="_StatusMessage" />

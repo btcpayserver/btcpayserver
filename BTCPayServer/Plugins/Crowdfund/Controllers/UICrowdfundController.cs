@@ -583,7 +583,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             return currency.Trim().ToUpperInvariant();
         }
 
-        private AppData GetCurrentApp() => HttpContext.GetAppData();
+        private AppData GetCurrentApp() => HttpContext.GetAppDataOrNull();
 
         private string GetUserId() => User.GetIdOrNull();
 

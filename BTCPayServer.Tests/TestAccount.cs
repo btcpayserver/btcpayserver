@@ -94,10 +94,16 @@ namespace BTCPayServer.Tests
         {
             await RegisterAsync(isAdmin);
             await CreateStoreAsync();
+            await PairWithBitpayAPI();
+        }
+
+        public async Task PairWithBitpayAPI()
+        {
             var store = GetController<BTCPayServer.Plugins.Bitpay.Controllers.UIStoresTokenController>();
-            var pairingCode = BitPay.RequestClientAuthorization("test", Facade.Merchant);
+            var pairingCode = await BitPay.RequestClientAuthorizationAsync("test", Facade.Merchant);
             Assert.IsType<ViewResult>(await store.RequestPairing(pairingCode.ToString()));
-            await store.Pair(pairingCode.ToString(), StoreId);
+            var result = await store.Pair(pairingCode.ToString(), StoreId);
+            Assert.IsType<RedirectToActionResult>(result);
         }
 
         public BTCPayServerClient CreateClientFromAPIKey(string apiKey)

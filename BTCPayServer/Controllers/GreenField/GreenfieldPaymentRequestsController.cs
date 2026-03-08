@@ -59,26 +59,23 @@ namespace BTCPayServer.Controllers.Greenfield
 		[Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
 		[HttpGet("~/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}")]
 		public async Task<IActionResult> GetPaymentRequest(string storeId, string paymentRequestId)
-		{
-			var pr = await _paymentRequestRepository.FindPaymentRequests(
-				new PaymentRequestQuery() { StoreId = storeId, Ids = new[] { paymentRequestId } });
+        {
+			var pr = HttpContext.GetPaymentRequestDataOrNull();
 
-			if (pr.Length == 0)
-			{
+			if (pr is null)
 				return PaymentRequestNotFound();
-			}
 
-			return Ok(FromModel(pr.First()));
+			return Ok(FromModel(pr));
 		}
 
 		[Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
 		[HttpPost("~/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}/pay")]
 		public async Task<IActionResult> PayPaymentRequest(string storeId, string paymentRequestId, [FromBody] PayPaymentRequestRequest pay, CancellationToken cancellationToken)
 		{
-			var pr = await this.PaymentRequestService.GetPaymentRequest(paymentRequestId);
-			if (pr is null || pr.StoreId != storeId)
+			var p = HttpContext.GetPaymentRequestDataOrNull();
+			if (p is null)
 				return PaymentRequestNotFound();
-
+            var pr = await PaymentRequestService.AsViewModel(p);
 			var amount = pay?.Amount;
 			if (amount.HasValue && amount.Value <= 0)
 			{
@@ -118,8 +115,9 @@ namespace BTCPayServer.Controllers.Greenfield
 
 			try
 			{
+				var storeData = HttpContext.GetStoreData();
 				var prData = await _paymentRequestRepository.FindPaymentRequest(pr.Id, null);
-				var invoice = await _invoiceController.CreatePaymentRequestInvoice(prData, amount, pr.AmountDue, this.StoreData, Request, cancellationToken);
+				var invoice = await _invoiceController.CreatePaymentRequestInvoice(prData, amount, pr.AmountDue, storeData, Request, cancellationToken);
 				return Ok(GreenfieldInvoiceController.ToModel(invoice, _linkGenerator, _currencyNameTable, Request));
 			}
 			catch (BitpayHttpException e)
@@ -133,14 +131,11 @@ namespace BTCPayServer.Controllers.Greenfield
 		[HttpDelete("~/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}")]
 		public async Task<IActionResult> ArchivePaymentRequest(string storeId, string paymentRequestId)
 		{
-			var pr = await _paymentRequestRepository.FindPaymentRequests(
-				new PaymentRequestQuery() { StoreId = storeId, Ids = new[] { paymentRequestId }, IncludeArchived = false });
-			if (pr.Length == 0)
-			{
-				return PaymentRequestNotFound();
-			}
+			var pr = HttpContext.GetPaymentRequestDataOrNull();
+			if (pr is null || pr.Archived)
+                return PaymentRequestNotFound();
 
-			await _paymentRequestRepository.ArchivePaymentRequest(pr.First().Id);
+			await _paymentRequestRepository.ArchivePaymentRequest(pr.Id);
 			return Ok();
 		}
 
@@ -168,11 +163,11 @@ namespace BTCPayServer.Controllers.Greenfield
 			if (string.IsNullOrEmpty(request.Title))
 				ModelState.AddModelError(nameof(request.Title), "Title is required");
 
+			var storeData = HttpContext.GetStoreData();
 			PaymentRequestData pr;
 			if (paymentRequestId is not null)
 			{
-				pr = (await _paymentRequestRepository.FindPaymentRequests(
-					new PaymentRequestQuery() { StoreId = storeId, Ids = new[] { paymentRequestId } })).FirstOrDefault();
+				pr = HttpContext.GetPaymentRequestDataOrNull();
 				if (pr is null)
 					return PaymentRequestNotFound();
 				if ((pr.Amount != request.Amount && request.Amount != 0.0m) ||
@@ -201,7 +196,7 @@ namespace BTCPayServer.Controllers.Greenfield
 					Status = PaymentRequestStatus.Pending,
 					Created = DateTimeOffset.UtcNow,
 					Amount = request.Amount,
-					Currency = request.Currency ?? StoreData.GetStoreBlob().DefaultCurrency,
+					Currency = request.Currency ?? storeData.GetStoreBlob().DefaultCurrency,
 					Expiry = request.ExpiryDate,
 				};
 			}
@@ -225,7 +220,6 @@ namespace BTCPayServer.Controllers.Greenfield
 			pr = await _paymentRequestRepository.CreateOrUpdatePaymentRequest(pr);
 			return Ok(FromModel(pr));
 		}
-		public Data.StoreData StoreData => HttpContext.GetStoreData();
 
 		public PaymentRequestService PaymentRequestService { get; }
 

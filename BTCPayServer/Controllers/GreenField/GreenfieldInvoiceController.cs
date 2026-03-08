@@ -97,7 +97,7 @@ namespace BTCPayServer.Controllers.Greenfield
             [FromQuery] int? take = null
             )
         {
-            var store = HttpContext.GetStoreData()!;
+            var store = HttpContext.GetStoreData();
             if (startDate is DateTimeOffset s &&
                 endDate is DateTimeOffset e &&
                 s > e)
@@ -130,7 +130,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/stores/{storeId}/invoices/{invoiceId}")]
         public async Task<IActionResult> GetInvoice(string storeId, string invoiceId)
         {
-            var invoice = HttpContext.GetInvoiceData();
+            var invoice = HttpContext.GetInvoiceDataOrNull();
             if (invoice is null)
                 return InvoiceNotFound();
             return Ok(ToModel(invoice));
@@ -141,7 +141,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpDelete("~/api/v1/stores/{storeId}/invoices/{invoiceId}")]
         public async Task<IActionResult> ArchiveInvoice(string storeId, string invoiceId)
         {
-            var invoice = HttpContext.GetInvoiceData();
+            var invoice = HttpContext.GetInvoiceDataOrNull();
             if (invoice is null)
                 return InvoiceNotFound();
             await _invoiceRepository.ToggleInvoiceArchival(invoiceId, true, storeId);
@@ -153,7 +153,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpPut("~/api/v1/stores/{storeId}/invoices/{invoiceId}")]
         public async Task<IActionResult> UpdateInvoice(string storeId, string invoiceId, UpdateInvoiceRequest request)
         {
-            if (HttpContext.GetInvoiceData() is null)
+            if (HttpContext.GetInvoiceDataOrNull() is null)
                 return InvoiceNotFound();
             var invoice = await _invoiceRepository.UpdateInvoiceMetadata(invoiceId, storeId, request.Metadata);
             return Ok(ToModel(invoice));
@@ -164,7 +164,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpPost("~/api/v1/stores/{storeId}/invoices")]
         public async Task<IActionResult> CreateInvoice(string storeId, CreateInvoiceRequest request)
         {
-            var store = HttpContext.GetStoreData()!;
+            var store = HttpContext.GetStoreData();
             if (request.Amount < 0.0m)
             {
                 ModelState.AddModelError(nameof(request.Amount), "The amount should be 0 or more.");
@@ -238,7 +238,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> MarkInvoiceStatus(string storeId, string invoiceId,
             MarkInvoiceStatusRequest request)
         {
-            var invoice = HttpContext.GetInvoiceData();
+            var invoice = HttpContext.GetInvoiceDataOrNull();
             if (invoice is null)
                 return InvoiceNotFound();
 
@@ -259,7 +259,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/unarchive")]
         public async Task<IActionResult> UnarchiveInvoice(string storeId, string invoiceId)
         {
-            var invoice = HttpContext.GetInvoiceData();
+            var invoice = HttpContext.GetInvoiceDataOrNull();
             if (invoice is null)
                 return InvoiceNotFound();
 
@@ -281,7 +281,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods")]
         public async Task<IActionResult> GetInvoicePaymentMethods(string storeId, string invoiceId, bool onlyAccountedPayments = true, bool includeSensitive = false)
         {
-            var invoice = HttpContext.GetInvoiceData();
+            var invoice = HttpContext.GetInvoiceDataOrNull();
             if (invoice is null)
                 return InvoiceNotFound();
 
@@ -296,7 +296,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods/{paymentMethod}/activate")]
         public async Task<IActionResult> ActivateInvoicePaymentMethod(string storeId, string invoiceId, string paymentMethod)
         {
-            if (HttpContext.GetInvoiceData() is null)
+            if (HttpContext.GetInvoiceDataOrNull() is null)
                 return InvoiceNotFound();
             if (PaymentMethodId.TryParse(paymentMethod, out var paymentMethodId))
             {
@@ -317,9 +317,9 @@ namespace BTCPayServer.Controllers.Greenfield
             CancellationToken cancellationToken = default
         )
         {
-            var invoice = HttpContext.GetInvoiceData();
+            var invoice = HttpContext.GetInvoiceDataOrNull();
             var store = HttpContext.GetStoreData();
-            if (invoice is null || store is null)
+            if (invoice is null)
                 return InvoiceNotFound();
             if (!invoice.GetInvoiceState().CanRefund())
                 return this.CreateAPIError("non-refundable", "Cannot refund this invoice");
@@ -488,7 +488,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/stores/{storeId}/invoices/{invoiceId}/refund/{paymentMethodId}")]
         public async Task<IActionResult> GetInvoiceRefundTriggerData(string storeId, string invoiceId, string paymentMethodId, CancellationToken cancellationToken)
         {
-            var invoice = HttpContext.GetInvoiceData();
+            var invoice = HttpContext.GetInvoiceDataOrNull();
             if (invoice is null)
                 return InvoiceNotFound();
             var pmi = PaymentMethodId.TryParse(paymentMethodId);
@@ -517,7 +517,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var cdCurrency = _currencyNameTable.GetCurrencyData(invoice.Currency, true);
 
             var paidAmount = Math.Round(cryptoPaid * paymentPrompt.Rate, cdCurrency.Divisibility);
-            var store = this.HttpContext.GetStoreDataOrThrow();
+            var store = this.HttpContext.GetStoreData();
             var rules = store.GetStoreBlob().GetRateRules(_defaultRules);
             var rateResult = await _rateProvider.FetchRate(
                 new CurrencyPair(paymentMethodCurrency, invoice.Currency), rules, new StoreIdRateContext(store.Id),
@@ -650,7 +650,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 statuses.Add(InvoiceStatus.Invalid);
             }
-            var store = request?.HttpContext.GetStoreData();
+            var store = request?.HttpContext.GetStoreDataOrNull();
             var receipt = store == null ? entity.ReceiptOptions : InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, entity.ReceiptOptions);
             return new InvoiceData
             {

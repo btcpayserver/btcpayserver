@@ -43,7 +43,7 @@ namespace BTCPayServer.Components.WalletNav
 
         public async Task<IViewComponentResult> InvokeAsync(WalletId walletId)
         {
-            var store = ViewContext.HttpContext.GetStoreData();
+            var store = ViewContext.HttpContext.GetStoreDataOrNull();
             var network = _handlers.TryGetNetwork(PaymentTypes.CHAIN.GetPaymentMethodId(walletId.CryptoCode));
             if (network is null || store is null)
                 return new HtmlContentViewComponentResult(new StringHtmlContent(string.Empty));

@@ -1999,8 +1999,13 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
-            await user.GrantAccessAsync(true);
-            await user.MakeAdmin();
+
+            await user.RegisterAsync(true);
+            await user.CreateStoreAsync();
+            var otherStoreId = user.StoreId;
+            await user.CreateStoreAsync();
+            await user.PairWithBitpayAPI();
+
             await user.SetupWebhook();
             var client = await user.CreateClient(Policies.Unrestricted);
             var viewOnly = await user.CreateClient(Policies.CanViewInvoices);
@@ -2116,6 +2121,9 @@ namespace BTCPayServer.Tests
 
             //get
             var invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
+
+            await AssertEx.AssertApiError("missing-permission", async () => await viewOnly.GetInvoice("some-other-store", newInvoice.Id));
+            await AssertEx.AssertApiError("invoice-not-found", async () => await viewOnly.GetInvoice(otherStoreId, newInvoice.Id));
             Assert.True(JObject.DeepEquals(newInvoice.Metadata, invoice.Metadata));
             var paymentMethods = await viewOnly.GetInvoicePaymentMethods(user.StoreId, newInvoice.Id);
             Assert.Single(paymentMethods);

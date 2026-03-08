@@ -3,7 +3,7 @@
 @inject UriResolver UriResolver
 @{
     ViewData.TryGetValue("StoreBranding", out var storeBranding);
-    var store = Context.GetStoreData();
+    var store = Context.GetStoreDataOrNull();
     var storeBlob = store?.GetStoreBlob();
     var isBackend = store != null && storeBranding == null; 
     if (isBackend && storeBlob.ApplyBrandColorToBackend)

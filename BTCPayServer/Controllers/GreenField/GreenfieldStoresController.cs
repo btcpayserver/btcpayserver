@@ -70,18 +70,12 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}")]
         public async Task<IActionResult> GetStore(string storeId)
-        {
-            var store = HttpContext.GetStoreData();
-            return store == null ? StoreNotFound() : Ok(await FromModel(store));
-        }
+        => Ok(await FromModel(HttpContext.GetStoreData()));
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/stores/{storeId}")]
         public async Task<IActionResult> RemoveStore(string storeId)
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null) return StoreNotFound();
-
             await _storeRepository.RemoveStore(storeId, User.GetId());
             return Ok();
         }
@@ -118,7 +112,6 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> UpdateStore(string storeId, UpdateStoreRequest request)
         {
             var store = HttpContext.GetStoreData();
-            if (store == null) return StoreNotFound();
             request = await MergeStoreRequestWithTemplate(request, store);
             var validationResult = Validate(request);
             if (validationResult != null) return validationResult;
@@ -133,7 +126,8 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var user = await _userManager.GetUserAsync(User);
             var store = HttpContext.GetStoreData();
-            if (user == null || store == null) return StoreNotFound();
+            if (user == null)
+                return this.CreateAPIError(400, "user-not-found", "The user was not found");
 
             UploadImageResultModel upload = null;
             if (file is null)
@@ -168,13 +162,12 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> DeleteStoreLogo(string storeId)
         {
             var store = HttpContext.GetStoreData();
-            if (store == null || User.GetIdOrNull() is not string userId) return StoreNotFound();
 
             var blob = store.GetStoreBlob();
             var fileId = (blob.LogoUrl as UnresolvedUri.FileIdUri)?.FileId;
             if (!string.IsNullOrEmpty(fileId))
             {
-                await _fileService.RemoveFile(fileId, userId);
+                await _fileService.RemoveFile(fileId, User.GetId());
                 blob.LogoUrl = null;
                 store.SetStoreBlob(blob);
                 await _storeRepository.UpdateStore(store);
@@ -380,11 +373,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 }
             }
             return !ModelState.IsValid ? this.CreateValidationError(ModelState) : null;
-        }
-
-        private IActionResult StoreNotFound()
-        {
-            return this.CreateAPIError(404, "store-not-found", "The store was not found");
         }
     }
 }

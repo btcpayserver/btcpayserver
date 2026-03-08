@@ -24,7 +24,7 @@ public class UIStoreWebhooksController(
     IStringLocalizer stringLocalizer,
     WebhookSender webhookSender) : Controller
 {
-    public Data.StoreData CurrentStore => HttpContext.GetStoreDataOrThrow();
+    public Data.StoreData CurrentStore => HttpContext.GetStoreData();
     public IStringLocalizer StringLocalizer { get; set; } = stringLocalizer;
     private async Task<Data.WebhookDeliveryData?> LastDeliveryForWebhook(string webhookId)
     {

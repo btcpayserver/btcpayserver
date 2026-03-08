@@ -103,9 +103,7 @@ public class BuiltInPermissionScopeProvider(
                     // Consider the route /stores/{storeId}/apps/{appId}
                     // This check is making sure that the `storeId` is matching the scope resolved from `appId`.
                     if (storeId2 != storeId)
-                    {
                         storeId2 = null;
-                    }
 
                     if (storeId2 is not null)
                         additionalScopes.Add(new AdditionalScope(i.RouteValue, id));

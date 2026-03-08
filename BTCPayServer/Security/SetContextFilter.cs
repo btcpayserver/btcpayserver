@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace BTCPayServer.Security;
 
+// Note: Plugins should rather put controller-specific filters rather than this global one
 public class SetContextFilter(
     PaymentRequestRepository paymentRequestRepository,
     InvoiceRepository invoiceRepository,
@@ -44,6 +45,7 @@ public class SetContextFilter(
         if (httpContext.Items.TryGetValue(BuiltInPermissionHandler.StoresKey, out var ooo) && ooo is StoreData[] stores)
             httpContext.SetStoresData(stores);
 
+        //TODO: We should probably do this on controller specific filters, this would be better example for plugins
         if (httpContext.Items.TryGetValue(BuiltInPermissionScopeProvider.AdditionalScopeKey, out var o) && o is IEnumerable<BuiltInPermissionScopeProvider.AdditionalScope> additionalScopes)
         {
             foreach (var additionalScope in additionalScopes)
@@ -55,7 +57,7 @@ public class SetContextFilter(
                         if (app is not null)
                             httpContext.SetAppData(app);
                         break;
-                    case "payReqId":
+                    case "payReqId" or "paymentRequestId":
                         var paymentRequest = await paymentRequestRepository.FindPaymentRequest(additionalScope.Scope, userId);
                         if (paymentRequest is not null)
                             httpContext.SetPaymentRequestData(paymentRequest);

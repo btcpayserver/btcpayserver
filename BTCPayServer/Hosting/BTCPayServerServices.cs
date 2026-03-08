@@ -502,8 +502,11 @@ namespace BTCPayServer.Hosting
                      {
                          new("appId", "SELECT \"StoreDataId\" FROM \"Apps\" WHERE \"Id\" = @id"),
                          new("payReqId", "SELECT \"StoreDataId\" FROM \"PaymentRequests\" WHERE \"Id\" = @id"),
+                         new("paymentRequestId", "SELECT \"StoreDataId\" FROM \"PaymentRequests\" WHERE \"Id\" = @id"),
+                         new("pullPaymentId", "SELECT \"StoreId\" FROM \"PullPayments\" WHERE \"Id\" = @id"),
                          new("invoiceId", "SELECT \"StoreDataId\" FROM \"Invoices\" WHERE \"Id\" = @id"),
                      })
+
                 services.AddSingleton(routeDataToStoreId);
 
             services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();

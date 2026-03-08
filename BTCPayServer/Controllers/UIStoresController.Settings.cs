@@ -22,7 +22,7 @@ public partial class UIStoresController
     [HttpGet("{storeId}/settings")]
     public async Task<IActionResult> GeneralSettings(string storeId)
     {
-        var store = HttpContext.GetStoreData();
+        var store = HttpContext.GetStoreDataOrNull();
         if (store == null) return NotFound();
 
         var storeBlob = store.GetStoreBlob();

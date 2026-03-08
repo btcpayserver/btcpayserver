@@ -1418,6 +1418,7 @@ namespace BTCPayServer.Plugins.Translations
   "Search by Id, Title or Amount...": "",
   "Search engines can index this site": "",
   "Search…": "",
+  "Search labels…": "",
   "seconds": "",
   "Secure your recovery phrase": "",
   "Security device (FIDO2)": "",

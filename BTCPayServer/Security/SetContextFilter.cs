@@ -62,7 +62,7 @@ public class SetContextFilter(
                             httpContext.SetPaymentRequestData(paymentRequest);
                         break;
                     case "invoiceId":
-                        var invoice = await invoiceRepository.GetInvoice(additionalScope.Scope);
+                        var invoice = await invoiceRepository.GetInvoice(additionalScope.Scope, true);
                         if (invoice is not null)
                             httpContext.SetInvoiceData(invoice);
                         break;

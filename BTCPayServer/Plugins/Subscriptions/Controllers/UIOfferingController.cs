@@ -489,7 +489,7 @@ public partial class UIOfferingController(
             OfferingId = offeringId,
             PlanId = planId,
             OfferingName = offering.App.Name,
-            Currency = plan?.Currency ?? this.HttpContext.GetStoreData().GetStoreBlob().DefaultCurrency,
+            Currency = plan?.Currency ?? this.HttpContext.GetStoreDataOrThrow().GetStoreBlob().DefaultCurrency,
             Price = plan?.Price ?? 0m,
             Name = plan?.Name ?? "",
             Description = plan?.Description ?? "",

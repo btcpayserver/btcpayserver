@@ -22,23 +22,13 @@ namespace BTCPayServer.Controllers.Greenfield
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     [EnableCors(CorsPolicies.All)]
-    public class GreenfieldStorePaymentMethodsController : ControllerBase
+    public class GreenfieldStorePaymentMethodsController(
+        PaymentMethodHandlerDictionary handlers,
+        StoreRepository storeRepository,
+        IAuthorizationService authorizationService)
+        : ControllerBase
     {
-        private StoreData Store => HttpContext.GetStoreData();
-
-        private readonly PaymentMethodHandlerDictionary _handlers;
-        private readonly StoreRepository _storeRepository;
-        private readonly IAuthorizationService _authorizationService;
-
-        public GreenfieldStorePaymentMethodsController(
-            PaymentMethodHandlerDictionary handlers,
-            StoreRepository storeRepository,
-            IAuthorizationService authorizationService)
-        {
-            _handlers = handlers;
-            _storeRepository = storeRepository;
-            _authorizationService = authorizationService;
-        }
+        private StoreData Store => HttpContext.GetStoreDataOrThrow();
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}")]
@@ -68,7 +58,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (Store.GetPaymentMethodConfig(paymentMethodId) is null)
                 return Ok();
             Store.SetPaymentMethodConfig(paymentMethodId, null);
-            await _storeRepository.UpdateStore(Store);
+            await storeRepository.UpdateStore(Store);
             return Ok();
         }
 
@@ -91,13 +81,11 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 try
                 {
-                    var ctx = new PaymentMethodConfigValidationContext(_authorizationService, ModelState, config, User, Store.GetPaymentMethodConfig(paymentMethodId));
+                    var ctx = new PaymentMethodConfigValidationContext(authorizationService, ModelState, config, User, Store.GetPaymentMethodConfig(paymentMethodId));
                     await handler.ValidatePaymentMethodConfig(ctx);
                     config = ctx.Config;
                     if (ctx.MissingPermission is not null)
-                    {
                         return this.CreateAPIPermissionError(ctx.MissingPermission.Permission, ctx.MissingPermission.Message);
-                    }
                     if (!ModelState.IsValid)
                         return this.CreateValidationError(ModelState);
                     if (ctx.StripUnknownProperties)
@@ -116,13 +104,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 storeBlob.SetExcluded(paymentMethodId, !enabled);
                 Store.SetStoreBlob(storeBlob);
             }
-            await _storeRepository.UpdateStore(Store);
+            await storeRepository.UpdateStore(Store);
             return await GetStorePaymentMethod(storeId, paymentMethodId, request?.Config is not null);
         }
 
         private IPaymentMethodHandler AssertHasHandler(PaymentMethodId paymentMethodId)
         {
-            if (!_handlers.TryGetValue(paymentMethodId, out var handler))
+            if (!handlers.TryGetValue(paymentMethodId, out var handler))
                 throw new JsonHttpException(PaymentMethodNotFound());
             return handler;
         }
@@ -143,17 +131,17 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (includeConfig is true)
             {
-                if (!await _authorizationService.CanModifyStore(User))
+                if (!await authorizationService.CanModifyStore(User))
                     return this.CreateAPIPermissionError(Policies.CanModifyStoreSettings);
             }
 
-            return Ok(Store.GetPaymentMethodConfigs(_handlers, onlyEnabled is true)
+            return Ok(Store.GetPaymentMethodConfigs(handlers, onlyEnabled is true)
                 .Select(
                     method => new GenericPaymentMethodData()
                     {
                         PaymentMethodId = method.Key.ToString(),
                         Enabled = !excludedPaymentMethods.Match(method.Key),
-                        Config = includeConfig is true ? JToken.FromObject(method.Value, _handlers[method.Key].Serializer.ForAPI()) : null
+                        Config = includeConfig is true ? JToken.FromObject(method.Value, handlers[method.Key].Serializer.ForAPI()) : null
                     }).ToArray());
         }
     }

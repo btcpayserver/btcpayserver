@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -148,7 +149,7 @@ public partial class UIStoresController : Controller
         return Forbid();
     }
 
-    public StoreData CurrentStore => HttpContext.GetStoreData();
+    public StoreData CurrentStore => HttpContext.GetStoreDataOrThrow();
 
     public PaymentMethodOptionViewModel.Format[] GetEnabledPaymentMethodChoices(StoreData storeData)
     {

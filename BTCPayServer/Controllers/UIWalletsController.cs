@@ -1978,7 +1978,7 @@ namespace BTCPayServer.Controllers
 
         private string? GetUserId() => User.GetIdOrNull();
 
-        private StoreData GetCurrentStore() => HttpContext.GetStoreData();
+        private StoreData GetCurrentStore() => HttpContext.GetStoreDataOrThrow();
     }
 
     public class WalletReceiveViewModel

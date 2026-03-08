@@ -93,6 +93,6 @@ namespace BTCPayServer.Plugins.PayButton.Controllers
             });
         }
 
-        private StoreData GetCurrentStore => HttpContext.GetStoreData();
+        private StoreData GetCurrentStore => HttpContext.GetStoreDataOrThrow();
     }
 }

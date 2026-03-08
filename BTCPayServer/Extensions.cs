@@ -788,57 +788,58 @@ namespace BTCPayServer
             ctx.SetStoreData(storeData);
             return new ActionDisposable(() => { ctx.SetStoreData(old); });
         }
-#nullable restore
 
-        public static StoreData GetStoreData(this HttpContext ctx)
+        /// <summary>
+        /// Set after authorization succeed. If your route is authorized, this is guaranted to not be null.
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <returns></returns>
+        public static StoreData? GetStoreData(this HttpContext ctx)
             => ctx.Items.TryGet("BTCPAY.STOREDATA") as StoreData;
-        public static void SetStoreData(this HttpContext ctx, StoreData storeData)
+        /// <summary>
+        /// Set after authorization succeed. If your route is authorized, this is guaranted to not throw.
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <returns></returns>
+        public static StoreData GetStoreDataOrThrow(this HttpContext ctx)
+            => GetStoreData(ctx) ?? throw new InvalidOperationException("StoreData is not set");
+        public static void SetStoreData(this HttpContext ctx, StoreData? storeData)
             => ctx.Items["BTCPAY.STOREDATA"] = storeData;
-        public static string GetCurrentStoreId(this HttpContext ctx)
+        public static string? GetCurrentStoreId(this HttpContext ctx)
             => GetStoreData(ctx)?.Id;
 
         public static StoreData[] GetStoresData(this HttpContext ctx)
-            => ctx.Items.TryGet("BTCPAY.STORESDATA") as StoreData[];
-        public static void SetStoresData(this HttpContext ctx, StoreData[] storeData)
+            => ctx.Items.TryGet("BTCPAY.STORESDATA") as StoreData[] ?? Array.Empty<StoreData>();
+        public static void SetStoresData(this HttpContext ctx, StoreData[]? storeData)
             => ctx.Items["BTCPAY.STORESDATA"] = storeData;
+        /// <summary>
+        /// Set after authorization succeed if invoiceId is present in the route. If not null, the invoice is guaranteed to be from the current store (GetStoreData).
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <returns></returns>
+        public static InvoiceEntity? GetInvoiceData(this HttpContext ctx)
+        => ctx.Items.TryGet("BTCPAY.INVOICEDATA") as InvoiceEntity;
 
-        public static InvoiceEntity GetInvoiceData(this HttpContext ctx)
-        {
-            return ctx.Items.TryGet("BTCPAY.INVOICEDATA") as InvoiceEntity;
-        }
 
-        public static void SetInvoiceData(this HttpContext ctx, InvoiceEntity invoiceEntity)
-        {
-            ctx.Items["BTCPAY.INVOICEDATA"] = invoiceEntity;
-        }
+        public static void SetInvoiceData(this HttpContext ctx, InvoiceEntity? invoiceEntity)
+        => ctx.Items["BTCPAY.INVOICEDATA"] = invoiceEntity;
 
-        public static PaymentRequestData GetPaymentRequestData(this HttpContext ctx)
-        {
-            return ctx.Items.TryGet("BTCPAY.PAYMENTREQUESTDATA") as PaymentRequestData;
-        }
+        public static PaymentRequestData? GetPaymentRequestData(this HttpContext ctx)
+        => ctx.Items.TryGet("BTCPAY.PAYMENTREQUESTDATA") as PaymentRequestData;
 
-        public static void SetPaymentRequestData(this HttpContext ctx, PaymentRequestData paymentRequestData)
+        public static void SetPaymentRequestData(this HttpContext ctx, PaymentRequestData? paymentRequestData)
         {
             ctx.Items["BTCPAY.PAYMENTREQUESTDATA"] = paymentRequestData;
         }
 
-        public static AppData GetAppData(this HttpContext ctx)
-        {
-            return ctx.Items.TryGet("BTCPAY.APPDATA") as AppData;
-        }
+        public static AppData? GetAppData(this HttpContext ctx)
+        => ctx.Items.TryGet("BTCPAY.APPDATA") as AppData;
 
-        public static void SetAppData(this HttpContext ctx, AppData appData)
+        public static void SetAppData(this HttpContext ctx, AppData? appData)
         {
             ctx.Items["BTCPAY.APPDATA"] = appData;
         }
-
-        public static bool SupportChain(this IConfiguration conf, string cryptoCode)
-        {
-            var supportedChains = conf.GetOrDefault<string>("chains", "btc")
-                .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Select(t => t.ToUpperInvariant()).ToHashSet();
-            return supportedChains.Contains(cryptoCode.ToUpperInvariant());
-        }
+#nullable restore
 
         class ParameterReplacer : ExpressionVisitor
         {

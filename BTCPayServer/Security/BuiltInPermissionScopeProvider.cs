@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using Microsoft.AspNetCore.Authorization;
@@ -37,8 +38,45 @@ public class BuiltInPermissionScopeProvider(
     {
         public async Task<string?> GetStoreId(AuthorizationHandlerContext authContext, ScopeProviderAuthorizationContext providerContext, RouteData routeData)
         {
+
             await using var ctx = dbContextFactory.CreateContext();
-            var storeId = providerContext.HttpContext.GetImplicitStoreId();
+            var httpContext = providerContext.HttpContext;
+            var storeId = providerContext.HttpContext.GetCurrentStoreId();
+            if (storeId is null)
+            {
+                // 1. Check in the routeData
+                if (routeData.Values.TryGetValue("storeId", out var v))
+                    storeId = v as string;
+
+                if (storeId == null)
+                {
+                    if (httpContext.Request.Query.TryGetValue("storeId", out var sv))
+                    {
+                        storeId = sv.FirstOrDefault();
+                    }
+                }
+
+                // 2. Check in forms
+                if (storeId == null)
+                {
+                    if (httpContext.Request.HasFormContentType &&
+                        (await httpContext.Request.ReadFormAsync()).TryGetValue("storeId", out var sv))
+                    {
+                        storeId = sv.FirstOrDefault();
+                    }
+                }
+
+                // 3. Checks in walletId
+                if (storeId == null)
+                {
+                    if (routeData.Values.TryGetValue("walletId", out var walletId) &&
+                        WalletId.TryParse(walletId as string ?? "", out var w))
+                    {
+                        storeId = w.StoreId;
+                    }
+                }
+            }
+
             List<AdditionalScope> additionalScopes = new();
             foreach (var i in routeDataToStoreIds)
             {

@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Linq;
 using System.Threading;
@@ -32,19 +33,20 @@ namespace BTCPayServer.Components.MainNav
 
         public async Task<IViewComponentResult> InvokeAsync()
         {
-            var store = ViewContext.HttpContext.GetNavStoreData();
+            var navStore = HttpContext.GetNavStoreData();
+
             var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
             var vm = new MainNavViewModel
             {
-                Store = store,
+                Store = navStore,
                 ContactUrl = serverSettings.ContactUrl
             };
-            if (store != null)
+            if (navStore != null)
             {
-                var storeBlob = store.GetStoreBlob();
+                var storeBlob = navStore.GetStoreBlob();
 
                 // Wallets
-                storesController.AddPaymentMethods(store, storeBlob,
+                storesController.AddPaymentMethods(navStore, storeBlob,
                     out var derivationSchemes, out var lightningNodes);
 
                 foreach (var lnNode in lightningNodes)
@@ -63,7 +65,7 @@ namespace BTCPayServer.Components.MainNav
 								entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
 								try
 								{
-									var paymentMethodDetails = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(pmi, paymentMethodHandlerDictionary);
+									var paymentMethodDetails = navStore.GetPaymentMethodConfig<LightningPaymentMethodConfig>(pmi, paymentMethodHandlerDictionary);
 									await handler.GetNodeInfo(paymentMethodDetails!, null, throws: true);
 									// if we came here without exception, this means the node is available
 									return true;
@@ -82,7 +84,7 @@ namespace BTCPayServer.Components.MainNav
                 vm.LightningNodes = lightningNodes;
 
                 // Apps
-                var apps = await appService.GetAllApps(UserId, false, store.Id, true);
+                var apps = await appService.GetAllApps(HttpContext.User.GetIdOrNull(), false, navStore.Id, true);
                 vm.Apps = apps
                     .Where(a => !a.Archived)
                     .Select(a => new StoreApp
@@ -108,7 +110,5 @@ namespace BTCPayServer.Components.MainNav
 
             return View(vm);
         }
-
-        private string UserId => userManager.GetUserId(HttpContext.User);
     }
 }

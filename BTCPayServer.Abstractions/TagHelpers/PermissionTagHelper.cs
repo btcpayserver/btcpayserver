@@ -9,17 +9,9 @@ namespace BTCPayServer.Abstractions.TagHelpers;
 
 [HtmlTargetElement(Attributes = "[permission]")]
 [HtmlTargetElement(Attributes = "[not-permission]")]
-public class PermissionTagHelper : TagHelper
+public class PermissionTagHelper(IAuthorizationService authorizationService, IHttpContextAccessor httpContextAccessor)
+    : TagHelper
 {
-    private readonly IAuthorizationService _authorizationService;
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public PermissionTagHelper(IAuthorizationService authorizationService, IHttpContextAccessor httpContextAccessor)
-    {
-        _authorizationService = authorizationService;
-        _httpContextAccessor = httpContextAccessor;
-    }
-
     public string Permission { get; set; }
     public string NotPermission { get; set; }
     public string PermissionResource { get; set; }
@@ -32,10 +24,10 @@ public class PermissionTagHelper : TagHelper
 
         if (!permissions.Any() && !notPermissions.Any())
             return;
-        if (_httpContextAccessor.HttpContext is null)
+        if (httpContextAccessor.HttpContext is null)
             return;
 
-        bool shouldRender = true; // Assume tag should be rendered unless a check fails
+        var shouldRender = true; // Assume tag should be rendered unless a check fails
 
         // Process 'Permission' - User must have these permissions
         if (permissions.Any())
@@ -43,8 +35,7 @@ public class PermissionTagHelper : TagHelper
             bool finalResult = AndMode;
             foreach (var perm in permissions)
             {
-                var key = $"{perm}_{PermissionResource}";
-                AuthorizationResult res = await GetOrAddAuthorizationResult(key, perm);
+                var res = await Check(perm);
 
                 if (AndMode)
                     finalResult &= res.Succeeded;
@@ -62,8 +53,7 @@ public class PermissionTagHelper : TagHelper
         {
             foreach (var notPerm in notPermissions)
             {
-                var key = $"{notPerm}_{PermissionResource}";
-                AuthorizationResult res = await GetOrAddAuthorizationResult(key, notPerm);
+                var res = await Check(notPerm);
 
                 if (res.Succeeded) // If the user has a 'NotPermission', they should not see the tag
                 {
@@ -79,16 +69,10 @@ public class PermissionTagHelper : TagHelper
         }
     }
 
-    private async Task<AuthorizationResult> GetOrAddAuthorizationResult(string key, string permission)
+    private async Task<AuthorizationResult> Check(string permission)
     {
-        if (!_httpContextAccessor.HttpContext.Items.TryGetValue(key, out var cachedResult))
-        {
-            var res = await _authorizationService.AuthorizeAsync(_httpContextAccessor.HttpContext.User,
-                PermissionResource, permission);
-            _httpContextAccessor.HttpContext.Items[key] = res;
-            return res;
-        }
-
-        return cachedResult as AuthorizationResult;
+        var res = await authorizationService.AuthorizeAsync(httpContextAccessor.HttpContext!.User,
+            PermissionResource, permission);
+        return res;
     }
 }

@@ -12,7 +12,6 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
-using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Models.InvoicingModels;
@@ -30,7 +29,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using NBitcoin;
@@ -286,7 +284,7 @@ namespace BTCPayServer.Controllers
             if (invoice is null)
                 return NotFound();
             var currentRefund = invoice.Refunds.OrderByDescending(r => r.PullPaymentData.StartDate).FirstOrDefault();
-            if (currentRefund?.PullPaymentDataId is null && GetUserId() is null)
+            if (currentRefund?.PullPaymentDataId is null && User.GetIdOrNull() is null)
                 return NotFound();
             if (!invoice.GetInvoiceState().CanRefund())
                 return NotFound();
@@ -335,8 +333,6 @@ namespace BTCPayServer.Controllers
             await using var ctx = _dbContextFactory.CreateContext();
 
             var invoice = GetCurrentInvoice();
-            if (invoice == null)
-                return NotFound();
 
             if (!invoice.GetInvoiceState().CanRefund())
                 return NotFound();
@@ -654,7 +650,7 @@ namespace BTCPayServer.Controllers
                     var explorer = network is null ? null : _ExplorerClients.GetExplorerClient(network);
                     if (explorer is null || network is null)
                         return NotSupported(StringLocalizer["This feature is only available to BTC wallets"]);
-                    if (!GetCurrentStore().HasPolicy(GetUserId(), Policies.CanModifyStoreSettings, _permissionService))
+                    if (!GetCurrentStore().HasPolicy(User.GetId(), Policies.CanModifyStoreSettings, _permissionService))
                         return Forbid();
 
                     var derivationScheme = GetCurrentStore().GetDerivationSchemeSettings(_handlers, network.CryptoCode)?.AccountDerivation;
@@ -848,9 +844,9 @@ namespace BTCPayServer.Controllers
                     .Replace("{InvoiceId}", Uri.EscapeDataString(invoice.Id))
                 : null;
 
-            string GetPaymentMethodImage(PaymentMethodId paymentMethodId)
+            string GetPaymentMethodImage(PaymentMethodId paymentMethodId2)
             {
-                _paymentModelExtensions.TryGetValue(paymentMethodId, out var extension);
+                _paymentModelExtensions.TryGetValue(paymentMethodId2, out var extension);
                 return extension?.Image ?? "";
             }
 
@@ -1075,7 +1071,7 @@ namespace BTCPayServer.Controllers
             model.Search = fs;
             model.SearchText = fs.TextCombined;
 
-            var apps = await _appService.GetAllApps(GetUserId(), false, storeId);
+            var apps = await _appService.GetAllApps(User.GetIdOrNull(), false, storeId);
             InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, apps, timezoneOffset);
             invoiceQuery.StoreId = storeIds.ToArray();
             invoiceQuery.Take = model.Count;
@@ -1121,7 +1117,7 @@ namespace BTCPayServer.Controllers
             {
                 var appsById = apps.ToDictionary(a => a.Id);
                 var searchTexts = appIds.Select(a => appsById.TryGet(a)).Where(a => a != null)
-                    .Select(a => AppService.GetAppSearchTerm(a!.AppType, a!.Id))
+                    .Select(a => AppService.GetAppSearchTerm(a!.AppType, a.Id))
                     .ToList();
                 searchTexts.Add(fs.TextSearch);
                 textSearch = string.Join(' ', searchTexts.Where(t => !string.IsNullOrEmpty(t)).ToList());
@@ -1300,10 +1296,8 @@ namespace BTCPayServer.Controllers
 
         private InvoiceEntity GetCurrentInvoice() => HttpContext.GetInvoiceData();
 
-        private string GetUserId() => _UserManager.GetUserId(User)!;
-
         // Let server admin lookup invoices from users, see #6489
-        private string? GetUserIdForInvoiceQuery() => User.IsInRole(Roles.ServerAdmin) ? null : GetUserId();
+        private string? GetUserIdForInvoiceQuery() => User.IsInRole(Roles.ServerAdmin) ? null : User.GetIdOrNull();
 
         private SelectList GetPaymentMethodsSelectList(StoreData store)
         {

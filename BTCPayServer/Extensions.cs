@@ -10,6 +10,7 @@ using System.Net;
 using System.Net.WebSockets;
 using System.Reflection;
 using System.Security.Claims;
+using System.Security.Principal;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
@@ -741,11 +742,53 @@ namespace BTCPayServer
             }
         }
 
-        public static StoreData GetNavStoreData(this HttpContext ctx)
+#nullable enable
+        /// <summary>
+        /// Returns the user ID or empty string
+        /// </summary>
+        /// <param name="principal"></param>
+        /// <returns></returns>
+        public static string GetId(this IPrincipal? principal)
+        => GetIdOrNull(principal) ?? "";
+        public static string? GetIdOrNull(this IPrincipal? principal)
+        {
+            var claimsPrincipal = principal as ClaimsPrincipal;
+            if (claimsPrincipal is null)
+                return null;
+            return claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier) ?? null;
+        }
+
+        public static StoreData AddCachedStoreData(this HttpContext ctx, StoreData storeData)
+        {
+            if (!ctx.Items.TryGetValue("BTCPAY.CACHEDSTOREDATA", out var item) ||
+                item is not Dictionary<string, StoreData> dictionary)
+            {
+                dictionary = new Dictionary<string, StoreData>();
+                ctx.Items["BTCPAY.CACHEDSTOREDATA"] = dictionary;
+            }
+            dictionary[storeData.Id] = storeData;
+            return storeData;
+        }
+        public static StoreData? GetCachedStoreData(this HttpContext ctx, string storeId)
+        {
+            if (!ctx.Items.TryGetValue("BTCPAY.CACHEDSTOREDATA", out var item) ||
+                item is not Dictionary<string, StoreData> dictionary)
+                return null;
+            dictionary.TryGetValue(storeId, out var storeData);
+            return storeData;
+        }
+        public static StoreData? GetNavStoreData(this HttpContext ctx)
             => ctx.Items.TryGet("BTCPAY.NAVSTOREDATA") as StoreData;
-        public static void SetNavStoreData(this HttpContext ctx, StoreData storeData)
+        public static void SetNavStoreData(this HttpContext ctx, StoreData? storeData)
             => ctx.Items["BTCPAY.NAVSTOREDATA"] = storeData;
 
+        public static IDisposable SwitchStoreData(this HttpContext ctx, StoreData? storeData)
+        {
+            var old = ctx.GetStoreData();
+            ctx.SetStoreData(storeData);
+            return new ActionDisposable(() => { ctx.SetStoreData(old); });
+        }
+#nullable restore
 
         public static StoreData GetStoreData(this HttpContext ctx)
             => ctx.Items.TryGet("BTCPAY.STOREDATA") as StoreData;

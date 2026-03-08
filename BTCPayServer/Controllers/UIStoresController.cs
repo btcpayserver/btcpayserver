@@ -131,11 +131,7 @@ public partial class UIStoresController : Controller
     [HttpGet("{storeId}/index")]
     public async Task<IActionResult> Index(string storeId)
     {
-        var userId = _userManager.GetUserId(User);
-        if (string.IsNullOrEmpty(userId))
-            return Forbid();
-
-        var store = await _storeRepo.FindStore(storeId, userId);
+        var store = await _storeRepo.FindStore(storeId, User.GetId());
         if (store is null)
             return NotFound();
 
@@ -168,8 +164,5 @@ public partial class UIStoresController : Controller
                 }).ToArray();
     }
 
-    private string? GetUserId()
-    {
-        return User.Identity?.AuthenticationType != AuthenticationSchemes.Cookie ? null : _userManager.GetUserId(User);
-    }
+    private string? GetUserId() => User.Identity?.AuthenticationType != AuthenticationSchemes.Cookie ? null : User.GetIdOrNull();
 }

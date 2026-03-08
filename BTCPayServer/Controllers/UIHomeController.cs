@@ -58,7 +58,7 @@ namespace BTCPayServer.Controllers
 
             if (SignInManager.IsSignedIn(User))
             {
-                var userId = SignInManager.UserManager.GetUserId(HttpContext.User);
+                var userId = HttpContext.User.GetIdOrNull();
                 var storeId = HttpContext.GetUserPrefsCookie()?.CurrentStoreId;
                 if (storeId != null && userId != null)
                 {

@@ -87,9 +87,7 @@ namespace BTCPayServer.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
+                return NotFound();
             var blob = user.GetBlob() ?? new();
             var model = new IndexViewModel
             {
@@ -109,9 +107,7 @@ namespace BTCPayServer.Controllers
 
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
+                return NotFound();
 
             var blob = user.GetBlob() ?? new();
             blob.ShowInvoiceStatusChangeHint = false;
@@ -126,9 +122,7 @@ namespace BTCPayServer.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
+                return NotFound();
 
             bool needUpdate = false;
             var email = user.Email;
@@ -214,9 +208,7 @@ namespace BTCPayServer.Controllers
 
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
+                return NotFound();
 
             var callbackUrl = await _callbackGenerator.ForEmailConfirmation(user);
             _eventAggregator.Publish(new UserEvent.ConfirmationEmailRequested(user, callbackUrl));
@@ -229,9 +221,7 @@ namespace BTCPayServer.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
+                return NotFound();
 
             var hasPassword = await _userManager.HasPasswordAsync(user);
             if (!hasPassword)
@@ -254,9 +244,7 @@ namespace BTCPayServer.Controllers
 
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
+                return NotFound();
 
             var changePasswordResult = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
             if (!changePasswordResult.Succeeded)
@@ -277,9 +265,7 @@ namespace BTCPayServer.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
+                return NotFound();
 
             var hasPassword = await _userManager.HasPasswordAsync(user);
 
@@ -303,9 +289,7 @@ namespace BTCPayServer.Controllers
 
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
+                return NotFound();
 
             var addPasswordResult = await _userManager.AddPasswordAsync(user, model.NewPassword);
             if (!addPasswordResult.Succeeded)

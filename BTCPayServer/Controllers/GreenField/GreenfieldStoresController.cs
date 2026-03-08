@@ -82,7 +82,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var store = HttpContext.GetStoreData();
             if (store == null) return StoreNotFound();
 
-            await _storeRepository.RemoveStore(storeId, _userManager.GetUserId(User) ?? "");
+            await _storeRepository.RemoveStore(storeId, User.GetId());
             return Ok();
         }
 
@@ -95,7 +95,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var validationResult = Validate(request);
             if (validationResult != null) return validationResult;
             ToModel(request, store);
-            await _storeRepository.CreateStore(_userManager.GetUserId(User) ?? "", store);
+            await _storeRepository.CreateStore(User.GetId(), store);
             return Ok(await FromModel(store));
         }
 
@@ -168,13 +168,12 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> DeleteStoreLogo(string storeId)
         {
             var store = HttpContext.GetStoreData();
-            if (store == null) return StoreNotFound();
+            if (store == null || User.GetIdOrNull() is not string userId) return StoreNotFound();
 
             var blob = store.GetStoreBlob();
             var fileId = (blob.LogoUrl as UnresolvedUri.FileIdUri)?.FileId;
             if (!string.IsNullOrEmpty(fileId))
             {
-                var userId = _userManager.GetUserId(User)!;
                 await _fileService.RemoveFile(fileId, userId);
                 blob.LogoUrl = null;
                 store.SetStoreBlob(blob);

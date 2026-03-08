@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Data;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 
 namespace BTCPayServer.Security;
 
@@ -15,8 +13,7 @@ public class PermissionAuthorizationHandler(
     PermissionService permissionService,
     IHttpContextAccessor httpContext,
     IEnumerable<IPermissionHandler> permissionHandlers,
-    IEnumerable<IPermissionScopeProvider> implicitScopeProviders,
-    UserManager<ApplicationUser> userManager)
+    IEnumerable<IPermissionScopeProvider> implicitScopeProviders)
     : AuthorizationHandler<PolicyRequirement>
 {
     public const string PolicyRequirementKey = nameof(PolicyRequirementKey);
@@ -24,8 +21,8 @@ public class PermissionAuthorizationHandler(
     {
         if (context.User.Identity is not ({ AuthenticationType: AuthenticationSchemes.Cookie } or { AuthenticationType: GreenfieldConstants.AuthenticationType }))
             return;
-        var userId = userManager.GetUserId(context.User);
-        if (userId is null || httpContext.HttpContext is null)
+        var userId = context.User.GetIdOrNull();
+        if (httpContext.HttpContext is null || userId is null)
             return;
         httpContext.HttpContext.Items[PolicyRequirementKey] = requirement;
 

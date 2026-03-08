@@ -352,7 +352,7 @@ namespace BTCPayServer.Tests
         // [Trait("PreReleaseCheck", "PreReleaseCheck")]
         // [Fact]
         // ReSharper disable once UnusedMember.Global
-        public async Task CheckDefaultTranslationsUpToDate()
+        private async Task CheckDefaultTranslationsUpToDate()
         {
             var soldir = TestUtils.TryGetSolutionDirectoryInfo();
             var path = Path.Combine(soldir.FullName, "BTCPayServer/Services/Translations.Default.cs");

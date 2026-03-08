@@ -30,7 +30,6 @@ namespace BTCPayServer.Controllers.Greenfield
 		private readonly UIInvoiceController _invoiceController;
 		private readonly PaymentRequestRepository _paymentRequestRepository;
 		private readonly CurrencyNameTable _currencyNameTable;
-		private readonly UserManager<ApplicationUser> _userManager;
 		private readonly LinkGenerator _linkGenerator;
 
 		public GreenfieldPaymentRequestsController(
@@ -39,7 +38,6 @@ namespace BTCPayServer.Controllers.Greenfield
 			PaymentRequestRepository paymentRequestRepository,
 			PaymentRequestService paymentRequestService,
 			CurrencyNameTable currencyNameTable,
-			UserManager<ApplicationUser> userManager,
 			LinkGenerator linkGenerator)
 		{
 			_InvoiceRepository = invoiceRepository;
@@ -47,7 +45,6 @@ namespace BTCPayServer.Controllers.Greenfield
 			_paymentRequestRepository = paymentRequestRepository;
 			PaymentRequestService = paymentRequestService;
 			_currencyNameTable = currencyNameTable;
-			_userManager = userManager;
 			_linkGenerator = linkGenerator;
 		}
 
@@ -233,7 +230,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
 		public PaymentRequestService PaymentRequestService { get; }
 
-		private string GetUserId() => _userManager.GetUserId(User);
+		private string GetUserId() => User.GetIdOrNull();
 
 		private static Client.Models.PaymentRequestBaseData FromModel(PaymentRequestData data)
 		{

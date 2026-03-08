@@ -17,7 +17,6 @@ public class BTCPayServerSecurityStampValidator(
     IOptions<SecurityStampValidatorOptions> options,
     SignInManager<ApplicationUser> signInManager,
     ILoggerFactory logger,
-    UserManager<ApplicationUser> userManager,
     BTCPayServerSecurityStampValidator.DisabledUsers disabledUsers)
     : SecurityStampValidator<ApplicationUser>(options, signInManager, logger)
 {
@@ -58,8 +57,7 @@ public class BTCPayServerSecurityStampValidator(
     public override async Task ValidateAsync(CookieValidatePrincipalContext context)
     {
         if (disabledUsers.HasAny &&
-            context.Principal is not null &&
-            userManager.GetUserId(context.Principal) is string id &&
+            context.Principal.GetIdOrNull() is string id &&
             disabledUsers.Contains(id))
         {
             context.Properties.IssuedUtc = null;

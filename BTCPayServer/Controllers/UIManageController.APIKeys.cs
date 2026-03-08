@@ -26,7 +26,7 @@ namespace BTCPayServer.Controllers
             {
                 ApiKeyDatas = await _apiKeyRepository.GetKeys(new APIKeyRepository.APIKeyQuery()
                 {
-                    UserId = new[] { _userManager.GetUserId(User) }
+                    UserId = new[] { User.GetId() }
                 })
             });
         }
@@ -35,7 +35,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> DeleteAPIKey(string id)
         {
             var key = await _apiKeyRepository.GetKey(id);
-            if (key == null || key.UserId != _userManager.GetUserId(User))
+            if (key == null || key.UserId != User.GetId())
             {
                 return NotFound();
             }
@@ -52,11 +52,11 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> DeleteAPIKeyPost(string id)
         {
             var key = await _apiKeyRepository.GetKey(id);
-            if (key == null || key.UserId != _userManager.GetUserId(User))
+            if (key == null || key.UserId != User.GetId())
             {
                 return NotFound();
             }
-            await _apiKeyRepository.Remove(id, _userManager.GetUserId(User));
+            await _apiKeyRepository.Remove(id, User.GetId());
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
@@ -260,7 +260,7 @@ namespace BTCPayServer.Controllers
             //check if there is an app identifier that matches and belongs to the current user
             var keys = await _apiKeyRepository.GetKeys(new APIKeyRepository.APIKeyQuery
             {
-                UserId = new[] { _userManager.GetUserId(User) }
+                UserId = new[] { User.GetId() }
             });
             foreach (var key in keys)
             {
@@ -435,7 +435,7 @@ namespace BTCPayServer.Controllers
             {
                 Id = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20)),
                 Type = APIKeyType.Permanent,
-                UserId = _userManager.GetUserId(User),
+                UserId = User.GetId(),
                 Label = viewModel.Label,
             };
             key.SetBlob(new APIKeyBlob
@@ -474,7 +474,7 @@ namespace BTCPayServer.Controllers
 
         private async Task<T> SetViewModelValues<T>(T viewModel) where T : AddApiKeyViewModel
         {
-            var stores = await _StoreRepository.GetStoresByUserId(_userManager.GetUserId(User) ?? "");
+            var stores = await _StoreRepository.GetStoresByUserId(User.GetId());
             viewModel.Stores = stores.OrderBy(store => store.StoreName, StringComparer.InvariantCultureIgnoreCase).ToArray();
 
             var isAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings))

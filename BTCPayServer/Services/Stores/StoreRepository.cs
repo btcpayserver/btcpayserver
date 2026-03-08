@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Principal;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
@@ -50,9 +51,26 @@ namespace BTCPayServer.Services.Stores
             return result;
         }
 
+        public async Task<StoreData?> FindStore(string storeId, IPrincipal user, bool adminCanAccess = false)
+        {
+            if (adminCanAccess && user.IsInRole(Roles.ServerAdmin))
+            {
+                await using var ctx = _ContextFactory.CreateContext();
+                return await ctx
+                    .Stores.Where(s => s.Id == storeId)
+                    .Include(store => store.UserStores)
+                    .ThenInclude(store => store.StoreRole)
+                    .FirstOrDefaultAsync();
+            }
+            return await FindStore(storeId, user.GetId());
+        }
+
         public async Task<StoreData?> FindStore(string storeId, string userId)
         {
             ArgumentNullException.ThrowIfNull(userId);
+            if (string.IsNullOrEmpty(storeId) ||
+                string.IsNullOrEmpty(userId))
+                return null;
             await using var ctx = _ContextFactory.CreateContext();
             return await ctx
                 .UserStore
@@ -247,6 +265,8 @@ namespace BTCPayServer.Services.Stores
 
         public async Task<StoreData[]> GetStoresByUserId(string userId, IEnumerable<string>? storeIds = null)
         {
+            if (userId == "")
+                return Array.Empty<StoreData>();
             await using var ctx = _ContextFactory.CreateContext();
             return (await ctx.UserStore
                 .Where(u => u.ApplicationUserId == userId && (storeIds == null || storeIds.Contains(u.StoreDataId)))

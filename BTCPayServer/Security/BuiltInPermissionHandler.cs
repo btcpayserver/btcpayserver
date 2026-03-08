@@ -18,7 +18,7 @@ public class BuiltInPermissionHandler(
     public const string StoreKey = "BuiltInPermissionHandler-Store";
     public const string StoresKey = "BuiltInPermissionHandler-Stores";
 
-    //TODO: In the future, we will add these store permissions to actual aspnet roles, and remove this class.
+    //TODO: In the future, we will add these store permissions to actual aspnet roles and remove this class.
     private static readonly PermissionSet ServerAdminRolePermissions =
         new PermissionSet(new[] { Permission.Create(Policies.CanViewStoreSettings) });
 
@@ -54,7 +54,10 @@ public class BuiltInPermissionHandler(
                     {
                         if (authContext.HasPermission(permContext.Permission.WithScope(store.Id), permissionService) &&
                             store.HasPolicy(permContext.UserId, permContext.Permission.Policy, permissionService))
+                        {
                             permissionedStores.Add(store);
+                            permContext.HttpContext.AddCachedStoreData(store);
+                        }
                     }
                     success = true;
                 }
@@ -82,17 +85,17 @@ public class BuiltInPermissionHandler(
 
     private async Task<StoreData?> GetStoreData(PermissionAuthorizationContext permContext, string storeId, bool isAdmin)
     {
-        var store = permContext.HttpContext.GetStoreData();
+        var store = permContext.HttpContext.GetCachedStoreData(storeId);
         if (store is not null)
         {
             if (isAdmin ||
                 store.UserStores.Any(u => u.ApplicationUserId == permContext.UserId))
                 return store;
-            store = null;
         }
-        store = await storeRepository.FindStore(storeId, permContext.UserId);
-        if (store is null && isAdmin)
-            store = await storeRepository.FindStore(storeId);
+        if (store is null)
+            store = await storeRepository.FindStore(storeId, permContext.HttpContext.User, true);
+        if (store is not null)
+            permContext.HttpContext.AddCachedStoreData(store);
         return store;
     }
 }

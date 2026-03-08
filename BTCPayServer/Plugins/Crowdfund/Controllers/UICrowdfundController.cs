@@ -25,7 +25,6 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using NBitcoin;
@@ -47,7 +46,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         StoreRepository storeRepository,
         IFileService fileService,
         UIInvoiceController invoiceController,
-        UserManager<ApplicationUser> userManager,
         FormDataService formDataService,
         IStringLocalizer stringLocalizer,
         CrowdfundAppType appType,
@@ -587,7 +585,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
         private AppData GetCurrentApp() => HttpContext.GetAppData();
 
-        private string GetUserId() => userManager.GetUserId(User);
+        private string GetUserId() => User.GetIdOrNull();
 
         private async Task<ViewCrowdfundViewModel> GetAppInfo(string appId)
         {

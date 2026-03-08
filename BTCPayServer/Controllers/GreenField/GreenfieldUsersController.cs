@@ -302,10 +302,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [Authorize(Policy = Policies.CanDeleteUser, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/users/me")]
-        public async Task<IActionResult> DeleteCurrentUser()
-        {
-            return await DeleteUser(_userManager.GetUserId(User)!);
-        }
+        public Task<IActionResult> DeleteCurrentUser() => DeleteUser(User.GetId());
 
         [AllowAnonymous]
         [HttpPost("~/api/v1/users")]

@@ -1,7 +1,5 @@
 using System.Linq;
 using BTCPayServer.Client.JsonConverters;
-using BTCPayServer.Client.Models;
-using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using Newtonsoft.Json;
 

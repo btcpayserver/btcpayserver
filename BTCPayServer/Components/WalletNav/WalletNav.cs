@@ -45,7 +45,7 @@ namespace BTCPayServer.Components.WalletNav
         {
             var store = ViewContext.HttpContext.GetStoreData();
             var network = _handlers.TryGetNetwork(PaymentTypes.CHAIN.GetPaymentMethodId(walletId.CryptoCode));
-            if (network is null)
+            if (network is null || store is null)
                 return new HtmlContentViewComponentResult(new StringHtmlContent(string.Empty));
             var wallet = _walletProvider.GetWallet(network);
             var defaultCurrency = store.GetStoreBlob().DefaultCurrency;

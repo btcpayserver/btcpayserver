@@ -19,9 +19,7 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using CrowdfundResetEvery = BTCPayServer.Client.Models.CrowdfundResetEvery;
 using PosViewType = BTCPayServer.Client.Models.PosViewType;
 
@@ -117,7 +115,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Archived = request.Archived ?? false
             };
 
-            var settings = ToPointOfSaleSettings(request, new PointOfSaleSettings { Title = request.Title ?? request.AppName });
+            var settings = ToPointOfSaleSettings(request);
             appData.SetSettings(settings);
 
             await _appService.UpdateOrCreateApp(appData);
@@ -158,7 +156,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 app.Archived = request.Archived.Value;
             }
-            app.SetSettings(ToPointOfSaleSettings(request, settings));
+            app.SetSettings(ToPointOfSaleSettings(request));
 
             await _appService.UpdateOrCreateApp(app);
 
@@ -343,7 +341,7 @@ namespace BTCPayServer.Controllers.Greenfield
             };
         }
 
-        private PointOfSaleSettings ToPointOfSaleSettings(PointOfSaleAppRequest request, PointOfSaleSettings settings)
+        private PointOfSaleSettings ToPointOfSaleSettings(PointOfSaleAppRequest request)
         {
             Enum.TryParse<BTCPayServer.Plugins.PointOfSale.PosViewType>(request.DefaultView.ToString(), true, out var defaultView);
             if (request.HtmlMetaTags is not null)

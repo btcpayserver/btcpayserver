@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using Microsoft.Extensions.Logging;
 

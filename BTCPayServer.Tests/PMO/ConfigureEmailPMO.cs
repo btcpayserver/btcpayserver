@@ -1,6 +1,5 @@
 ﻿#nullable enable
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Models;
 
 namespace BTCPayServer.Tests.PMO;
 

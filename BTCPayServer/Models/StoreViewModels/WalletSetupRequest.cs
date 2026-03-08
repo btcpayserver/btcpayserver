@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using NBXplorer.Models;
 
 namespace BTCPayServer.Models.StoreViewModels

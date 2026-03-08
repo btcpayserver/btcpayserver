@@ -7,7 +7,6 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Stores;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace BTCPayServer.Security;
@@ -62,7 +61,7 @@ public class SetContextFilter(
                             httpContext.SetPaymentRequestData(paymentRequest);
                         break;
                     case "invoiceId":
-                        var invoice = await invoiceRepository.GetInvoice(additionalScope.Scope);
+                        var invoice = await invoiceRepository.GetInvoice(additionalScope.Scope, true);
                         if (invoice is not null)
                             httpContext.SetInvoiceData(invoice);
                         break;

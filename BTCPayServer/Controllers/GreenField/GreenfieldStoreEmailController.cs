@@ -76,7 +76,7 @@ namespace BTCPayServer.Controllers.GreenField
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
-            var store = HttpContext.GetStoreData();
+            var store = HttpContext.GetStoreDataOrThrow();
             var blob = store.GetStoreBlob();
             var settings = EmailSettings.FromData(request, blob.EmailSettings?.Password);
             blob.EmailSettings = settings;

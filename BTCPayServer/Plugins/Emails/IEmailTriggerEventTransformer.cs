@@ -1,6 +1,5 @@
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Emails.HostedServices;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins.Emails;
 

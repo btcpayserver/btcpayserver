@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
@@ -489,7 +488,7 @@ public partial class UIOfferingController(
             OfferingId = offeringId,
             PlanId = planId,
             OfferingName = offering.App.Name,
-            Currency = plan?.Currency ?? this.HttpContext.GetStoreData().GetStoreBlob().DefaultCurrency,
+            Currency = plan?.Currency ?? this.HttpContext.GetStoreDataOrThrow().GetStoreBlob().DefaultCurrency,
             Price = plan?.Price ?? 0m,
             Name = plan?.Name ?? "",
             Description = plan?.Description ?? "",

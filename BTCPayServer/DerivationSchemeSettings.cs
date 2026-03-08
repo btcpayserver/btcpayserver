@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BTCPayServer.Payments;
 using NBitcoin;
 using NBXplorer.Client;
 using NBXplorer.DerivationStrategy;

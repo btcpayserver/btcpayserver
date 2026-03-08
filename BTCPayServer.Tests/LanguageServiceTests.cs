@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Hosting;
 using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Services;
 using Dapper;

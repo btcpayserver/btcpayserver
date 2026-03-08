@@ -5,7 +5,6 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Plugins.Monetization;
 using BTCPayServer.Services;
-using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using Microsoft.Playwright;
 using Xunit;

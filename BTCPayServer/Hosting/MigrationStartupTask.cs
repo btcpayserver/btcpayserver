@@ -32,7 +32,6 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using YamlDotNet.RepresentationModel;
-using static BTCPayServer.Fido2.Models.Fido2CredentialBlob;
 using LightningAddressData = BTCPayServer.Data.LightningAddressData;
 
 namespace BTCPayServer.Hosting

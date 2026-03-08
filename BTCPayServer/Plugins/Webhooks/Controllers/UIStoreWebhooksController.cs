@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -25,7 +24,7 @@ public class UIStoreWebhooksController(
     IStringLocalizer stringLocalizer,
     WebhookSender webhookSender) : Controller
 {
-    public Data.StoreData CurrentStore => HttpContext.GetStoreData();
+    public Data.StoreData CurrentStore => HttpContext.GetStoreDataOrThrow();
     public IStringLocalizer StringLocalizer { get; set; } = stringLocalizer;
     private async Task<Data.WebhookDeliveryData?> LastDeliveryForWebhook(string webhookId)
     {

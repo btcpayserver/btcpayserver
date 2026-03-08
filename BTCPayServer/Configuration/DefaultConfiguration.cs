@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -11,7 +10,6 @@ using BTCPayServer.Plugins;
 using BTCPayServer.Plugins.Bitcoin;
 using CommandLine;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using NBXplorer;

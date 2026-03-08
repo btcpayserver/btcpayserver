@@ -1,11 +1,6 @@
-using System;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Components.AppSales;
-using BTCPayServer.Data;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.Stores;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewComponents;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;

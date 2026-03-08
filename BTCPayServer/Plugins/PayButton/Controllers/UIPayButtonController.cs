@@ -9,7 +9,6 @@ using BTCPayServer.Plugins.PayButton.Models;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -93,6 +92,6 @@ namespace BTCPayServer.Plugins.PayButton.Controllers
             });
         }
 
-        private StoreData GetCurrentStore => HttpContext.GetStoreData();
+        private StoreData GetCurrentStore => HttpContext.GetStoreDataOrThrow();
     }
 }

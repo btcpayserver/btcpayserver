@@ -332,9 +332,9 @@ namespace BTCPayServer.Controllers
         {
             await using var ctx = _dbContextFactory.CreateContext();
 
-            var invoice = GetCurrentInvoice();
+            var invoice = HttpContext.GetInvoiceData();
 
-            if (!invoice.GetInvoiceState().CanRefund())
+            if (invoice?.GetInvoiceState().CanRefund() is not true)
                 return NotFound();
 
             var store = GetCurrentStore();
@@ -1174,7 +1174,7 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanCreateInvoice, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> CreateInvoice(CreateInvoiceModel model, CancellationToken cancellationToken)
         {
-            var store = HttpContext.GetStoreData();
+            var store = HttpContext.GetStoreDataOrThrow();
             if (!store.AnyPaymentMethodAvailable(_handlers))
             {
                 return NoPaymentMethodResult(store.Id);
@@ -1292,9 +1292,7 @@ namespace BTCPayServer.Controllers
             public string? StatusString { get; set; }
         }
 
-        private StoreData GetCurrentStore() => HttpContext.GetStoreData();
-
-        private InvoiceEntity GetCurrentInvoice() => HttpContext.GetInvoiceData();
+        private StoreData GetCurrentStore() => HttpContext.GetStoreDataOrThrow();
 
         // Let server admin lookup invoices from users, see #6489
         private string? GetUserIdForInvoiceQuery() => User.IsInRole(Roles.ServerAdmin) ? null : User.GetIdOrNull();

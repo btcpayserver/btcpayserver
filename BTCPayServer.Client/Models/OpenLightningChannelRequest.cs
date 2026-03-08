@@ -1,5 +1,4 @@
 using BTCPayServer.Client.JsonConverters;
-using BTCPayServer.Lightning;
 using NBitcoin;
 using NBitcoin.JsonConverters;
 using Newtonsoft.Json;

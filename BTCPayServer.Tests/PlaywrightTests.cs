@@ -2362,6 +2362,7 @@ namespace BTCPayServer.Tests
                 document.getElementById('EndDate').value = yst.toISOString();
             ");
             await s.ClickPagePrimary();
+            await s.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
             var pageContent = await s.Page.ContentAsync();
             Assert.Contains("End date cannot be before start date", pageContent);
             Assert.DoesNotContain("App updated", pageContent);
@@ -2476,6 +2477,7 @@ namespace BTCPayServer.Tests
             await s.PayInvoice(true, 20);
             invoiceId = s.Page.Url[(s.Page.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
             await s.GoToInvoice(invoiceId);
+            await s.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
             pageContent = await s.Page.ContentAsync();
             Assert.Contains("test-with-perk@crowdfund.com", pageContent);
         }

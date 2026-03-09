@@ -27,7 +27,6 @@ using StoreData = BTCPayServer.Data.StoreData;
 namespace BTCPayServer.Controllers;
 
 [Route("stores")]
-[Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 public partial class UIStoresController : Controller
 {

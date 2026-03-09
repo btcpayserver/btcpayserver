@@ -8,24 +8,21 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Tests
 {
     public class FakeServer : IDisposable
     {
         IHost host;
-        readonly SemaphoreSlim semaphore;
+        readonly SemaphoreSlim semaphore = new(0);
         readonly CancellationTokenSource cts = new CancellationTokenSource();
-        public FakeServer()
-        {
-            _channel = Channel.CreateUnbounded<HttpContext>();
-            semaphore = new SemaphoreSlim(0);
-        }
 
-        readonly Channel<HttpContext> _channel;
+        readonly Channel<HttpContext> _channel = Channel.CreateUnbounded<HttpContext>();
         public async Task Start()
         {
             host = Host.CreateDefaultBuilder()
+                .ConfigureLogging(p => p.ClearProviders())
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder

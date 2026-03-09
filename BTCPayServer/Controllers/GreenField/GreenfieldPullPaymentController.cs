@@ -585,11 +585,10 @@ retry:
         [Authorize(Policy = Policies.CanArchivePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> ArchivePullPayment(string storeId, string pullPaymentId)
         {
-            using var ctx = _dbContextFactory.CreateContext();
-            var pp = await ctx.PullPayments.FindAsync(pullPaymentId);
-            if (pp is null || pp.StoreId != storeId)
+            var pp = HttpContext.GetPullPaymentDataOrNull();
+            if (pp is null)
                 return PullPaymentNotFound();
-            await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(pullPaymentId));
+            await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(pp.Id));
             return Ok();
         }
 

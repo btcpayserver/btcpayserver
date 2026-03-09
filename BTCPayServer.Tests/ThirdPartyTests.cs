@@ -632,9 +632,9 @@ retry:
             string currency = "USD")
         {
             var storeController = user.GetController<UIStoresController>();
-            var vm = (RatesViewModel)((ViewResult)await storeController.Rates()).Model;
+            var vm = await storeController.Rates().AssertViewModelAsync<RatesViewModel>();
             vm.PrimarySource.PreferredExchange = exchange;
-            await storeController.Rates(vm);
+            await storeController.Rates(vm,vm.StoreId);
             var invoice2 = await user.BitPay.CreateInvoiceAsync(
                 new Invoice()
                 {

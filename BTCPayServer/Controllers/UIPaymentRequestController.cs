@@ -51,7 +51,6 @@ namespace BTCPayServer.Controllers
         private readonly StoreLabelRepository _storeLabelRepository;
 
 
-        private FormComponentProviders FormProviders { get; }
         public FormDataService FormDataService { get; }
         public IStringLocalizer StringLocalizer { get; }
         public ViewLocalizer ViewLocalizer { get; }
@@ -66,7 +65,6 @@ namespace BTCPayServer.Controllers
             StoreRepository storeRepository,
             UriResolver uriResolver,
             InvoiceRepository invoiceRepository,
-            FormComponentProviders formProviders,
             FormDataService formDataService,
             IStringLocalizer stringLocalizer,
             ViewLocalizer viewLocalizer,
@@ -84,7 +82,6 @@ namespace BTCPayServer.Controllers
             _uriResolver = uriResolver;
             _InvoiceRepository = invoiceRepository;
             _dbContextFactory = dbContextFactory;
-            FormProviders = formProviders;
             FormDataService = formDataService;
             StringLocalizer = stringLocalizer;
             ViewLocalizer = viewLocalizer;
@@ -111,7 +108,7 @@ namespace BTCPayServer.Controllers
                 StoreId = store.Id,
                 Skip = model.Skip,
                 Count = model.Count,
-                Status = fs.GetFilterArray("status")?.Select(s => Enum.Parse<Client.Models.PaymentRequestStatus>(s, true)).ToArray(),
+                Status = fs.GetFilterArray("status")?.Select(s => Enum.Parse<PaymentRequestStatus>(s, true)).ToArray(),
                 IncludeArchived = fs.GetFilterBool("includearchived") ?? false,
                 SearchText = model.SearchText,
                 StartDate = startDate,
@@ -470,7 +467,7 @@ namespace BTCPayServer.Controllers
             {
                 var store = await _storeRepository.FindStore(result.StoreId);
                 var prData = await _PaymentRequestRepository.FindPaymentRequest(result.Id, null, cancellationToken);
-                var newInvoice = await _InvoiceController.CreatePaymentRequestInvoice(prData, amount, result.AmountDue, store, Request, cancellationToken);
+                var newInvoice = await _InvoiceController.CreatePaymentRequestInvoice(prData, amount, result.AmountDue, store!, Request, cancellationToken);
                 if (redirectToInvoice)
                 {
                     return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = newInvoice.Id });
@@ -500,7 +497,8 @@ namespace BTCPayServer.Controllers
             }
 
             var invoices = result.Invoices.Where(requestInvoice =>
-                requestInvoice.State.Status == InvoiceStatus.New && !requestInvoice.Payments.Any());
+                requestInvoice.State.Status == InvoiceStatus.New && !requestInvoice.Payments.Any())
+                .ToArray();
 
             if (!invoices.Any())
             {
@@ -527,9 +525,8 @@ namespace BTCPayServer.Controllers
         {
             var store = GetCurrentStore();
             var result = await EditPaymentRequest(store.Id, payReqId);
-            if (result is ViewResult viewResult)
+            if (result is ViewResult { Model: UpdatePaymentRequestViewModel model })
             {
-                var model = (UpdatePaymentRequestViewModel)viewResult.Model;
                 model.Id = null;
                 model.Archived = false;
                 model.ExpiryDate = null;

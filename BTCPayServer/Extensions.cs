@@ -831,6 +831,12 @@ namespace BTCPayServer
             ctx.Items["BTCPAY.PAYMENTREQUESTDATA"] = paymentRequestData;
         }
 
+        public static PullPaymentData? GetPullPaymentDataOrNull(this HttpContext ctx)
+            => ctx.Items.TryGet("BTCPAY.PULLPAYMENTDATA") as PullPaymentData;
+
+        public static void SetPullPaymentData(this HttpContext ctx, PullPaymentData? pullPaymentData)
+            => ctx.Items["BTCPAY.PULLPAYMENTDATA"] = pullPaymentData;
+
         public static AppData? GetAppDataOrNull(this HttpContext ctx)
         => ctx.Items.TryGet("BTCPAY.APPDATA") as AppData;
 

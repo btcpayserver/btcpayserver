@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
@@ -16,6 +17,7 @@ public class SetContextFilter(
     PaymentRequestRepository paymentRequestRepository,
     InvoiceRepository invoiceRepository,
     AppService appService,
+    PullPaymentHostedService pullPaymentHostedService,
     StoreRepository storeRepository) : IAsyncActionFilter
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
@@ -67,6 +69,13 @@ public class SetContextFilter(
                         if (invoice is not null)
                             httpContext.SetInvoiceData(invoice);
                         break;
+                    case "pullPaymentId":
+                    {
+                        var pp = await pullPaymentHostedService.GetPullPayment(additionalScope.Scope, false);
+                        if (pp is not null)
+                            httpContext.SetPullPaymentData(pp);
+                        break;
+                    }
                 }
             }
         }

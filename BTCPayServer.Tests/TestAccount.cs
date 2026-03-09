@@ -116,7 +116,7 @@ namespace BTCPayServer.Tests
         {
             await RegisterAsync(isAdmin);
             await CreateStoreAsync();
-            var store = GetController<UIStoresController>();
+            var store = GetController<BTCPayServer.Plugins.Bitpay.Controllers.UIStoresTokenController>();
             var pairingCode = BitPay.RequestClientAuthorization("test", Facade.Merchant);
             Assert.IsType<ViewResult>(await store.RequestPairing(pairingCode.ToString()));
             await store.Pair(pairingCode.ToString(), StoreId);
@@ -167,7 +167,7 @@ namespace BTCPayServer.Tests
             storeController.UpdateWalletSettings(walletSettings).GetAwaiter().GetResult();
         }
 
-        public T GetController<T>(bool setImplicitStore = true) where T : Controller
+        public T GetController<T>(bool setImplicitStore = true) where T : ControllerBase
         {
             var controller = parent.PayTester.GetController<T>(UserId, setImplicitStore ? StoreId : null, IsAdmin);
             return controller;

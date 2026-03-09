@@ -27,7 +27,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
     }
 
-    public abstract class GreenfieldLightningNodeApiController : Controller
+    public abstract class GreenfieldLightningNodeApiController : ControllerBase
     {
         private readonly PoliciesSettings _policiesSettings;
         private readonly IAuthorizationService _authorizationService;
@@ -89,7 +89,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     : null
             });
         }
-        
+
         public virtual async Task<IActionResult> GetHistogram(string cryptoCode, HistogramType? type = null, CancellationToken cancellationToken = default)
         {
             Enum.TryParse<HistogramType>(type.ToString(), true, out var histType);
@@ -361,7 +361,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
         }
         protected BTCPayNetwork GetNetwork(string cryptoCode)
-            => _handlers.TryGetValue(PaymentTypes.LN.GetPaymentMethodId(cryptoCode), out var h) 
+            => _handlers.TryGetValue(PaymentTypes.LN.GetPaymentMethodId(cryptoCode), out var h)
                     && h is IHasNetwork { Network: var network }
                 ? network
                 : null;

@@ -11,7 +11,6 @@ using BTCPayServer.Client;
 using BTCPayServer.Common;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
-using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.Forms;
@@ -35,7 +34,6 @@ using BTCPayServer.Plugins;
 using BTCPayServer.Rating;
 using BTCPayServer.Rating.Providers;
 using BTCPayServer.Security;
-using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -76,8 +74,6 @@ using BTCPayServer.Payouts;
 using ExchangeSharp;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Localization;
-using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 
@@ -94,12 +90,6 @@ namespace BTCPayServer.Hosting
         public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration, Logs logs)
         {
             services.TryAddScoped<CallbackGenerator>();
-            services.TryAddSingleton<IStringLocalizerFactory, LocalizerFactory>();
-            services.TryAddSingleton<IHtmlLocalizerFactory, LocalizerFactory>();
-            services.TryAddSingleton<LocalizerService>();
-            services.TryAddSingleton<LanguagePackUpdateService>();
-            services.TryAddSingleton<ViewLocalizer>();
-            services.TryAddSingleton<IStringLocalizer>(o => o.GetRequiredService<IStringLocalizerFactory>().Create("", ""));
             services.TryAddSingleton<DelayedTaskScheduler>();
             services.TryAddSingleton<UIExtensionsRegistry>();
 
@@ -181,11 +171,9 @@ namespace BTCPayServer.Hosting
 
             services.AddStartupTask<BlockExplorerLinkStartupTask>();
             services.AddStartupTask<LoadCurrencyNameTableStartupTask>();
-            services.AddStartupTask<LoadTranslationsStartupTask>();
             services.TryAddSingleton<InvoiceRepository>();
             services.AddSingleton<PaymentService>();
             services.AddSingleton<BTCPayServerEnvironment>();
-            services.TryAddSingleton<TokenRepository>();
             services.TryAddSingleton<WalletRepository>();
             services.TryAddSingleton<UserSettingsRepository>();
             services.TryAddSingleton<EventAggregator>();
@@ -474,7 +462,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService>(s => s.GetRequiredService<PaymentRequestStreamer>());
             services.AddSingleton<IBackgroundJobClient, BackgroundJobClient>();
             services.AddScoped<IAuthorizationHandler, CookieAuthorizationHandler>();
-            services.AddScoped<IAuthorizationHandler, BitpayAuthorizationHandler>();
 
             services.AddSingleton<INotificationHandler, NewVersionNotification.Handler>();
             services.AddSingleton<INotificationHandler, NewUserRequiresApprovalNotification.Handler>();
@@ -499,7 +486,6 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<RateFetcher>();
 
             services.TryAddScoped<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddTransient<BitpayAccessTokenController>();
             services.AddTransient<UIInvoiceController>();
             services.AddTransient<UIPaymentRequestController>();
             services.AddSingleton<LabelService>();
@@ -520,20 +506,6 @@ namespace BTCPayServer.Hosting
                 options.AddPolicy(CorsPolicies.All, p => p.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
             });
             services.AddRateLimits();
-            services.AddLogging(logBuilder =>
-            {
-                var debugLogFile = BTCPayServerOptions.GetDebugLog(configuration);
-                if (!string.IsNullOrEmpty(debugLogFile))
-                {
-                    Serilog.Log.Logger = new LoggerConfiguration()
-                        .Enrich.FromLogContext()
-                        .MinimumLevel.Is(BTCPayServerOptions.GetDebugLogLevel(configuration))
-                        .WriteTo.File(debugLogFile, rollingInterval: RollingInterval.Day, fileSizeLimitBytes: MAX_DEBUG_LOG_FILE_SIZE,
-                            rollOnFileSizeLimit: true, retainedFileCountLimit: 1)
-                        .CreateLogger();
-                    logBuilder.AddProvider(new Serilog.Extensions.Logging.SerilogLoggerProvider(Log.Logger));
-                }
-            });
 
             services.AddSingleton<IObjectModelValidator, SkippableObjectValidatorProvider>();
             services.SkipModelValidation<RootedKeyPath>();
@@ -771,8 +743,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<SkippableObjectValidatorProvider.ISkipValidation, SkippableObjectValidatorProvider.SkipValidationType<T>>();
         }
 
-        private const long MAX_DEBUG_LOG_FILE_SIZE = 2000000; // If debug log is in use roll it every N MB.
-
         private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services)
         {
             services.PostConfigure<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme, opt =>
@@ -799,14 +769,13 @@ namespace BTCPayServer.Hosting
                     options.AccessDeniedPath = "/errors/403";
                     options.LogoutPath = "/logout";
                 })
-                .AddBitpayAuthentication()
                 .AddAPIKeyAuthentication();
         }
 
         public static IApplicationBuilder UsePayServer(this IApplicationBuilder app)
         {
-            app.UseMiddleware<GreenfieldMiddleware>();
-            app.UseMiddleware<BTCPayMiddleware>();
+            app.UseMiddleware<SetCultureMiddleware>();
+            app.UseMiddleware<OnionLocationMiddleware>();
             return app;
         }
 

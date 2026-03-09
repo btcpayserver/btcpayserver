@@ -8,6 +8,7 @@
 @using BTCPayServer.Views.Apps
 @using BTCPayServer.Configuration
 @using BTCPayServer.Plugins.Emails
+@using BTCPayServer.Plugins.Translations
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContext;
 @inject BTCPayServerOptions BtcPayServerOptions
 @inject BTCPayServerEnvironment Env
@@ -48,9 +49,7 @@
                                 <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a layout-menu-item="@(nameof(StoreNavPages.CheckoutAppearance))" asp-controller="UIStores" asp-action="CheckoutAppearance" asp-route-storeId="@Model.Store.Id" text-translate="true">Checkout Appearance</a>
                                 </li>
-                                <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
-                                    <a layout-menu-item="@nameof(StoreNavPages.Tokens)" asp-controller="UIStores" asp-action="ListTokens" asp-route-storeId="@Model.Store.Id" text-translate="true">Access Tokens</a>
-                                </li>
+
                                 <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a layout-menu-item="@(nameof(StoreNavPages.Users))" asp-controller="UIStores" asp-action="StoreUsers" asp-route-storeId="@Model.Store.Id" text-translate="true">Users</a>
                                 </li>
@@ -69,6 +68,7 @@
                                 <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a layout-menu-item="@(nameof(StoreNavPages.Forms))" asp-controller="UIForms" asp-action="FormsList" asp-route-storeId="@Model.Store.Id" text-translate="true">Forms</a>
                                 </li>
+                                <vc:ui-extension-point location="store-category-nav" model="@Model"/>
                             }
                             <vc:ui-extension-point location="store-nav" model="@Model"/>
                         </ul>
@@ -323,7 +323,7 @@
                     <a layout-menu-item="@nameof(ServerNavPages.Branding)" asp-controller="UIServer" asp-action="Branding" text-translate="true">Branding</a>
                 </li>
                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
-                    <a layout-menu-item="@nameof(ServerNavPages.Translations)" asp-controller="UIServer" asp-action="ListDictionaries" text-translate="true">Translations</a>
+                    <a layout-menu-item="@nameof(ServerNavPages.Translations)" asp-area="@TranslationsPlugin.Area" asp-controller="UITranslation" asp-action="ListDictionaries" text-translate="true">Translations</a>
                 </li>
                 @if (BtcPayServerOptions.DockerDeployment)
                 {

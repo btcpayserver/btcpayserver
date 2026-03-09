@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
-using BTCPayServer.Filters;
 using BTCPayServer.Models.NotificationViewModels;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Stores;
@@ -14,7 +13,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
 {
-    [BitpayAPIConstraint(false)]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewNotificationsForUser)]
     [Route("notifications/{action:lowercase=Index}")]
     public class UINotificationsController : Controller

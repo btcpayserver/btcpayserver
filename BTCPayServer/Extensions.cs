@@ -45,7 +45,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
 using NBitcoin;
 using NBitcoin.Payment;
 using NBitcoin.RPC;
@@ -57,7 +56,7 @@ using InvoiceCryptoInfo = BTCPayServer.Services.Invoices.InvoiceCryptoInfo;
 
 namespace BTCPayServer
 {
-    public static class Extensions
+    public static partial class Extensions
     {
         public static string GetNiceModelName(this HwiDeviceClient device)
         => device.Model switch
@@ -422,22 +421,6 @@ namespace BTCPayServer
             }
         }
 
-#nullable enable
-        public static IServiceCollection AddDefaultTranslations(this IServiceCollection services, params string[] keyValues)
-        {
-            return services.AddDefaultTranslations(keyValues.Select(k => KeyValuePair.Create<string, string?>(k, string.Empty)).ToArray());
-        }
-        public static IServiceCollection AddDefaultPrettyName(this IServiceCollection services, PaymentMethodId paymentMethodId, string defaultPrettyName)
-        {
-			services.AddSingleton<PrettyNameProvider.UntranslatedPrettyName>(new PrettyNameProvider.UntranslatedPrettyName(paymentMethodId, defaultPrettyName));
-			return services.AddDefaultTranslations(KeyValuePair.Create<string, string?>(PrettyNameProvider.GetTranslationKey(paymentMethodId), defaultPrettyName));
-        }
-        public static IServiceCollection AddDefaultTranslations(this IServiceCollection services, params KeyValuePair<string, string?>[] keyValues)
-        {
-            services.AddSingleton<IDefaultTranslationProvider>(new InMemoryDefaultTranslationProvider(keyValues));
-            return services;
-        }
-#nullable restore
         public static IServiceCollection AddUIExtension(this IServiceCollection services, string location, string partialViewName)
         {
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -714,38 +697,6 @@ namespace BTCPayServer
             if (uri == null || !uri.IsAbsoluteUri)
                 return false;
             return uri.DnsSafeHost.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
-        }
-
-        public static string GetSIN(this ClaimsPrincipal principal)
-        {
-            return principal.Claims.Where(c => c.Type == Security.Bitpay.BitpayClaims.SIN).Select(c => c.Value).FirstOrDefault();
-        }
-
-        public static void SetIsBitpayAPI(this HttpContext ctx, bool value)
-        {
-            NBitcoin.Extensions.TryAdd(ctx.Items, "IsBitpayAPI", value);
-        }
-
-        public static bool GetIsBitpayAPI(this HttpContext ctx)
-        {
-            return ctx.Items.TryGetValue("IsBitpayAPI", out object obj) &&
-                  obj is bool b && b;
-        }
-
-        public static void SetBitpayAuth(this HttpContext ctx, (string Signature, String Id, String Authorization) value)
-        {
-            NBitcoin.Extensions.TryAdd(ctx.Items, "BitpayAuth", value);
-        }
-
-        public static bool TryGetBitpayAuth(this HttpContext ctx, out (string Signature, String Id, String Authorization) result)
-        {
-            if (ctx.Items.TryGetValue("BitpayAuth", out object obj))
-            {
-                result = ((string Signature, String Id, String Authorization))obj;
-                return true;
-            }
-            result = default;
-            return false;
         }
 
         public static UserPrefsCookie GetUserPrefsCookie(this HttpContext ctx)

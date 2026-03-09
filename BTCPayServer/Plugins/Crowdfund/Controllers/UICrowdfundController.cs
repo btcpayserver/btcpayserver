@@ -37,7 +37,6 @@ using CrowdfundResetEvery = BTCPayServer.Services.Apps.CrowdfundResetEvery;
 
 namespace BTCPayServer.Plugins.Crowdfund.Controllers
 {
-    [AutoValidateAntiforgeryToken]
     [Route("apps")]
     [Area(CrowdfundPlugin.Area)]
     public class UICrowdfundController(

@@ -19,7 +19,6 @@ namespace BTCPayServer.Plugins.PayButton.Controllers
     [Route("stores")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [AutoValidateAntiforgeryToken]
     [Area(PayButtonPlugin.Area)]
     public class UIPayButtonController(
         StoreRepository repo,

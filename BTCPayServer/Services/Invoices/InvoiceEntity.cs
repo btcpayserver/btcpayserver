@@ -19,12 +19,10 @@ using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitpayClient;
-using NBXplorer;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using static BTCPayServer.Controllers.BitpayRateController;
 
 namespace BTCPayServer.Services.Invoices
 {

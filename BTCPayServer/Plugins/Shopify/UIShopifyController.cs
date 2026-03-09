@@ -32,6 +32,7 @@ namespace BTCPayServer.Plugins.Shopify
 
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Area(ShopifyPlugin.Area)]
     public class UIShopifyController : Controller
     {
         private readonly ShopifyService _shopifyService;

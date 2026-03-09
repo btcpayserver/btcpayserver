@@ -11,6 +11,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -21,13 +22,14 @@ namespace BTCPayServer.Security.Greenfield
     public class BasicAuthenticationHandler(
         IOptionsMonitor<IdentityOptions> identityOptions,
         IOptionsMonitor<GreenfieldAuthenticationOptions> options,
+        IOptions<MvcNewtonsoftJsonOptions> mvcOptions,
         ILoggerFactory logger,
         UrlEncoder encoder,
         SignInManager<ApplicationUser> signInManager,
         UserService userService,
         IRateLimitService rateLimitService,
         UserManager<ApplicationUser> userManager)
-        : AuthenticationHandler<GreenfieldAuthenticationOptions>(options, logger, encoder)
+        : GreenfieldAuthenticationHandler(options, logger, encoder, mvcOptions)
     {
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
@@ -93,7 +95,7 @@ namespace BTCPayServer.Security.Greenfield
 
         AuthenticateResult Fail(string reason)
         {
-            Context.Items.TryAdd(APIKeysAuthenticationHandler.AuthFailureReason, reason);
+            Context.Items.TryAdd(GreenfieldAuthenticationHandler.GreenfieldAuthFailureReason, reason);
             return AuthenticateResult.Fail(reason);
         }
     }

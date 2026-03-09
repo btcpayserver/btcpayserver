@@ -21,7 +21,6 @@ using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Controllers
 {
-    [AutoValidateAntiforgeryToken]
     [Route("apps")]
     public partial class UIAppsController : Controller
     {

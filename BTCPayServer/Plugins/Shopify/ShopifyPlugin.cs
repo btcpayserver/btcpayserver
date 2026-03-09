@@ -8,6 +8,7 @@ namespace BTCPayServer.Plugins.Shopify
 {
     public class ShopifyPlugin : BaseBTCPayServerPlugin
     {
+        public const string Area = "Shopify";
         public override string Identifier => "BTCPayServer.Plugins.Shopify";
         public override string Name => "Shopify";
         public override string Description => "Allows you to integrate BTCPay Server as a payment option in Shopify.";
@@ -16,7 +17,7 @@ namespace BTCPayServer.Plugins.Shopify
         {
             applicationBuilder.AddSingleton<ShopifyService>();
             applicationBuilder.AddSingleton<IHostedService, ShopifyService>(provider => provider.GetRequiredService<ShopifyService>());
-            applicationBuilder.AddUIExtension("header-nav", "Shopify/NavExtension");
+            applicationBuilder.AddUIExtension("header-nav", "/Plugins/Shopify/Views/NavExtension.cshtml");
             base.Execute(applicationBuilder);
         }
     }

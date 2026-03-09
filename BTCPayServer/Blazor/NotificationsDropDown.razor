@@ -15,7 +15,7 @@
 @inject BTCPayServerOptions _BTCPayServerOptions
 @inject EventAggregator _EventAggregator
 
-<div id="Notifications">
+<div id="Notifications"  class="@(!_JSRuntime.IsPreRendering() ? "rendered" : "")">
 	@if (UnseenCount == "0")
 	{
 		<a href="@NotificationsUrl" id="NotificationsHandle" class="mainMenuButton" title="@StringLocalizer["Notifications"]">

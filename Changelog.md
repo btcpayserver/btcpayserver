@@ -1,5 +1,28 @@
 # Changelog
 
+## 2.3.5
+
+### New Features
+
+* Allow BTCPay Server to start without any on-chain payment methods with `BTCPAY_NODEFAULTCHAIN` (#7180) @NicolasDorier
+* Add custom textbox for checkout (#7182) @pavlenex
+* Add CoinDCX rate provider for BTC/INR rates (#7173) @Abhijay007
+* Add Desiboard rate provider for BTC/USD and BTC/INR rates (#7169) @Abhijay007
+* Dashboard: Support multi-crypto wallet balance widgets (#7110) @Sup3rlativ3
+* Ability to update a previously downloaded language pack (#7185) @Abhijay007
+
+### Fixes
+
+* Fix: Images in Point of Sale Cart doesn't show on mobile (#7190) @NicolasDorier
+* Fix: Payments getting undetected on LND when the node restarted (#7176) @rockstardev
+* Fix: Do not show claim button in pull payments if it is archived (#7154 #7167) @NicolasDorier
+* Fix: Unable to edit roles when navigating from store level to Roles (#7157) @rockstardev
+
+### Improvements
+
+* Throttle Greenfield API calls with Basic auth (#7177) @NicolasDorier
+* Added missing translations strings for various files (#6897) @Abhijay007
+
 ## 2.3.4
 
 ### New Features

@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
 {
+    [IgnoreAntiforgeryToken]
     public class UIErrorController : Controller
     {
+        public const string ErrorDetailsKey = "ERROR_DETAILS";
         [Route("/errors/{statusCode:int}")]
         public IActionResult Handle(int? statusCode = null)
         {

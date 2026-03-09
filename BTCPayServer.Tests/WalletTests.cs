@@ -163,9 +163,9 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         // ReSharper disable once GrammarMistakeInComment
         // In this test, we try to spend from a manual seed. We import the xpub 49'/0'/0',
         // then try to use the seed to sign the transaction
-        await s.GenerateWallet(cryptoCode, "", true);
+        await s.GenerateWallet();
 
-        //let's test quickly the wallet send page
+        //let's quickly test the wallet send page
         await s.GoToWallet(navPages: WalletsNavPages.Send);
         //you cannot use the Sign with NBX option without saving private keys when generating the wallet.
         Assert.DoesNotContain("nbx-seed", await s.Page.ContentAsync());
@@ -241,7 +241,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await wt.AssertHasLabels("label2");
 
         //change the wallet and ensure old address is not there and generating a new one does not result in the prev one
-        await s.GenerateWallet(cryptoCode, "", true);
+        await s.GenerateWallet(importkeys: true, isHotWallet: true);
         await s.GoToWallet(null, WalletsNavPages.Receive);
         await s.Page.ClickAsync("button[value=generate-new-address]");
         var newAddr = await s.Page.Locator("#Address").GetAttributeAsync("data-text");
@@ -252,10 +252,10 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var btc = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
         var address = invoice.GetPaymentPrompt(btc)!.Destination;
 
-        //wallet should have been imported to bitcoin core wallet in watch only mode.
+        // wallet should have been imported to bitcoin core wallet
         var result =
             await s.Server.ExplorerNode.GetAddressInfoAsync(BitcoinAddress.Create(address, Network.RegTest));
-        Assert.True(result.IsWatchOnly);
+        Assert.False(result.IsWatchOnly);
         await s.GoToStore(storeId);
         var mnemonic = await s.GenerateWallet(cryptoCode, "", true, true);
 
@@ -313,10 +313,10 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         });
 
         await ws.Sign();
-        // Back button should lead back to the previous page inside the send wizard
+        // The back button should lead back to the previous page inside the send wizard
         var backUrl = await s.Page.Locator("#GoBack").GetAttributeAsync("href");
         Assert.EndsWith($"/send?returnUrl={Uri.EscapeDataString(walletTransactionUri.AbsolutePath)}", backUrl);
-        // Cancel button should lead to the page that referred to the send wizard
+        // The cancel button should lead to the page that referred to the send wizard
         var cancelUrl = await s.Page.Locator("#CancelWizard").GetAttributeAsync("href");
         Assert.EndsWith(walletTransactionUri.AbsolutePath, cancelUrl);
 

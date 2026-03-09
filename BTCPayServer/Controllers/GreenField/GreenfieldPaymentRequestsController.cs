@@ -17,9 +17,6 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using TwentyTwenty.Storage;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using static QRCoder.PayloadGenerator;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 
 namespace BTCPayServer.Controllers.Greenfield

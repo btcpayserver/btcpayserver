@@ -15,7 +15,6 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
-using BTCPayServer.Security;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -36,7 +35,6 @@ using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Controllers
 {
-    [Filters.BitpayAPIConstraint(false)]
     public partial class UIInvoiceController : Controller
     {
         readonly InvoiceRepository _InvoiceRepository;

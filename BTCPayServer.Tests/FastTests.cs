@@ -1484,6 +1484,16 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.Equal("StartDate:2019-04-25 01:00 AM", search.WithoutSearchText());
             Assert.Equal(filter, search.ToString());
 
+            filter = "label:test,nolabel:true,direction:in, hekki";
+            search = new SearchString(filter);
+            Assert.Equal("hekki", search.TextSearch);
+            Assert.Null(search.TextFilters);
+            Assert.Equal("hekki", search.TextCombined);
+            Assert.Equal("label:test,nolabel:true,direction:in", search.WithoutSearchText());
+            Assert.Single(search.Filters["label"], "test");
+            Assert.Single(search.Filters["direction"], "in");
+            Assert.True(search.GetFilterBool("nolabel"));
+
             // modify search
             filter = $"status:settled,exceptionstatus:paidLate,unusual:true, fulltext searchterm, storeid:{storeId},startdate:2019-04-25 01:00:00";
             search = new SearchString(filter);

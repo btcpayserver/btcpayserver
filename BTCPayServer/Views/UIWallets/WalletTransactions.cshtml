@@ -15,6 +15,15 @@
     var wallet = walletId != null ? WalletId.Parse(walletId) : new WalletId(storeId, cryptoCode);
     storeId = wallet.StoreId;
     var hasDateFilter = Model.Search?.ContainsFilter("startdate") is true || Model.Search?.ContainsFilter("enddate") is true;
+    var hasNoLabelFilter = Model.Search?.ContainsFilter("nolabel") is true && Model.Search.GetFilterBool("nolabel") is true;
+    var searchLabelFilters = Model.Search?.GetFilterArray("label") ?? Array.Empty<string>();
+    var hasLegacyLabelFilter = !string.IsNullOrEmpty(labelFilter) && !searchLabelFilters.Any(value => value.Equals(labelFilter, StringComparison.OrdinalIgnoreCase));
+    var labelFilterCount = searchLabelFilters.Length + (hasLegacyLabelFilter ? 1 : 0) + (hasNoLabelFilter ? 1 : 0);
+    var directionFilters = Model.Search?.GetFilterArray("direction") ?? Array.Empty<string>();
+    var hasIncomingFilter = directionFilters.Contains("in");
+    var hasOutgoingFilter = directionFilters.Contains("out");
+    var hasIncomingOnlyFilter = hasIncomingFilter && !hasOutgoingFilter;
+    var hasOutgoingOnlyFilter = hasOutgoingFilter && !hasIncomingFilter;
 
     ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Transactions)}-{Model.CryptoCode}", StringLocalizer["{0} Transactions", Model.CryptoCode])
         .SetCategory(WellKnownCategories.ForWallet(Model.CryptoCode)));
@@ -46,14 +55,20 @@
             }
         }
 
+        .dropdown > .btn {
+            min-width: 7rem;
+            padding-left: 1rem;
+            text-align: left;
+        }
+
         /* pull actions area, so that it is besides the search form */
         @@media (min-width: 1200px) {
-            #Filter + #Dropdowns {
+            #WalletTransactionsSearch + #Dropdowns {
                 margin-top: -4rem;
                 float: right;
             }
 
-            #Filter + #Dropdowns #Actions {
+            #WalletTransactionsSearch + #Dropdowns #Actions {
                 order: 1;
             }
         }
@@ -213,8 +228,31 @@
     private bool HasArrayFilter(string type, string key = null) =>
         Model.Search?.ContainsFilter(type) is true && (key is null || Model.Search.GetFilterArray(type).Contains(key));
 
+    private bool HasBooleanFilter(string key) =>
+        Model.Search?.ContainsFilter(key) is true && Model.Search.GetFilterBool(key) is true;
+
     private bool HasCustomDateFilter() =>
         Model.Search?.ContainsFilter("startdate") is true && Model.Search.ContainsFilter("enddate");
+
+    private string SetSearchFilter(string search, string key, params string[] values)
+    {
+        var filters = (search ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(value => value.Trim())
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Where(value => !value.StartsWith($"{key}:", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        foreach (var value in values.Where(value => !string.IsNullOrWhiteSpace(value)))
+        {
+            filters.Add($"{key}:{value}");
+        }
+
+        return filters.Count > 0 ? string.Join(',', filters) : string.Empty;
+    }
+
+    private string SetSearchFilter(string key, params string[] values) =>
+        SetSearchFilter(Model.Search?.ToString(), key, values);
 }
 
 @* Custom Range Modal *@
@@ -262,7 +300,7 @@
     </div>
 </div>
 
-<form id="WalletTransactionsSearch" class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-2 col-xxl-8" asp-action="WalletTransactions" asp-route-walletId="@walletId" method="get">
+<form id="WalletTransactionsSearch" class="d-flex flex-wrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="WalletTransactions" asp-route-walletId="@walletId" method="get">
     <input id="Count" name="Count" type="hidden" value="@Model.Count" />
     <input id="TimezoneOffset" name="TimezoneOffset" type="hidden" value="@Model.TimezoneOffset" />
     <input name="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()" />
@@ -270,7 +308,70 @@
     {
         <input name="labelFilter" type="hidden" value="@labelFilter" />
     }
-    <input id="SearchText" name="SearchText" class="form-control" value="@Model.SearchText" placeholder="@StringLocalizer["Search transactions…"]" />
+    <input id="SearchText" name="SearchText" class="form-control" value="@Model.SearchText" placeholder="@StringLocalizer["Search transactions..."]" />
+    <div class="dropdown">
+        <button id="DirectionOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (hasIncomingOnlyFilter)
+            {
+                <span text-translate="true">Incoming</span>
+            }
+            else if (hasOutgoingOnlyFilter)
+            {
+                <span text-translate="true">Outgoing</span>
+            }
+            else
+            {
+                <span text-translate="true">All Directions</span>
+            }
+        </button>
+        <div class="dropdown-menu" aria-labelledby="DirectionOptionsToggle">
+            <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter("direction")" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item @((!hasIncomingOnlyFilter && !hasOutgoingOnlyFilter) ? "custom-active" : string.Empty)" text-translate="true">All Directions</a>
+            <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter("direction", "in")" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item @(hasIncomingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Incoming</a>
+            <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter("direction", "out")" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item @(hasOutgoingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Outgoing</a>
+        </div>
+    </div>
+    @if (Model.Labels.Any())
+    {
+        <div class="dropdown">
+            <button id="LabelOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                @if (labelFilterCount > 1)
+                {
+                    <span>@StringLocalizer["{0} Labels", labelFilterCount]</span>
+                }
+                else if (searchLabelFilters.Length == 1)
+                {
+                    <span text-translate="true">Label:</span>
+                    <span>@searchLabelFilters[0]</span>
+                }
+                else if (!string.IsNullOrEmpty(labelFilter))
+                {
+                    <span text-translate="true">Label:</span>
+                    <span>@labelFilter</span>
+                }
+                else if (hasNoLabelFilter)
+                {
+                    <span text-translate="true">No Label</span>
+                }
+                else
+                {
+                    <span text-translate="true">All Labels</span>
+                }
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="LabelOptionsToggle">
+                <li>
+                    <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("label"), "nolabel")" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item @(labelFilterCount == 0 ? "custom-active" : string.Empty)" text-translate="true">All Labels</a>
+                </li>
+                <li>
+                    <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("label"), "nolabel", "true")" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item @(hasNoLabelFilter ? "custom-active" : string.Empty)" text-translate="true">No Label</a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                @foreach (var label in Model.Labels)
+                {
+                    <li><a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("nolabel"), "label", label.Text)" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item transaction-label-text@((searchLabelFilters.Any(value => value.Equals(label.Text, StringComparison.OrdinalIgnoreCase)) || labelFilter == label.Text) ? " active" : string.Empty)" style="--btcpay-dropdown-link-active-bg:@label.Color;--btcpay-dropdown-link-active-color:@label.TextColor;">@label.Text</a></li>
+                }
+            </ul>
+        </div>
+    }
     <div class="dropdown">
         <button id="DateOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             @if (hasDateFilter)
@@ -309,52 +410,11 @@
     <button id="clearAllFiltersBtn" type="button" class="btn btn-secondary" style="min-width: 7rem;" title="@StringLocalizer["Clear all filters"]">
         <span class="align-middle" text-translate="true">Clear All</span>
     </button>
-    @if (!string.IsNullOrEmpty(labelFilter))
-    {
-        <a class="btn btn-secondary" asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-searchTerm="@Model.SearchTerm" asp-route-searchText="@Model.SearchText" asp-route-timezoneOffset="@Model.TimezoneOffset" text-translate="true">Clear label</a>
-    }
 }
 
 </form>
-<div class="text-secondary small mb-4">
-    <span text-translate="true">Filters:</span>
-    <code>label:MyLabel</code>,
-    <code>nolabel:true</code>,
-    <code>direction:in</code>,
-    <code>direction:out</code>,
-    <code>startdate:2024-01-01</code>,
-    <code>enddate:2024-01-31</code>. <span text-translate="true">Use comma to combine.</span>
-</div>
 
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3" id="Dropdowns">
-    @if (Model.Labels.Any())
-    {
-        <div class="btn-group" id="Filter">
-            <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                @if (string.IsNullOrEmpty(labelFilter))
-                {
-                    <span class="text-secondary" text-translate="true">Filter by label</span>
-                }
-                else
-                {
-                    <span class="text-secondary" text-translate="true">Label:</span>
-                    <span>@labelFilter</span>
-                }
-            </button>
-            <ul class="dropdown-menu">
-                @foreach (var label in Model.Labels)
-                {
-                    <li><a asp-route-labelFilter="@label.Text" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.SearchTerm" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item transaction-label-text@(labelFilter == label.Text ? " active" : string.Empty)" style="--btcpay-dropdown-link-active-bg:@label.Color;--btcpay-dropdown-link-active-color:@label.TextColor;">@label.Text</a></li>
-                }
-                @if (!string.IsNullOrEmpty(labelFilter))
-                {
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" asp-route-labelFilter="" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.SearchTerm" asp-route-timezoneOffset="@Model.TimezoneOffset" text-translate="true">Clear filter</a></li>
-                }
-            </ul>
-        </div>
-    }
-
+<div class="d-flex flex-wrap align-items-center justify-content-end gap-3" id="Dropdowns">
     <div class="dropdown d-inline-flex align-items-center gap-3 ms-auto" id="Export">
         <a
             id="view-report"
@@ -483,3 +543,4 @@
         Html.ActionLink(StringLocalizer["rescan your wallet"], "WalletRescan", "UIWallets", new { walletId = Context.GetRouteValue("walletId") }),
         new HtmlString($"<a href=\"https://docs.btcpayserver.org/FAQ/Wallet/#missing-payments-in-my-software-or-hardware-wallet\" target=\"_blank\" rel=\"noreferrer noopener\">{StringLocalizer["follow these instructions"]}</a>")]
 </p>
+

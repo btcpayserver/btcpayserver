@@ -40,11 +40,8 @@ public class StoreWalletBalance : ViewComponent
         _handlers = handlers;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync(StoreData store, string? cryptoCode = null)
+    public async Task<IViewComponentResult> InvokeAsync(StoreData store, string cryptoCode)
     {
-        cryptoCode = string.IsNullOrEmpty(cryptoCode)
-            ? _networkProvider.DefaultNetwork.CryptoCode
-            : cryptoCode;
         var walletId = new WalletId(store.Id, cryptoCode);
         var data = await _walletHistogramService.GetHistogram(store, walletId, DefaultType);
         var defaultCurrency = store.GetStoreBlob().DefaultCurrency;

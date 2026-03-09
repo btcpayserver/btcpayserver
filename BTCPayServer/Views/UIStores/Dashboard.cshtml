@@ -1,17 +1,9 @@
-@using BTCPayServer.Components.StoreLightningBalance
-@using BTCPayServer.Components.StoreLightningServices
-@using BTCPayServer.Components.StoreNumbers
-@using BTCPayServer.Components.StoreRecentInvoices
-@using BTCPayServer.Components.StoreRecentTransactions
-@using BTCPayServer.Components.StoreWalletBalance
-@using BTCPayServer.Components.AppSales
-@using BTCPayServer.Components.AppTopItems
 @using BTCPayServer.Client
 @model StoreDashboardViewModel
 @{
     BTCPayServer.Plugins.PluginExceptionHandler.SetDisablePluginIfCrash(Context);
     ViewData.SetLayoutModel(new(nameof(StoreNavPages.Dashboard), Model.StoreName));
-    var store = ViewContext.HttpContext.GetStoreData();
+    var store = ViewContext.HttpContext.GetStoreDataOrNull();
 }
 
 <partial name="_StatusMessage" />
@@ -96,7 +88,7 @@
             }
         </div>
         <div class="dashboard-row dashboard-row-tertiary">
-            <vc:store-recent-invoices store="store" crypto-code="@Model.CryptoCode" initial-rendering="true" />
+            <vc:store-recent-invoices store="store" initial-rendering="true" />
         </div>
         @if (Model.LightningEnabled)
         {

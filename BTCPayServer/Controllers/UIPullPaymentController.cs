@@ -72,7 +72,7 @@ namespace BTCPayServer.Controllers
         {
             using var ctx = _dbContextFactory.CreateContext();
             var pp = await ctx.PullPayments.FindAsync(pullPaymentId);
-            if (pp is null)
+            if (pp is null || _networkProvider.DefaultNetwork?.CryptoCode is not {} cryptoCode)
                 return NotFound();
 
             var store = await _storeRepository.FindStore(pp.StoreId);
@@ -116,10 +116,10 @@ namespace BTCPayServer.Controllers
             };
             vm.IsPending &= vm.AmountDue > 0.0m;
             vm.StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
-            
+
             if (_pullPaymentHostedService.SupportsLNURL(pp))
             {
-                var url = Url.Action(nameof(UILNURLController.GetLNURLForPullPayment), "UILNURL", new { cryptoCode = _networkProvider.DefaultNetwork.CryptoCode, pullPaymentId = vm.Id }, Request.Scheme, Request.Host.ToString());
+                var url = Url.Action(nameof(UILNURLController.GetLNURLForPullPayment), "UILNURL", new { cryptoCode, pullPaymentId = vm.Id }, Request.Scheme, Request.Host.ToString());
                 vm.LnurlEndpoint = url != null ? new Uri(url) : null;
                 vm.SetupDeepLink = $"boltcard://program?url={GetBoltcardDeeplinkUrl(vm, OnExistingBehavior.UpdateVersion)}";
                 vm.ResetDeepLink = $"boltcard://reset?url={GetBoltcardDeeplinkUrl(vm, OnExistingBehavior.KeepVersion)}";

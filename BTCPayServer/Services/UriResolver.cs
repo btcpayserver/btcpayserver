@@ -1,7 +1,5 @@
 #nullable enable
 using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Security.AccessControl;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 

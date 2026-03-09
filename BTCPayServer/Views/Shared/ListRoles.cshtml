@@ -1,7 +1,8 @@
-@using BTCPayServer.Views.Server
 @using BTCPayServer.Views.Stores
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Client
+@using BTCPayServer.Services
+@inject PermissionService PermissionService
+
 @model BTCPayServer.Models.ServerViewModels.RolesViewModel
 @{
     var storeId = Context.GetRouteValue("storeId") as string;
@@ -95,7 +96,7 @@
                     {
                         @foreach (var policy in role.Permissions)
                         {
-                            <code class="d-block text-break">@Policies.DisplayName(policy)</code>
+                            <code class="d-block text-break">@(PermissionService.TryGetDefinition(policy)?.Display?.Title ?? policy)</code>
                         }
                     }
                 </td>

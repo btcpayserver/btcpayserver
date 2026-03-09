@@ -1,7 +1,6 @@
-@using BTCPayServer.Components.MainNav
+
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor _context;
 @inject BTCPayServer.Services.BTCPayServerEnvironment _env
-@inject SignInManager<ApplicationUser> _signInManager
 @inject UserManager<ApplicationUser> _userManager
 
 @{
@@ -19,15 +18,7 @@
 </head>
 <body class="d-flex flex-column flex-lg-row min-vh-100">
 <header id="mainMenu" class="btcpay-header d-flex flex-column d-print-none" v-pre>
-    <div id="mainMenuHead">
-        <button id="mainMenuToggle" class="mainMenuButton" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span>Menu</span>
-        </button>
-        @if (_signInManager.IsSignedIn(User))
-        {
-            <vc:global-nav />
-        }
-    </div>
+
     <vc:main-nav />
 </header>
 <template id="badUrl">
@@ -52,7 +43,7 @@
     <section>
         @RenderBody()
     </section>
-    
+
     <partial name="_Footer"/>
     <partial name="LayoutFoot"/>
 

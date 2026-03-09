@@ -95,7 +95,7 @@ namespace BTCPayServer.Controllers.GreenField
             var storeData = HttpContext.GetStoreData();
             var storeBlob = storeData.GetStoreBlob();
             var blob = storeBlob.GetRateSettings(fallback);
-            
+
             // If fallback rates are not enabled but someone is trying to configure them, enable them automatically
             if (blob is null && fallback)
             {
@@ -105,7 +105,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 return this.CreateAPIError(404, "fallback-disabled", "The fallback rates are disabled");
             }
-            
+
             ValidateAndSanitizeConfiguration(configuration, storeBlob, blob);
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);

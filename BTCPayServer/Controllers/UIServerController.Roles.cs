@@ -56,10 +56,10 @@ namespace BTCPayServer.Controllers
 
             return View(new UpdateRoleViewModel
             {
-                Policies = roleData.Permissions,
+                Permissions = roleData.Permissions.ToHashSet(),
                 Role = roleData.Role
             });
-        } 
+        }
 
         [HttpPost("server/roles/{role}")]
         public async Task<IActionResult> CreateOrEditRole([FromRoute] string role, UpdateRoleViewModel viewModel)
@@ -83,7 +83,7 @@ namespace BTCPayServer.Controllers
                 return View(viewModel);
             }
 
-            var r = await _StoreRepository.AddOrUpdateStoreRole(new StoreRoleId(role), viewModel.Policies);
+            var r = await _StoreRepository.AddOrUpdateStoreRole(new StoreRoleId(role), viewModel.Permissions);
             if (r is null)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel
@@ -99,10 +99,10 @@ namespace BTCPayServer.Controllers
                 Severity = StatusMessageModel.StatusSeverity.Success,
                 Message = successMessage
             });
-                
+
             return RedirectToAction(nameof(ListRoles));
         }
-        
+
 
 
         [HttpGet("server/roles/{role}/delete")]
@@ -136,7 +136,7 @@ namespace BTCPayServer.Controllers
             var errorMessage = await _StoreRepository.RemoveStoreRole(roleId);
             if (errorMessage is null)
             {
-                
+
                 TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Role deleted"].Value;
             }
             else
@@ -160,7 +160,7 @@ namespace BTCPayServer.Controllers
                 await _StoreRepository.SetDefaultRole(role);
                 TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Role set default"].Value;
             }
-            
+
             return RedirectToAction(nameof(ListRoles));
         }
     }
@@ -171,5 +171,5 @@ public class UpdateRoleViewModel
     [Display(Name = "Role")]
     public string Role { get; set; }
 
-    [Display(Name = "Policies")] public List<string> Policies { get; set; } = new();
+    [Display(Name = "Permissions")] public HashSet<string> Permissions { get; set; } = new();
 }

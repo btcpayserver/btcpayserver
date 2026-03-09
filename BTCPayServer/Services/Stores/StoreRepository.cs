@@ -2,13 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Principal;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Migrations;
 using BTCPayServer.Payments;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
@@ -51,9 +51,26 @@ namespace BTCPayServer.Services.Stores
             return result;
         }
 
+        public async Task<StoreData?> FindStore(string storeId, IPrincipal user, bool adminCanAccess = false)
+        {
+            if (adminCanAccess && user.IsInRole(Roles.ServerAdmin))
+            {
+                await using var ctx = _ContextFactory.CreateContext();
+                return await ctx
+                    .Stores.Where(s => s.Id == storeId)
+                    .Include(store => store.UserStores)
+                    .ThenInclude(store => store.StoreRole)
+                    .FirstOrDefaultAsync();
+            }
+            return await FindStore(storeId, user.GetId());
+        }
+
         public async Task<StoreData?> FindStore(string storeId, string userId)
         {
             ArgumentNullException.ThrowIfNull(userId);
+            if (string.IsNullOrEmpty(storeId) ||
+                string.IsNullOrEmpty(userId))
+                return null;
             await using var ctx = _ContextFactory.CreateContext();
             return await ctx
                 .UserStore
@@ -168,11 +185,11 @@ namespace BTCPayServer.Services.Stores
             return "Role not found";
         }
 
-        public async Task<StoreRole?> AddOrUpdateStoreRole(StoreRoleId role, List<string> policies)
+        public async Task<StoreRole?> AddOrUpdateStoreRole(StoreRoleId role, IEnumerable<string> permissions)
         {
-            policies = policies.Where(s => Policies.IsValidPolicy(s) && Policies.IsStorePolicy(s)).ToList();
+            var policiesList = permissions.Where(p => Permission.TryGetPolicyType(p) is PolicyType.Store).ToList();
             await using var ctx = _ContextFactory.CreateContext();
-            Data.StoreRole? match = await ctx.StoreRoles.FindAsync(role.Id);
+            var match = await ctx.StoreRoles.FindAsync(role.Id);
             var added = false;
             if (match is null)
             {
@@ -180,7 +197,7 @@ namespace BTCPayServer.Services.Stores
                 ctx.StoreRoles.Add(match);
                 added = true;
             }
-            match.Permissions = policies;
+            match.Permissions = policiesList;
             try
             {
                 await ctx.SaveChangesAsync();
@@ -248,6 +265,8 @@ namespace BTCPayServer.Services.Stores
 
         public async Task<StoreData[]> GetStoresByUserId(string userId, IEnumerable<string>? storeIds = null)
         {
+            if (userId == "")
+                return Array.Empty<StoreData>();
             await using var ctx = _ContextFactory.CreateContext();
             return (await ctx.UserStore
                 .Where(u => u.ApplicationUserId == userId && (storeIds == null || storeIds.Contains(u.StoreDataId)))

@@ -2,12 +2,10 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Fido2;
@@ -18,6 +16,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Plugins.Emails.Services;
+using BTCPayServer.Security;
 using Fido2NetLib;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -68,14 +67,15 @@ namespace BTCPayServer.Controllers
         [HttpGet("/cheat/permissions")]
         [HttpGet("/cheat/permissions/stores/{storeId}")]
         [CheatModeRoute]
-        public async Task<IActionResult> CheatPermissions([FromServices] IAuthorizationService authorizationService, string storeId = null)
+        public async Task<IActionResult> CheatPermissions([FromServices] IAuthorizationService authorizationService, [FromServices] PermissionService permissionService, string storeId = null)
         {
             var vm = new CheatPermissionsViewModel();
             vm.StoreId = storeId;
             var results = new System.Collections.Generic.List<(string, Task<AuthorizationResult>)>();
-            foreach (var p in Policies.AllPolicies.Concat(new[] { Policies.CanModifyStoreSettingsUnscoped }))
+            foreach (var p in permissionService.Definitions.Values)
             {
-                results.Add((p, authorizationService.AuthorizeAsync(User, storeId, p)));
+                results.Add((p.Policy, authorizationService.AuthorizeAsync(User, storeId, new PolicyRequirement(p.Policy))));
+                results.Add((p.Policy + ":", authorizationService.AuthorizeAsync(User, storeId, new PolicyRequirement(p.Policy, requireUnscoped: true))));
             }
             await Task.WhenAll(results.Select(r => r.Item2));
             results = results.OrderBy(r => r.Item1).ToList();
@@ -634,8 +634,6 @@ namespace BTCPayServer.Controllers
         [HttpGet("/logout")]
         public async Task<IActionResult> Logout()
         {
-            var userId = signInManager.UserManager.GetUserId(HttpContext.User);
-            var user = await userManager.FindByIdAsync(userId);
             await signInManager.SignOutAsync();
             HttpContext.DeleteUserPrefsCookie();
             return RedirectToAction(nameof(Login));

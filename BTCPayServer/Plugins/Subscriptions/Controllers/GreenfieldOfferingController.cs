@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
@@ -23,7 +22,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield,
-        Policy = Policies.CanViewOfferings)]
+        Policy = SubscriptionsPolicies.CanViewOfferings)]
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldOfferingController(
         ApplicationDbContext ctx,
@@ -37,21 +36,23 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
         {
             OfferingData[] offerings;
             if (offeringId is null)
+            {
                 offerings = await ctx.Offerings.IncludeAll().Where(o => o.App.StoreDataId == storeId).ToArrayAsync();
+                await ctx.Plans.FetchPlanFeaturesAsync(offerings.SelectMany(p => p.Plans).ToArray());
+            }
             else
             {
-                var offering = await ctx.Offerings.GetOfferingData(offeringId, storeId);
+                var offering = await ctx.Offerings.GetOfferingData(offeringId, storeId, fetchPlanFeatures: true);
                 if (offering is null)
                     return OfferingNotFound();
                 offerings = new[] { offering };
             }
-            await ctx.Plans.FetchPlanFeaturesAsync(offerings.SelectMany(p => p.Plans).ToArray());
             if (offeringId is not null)
                 return Ok(Mapper.MapOffering(offerings[0]));
             return Ok(offerings.Select(Mapper.MapOffering).ToArray());
         }
         [HttpPost("~/api/v1/stores/{storeId}/offerings")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = Policies.CanModifyOfferings)]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = SubscriptionsPolicies.CanModifyOfferings)]
         public async Task<IActionResult> CreateOffering(string storeId, [FromBody] OfferingModel request)
         {
             if (request?.AppName is null)
@@ -79,7 +80,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/offerings/{offeringId}/plans")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = Policies.CanModifyOfferings)]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = SubscriptionsPolicies.CanModifyOfferings)]
         public async Task<IActionResult> CreateOfferingPlan(string storeId, string offeringId, [FromBody] CreatePlanRequest request)
         {
             var offering = await ctx.Offerings.GetOfferingData(offeringId, storeId);
@@ -168,7 +169,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             return Ok(Mapper.MapToSubscriberModel(subscriber));
         }
 
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = Policies.CanManageSubscribers)]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = SubscriptionsPolicies.CanManageSubscribers)]
         [HttpGet("~/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/credits/{currency}")]
         public async Task<IActionResult> GetCredit(string storeId, string offeringId,
             [ModelBinder<CustomerSelectorModelBinder>]
@@ -185,7 +186,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
                 Value = subscriber.GetCredit(currency)
             });
         }
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = Policies.CanCreditSubscribers)]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = SubscriptionsPolicies.CanCreditSubscribers)]
         [HttpPost("~/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/credits/{currency}")]
         public async Task<IActionResult> UpdateCredit(string storeId, string offeringId,
             [ModelBinder<CustomerSelectorModelBinder>]
@@ -212,7 +213,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             return await GetCredit(storeId, offeringId, customerSelector, currency);
         }
 
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = Policies.CanManageSubscribers)]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = SubscriptionsPolicies.CanManageSubscribers)]
         [HttpPost("~/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/suspend")]
         public async Task<IActionResult> SuspendSubscriber(string storeId, string offeringId,
             [ModelBinder<CustomerSelectorModelBinder>]
@@ -226,7 +227,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             ctx.ChangeTracker.Clear();
             return await GetSubscriber(storeId, offeringId, customerSelector);
         }
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = Policies.CanManageSubscribers)]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = SubscriptionsPolicies.CanManageSubscribers)]
         [HttpPost("~/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/unsuspend")]
         public async Task<IActionResult> UnsuspendSubscriber(string storeId, string offeringId,
             [ModelBinder<CustomerSelectorModelBinder>]
@@ -288,11 +289,10 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
             if (checkout is null)
                 return CheckoutNotFound();
-            await ctx.Plans.FetchPlanFeaturesAsync(checkout.Plan);
             return Ok(Mapper.MapPlanCheckout(checkout));
         }
 
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = Policies.CanManageSubscribers)]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = SubscriptionsPolicies.CanManageSubscribers)]
         [HttpPost("~/api/v1/plan-checkout")]
         public async Task<IActionResult> CreatePlanCheckout([FromBody]CreatePlanCheckoutRequest model)
         {
@@ -306,7 +306,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             if (model.NewSubscriberEmail is not null && model.CustomerSelector is not null)
                 ModelState.AddModelError(nameof(model.NewSubscriberEmail), "If customerSelector is specified, newSubscriberEmail cannot be specified");
             if (!await CanManageSubscribers(model.StoreId))
-                return this.CreateAPIPermissionError(Policies.CanManageSubscribers);
+                return this.CreateAPIPermissionError(SubscriptionsPolicies.CanManageSubscribers);
             var plan = await ctx.Plans.GetPlanFromId(model.PlanId ?? "", model.OfferingId ?? "", model.StoreId ?? "");
             if (plan is null)
                 return PlanNotFound();
@@ -354,7 +354,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             => Math.Round(amount, currencyNameTable.GetNumberFormatInfo(currency)?.CurrencyDecimalDigits ?? 2);
 
         private async Task<bool> CanManageSubscribers(string? storeId)
-            => (await authorizationService.AuthorizeAsync(User, storeId ?? "???", new PolicyRequirement(Policies.CanManageSubscribers))).Succeeded;
+            => (await authorizationService.AuthorizeAsync(User, storeId ?? "???", new PolicyRequirement(SubscriptionsPolicies.CanManageSubscribers))).Succeeded;
 
         [AllowAnonymous]
         [HttpGet("~/api/v1/subscriber-portal/{portalSessionId}")]
@@ -363,7 +363,6 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             var session = await ctx.PortalSessions.GetById(portalSessionId);
             if (session is null)
                 return PortalSessionNotFound();
-            await ctx.Plans.FetchPlanFeaturesAsync(session.Subscriber.Plan);
             return Ok(Mapper.MapPortalSession(session));
         }
 
@@ -379,7 +378,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             if (selector is null || model.OfferingId is null || !ModelState.IsValid || model.StoreId is null)
                 return this.CreateValidationError(ModelState);
             if (!await CanManageSubscribers(model.StoreId))
-                return this.CreateAPIPermissionError(Policies.CanManageSubscribers);
+                return this.CreateAPIPermissionError(SubscriptionsPolicies.CanManageSubscribers);
             var sub = await ctx.Subscribers.GetBySelector(model.OfferingId, selector, model.StoreId);
             if (sub is null)
                 return SubscriberNotFound();

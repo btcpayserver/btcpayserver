@@ -8,7 +8,6 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
-using BTCPayServer.Payments;
 using BTCPayServer.Payouts;
 using Microsoft.AspNetCore.Mvc;
 using PayoutData = BTCPayServer.Data.PayoutData;

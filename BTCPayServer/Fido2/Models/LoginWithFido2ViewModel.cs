@@ -1,6 +1,3 @@
-using Fido2NetLib;
-using Newtonsoft.Json.Linq;
-
 namespace BTCPayServer.Fido2.Models
 {
     public class LoginWithFido2ViewModel

@@ -1,8 +1,6 @@
 #nullable enable
 using System;
 using System.Linq;
-using Microsoft.EntityFrameworkCore;
-using NBitcoin.DataEncoders;
 
 namespace BTCPayServer
 {

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using BTCPayServer.Data;
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;

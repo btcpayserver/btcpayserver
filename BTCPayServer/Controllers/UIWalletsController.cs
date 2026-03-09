@@ -33,7 +33,6 @@ using BTCPayServer.Services.Wallets.Export;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
@@ -50,7 +49,6 @@ namespace BTCPayServer.Controllers
 {
     [Route("wallets")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [AutoValidateAntiforgeryToken]
     //16mb psbts
     [RequestFormLimits(ValueLengthLimit = FormReader.DefaultValueLengthLimit * 4)]
     public partial class UIWalletsController : Controller
@@ -62,8 +60,6 @@ namespace BTCPayServer.Controllers
         private IServiceProvider ServiceProvider { get; }
         private RateFetcher RateFetcher { get; }
         private IStringLocalizer StringLocalizer { get; }
-
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly NBXplorerDashboard _dashboard;
         private readonly IAuthorizationService _authorizationService;
         private readonly IFeeProviderFactory _feeRateProvider;
@@ -91,7 +87,6 @@ namespace BTCPayServer.Controllers
             WalletRepository walletRepository,
             CurrencyNameTable currencyTable,
             BTCPayNetworkProvider networkProvider,
-            UserManager<ApplicationUser> userManager,
             NBXplorerDashboard dashboard,
             WalletHistogramService walletHistogramService,
             RateFetcher rateProvider,
@@ -127,7 +122,6 @@ namespace BTCPayServer.Controllers
             RateFetcher = rateProvider;
             _authorizationService = authorizationService;
             NetworkProvider = networkProvider;
-            _userManager = userManager;
             _dashboard = dashboard;
             ExplorerClientProvider = explorerProvider;
             _feeRateProvider = feeRateProvider;
@@ -175,7 +169,7 @@ namespace BTCPayServer.Controllers
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             var pendingTransaction =
                 await _pendingTransactionService.GetPendingTransaction(GetPendingTxId(walletId, pendingTransactionId));
-            if (pendingTransaction is null)
+            if (pendingTransaction is null || network is null)
                 return NotFound();
             var blob = pendingTransaction.GetBlob();
             if (blob?.PSBT is null)
@@ -1412,7 +1406,10 @@ namespace BTCPayServer.Controllers
         {
             if (vm.SigningContext.PendingTransactionId is not null)
             {
-                var psbt = PSBT.Parse(vm.SigningContext.PSBT, NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode).NBitcoinNetwork);
+                var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode)?.NBitcoinNetwork;
+                if (network is null)
+                    return NotFound();
+                var psbt = PSBT.Parse(vm.SigningContext.PSBT, network);
                 var pendingTransaction = await _pendingTransactionService.CollectSignature(GetPendingTxId(walletId, vm.SigningContext.PendingTransactionId), psbt, CancellationToken.None);
 
                 if (pendingTransaction != null)
@@ -1978,7 +1975,7 @@ namespace BTCPayServer.Controllers
             return null;
         }
 
-        private string? GetUserId() => _userManager.GetUserId(User)!;
+        private string? GetUserId() => User.GetIdOrNull();
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
     }

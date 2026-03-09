@@ -1,5 +1,4 @@
 @using BTCPayServer.Services
-@using BTCPayServer.Abstractions.Contracts
 @inject LanguageService LangService
 @inject BTCPayServerEnvironment Env
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
@@ -221,6 +220,11 @@
                         <button v-else-if="isModal" class="btn btn-primary rounded-pill w-100" v-on:click="close" v-t="'Close'"></button>
                     </div>
                 </div>
+            </section>
+        </main>
+        <main v-if="isActive && srvModel.checkoutText" class="tile checkout-text">
+            <section>
+                <div class="text-muted text-center" v-text="srvModel.checkoutText"></div>
             </section>
         </main>
         @if (Env.CheatMode)

@@ -6,11 +6,8 @@ using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Logging;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 

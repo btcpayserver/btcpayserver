@@ -5,10 +5,8 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using static BTCPayServer.Data.Subscriptions.SubscriberData;
 
 namespace BTCPayServer.Data.Subscriptions;
 

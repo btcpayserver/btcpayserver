@@ -1,5 +1,6 @@
 ﻿@using System.Net
 @using System.Text.RegularExpressions
+@using BTCPayServer.Controllers
 @model int?
 @{
     Layout = "_LayoutError";
@@ -10,8 +11,13 @@
         var name = Regex.Replace(httpCode.ToString(), @"(\B[A-Z])", @" $1");
         ViewData["Title"] = $"{(int)httpCode} - {name}";
     }
+    this.Context.Items.TryGetValue(UIErrorController.ErrorDetailsKey, out var errorDetails);
 }
 
 <p class="mt-4">A generic error occurred (HTTP Code: @Model)</p>
+@if (errorDetails != null)
+{
+    <pre>@errorDetails</pre>
+}
 <p text-translate="true">Please consult the server log for more details.</p>
 <a href="/" text-translate="true">Navigate back to home</a>

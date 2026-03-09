@@ -28,7 +28,6 @@ using StoreData = BTCPayServer.Data.StoreData;
 namespace BTCPayServer.Controllers
 {
     [Authorize(Policy = Policies.CanViewPullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [AutoValidateAntiforgeryToken]
     public class UIStorePullPaymentsController : Controller
     {
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
@@ -46,7 +45,7 @@ namespace BTCPayServer.Controllers
         {
             get
             {
-                return HttpContext.GetStoreData();
+                return HttpContext.GetStoreDataOrNull();
             }
         }
 
@@ -290,7 +289,8 @@ namespace BTCPayServer.Controllers
             if (vm is null)
                 return NotFound();
 
-            vm.PayoutMethods = _payoutHandlers.GetSupportedPayoutMethods(HttpContext.GetStoreData());
+            var store = HttpContext.GetStoreData();
+            vm.PayoutMethods = _payoutHandlers.GetSupportedPayoutMethods(store);
             vm.HasPayoutProcessor = await HasPayoutProcessor(storeId, vm.PayoutMethodId);
             var payoutMethodId = PayoutMethodId.Parse(vm.PayoutMethodId);
             var handler = _payoutHandlers

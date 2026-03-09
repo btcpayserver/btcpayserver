@@ -1,5 +1,4 @@
 using BTCPayServer.Data;
-using BTCPayServer.Payments;
 using BTCPayServer.PayoutProcessors.Lightning;
 using BTCPayServer.PayoutProcessors.OnChain;
 using BTCPayServer.Payouts;

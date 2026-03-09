@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -19,7 +18,6 @@ namespace BTCPayServer.Plugins.Emails.Controllers;
 [Route("stores/{storeId}/emails/rules")]
 [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-[AutoValidateAntiforgeryToken]
 public class UIStoreEmailRulesController(
     EmailSenderFactory emailSenderFactory,
     LinkGenerator linkGenerator,

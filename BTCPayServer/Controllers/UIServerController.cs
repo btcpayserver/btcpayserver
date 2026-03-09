@@ -1,7 +1,6 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
@@ -23,6 +22,7 @@ using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Plugins.Emails.Services;
+using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Services;
 using BTCPayServer.Storage.Services.Providers;
@@ -32,12 +32,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MimeKit;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Renci.SshNet;
@@ -102,7 +100,8 @@ namespace BTCPayServer.Controllers
             LocalizerService localizer,
             IStringLocalizer stringLocalizer,
             ViewLocalizer viewLocalizer,
-            BTCPayServerEnvironment environment
+            BTCPayServerEnvironment environment,
+            LanguagePackUpdateService languagePackUpdateService
         )
         {
             _policiesSettings = policiesSettings;
@@ -367,8 +366,8 @@ namespace BTCPayServer.Controllers
             if (command == "SetTemplate")
             {
                 ModelState.Clear();
-                var storeId = this.HttpContext.GetStoreData()?.Id;
-                if (storeId is null)
+                var navStore = this.HttpContext.GetNavStoreData();
+                if (navStore is null)
                 {
                     this.TempData.SetStatusMessageModel(new()
                     {
@@ -378,8 +377,8 @@ namespace BTCPayServer.Controllers
                 }
                 else
                 {
-                    await _StoreRepository.SetDefaultStoreTemplate(storeId, GetUserId());
-                    this.TempData.SetStatusSuccess(StringLocalizer["Store template created from store '{0}'. New stores will inherit these settings.", HttpContext.GetStoreData().StoreName]);
+                    await _StoreRepository.SetDefaultStoreTemplate(navStore.Id, GetUserId());
+                    this.TempData.SetStatusSuccess(StringLocalizer["Store template created from store '{0}'. New stores will inherit these settings.", navStore.StoreName]);
                 }
                 return RedirectToAction(nameof(Policies));
             }

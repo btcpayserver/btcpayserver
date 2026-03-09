@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Payouts.LightningLike;
-using BTCPayServer.Payments;
 using BTCPayServer.Payouts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -58,6 +57,8 @@ public class LightningAutomatedPayoutSenderFactory : IPayoutProcessorFactory
             throw new NotSupportedException("This processor cannot handle the provided requirements");
         }
         var payoutMethodId = settings.GetPayoutMethodId();
+        if (!_handlers.TryGetValue(payoutMethodId, out _))
+            return null;
         return ActivatorUtilities.CreateInstance<LightningAutomatedPayoutProcessor>(_serviceProvider, settings, payoutMethodId);
     }
     Task<IHostedService> IPayoutProcessorFactory.ConstructProcessor(PayoutProcessorData settings)

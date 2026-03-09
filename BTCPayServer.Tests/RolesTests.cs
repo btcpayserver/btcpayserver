@@ -266,7 +266,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.Page.Locator("#Role").FillAsync("Malice");
 
         await s.Page.EvaluateAsync(
-            $"document.getElementById('Policies')['{Policies.CanModifyServerSettings}']=new Option('{Policies.CanModifyServerSettings}', '{Policies.CanModifyServerSettings}', true,true);");
+            $"document.getElementById('Permissions')['{Policies.CanModifyServerSettings}']=new Option('{Policies.CanModifyServerSettings}', '{Policies.CanModifyServerSettings}', true,true);");
 
         await s.ClickPagePrimary();
         await s.FindAlertMessage();

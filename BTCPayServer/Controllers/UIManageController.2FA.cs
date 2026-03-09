@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Models;
 using BTCPayServer.Models.ManageViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -21,15 +20,13 @@ namespace BTCPayServer.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
+                return NotFound();
 
             var model = new TwoFactorAuthenticationViewModel
             {
                 Is2faEnabled = user.TwoFactorEnabled,
                 RecoveryCodesLeft = await _userManager.CountRecoveryCodesAsync(user),
-                Credentials = await _fido2Service.GetCredentials(_userManager.GetUserId(User))
+                Credentials = await _fido2Service.GetCredentials(User.GetId())
             };
 
             return View(model);
@@ -39,9 +36,7 @@ namespace BTCPayServer.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
+                return NotFound();
 
             var disable2faResult = await _userManager.SetTwoFactorEnabledAsync(user, false);
             if (!disable2faResult.Succeeded)
@@ -59,9 +54,7 @@ namespace BTCPayServer.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
+                return NotFound();
 
             var model = new EnableAuthenticatorViewModel();
             await LoadSharedKeyAndQrCodeUriAsync(user, model);
@@ -75,9 +68,7 @@ namespace BTCPayServer.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
+                return NotFound();
 
             if (!ModelState.IsValid)
             {
@@ -111,9 +102,7 @@ namespace BTCPayServer.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
+                return NotFound();
 
             await _userManager.SetTwoFactorEnabledAsync(user, false);
             await _userManager.ResetAuthenticatorKeyAsync(user);
@@ -129,9 +118,7 @@ namespace BTCPayServer.Controllers
             {
                 var user = await _userManager.GetUserAsync(User);
                 if (user == null)
-                {
-                    throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-                }
+                    return NotFound();
 
                 recoveryCodes = (await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10)).ToArray();
             }

@@ -11,6 +11,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -21,13 +22,14 @@ namespace BTCPayServer.Security.Greenfield
     public class BasicAuthenticationHandler(
         IOptionsMonitor<IdentityOptions> identityOptions,
         IOptionsMonitor<GreenfieldAuthenticationOptions> options,
+        IOptions<MvcNewtonsoftJsonOptions> mvcOptions,
         ILoggerFactory logger,
         UrlEncoder encoder,
         SignInManager<ApplicationUser> signInManager,
         UserService userService,
         IRateLimitService rateLimitService,
         UserManager<ApplicationUser> userManager)
-        : AuthenticationHandler<GreenfieldAuthenticationOptions>(options, logger, encoder)
+        : GreenfieldAuthenticationHandler(options, logger, encoder, mvcOptions)
     {
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
@@ -58,7 +60,7 @@ namespace BTCPayServer.Security.Greenfield
                     applicationUser.NormalizedUserName == userManager.NormalizeName(username));
 
             // We disable throttling for new accounts to give time to create API keys via greenfield API.
-            if (user.Created is not {} created ||
+            if (user?.Created is not {} created ||
                 (DateTimeOffset.UtcNow - created) > TimeSpan.FromMinutes(5))
             {
                 if (Context.Connection.RemoteIpAddress?.ToString() is string ip)
@@ -71,6 +73,8 @@ namespace BTCPayServer.Security.Greenfield
             {
                 return Fail($"Basic authentication failed: {loggingContext.Failures[0].Text.Value}");
             }
+            if (user is null)
+                return Fail($"Basic authentication failed");
             if (user.Fido2Credentials.Any())
             {
                 return Fail("Cannot use Basic authentication when multi-factor is enabled.");
@@ -93,7 +97,7 @@ namespace BTCPayServer.Security.Greenfield
 
         AuthenticateResult Fail(string reason)
         {
-            Context.Items.TryAdd(APIKeysAuthenticationHandler.AuthFailureReason, reason);
+            Context.Items.TryAdd(GreenfieldAuthenticationHandler.GreenfieldAuthFailureReason, reason);
             return AuthenticateResult.Fail(reason);
         }
     }

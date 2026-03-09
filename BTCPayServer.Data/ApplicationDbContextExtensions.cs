@@ -1,7 +1,6 @@
 ﻿#nullable enable
 using System;
 using System.Data.Common;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 

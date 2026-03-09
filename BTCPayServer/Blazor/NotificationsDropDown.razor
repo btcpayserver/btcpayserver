@@ -1,25 +1,29 @@
 @using BTCPayServer.Abstractions.Contracts;
 @using BTCPayServer.Configuration;
-@using BTCPayServer.Data;
 @using BTCPayServer.Services.Notifications;
-@using Microsoft.AspNetCore.Identity;
 @using Microsoft.AspNetCore.Routing;
 @using Microsoft.Extensions.Localization
 @implements IDisposable
 @inject AuthenticationStateProvider _AuthenticationStateProvider
 @inject NotificationManager _NotificationManager
-@inject UserManager<ApplicationUser> _UserManager
 @inject IStringLocalizer StringLocalizer
 @inject IJSRuntime _JSRuntime
 @inject LinkGenerator _LinkGenerator
 @inject BTCPayServerOptions _BTCPayServerOptions
 @inject EventAggregator _EventAggregator
 
-<div id="Notifications" class="dropdown">
-	<button id="NotificationsHandle" class="mainMenuButton dropdown-toggle" title="@StringLocalizer["Notifications"]" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside" aria-expanded="false">
-		<Icon Symbol="nav-notifications" />
-		@if (HasUnseenNotifications)
-		{
+<div id="Notifications"  class="@(!_JSRuntime.IsPreRendering() ? "rendered" : "")">
+	@if (UnseenCount == "0")
+	{
+		<a href="@NotificationsUrl" id="NotificationsHandle" class="mainMenuButton" title="@StringLocalizer["Notifications"]">
+			<Icon Symbol="nav-notifications" />
+		</a>
+	}
+	else
+	{
+		<button id="NotificationsHandle" class="mainMenuButton" title="@StringLocalizer["Notifications"]" type="button" data-bs-toggle="dropdown">
+			<Icon Symbol="nav-notifications" />
+
 			<span class="badge rounded-pill bg-danger p-1 ms-1" id="NotificationsBadge">@UnseenCount</span>
 		}
 	</button>
@@ -127,9 +131,7 @@
 	async Task<string> GetUserId()
 	{
 		var state = await _AuthenticationStateProvider.GetAuthenticationStateAsync();
-		if (!state.User.Identity.IsAuthenticated)
-			return null;
-		return _UserManager.GetUserId(state.User);
+		return state.User.GetIdOrNull();
 	}
 
     private async Task MarkAllAsSeen()

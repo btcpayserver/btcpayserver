@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -67,6 +66,10 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Support URL")]
         [MaxLength(500)]
         public string SupportUrl { get; set; }
+
+        [Display(Name = "Custom checkout text")]
+        [MaxLength(500)]
+        public string CheckoutText { get; set; }
 
         [Display(Name = "Show a timer … minutes before invoice expiration")]
         [Range(1, 60 * 24 * 24)]

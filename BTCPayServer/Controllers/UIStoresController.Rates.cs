@@ -6,8 +6,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
@@ -147,7 +145,7 @@ public partial class UIStoresController
         if (CurrentStore.SetStoreBlob(storeBlob))
         {
             await _storeRepo.UpdateStore(CurrentStore);
-            TempData[WellKnownTempData.SuccessMessage] = "Rate settings updated";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Rate settings updated"].Value;
         }
         return RedirectToAction(nameof(Rates), new
         {

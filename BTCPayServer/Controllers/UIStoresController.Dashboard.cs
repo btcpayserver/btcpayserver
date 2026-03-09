@@ -26,7 +26,7 @@ public partial class UIStoresController
         var store = CurrentStore;
         if (store is null)
             return NotFound();
-
+        HttpContext.SetPreferredStoreId(store.Id);
         var storeBlob = store.GetStoreBlob();
 
         AddPaymentMethods(store, storeBlob,
@@ -102,7 +102,7 @@ public partial class UIStoresController
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult LightningBalance(string storeId, string cryptoCode)
     {
-        var store = HttpContext.GetStoreData();
+        var store = HttpContext.GetStoreDataOrNull();
         return store != null
              ? ViewComponent("StoreLightningBalance", new { Store = store, CryptoCode = cryptoCode })
              : NotFound();
@@ -112,7 +112,7 @@ public partial class UIStoresController
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult StoreNumbers(string storeId, string cryptoCode)
     {
-        var store = HttpContext.GetStoreData();
+        var store = HttpContext.GetStoreDataOrNull();
         return store != null
             ? ViewComponent("StoreNumbers", new { Store = store, CryptoCode = cryptoCode })
             : NotFound();
@@ -122,7 +122,7 @@ public partial class UIStoresController
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult RecentTransactions(string storeId, string cryptoCode)
     {
-        var store = HttpContext.GetStoreData();
+        var store = HttpContext.GetStoreDataOrNull();
         return store != null
             ? ViewComponent("StoreRecentTransactions", new { Store = store, CryptoCode = cryptoCode })
             : NotFound();
@@ -132,7 +132,7 @@ public partial class UIStoresController
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult RecentInvoices(string storeId)
     {
-        var store = HttpContext.GetStoreData();
+        var store = HttpContext.GetStoreDataOrNull();
         return store != null
             ? ViewComponent("StoreRecentInvoices", new { Store = store })
             : NotFound();

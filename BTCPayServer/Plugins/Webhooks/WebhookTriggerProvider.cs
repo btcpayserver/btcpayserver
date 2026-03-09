@@ -1,8 +1,6 @@
 #nullable  enable
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
-using BTCPayServer.HostedServices;
-using BTCPayServer.Plugins.Emails;
 using BTCPayServer.Plugins.Emails.HostedServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

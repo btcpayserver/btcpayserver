@@ -33,7 +33,6 @@ using BTCPayServer.Services.Wallets.Export;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
@@ -61,8 +60,6 @@ namespace BTCPayServer.Controllers
         private IServiceProvider ServiceProvider { get; }
         private RateFetcher RateFetcher { get; }
         private IStringLocalizer StringLocalizer { get; }
-
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly NBXplorerDashboard _dashboard;
         private readonly IAuthorizationService _authorizationService;
         private readonly IFeeProviderFactory _feeRateProvider;
@@ -90,7 +87,6 @@ namespace BTCPayServer.Controllers
             WalletRepository walletRepository,
             CurrencyNameTable currencyTable,
             BTCPayNetworkProvider networkProvider,
-            UserManager<ApplicationUser> userManager,
             NBXplorerDashboard dashboard,
             WalletHistogramService walletHistogramService,
             RateFetcher rateProvider,
@@ -126,7 +122,6 @@ namespace BTCPayServer.Controllers
             RateFetcher = rateProvider;
             _authorizationService = authorizationService;
             NetworkProvider = networkProvider;
-            _userManager = userManager;
             _dashboard = dashboard;
             ExplorerClientProvider = explorerProvider;
             _feeRateProvider = feeRateProvider;
@@ -1980,7 +1975,7 @@ namespace BTCPayServer.Controllers
             return null;
         }
 
-        private string? GetUserId() => _userManager.GetUserId(User)!;
+        private string? GetUserId() => User.GetIdOrNull();
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
     }

@@ -10,10 +10,10 @@ using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Plugins.Bitpay.Security;
 using BTCPayServer.Plugins.Bitpay.Views;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Localization;
@@ -31,13 +31,13 @@ public class UIStoresTokenController(
     BitpayAccessTokenController tokenController,
     IStringLocalizer stringLocalizer,
     StoreRepository storeRepository,
-    UserManager<ApplicationUser> userManager,
     IHtmlHelper html,
-    PaymentMethodHandlerDictionary handlers) : Controller
+    PaymentMethodHandlerDictionary handlers,
+    PermissionService permissionService) : Controller
 {
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
-    public StoreData CurrentStore => HttpContext.GetStoreData() ?? throw new InvalidOperationException("Store not found");
-    private string? GetUserId() => userManager.GetUserId(User);
+    public StoreData CurrentStore => HttpContext.GetStoreDataOrNull() ?? throw new InvalidOperationException("Store not found");
+    private string? GetUserId() => User.GetIdOrNull();
 
     [TempData]
     public bool StoreNotConfigured { get; set; }
@@ -166,7 +166,7 @@ public class UIStoresTokenController(
         var model = new CreateTokenViewModel();
         ViewBag.HidePublicKey = true;
         ViewBag.ShowStores = true;
-        var stores = (await storeRepository.GetStoresByUserId(userId)).Where(data => data.HasPermission(userId, Policies.CanModifyStoreSettings)).ToArray();
+        var stores = (await storeRepository.GetStoresByUserId(userId)).Where(data => data.HasPolicy(userId, Policies.CanModifyStoreSettings, permissionService)).ToArray();
 
         model.Stores = new SelectList(stores, nameof(CurrentStore.Id), nameof(CurrentStore.StoreName));
         if (!model.Stores.Any())
@@ -188,7 +188,7 @@ public class UIStoresTokenController(
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> GenerateAPIKey(string storeId, string command = "")
     {
-        var store = HttpContext.GetStoreData();
+        var store = HttpContext.GetStoreDataOrNull();
         if (store == null)
             return NotFound();
         if (command == "revoke")
@@ -231,7 +231,7 @@ public class UIStoresTokenController(
             return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
         }
 
-        var stores = (await storeRepository.GetStoresByUserId(userId)).Where(data => data.HasPermission(userId, Policies.CanModifyStoreSettings)).ToArray();
+        var stores = (await storeRepository.GetStoresByUserId(userId)).Where(data => data.HasPolicy(userId, Policies.CanModifyStoreSettings, permissionService)).ToArray();
         return View(new PairingModel
         {
             Id = pairing.Id,

@@ -1,9 +1,7 @@
 ﻿#nullable enable
 using System;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
-using BTCPayServer.Data.Subscriptions;
 
 namespace BTCPayServer.Data;
 

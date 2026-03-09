@@ -33,20 +33,12 @@ namespace BTCPayServer.Controllers.GreenField
             [FromBody] SendEmailRequest request)
         {
             var store = HttpContext.GetStoreData();
-            if (store == null)
-            {
-                return this.CreateAPIError(404, "store-not-found", "The store was not found");
-            }
             if (!MailboxAddressValidator.TryParse(request.Email, out var to))
             {
                 ModelState.AddModelError(nameof(request.Email), "Invalid email");
                 return this.CreateValidationError(ModelState);
             }
             var emailSender = await _emailSenderFactory.GetEmailSender(storeId);
-            if (emailSender is null)
-            {
-                return this.CreateAPIError(404, "smtp-not-configured", "Store does not have an SMTP server configured.");
-            }
             emailSender.SendEmail(to, request.Subject, request.Body);
             return Ok();
         }
@@ -61,10 +53,7 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/email")]
         public IActionResult GetStoreEmailSettings()
-        {
-            var store = HttpContext.GetStoreData();
-            return store == null ? StoreNotFound() : Ok(ToApiModel(store));
-        }
+        => Ok(ToApiModel(HttpContext.GetStoreData()));
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPut("~/api/v1/stores/{storeId}/email")]
@@ -84,11 +73,6 @@ namespace BTCPayServer.Controllers.GreenField
                 await _storeRepository.UpdateStore(store);
 
             return Ok(ToApiModel(store));
-        }
-
-        private IActionResult StoreNotFound()
-        {
-            return this.CreateAPIError(404, "store-not-found", "The store was not found");
         }
     }
 }

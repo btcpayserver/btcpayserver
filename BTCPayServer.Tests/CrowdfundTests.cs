@@ -11,6 +11,7 @@ using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Plugins.Crowdfund;
 using BTCPayServer.Plugins.Crowdfund.Controllers;
 using BTCPayServer.Plugins.Crowdfund.Models;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -62,7 +63,8 @@ namespace BTCPayServer.Tests
             Assert.Empty(appList2.Apps);
             Assert.Equal("test", app.AppName);
             Assert.Equal(apps.CreatedAppId, app.Id);
-            Assert.True(app.Role.ToPermissionSet(app.StoreId).Contains(Policies.CanModifyStoreSettings, app.StoreId));
+            var permissionService = tester.PayTester.GetService<PermissionService>();
+            Assert.True(app.Role.ToPermissionSet(app.StoreId).HasPermission(Permission.Create(Policies.CanModifyStoreSettings, app.StoreId), permissionService));
             Assert.Equal(user.StoreId, app.StoreId);
             // Archive
             redirect = Assert.IsType<RedirectResult>(apps.ToggleArchive(app.Id).Result);

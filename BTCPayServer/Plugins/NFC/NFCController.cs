@@ -6,7 +6,6 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;

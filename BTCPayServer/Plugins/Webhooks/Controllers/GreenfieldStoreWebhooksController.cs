@@ -47,13 +47,7 @@ namespace BTCPayServer.Plugins.Webhooks.Controllers
             }
         }
 
-        string CurrentStoreId
-        {
-            get
-            {
-                return this.HttpContext.GetStoreData()?.Id;
-            }
-        }
+        string CurrentStoreId => this.HttpContext.GetStoreData().Id;
 
         [HttpPost("~/api/v1/stores/{storeId}/webhooks")]
         public async Task<IActionResult> CreateWebhook(string storeId, Client.Models.CreateStoreWebhookRequest create)

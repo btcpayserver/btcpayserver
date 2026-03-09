@@ -9,7 +9,6 @@
 @using BTCPayServer.Configuration
 @using BTCPayServer.Plugins.Emails
 @using BTCPayServer.Plugins.Translations
-@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContext;
 @inject BTCPayServerOptions BtcPayServerOptions
 @inject BTCPayServerEnvironment Env
 @inject SignInManager<ApplicationUser> SignInManager
@@ -20,6 +19,25 @@
 
 @model BTCPayServer.Components.MainNav.MainNavViewModel
 
+@{
+    // The store's context in navigation might be different
+    // from the rest of the page.
+    // For example, if on the Server settings page, GetStoreData should be
+    // null, but the navigation menu should show the last selected store.
+    using var _ = this.Context.SwitchStoreData(Model.Store);
+}
+
+
+<div id="mainMenuHead">
+    <button id="mainMenuToggle" class="mainMenuButton" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span>Menu</span>
+    </button>
+    <vc:store-selector />
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <component type="typeof(BTCPayServer.Blazor.NotificationsDropDown)" render-mode="ServerPrerendered" />
+    }
+</div>
 <nav id="mainNav" class="d-flex flex-column justify-content-between">
     <div class="accordion px-3 px-lg-4">
         @if (SignInManager.IsSignedIn(User))
@@ -281,7 +299,7 @@
                 })()
             </script>
         }
-        else if (Env.IsSecure(HttpContext.HttpContext))
+        else if (Env.IsSecure(Context))
         {
             <ul class="navbar-nav">
                 @if (!PoliciesSettings.LockSubscription)

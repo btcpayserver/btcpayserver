@@ -4,9 +4,6 @@ using System.Linq;
 using BTCPayServer.Models;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Routing;
-using Microsoft.AspNetCore.Routing;
-using NBitpayClient;
 
 namespace BTCPayServer.Payments.Lightning;
 

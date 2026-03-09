@@ -1,7 +1,6 @@
 using BTCPayServer.Abstractions;
 using BTCPayServer.Plugins.Emails;
 using BTCPayServer.Plugins.Emails.Views;
-using BTCPayServer.Plugins.Monetization.Controllers;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Mvc;

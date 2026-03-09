@@ -1,11 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using BTCPayServer.Configuration;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using NBitcoin;
-using NBXplorer;
 
 namespace BTCPayServer.Plugins
 {

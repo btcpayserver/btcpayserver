@@ -1,12 +1,10 @@
 @using BTCPayServer.Client
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Views.Apps
 @using BTCPayServer.Plugins.Crowdfund
 @using BTCPayServer.Services.Apps
 @inject AppService AppService
 @model BTCPayServer.Components.MainNav.MainNavViewModel
 @{
-    var store = Context.GetStoreData();
+    var store = Model.Store;
 }
 
 @if (store != null)

@@ -223,10 +223,7 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        private string GetUserId()
-        {
-            return _UserManager.GetUserId(ControllerContext.HttpContext.User);
-        }
+        private string GetUserId() => ControllerContext.HttpContext.User.GetIdOrNull();
 
         [HttpGet("server/storage")]
         public async Task<IActionResult> Storage(bool forceChoice = false)

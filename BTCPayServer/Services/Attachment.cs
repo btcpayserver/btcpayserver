@@ -1,8 +1,6 @@
 #nullable enable
 using System.Collections.Generic;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Services.Labels;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services

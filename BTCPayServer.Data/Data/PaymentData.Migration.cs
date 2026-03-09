@@ -1,13 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
-using System.Reflection.Metadata;
-using System.Text;
-using System.Threading.Tasks;
-using BTCPayServer.Migrations;
-using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using NBitcoin;
 using NBitcoin.Altcoins;
 using NBitcoin.DataEncoders;

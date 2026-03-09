@@ -2,9 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BTCPayServer.Data;
 using BTCPayServer.Rating;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer;
 public record DefaultRules(RateRules Rules)

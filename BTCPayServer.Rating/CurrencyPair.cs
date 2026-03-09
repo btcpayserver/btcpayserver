@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Rating

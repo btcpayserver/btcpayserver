@@ -24,7 +24,6 @@ using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.EntityFrameworkCore;
@@ -40,7 +39,6 @@ namespace BTCPayServer.Controllers
     {
         private readonly UIInvoiceController _InvoiceController;
         private readonly PaymentMethodHandlerDictionary _handlers;
-        private readonly UserManager<ApplicationUser> _UserManager;
         private readonly PaymentRequestRepository _PaymentRequestRepository;
         private readonly PaymentRequestService _PaymentRequestService;
         private readonly CurrencyNameTable _Currencies;
@@ -61,7 +59,6 @@ namespace BTCPayServer.Controllers
         public UIPaymentRequestController(
             UIInvoiceController invoiceController,
             PaymentMethodHandlerDictionary handlers,
-            UserManager<ApplicationUser> userManager,
             PaymentRequestRepository paymentRequestRepository,
             PaymentRequestService paymentRequestService,
             CurrencyNameTable currencies,
@@ -79,7 +76,6 @@ namespace BTCPayServer.Controllers
         {
             _InvoiceController = invoiceController;
             _handlers = handlers;
-            _UserManager = userManager;
             _PaymentRequestRepository = paymentRequestRepository;
             _PaymentRequestService = paymentRequestService;
             _Currencies = currencies;
@@ -673,11 +669,11 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(PaymentRequestLabels), new { storeId });
         }
 
-        private string GetUserId() => _UserManager.GetUserId(User);
+        private string GetUserId() => User.GetIdOrNull();
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
 
-        private PaymentRequestData GetCurrentPaymentRequest() => HttpContext.GetPaymentRequestData();
+        private PaymentRequestData GetCurrentPaymentRequest() => HttpContext.GetPaymentRequestDataOrNull();
 
         private IActionResult NoPaymentMethodResult(string storeId)
         {

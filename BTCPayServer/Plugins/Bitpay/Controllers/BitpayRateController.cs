@@ -32,7 +32,7 @@ public class BitpayRateController : ControllerBase
     readonly StoreRepository _storeRepo;
     private readonly InvoiceRepository _invoiceRepository;
 
-    private StoreData CurrentStore => HttpContext.GetStoreData();
+    private StoreData CurrentStore => HttpContext.GetStoreDataOrNull();
 
     public BitpayRateController(
         RateFetcher rateProviderFactory,
@@ -55,9 +55,16 @@ public class BitpayRateController : ControllerBase
     [BitpayEndpointSelectorPolicy.BitpayEndpointMetadata]
     public async Task<IActionResult> GetBaseCurrencyRates(string baseCurrency, string cryptoCode = null, CancellationToken cancellationToken = default)
     {
-        var inv = _invoiceRepository.CreateNewInvoice(CurrentStore.Id);
+        var store = CurrentStore;
+        if (store == null)
+        {
+            var err = Ok(new BitpayErrorsModel { Error = "Store not found" });
+            err.StatusCode = 404;
+            return err;
+        }
+        var inv = _invoiceRepository.CreateNewInvoice(store.Id);
         inv.Currency = baseCurrency;
-        var ctx = new InvoiceCreationContext(CurrentStore, CurrentStore.GetStoreBlob(), inv, new Logging.InvoiceLogs(), _handlers, null);
+        var ctx = new InvoiceCreationContext(store, store.GetStoreBlob(), inv, new Logging.InvoiceLogs(), _handlers, null);
         ctx.SetLazyActivation(true);
         await ctx.BeforeFetchingRates();
         var currencyCodes = ctx

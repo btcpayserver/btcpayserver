@@ -1,15 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Controllers;
-using BTCPayServer.Models;
-using BTCPayServer.Models.WalletViewModels;
-using BTCPayServer.Tests.Logging;
-using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
-using NBitpayClient;
 using Xunit;
 using Xunit.Abstractions;
 

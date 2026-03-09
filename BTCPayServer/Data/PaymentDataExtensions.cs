@@ -1,10 +1,7 @@
 #nullable enable
 using System;
-using System.Reflection.Metadata;
-using System.Runtime.InteropServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Invoices;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data

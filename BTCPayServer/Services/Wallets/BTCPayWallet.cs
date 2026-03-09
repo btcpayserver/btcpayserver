@@ -8,7 +8,6 @@ using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using Dapper;
-using Microsoft.AspNetCore.Components.Web.Virtualization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -18,8 +17,6 @@ using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
-using static BTCPayServer.Services.TransactionLinkProviders;
-using static NBitcoin.Protocol.Behaviors.ChainBehavior;
 
 namespace BTCPayServer.Services.Wallets
 {

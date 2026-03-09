@@ -1,5 +1,4 @@
 #nullable enable
-using System;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -9,8 +8,6 @@ using BTCPayServer.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using AuthenticationSchemes = BTCPayServer.Abstractions.Constants.AuthenticationSchemes;
 using LightningAddressData = BTCPayServer.Client.Models.LightningAddressData;
 

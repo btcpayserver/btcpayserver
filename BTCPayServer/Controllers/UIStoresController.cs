@@ -131,20 +131,18 @@ public partial class UIStoresController : Controller
     [HttpGet("{storeId}/index")]
     public async Task<IActionResult> Index(string storeId)
     {
-        var userId = _userManager.GetUserId(User);
-        if (string.IsNullOrEmpty(userId))
-            return Forbid();
-
-        var store = await _storeRepo.FindStore(storeId);
+        var store = await _storeRepo.FindStore(storeId, User.GetId());
         if (store is null)
             return NotFound();
 
         if ((await _authorizationService.AuthorizeAsync(User, Policies.CanModifyStoreSettings)).Succeeded)
         {
+            HttpContext.SetPreferredStoreId(storeId);
             return RedirectToAction("Dashboard", new { storeId });
         }
         if ((await _authorizationService.AuthorizeAsync(User, Policies.CanViewInvoices)).Succeeded)
         {
+            HttpContext.SetPreferredStoreId(storeId);
             return RedirectToAction("ListInvoices", "UIInvoice", new { storeId });
         }
         return Forbid();
@@ -166,8 +164,5 @@ public partial class UIStoresController : Controller
                 }).ToArray();
     }
 
-    private string? GetUserId()
-    {
-        return User.Identity?.AuthenticationType != AuthenticationSchemes.Cookie ? null : _userManager.GetUserId(User);
-    }
+    private string? GetUserId() => User.Identity?.AuthenticationType != AuthenticationSchemes.Cookie ? null : User.GetIdOrNull();
 }

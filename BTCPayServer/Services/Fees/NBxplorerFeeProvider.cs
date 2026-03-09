@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using NBitcoin;
 using NBXplorer;
-using NBXplorer.Models;
 
 namespace BTCPayServer.Services.Fees
 {

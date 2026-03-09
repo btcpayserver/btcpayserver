@@ -1,9 +1,8 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Plugins.Shopify
-@using BTCPayServer.Views.Stores
 @model BTCPayServer.Components.MainNav.MainNavViewModel
 @{
-    var store = Context.GetStoreData();
+    var store = Model.Store;
 }
 
 @if (store != null)

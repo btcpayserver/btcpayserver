@@ -125,7 +125,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.BOLT11Expiration), $"The BOLT11 expiration should be positive");
             }
 
-            var supported = _payoutHandlers.GetSupportedPayoutMethods(HttpContext.GetStoreData());
+			var storeData = HttpContext.GetStoreData();
+			var supported = _payoutHandlers.GetSupportedPayoutMethods(storeData);
             if (request.PayoutMethods is not null)
             {
                 for (int i = 0; i < request.PayoutMethods.Length; i++)
@@ -144,7 +145,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
-            var ppId = await _pullPaymentService.CreatePullPayment(HttpContext.GetStoreData(), request);
+			var ppId = await _pullPaymentService.CreatePullPayment(storeData, request);
             var pp = await _pullPaymentService.GetPullPayment(ppId, false);
             return this.Ok(CreatePullPaymentData(pp));
         }

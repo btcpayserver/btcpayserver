@@ -6,63 +6,67 @@ using BTCPayServer.Security;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 
-namespace BTCPayServer.Plugins.Bitpay.Security
+namespace BTCPayServer.Plugins.Bitpay.Security;
+
+public class BitpayAuthorizationHandler(
+    IHttpContextAccessor httpContextAccessor,
+    StoreRepository storeRepository,
+    TokenRepository tokenRepository)
+    : AuthorizationHandler<PolicyRequirement>
 {
-    public class BitpayAuthorizationHandler : AuthorizationHandler<PolicyRequirement>
+    protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PolicyRequirement requirement)
     {
-        private readonly HttpContext _HttpContext;
-        private readonly StoreRepository _storeRepository;
-        private readonly TokenRepository _tokenRepository;
-
-        public BitpayAuthorizationHandler(IHttpContextAccessor httpContextAccessor,
-                                StoreRepository storeRepository,
-                                TokenRepository tokenRepository)
+        if (httpContextAccessor.HttpContext is null)
+            return;
+        var httpContext = httpContextAccessor.HttpContext;
+        string storeId = null;
+        if (context.User.Identity is { AuthenticationType: BitpayAuthenticationTypes.ApiKeyAuthentication })
         {
-            _HttpContext = httpContextAccessor.HttpContext;
-            _storeRepository = storeRepository;
-            _tokenRepository = tokenRepository;
+            storeId = context.User.Claims.Where(c => c.Type == BitpayClaims.ApiKeyStoreId).Select(c => c.Value).First();
+        }
+        else if (context.User.Identity is { AuthenticationType: BitpayAuthenticationTypes.SinAuthentication })
+        {
+            var sin = context.User.Claims.Where(c => c.Type == BitpayClaims.SIN).Select(c => c.Value).First();
+            var bitToken = (await tokenRepository.GetTokens(sin)).FirstOrDefault();
+            storeId = bitToken?.StoreId;
+        }
+        else if (context.User.Identity is { AuthenticationType: BitpayAuthenticationTypes.Anonymous })
+        {
+            if (httpContext.GetRouteData().Values.TryGetValue("storeId", out var v))
+                storeId = v as string;
+
+            if (storeId == null)
+            {
+                if (httpContext.Request.Query.TryGetValue("storeId", out var sv))
+                {
+                    storeId = sv.FirstOrDefault();
+                }
+            }
         }
 
-        protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PolicyRequirement requirement)
+        if (storeId == null)
+            return;
+        var store = await storeRepository.FindStore(storeId);
+        if (store == null)
+            return;
+        var isAnonymous = context.User.Identity.AuthenticationType == BitpayAuthenticationTypes.Anonymous;
+        var anyoneCanInvoice = store.GetStoreBlob().AnyoneCanInvoice;
+        switch (requirement.Policy)
         {
-            string storeId = null;
-            if (context.User.Identity.AuthenticationType == BitpayAuthenticationTypes.ApiKeyAuthentication)
-            {
-                storeId = context.User.Claims.Where(c => c.Type == BitpayClaims.ApiKeyStoreId).Select(c => c.Value).First();
-            }
-            else if (context.User.Identity.AuthenticationType == BitpayAuthenticationTypes.SinAuthentication)
-            {
-                var sin = context.User.Claims.Where(c => c.Type == BitpayClaims.SIN).Select(c => c.Value).First();
-                var bitToken = (await _tokenRepository.GetTokens(sin)).FirstOrDefault();
-                storeId = bitToken?.StoreId;
-            }
-            else if (context.User.Identity.AuthenticationType == BitpayAuthenticationTypes.Anonymous)
-            {
-                storeId = _HttpContext.GetImplicitStoreId();
-            }
-            if (storeId == null)
-                return;
-            var store = await _storeRepository.FindStore(storeId);
-            if (store == null)
-                return;
-            var isAnonymous = context.User.Identity.AuthenticationType == BitpayAuthenticationTypes.Anonymous;
-            var anyoneCanInvoice = store.GetStoreBlob().AnyoneCanInvoice;
-            switch (requirement.Policy)
-            {
-                case Policies.CanCreateInvoice:
-                    if (!isAnonymous || (isAnonymous && anyoneCanInvoice))
-                    {
-                        context.Succeed(requirement);
-                        _HttpContext.SetStoreData(store);
-                        return;
-                    }
-                    break;
-                case ServerPolicies.CanGetRates.Key:
+            case Policies.CanCreateInvoice:
+                if (!isAnonymous || anyoneCanInvoice)
+                {
                     context.Succeed(requirement);
-                    _HttpContext.SetStoreData(store);
-                    return;
-            }
+                    httpContextAccessor.HttpContext.SetStoreData(store);
+                }
+
+                break;
+            case ServerPolicies.CanGetRates.Key:
+                context.Succeed(requirement);
+                httpContextAccessor.HttpContext.SetStoreData(store);
+                break;
         }
     }
 }

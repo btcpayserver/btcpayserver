@@ -1,10 +1,8 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
-using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Plugins.Monetization.Views;

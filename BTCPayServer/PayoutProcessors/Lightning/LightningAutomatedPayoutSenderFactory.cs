@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Payouts.LightningLike;
-using BTCPayServer.Payments;
 using BTCPayServer.Payouts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;

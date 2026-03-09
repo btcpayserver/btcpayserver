@@ -1,14 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Models;
-using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Controllers;
-using BTCPayServer.Events;
-using BTCPayServer.Services.Invoices;
 using BTCPayServer.Views.Wallets;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;

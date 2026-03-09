@@ -170,7 +170,7 @@ namespace BTCPayServer.Tests
             await tester.StartAsync();
             var acc = tester.NewAccount();
 
-            var description = UtilitiesTests.GetSecuritySchemeDescription();
+            var description = UtilitiesTests.GetSecuritySchemeDescription(tester);
             TestLogs.LogInformation(description);
 
             var sresp = Assert
@@ -1508,7 +1508,8 @@ namespace BTCPayServer.Tests
             Assert.Equal("test", appList.Apps[0].AppName);
             Assert.Equal(apps.CreatedAppId, appList.Apps[0].Id);
 
-            Assert.True(app.Role.ToPermissionSet(app.StoreId).Contains(Policies.CanModifyStoreSettings, app.StoreId));
+            var permissionService = tester.PayTester.GetService<PermissionService>();
+            Assert.True(app.Role.ToPermissionSet(app.StoreId).HasPermission(Permission.Create(Policies.CanModifyStoreSettings, app.StoreId), permissionService));
             Assert.Equal(user.StoreId, appList.Apps[0].StoreId);
             Assert.IsType<NotFoundResult>(apps2.DeleteApp(appList.Apps[0].Id));
             Assert.IsType<ViewResult>(apps.DeleteApp(appList.Apps[0].Id));

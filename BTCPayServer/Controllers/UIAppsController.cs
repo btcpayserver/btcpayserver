@@ -13,7 +13,6 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -25,7 +24,6 @@ namespace BTCPayServer.Controllers
     public partial class UIAppsController : Controller
     {
         public UIAppsController(
-            UserManager<ApplicationUser> userManager,
             PaymentMethodHandlerDictionary handlers,
             BTCPayNetworkProvider networkProvider,
             StoreRepository storeRepository,
@@ -35,7 +33,6 @@ namespace BTCPayServer.Controllers
             ViewLocalizer viewLocalizer,
             IHtmlHelper html)
         {
-            _userManager = userManager;
             _handlers = handlers;
             _networkProvider = networkProvider;
             _storeRepository = storeRepository;
@@ -46,7 +43,6 @@ namespace BTCPayServer.Controllers
             ViewLocalizer = viewLocalizer;
         }
 
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly StoreRepository _storeRepository;
@@ -90,7 +86,7 @@ namespace BTCPayServer.Controllers
             bool archived = false
         )
         {
-            var store = GetCurrentStore();
+            var store = HttpContext.GetStoreData();
             var apps = (await _appService.GetAllApps(GetUserId(), false, store.Id, archived))
                 .Where(app => app.Archived == archived);
 
@@ -142,11 +138,7 @@ namespace BTCPayServer.Controllers
         [HttpPost("/stores/{storeId}/apps/create/{appType?}")]
         public async Task<IActionResult> CreateApp(string storeId, CreateAppViewModel vm)
         {
-            var store = GetCurrentStore();
-            if (store == null)
-            {
-                return NotFound();
-            }
+            var store = HttpContext.GetStoreData();
             if (!store.AnyPaymentMethodAvailable(_handlers))
             {
                 object text = _networkProvider.DefaultNetwork?.CryptoCode switch
@@ -256,7 +248,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> FileUpload(IFormFile file)
         {
             var app = GetCurrentApp();
-            var userId = GetUserId();
+            var userId = User.GetIdOrNull();
             if (app is null || userId is null)
                 return NotFound();
 
@@ -300,10 +292,8 @@ namespace BTCPayServer.Controllers
             return currency?.Trim().ToUpperInvariant();
         }
 
-        private string GetUserId() => _userManager.GetUserId(User);
+        private string GetUserId() => User.GetId();
 
-        private StoreData GetCurrentStore() => HttpContext.GetStoreData();
-
-        private AppData GetCurrentApp() => HttpContext.GetAppData();
+        private AppData GetCurrentApp() => HttpContext.GetAppDataOrNull();
     }
 }

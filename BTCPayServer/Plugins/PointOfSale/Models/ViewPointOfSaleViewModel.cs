@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Plugins.PointOfSale.Models
 {

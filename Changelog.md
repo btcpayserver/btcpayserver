@@ -1,5 +1,39 @@
 # Changelog
 
+## 2.3.6
+
+This is the last BTCPay Server release running on .NET 8.0. Starting with the next release, we are moving to .NET 10. If you are a plugin author or depend on plugins, please read our [migration guide](https://blog.btcpayserver.org/migrating-to-net10) to prepare.
+
+This release also includes several security fixes, so updating is highly recommended. If you rely on plugins and want maximum stability, we suggest staying on 2.3.6 until the .NET 10 transition is complete and most plugins have been updated.
+
+### New Features
+
+* API: Include a payment method in the Get invoices endpoint (#6757 #2394) @TChukwuleta
+* BTCPay Invoice Modal: Add a `paymentMethodId` parameter (#7209 #7208) @pwnfoo
+* Security: Include API key permission analysis metadata (#6771 #3196) @TChukwuleta
+* Improved Label System: Add search filtering to label dropdown menu (#7210) @rollforsats @dstrukt @rockstardev
+* A plugin can now create new permission policies (#7215 #7156) @NicolasDorier
+
+### Fixes
+
+* Fix: Dashboard layout issues on mobile, regression from 2.3.5 (#7223 #7217) @NicolasDorier
+* Fix: Subscriber portal sessions can be created again via API (#7200 #7198) @NicolasDorier
+* Fix: Can't upgrade/downgrade a Lifetime subscription (#7194 #7193) @NicolasDorier
+* Fix: Cross-tenant payment request creation/update via forged StoreId (#7233) @Donjon-Cerberus
+* Fix: Broken access control on private form access and invoice creation (#7236) @Donjon-Cerberus
+* Fix: IDOR in NewSubscriber allows creating checkouts for plans from other stores (#7237) @Donjon-Cerberus
+* Fix: Missing plan validation in CreatePlanMigrationCheckout (#7238) @Donjon-Cerberus
+
+### Improvements
+
+* Update Wasabi wallet folder access instructions (#7192) @nopara73
+* Security: Apply CSRF protection globally to UI controllers (#7199) @NicolasDorier
+* Update many missing translations from the language packs @Abhijay007
+
+### Regression
+
+* Revert: Dashboard: Support multi-crypto wallet balance widgets (#7223) @NicolasDorier
+
 ## 2.3.5
 
 ### New Features

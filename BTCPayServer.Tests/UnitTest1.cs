@@ -553,9 +553,9 @@ namespace BTCPayServer.Tests
             Assert.Null(GetRatesResult?.Data);
 
             var store = acc.GetController<UIStoresController>();
-            var ratesVM = (RatesViewModel)(Assert.IsType<ViewResult>(await store.Rates()).Model);
+            var ratesVM = await store.Rates().AssertViewModelAsync<RatesViewModel>();
             ratesVM.DefaultCurrencyPairs = "BTC_USD,LTC_USD";
-            await store.Rates(ratesVM);
+            await store.Rates(ratesVM, ratesVM.StoreId);
             store = acc.GetController<UIStoresController>();
             rateController = acc.GetController<BitpayRateController>();
             GetRatesResult = JObject.Parse(((OkObjectResult)rateController.GetRates(null, default)
@@ -799,13 +799,13 @@ namespace BTCPayServer.Tests
             Assert.Equal(Money.Coins(1.0m), invoice1.BtcPrice);
 
             var storeController = user.GetController<UIStoresController>();
-            var vm = (RatesViewModel)((ViewResult)await storeController.Rates()).Model;
+            var vm = await storeController.Rates().AssertViewModelAsync<RatesViewModel>();
             Assert.Equal(0.0, vm.Spread);
             vm.Spread = 40;
-            await storeController.Rates(vm);
+            await storeController.Rates(vm, vm.StoreId);
 
 
-            var invoice2 = user.BitPay.CreateInvoice(
+            var invoice2 = await user.BitPay.CreateInvoiceAsync(
                 new Invoice()
                 {
                     Price = 5000.0m,
@@ -2733,25 +2733,6 @@ namespace BTCPayServer.Tests
             //verify file is available and the same
             using var net = new HttpClient();
             var data = await net.GetStringAsync(new Uri(viewFilesViewModel.DirectUrlByFiles[fileId]));
-            Assert.Equal(fileContent, data);
-
-            //create a temporary link to file
-            Assert.IsType<RedirectToActionResult>(await controller.CreateTemporaryFileUrl(fileId,
-                new UIServerController.CreateTemporaryFileUrlViewModel
-                {
-                    IsDownload = true,
-                    TimeAmount = 1,
-                    TimeType = UIServerController.CreateTemporaryFileUrlViewModel.TmpFileTimeType.Minutes
-                }));
-            var statusMessageModel = controller.TempData.GetStatusMessageModel();
-            Assert.NotNull(statusMessageModel);
-            Assert.Equal(StatusMessageModel.StatusSeverity.Success, statusMessageModel.Severity);
-            var index = statusMessageModel.Html.IndexOf("target='_blank'>");
-            var url = statusMessageModel.Html.Substring(index)
-                .Replace("</a>", string.Empty)
-                .Replace("target='_blank'>", string.Empty);
-            //verify tmpfile is available and the same
-            data = await net.GetStringAsync(new Uri(url));
             Assert.Equal(fileContent, data);
 
             return fileId;

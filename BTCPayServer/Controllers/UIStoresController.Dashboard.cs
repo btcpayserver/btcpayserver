@@ -23,9 +23,7 @@ public partial class UIStoresController
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Dashboard()
     {
-        var store = CurrentStore;
-        if (store is null)
-            return NotFound();
+        var store = HttpContext.GetStoreData();
         HttpContext.SetPreferredStoreId(store.Id);
         var storeBlob = store.GetStoreBlob();
 

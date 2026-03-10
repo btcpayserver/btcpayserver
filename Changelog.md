@@ -1,5 +1,36 @@
 # Changelog
 
+## 2.3.6
+
+While there are a few bug fixes and improvements, the biggest change in this release is [the migration of BTCPay Server from .NET 8.0 to .NET 10](https://blog.btcpayserver.org/migrating-to-net10).
+
+While we aren't aware of any problems or breaking changes, this migration came with a lot of internal refactoring that may have impacted the stability of some plugins.
+
+If stability is important to you, you might prefer to wait for the next minor release.
+
+### New Features
+
+* API: Include a payment method in the Get invoices endpoint (#6757 #2394) @TChukwuleta
+* BTCPay Invoice Modal: Add a `paymentMethodId` parameter (#7209 #7208) @pwnfoo
+* Security: Include API key permission analysis metadata (#6771 #3196) @TChukwuleta
+* A plugin can now create new permission policies (#7215 #7156) @NicolasDorier
+
+### Fixes
+
+* Fix: Dashboard layout issues on mobile, regression from 2.3.5 (#7223 #7217) @NicolasDorier
+* Fix: Subscriber portal sessions can be created again via API (#7200 #7198) @NicolasDorier
+* Fix: Can't upgrade/downgrade a Lifetime subscription (#7194 #7193) @NicolasDorier
+
+### Improvements
+
+* Update Wasabi wallet folder access instructions (#7192) @nopara73
+* Security: Apply CSRF protection globally to UI controllers (#7199) @NicolasDorier
+* Update many missing translations from the language packs @Abhijay007
+
+### Regression
+
+* Revert: Dashboard: Support multi-crypto wallet balance widgets (#7223) @NicolasDorier
+
 ## 2.3.5
 
 ### New Features

@@ -139,7 +139,7 @@
 												<td>
 													@if (!string.IsNullOrEmpty(payment.Destination))
 													{
-														<vc:truncate-center text="@payment.Destination" classes="truncate-center-id" />
+														<vc:truncate-center text="@payment.Destination" link="@payment.Link" classes="truncate-center-id" />
 													}
 												</td>
 												<td>

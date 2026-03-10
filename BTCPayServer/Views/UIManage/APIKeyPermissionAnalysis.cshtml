@@ -3,7 +3,8 @@
 @{
     var staleThresholdDays = 100;
     var usedPermissionsPercentage = Model.TotalPermissions > 0 ? (int)Math.Round((double)Model.UsedPermissions.Count / Model.TotalPermissions * 100) : 0;
-    ViewData.SetActivePage(ManageNavPages.APIKeys, StringLocalizer["API Key Analysis"]);
+	ViewData.SetLayoutModel(new LayoutModel(nameof(ManageNavPages.APIKeys), StringLocalizer["API Key Analysis"])
+		.SetCategory(nameof(ManageNavPages)));
 }
 
 <div class="sticky-header">
@@ -115,7 +116,7 @@
                                         }
                                         else
                                         {
-                                            <span class="text-muted">—</span>
+                                            <span class="text-muted">â€”</span>
                                         }
                                     </td>
                                     <td>

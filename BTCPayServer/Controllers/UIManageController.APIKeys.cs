@@ -31,6 +31,50 @@ namespace BTCPayServer.Controllers
             });
         }
 
+        [HttpGet("~/api-keys/{id}/view-analysis")]
+        public async Task<IActionResult> APIKeyPermissionAnalysis(string id)
+        {
+            var key = await _apiKeyRepository.GetKey(id);
+            if (key == null || key.UserId != _userManager.GetUserId(User))
+                return NotFound();
+
+            var allPermissions = key.GetBlob().Permissions;
+            var usageRecords = await _apiKeyRepository.GetAPIPermissionUsageRecords(id);
+            var usageByPermission = usageRecords.ToDictionary(u => u.Permission, u => u);
+
+            var usedPermissions = new List<PermissionUsageViewModel>();
+            var unusedPermissions = new List<string>();
+            var allPermissionVMs = new List<PermissionViewModel>();
+
+            foreach (var permission in allPermissions)
+            {
+                if (usageByPermission.TryGetValue(permission, out var usage))
+                {
+                    var usageVM = new PermissionUsageViewModel
+                    {
+                        Permission = usage.Permission,
+                        LastUsed = usage.LastUsed,
+                        UsageCount = usage.UsageCount
+                    };
+                    usedPermissions.Add(usageVM);
+                    allPermissionVMs.Add(new PermissionViewModel { Permission = permission, Usage = usageVM });
+                }
+                else
+                {
+                    unusedPermissions.Add(permission);
+                    allPermissionVMs.Add(new PermissionViewModel { Permission = permission, Usage = null });
+                }
+            }
+            return View(new ApiKeyPermissionAnalyticsViewModel
+            {
+                ApiKey = key.Id,
+                Label = key.Label,
+                UsedPermissions = usedPermissions,
+                UnusedPermissions = unusedPermissions,
+                AllPermissions = allPermissionVMs
+            });
+        }
+
         [HttpGet("~/api-keys/{id}/delete")]
         public async Task<IActionResult> DeleteAPIKey(string id)
         {
@@ -585,6 +629,28 @@ namespace BTCPayServer.Controllers
         public class ApiKeysViewModel
         {
             public List<APIKeyData> ApiKeyDatas { get; set; }
+        }
+
+        public class ApiKeyPermissionAnalyticsViewModel
+        {
+            public string ApiKey { get; set; }
+            public string Label { get; set; }
+            public List<PermissionUsageViewModel> UsedPermissions { get; set; } = new();
+            public List<string> UnusedPermissions { get; set; } = new();
+            public List<PermissionViewModel> AllPermissions { get; set; } = new();
+            public int TotalPermissions => AllPermissions.Count;
+        }
+
+        public class PermissionUsageViewModel
+        {
+            public string Permission { get; set; }
+            public DateTimeOffset LastUsed { get; set; }
+            public int UsageCount { get; set; }
+        }
+        public class PermissionViewModel
+        {
+            public string Permission { get; set; }
+            public PermissionUsageViewModel Usage { get; set; }
         }
     }
 }

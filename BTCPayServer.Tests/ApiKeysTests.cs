@@ -252,6 +252,102 @@ namespace BTCPayServer.Tests
             Assert.Contains("There are no associated permissions to the API key being requested", emptyPageContent);
         }
 
+
+        [Fact]
+        [Trait("Playwright", "Playwright-2")]
+        public async Task CanViewApiKeyPermissionAnalysis()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            var tester = s.Server;
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            await s.GoToLogin();
+            await s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
+
+            await s.GoToProfile(ManageNavPages.APIKeys);
+            await s.ClickPagePrimary();
+            await s.Page.SetCheckedAsync("#btcpay\\.store\\.cancreateinvoice", true);
+            await s.Page.SetCheckedAsync("#btcpay\\.store\\.canviewinvoices", true);
+            await s.ClickPagePrimary();
+            var apiKey = await (await s.FindAlertMessage()).Locator("code").TextContentAsync();
+
+            await s.GoToUrl($"api-keys/{apiKey}/view-analysis");
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+
+            var cards = await s.Page.Locator(".display-6.fw-bold").AllTextContentsAsync();
+            Assert.Equal("2", cards[0].Trim());
+            Assert.Equal("0", cards[1].Trim());
+            Assert.Equal("2", cards[2].Trim());
+
+            var allRows = s.Page.Locator("#all-permissions tbody tr");
+            Assert.Equal(2, await allRows.CountAsync());
+            var neverUsedBadges = s.Page.Locator("#all-permissions .badge:has-text('Never Used')");
+            Assert.Equal(2, await neverUsedBadges.CountAsync());
+
+            await s.Page.Locator("#used-tab").ClickAsync();
+            await s.Page.Locator("#used-permissions.show.active").WaitForAsync();
+            Assert.Equal(0, await s.Page.Locator("#used-permissions tbody tr").CountAsync());
+
+            await s.Page.Locator("#unused-tab").ClickAsync();
+            await s.Page.Locator("#unused-permissions.show.active").WaitForAsync();
+            var unusedRows = s.Page.Locator("#unused-permissions tbody tr");
+            Assert.Equal(2, await unusedRows.CountAsync());
+
+            var uri = new Uri(tester.PayTester.ServerUri, $"api/v1/stores/{user.StoreId}/invoices");
+            var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("token", apiKey);
+            var response = await tester.PayTester.HttpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            await s.Page.ReloadAsync();
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+
+            cards = await s.Page.Locator(".display-6.fw-bold").AllTextContentsAsync();
+            Assert.Equal("2", cards[0].Trim());
+            Assert.Equal("1", cards[1].Trim());
+            Assert.Equal("1", cards[2].Trim());
+
+            await s.Page.Locator("#used-tab").ClickAsync();
+            await s.Page.Locator("#used-permissions.show.active").WaitForAsync();
+            var usedRows = s.Page.Locator("#used-permissions tbody tr");
+            Assert.Equal(1, await usedRows.CountAsync());
+            await s.Page.Locator("#used-permissions .badge.bg-success:has-text('Active')").WaitForAsync();
+
+            await s.Page.Locator("#unused-tab").ClickAsync();
+            await s.Page.Locator("#unused-permissions.show.active").WaitForAsync();
+            unusedRows = s.Page.Locator("#unused-permissions tbody tr");
+            Assert.Equal(1, await unusedRows.CountAsync());
+        }
+
+        [Fact]
+        [Trait("Playwright", "Playwright-2")]
+        public async Task CannotViewOtherUsersApiKeyAnalysis()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            var tester = s.Server;
+
+            var user1 = tester.NewAccount();
+            await user1.GrantAccessAsync();
+            var user2 = tester.NewAccount();
+            await user2.GrantAccessAsync();
+
+            await s.GoToLogin();
+            await s.LogIn(user1.RegisterDetails.Email, user1.RegisterDetails.Password);
+            await s.GoToProfile(ManageNavPages.APIKeys);
+            await s.ClickPagePrimary();
+            await s.ClickPagePrimary();
+            var user1ApiKey = await (await s.FindAlertMessage()).Locator("code").TextContentAsync();
+            await s.Logout();
+
+            await s.GoToLogin();
+            await s.LogIn(user2.RegisterDetails.Email, user2.RegisterDetails.Password);
+            await s.GoToUrl($"api-keys/{user1ApiKey}/view-analysis");
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+            Assert.Contains("404", await s.Page.ContentAsync());
+        }
+
         async Task TestApiAgainstAccessToken(string accessToken, ServerTester tester, TestAccount testAccount,
             params string[] expectedPermissionsArr)
         {

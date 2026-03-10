@@ -13,7 +13,8 @@ namespace BTCPayServer.Security;
 
 public class BuiltInPermissionHandler(
     StoreRepository storeRepository,
-    PermissionService permissionService) : IPermissionHandler
+    PermissionService permissionService,
+    APIKeyRepository apiKeyRepository) : IPermissionHandler
 {
     public const string StoreKey = "BuiltInPermissionHandler-Store";
     public const string StoresKey = "BuiltInPermissionHandler-Stores";
@@ -73,6 +74,10 @@ public class BuiltInPermissionHandler(
 
         if (success is true)
         {
+            if (permContext.HttpContext.GetAPIKey(out var apiKey))
+            {
+                _ = apiKeyRepository.RecordPermissionUsage(apiKey, permContext.Permission);
+            }
             authContext.Succeed(permContext.Requirement);
             if (permissionedStore is not null)
                 permContext.HttpContext.Items[StoreKey] = permissionedStore;

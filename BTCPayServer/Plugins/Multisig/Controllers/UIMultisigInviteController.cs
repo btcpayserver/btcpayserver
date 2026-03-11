@@ -26,6 +26,9 @@ public class UIMultisigInviteController(
     MultisigService multisigService,
     MultisigNotificationService multisigNotificationService) : Controller
 {
+    private static bool IsSupportedCryptoCode(string? cryptoCode) =>
+        string.Equals(cryptoCode, "BTC", StringComparison.OrdinalIgnoreCase);
+
     private enum InviteLoadStatus
     {
         Ok,
@@ -42,6 +45,8 @@ public class UIMultisigInviteController(
     [HttpGet("{storeId}/onchain/{cryptoCode}/multisig/invite/{**token}")]
     public async Task<IActionResult> SubmitMultisigSigner(string storeId, string cryptoCode, string token)
     {
+        if (!IsSupportedCryptoCode(cryptoCode))
+            return NotFound();
         var result = await LoadInviteViewModel(storeId, cryptoCode, token);
         if (result.Status is InviteLoadStatus.WrongUser)
             return RedirectToAction("Login", "UIAccount", new { area = "", returnUrl = Request.Path + Request.QueryString });
@@ -53,6 +58,8 @@ public class UIMultisigInviteController(
     [HttpPost("{storeId}/onchain/{cryptoCode}/multisig/invite/{**token}")]
     public async Task<IActionResult> SubmitMultisigSigner(string storeId, string cryptoCode, string token, MultisigInviteViewModel vm)
     {
+        if (!IsSupportedCryptoCode(cryptoCode))
+            return NotFound();
         var result = await LoadInviteViewModel(storeId, cryptoCode, token);
         if (result.Status is InviteLoadStatus.WrongUser)
             return RedirectToAction("Login", "UIAccount", new { area = "", returnUrl = Request.Path + Request.QueryString });

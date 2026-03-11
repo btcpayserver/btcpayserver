@@ -33,9 +33,14 @@ public class UIMultisigSetupController(
     MultisigNotificationService multisigNotificationService,
     IStringLocalizer stringLocalizer) : Controller
 {
+    private static bool IsSupportedCryptoCode(string? cryptoCode) =>
+        string.Equals(cryptoCode, "BTC", StringComparison.OrdinalIgnoreCase);
+
     [HttpGet("{storeId}/onchain/{cryptoCode}/import/multisig")]
     public async Task<IActionResult> SetupMultisig(MultisigSetupViewModel vm)
     {
+        if (!IsSupportedCryptoCode(vm.CryptoCode))
+            return NotFound();
         if (!await walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, vm.StoreId, vm.CryptoCode))
             return Forbid();
 
@@ -50,6 +55,8 @@ public class UIMultisigSetupController(
     [HttpPost("{storeId}/onchain/{cryptoCode}/import/multisig")]
     public async Task<IActionResult> SetupMultisig(MultisigSetupViewModel vm, string? command = null)
     {
+        if (!IsSupportedCryptoCode(vm.CryptoCode))
+            return NotFound();
         if (!await walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, vm.StoreId, vm.CryptoCode))
             return Forbid();
 

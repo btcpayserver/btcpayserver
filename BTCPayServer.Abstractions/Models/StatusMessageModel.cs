@@ -1,4 +1,9 @@
 using System;
+using System.IO;
+using System.Text.Encodings.Web;
+using Microsoft.AspNetCore.Mvc.Localization;
+using Microsoft.Extensions.Localization;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Abstractions.Models
 {
@@ -8,7 +13,34 @@ namespace BTCPayServer.Abstractions.Models
         {
         }
         public string Message { get; set; }
+
+        [JsonIgnore]
+        public LocalizedString LocalizedMessage
+        {
+            set
+            {
+                Message = value?.Value;
+            }
+        }
+
         public string Html { get; set; }
+        [JsonIgnore]
+        public  LocalizedHtmlString LocalizedHtml
+        {
+            set
+            {
+                if (value is null)
+                {
+                    Html = null;
+                }
+                else
+                {
+                    StringWriter w = new();
+                    value.WriteTo(w, HtmlEncoder.Default);
+                    Html = w.ToString();
+                }
+            }
+        }
         public StatusSeverity Severity { get; set; }
         public bool AllowDismiss { get; set; } = true;
 

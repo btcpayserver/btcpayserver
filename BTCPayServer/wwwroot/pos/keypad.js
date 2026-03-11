@@ -129,6 +129,13 @@ document.addEventListener("DOMContentLoaded",function () {
                 }
             }
         },
+        mounted() {
+            // Initialize Bootstrap tooltips for disabled items
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
+        },
         created() {
             // We need to unset state in case user clicks the browser back button
             window.addEventListener('pagehide', () => { this.payButtonLoading = false })

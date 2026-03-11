@@ -1,9 +1,9 @@
-@using BTCPayServer.Client
 @using BTCPayServer.Controllers
 @model UIManageController.AddApiKeyViewModel
 
 @{
-    ViewData.SetActivePage(ManageNavPages.APIKeys, StringLocalizer["Generate API Key"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ManageNavPages.APIKeys), StringLocalizer["Generate API Key"])
+        .SetCategory(nameof(ManageNavPages)));
 }
 
 @section PageHeadContent {
@@ -36,7 +36,7 @@
             </ol>
             <h2>@ViewData["Title"]</h2>
         </nav>
-		<button id="page-primary" type="submit" class="btn btn-primary">Generate API Key</button>
+		<button id="page-primary" type="submit" class="btn btn-primary" text-translate="true">Generate API Key</button>
     </div>
     <p text-translate="true">Generate a new api key to use BTCPay through its API.</p>
     <div class="row">
@@ -50,7 +50,7 @@
                 <input asp-for="Label" class="form-control"/>
                 <span asp-validation-for="Label" class="text-danger"></span>
             </div>
-        
+
             <h5 class="mt-4 mb-3">Permissions</h5>
             <div class="list-group mb-4">
                 @for (int i = 0; i < Model.PermissionValues.Count; i++)
@@ -63,7 +63,7 @@
                     {
                         <div class="list-group-item py-3">
                             <input type="hidden" asp-for="PermissionValues[i].Permission" />
-                            @if (Policies.IsStorePolicy(Model.PermissionValues[i].Permission))
+                            @if (Model.PermissionValues[i].IsStorePolicy)
                             {
                                 <input type="hidden" asp-for="PermissionValues[i].StoreMode" value="@Model.PermissionValues[i].StoreMode" />
                                 @if (Model.PermissionValues[i].StoreMode == UIManageController.AddApiKeyViewModel.ApiKeyStoreMode.AllStores)
@@ -92,7 +92,7 @@
                                     </h5>
                                     <div class="text-muted">@Model.PermissionValues[i].Description</div>
                                     <button type="submit" class="btn btn-link p-0" name="command" value="@($"{Model.PermissionValues[i].Permission}:change-store-mode")">Give permission to all stores instead</button>
-        
+
                                     @if (!Model.Stores.Any())
                                     {
                                         <p class="info-note text-warning mt-2 mb-0">
@@ -138,7 +138,7 @@
                                         <span asp-validation-for="PermissionValues[i].Value" class="text-danger"></span>
                                         <span class="text-muted">@Model.PermissionValues[i].Description</span>
                                     </div>
-                                </div>  
+                                </div>
                             }
                         </div>
                     }

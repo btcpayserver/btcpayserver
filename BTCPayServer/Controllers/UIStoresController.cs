@@ -6,13 +6,12 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
-using BTCPayServer.HostedServices.Webhooks;
 using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Mails;
+using BTCPayServer.Plugins.Emails.Services;
+using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
@@ -28,18 +27,14 @@ using StoreData = BTCPayServer.Data.StoreData;
 namespace BTCPayServer.Controllers;
 
 [Route("stores")]
-[Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-[AutoValidateAntiforgeryToken]
 public partial class UIStoresController : Controller
 {
     public UIStoresController(
         BTCPayServerOptions btcpayServerOptions,
         BTCPayServerEnvironment btcpayEnv,
         StoreRepository storeRepo,
-        TokenRepository tokenRepo,
         UserManager<ApplicationUser> userManager,
-        BitpayAccessTokenController tokenController,
         BTCPayWalletProvider walletProvider,
         BTCPayNetworkProvider networkProvider,
         RateFetcher rateFactory,
@@ -50,7 +45,6 @@ public partial class UIStoresController : Controller
         IAuthorizationService authorizationService,
         AppService appService,
         IFileService fileService,
-        WebhookSender webhookNotificationManager,
         IDataProtectionProvider dataProtector,
         IOptions<LightningNetworkOptions> lightningNetworkOptions,
         IOptions<ExternalServicesOptions> externalServiceOptions,
@@ -65,14 +59,13 @@ public partial class UIStoresController : Controller
         IStringLocalizer stringLocalizer,
         EventAggregator eventAggregator,
         LightningHistogramService lnHistogramService,
-        LightningClientFactoryService lightningClientFactory)
+        LightningClientFactoryService lightningClientFactory,
+        StoreLabelRepository storeLabelRepository)
     {
         _rateFactory = rateFactory;
         _storeRepo = storeRepo;
-        _tokenRepository = tokenRepo;
         _userManager = userManager;
         _langService = langService;
-        _tokenController = tokenController;
         _walletProvider = walletProvider;
         _handlers = paymentMethodHandlerDictionary;
         _policiesSettings = policiesSettings;
@@ -94,20 +87,18 @@ public partial class UIStoresController : Controller
         _html = html;
         _defaultRules = defaultRules;
         _dataProtector = dataProtector.CreateProtector("ConfigProtector");
-        _webhookNotificationManager = webhookNotificationManager;
         _lightningNetworkOptions = lightningNetworkOptions.Value;
         _lnHistogramService = lnHistogramService;
         _lightningClientFactory = lightningClientFactory;
         StringLocalizer = stringLocalizer;
+        _storeLabelRepository = storeLabelRepository;
     }
 
     private readonly BTCPayServerOptions _btcpayServerOptions;
     private readonly BTCPayServerEnvironment _btcPayEnv;
     private readonly BTCPayNetworkProvider _networkProvider;
     private readonly BTCPayWalletProvider _walletProvider;
-    private readonly BitpayAccessTokenController _tokenController;
     private readonly StoreRepository _storeRepo;
-    private readonly TokenRepository _tokenRepository;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RateFetcher _rateFactory;
     private readonly CurrencyNameTable _currencyNameTable;
@@ -127,41 +118,35 @@ public partial class UIStoresController : Controller
     private readonly UriResolver _uriResolver;
     private readonly EventAggregator _eventAggregator;
     private readonly IHtmlHelper _html;
-    private readonly WebhookSender _webhookNotificationManager;
     private readonly LightningNetworkOptions _lightningNetworkOptions;
     private readonly IDataProtector _dataProtector;
     private readonly LightningHistogramService _lnHistogramService;
     private readonly LightningClientFactoryService _lightningClientFactory;
+    private readonly StoreLabelRepository _storeLabelRepository;
 
-    public string? GeneratedPairingCode { get; set; }
     public IStringLocalizer StringLocalizer { get; }
 
-    [TempData]
-    private bool StoreNotConfigured { get; set; }
-        
     [AllowAnonymous]
     [HttpGet("{storeId}/index")]
     public async Task<IActionResult> Index(string storeId)
     {
-        var userId = _userManager.GetUserId(User);
-        if (string.IsNullOrEmpty(userId))
-            return Forbid();
-            
-        var store = await _storeRepo.FindStore(storeId);
+        var store = await _storeRepo.FindStore(storeId, User.GetId());
         if (store is null)
             return NotFound();
 
         if ((await _authorizationService.AuthorizeAsync(User, Policies.CanModifyStoreSettings)).Succeeded)
         {
+            HttpContext.SetPreferredStoreId(storeId);
             return RedirectToAction("Dashboard", new { storeId });
         }
         if ((await _authorizationService.AuthorizeAsync(User, Policies.CanViewInvoices)).Succeeded)
         {
+            HttpContext.SetPreferredStoreId(storeId);
             return RedirectToAction("ListInvoices", "UIInvoice", new { storeId });
         }
         return Forbid();
     }
-        
+
     public StoreData CurrentStore => HttpContext.GetStoreData();
 
     public PaymentMethodOptionViewModel.Format[] GetEnabledPaymentMethodChoices(StoreData storeData)
@@ -178,8 +163,5 @@ public partial class UIStoresController : Controller
                 }).ToArray();
     }
 
-    private string? GetUserId()
-    {
-        return User.Identity?.AuthenticationType != AuthenticationSchemes.Cookie ? null : _userManager.GetUserId(User);
-    }
+    private string? GetUserId() => User.Identity?.AuthenticationType != AuthenticationSchemes.Cookie ? null : User.GetIdOrNull();
 }

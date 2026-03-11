@@ -1,5 +1,3 @@
-using System;
-
 namespace BTCPayServer.Events
 {
     public class WalletChangedEvent

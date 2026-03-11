@@ -1,13 +1,12 @@
 @inject BTCPayServerEnvironment env
 @using BTCPayServer.Controllers
-@using BTCPayServer.Components.QRCode
 @using BTCPayServer.Services
 @model BTCPayServer.Controllers.WalletReceiveViewModel
 @{
-    var walletId = Context.GetRouteValue("walletId").ToString();
+    var walletId = Context.GetRouteValue("walletId")!.ToString();
     var returnUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
     Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.Receive, StringLocalizer["Receive {0}", Model.CryptoCode], walletId);
+    ViewData.SetTitle(StringLocalizer["Receive {0}", Model!.CryptoCode]);
 }
 
 @section PageHeadContent
@@ -101,7 +100,7 @@
             <div class="payment-box mt-3">
                 <a class="btn btn-outline-info w-100"
                    id="reserved-addresses-button"
-                   asp-controller="UIWallets" asp-action="ReservedAddresses" asp-route-walletId="@walletId">
+                   asp-controller="UIWallets" asp-action="ReservedAddresses" asp-route-walletId="@walletId" text-translate="true">
                     Reserved Addresses
                 </a>
             </div>

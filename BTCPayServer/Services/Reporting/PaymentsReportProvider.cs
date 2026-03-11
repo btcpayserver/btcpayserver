@@ -1,15 +1,10 @@
-using System;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Invoices;
-using Dapper;
-using Microsoft.EntityFrameworkCore;
-using static BTCPayServer.Client.Models.InvoicePaymentMethodDataModel;
 
 namespace BTCPayServer.Services.Reporting;
 

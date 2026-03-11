@@ -1,10 +1,8 @@
 #nullable enable
-using BTCPayServer.Payments;
 using System.Diagnostics.CodeAnalysis;
 using System;
 using System.Collections.Generic;
 using System.Collections;
-using Amazon.Runtime.Internal.Transform;
 
 namespace BTCPayServer
 {

@@ -1,0 +1,13 @@
+@using BTCPayServer.Client
+@model BTCPayServer.Components.MainNav.MainNavViewModel
+
+@if (Model.Store != null)
+{
+    <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
+        <a layout-menu-item="PayButton" asp-area="@PayButtonPlugin.Area" asp-controller="UIPayButton" asp-action="PayButton" asp-route-storeId="@Model.Store.Id">
+            <vc:icon symbol="nav-pay-button"/>
+			<span text-translate="true">Pay Button</span>
+        </a>
+    </li>
+}
+

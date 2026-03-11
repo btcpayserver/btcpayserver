@@ -47,25 +47,6 @@ namespace BTCPayServer.Filters
         }
     }
 
-    public class BitpayAPIConstraintAttribute : Attribute, IActionConstraint
-    {
-        public BitpayAPIConstraintAttribute(bool isBitpayAPI = true)
-        {
-            IsBitpayAPI = isBitpayAPI;
-        }
-
-        public bool IsBitpayAPI
-        {
-            get; set;
-        }
-        public int Order => 100;
-
-        public bool Accept(ActionConstraintContext context)
-        {
-            return context.RouteContext.HttpContext.GetIsBitpayAPI() == IsBitpayAPI;
-        }
-    }
-
     public class AcceptMediaTypeConstraintAttribute : Attribute, IActionConstraint
     {
         public AcceptMediaTypeConstraintAttribute(string mediaType, bool expectedValue = true)

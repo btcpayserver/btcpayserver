@@ -4,6 +4,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Plugins.Webhooks.Views;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -85,7 +86,7 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         }
 
-        public List<StoreViewModels.DeliveryViewModel> Deliveries { get; set; } = new List<StoreViewModels.DeliveryViewModel>();
+        public List<DeliveryViewModel> Deliveries { get; set; } = new ();
         public string TaxIncluded { get; set; }
 
         public string TransactionSpeed { get; set; }

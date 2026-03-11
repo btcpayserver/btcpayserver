@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Globalization;
 using System.Linq;
-using System.Text;
+using BTCPayServer.Abstractions;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -11,19 +10,16 @@ using BTCPayServer.JsonConverters;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
-using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitpayClient;
-using NBXplorer;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using static BTCPayServer.Controllers.BitpayRateController;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -295,6 +291,7 @@ namespace BTCPayServer.Services.Invoices
         public string Currency { get; set; }
         [JsonConverter(typeof(PaymentMethodIdJsonConverter))]
         public PaymentMethodId DefaultPaymentMethod { get; set; }
+
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; }
 
@@ -370,8 +367,8 @@ namespace BTCPayServer.Services.Invoices
             }
             if (paymentMethodId is null)
             {
-                var defaultBTC = PaymentTypes.CHAIN.GetPaymentMethodId(networkProvider.DefaultNetwork.CryptoCode);
-                var defaultLNURLPay = PaymentTypes.LNURL.GetPaymentMethodId(networkProvider.DefaultNetwork.CryptoCode);
+                var defaultBTC = PaymentTypes.CHAIN.GetPaymentMethodId(networkProvider.DefaultCryptoCode);
+                var defaultLNURLPay = PaymentTypes.LNURL.GetPaymentMethodId(networkProvider.DefaultCryptoCode);
                 paymentMethodId = authorized.FirstOrDefault(e => e == defaultBTC) ??
                                   authorized.FirstOrDefault(e => e == defaultLNURLPay) ??
                                   authorized.FirstOrDefault();
@@ -483,7 +480,9 @@ namespace BTCPayServer.Services.Invoices
         private Uri FillPlaceholdersUri(string v)
         {
             var uriStr = (v ?? string.Empty).Replace("{OrderId}", System.Web.HttpUtility.UrlEncode(Metadata.OrderId) ?? "", StringComparison.OrdinalIgnoreCase)
-                                     .Replace("{InvoiceId}", System.Web.HttpUtility.UrlEncode(Id) ?? "", StringComparison.OrdinalIgnoreCase);
+                                     .Replace("{InvoiceId}", System.Web.HttpUtility.UrlEncode(Id) ?? "", StringComparison.OrdinalIgnoreCase)
+                                     // NOTE: Not recommended to depend on the status on client side, rather fetch invoice status via API instead
+                                     .Replace("{Status}", System.Web.HttpUtility.UrlEncode(Status.ToString()) ?? "", StringComparison.OrdinalIgnoreCase);
             if (Uri.TryCreate(uriStr, UriKind.Absolute, out var uri) && (uri.Scheme == "http" || uri.Scheme == "https"))
                 return uri;
             return null;
@@ -756,11 +755,10 @@ namespace BTCPayServer.Services.Invoices
         public decimal NetSettled { get; private set; }
         [JsonIgnore]
         public bool DisableAccounting { get; set; }
+
+        public RequestBaseUrl GetRequestBaseUrl() => RequestBaseUrl.FromUrl(ServerUrl);
     }
 
-    public enum InvoiceStatusLegacy
-    {
-    }
     public static class InvoiceStatusLegacyExtensions
     {
         public static string ToLegacyStatusString(this InvoiceStatus status) =>

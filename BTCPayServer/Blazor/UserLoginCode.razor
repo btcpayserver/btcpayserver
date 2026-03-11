@@ -30,7 +30,7 @@
 @code {
     [Parameter]
     public string UserId { get; set; }
-    
+
     [Parameter]
     public string RedirectUrl { get; set; }
 
@@ -84,7 +84,7 @@
     {
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         return state.User.Identity?.IsAuthenticated is true
-            ? UserManager.GetUserId(state.User)
+            ? state.User.GetIdOrNull()
             : null;
     }
 

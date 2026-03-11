@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Operations;
 
 namespace BTCPayServer.Abstractions.Contracts
 {
-    public abstract class BaseDbContextFactory<T> where T : DbContext
+    public abstract class BaseDbContextFactory<T> : IDbContextFactory<T> where T : DbContext
     {
         private readonly IOptions<DatabaseOptions> _options;
         private readonly string _migrationTableName;
@@ -90,5 +90,8 @@ namespace BTCPayServer.Abstractions.Contracts
             var searchPaths = connectionStringBuilder.SearchPath?.Split(',');
             return searchPaths is not { Length: > 0 } ? null : searchPaths[0];
         }
+
+        T IDbContextFactory<T>.CreateDbContext()
+            => this.CreateContext();
     }
 }

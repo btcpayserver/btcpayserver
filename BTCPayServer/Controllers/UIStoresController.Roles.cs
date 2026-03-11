@@ -61,7 +61,7 @@ public partial class UIStoresController
             return NotFound();
         return View(new UpdateRoleViewModel
         {
-            Policies = roleData.Permissions,
+            Permissions = roleData.Permissions.ToHashSet(),
             Role = roleData.Role
         });
     }
@@ -95,7 +95,7 @@ public partial class UIStoresController
             return View(viewModel);
         }
 
-        var r = await storeRepository.AddOrUpdateStoreRole(roleId, viewModel.Policies);
+        var r = await storeRepository.AddOrUpdateStoreRole(roleId, viewModel.Permissions);
         if (r is null)
         {
             TempData.SetStatusMessageModel(new StatusMessageModel
@@ -122,7 +122,11 @@ public partial class UIStoresController
         [FromServices] StoreRepository storeRepository,
         string role)
     {
-        var roleData = await storeRepository.GetStoreRole(new StoreRoleId(storeId, role), true);
+        var roleId = await storeRepository.ResolveStoreRoleId(storeId, role);
+        if (roleId == null)
+            return NotFound();
+
+        var roleData = await storeRepository.GetStoreRole(roleId, true);
         if (roleData == null)
             return NotFound();
 
@@ -142,7 +146,10 @@ public partial class UIStoresController
         [FromServices] StoreRepository storeRepository,
         string role)
     {
-        var roleId = new StoreRoleId(storeId, role);
+        var roleId = await storeRepository.ResolveStoreRoleId(storeId, role);
+        if (roleId == null)
+            return NotFound();
+
         var roleData = await storeRepository.GetStoreRole(roleId, true);
         if (roleData == null)
             return NotFound();

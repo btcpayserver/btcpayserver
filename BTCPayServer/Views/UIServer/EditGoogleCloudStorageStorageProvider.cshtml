@@ -1,6 +1,7 @@
 @model BTCPayServer.Storage.Services.Providers.GoogleCloudStorage.Configuration.GoogleCloudStorageConfiguration
 @{
-    ViewData.SetActivePage(ServerNavPages.Files, StringLocalizer["Google Cloud Storage"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Files), StringLocalizer["Google Cloud Storage"])
+        .SetCategory(WellKnownCategories.Server));
 }
 
 <div class="sticky-header">

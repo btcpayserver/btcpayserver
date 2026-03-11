@@ -1,9 +1,6 @@
 @model BTCPayServer.Models.InvoicingModels.CreateInvoiceModel
-@using BTCPayServer.TagHelpers
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.TagHelpers
 @{
-    ViewData.SetActivePage(InvoiceNavPages.Create, StringLocalizer["Create Invoice"]);
+    ViewData.SetLayoutModel(new("Invoices", StringLocalizer["Create Invoices"]));
 }
 
 @section PageFootContent {

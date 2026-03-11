@@ -21,24 +21,22 @@ namespace BTCPayServer
             return await userManager.FindByIdAsync(idOrEmail);
         }
 
-        public static async Task<string?> GenerateInvitationTokenAsync<TUser>(this UserManager<ApplicationUser> userManager, string userId) where TUser : class
+        public static async Task<string?> GenerateInvitationTokenAsync(this UserManager<ApplicationUser> userManager, string userId)
         {
             var token = Guid.NewGuid().ToString("n")[..12];
-            return await userManager.SetInvitationTokenAsync<TUser>(userId, token) ? token : null;
+            return await userManager.SetInvitationTokenAsync(userId, token) ? token : null;
         }
 
-        public static async Task<bool> UnsetInvitationTokenAsync<TUser>(this UserManager<ApplicationUser> userManager, string userId) where TUser : class
-        {
-            return await userManager.SetInvitationTokenAsync<TUser>(userId, null);
-        }
+        public static Task<bool> UnsetInvitationTokenAsync(this UserManager<ApplicationUser> userManager, string userId)
+        => userManager.SetInvitationTokenAsync(userId, null);
 
-        public static bool HasInvitationToken<TUser>(this UserManager<ApplicationUser> userManager, ApplicationUser user, string? token = null) where TUser : class
+        public static bool HasInvitationToken(this UserManager<ApplicationUser> userManager, ApplicationUser user, string? token = null)
         {
             var blob = user.GetBlob() ?? new UserBlob();
             return token == null ? !string.IsNullOrEmpty(blob.InvitationToken) : blob.InvitationToken == token;
         }
 
-        private static async Task<bool> SetInvitationTokenAsync<TUser>(this UserManager<ApplicationUser> userManager, string userId, string? token) where TUser : class
+        private static async Task<bool> SetInvitationTokenAsync(this UserManager<ApplicationUser> userManager, string userId, string? token)
         {
             var user = await userManager.FindByIdAsync(userId);
             if (user == null) return false;
@@ -49,7 +47,7 @@ namespace BTCPayServer
             return true;
         }
 
-        public static async Task<ApplicationUser?> FindByInvitationTokenAsync<TUser>(this UserManager<ApplicationUser> userManager, string userId, string token) where TUser : class
+        public static async Task<ApplicationUser?> FindByInvitationTokenAsync(this UserManager<ApplicationUser> userManager, string userId, string token)
         {
             var user = await userManager.FindByIdAsync(userId);
             var isValid = user is not null && (

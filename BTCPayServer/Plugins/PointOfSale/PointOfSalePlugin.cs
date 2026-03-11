@@ -4,9 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
@@ -28,7 +26,7 @@ namespace BTCPayServer.Plugins.PointOfSale
 
         public override void Execute(IServiceCollection services)
         {
-            services.AddUIExtension("header-nav", "PointOfSale/NavExtension");
+            services.AddUIExtension("header-nav", "/Plugins/PointOfSale/Views/NavExtension.cshtml");
             services.AddSingleton<AppBaseType, PointOfSaleAppType>();
             base.Execute(services);
         }

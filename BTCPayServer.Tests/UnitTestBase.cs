@@ -1,8 +1,5 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Hosting;
 using BTCPayServer.Logging;
@@ -15,9 +12,11 @@ using Xunit.Abstractions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
 using NBitcoin;
+using Xunit;
 
 namespace BTCPayServer.Tests
 {
+    [Collection(nameof(NonParallelizableCollectionDefinition))]
     public class UnitTestBase
     {
         public UnitTestBase(ITestOutputHelper helper)
@@ -57,7 +56,7 @@ namespace BTCPayServer.Tests
                     InitialData = new[] {
                         new KeyValuePair<string, string>("chains", "*"),
                         new KeyValuePair<string, string>("network", "regtest")
-                    } 
+                    }
                 })
             });
             var bootstrap = Startup.CreateBootstrap(conf);
@@ -92,10 +91,6 @@ namespace BTCPayServer.Tests
         public ServerTester CreateServerTester([CallerMemberNameAttribute] string scope = null, bool newDb = false)
         {
             return new ServerTester(scope, newDb, TestLogs, TestLogProvider, CreateNetworkProvider());
-        }
-        public SeleniumTester CreateSeleniumTester([CallerMemberNameAttribute] string scope = null, bool newDb = false)
-        {
-            return new SeleniumTester() { Server = new ServerTester(scope, newDb, TestLogs, TestLogProvider, CreateNetworkProvider()) };
         }
         public PlaywrightTester CreatePlaywrightTester([CallerMemberNameAttribute] string scope = null, bool newDb = false)
         {

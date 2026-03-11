@@ -5,7 +5,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Services.Mails;
+using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -16,7 +16,7 @@ namespace BTCPayServer.Controllers.GreenField
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     [EnableCors(CorsPolicies.All)]
-    public class GreenfieldStoreEmailController : Controller
+    public class GreenfieldStoreEmailController : ControllerBase
     {
         private readonly EmailSenderFactory _emailSenderFactory;
         private readonly StoreRepository _storeRepository;
@@ -33,20 +33,12 @@ namespace BTCPayServer.Controllers.GreenField
             [FromBody] SendEmailRequest request)
         {
             var store = HttpContext.GetStoreData();
-            if (store == null)
-            {
-                return this.CreateAPIError(404, "store-not-found", "The store was not found");
-            }
             if (!MailboxAddressValidator.TryParse(request.Email, out var to))
             {
                 ModelState.AddModelError(nameof(request.Email), "Invalid email");
                 return this.CreateValidationError(ModelState);
             }
             var emailSender = await _emailSenderFactory.GetEmailSender(storeId);
-            if (emailSender is null)
-            {
-                return this.CreateAPIError(404, "smtp-not-configured", "Store does not have an SMTP server configured.");
-            }
             emailSender.SendEmail(to, request.Subject, request.Body);
             return Ok();
         }
@@ -61,10 +53,7 @@ namespace BTCPayServer.Controllers.GreenField
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/email")]
         public IActionResult GetStoreEmailSettings()
-        {
-            var store = HttpContext.GetStoreData();
-            return store == null ? StoreNotFound() : Ok(ToApiModel(store));
-        }
+        => Ok(ToApiModel(HttpContext.GetStoreData()));
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPut("~/api/v1/stores/{storeId}/email")]
@@ -72,7 +61,7 @@ namespace BTCPayServer.Controllers.GreenField
         {
             if (!string.IsNullOrWhiteSpace(request.From) && !MailboxAddressValidator.IsMailboxAddress(request.From))
                 ModelState.AddModelError(nameof(request.From), "Invalid email address");
-            
+
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
@@ -84,11 +73,6 @@ namespace BTCPayServer.Controllers.GreenField
                 await _storeRepository.UpdateStore(store);
 
             return Ok(ToApiModel(store));
-        }
-
-        private IActionResult StoreNotFound()
-        {
-            return this.CreateAPIError(404, "store-not-found", "The store was not found");
         }
     }
 }

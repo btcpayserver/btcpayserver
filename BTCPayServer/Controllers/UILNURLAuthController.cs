@@ -4,10 +4,8 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
-using BTCPayServer.Data;
 using LNURL;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
@@ -21,15 +19,13 @@ namespace BTCPayServer
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewProfile)]
     public class UILNURLAuthController : Controller
     {
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly LnurlAuthService _lnurlAuthService;
         private readonly LinkGenerator _linkGenerator;
         public IStringLocalizer StringLocalizer { get; }
 
-        public UILNURLAuthController(UserManager<ApplicationUser> userManager, LnurlAuthService lnurlAuthService,
+        public UILNURLAuthController(LnurlAuthService lnurlAuthService,
             IStringLocalizer stringLocalizer, LinkGenerator linkGenerator)
         {
-            _userManager = userManager;
             _lnurlAuthService = lnurlAuthService;
             _linkGenerator = linkGenerator;
             StringLocalizer = stringLocalizer;
@@ -41,13 +37,13 @@ namespace BTCPayServer
             return View("Confirm",
                 new ConfirmModel(StringLocalizer["Remove LNURL Auth link"],
                     StringLocalizer["Your account will no longer have this Lightning wallet as an option for two-factor authentication."],
-                    StringLocalizer["Remove"]));
+                    StringLocalizer["Delete"]));
         }
 
         [HttpPost("{id}/delete")]
         public async Task<IActionResult> RemoveP(string id)
         {
-            await _lnurlAuthService.Remove(id, _userManager.GetUserId(User));
+            await _lnurlAuthService.Remove(id, User.GetId());
 
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
@@ -61,7 +57,7 @@ namespace BTCPayServer
         [HttpGet("register")]
         public async Task<IActionResult> Create(string name)
         {
-            var userId = _userManager.GetUserId(User);
+            var userId = User.GetId();
             var options = await _lnurlAuthService.RequestCreation(userId);
             if (options is null)
             {
@@ -90,7 +86,7 @@ namespace BTCPayServer
         [HttpGet("register/check")]
         public Task<IActionResult> CreateCheck()
         {
-            var userId = _userManager.GetUserId(User);
+            var userId = User.GetId();
             if (_lnurlAuthService.CreationStore.TryGetValue(userId, out _))
             {
                 return Task.FromResult<IActionResult>(Ok());

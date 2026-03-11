@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -11,7 +10,6 @@ using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices;

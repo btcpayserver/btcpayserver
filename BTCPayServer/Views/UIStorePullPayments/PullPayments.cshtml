@@ -1,5 +1,4 @@
 @using BTCPayServer.Views.Stores
-@using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Client
 @using BTCPayServer.Client.Models
 @using ExchangeSharp
@@ -15,7 +14,7 @@
         "desc" => "asc",
         _ => null
     };
-    ViewData.SetActivePage(StoreNavPages.PullPayments, StringLocalizer["Pull Payments"], storeId);
+    ViewData.SetLayoutModel(new(nameof(StoreNavPages.PullPayments), StringLocalizer["Pull Payments"]));
 }
 
 @section PageHeadContent {
@@ -33,7 +32,7 @@
             <vc:icon symbol="info" />
         </a>
     </h2>
-    <a id="page-primary" permission="@Policies.CanCreateNonApprovedPullPayments" asp-action="NewPullPayment" asp-route-storeId="@storeId" class="btn btn-primary" role="button">
+    <a id="page-primary" permission="@Policies.CanCreateNonApprovedPullPayments" asp-action="NewPullPayment" asp-route-storeId="@storeId" class="btn btn-primary" role="button" text-translate="true">
         Create Pull Payment
     </a>
 </div>

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -12,7 +11,6 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Plugins.Dotnet;
 using NBitcoin.Crypto;
 using NBitcoin.DataEncoders;
-using NBitcoin.Secp256k1;
 
 namespace BTCPayServer.PluginPacker
 {

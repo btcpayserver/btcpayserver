@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,13 +12,10 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payouts;
-using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using LNURL;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using MimeKit;
 using NBitcoin;
 
 namespace BTCPayServer.Data.Payouts.LightningLike
@@ -32,7 +27,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         public PaymentMethodId PaymentMethodId { get; }
 
         private readonly IOptions<LightningNetworkOptions> _options;
-        private PaymentMethodHandlerDictionary _paymentHandlers;
+        private readonly PaymentMethodHandlerDictionary _paymentHandlers;
 
         public BTCPayNetwork Network { get; }
         public string[] DefaultRateRules => Network.DefaultRateRules;
@@ -43,15 +38,13 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         public const string LightningLikePayoutHandlerClearnetNamedClient =
             nameof(LightningLikePayoutHandlerClearnetNamedClient);
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly UserService _userService;
-        private readonly IAuthorizationService _authorizationService;
 
         public LightningLikePayoutHandler(
             PayoutMethodId payoutMethodId,
             IOptions<LightningNetworkOptions> options,
             BTCPayNetwork network,
             PaymentMethodHandlerDictionary paymentHandlers,
-            IHttpClientFactory httpClientFactory, UserService userService, IAuthorizationService authorizationService)
+            IHttpClientFactory httpClientFactory)
         {
             _paymentHandlers = paymentHandlers;
             Network = network;
@@ -59,8 +52,6 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             _options = options;
             PaymentMethodId = PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode);
             _httpClientFactory = httpClientFactory;
-            _userService = userService;
-            _authorizationService = authorizationService;
             Currency = network.CryptoCode;
         }
 
@@ -112,7 +103,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             }
 
             var result =
-                BOLT11PaymentRequest.TryParse(destination, out var invoice, Network.NBitcoinNetwork)
+                BOLT11PaymentRequest.TryParse(destination, out var invoice, Network.NBitcoinNetwork) && invoice is not null
                     ? new BoltInvoiceClaimDestination(destination, invoice)
                     : null;
 

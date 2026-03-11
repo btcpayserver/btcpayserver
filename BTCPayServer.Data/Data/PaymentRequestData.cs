@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using BTCPayServer.Client.Models;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +15,7 @@ namespace BTCPayServer.Data
         public bool Archived { get; set; }
         public string Currency { get; set; }
         public decimal Amount { get; set; }
+        public string Title { get; set; }
 
         /// <summary>
         /// Linking to invoices outside BTCPay Server using & user defined ids

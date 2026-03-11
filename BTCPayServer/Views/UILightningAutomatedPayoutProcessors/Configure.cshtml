@@ -1,10 +1,9 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Views.Stores
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.PayoutProcessors.Lightning.UILightningAutomatedPayoutProcessorsController.LightningTransferViewModel
 @{
     var storeId = Context.GetStoreData().Id;
-    ViewData.SetActivePage(StoreNavPages.PayoutProcessors, StringLocalizer["Lightning Payout Processor"], storeId);
+    ViewData.SetLayoutModel(new(nameof(StoreNavPages.PayoutProcessors), StringLocalizer["Lightning Payout Processor"]));
 }
 
 <form method="post" permissioned="@Policies.CanModifyStoreSettings">
@@ -18,7 +17,7 @@
             </ol>
             <h2>@ViewData["Title"]</h2>
         </nav>
-		<button id="page-primary" name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
+		<button id="page-primary" name="command" type="submit" class="btn btn-primary" value="Save" text-translate="true">Save</button>
     </div>
     <partial name="_StatusMessage" />
     <div class="row">

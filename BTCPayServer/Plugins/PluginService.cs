@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
@@ -53,11 +54,11 @@ namespace BTCPayServer.Plugins
 
         private string GetShortBtcpayVersion() => Env.Version.TrimStart('v').Split('+')[0];
 
-        public async Task<AvailablePlugin[]> GetRemotePlugins(string searchPluginName)
+        public async Task<AvailablePlugin[]> GetRemotePlugins(string searchPluginName, CancellationToken cancellationToken = default)
         {
             string btcpayVersion = GetShortBtcpayVersion();
             var versions = await _pluginBuilderClient.GetPublishedVersions(
-                btcpayVersion, _policiesSettings.PluginPreReleases, searchPluginName);
+                btcpayVersion, _policiesSettings.PluginPreReleases, searchPluginName, cancellationToken: cancellationToken);
 
             var plugins = versions
                 .Select(MapToAvailablePlugin)
@@ -79,7 +80,7 @@ namespace BTCPayServer.Plugins
             var updates = await _pluginBuilderClient.GetInstalledPluginsUpdates(
                 btcpayVersion,
                 _policiesSettings.PluginPreReleases,
-                loadedToCheck);
+                loadedToCheck, cancellationToken: cancellationToken);
 
             if (updates is { Length: > 0 })
             {
@@ -185,6 +186,10 @@ namespace BTCPayServer.Plugins
             var dest = _dataDirectories.Value.PluginDir;
             PluginManager.CancelCommands(dest, plugin);
             PluginManager.QueueCommands(dest, ("delete", plugin));
+        }
+
+        public void EnablePlugin(string plugin){
+            PluginManager.QueueCommands(_dataDirectories.Value.PluginDir, ("enable", plugin));
         }
 
         public class AvailablePlugin

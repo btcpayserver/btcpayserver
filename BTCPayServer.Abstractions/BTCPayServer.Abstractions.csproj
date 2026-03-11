@@ -20,9 +20,9 @@
     <Optimize>true</Optimize>
     <NoWarn>1591;1573;1572;1584;1570;3021</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>  
+  </PropertyGroup>
   <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
@@ -31,9 +31,9 @@
     <None Include="icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="HtmlSanitizer" Version="8.0.838" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
+    <PackageReference Include="HtmlSanitizer" Version="9.0.892" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.4" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BTCPayServer.Client\BTCPayServer.Client.csproj" />

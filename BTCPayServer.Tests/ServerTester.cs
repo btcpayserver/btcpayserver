@@ -5,27 +5,27 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using BTCPayServer.Hosting;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Tests.Lnd;
 using BTCPayServer.Tests.Logging;
-using Microsoft.Extensions.Configuration.Memory;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.RPC;
 using NBitpayClient;
 using NBXplorer;
-using BTCPayServer.Abstractions.Contracts;
-using System.Diagnostics.Metrics;
+using System.Threading;
+using BTCPayServer.Events;
+using BTCPayServer.Hosting;
+using BTCPayServer.Services;
 
 namespace BTCPayServer.Tests
 {
     public class ServerTester : IDisposable
     {
         public const string DefaultConnectionString = "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=btcpayserver";
+        public (string Hostname, int SmtpPort, int HttpPort) MailPitSettings { get; set; }
         public List<IDisposable> Resources = new List<IDisposable>();
         readonly string _Directory;
 
@@ -43,6 +43,11 @@ namespace BTCPayServer.Tests
             if (!Directory.Exists(_Directory))
                 Directory.CreateDirectory(_Directory);
 
+            MailPitSettings = (
+                GetEnvironment("TESTS_MAILPIT_HOST", "127.0.0.1"),
+                int.Parse(GetEnvironment("TESTS_MAILPIT_SMTP", "34219")),
+                int.Parse(GetEnvironment("TESTS_MAILPIT_HTTP", "34218")));
+            TestLogs.LogInformation($"MailPit settings: http://{MailPitSettings.Hostname}:{MailPitSettings.HttpPort} (SMTP: {MailPitSettings.SmtpPort})");
             _NetworkProvider = networkProvider;
             ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_BTCRPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork);
             ExplorerNode.ScanRPCCapabilities();
@@ -74,18 +79,14 @@ namespace BTCPayServer.Tests
             PayTester.SocksEndpoint = GetEnvironment("TESTS_SOCKSENDPOINT", "localhost:9050");
         }
 
-        public string Scope { get; set; }
-
-        public void ActivateLangs()
+        public async Task RestartMigration()
         {
-            TestLogs.LogInformation("Activating Langs...");
-            var dir = TestUtils.GetTestDataFullPath("Langs");
-            var langdir = Path.Combine(PayTester._Directory, "Langs");
-            Directory.CreateDirectory(langdir);
-            foreach (var file in Directory.GetFiles(dir))
-                File.Copy(file, Path.Combine(langdir, Path.GetFileName(file)));
+            var settings = PayTester.GetService<SettingsRepository>();
+            await settings.UpdateSetting<MigrationSettings>(new MigrationSettings());
+            await PayTester.RestartStartupTask<MigrationStartupTask>();
         }
 
+        public string Scope { get; set; }
 
         public void ActivateLTC()
         {
@@ -191,7 +192,9 @@ namespace BTCPayServer.Tests
         public async Task<T> WaitForEvent<T>(Func<Task> action, Func<T, bool> correctEvent = null)
         {
             var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var sub = PayTester.GetService<EventAggregator>().Subscribe<T>(evt =>
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            await using var register = cts.Token.Register(() => tcs.TrySetCanceled());
+            var sub = PayTester.GetService<EventAggregator>().SubscribeAny<T>(evt =>
             {
                 if (correctEvent is null)
                     tcs.TrySetResult(evt);
@@ -286,5 +289,25 @@ namespace BTCPayServer.Tests
                 cryptoCode == "LTC" ? NetworkProvider.GetNetwork<BTCPayNetwork>("LTC") :
                 cryptoCode == "LBTC" ? NetworkProvider.GetNetwork<BTCPayNetwork>("LBTC") :
                 throw new NotSupportedException();
+
+        public async Task<MailPitClient.Message> AssertHasEmail(EmailSentEvent sent)
+        {
+            var mailPitClient = GetMailPitClient();
+            return await mailPitClient.GetMessage(sent.ServerResponse.Split(' ').Last());
+        }
+
+        public async Task<MailPitClient.Message> AssertHasEmail(Func<Task> action)
+        {
+            var sent = await WaitForEvent<EmailSentEvent>(action);
+            return await AssertHasEmail(sent);
+        }
+
+        public MailPitClient GetMailPitClient()
+        {
+            var http = PayTester.GetService<IHttpClientFactory>().CreateClient("MAIL_PIT");
+            http.BaseAddress = new Uri($"http://{MailPitSettings.Hostname}:{MailPitSettings.HttpPort}");
+            var mailPitClient = new MailPitClient(http);
+            return mailPitClient;
+        }
     }
 }

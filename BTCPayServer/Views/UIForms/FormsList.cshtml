@@ -1,9 +1,7 @@
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Client
 @model List<BTCPayServer.Data.FormData>
 @{
-    ViewData.SetActivePage(StoreNavPages.Forms, StringLocalizer["Forms"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Forms), StringLocalizer["Forms"]).SetCategory(WellKnownCategories.Store));
     var storeId = Context.GetCurrentStoreId();
 }
 
@@ -41,7 +39,7 @@
                                     <a asp-action="ViewPublicForm" asp-route-formId="@item.Id" id="View-@item.Name" not-permission="@Policies.CanModifyStoreSettings">@item.Name</a>
                                 </td>
                                 <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
-                                    <a asp-action="Remove" asp-route-storeId="@item.StoreId" asp-route-id="@item.Id" id="Remove-@item.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal"  data-confirm-input="DELETE" text-translate="true">Remove</a> - 
+                                    <a asp-action="Remove" asp-route-storeId="@item.StoreId" asp-route-id="@item.Id" id="Remove-@item.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal"  data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Remove</a> -
                                     <a asp-action="ViewPublicForm" asp-route-formId="@item.Id" id="View-@item.Name" text-translate="true">View</a>
                                 </td>
                             </tr>
@@ -59,4 +57,4 @@
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Delete form", "This form will be removed from this store.", "Delete"))" permission="@Policies.CanModifyStoreSettings" />
+<partial name="_Confirm" model="@(new ConfirmModel("Delete form", "This form will be removed from this store.", StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />

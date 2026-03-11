@@ -11,7 +11,6 @@ using BTCPayServer.Events;
 using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.WalletViewModels;
-using BTCPayServer.Payments;
 using BTCPayServer.Payouts;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
@@ -19,14 +18,11 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Services.Rates;
-using Dapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using PullPaymentData = BTCPayServer.Data.PullPaymentData;
@@ -430,9 +426,11 @@ namespace BTCPayServer.HostedServices
 
         public bool SupportsLNURL(PullPaymentData pp, PullPaymentBlob blob = null)
         {
+            var cryptoCode = _networkProvider.DefaultNetwork?.CryptoCode;
+            if (cryptoCode is null) return false;
             blob ??= pp.GetBlob();
             var pms = blob.SupportedPayoutMethods.FirstOrDefault(id =>
-                PayoutTypes.LN.GetPayoutMethodId(_networkProvider.DefaultNetwork.CryptoCode)
+                PayoutTypes.LN.GetPayoutMethodId(cryptoCode)
                 == id);
             return pms is not null && _lnurlSupportedCurrencies.Contains(pp.Currency);
         }
@@ -1057,5 +1055,7 @@ namespace BTCPayServer.HostedServices
             Approved,
             Updated
         }
+
+        public override string ToString() => $"Payout Event for {Payout.Id} ({Type})";
     }
 }

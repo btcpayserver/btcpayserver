@@ -22,14 +22,20 @@ jobs:
             docker run --rm -v btcpayservertests_tests_datadir:/data -v /tmp/Artifacts:/host alpine sh -c "cp -r /data/. /host/"
       - store_artifacts:
           path: /tmp/Artifacts
-  selenium_tests:
+  playwright_2_tests:
     machine:
       image: ubuntu-2004:2024.11.1
     steps:
       - checkout
       - run:
           command: |
-            cd .circleci && ./run-tests.sh "Selenium=Selenium"
+            cd .circleci && ./run-tests.sh "Playwright=Playwright-2"
+      - run:
+          when: always
+          command: |
+            docker run --rm -v btcpayservertests_tests_datadir:/data -v /tmp/Artifacts:/host alpine sh -c "cp -r /data/. /host/"
+      - store_artifacts:
+          path: /tmp/Artifacts
   integration_tests:
     machine:
       image: ubuntu-2004:2024.11.1
@@ -45,6 +51,15 @@ jobs:
       - run:
           command: |
             curl -X POST -H "Authorization: token $GH_PAT" -H "Accept: application/vnd.github.everest-preview+json" -H "Content-Type: application/json" https://api.github.com/repos/btcpayserver/btcpayserver-doc/dispatches --data '{"event_type": "build_docs"}'
+  release_checks:
+    machine:
+      image: ubuntu-2004:2024.11.1
+    steps:
+      - checkout
+      - run:
+          name: Run pre-release checks
+          command: |
+            cd .circleci && ./run-tests.sh "PreReleaseCheck=PreReleaseCheck"
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined
   docker:
     docker:
@@ -53,6 +68,11 @@ jobs:
       - setup_remote_docker
       - checkout
       - run:
+          name: Verify commit is signed
+          command: |
+            cd .circleci && chmod +x verify-signed-commit.sh && ./verify-signed-commit.sh
+      - run:
+          name: Build and push Docker images
           command: |
             LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
             GIT_COMMIT=$(git rev-parse HEAD)
@@ -67,7 +87,7 @@ workflows:
     jobs:
       - fast_tests
       - playwright_tests 
-      - selenium_tests
+      - playwright_2_tests 
       - integration_tests
   publish:
     jobs:
@@ -78,7 +98,15 @@ workflows:
             # only act on version tags
             tags:
               only: /(v[1-9]+(\.[0-9]+)*(-[a-z0-9-]+)?)|(v[a-z0-9-]+)/
+      - release_checks:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /(v[1-9]+(\.[0-9]+)*(-[a-z0-9-]+)?)|(v[a-z0-9-]+)/
       - docker:
+          requires:
+            - release_checks
           filters:
             # ignore any commit on any branch by default
             branches:

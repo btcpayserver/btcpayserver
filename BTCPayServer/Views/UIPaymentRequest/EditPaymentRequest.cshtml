@@ -1,20 +1,19 @@
 @using BTCPayServer.Services.PaymentRequests
 @using System.Globalization
 @using BTCPayServer.Client
-@using BTCPayServer.Controllers
 @using BTCPayServer.Forms
-@using BTCPayServer.TagHelpers
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject FormDataService FormDataService
+@inject LinkGenerator LinkGenerator
 @model BTCPayServer.Models.PaymentRequestViewModels.UpdatePaymentRequestViewModel
 @{
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
-
-    ViewData.SetActivePage(PaymentRequestsNavPages.Create, string.IsNullOrEmpty(Model.Id) ? StringLocalizer["Create Payment Request"] : StringLocalizer["Edit Payment Request"], Model.Id);
+    ViewData.SetLayoutModel(new LayoutModel("PaymentRequests", string.IsNullOrEmpty(Model.Id) ? StringLocalizer["Create Payment Request"] : StringLocalizer["Edit Payment Request"]));
 }
 
 @section PageHeadContent {
     <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
+    <script src="~/vendor/tom-select/tom-select.complete.min.js" asp-append-version="true"></script>
+    <link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" asp-append-version="true" rel="stylesheet">
 }
 
 @section PageFootContent {
@@ -27,7 +26,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="GetPaymentRequests" asp-route-storeId="@Model.StoreId" text-translate="true">Requests</a>
+                    <a asp-action="GetPaymentRequests" asp-route-storeId="@Model.StoreId" text-translate="true">Payment Requests</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>
@@ -45,7 +44,7 @@
             }
         </div>
     </div>
-    
+
     <partial name="_StatusMessage" />
 
     <div class="row">
@@ -63,6 +62,10 @@
                 <div class="form-group flex-fill me-4">
                     <label asp-for="Amount" class="form-label" data-required></label>
                     <input type="number" inputmode="decimal" step="any" asp-for="Amount" class="form-control" required disabled="@(!Model.AmountAndCurrencyEditable)" />
+                    @if (!Model.AmountAndCurrencyEditable)
+                    {
+                        <input type="hidden" asp-for="Amount" />
+                    }
                     <span asp-validation-for="Amount" class="text-danger"></span>
                     @if (!Model.AmountAndCurrencyEditable)
                     {
@@ -75,6 +78,10 @@
                 <div class="form-group">
                     <label asp-for="Currency" class="form-label"></label>
                     <input asp-for="Currency" class="form-control w-auto" currency-selection disabled="@(!Model.AmountAndCurrencyEditable)" />
+                    @if (!Model.AmountAndCurrencyEditable)
+                    {
+                        <input type="hidden" asp-for="Currency" />
+                    }
                     <span asp-validation-for="Currency" class="text-danger"></span>
                 </div>
             </div>
@@ -87,6 +94,30 @@
                 <label asp-for="ReferenceId" class="form-label"></label>
                 <input asp-for="ReferenceId" class="form-control" />
                 <span asp-validation-for="ReferenceId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label class="form-label" text-translate="true">Labels</label>
+                <div class="input-group">
+                    <select asp-for="Labels" class="d-none">
+                        @foreach (var t in Model.Labels)
+                        {
+                            <option value="@t" selected></option>
+                        }
+                    </select>
+                    <vc:label-manager
+                        selected-labels="Model.Labels?.ToArray()"
+                        exclude-types="true"
+                        select-element="Labels"
+                        auto-update="false"
+                        linked-type="@WalletObjectData.Types.PaymentRequest"
+                        store-id="@Model.StoreId"
+                        store-object-id="@Model.Id" />
+                    <a asp-action="PaymentRequestLabels" asp-controller="UIPaymentRequest" asp-route-storeId="@Model.StoreId"
+                       class="btn btn-secondary input-group-clear"
+                       title="@StringLocalizer["Manage Labels"]">
+                        <vc:icon symbol="settings" />
+                    </a>
+                </div>
             </div>
             <div class="form-group">
                 <label asp-for="ExpiryDate" class="form-label"></label>
@@ -105,8 +136,8 @@
                 <input type="email" asp-for="Email" placeholder="@StringLocalizer["Firstname Lastname <email@example.com>"]" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
                 <div id="PaymentRequestEmailHelpBlock" class="form-text">
-                    @ViewLocalizer["This will send notification mails to the recipient, as configured by the {0}.", 
-                        Html.ActionLink(StringLocalizer["email rules"], nameof(UIStoresController.StoreEmailRulesList), "UIStores", new { storeId = Model.StoreId })]
+                    @ViewLocalizer["This will send notification mails to the recipient, as configured by the <a href=\"{0}\">email rules</a>.",
+                         LinkGenerator.GetStoreEmailRulesLink(Model.StoreId, Context.Request.GetRequestBaseUrl())]
                     @if (Model.HasEmailRules is not true)
                     {
                         <div class="info-note mt-1 text-warning" role="alert">
@@ -121,7 +152,7 @@
                 <select asp-for="FormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
                 <span asp-validation-for="FormId" class="text-danger"></span>
             </div>
-            
+
             @if (Model.FormResponse is not null)
             {
                 <div class="bg-tile rounded py-2 px-3 mb-5">

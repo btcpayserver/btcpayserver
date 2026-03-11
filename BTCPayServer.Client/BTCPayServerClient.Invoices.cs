@@ -17,6 +17,7 @@ public partial class BTCPayServerClient
         DateTimeOffset? endDate = null,
         string textSearch = null,
         bool includeArchived = false,
+        bool includePaymentMethods = false,
         int? skip = null,
         int? take = null,
         CancellationToken token = default)
@@ -43,6 +44,7 @@ public partial class BTCPayServerClient
     public virtual async Task<InvoiceData> GetInvoice(string storeId, string invoiceId,
         CancellationToken token = default)
     {
+        if (invoiceId == null) throw new ArgumentNullException(nameof(invoiceId));
         return await SendHttpRequest<InvoiceData>($"api/v1/stores/{storeId}/invoices/{invoiceId}", null, HttpMethod.Get, token);
     }
     public virtual async Task<InvoicePaymentMethodDataModel[]> GetInvoicePaymentMethods(string storeId, string invoiceId,

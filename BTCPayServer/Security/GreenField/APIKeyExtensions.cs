@@ -3,10 +3,10 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
 
 namespace BTCPayServer.Security.Greenfield
@@ -29,18 +29,10 @@ namespace BTCPayServer.Security.Greenfield
         public static AuthenticationBuilder AddAPIKeyAuthentication(this AuthenticationBuilder builder)
         {
             builder.AddScheme<GreenfieldAuthenticationOptions, APIKeysAuthenticationHandler>(AuthenticationSchemes.GreenfieldAPIKeys,
-                o => { });
+                _ => { });
             builder.AddScheme<GreenfieldAuthenticationOptions, BasicAuthenticationHandler>(AuthenticationSchemes.GreenfieldBasic,
-                o => { });
+                _ => { });
             return builder;
-        }
-
-        public static IServiceCollection AddAPIKeyAuthentication(this IServiceCollection serviceCollection)
-        {
-            serviceCollection.AddSingleton<APIKeyRepository>();
-            serviceCollection.AddScoped<IAuthorizationHandler, GreenfieldAuthorizationHandler>();
-            serviceCollection.AddScoped<IAuthorizationHandler, LocalGreenfieldAuthorizationHandler>();
-            return serviceCollection;
         }
 
         public static string[] GetPermissions(this AuthorizationHandlerContext context)
@@ -49,14 +41,15 @@ namespace BTCPayServer.Security.Greenfield
                     c.Type.Equals(GreenfieldConstants.ClaimTypes.Permission, StringComparison.InvariantCultureIgnoreCase))
                 .Select(claim => claim.Value).ToArray();
         }
-        public static bool HasPermission(this AuthorizationHandlerContext context, Permission permission)
+
+        public static bool HasPermission(this AuthorizationHandlerContext context, Permission permission, PermissionService permissionService, bool anyScope = false)
         {
             foreach (var claim in context.User.Claims.Where(c =>
                 c.Type.Equals(GreenfieldConstants.ClaimTypes.Permission, StringComparison.InvariantCultureIgnoreCase)))
             {
                 if (Permission.TryParse(claim.Value, out var claimPermission))
                 {
-                    if (claimPermission.Contains(permission))
+                    if (permissionService.Contains(claimPermission, permission, anyScope))
                     {
                         return true;
                     }

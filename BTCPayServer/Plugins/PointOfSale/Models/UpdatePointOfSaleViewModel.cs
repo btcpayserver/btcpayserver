@@ -79,7 +79,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         [Display(Name = "Redirect invoice to redirect url automatically after paid")]
         public string RedirectAutomatically { get; set; } = string.Empty;
 
-        public string AppId { get; set; }
         public string SearchTerm { get; set; }
 
         public SelectList RedirectAutomaticallySelectList =>
@@ -102,5 +101,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public string FormId { get; set; }
 
         public bool Archived { get; set; }
+
+        [Display(Name = "Disable zero amount invoices")]
+        public bool DisableZeroAmountInvoice { get; set; }
     }
 }

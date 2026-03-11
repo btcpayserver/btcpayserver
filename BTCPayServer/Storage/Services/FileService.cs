@@ -104,36 +104,6 @@ namespace BTCPayServer.Storage.Services
             return storedFile;
         }
 
-        public async Task<IStoredFile> AddFile(Uri url, string userId)
-        {
-            if (!await IsAvailable())
-                throw new InvalidOperationException("StoreSettings not configured");
-
-            var fileName = Sanitize(Path.GetFileName(url.AbsolutePath));
-            if (!fileName.IsValidFileName())
-                throw new InvalidOperationException("Invalid file name");
-
-            // download
-            var filePath = Path.Join(_dataDirectories.Value.TempDir, fileName);
-            var httClient = _httpClientFactory.CreateClient();
-            using var resp = await httClient.GetAsync(url);
-            await using var stream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite);
-            await resp.Content.CopyToAsync(stream);
-            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
-            {
-                Headers = new HeaderDictionary(),
-                ContentType = GetContentType(filePath)
-            };
-            await stream.FlushAsync();
-
-            var storedFile = await AddFile(file, userId);
-
-            // cleanup
-            File.Delete(filePath);
-
-            return storedFile;
-        }
-
         public async Task<string?> GetFileUrl(Uri baseUri, string fileId)
         {
             var settings = await _settingsRepository.GetSettingAsync<StorageSettings>();
@@ -142,17 +112,6 @@ namespace BTCPayServer.Storage.Services
             var provider = GetProvider(settings);
             var storedFile = await _fileRepository.GetFile(fileId);
             return storedFile == null ? null : await provider.GetFileUrl(baseUri, storedFile, settings);
-        }
-
-        public async Task<string?> GetTemporaryFileUrl(Uri baseUri, string fileId, DateTimeOffset expiry,
-            bool isDownload)
-        {
-            var settings = await _settingsRepository.GetSettingAsync<StorageSettings>();
-            if (settings is null)
-                return null;
-            var provider = GetProvider(settings);
-            var storedFile = await _fileRepository.GetFile(fileId);
-            return storedFile == null ? null : await provider.GetTemporaryFileUrl(baseUri, storedFile, settings, expiry, isDownload);
         }
 
         public async Task RemoveFile(string fileId, string userId)

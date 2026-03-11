@@ -1,6 +1,7 @@
 ﻿@model ChargeServiceViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, StringLocalizer["Lightning Charge Service"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Services), StringLocalizer["Lightning Charge Service"])
+        .SetCategory(WellKnownCategories.Server));
 }
 
 <div class="sticky-header">

@@ -1,6 +1,7 @@
 @model BTCPayServer.Models.ServerViewModels.LogsViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Logs, StringLocalizer["Logs"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Logs), StringLocalizer["Logs"])
+        .SetCategory(WellKnownCategories.Server));
 }
 
 <div class="sticky-header">

@@ -87,7 +87,7 @@
                 "description": "View information about the current API key",
                 "responses": {
                     "200": {
-                        "description": "Information about the current api key",
+                        "description": "Information about the current API key",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -162,7 +162,7 @@
                 "description": "Create a new API Key",
                 "responses": {
                     "200": {
-                        "description": "Information about the new api key",
+                        "description": "Information about the new API key",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -243,7 +243,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Information about the new api key",
+                        "description": "Information about the new API key",
                         "content": {
                             "application/json": {
                                 "schema": {

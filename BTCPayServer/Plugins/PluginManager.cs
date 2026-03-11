@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
@@ -12,6 +13,7 @@ using System.Text.RegularExpressions;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
 using BTCPayServer.Plugins.Dotnet;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -26,44 +28,69 @@ namespace BTCPayServer.Plugins
     public static class PluginManager
     {
         public const string BTCPayPluginSuffix = ".btcpay";
-        private static readonly List<Assembly> _pluginAssemblies = new ();
+        /// <summary>
+        /// In case of tests, this is shared the plugins that are already their assembly loaded.
+        /// This avoid loading the same plugin twice.
+        /// </summary>
+        private static PreloadedPlugins _preloadedPlugins = new();
 
-        public static bool IsExceptionByPlugin(Exception exception, [MaybeNullWhen(false)] out string pluginName)
+        public static bool IsExceptionByPlugin(Exception exception, [MaybeNullWhen(false)] out PreloadedPlugin preloadedPlugin)
         {
+            if (ExtractPluginsFromStackTrace(exception, out preloadedPlugin)) return true;
+
             var fromAssembly = exception is TypeLoadException
                 ? Regex.Match(exception.Message, "from assembly '(.*?),").Groups[1].Value
                 : null;
-
-            foreach (var assembly in _pluginAssemblies)
+            foreach (var plugin in _preloadedPlugins)
             {
+                var assembly = plugin.Assembly;
                 var assemblyName = assembly.GetName().Name;
                 if (assemblyName is null)
                     continue;
-                // Comparison is case sensitive as it is theoretically possible to have a different plugin
-                // with same name but different casing.
+                // Comparison is case-sensitive as it is theoretically possible to have a different plugin
+                // with the same name but different casing.
                 if (exception.Source is not null &&
                     assemblyName.Equals(exception.Source, StringComparison.Ordinal))
                 {
-                    pluginName = assemblyName;
+                    preloadedPlugin = plugin;
                     return true;
                 }
                 if (exception.Message.Contains(assemblyName, StringComparison.Ordinal))
                 {
-                    pluginName = assemblyName;
+                    preloadedPlugin = plugin;
                     return true;
                 }
-                // For TypeLoadException, check if it might come from areferenced assembly
+                // For TypeLoadException, check if it might come from a referenced assembly
                 if (!string.IsNullOrEmpty(fromAssembly) && assembly.GetReferencedAssemblies().Select(a => a.Name).Contains(fromAssembly))
                 {
-                    pluginName = assemblyName;
+                    preloadedPlugin = plugin;
                     return true;
                 }
             }
-            pluginName = null;
+            preloadedPlugin = null;
             return false;
         }
 
-        record PreloadedPlugin(IBTCPayServerPlugin Instance, PluginLoader? Loader, Assembly Assembly);
+        private static bool ExtractPluginsFromStackTrace(Exception exception, [MaybeNullWhen(false)] out PreloadedPlugin preloadedPlugin)
+        {
+            var pluginsByName = _preloadedPlugins.Where(p => p.Loader is not null).ToDictionary(p => p.Assembly.FullName ?? "", p => p);
+            var trace = new StackTrace(exception, true);
+            foreach (var frame in trace.GetFrames().Reverse())
+            {
+                var m = frame.GetMethod();
+                if (m is null)
+                    continue;
+                if (pluginsByName.TryGetValue(m.Module.Assembly.FullName ?? "", out var plugin))
+                {
+                    preloadedPlugin = plugin;
+                    return true;
+                }
+            }
+            preloadedPlugin = null;
+            return false;
+        }
+
+        public record PreloadedPlugin(IBTCPayServerPlugin Instance, PluginLoader? Loader, Assembly Assembly);
 
         class PreloadedPlugins : IEnumerable<PreloadedPlugin>
         {
@@ -113,34 +140,9 @@ namespace BTCPayServer.Plugins
         public static IMvcBuilder AddPlugins(this IMvcBuilder mvcBuilder, IServiceCollection serviceCollection,
             IConfiguration config, ILoggerFactory loggerFactory, ServiceProvider bootstrapServiceProvider)
         {
-            void PreloadPluginsFromAssemblies(Assembly systemAssembly1, HashSet<string> exclude, PreloadedPlugins preloadedPlugins)
-            {
-                var excludedAssemblies = "System.Private.CoreLib,testhost,System.Runtime,Microsoft.TestPlatform.CoreUtilities,System.Diagnostics.Tracing,System.Diagnostics.Debug,System.Runtime.Extensions,System.Diagnostics.Process,System.ComponentModel.Primitives,Microsoft.TestPlatform.PlatformAbstractions,System.Collections,Microsoft.TestPlatform.CrossPlatEngine,netstandard,Microsoft.TestPlatform.CommunicationUtilities,Microsoft.VisualStudio.TestPlatform.ObjectModel,Microsoft.VisualStudio.TestPlatform.Common,Newtonsoft.Json,System.Runtime.Serialization.Formatters,System.Collections.Concurrent,System.Diagnostics.TraceSource,System.Threading,System.IO.FileSystem,System.Runtime.InteropServices,System.Memory,Microsoft.Win32.Primitives,System.Threading.ThreadPool,System.Net.Primitives,System.Collections.NonGeneric,System.Net.Sockets,System.Private.Uri,System.Threading.Overlapped,System.Runtime.Intrinsics,System.Linq.Expressions,System.Runtime.Numerics,System.Linq,System.ComponentModel.TypeConverter,System.ObjectModel,System.Runtime.Serialization.Primitives,System.Data.Common,System.Xml.ReaderWriter,System.Private.Xml,System.ComponentModel,System.Reflection.Emit.ILGeneration,System.Reflection.Emit.Lightweight,System.Reflection.Primitives,Anonymously Hosted DynamicMethods Assembly,System.Runtime.Loader,System.Reflection.Metadata,System.IO.MemoryMappedFiles,System.Collections.Immutable,System.Text.Encoding.Extensions,xunit.runner.visualstudio.testadapter,System.Runtime.Serialization.Json,System.Private.DataContractSerialization,System.Runtime.Serialization.Xml,System.Resources.ResourceManager,xunit.runner.utility.netcoreapp10,xunit.abstractions,System.Text.RegularExpressions,System.Runtime.InteropServices.RuntimeInformation,NuGet.Frameworks,System.Xml.XDocument,System.Private.Xml.Linq,System.Threading.Thread,System.Globalization,System.IO,System.Reflection,System.Reflection.TypeExtensions,xunit.runner.reporters.netcoreapp10,System.Threading.Tasks,System.Net.Http,System.Reflection.Extensions,BTCPayServer.Tests,Microsoft.AspNetCore.Mvc.ViewFeatures,Microsoft.AspNetCore.Mvc.Core,Microsoft.AspNetCore.Mvc.Abstractions,xunit.core,BTCPayServer.Rating,Microsoft.Extensions.Logging.Abstractions,NBitpayClient,NBitcoin,BTCPayServer.Client,BTCPayServer.Data,Microsoft.AspNetCore.Http.Abstractions,BTCPayServer.Abstractions,BTCPayServer.Lightning.Common,Microsoft.EntityFrameworkCore,NBXplorer.Client,BTCPayServer.BIP78.Sender,Microsoft.Extensions.Identity.Stores,LNURL,Renci.SshNet,Microsoft.Extensions.Identity.Core,Newtonsoft.Json.Schema,Microsoft.AspNetCore.Razor.Language,Microsoft.CodeAnalysis.CSharp,Microsoft.CodeAnalysis,xunit.execution.dotnet,Microsoft.Extensions.Configuration.UserSecrets,System.Text.Encoding,BTCPayServer.Common,WebDriver,System.Drawing.Primitives,xunit.assert,Microsoft.Extensions.Configuration.Abstractions,Microsoft.Extensions.DependencyInjection,Microsoft.Extensions.DependencyInjection.Abstractions,Microsoft.Extensions.Configuration,Microsoft.Extensions.Primitives,StandardConfiguration,CommandLine,System.Security.Cryptography.Algorithms,System.Security.Cryptography,System.Security.Cryptography.Primitives,NBitcoin.Altcoins,ExchangeSharp,Microsoft.Extensions.Http,Microsoft.Extensions.Hosting.Abstractions,Microsoft.Extensions.Logging,Microsoft.Extensions.Options,Microsoft.Extensions.Diagnostics,System.Diagnostics.DiagnosticSource,System.Net.Security,System.Net.NameResolution,Microsoft.Extensions.Configuration.FileExtensions,Microsoft.Extensions.Configuration.Json,Microsoft.AspNetCore.Hosting,Microsoft.AspNetCore.Hosting.Abstractions,Microsoft.AspNetCore.Server.Kestrel,Microsoft.Extensions.Features,Microsoft.AspNetCore.Hosting.Server.Abstractions,Microsoft.Extensions.Configuration.EnvironmentVariables,CommandLine.Configuration,Microsoft.Extensions.Configuration.Ini,Microsoft.Extensions.FileProviders.Abstractions,Microsoft.Extensions.FileProviders.Physical,Microsoft.AspNetCore.Server.Kestrel.Transport.Quic,Microsoft.AspNetCore.Server.Kestrel.Transport.NamedPipes,System.Net.Quic,Microsoft.Win32.Registry,Microsoft.AspNetCore.Http,Microsoft.AspNetCore.Razor.Runtime,Microsoft.AspNetCore.Connections.Abstractions,Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets,Microsoft.AspNetCore.Server.Kestrel.Core,Microsoft.Extensions.ObjectPool,NicolasDorier.RateLimits,Microsoft.Extensions.Caching.Memory,Microsoft.AspNetCore.DataProtection,Microsoft.AspNetCore.Identity,Microsoft.AspNetCore.Identity.EntityFrameworkCore,Microsoft.AspNetCore.Authentication.Abstractions,Microsoft.AspNetCore.Authentication.Cookies,Microsoft.AspNetCore.Authentication,Microsoft.AspNetCore.Session,Microsoft.AspNetCore.SignalR,Microsoft.AspNetCore.SignalR.Core,Microsoft.AspNetCore.SignalR.Common,Fido2.Models,Fido2.AspNet,Fido2,Microsoft.AspNetCore.Mvc,Microsoft.AspNetCore.Mvc.Razor,Microsoft.AspNetCore.Mvc.NewtonsoftJson,Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation,Microsoft.AspNetCore.Mvc.DataAnnotations,Microsoft.AspNetCore.Components.Server,Microsoft.AspNetCore.Components.Endpoints,Microsoft.AspNetCore.Routing.Abstractions,Microsoft.Extensions.Caching.Abstractions,Microsoft.AspNetCore.DataProtection.Abstractions,Microsoft.AspNetCore.Cryptography.Internal,Microsoft.AspNetCore.Authentication.Core,System.Security.Claims,Microsoft.Extensions.WebEncoders,System.Text.Encodings.Web,Microsoft.Extensions.Localization.Abstractions,Microsoft.AspNetCore.Mvc.Localization,Npgsql.EntityFrameworkCore.PostgreSQL,Microsoft.AspNetCore.Diagnostics,HtmlSanitizer,Microsoft.AspNetCore.Authorization,Microsoft.AspNetCore.Authorization.Policy,Microsoft.AspNetCore.Cors,System.ComponentModel.Annotations,Serilog,Serilog.Sinks.File,Serilog.Extensions.Logging,Microsoft.Extensions.Configuration.Binder,Microsoft.AspNetCore.Http.Features,TwentyTwenty.Storage,TwentyTwenty.Storage.Azure,Microsoft.AspNetCore.WebSockets,Microsoft.AspNetCore.Http.Connections,Microsoft.AspNetCore.Routing,Microsoft.AspNetCore.SignalR.Protocols.Json,System.Text.Json,McMaster.NETCore.Plugins.Mvc,Microsoft.AspNetCore.Mvc.ApiExplorer,Microsoft.AspNetCore.Mvc.Cors,Microsoft.AspNetCore.Antiforgery,Microsoft.AspNetCore.Components,Microsoft.AspNetCore.Components.Web,Microsoft.JSInterop,Microsoft.AspNetCore.Mvc.TagHelpers,Microsoft.AspNetCore.Razor,Microsoft.AspNetCore.Mvc.RazorPages,Microsoft.AspNetCore.Html.Abstractions,McMaster.NETCore.Plugins,Selenium,Selenium.Support,Selenium.WebDriver,Selenium.WebDriver.ChromeDriver,WebDriver.Support"
-                    .Split(',').ToHashSet();
-                // Load the referenced assembly plugins
-                // All referenced plugins should have at least one plugin with exact same plugin identifier
-                // as the assembly. Except for the system assembly (btcpayserver assembly) which are fake plugins
-                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    var assemblyName = assembly.GetName().Name;
-                    if (assemblyName is null || excludedAssemblies.Contains(assemblyName))
-                        continue;
-                    var isSystemPlugin = assembly == systemAssembly1;
-                    if (!isSystemPlugin && exclude.Contains(assemblyName))
-                        continue;
-                    foreach (var plugin in GetPluginInstancesFromAssembly(assembly, true))
-                    {
-                        if (!isSystemPlugin && plugin.Identifier != assemblyName)
-                            continue;
-                        preloadedPlugins.Add(new PreloadedPlugin(plugin, null, assembly));
-                        plugin.SystemPlugin = isSystemPlugin;
-                    }
-                }
-            }
-
+            var preloadedPlugins = new PreloadedPlugins();
             var logger = loggerFactory.CreateLogger(typeof(PluginManager));
             var pluginsFolder = new DataDirectories().Configure(config).PluginDir;
-            var preloadedPlugins = new PreloadedPlugins();
 
             serviceCollection.Configure<KestrelServerOptions>(options =>
             {
@@ -148,16 +150,14 @@ namespace BTCPayServer.Plugins
             });
             logger.LogInformation($"Loading plugins from {pluginsFolder}");
             Directory.CreateDirectory(pluginsFolder);
-            ExecuteCommands(pluginsFolder, new());
+            ExecuteCommands(pluginsFolder);
 
             var disabledPluginIdentifiers = GetDisabledPluginIdentifiers(pluginsFolder);
             var systemAssembly = typeof(Program).Assembly;
-            PreloadPluginsFromAssemblies(systemAssembly, disabledPluginIdentifiers, preloadedPlugins);
-
-            if (ExecuteCommands(pluginsFolder, preloadedPlugins.ToDictionary(p => p.Instance.Identifier, p => p.Instance.Version)))
+            foreach (var plugin in GetPluginInstancesFromAssembly(systemAssembly, true))
             {
-                preloadedPlugins.Clear();
-                PreloadPluginsFromAssemblies(systemAssembly, disabledPluginIdentifiers, preloadedPlugins);
+                preloadedPlugins.Add(new PreloadedPlugin(plugin, null, systemAssembly));
+                plugin.SystemPlugin = true;
             }
 
             var pluginsToPreload = new List<(string PluginIdentifier, string PluginFilePath)>();
@@ -193,7 +193,11 @@ namespace BTCPayServer.Plugins
                 if (!File.Exists(pluginFilePath))
                     continue;
                 if (disabledPluginIdentifiers.Contains(pluginIdentifier))
+                {
+                    logger.LogInformation($"Skipping disabled plugin {pluginIdentifier}");
                     continue;
+                }
+
                 pluginsToPreload.Add((pluginIdentifier, pluginFilePath));
             }
 
@@ -203,6 +207,7 @@ namespace BTCPayServer.Plugins
             {
                 if (preloadedPlugins.Contains(toLoad.PluginIdentifier))
                     continue;
+
                 try
                 {
                     var loader = PluginLoader.CreateFromAssemblyFile(
@@ -213,6 +218,7 @@ namespace BTCPayServer.Plugins
                             // this ensures that the version of MVC is shared between this app and the plugin
                             c.PreferSharedTypes = true;
                             c.IsUnloadable = false;
+                            c.LoadAssembliesInDefaultLoadContext = config.GetOrDefault<bool>("TEST_RUNNER_ENABLED", false);
                         });
                     var pluginAssembly = loader.LoadDefaultAssembly();
 
@@ -254,10 +260,14 @@ namespace BTCPayServer.Plugins
                     GetPluginInstanceFromAssembly(plugin.Identifier, preloadedPlugin.Assembly, silentlyFails: false);
                     if (preloadedPlugin.Loader is not null)
                         mvcBuilder.AddPluginLoader(preloadedPlugin.Loader);
-                    _pluginAssemblies.Add(preloadedPlugin.Assembly);
 
-                    logger.LogInformation(
-                        $"Adding and executing plugin {plugin.Identifier} - {plugin.Version}");
+                    var (logLevel, message) = plugin switch
+                    {
+                        { Identifier: "BTCPayServer" } => (LogLevel.Information, $"Running {plugin.Identifier} - {BTCPayServerEnvironment.GetInformationalVersion()}"),
+                        { SystemPlugin: true } => (LogLevel.Debug, $"Running system plugin {plugin.Identifier} - {plugin.Version}"),
+                        _ => (LogLevel.Information, $"Running plugin {plugin.Identifier} - {plugin.Version}")
+                    };
+                    logger.Log(logLevel, message);
                     var pluginServiceCollection = new PluginServiceCollection(serviceCollection, bootstrapServiceProvider);
                     plugin.Execute(pluginServiceCollection);
                     serviceCollection.AddSingleton(plugin);
@@ -275,6 +285,7 @@ namespace BTCPayServer.Plugins
                         toDisable.Add(plugin.Identifier);
                 }
             }
+            _preloadedPlugins = preloadedPlugins;
 			if (toDisable.Count > 0)
 			{
 				foreach (var plugin in toDisable)
@@ -348,7 +359,7 @@ namespace BTCPayServer.Plugins
             return GetPluginInstancesFromAssembly(assembly, silentlyFails).FirstOrDefault(plugin => plugin.Identifier == pluginIdentifier);
         }
 
-        private static bool ExecuteCommands(string pluginsFolder, Dictionary<string, Version> installed)
+        private static bool ExecuteCommands(string pluginsFolder)
         {
             var pendingCommands = GetPendingCommands(pluginsFolder);
             if (!pendingCommands.Any())
@@ -356,7 +367,7 @@ namespace BTCPayServer.Plugins
                 return false;
             }
 
-            var remainingCommands = (from command in pendingCommands where !ExecuteCommand(command, pluginsFolder, installed) select $"{command.command}:{command.plugin}").ToList();
+            var remainingCommands = (from command in pendingCommands where !ExecuteCommand(command, pluginsFolder) select $"{command.command}:{command.plugin}").ToList();
             if (remainingCommands.Any())
             {
                 File.WriteAllLines(Path.Combine(pluginsFolder, "commands"), remainingCommands);
@@ -406,13 +417,13 @@ namespace BTCPayServer.Plugins
             return true;
         }
 
-        private static bool ExecuteCommand((string command, string extension) command, string pluginsFolder, Dictionary<string, Version> installed)
+        private static bool ExecuteCommand((string command, string extension) command, string pluginsFolder)
         {
             var dirName = Path.Combine(pluginsFolder, command.extension);
             switch (command.command)
             {
                 case "delete":
-                    ExecuteCommand(("enable", command.extension), pluginsFolder, installed);
+                    ExecuteCommand(("enable", command.extension), pluginsFolder);
                     if (File.Exists(dirName))
                     {
                         File.Delete(dirName);
@@ -426,17 +437,17 @@ namespace BTCPayServer.Plugins
                 case "install":
                     var fileName = dirName + BTCPayPluginSuffix;
                     var manifestFileName = dirName + ".json";
-                    ExecuteCommand(("enable", command.extension), pluginsFolder, installed);
+                    ExecuteCommand(("enable", command.extension), pluginsFolder);
 
                     if (File.Exists(fileName))
                     {
                         if (File.Exists(dirName) || Directory.Exists(dirName))
-                            ExecuteCommand(("delete", dirName), pluginsFolder, installed);
+                            ExecuteCommand(("delete", dirName), pluginsFolder);
                         ZipFile.ExtractToDirectory(fileName, dirName, true);
                         File.Delete(fileName);
                         if (File.Exists(manifestFileName))
                         {
-                            File.Move(manifestFileName, Path.Combine(dirName, Path.GetFileName(manifestFileName)));
+                            File.Move(manifestFileName, Path.Combine(dirName, Path.GetFileName(manifestFileName)), true);
                         }
                     }
                     break;
@@ -511,10 +522,25 @@ namespace BTCPayServer.Plugins
             QueueCommands(pluginDir, cmds);
         }
 
+        public static void DisablePlugins(string pluginDir)
+        {
+            foreach (var plugin in _preloadedPlugins)
+                DisablePlugin(pluginDir, plugin);
+        }
+
+        public static void DisablePlugin(string pluginDir, PreloadedPlugin plugin)
+        {
+            if (plugin.Instance.SystemPlugin) return;
+            var name = plugin.Assembly.GetName()?.Name;
+            if (name is null) return;
+            DisablePlugin(pluginDir, name);
+        }
+
         public static void DisablePlugin(string pluginDir, string plugin)
         {
             QueueCommands(pluginDir, ("disable", plugin));
         }
+
 
         // Loads the list of disabled plugins from the file
         private static HashSet<string> GetDisabledPluginIdentifiers(string pluginsFolder)

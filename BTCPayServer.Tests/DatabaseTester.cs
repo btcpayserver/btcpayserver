@@ -1,6 +1,4 @@
 using System;
-using System.Data;
-using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
@@ -87,10 +85,10 @@ namespace BTCPayServer.Tests
             await ctx.Database.MigrateAsync();
         }
 
-        public async Task ContinueMigration()
+        public async Task CompleteMigrations()
         {
             if (notAppliedMigrations is null)
-                throw new InvalidOperationException("Call MigrateUpTo first");
+                throw new InvalidOperationException("Call MigrateUntil first");
             using var ctx = CreateContext();
             var db = ctx.Database.GetDbConnection();
             await db.ExecuteAsync("DELETE FROM \"__EFMigrationsHistory\" WHERE \"MigrationId\" = ANY (@migrations)", new { migrations = notAppliedMigrations });

@@ -1,6 +1,7 @@
 @model BTCPayServer.Controllers.UIManageController.NotificationSettingsViewModel
 @{
-    ViewData.SetActivePage(ManageNavPages.Notifications, StringLocalizer["Notification Settings"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ManageNavPages.Notifications), StringLocalizer["Notification Settings"])
+        .SetCategory(nameof(ManageNavPages)));
 }
 
 <form method="post" asp-action="NotificationSettings">
@@ -14,7 +15,7 @@
             </ol>
             <h2>@ViewData["Title"]</h2>
         </nav>
-		<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="update">Save</button>
+		<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="update" text-translate="true">Save</button>
     </div>
     <partial name="_StatusMessage" />
     <div class="row">

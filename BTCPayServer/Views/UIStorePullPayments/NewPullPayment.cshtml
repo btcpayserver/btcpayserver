@@ -3,7 +3,7 @@
 @model BTCPayServer.Models.WalletViewModels.NewPullPaymentModel
 @{
     var storeId = Context.GetStoreData().Id;
-    ViewData.SetActivePage(StoreNavPages.PullPayments, StringLocalizer["Create Pull Payment"], storeId);
+    ViewData.SetLayoutModel(new(nameof(StoreNavPages.PullPayments), StringLocalizer["Create Pull Payment"]));
 }
 
 @section PageHeadContent {

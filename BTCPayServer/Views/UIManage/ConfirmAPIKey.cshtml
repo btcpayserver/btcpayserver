@@ -2,7 +2,7 @@
 
 @{
     var displayName = Model.ApplicationName ?? Model.ApplicationIdentifier;
-    ViewData["Title"] = $"Authorize {displayName ?? "Application"}";
+    ViewData.SetTitle($"Authorize {displayName ?? "Application"}");
     Layout = "_LayoutWizard";
 }
 

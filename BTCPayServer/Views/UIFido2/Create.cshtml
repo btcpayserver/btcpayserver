@@ -1,7 +1,7 @@
 @using Newtonsoft.Json.Linq
 @model Fido2NetLib.CredentialCreateOptions
 @{
-    ViewData.SetActivePage(ManageNavPages.TwoFactorAuthentication, StringLocalizer["Register your security device"]);
+    ViewData.SetLayoutModel(new(nameof(ManageNavPages.TwoFactorAuthentication), StringLocalizer["Register your security device"]));
 }
 
 <div class="sticky-header">

@@ -46,30 +46,5 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
                 r = r.Replace(Path.DirectorySeparatorChar, '/');
             return r;
         }
-
-        public override async Task<string> GetTemporaryFileUrl(Uri baseUri, StoredFile storedFile,
-            StorageSettings configuration, DateTimeOffset expiry, bool isDownload,
-            BlobUrlAccess access = BlobUrlAccess.Read)
-        {
-
-            var localFileDescriptor = new TemporaryLocalFileDescriptor
-            {
-                Expiry = expiry,
-                FileId = storedFile.Id,
-                IsDownload = isDownload
-            };
-            var name = Guid.NewGuid().ToString();
-            var fullPath = Path.Combine(_datadirs.Value.TempStorageDir, name);
-            var fileInfo = new FileInfo(fullPath);
-            if (!fileInfo.Exists)
-            {
-                fileInfo.Directory?.Create();
-                await File.Create(fileInfo.FullName).DisposeAsync();
-            }
-
-            await File.WriteAllTextAsync(Path.Combine(_datadirs.Value.TempStorageDir, name), JsonConvert.SerializeObject(localFileDescriptor));
-
-            return new Uri(baseUri, $"{LocalStorageDirectoryName}tmp/{name}{(isDownload ? "?download" : string.Empty)}").AbsoluteUri;
-        }
     }
 }

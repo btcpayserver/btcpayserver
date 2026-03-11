@@ -3,10 +3,11 @@
 @model BrandingViewModel;
 @inject IFileService FileService
 @{
-    ViewData.SetActivePage(ServerNavPages.Branding, StringLocalizer["Branding"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Branding), StringLocalizer["Branding"])
+        .SetCategory(WellKnownCategories.Server));
     var canUpload = await FileService.IsAvailable();
     var themeExtension = ((ThemeExtension[])Enum.GetValues(typeof(ThemeExtension))).Select(t =>
-        new SelectListItem(typeof(ThemeExtension).DisplayName(t.ToString()), t == ThemeExtension.Custom ? null : t.ToString()));
+        new SelectListItem(typeof(ThemeExtension).DisplayName(t.ToString()), t.ToString()));
 }
 
 @section PageFootContent {
@@ -16,7 +17,7 @@
 <form method="post" enctype="multipart/form-data">
     <div class="sticky-header">
 		<h2>@ViewData["Title"]</h2>
-		<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+		<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save" text-translate="true">Save</button>
     </div>
     <partial name="_StatusMessage" />
 
@@ -33,6 +34,17 @@
                 <input asp-for="ContactUrl" class="form-control" />
                 <div class="form-text" text-translate="true">Add an email address or an external URL where users can contact you for support requests through a "Contact Us" button, displayed at the bottom of the public facing pages.</div>
                 <span asp-validation-for="ContactUrl" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="BaseUrl" class="form-label"></label>
+                <div class="input-group flex-nowrap">
+                    <input asp-for="BaseUrl" class="form-control" />
+                    <button class="btn btn-success input-group-clear px-3" type="submit" name="command" value="SetBaseUrl" text-translate="true">
+                        Use current URL
+                    </button>
+                </div>
+                <div class="form-text" text-translate="true">The preferred link to this server. This is typically used when BTCPay Server is generating an email containing a link which should point to this server.</div>
+                <span asp-validation-for="BaseUrl" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <div class="d-flex align-items-center justify-content-between gap-2">
@@ -65,7 +77,7 @@
 
 			<h3 class="mt-5 mb-3" text-translate="true">Theme</h3>
             <p text-translate="true">Use the default Light or Dark Themes, or provide a custom CSS theme file below.</p>
-            
+
             <div class="d-flex align-items-center mb-3">
                 <input asp-for="CustomTheme" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomThemeSettings" aria-expanded="@(Model.CustomTheme)" aria-controls="CustomThemeSettings" />
                 <div>

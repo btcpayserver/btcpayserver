@@ -30,6 +30,7 @@ namespace BTCPayServer.Plugins.Dotnet.Loader
 
         private bool _isCollectible;
         private bool _loadInMemory;
+        private bool _loadAssembliesInDefaultLoadContext;
         private bool _shadowCopyNativeLibraries;
 
         /// <summary>
@@ -65,6 +66,7 @@ namespace BTCPayServer.Plugins.Dotnet.Loader
                 _lazyLoadReferences,
                 _isCollectible,
                 _loadInMemory,
+                _loadAssembliesInDefaultLoadContext,
                 _shadowCopyNativeLibraries);
         }
 
@@ -316,6 +318,18 @@ namespace BTCPayServer.Plugins.Dotnet.Loader
         public AssemblyLoadContextBuilder PreloadAssembliesIntoMemory()
         {
             _loadInMemory = true; // required to prevent dotnet from locking loaded files
+            return this;
+        }
+
+        /// <summary>
+        /// This will load assemblies into the default load context.
+        /// This is used for integration tests. Tests run in the default load context, so we do
+        /// not want type mismatch errors due to loading types in different load contexts.
+        /// </summary>
+        /// <returns></returns>
+        public AssemblyLoadContextBuilder LoadAssembliesInDefaultLoadContext()
+        {
+            _loadAssembliesInDefaultLoadContext = true;
             return this;
         }
 

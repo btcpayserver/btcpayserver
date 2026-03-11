@@ -2,7 +2,6 @@ language: en-US
 tone_instructions: ''
 early_access: false
 enable_free_tier: true
-auto_resolve_threads: true
 reviews:
   summaries:
     include_walkthrough: false
@@ -41,7 +40,7 @@ reviews:
     base_branches: []
   finishing_touches:
     docstrings:
-      enabled: true
+      enabled: false
   tools:
     ast-grep:
       rule_dirs: []

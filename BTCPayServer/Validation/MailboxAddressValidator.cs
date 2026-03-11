@@ -1,14 +1,12 @@
 #nullable enable
 using System;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
-using System.Text.RegularExpressions;
 using MimeKit;
 
 namespace BTCPayServer
 {
     /// <summary>
-    /// Validate address in the format "Firstname Lastname <blah@example.com>" See rfc822
+    /// Validate address in the format "Firstname Lastname <blah@example.com>" See rfc5322
     /// </summary>
     public class MailboxAddressValidator
     {
@@ -25,7 +23,7 @@ namespace BTCPayServer
         public static MailboxAddress Parse(string? str)
         {
             if (!TryParse(str, out var mb))
-                throw new FormatException("Invalid mailbox address (rfc822)");
+                throw new FormatException("Invalid mailbox address (rfc5322)");
             return mb;
         }
         public static bool TryParse(string? str, [MaybeNullWhen(false)] out MailboxAddress mailboxAddress)

@@ -1,13 +1,9 @@
-@using BTCPayServer.Abstractions.TagHelpers
-@using BTCPayServer.Blazor
 @using BTCPayServer.Blazor.VaultBridge
-@using BTCPayServer.TagHelpers
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model WalletSetupViewModel
 
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, StringLocalizer["Connect your hardware wallet"], $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+    ViewData.SetTitle(StringLocalizer["Connect your hardware wallet"]);
     this.ViewData.SetBlazorAllowed(true);
 }
 

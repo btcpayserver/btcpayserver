@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using BTCPayServer.Data;
 
 namespace BTCPayServer.Components.StoreRecentInvoices;
 

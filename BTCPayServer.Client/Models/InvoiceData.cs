@@ -21,7 +21,6 @@ namespace BTCPayServer.Client.Models
         public JObject Metadata { get; set; }
         public CheckoutOptions Checkout { get; set; } = new CheckoutOptions();
         public ReceiptOptions Receipt { get; set; } = new ReceiptOptions();
-
         public class ReceiptOptions
         {
             public bool? Enabled { get; set; }
@@ -109,7 +108,10 @@ namespace BTCPayServer.Client.Models
         [JsonProperty(ItemConverterType = typeof(StringEnumConverter))]
         public InvoiceStatus[] AvailableStatusesForManualMarking { get; set; }
         public bool Archived { get; set; }
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public InvoicePaymentMethodDataModel[] PaymentMethods { get; set; } = Array.Empty<InvoicePaymentMethodDataModel>();
     }
+
     public enum InvoiceStatus
     {
         New,

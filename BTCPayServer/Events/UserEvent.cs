@@ -1,9 +1,8 @@
 #nullable enable
-using System;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions;
 using BTCPayServer.Data;
 using BTCPayServer.Services;
-using Microsoft.AspNetCore.Http;
 
 namespace BTCPayServer.Events;
 
@@ -16,41 +15,39 @@ public class UserEvent(ApplicationUser user)
             return $"{base.ToString()} has been deleted";
         }
     }
-    public class InviteAccepted(ApplicationUser user, string storeUsersLink) : UserEvent(user)
-    {
-        public string StoreUsersLink { get; set; } = storeUsersLink;
-    }
     public class PasswordResetRequested(ApplicationUser user, string resetLink) : UserEvent(user)
     {
         public string ResetLink { get; } = resetLink;
     }
-    public class Registered(ApplicationUser user, string approvalLink, string confirmationEmail) : UserEvent(user)
+
+    public class ConfirmationEmailRequested(ApplicationUser user, string confirmLink) : UserEvent(user)
+    {
+        public string ConfirmLink { get; } = confirmLink;
+    }
+
+    public class Registered(ApplicationUser user, RequestBaseUrl requestBaseUrl, string approvalLink, string confirmationEmail) : UserEvent(user)
     {
         public string ApprovalLink { get; } = approvalLink;
 		public string ConfirmationEmailLink { get; set; } = confirmationEmail;
-		public static async Task<Registered> Create(ApplicationUser user, CallbackGenerator callbackGenerator, HttpRequest request)
+        public RequestBaseUrl RequestBaseUrl { get; set; } = requestBaseUrl;
+		public static async Task<Registered> Create(ApplicationUser user, ApplicationUser? invitedBy, CallbackGenerator callbackGenerator, bool sendInvitationEmail = true)
 		{
-			var approvalLink = callbackGenerator.ForApproval(user, request);
-			var confirmationEmail = await callbackGenerator.ForEmailConfirmation(user, request);
-			return new Registered(user, approvalLink, confirmationEmail);
+			var approvalLink = callbackGenerator.ForApproval(user);
+			var confirmationEmail = await callbackGenerator.ForEmailConfirmation(user);
+            if (invitedBy is null)
+                return new Registered(user, callbackGenerator.GetRequestBaseUrl(), approvalLink, confirmationEmail);
+            var invitationLink = await callbackGenerator.ForInvitation(user);
+            return new Invited(user, invitedBy, callbackGenerator.GetRequestBaseUrl(), invitationLink, approvalLink, confirmationEmail)
+            {
+                SendInvitationEmail = sendInvitationEmail
+            };
 		}
 	}
-    public class Invited(ApplicationUser user, ApplicationUser invitedBy, string invitationLink, string approvalLink, string confirmationEmail) : Registered(user, approvalLink, confirmationEmail)
+    public class Invited(ApplicationUser user, ApplicationUser invitedBy, RequestBaseUrl requestBaseUrl, string invitationLink, string approvalLink, string confirmationEmail) : Registered(user, requestBaseUrl, approvalLink, confirmationEmail)
     {
         public bool SendInvitationEmail { get; set; }
         public ApplicationUser InvitedByUser { get; } = invitedBy;
         public string InvitationLink { get; } = invitationLink;
-
-        public static async Task<Invited> Create(ApplicationUser user, ApplicationUser currentUser, CallbackGenerator callbackGenerator, HttpRequest request, bool sendEmail)
-        {
-			var invitationLink = await callbackGenerator.ForInvitation(user, request);
-			var approvalLink = callbackGenerator.ForApproval(user, request);
-			var confirmationEmail = await callbackGenerator.ForEmailConfirmation(user, request);
-			return new Invited(user, currentUser, invitationLink, approvalLink, confirmationEmail)
-            {
-                SendInvitationEmail = sendEmail
-            };
-		}
     }
     public class Updated(ApplicationUser user) : UserEvent(user)
     {

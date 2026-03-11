@@ -1,12 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace BTCPayServer.Data
 {
@@ -20,7 +15,7 @@ namespace BTCPayServer.Data
             return new ApplicationDbContext(builder.Options);
         }
     }
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    public partial class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -28,6 +23,7 @@ namespace BTCPayServer.Data
         }
         public DbSet<AddressInvoiceData> AddressInvoices { get; set; }
         public DbSet<APIKeyData> ApiKeys { get; set; }
+        public DbSet<ApiKeyPermissionUsage> ApiKeyPermissionUsages { get; set; }
         public DbSet<AppData> Apps { get; set; }
         public DbSet<StoredFile> Files { get; set; }
         public DbSet<InvoiceSearchData> InvoiceSearches { get; set; }
@@ -51,6 +47,8 @@ namespace BTCPayServer.Data
         public DbSet<U2FDevice> U2FDevices { get; set; }
         public DbSet<Fido2Credential> Fido2Credentials { get; set; }
         public DbSet<UserStore> UserStore { get; set; }
+        public DbSet<StoreLabelData> StoreLabels { get; set; }
+        public DbSet<StoreLabelLinkData> StoreLabelLinks { get; set; }
         public DbSet<StoreRole> StoreRoles { get; set; }
         [Obsolete]
         public DbSet<WalletData> Wallets { get; set; }
@@ -64,6 +62,9 @@ namespace BTCPayServer.Data
         public DbSet<PayoutProcessorData> PayoutProcessors { get; set; }
         public DbSet<FormData> Forms { get; set; }
         public DbSet<PendingTransaction> PendingTransactions { get; set; }
+        public DbSet<CustomerData> Customers { get; set; }
+
+        public DbSet<EmailRuleData> EmailRules { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -71,6 +72,10 @@ namespace BTCPayServer.Data
 
             // some of the data models don't have OnModelCreating for now, commenting them
 
+            OnSubscriptionsModelCreating(builder);
+            CustomerData.OnModelCreating(builder, Database);
+            CustomerIdentityData.OnModelCreating(builder, Database);
+            EmailRuleData.OnModelCreating(builder, Database);
             ApplicationUser.OnModelCreating(builder, Database);
             AddressInvoiceData.OnModelCreating(builder);
             APIKeyData.OnModelCreating(builder, Database);
@@ -91,6 +96,8 @@ namespace BTCPayServer.Data
             PullPaymentData.OnModelCreating(builder, Database);
             RefundData.OnModelCreating(builder);
             SettingData.OnModelCreating(builder, Database);
+            StoreLabelData.OnModelCreating(builder);
+            StoreLabelLinkData.OnModelCreating(builder);
             StoreSettingData.OnModelCreating(builder, Database);
             StoreWebhookData.OnModelCreating(builder);
             StoreData.OnModelCreating(builder, Database);

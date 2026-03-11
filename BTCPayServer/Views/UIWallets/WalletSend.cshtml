@@ -1,15 +1,13 @@
 @using Microsoft.AspNetCore.Mvc.ModelBinding
-@using BTCPayServer.Controllers
 @using BTCPayServer.Services
-@using BTCPayServer.Components.LabelManager
-@using BTCPayServer.Components.UIExtensionPoint
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model WalletSendModel
 @{
 	var walletId = Context.GetRouteValue("walletId").ToString();
 	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
 	Layout = "_LayoutWizard";
-	ViewData.SetActivePage(WalletsNavPages.Send, StringLocalizer["Send {0}", Model.CryptoCode], walletId);
+    ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Send)}-{Model.CryptoCode}", StringLocalizer["Send {0}", Model.CryptoCode])
+        .SetCategory(WellKnownCategories.ForWallet(Model.CryptoCode)));
 	Csp.Add("worker-src", "blob:");
 	Csp.UnsafeEval();
 }
@@ -29,6 +27,9 @@
         }
         .buttons .btn {
             flex: 1 0 45%;
+        }
+        #scanqrcode .icon {
+            margin-left: 0;
         }
     </style>
     <link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" asp-append-version="true" rel="stylesheet">
@@ -94,7 +95,7 @@
                     </div>
                     <div class="input-group">
                         <input asp-for="Outputs[index].DestinationAddress" class="form-control font-monospace flex-grow-1" autocomplete="off" autofocus="@(index == Model.Outputs.Count - 1 ? "autofocus" : null)"/>
-                        <button type="button" id="scanqrcode" class="btn btn-secondary px-3 only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="@StringLocalizer["Scan with camera"]" data-index="@index">
+                        <button type="button" id="scanqrcode" class="btn btn-secondary px-3 d-flex align-items-center justify-content-center only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="@StringLocalizer["Scan with camera"]" data-index="@index">
                             <vc:icon symbol="scan-qr" />
                         </button>
                     </div>

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using BTCPayServer.Data;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
 using BTCPayServer.Validation;
@@ -102,6 +101,9 @@ namespace BTCPayServer.Services
 
         [Display(Name = "Default store template")]
         public JObject DefaultStoreTemplate { get; set; }
+
+        [Display(Name = "Register page redirect URL")]
+        public string RegisterPageRedirect { get; set; }
 
         public class BlockExplorerOverrideItem
         {

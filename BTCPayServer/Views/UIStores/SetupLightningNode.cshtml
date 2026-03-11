@@ -1,7 +1,7 @@
 @model LightningNodeViewModel
 @{
     Layout = "_LayoutWalletSetup.cshtml";
-    ViewData.SetActivePage(StoreNavPages.LightningSettings, StringLocalizer["Connect to a Lightning node"], Model.StoreId);
+    ViewData.SetTitle(StringLocalizer["Connect to a Lightning node"]);
 }
 
 @section PageHeadContent {
@@ -242,7 +242,7 @@
     </div>
 
     <div class="text-start mt-4">
-        <button id="page-primary" name="command" type="submit" value="save" class="btn btn-primary me-2">Save</button>
+        <button id="page-primary" name="command" type="submit" value="save" class="btn btn-primary me-2" text-translate="true">Save</button>
     </div>
 </form>
 

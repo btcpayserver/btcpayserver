@@ -1,6 +1,7 @@
 @model BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration.AzureBlobStorageConfiguration
 @{
-    ViewData.SetActivePage(ServerNavPages.Files, StringLocalizer["Azure Blob Storage"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Files), StringLocalizer["Azure Blob Storage"])
+        .SetCategory(WellKnownCategories.Server));
 }
 
 <div class="sticky-header">

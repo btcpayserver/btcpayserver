@@ -1,7 +1,9 @@
 ﻿@model RescanWalletModel
 @{
-    var walletId = Context.GetRouteValue("walletId").ToString();
-    ViewData.SetActivePage(WalletsNavPages.Settings, StringLocalizer["Rescan Wallet"], walletId);
+    var walletId = Context.GetRouteValue("walletId")!.ToString();
+    var w = WalletId.Parse(walletId!);
+    ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Settings)}-{w.CryptoCode}", StringLocalizer["Rescan Wallet"])
+        .SetCategory(WellKnownCategories.ForWallet(w.CryptoCode)));
 }
 
 <h3 class="mb-3">@ViewData["Title"]</h3>

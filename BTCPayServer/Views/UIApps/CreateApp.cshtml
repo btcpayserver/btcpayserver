@@ -1,6 +1,6 @@
 @model CreateAppViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Create, StringLocalizer["Create a new {0}", Model.AppType]);
+    ViewData.SetLayoutModel(new($"CreateApp-{Model.AppType}", StringLocalizer["Create a new {0}", Model.AppType]));
 }
 
 @section PageFootContent {

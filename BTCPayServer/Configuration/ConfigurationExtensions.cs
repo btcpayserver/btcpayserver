@@ -3,7 +3,6 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using Microsoft.Extensions.Configuration;
-using NBitcoin;
 
 namespace BTCPayServer.Configuration
 {

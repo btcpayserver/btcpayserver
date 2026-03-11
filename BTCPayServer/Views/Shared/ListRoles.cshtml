@@ -1,15 +1,15 @@
-@using BTCPayServer.Views.Server
 @using BTCPayServer.Views.Stores
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Client
+@using BTCPayServer.Services
+@inject PermissionService PermissionService
+
 @model BTCPayServer.Models.ServerViewModels.RolesViewModel
 @{
     var storeId = Context.GetRouteValue("storeId") as string;
     var controller = ViewContext.RouteData.Values["controller"].ToString().TrimEnd("Controller", StringComparison.InvariantCultureIgnoreCase);
-    if (string.IsNullOrEmpty(storeId))
-        ViewData.SetActivePage(ServerNavPages.Roles, StringLocalizer["Roles"]);
-    else
-        ViewData.SetActivePage(StoreNavPages.Roles, StringLocalizer["Roles"], storeId);
+    var category = string.IsNullOrEmpty(storeId) ? WellKnownCategories.Server : WellKnownCategories.Store;
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Roles), StringLocalizer["Roles"]).SetCategory(category));
+
     var permission = string.IsNullOrEmpty(storeId) ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings;
     var nextRoleSortOrder = (string) ViewData["NextRoleSortOrder"];
     var roleSortOrder = nextRoleSortOrder switch
@@ -26,7 +26,7 @@
 
 <div class="sticky-header">
     <h2>@ViewData["Title"]</h2>
-	<a id="page-primary" class="btn btn-primary" role="button" asp-controller="@controller" asp-action="CreateOrEditRole" asp-route-role="create" asp-route-storeId="@storeId" permission="@permission">Add Role</a>
+	<a id="page-primary" text-translate="true" class="btn btn-primary" role="button" asp-controller="@(string.IsNullOrEmpty(storeId) ? "UIServer" : "UIStores")" asp-action="CreateOrEditRole" asp-route-role="create" asp-route-storeId="@storeId" permission="@permission">Add Role</a>
 </div>
 <partial name="_StatusMessage" />
 
@@ -96,7 +96,7 @@
                     {
                         @foreach (var policy in role.Permissions)
                         {
-                            <code class="d-block text-break">@Policies.DisplayName(policy)</code>
+                            <code class="d-block text-break">@(PermissionService.TryGetDefinition(policy)?.Display?.Title ?? policy)</code>
                         }
                     }
                 </td>
@@ -119,8 +119,8 @@
                         {
                             <a permission="@Policies.CanModifyServerSettings" asp-action="SetDefaultRole" asp-route-role="@role.Role" asp-controller="UIServer" id="SetDefault" text-translate="true">Set as default</a>
                         }
-                        <a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="CreateOrEditRole" asp-route-storeId="@storeId" asp-route-role="@role.Role" asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")" text-translate="true">Edit</a>
-                        <a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="DeleteRole" asp-route-storeId="@storeId" asp-route-role="@role.Role" asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")" text-translate="true">Remove</a>
+                        <a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="CreateOrEditRole" asp-route-storeId="@(role.IsServerRole ? null : storeId)" asp-route-role="@role.Role" asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")" text-translate="true">Edit</a>
+                        <a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="DeleteRole" asp-route-storeId="@(role.IsServerRole ? null : storeId)" asp-route-role="@role.Role" asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")" text-translate="true">Remove</a>
                     </div>
                 </td>
             </tr>

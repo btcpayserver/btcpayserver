@@ -3,7 +3,7 @@
 	var isHotWallet = Model.Method == WalletSetupMethod.HotWallet;
 	var title = isHotWallet ? StringLocalizer["Create {0} Hot Wallet", Model.CryptoCode] : StringLocalizer["Create {0} Watch-Only Wallet", Model.CryptoCode];
 	Layout = "_LayoutWalletSetup";
-	ViewData.SetActivePage(StoreNavPages.OnchainSettings, title, $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+	ViewData.SetTitle(title);
 	Model.SetViewData(ViewData);
 }
 

@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,7 +20,6 @@ using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer;
-using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 
@@ -31,7 +29,7 @@ public partial class UIStoresController
 {
     [HttpGet("{storeId}/onchain/{cryptoCode}")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public ActionResult SetupWallet(WalletSetupViewModel vm)
+    public async Task<ActionResult> SetupWallet(WalletSetupViewModel vm)
     {
         var checkResult = IsAvailable(vm.CryptoCode, out var store, out _);
         if (checkResult != null)
@@ -41,6 +39,9 @@ public partial class UIStoresController
 
         var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
         vm.DerivationScheme = derivation?.AccountDerivation.ToString();
+
+        var perm = await CanUseHotWallet();
+        vm.SetPermission(perm);
 
         return View(vm);
     }
@@ -651,7 +652,7 @@ public partial class UIStoresController
         {
             Title = StringLocalizer["Remove {0} wallet", network.CryptoCode],
             Description = WalletRemoveWarning(derivation.IsHotWallet, network.CryptoCode),
-            Action = StringLocalizer["Remove"]
+            Action = StringLocalizer["Delete"]
         });
     }
 
@@ -701,7 +702,7 @@ public partial class UIStoresController
 
     private ActionResult IsAvailable(string cryptoCode, out StoreData store, out BTCPayNetwork network)
     {
-        store = HttpContext.GetStoreData();
+        store = HttpContext.GetStoreDataOrNull();
         network = cryptoCode == null ? null : _explorerProvider.GetNetwork(cryptoCode);
         return store == null || network == null ? NotFound() : null;
     }

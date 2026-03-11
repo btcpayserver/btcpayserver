@@ -1,13 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
@@ -25,31 +26,20 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers
 {
-    public class UIHomeController : Controller
+    public class UIHomeController(
+        ThemeSettings theme,
+        LanguageService languageService,
+        StoreRepository storeRepository,
+        IWebHostEnvironment environment,
+        SignInManager<ApplicationUser> signInManager,
+        PermissionService permissionService)
+        : Controller
     {
-        private readonly ThemeSettings _theme;
-        private readonly StoreRepository _storeRepository;
-        private IHttpClientFactory HttpClientFactory { get; }
-        private SignInManager<ApplicationUser> SignInManager { get; }
+        private SignInManager<ApplicationUser> SignInManager { get; } = signInManager;
 
-        private IFileProvider _WebRootFileProvider;
+        private readonly IFileProvider _webRootFileProvider = environment.WebRootFileProvider;
 
-        public LanguageService LanguageService { get; }
-
-        public UIHomeController(IHttpClientFactory httpClientFactory,
-                              ThemeSettings theme,
-                              LanguageService languageService,
-                              StoreRepository storeRepository,
-                              IWebHostEnvironment environment,
-                              SignInManager<ApplicationUser> signInManager)
-        {
-            _theme = theme;
-            HttpClientFactory = httpClientFactory;
-            LanguageService = languageService;
-            _storeRepository = storeRepository;
-            SignInManager = signInManager;
-            _WebRootFileProvider = environment.WebRootFileProvider;
-        }
+        public LanguageService LanguageService { get; } = languageService;
 
         [HttpGet("home")]
         public Task<IActionResult> Home()
@@ -61,26 +51,27 @@ namespace BTCPayServer.Controllers
         [DomainMappingConstraint]
         public async Task<IActionResult> Index()
         {
-            if (_theme.FirstRun)
+            if (theme.FirstRun)
             {
                 return RedirectToAction(nameof(UIAccountController.Register), "UIAccount");
             }
 
             if (SignInManager.IsSignedIn(User))
             {
-                var userId = SignInManager.UserManager.GetUserId(HttpContext.User);
+                var userId = HttpContext.User.GetIdOrNull();
                 var storeId = HttpContext.GetUserPrefsCookie()?.CurrentStoreId;
-                if (storeId != null)
+                if (storeId != null && userId != null)
                 {
-                    // verify store exists and redirect to it
-                    var store = await _storeRepository.FindStore(storeId);
+                    // verify the store exists and redirect to it
+                    var store = await storeRepository.FindStore(storeId, userId);
                     if (store != null)
                     {
                         return RedirectToAction(nameof(UIStoresController.Index), "UIStores", new { storeId });
                     }
+                    HttpContext.DeleteUserPrefsCookie();
                 }
 
-                var stores = await _storeRepository.GetStoresByUserId(userId!);
+                var stores = await storeRepository.GetStoresByUserId(userId!);
                 var activeStore = stores.FirstOrDefault(s => !s.Archived);
                 return activeStore != null
                     ? RedirectToAction(nameof(UIStoresController.Index), "UIStores", new { storeId = activeStore.Id })
@@ -101,7 +92,18 @@ namespace BTCPayServer.Controllers
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
         public IActionResult Permissions()
         {
-            return Json(Client.Models.PermissionMetadata.PermissionNodes, new JsonSerializerSettings { Formatting = Formatting.Indented });
+            var nodes = new Dictionary<string, PermissionMetadata>();
+            foreach (var def in permissionService.Definitions.Values)
+            {
+                var m = new PermissionMetadata { PermissionName = def.Policy };
+                m.SubPermissions = permissionService.PermissionNodesByPolicy[m.PermissionName]
+                    .EnumerateDescendants(false).Select(e => e.Definition.Policy)
+                    .OrderBy(e => e, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                nodes.Add(def.Policy, m);
+            }
+            var metadata = nodes.Values.OrderBy(v => v.PermissionName, StringComparer.OrdinalIgnoreCase).ToArray();
+            return Json(metadata, new JsonSerializerSettings { Formatting = Formatting.Indented });
         }
         [Route("misc/translations/{resource}/{lang}")]
         [AllowAnonymous]
@@ -129,7 +131,7 @@ namespace BTCPayServer.Controllers
 
         private IActionResult Lang(string path)
         {
-            var fi = _WebRootFileProvider.GetFileInfo(path);
+            var fi = _webRootFileProvider.GetFileInfo(path);
             try
             {
                 using var fs = fi.CreateReadStream();
@@ -147,19 +149,34 @@ namespace BTCPayServer.Controllers
         {
             JObject json = new();
             var res = await Task.WhenAll(swaggerProviders.Select(provider => provider.Fetch()));
-            foreach (JObject jObject in res)
+            foreach (var jObject in res)
             {
+                if (json.ContainsKey("x-webhooks") && jObject.TryGetValue("x-webhooks", out var value))
+                {
+                    (((JObject)json["x-webhooks"])!).Merge(value);
+                }
                 json.Merge(jObject);
             }
             var servers = new JArray();
             servers.Add(new JObject(new JProperty("url", HttpContext.Request.GetAbsoluteRoot())));
             json["servers"] = servers;
-            var tags = (JArray)json["tags"];
-            json["tags"] = new JArray(tags
-                .Select(o => (name: ((JObject)o)["name"].Value<string>(), o))
-                .OrderBy(o => o.name)
-                .Select(o => o.o)
-                .ToArray());
+
+            if (json["tags"] is JArray tags)
+            {
+                json["tags"] = new JArray(tags
+                    .Select(o => (name: ((JObject)o)["name"].Value<string>(), o))
+                    .OrderBy(o => o.name)
+                    .Select(o => o.o)
+                    .ToArray<object>());
+            }
+
+            if (json["x-webhooks"] is JObject webhooks)
+            {
+                json["x-webhooks"] = new JObject(webhooks.Properties()
+                    .OrderBy(o => o.Name)
+                    .ToArray<object>());
+            }
+
             return Json(json);
         }
 

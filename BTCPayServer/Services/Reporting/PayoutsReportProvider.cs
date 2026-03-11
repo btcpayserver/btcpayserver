@@ -7,11 +7,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.HostedServices;
-using BTCPayServer.Payments;
-using BTCPayServer.Payments.Bitcoin;
-using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payouts;
-using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Services.Reporting;
 

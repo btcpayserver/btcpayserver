@@ -1,8 +1,6 @@
 @using BTCPayServer.Services
-@using BTCPayServer.Abstractions.Contracts
 @inject LanguageService LangService
 @inject BTCPayServerEnvironment Env
-@inject IEnumerable<IUIExtension> UiExtensions
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model CheckoutModel
 @{
@@ -10,7 +8,6 @@
 	ViewData["Title"] = Model.HtmlTitle;
     ViewData["StoreBranding"] = Model.StoreBranding;
 	Csp.UnsafeEval();
-	var hasPaymentPlugins = UiExtensions.Any(extension => extension.Location == "checkout-payment-method");
 }
 @functions {
     private string ToJsValue(object value)
@@ -88,7 +85,7 @@
                         :show-recommended-fee="showRecommendedFee"
                         class="pb-4" />
                 </div>
-                <div v-if="displayedPaymentMethods.length > 1 || @Safe.Json(hasPaymentPlugins)" class="mt-3 mb-2">
+                <div class="mt-3 mb-2 payment-methods-wrapper">
                     <h6 class="text-center mb-3" v-t="'pay_with'"></h6>
                     <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2 pb-2">
                         <a v-for="crypto in displayedPaymentMethods"
@@ -225,6 +222,11 @@
                 </div>
             </section>
         </main>
+        <main v-if="isActive && srvModel.checkoutText" class="tile checkout-text">
+            <section>
+                <div class="text-muted text-center" v-text="srvModel.checkoutText"></div>
+            </section>
+        </main>
         @if (Env.CheatMode)
         {
             <checkout-cheating invoice-id="@Model.InvoiceId" :due="due" :is-settled="isSettled" :is-processing="isProcessing" :payment-method-id="pmId" :crypto-code="srvModel.paymentMethodCurrency"></checkout-cheating>
@@ -255,7 +257,7 @@
             </div>
             <div v-if="orderAmount > 0 && srvModel.orderAmountFiat" id="PaymentDetails-TotalFiat" key="TotalFiat">
                 <dt v-t="'total_fiat'"></dt>
-                <dd class="clipboard-button clipboard-button-hover" :data-clipboard="asNumber(srvModel.orderAmountFiat)" data-clipboard-hover="start">{{srvModel.orderAmountFiat}}</dd>
+                <dd id="total_fiat" class="clipboard-button clipboard-button-hover" :data-clipboard="srvModel.orderAmountFiat" data-clipboard-hover="start">{{srvModel.orderAmountFiat}}</dd>
             </div>
              <div v-if="srvModel.taxIncluded.value > 0 && srvModel.taxIncluded.formatted" id="PaymentDetails-TaxIncluded" key="TaxIncluded">
                 <dt v-t="'tax_included'"></dt>
@@ -263,7 +265,7 @@
             </div>
             <div v-if="srvModel.rate && srvModel.paymentMethodCurrency" id="PaymentDetails-ExchangeRate" key="ExchangeRate">
                 <dt v-t="'exchange_rate'"></dt>
-                <dd class="clipboard-button clipboard-button-hover" :data-clipboard="asNumber(srvModel.rate)" data-clipboard-hover="start">
+                <dd class="clipboard-button clipboard-button-hover" :data-clipboard="srvModel.rate" data-clipboard-hover="start">
                     <template v-if="srvModel.paymentMethodCurrency === 'sats'">1 sat = {{ srvModel.rate }}</template>
                     <template v-else>1 {{ srvModel.paymentMethodCurrency }} = {{ srvModel.rate }}</template>
                 </dd>

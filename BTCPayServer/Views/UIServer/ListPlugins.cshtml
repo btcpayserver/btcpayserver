@@ -5,7 +5,7 @@
 @inject PluginService PluginService
 @{
     Layout = "_Layout";
-    ViewData.SetActivePage(ServerNavPages.Plugins);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Plugins), StringLocalizer["Plugins"]));
     var installed = Model.Installed;
     var availableAndNotInstalled = new List<PluginService.AvailablePlugin>();
     var availableAndNotInstalledx = Model.Available
@@ -103,17 +103,31 @@
                         </span>
 						@{
 							var uninstalled = Model.Commands.Any(c => c.plugin == plugin && c.command == "delete");
+                            var enabled = Model.Commands.Any(c => c.plugin == plugin && c.command == "enable");
 						}
-						<form asp-action="UnInstallPlugin" asp-route-plugin="@plugin">
-							@if (uninstalled)
-							{
-								<button type="submit" class="btn btn-sm btn-outline-danger" disabled text-translate="true">Marked for deletion</button>
-							}
-							else
-							{
-								<button type="submit" class="btn btn-sm btn-outline-danger" text-translate="true">Uninstall</button>
-							}
-						</form>
+                        <div class="d-flex gap-2">
+                            <form asp-action="EnablePlugin" asp-route-plugin="@plugin">
+							    @if (enabled)
+							    {
+								    <button type="submit" class="btn btn-sm btn-outline-primary" disabled text-translate="true">Marked for enabling</button>
+							    }
+							    else if (!uninstalled)
+							    {
+								    <button type="submit" class="btn btn-sm btn-outline-primary" text-translate="true">Enable</button>
+							    }
+						    </form>
+
+                            <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin">
+                                @if (uninstalled)
+                                {
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" disabled text-translate="true">Marked for deletion</button>
+                                }
+                                else if (!enabled)
+                                {
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" text-translate="true">Uninstall</button>
+                                }
+                            </form>
+                        </div>
                     </div>
                 </li>
             }
@@ -123,7 +137,7 @@
 
 @if (Model.Plugins.Any())
 {
-    <h3 class="mb-4">Installed Plugins</h3>
+    <h3 class="mb-4" text-translate="true">Installed Plugins</h3>
     <div class="row mb-4">
         @foreach (var plugin in Model.Plugins.Where(i => !i.SystemPlugin))
         {
@@ -287,6 +301,8 @@
                                     </form>
                                 }
                             }
+                            
+                            
                             @if (DependentOn(plugin.Identifier))
                             {
                                 <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-3" data-bs-toggle="tooltip" title="This plugin cannot be uninstalled as it is depended on by other plugins.">
@@ -348,7 +364,7 @@
 }
 else
 {
-    <h3 class="mb-4">Available Plugins</h3>
+    <h3 class="mb-4" text-translate="true">Available Plugins</h3>
     <div class="row mb-4">
         @foreach (var plugin in availableAndNotInstalled)
         {
@@ -525,15 +541,15 @@ else
 @if (Model.Commands.Any())
 {
     <div class="mb-4">
-        <h3 class="mb-4">Pending Action</h3>
-        <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#pending-actions">
+        <h3 class="mb-4" text-translate="true">Pending Action</h3>
+        <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#pending-actions" text-translate="true">
             Pending Actions
         </button>
         <div class="row collapse" id="pending-actions">
             <div class="col col-12 col-lg-6 mb-4">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title">Pending actions</h4>
+                        <h4 class="card-title" text-translate="true">Pending actions</h4>
                         <ul class="list-group list-group-flush">
                             @foreach (var extComm in Model.Commands.GroupBy(tuple => tuple.plugin))
                             {

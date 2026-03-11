@@ -1,21 +1,14 @@
-using System.Globalization;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using AngleSharp.Html;
 using BTCPayServer.Abstractions.Services;
-using Microsoft.AspNetCore.Html;
-using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.Mvc.TagHelpers;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Localization;
-using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.TagHelpers
 {
     [HtmlTargetElement(Attributes = "text-translate")]
     [HtmlTargetElement(Attributes = "html-translate")]
     [HtmlTargetElement("input", Attributes = "[type=submit]")]
-    [HtmlTargetElement(Attributes = "[id=page-primary]")]
     public class TranslateTagHelper : TagHelper
     {
         private readonly IStringLocalizer<TranslateTagHelper> _localizer;

@@ -339,7 +339,7 @@
                         }
                     },
                     "400": {
-                        "description": "Wellknown error codes are: `archived`, `already-paid`, `expired`",
+                        "description": "Well-known error codes are: `archived`, `already-paid`, `expired`",
                         "content": {
                             "application/json": {
                                 "schema": {

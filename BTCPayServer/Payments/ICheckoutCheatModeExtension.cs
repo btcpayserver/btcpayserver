@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
-using NBitcoin;
 
 namespace BTCPayServer.Payments
 {

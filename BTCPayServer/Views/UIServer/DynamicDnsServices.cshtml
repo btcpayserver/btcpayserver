@@ -1,7 +1,7 @@
-@using BTCPayServer.Abstractions.Models
 @model BTCPayServer.Models.ServerViewModels.DynamicDnsViewModel[]
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, StringLocalizer["Dynamic DNS Settings"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Services), StringLocalizer["Dynamic DNS Settings"])
+        .SetCategory(WellKnownCategories.Server));
 }
 <div class="sticky-header">
     <nav aria-label="breadcrumb">
@@ -32,11 +32,11 @@
         <div class="form-group">
             <p text-translate="true">Dynamic DNS allows you to have a stable DNS name pointing to your server, even if your IP address changes regularly. This is recommended if you are hosting BTCPay Server at home and wish to have a clearnet domain to access your server.</p>
             <p>
-                Note that you need to properly configure your NAT and BTCPay Server installation to get the HTTPS certificate. 
+                Note that you need to properly configure your NAT and BTCPay Server installation to get the HTTPS certificate.
                 See the documentation for <a href="https://docs.btcpayserver.org/Deployment/DynamicDNS/" target="_blank" rel="noreferrer noopener">more information</a>.
             </p>
         </div>
-        
+
         @if (Model.Any())
         {
             <div class="table-responsive-md">
@@ -68,7 +68,7 @@
                             <td class="text-end">
                                 <a asp-action="DynamicDnsService" asp-route-hostname="@service.Settings.Hostname" text-translate="true">Edit</a>
                                 <span> - </span>
-                                <a asp-action="DeleteDynamicDnsService" asp-route-hostname="@service.Settings.Hostname" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Deleting the dynamic DNS service for <strong>@Html.Encode(service.Settings.Hostname)</strong> means your BTCPay Server will stop updating the associated DNS record periodically." data-confirm-input="DELETE" text-translate="true">Delete</a>
+                                <a asp-action="DeleteDynamicDnsService" asp-route-hostname="@service.Settings.Hostname" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Deleting the dynamic DNS service for <strong>@Html.Encode(service.Settings.Hostname)</strong> means your BTCPay Server will stop updating the associated DNS record periodically." data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Delete</a>
                             </td>
                         </tr>
                     }
@@ -85,5 +85,5 @@
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Delete dynamic DNS service", "Deleting the dynamic DNS service means your BTCPay Server will stop updating the associated DNS record periodically.", "Delete"))" />
+<partial name="_Confirm" model="@(new ConfirmModel("Delete dynamic DNS service", "Deleting the dynamic DNS service means your BTCPay Server will stop updating the associated DNS record periodically.", StringLocalizer["Delete"]))" />
 

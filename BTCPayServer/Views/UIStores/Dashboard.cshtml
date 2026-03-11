@@ -1,17 +1,9 @@
-@using BTCPayServer.Components.StoreLightningBalance
-@using BTCPayServer.Components.StoreLightningServices
-@using BTCPayServer.Components.StoreNumbers
-@using BTCPayServer.Components.StoreRecentInvoices
-@using BTCPayServer.Components.StoreRecentTransactions
-@using BTCPayServer.Components.StoreWalletBalance
-@using BTCPayServer.Components.AppSales
-@using BTCPayServer.Components.AppTopItems
 @using BTCPayServer.Client
 @model StoreDashboardViewModel
 @{
     BTCPayServer.Plugins.PluginExceptionHandler.SetDisablePluginIfCrash(Context);
-    ViewData.SetActivePage(StoreNavPages.Dashboard, Model.StoreName, Model.StoreId);
-    var store = ViewContext.HttpContext.GetStoreData();
+    ViewData.SetLayoutModel(new(nameof(StoreNavPages.Dashboard), Model.StoreName));
+    var store = ViewContext.HttpContext.GetStoreDataOrNull();
 }
 
 <partial name="_StatusMessage" />

@@ -1,29 +1,20 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
-using AngleSharp.Dom;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Logging;
-using BTCPayServer.Migrations;
-using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Rating;
-using BTCPayServer.Services;
-using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using NBitcoin;
-using NBitcoin.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using InvoiceResponse = BTCPayServer.Models.InvoiceResponse;
 
 namespace BTCPayServer.Payments
 {

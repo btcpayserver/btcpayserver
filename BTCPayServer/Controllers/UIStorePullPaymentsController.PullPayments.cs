@@ -28,7 +28,6 @@ using StoreData = BTCPayServer.Data.StoreData;
 namespace BTCPayServer.Controllers
 {
     [Authorize(Policy = Policies.CanViewPullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [AutoValidateAntiforgeryToken]
     public class UIStorePullPaymentsController : Controller
     {
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
@@ -46,7 +45,7 @@ namespace BTCPayServer.Controllers
         {
             get
             {
-                return HttpContext.GetStoreData();
+                return HttpContext.GetStoreDataOrNull();
             }
         }
 
@@ -76,7 +75,7 @@ namespace BTCPayServer.Controllers
             _payoutProcessorService = payoutProcessorService;
             _payoutProcessorFactories = payoutProcessorFactories;
         }
-        
+
         [HttpGet("stores/{storeId}/pull-payments/new")]
         [Authorize(Policy = Policies.CanCreateNonApprovedPullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public IActionResult NewPullPayment(string storeId)
@@ -119,7 +118,7 @@ namespace BTCPayServer.Controllers
             model.PayoutMethods ??= new List<string>();
             if (!model.PayoutMethods.Any())
             {
-                // Since we assign all payment methods to be selected by default above we need to update 
+                // Since we assign all payment methods to be selected by default above we need to update
                 // them here to reflect user's selection so that they can correct their mistake
                 model.PayoutMethodsItem =
                     paymentMethodOptions.Select(id => new SelectListItem(id.ToString(), id.ToString(), false));
@@ -263,7 +262,7 @@ namespace BTCPayServer.Controllers
             string pullPaymentId)
         {
             return View("Confirm",
-                new ConfirmModel(StringLocalizer["Archive pull payment"], StringLocalizer["Do you really want to archive the pull payment?"], "Archive"));
+                new ConfirmModel(StringLocalizer["Archive pull payment"], StringLocalizer["Do you really want to archive the pull payment?"], StringLocalizer["Archive"]));
         }
 
         [HttpPost("stores/{storeId}/pull-payments/{pullPaymentId}/archive")]
@@ -290,7 +289,8 @@ namespace BTCPayServer.Controllers
             if (vm is null)
                 return NotFound();
 
-            vm.PayoutMethods = _payoutHandlers.GetSupportedPayoutMethods(HttpContext.GetStoreData());
+            var store = HttpContext.GetStoreData();
+            vm.PayoutMethods = _payoutHandlers.GetSupportedPayoutMethods(store);
             vm.HasPayoutProcessor = await HasPayoutProcessor(storeId, vm.PayoutMethodId);
             var payoutMethodId = PayoutMethodId.Parse(vm.PayoutMethodId);
             var handler = _payoutHandlers

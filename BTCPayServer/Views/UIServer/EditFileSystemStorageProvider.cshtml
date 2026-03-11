@@ -1,6 +1,7 @@
 ﻿@model BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration.FileSystemStorageConfiguration
 @{
-    ViewData.SetActivePage(ServerNavPages.Files, StringLocalizer["Local Filesystem Storage"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Files), StringLocalizer["Local Filesystem Storage"])
+        .SetCategory(WellKnownCategories.Server));
 }
 
 <div class="sticky-header">

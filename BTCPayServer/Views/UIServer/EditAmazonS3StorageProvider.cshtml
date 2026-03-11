@@ -1,6 +1,7 @@
 @model BTCPayServer.Storage.Services.Providers.AmazonS3Storage.Configuration.AmazonS3StorageConfiguration
 @{
-    ViewData.SetActivePage(ServerNavPages.Files, StringLocalizer["Amazon S3 Storage"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Files), StringLocalizer["Amazon S3 Storage"])
+        .SetCategory(WellKnownCategories.Server));
 }
 
 <div class="sticky-header">

@@ -3,14 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payouts;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
@@ -47,7 +44,6 @@ namespace BTCPayServer.PayoutProcessors.OnChain
 			WalletRepository walletRepository,
 			StoreRepository storeRepository,
 			PayoutProcessorData payoutProcesserSettings,
-			PullPaymentHostedService pullPaymentHostedService,
             PayoutMethodHandlerDictionary payoutHandlers,
             PaymentMethodHandlerDictionary handlers,
 			IPluginHookService pluginHookService,
@@ -84,7 +80,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             {
                 return;
             }
-            
+
             var explorerClient = _explorerClientProvider.GetExplorerClient(Network.CryptoCode);
 
             var extKeyStr = await explorerClient.GetMetadataAsync<string>(
@@ -111,7 +107,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             var processorBlob = GetBlob(PayoutProcessorSettings);
             if (payouts.Sum(p => p.Amount) < processorBlob.Threshold)
                 return;
-            
+
             var feeRate = await this._feeProviderFactory.CreateFeeProvider(Network).GetFeeRateAsync(Math.Max(processorBlob.FeeTargetBlock, 1));
 
             var transfersProcessing = new List<PayoutData>();

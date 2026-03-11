@@ -1,10 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using NBitcoin;
-using static BTCPayServer.Models.WalletViewModels.WalletBumpFeeViewModel;
 
 namespace BTCPayServer.Models.WalletViewModels
 {

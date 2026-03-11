@@ -3,13 +3,14 @@
 @inject LightningClientFactoryService LightningClientFactoryService
 @inject BTCPayNetworkProvider NetworkProvider
 @{
-    ViewData.SetActivePage(StoreNavPages.LightningSettings, StringLocalizer["{0} Lightning Settings", Model.CryptoCode], $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+    ViewData.SetLayoutModel(new LayoutModel($"{nameof(StoreNavPages.LightningSettings)}-{Model.CryptoCode}", StringLocalizer["{0} Lightning Settings", Model.CryptoCode])
+        .SetCategory(WellKnownCategories.ForLightning(Model.CryptoCode)));
 }
 
 <form method="post">
     <div class="sticky-header">
         <h2>@ViewData["Title"]</h2>
-		<button id="page-primary" name="command" type="submit" value="save" class="btn btn-primary">Save</button>
+		<button id="page-primary" name="command" type="submit" value="save" class="btn btn-primary" text-translate="true">Save</button>
     </div>
     <partial name="_StatusMessage" />
     <div class="row">
@@ -56,7 +57,7 @@
                     <input type="checkbox" asp-for="Enabled" class="btcpay-toggle me-3" id="@($"{Model.CryptoCode}LightningEnabled")" />
                     <label asp-for="Enabled" class="form-check-label"></label>
                 </div>
-            
+
                 <div class="text-start">
                     <h3 class="mt-5 mb-3" text-translate="true">Payment</h3>
                     <div class="form-check my-3">
@@ -80,7 +81,7 @@
                         <span asp-validation-for="LightningDescriptionTemplate" class="text-danger"></span>
                         <div class="form-text" html-translate="true">Available placeholders: <code>{StoreName} {ItemDescription} {OrderId}</code></div>
                     </div>
-                    
+
                     <h3 class="mt-5 mb-3" id="ln-url" text-translate="true">LNURL</h3>
                     <div class="form-group d-flex align-items-center">
                         <input asp-for="LNURLEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#LNURLSettings" aria-expanded="@Model.LNURLEnabled" aria-controls="LNURLSettings"/>

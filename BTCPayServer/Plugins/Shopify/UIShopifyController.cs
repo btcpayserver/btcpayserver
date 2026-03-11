@@ -32,6 +32,7 @@ namespace BTCPayServer.Plugins.Shopify
 
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Area(ShopifyPlugin.Area)]
     public class UIShopifyController : Controller
     {
         private readonly ShopifyService _shopifyService;
@@ -65,13 +66,7 @@ namespace BTCPayServer.Plugins.Shopify
             _jsonHelper = jsonHelper;
             _clientFactory = clientFactory;
         }
-        public StoreData CurrentStore
-        {
-            get
-            {
-                return this.HttpContext.GetStoreData();
-            }
-        }
+        public StoreData CurrentStore => this.HttpContext.GetStoreData();
         private static string _cachedShopifyJavascript;
 
         private async Task<string> GetJavascript()

@@ -4,14 +4,12 @@
 
 @{
 	Layout = "_LayoutWalletSetup";
-	var title = StringLocalizer["Setup {0} Wallet", Model.CryptoCode];
-	ViewData.SetActivePage(StoreNavPages.OnchainSettings, title, $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+    ViewData.SetTitle(StringLocalizer["Setup {0} Wallet", Model.CryptoCode]);
 }
 
 <h1 class="text-center" text-translate="true">Let's get started</h1>
 <br>
 <div class="mt-5">
-	<h3 class="my-4" text-translate="true">I have a wallet</h3>
     <div class="list-group">
         <a asp-controller="UIStores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="ImportWalletOptionsLink" class="list-group-item list-group-item-action">
             <div class="image">
@@ -26,19 +24,21 @@
     </div>
 </div>
 
-<br>
-<div class="mt-5">
-	<h3 class="my-4" text-translate="true">I don't have a wallet</h3>
-    <div class="list-group">
-        <a asp-controller="UIStores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="GenerateWalletLink" class="list-group-item list-group-item-action">
-            <div class="image">
-                <vc:icon symbol="wallet-new"/>
-            </div>
-            <div class="content">
-				<h4 text-translate="true">Create a new wallet</h4>
-				<p class="mb-0 text-secondary" text-translate="true">Generate a brand-new wallet to use</p>
-            </div>
-            <vc:icon symbol="caret-right"/>
-        </a>
+@if (Model.CanUseHotWallet || Model.CanCreateNewColdWallet)
+{
+    <br>
+    <div class="mt-5">
+        <div class="list-group">
+            <a asp-controller="UIStores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="GenerateWalletLink" class="list-group-item list-group-item-action">
+                <div class="image">
+                    <vc:icon symbol="wallet-new"/>
+                </div>
+                <div class="content">
+                    <h4 text-translate="true">Create a new wallet</h4>
+                    <p class="mb-0 text-secondary" text-translate="true">Generate a brand-new wallet to use</p>
+                </div>
+                <vc:icon symbol="caret-right"/>
+            </a>
+        </div>
     </div>
-</div>
+}

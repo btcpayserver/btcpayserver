@@ -344,6 +344,10 @@ namespace BTCPayServer.Plugins.Dotnet
 
             builder.SetMainAssemblyPath(config.MainAssemblyPath);
             builder.SetDefaultContext(config.DefaultContext);
+            if (config.LoadAssembliesInDefaultLoadContext)
+            {
+                builder.LoadAssembliesInDefaultLoadContext();
+            }
 
             foreach (var ext in config.PrivateAssemblies)
             {

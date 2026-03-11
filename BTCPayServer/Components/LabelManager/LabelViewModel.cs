@@ -12,5 +12,8 @@ namespace BTCPayServer.Components.LabelManager
         public Dictionary<string, RichLabelInfo> RichLabelInfo { get; set; }
         public bool AutoUpdate { get; set; }
         public string SelectElement { get; set; }
+        public string LinkedType { get; set; }
+        public string StoreId { get; set; }
+        public string StoreObjectId { get; set; }
     }
 }

@@ -1,14 +1,10 @@
 @using BTCPayServer.Payments
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Client
-@using BTCPayServer.TagHelpers
 @inject IFileService FileService
 @model CheckoutAppearanceViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.CheckoutAppearance, StringLocalizer["Checkout Experience"], Context.GetStoreData().Id);
-
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.CheckoutAppearance), StringLocalizer["Checkout Experience"]).SetCategory(WellKnownCategories.Store));
     var canUpload = await FileService.IsAvailable();
 }
 @functions {
@@ -44,7 +40,7 @@
 			$("#ShowPayInWalletButton").prop('checked', true);
 			$("#ShowStoreHeader").prop('checked', true);
 		});
-        
+
 		delegate('click', '#CheckNFC button', async e => {
 			if ('NDEFReader' in window) {
                 const ndef = new NDEFReader();
@@ -67,7 +63,7 @@
 <form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">
     <div class="sticky-header">
         <h2>@ViewData["Title"]</h2>
-		<button id="page-primary" type="submit" class="btn btn-primary">Save</button>
+		<button id="page-primary" type="submit" class="btn btn-primary" text-translate="true">Save</button>
     </div>
     <partial name="_StatusMessage" />
 
@@ -220,6 +216,12 @@
                 <input asp-for="SupportUrl" class="form-control" />
                 <span asp-validation-for="SupportUrl" class="text-danger"></span>
                 <div class="form-text" html-translate="true">A "Contact Us" button with this link will be shown on the checkout page. Can contain the placeholders <code>{OrderId}</code> and <code>{InvoiceId}</code>. Can be any valid URI, such as a website, email, and Nostr.</div>
+            </div>
+            <div class="form-group">
+                <label asp-for="CheckoutText" class="form-label"></label>
+                <textarea asp-for="CheckoutText" class="form-control" rows="3" maxlength="500"></textarea>
+                <span asp-validation-for="CheckoutText" class="text-danger"></span>
+                <div class="form-text" text-translate="true">Custom text displayed on the checkout page below the payment details. Plain text only, newlines are supported.</div>
             </div>
             <div class="d-flex my-3">
                 <input asp-for="LazyPaymentMethods" type="checkbox" class="btcpay-toggle me-3" />

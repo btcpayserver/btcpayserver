@@ -1,7 +1,5 @@
 using System.Linq;
-using System.Text;
 using BTCPayServer.Payouts;
-using NBitcoin.JsonConverters;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Data

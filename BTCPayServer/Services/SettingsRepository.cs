@@ -1,9 +1,13 @@
 #nullable enable
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
@@ -25,7 +29,7 @@ namespace BTCPayServer.Services
 
         public async Task<T?> GetSettingAsync<T>(string? name = null) where T : class
         {
-            name ??= typeof(T).FullName ?? string.Empty;
+            name ??= KeyNameByType(typeof(T));
             var data = await _memoryCache.GetOrCreateAsync(GetCacheKey(name), async entry =>
             {
                 await using var ctx = _ContextFactory.CreateContext();
@@ -34,9 +38,32 @@ namespace BTCPayServer.Services
             });
             return data is string ? Deserialize<T>(data) : null;
         }
+
+        public async Task<Dictionary<Type, object?>> LoadAllSettings((Type Type, string? KeyName)[] settings)
+        {
+            var settingsByName = settings
+                .ToDictionary(s => s.KeyName ?? KeyNameByType(s.Type));
+            await using var ctx = _ContextFactory.CreateContext();
+            var rows = await ctx.Database.GetDbConnection()
+                .QueryAsync<(string Name, string? Value)>("""
+                                    SELECT val, s."Value"
+                                    FROM unnest(@names) val
+                                    LEFT JOIN "Settings" s ON s."Id" = val
+                                    """, new{ names = settingsByName.Keys.ToArray() });
+            var result = new Dictionary<Type, object?>();
+            foreach (var row in rows)
+            {
+                var type = settingsByName[row.Name].Type;
+                var obj = row.Value is null ? null : Deserialize(type, row.Value);
+                result.Add(type, obj);
+                _memoryCache.GetOrCreate(GetCacheKey(row.Name), e => row.Value);
+            }
+            return result;
+        }
+
         public async Task UpdateSetting<T>(T obj, string? name = null) where T : class
         {
-            name ??= typeof(T).FullName ?? string.Empty;
+            name ??=  KeyNameByType(obj.GetType());
             await using (var ctx = _ContextFactory.CreateContext())
             {
                 var settings = UpdateSettingInContext<T>(ctx, obj, name);
@@ -58,9 +85,12 @@ namespace BTCPayServer.Services
             });
         }
 
+        public static string KeyNameByType(Type type)
+        => type.FullName ?? string.Empty;
+
         public SettingData UpdateSettingInContext<T>(ApplicationDbContext ctx, T obj, string? name = null) where T : class
         {
-            name ??= obj.GetType().FullName ?? string.Empty;
+            name ??= KeyNameByType(obj.GetType());
             _memoryCache.Remove(GetCacheKey(name));
             var settings = new SettingData { Id = name, Value = Serialize(obj) };
             ctx.Attach(settings);
@@ -71,6 +101,10 @@ namespace BTCPayServer.Services
         private T? Deserialize<T>(string value) where T : class
         {
             return JsonConvert.DeserializeObject<T>(value);
+        }
+        private object? Deserialize(Type type, string value)
+        {
+            return JsonConvert.DeserializeObject(value, type);
         }
 
         private string Serialize<T>(T obj)

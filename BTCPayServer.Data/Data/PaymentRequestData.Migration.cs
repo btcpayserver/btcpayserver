@@ -1,11 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Globalization;
-using System.Linq;
-using System.Reflection.Metadata;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
@@ -49,6 +44,11 @@ namespace BTCPayServer.Data
 				JValue jv when jv.Type == JTokenType.String && decimal.TryParse(jv.Value<string>(), CultureInfo.InvariantCulture, out var d) => d,
 				_ => 0m
 			};
+            if (jobj["title"] is not null)
+            {
+                Title = jobj["title"].ToString();
+                jobj.Remove("title");
+            }
 			Blob2 = jobj.ToString(Newtonsoft.Json.Formatting.None);
             return true;
         }

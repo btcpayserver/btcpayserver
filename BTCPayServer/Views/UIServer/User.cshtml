@@ -1,9 +1,8 @@
 @using BTCPayServer.Abstractions.Contracts
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model UsersViewModel.UserViewModel
 @inject IFileService FileService
 @{
-    ViewData.SetActivePage(ServerNavPages.Users, Model.Email);
+    ViewData.SetLayoutModel(new(nameof(ServerNavPages.Users), Model.Email));
     var canUpload = await FileService.IsAvailable();
 }
 
@@ -36,7 +35,7 @@
             </div>
         </div>
     }
-    
+
     <div class="form-group">
         <label asp-for="Name" class="form-label"></label>
         <input asp-for="Name" class="form-control" />

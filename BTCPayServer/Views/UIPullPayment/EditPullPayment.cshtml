@@ -2,7 +2,7 @@
 @model BTCPayServer.Models.WalletViewModels.UpdatePullPaymentModel
 @{
     var storeId = Context.GetStoreData().Id;
-    ViewData.SetActivePage(StoreNavPages.Create, StringLocalizer["Edit Pull Payment"], Model.Id);
+    ViewData.SetLayoutModel(new(nameof(StoreNavPages.Create), StringLocalizer["Edit Pull Payment"]));
 }
 
 @section PageHeadContent {
@@ -28,11 +28,11 @@
         <div>
             @if (string.IsNullOrEmpty(Model.Id))
             {
-				<button id="page-primary" type="submit" class="btn btn-primary">Create</button>
+				<button id="page-primary" type="submit" class="btn btn-primary" text-translate="true">Create</button>
             }
             else
             {
-				<button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
+				<button id="page-primary" type="submit" class="btn btn-primary order-sm-1" text-translate="true">Save</button>
                 <a class="btn btn-secondary" asp-action="ViewPullPayment" asp-route-pullPaymentId="@Model.Id" id="ViewPullPayment" target="_blank" text-translate="true">View</a>
             }
         </div>

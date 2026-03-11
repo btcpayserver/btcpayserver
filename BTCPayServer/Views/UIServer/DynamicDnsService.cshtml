@@ -1,6 +1,7 @@
 @model BTCPayServer.Models.ServerViewModels.DynamicDnsViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, StringLocalizer["Dynamic DNS Service"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Services), StringLocalizer["Dynamic DNS Service"])
+        .SetCategory(WellKnownCategories.Server));
 }
 
 @section PageFootContent {
@@ -31,7 +32,7 @@
                 </small>
             </h2>
         </nav>
-		<button id="page-primary" name="command" class="btn btn-primary" type="submit" value="Save">Save</button>
+		<button id="page-primary" name="command" class="btn btn-primary" type="submit" value="Save" text-translate="true">Save</button>
     </div>
     <partial name="_StatusMessage" />
 

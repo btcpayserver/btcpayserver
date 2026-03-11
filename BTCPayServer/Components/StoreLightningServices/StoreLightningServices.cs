@@ -17,39 +17,22 @@ using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Components.StoreLightningServices;
 
-public class StoreLightningServices : ViewComponent
+public class StoreLightningServices(
+    BTCPayServerOptions btcpayServerOptions,
+    IAuthorizationService authorizationService,
+    PaymentMethodHandlerDictionary handlers,
+    IOptions<LightningNetworkOptions> lightningNetworkOptions,
+    IOptions<ExternalServicesOptions> externalServiceOptions)
+    : ViewComponent
 {
-    private readonly BTCPayServerOptions _btcpayServerOptions;
-    private readonly BTCPayNetworkProvider _networkProvider;
-    private readonly IAuthorizationService _authorizationService;
-    private readonly PaymentMethodHandlerDictionary _handlers;
-    private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
-    private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
-
-    public StoreLightningServices(
-        BTCPayNetworkProvider networkProvider,
-        BTCPayServerOptions btcpayServerOptions,
-        IAuthorizationService authorizationService,
-        PaymentMethodHandlerDictionary handlers,
-        IOptions<LightningNetworkOptions> lightningNetworkOptions,
-        IOptions<ExternalServicesOptions> externalServiceOptions)
-    {
-        _networkProvider = networkProvider;
-        _btcpayServerOptions = btcpayServerOptions;
-        _lightningNetworkOptions = lightningNetworkOptions;
-        _externalServiceOptions = externalServiceOptions;
-        _authorizationService = authorizationService;
-        _handlers = handlers;
-    }
-
     public async Task<IViewComponentResult> InvokeAsync(StoreData store, string cryptoCode)
     {
         var vm = new StoreLightningServicesViewModel { StoreId = store.Id, CryptoCode = cryptoCode };
         var id = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);
-        var existing = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(id, _handlers);
-        if (existing?.IsInternalNode is true && _lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out _))
+        var existing = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(id, handlers);
+        if (existing?.IsInternalNode is true && lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out _))
         {
-            var result = await _authorizationService.AuthorizeAsync(HttpContext.User, null, new PolicyRequirement(Policies.CanUseInternalLightningNode));
+            var result = await authorizationService.AuthorizeAsync(HttpContext.User, null, new PolicyRequirement(Policies.CanUseInternalLightningNode));
             vm.LightningNodeType = result.Succeeded ? LightningNodeType.Internal : null;
         }
 
@@ -58,7 +41,7 @@ public class StoreLightningServices : ViewComponent
         if (!User.IsInRole(Roles.ServerAdmin))
             return View(vm);
 
-        var services = _externalServiceOptions.Value.ExternalServices.ToList()
+        var services = externalServiceOptions.Value.ExternalServices.ToList()
             .Where(service => ExternalServices.LightningServiceTypes.Contains(service.Type))
             .Select(async service =>
             {
@@ -71,7 +54,7 @@ public class StoreLightningServices : ViewComponent
                 };
                 try
                 {
-                    model.Link = await service.GetLink(Request.GetAbsoluteUriNoPathBase(), _btcpayServerOptions.NetworkType);
+                    model.Link = await service.GetLink(Request.GetAbsoluteUriNoPathBase(), btcpayServerOptions.NetworkType);
                 }
                 catch (Exception exception)
                 {
@@ -83,7 +66,7 @@ public class StoreLightningServices : ViewComponent
             .ToList();
 
         // other services
-        foreach ((string key, Uri value) in _externalServiceOptions.Value.OtherExternalServices)
+        foreach (var (key, value) in externalServiceOptions.Value.OtherExternalServices)
         {
             if (ExternalServices.LightningServiceNames.Contains(key))
             {

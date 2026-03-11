@@ -1,0 +1,55 @@
+﻿@model (bool, SubscriberData)
+
+@{
+    var subscriber = Model.Item2;
+    var canSuspend = Model.Item1;
+    var (label, badge, hasDropdown) = subscriber switch
+    {
+        { IsActive: true } => (StringLocalizer["Active"], "success", true),
+        { IsActive: false, IsSuspended: true } => (StringLocalizer["Suspended"], "danger", true),
+        _ => (StringLocalizer["Inactive"], "danger", subscriber.IsSuspended)
+    };
+    hasDropdown = hasDropdown && canSuspend;
+}
+<span class="subscriber-status badge badge-translucent rounded-pill text-bg-@badge">
+@if (hasDropdown)
+    {
+        <form asp-action="SubscriberSuspend"
+              asp-route-offeringId="@subscriber.OfferingId"
+              asp-route-storeId="@subscriber.Offering.App.StoreDataId"
+              asp-route-customerId="@subscriber.CustomerId" method="post" class="dropdown">
+        <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span>@label</span>
+        </span>
+        <div class="dropdown-menu">
+            @if (subscriber.IsActive)
+            {
+                @* <button type="submit" name="command" value="suspend" class="dropdown-item lh-base" text-translate="true"> *@
+                @*     Suspend Access *@
+                @* </button> *@
+                <a
+                    href="#"
+                   text-translate="true"
+                   class="suspend-subscriber-link dropdown-item lh-base"
+                   data-bs-toggle="modal"
+                   data-bs-target="#suspendSubscriberModal"
+                   data-subscriber-id="@subscriber.CustomerId"
+                   data-subscriber-email="@subscriber.Customer.Email.Get()">
+                    Suspend Access
+                </a>
+
+            }
+            else if (subscriber.IsSuspended)
+            {
+                <button type="submit" name="command" value="unsuspend" class="dropdown-item lh-base" text-translate="true">
+                    Unsuspend Access
+                </button>
+            }
+        </div>
+    </form>
+    }
+    else
+    {
+        <span>@label</span>
+    }
+</span>

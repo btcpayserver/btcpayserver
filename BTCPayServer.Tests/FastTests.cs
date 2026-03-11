@@ -14,7 +14,6 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
-using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
@@ -26,7 +25,6 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
-using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Validation;
 using Microsoft.Extensions.Configuration;
@@ -36,7 +34,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.RPC;
-using NBitcoin.Scripting.Parser;
 using NBitcoin.WalletPolicies;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
@@ -1430,41 +1427,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void CanFixupWebhookEventPropertyName()
-        {
-            string legacy = "{\"orignalDeliveryId\":\"blahblah\"}";
-            var obj = JsonConvert.DeserializeObject<WebhookEvent>(legacy, WebhookEvent.DefaultSerializerSettings);
-            Assert.Equal("blahblah", obj.OriginalDeliveryId);
-            var serialized = JsonConvert.SerializeObject(obj, WebhookEvent.DefaultSerializerSettings);
-            Assert.DoesNotContain("orignalDeliveryId", serialized);
-            Assert.Contains("originalDeliveryId", serialized);
-        }
-
-        [Fact]
-        public void CanUsePermission()
-        {
-            Assert.True(Permission.Create(Policies.CanModifyServerSettings)
-                .Contains(Permission.Create(Policies.CanModifyServerSettings)));
-            Assert.True(Permission.Create(Policies.CanModifyProfile)
-                .Contains(Permission.Create(Policies.CanViewProfile)));
-            Assert.True(Permission.Create(Policies.CanModifyStoreSettings)
-                .Contains(Permission.Create(Policies.CanViewStoreSettings)));
-            Assert.False(Permission.Create(Policies.CanViewStoreSettings)
-                .Contains(Permission.Create(Policies.CanModifyStoreSettings)));
-            Assert.False(Permission.Create(Policies.CanModifyServerSettings)
-                .Contains(Permission.Create(Policies.CanModifyStoreSettings)));
-            Assert.True(Permission.Create(Policies.Unrestricted)
-                .Contains(Permission.Create(Policies.CanModifyStoreSettings)));
-            Assert.True(Permission.Create(Policies.Unrestricted)
-                .Contains(Permission.Create(Policies.CanModifyStoreSettings, "abc")));
-
-            Assert.True(Permission.Create(Policies.CanViewStoreSettings)
-                .Contains(Permission.Create(Policies.CanViewStoreSettings, "abcd")));
-            Assert.False(Permission.Create(Policies.CanModifyStoreSettings, "abcd")
-                .Contains(Permission.Create(Policies.CanModifyStoreSettings)));
-        }
-
-        [Fact]
         public void CanParseFilter()
         {
             var storeId = "6DehZnc9S7qC6TUTNWuzJ1pFsHTHvES6An21r3MjvLey";
@@ -1723,7 +1685,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
                 jobs[2] = true;
                 throw new Exception("Job[2]");
             }, TimeSpan.FromSeconds(6.0));
-            TestLogs.LogInformation("Start Job[3] starts in in 7 sec");
+            TestLogs.LogInformation("Start Job[3] in 7 sec");
             client.Schedule((_) =>
             {
                 TestLogs.LogInformation("Job[3]");
@@ -1821,7 +1783,12 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             rule.Reevaluate();
             Assert.True(!rule.HasError);
             Assert.Equal(1.1m, rule.BidAsk.Ask);
+            // Check invalid currency pair (GetRule for should not contains X)
+            rule = rules.GetRuleFor(new CurrencyPair("DOGE", "X"));
+            rule.Reevaluate();
+            Assert.True(rule.HasError);
         }
+
 
         [Fact]
         public void CanSerializeExchangeRatesCache()
@@ -1849,24 +1816,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.Equal(cache.Created.ToUnixTimeSeconds(), cache2.Created.ToUnixTimeSeconds());
             Assert.Equal(cache.States[0].Rates[0].BidAsk, cache2.States[0].Rates[0].BidAsk);
             Assert.Equal(cache.States[0].Rates[0].Pair, cache2.States[0].Rates[0].Pair);
-        }
-
-        [Fact]
-        public void CanParseStoreRoleId()
-        {
-            var id = StoreRoleId.Parse("test::lol");
-            Assert.Equal("test", id.StoreId);
-            Assert.Equal("lol", id.Role);
-            Assert.Equal("test::lol", id.ToString());
-            Assert.Equal("test::lol", id.Id);
-            Assert.False(id.IsServerRole);
-
-            id = StoreRoleId.Parse("lol");
-            Assert.Null(id.StoreId);
-            Assert.Equal("lol", id.Role);
-            Assert.Equal("lol", id.ToString());
-            Assert.Equal("lol", id.Id);
-            Assert.True(id.IsServerRole);
         }
 
         [Fact]
@@ -2364,20 +2313,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             // LTC might should be over paid due to BTC paying above what it should (round 1 satoshi up), but we handle this case
             // and set DueUncapped to zero.
             Assert.Equal(0.0m, accounting.DueUncapped);
-        }
-
-        [Fact]
-        public void AllPoliciesShowInUI()
-        {
-            new BitpayRateProvider(new System.Net.Http.HttpClient()).GetRatesAsync(default).GetAwaiter().GetResult();
-            foreach (var policy in Policies.AllPolicies)
-            {
-                Assert.True(UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey(policy));
-                if (Policies.IsStorePolicy(policy))
-                {
-                    Assert.True(UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey($"{policy}:"));
-                }
-            }
         }
 
         [Fact]

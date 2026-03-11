@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using BTCPayServer.Plugins.PointOfSale;
 using Newtonsoft.Json;
@@ -118,7 +117,7 @@ public class PosAppCartItemPriceJsonConverter : JsonConverter
             case JTokenType.Null:
                 return null;
             case JTokenType.Object:
-                return token.ToObject<JObject>()?["value"]?.Value<decimal?>();
+                return token.ToObject<JObject>()?["value"]?.Value<decimal?>() ?? (objectType == typeof(decimal) ? 0m : null);
             default:
                 throw new JsonSerializationException($"Unexpected token type: {token.Type}");
         }

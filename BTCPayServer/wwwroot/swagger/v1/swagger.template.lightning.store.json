@@ -163,7 +163,7 @@
                         }
                     },
                     "400": {
-                        "description": "Wellknown error codes are: `could-not-connect`",
+                        "description": "Well-known error codes are: `could-not-connect`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -272,7 +272,7 @@
                         }
                     },
                     "400": {
-                        "description": "Wellknown error codes are: `channel-already-exists`, `cannot-afford-funding`, `need-more-confirmations`, `peer-not-connected`",
+                        "description": "Well-known error codes are: `channel-already-exists`, `cannot-afford-funding`, `need-more-confirmations`, `peer-not-connected`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -514,7 +514,7 @@
                         }
                     },
                     "400": {
-                        "description": "Wellknown error codes are: `could-not-find-route`, `generic-error`",
+                        "description": "Well-known error codes are: `could-not-find-route`, `generic-error`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -662,7 +662,7 @@
                         }
                     },
                     "400": {
-                        "description": "Wellknown error codes are: `invoice-error`",
+                        "description": "Well-known error codes are: `invoice-error`",
                         "content": {
                             "application/json": {
                                 "schema": {

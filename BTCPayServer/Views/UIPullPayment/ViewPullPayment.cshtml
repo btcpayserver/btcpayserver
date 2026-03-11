@@ -93,7 +93,7 @@
                         <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
                             @if (!string.IsNullOrWhiteSpace(Model.Title))
                             {
-                                <h2 class="h4 mb-3">@Model.Title</h2>
+                                <h2 class="h4 mb-3" data-testid="title">@Model.Title</h2>
                             }
                             <div class="d-flex align-items-center gap-2">
                                 <span class="text-muted text-nowrap" text-translate="true">Start Date</span>
@@ -122,7 +122,7 @@
                             }
                             @if (!string.IsNullOrEmpty(Model.Description))
                             {
-                                <div class="mt-4">@Safe.Raw(Model.Description)</div>
+                                <div class="mt-4" data-testid="description">@Safe.Raw(Model.Description)</div>
                             }
                         </div>
                     </div>
@@ -205,18 +205,7 @@
                     Edit pull payment
                 </a>
             </p>
-			@if (Model.LnurlEndpoint is not null)
-			{
-				<p id="BoltcardActions">
-					<a id="SetupBoltcard" asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="configure-boltcard" text-translate="true">
-						Setup Boltcard
-					</a>
-					<span>&nbsp;|&nbsp;</span>
-					<a id="ResetBoltcard" asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="reset-boltcard" text-translate="true">
-						Reset Boltcard
-					</a>
-				</p>
-			}
+            <vc:ui-extension-point location="pullpayment-store-footer" model="@Model"></vc:ui-extension-point>
             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
                 <span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" />
             </a>
@@ -231,14 +220,6 @@
     <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-			var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-			if (isMobile) {
-				document.getElementById("SetupBoltcard").setAttribute('target', '_blank');
-				document.getElementById("SetupBoltcard").setAttribute('href', @Safe.Json(Model.SetupDeepLink));
-				document.getElementById("ResetBoltcard").setAttribute('target', '_blank');
-				document.getElementById("ResetBoltcard").setAttribute('href', @Safe.Json(Model.ResetDeepLink));
-			}
-
             window.qrApp = initQRShow({});
             delegate('click', 'button[page-qr]', event => {
                 qrApp.title = "Pull Payment QR";

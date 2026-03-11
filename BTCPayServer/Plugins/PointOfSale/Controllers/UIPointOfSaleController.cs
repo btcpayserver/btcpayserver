@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
@@ -32,7 +31,6 @@ using Ganss.Xss;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using NBitcoin;
@@ -44,7 +42,6 @@ using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Plugins.PointOfSale.Controllers
 {
-    [AutoValidateAntiforgeryToken]
     [Route("apps")]
     public class UIPointOfSaleController : Controller
     {
@@ -60,7 +57,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             DisplayFormatter displayFormatter,
             IRateLimitService rateLimitService,
             IAuthorizationService authorizationService,
-            UserManager<ApplicationUser> userManager,
+            HtmlSanitizer htmlSanitizer,
             Safe safe)
         {
             _currencies = currencies;
@@ -72,7 +69,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             _displayFormatter = displayFormatter;
             _rateLimitService = rateLimitService;
             _authorizationService = authorizationService;
-            _userManager = userManager;
+            _htmlSanitizer = htmlSanitizer;
             _safe = safe;
             StringLocalizer = stringLocalizer;
             FormDataService = formDataService;
@@ -87,7 +84,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly DisplayFormatter _displayFormatter;
         private readonly IRateLimitService _rateLimitService;
         private readonly IAuthorizationService _authorizationService;
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly HtmlSanitizer _htmlSanitizer;
         private readonly Safe _safe;
         public FormDataService FormDataService { get; }
         public IStringLocalizer StringLocalizer { get; }
@@ -111,7 +108,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var storeBlob = store.GetStoreBlob();
             var storeBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
 
-            return View($"PointOfSale/Public/{viewType}", new ViewPointOfSaleViewModel
+            return View($"/Plugins/PointOfSale/Views/Public/{viewType}.cshtml", new ViewPointOfSaleViewModel
             {
                 Title = settings.Title,
                 StoreName = store.StoreName,
@@ -135,7 +132,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     Prefixed = new[] { 0, 2 }.Contains(numberFormatInfo.CurrencyPositivePattern),
                     SymbolSpace = new[] { 2, 3 }.Contains(numberFormatInfo.CurrencyPositivePattern)
                 },
-                Items = AppService.Parse(settings.Template, false),
+                Items = CreateItemsViewModel(settings),
                 ButtonText = settings.ButtonText,
                 CustomButtonText = settings.CustomButtonText,
                 CustomTipText = settings.CustomTipText,
@@ -146,7 +143,42 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 HtmlLang = settings.HtmlLang,
                 HtmlMetaTags= settings.HtmlMetaTags,
                 Description = settings.Description,
+                NotAvailable = StringLocalizer["Not available in Keypad POS"].Value
             });
+        }
+
+        private ViewPointOfSaleViewModel.AppItemViewModel[] CreateItemsViewModel(PointOfSaleSettings settings)
+        {
+            var items = AppService.Parse(settings.Template, false).Select(i => JObject.FromObject(i).ToObject<ViewPointOfSaleViewModel.AppItemViewModel>()).ToList();
+            return items.Select(i => FillItemViewModel(i, settings)).ToArray();
+        }
+
+        private ViewPointOfSaleViewModel.AppItemViewModel FillItemViewModel(ViewPointOfSaleViewModel.AppItemViewModel vm, PointOfSaleSettings settings)
+        {
+            vm.PriceFormatted = GetItemPriceFormatted(vm, settings.Currency);
+            vm.HasPrice = vm.PriceType != AppItemPriceType.Topup && vm.Price != 0;
+            vm.InventoryText = vm.Inventory is { } inv ? StringLocalizer["{0} left", inv].Value : StringLocalizer["Sold out"].Value;
+
+            var inStock = vm.Inventory is null or > 0;
+            var isFixedPrice = vm.PriceType == AppItemPriceType.Fixed;
+            vm.Displayed = (isFixedPrice && inStock) || vm.PriceType == AppItemPriceType.Topup;
+            vm.Disabled = vm.PriceType == AppItemPriceType.Topup;
+            vm.Search = _htmlSanitizer.Sanitize(vm.Title + " " + vm.Description);
+            vm.HasImage = !string.IsNullOrWhiteSpace(vm.Image);
+            vm.ButtonText = string.IsNullOrEmpty(vm.BuyButtonText)
+                ? vm.PriceType == AppItemPriceType.Topup ? settings.CustomButtonText : settings.ButtonText
+                : vm.BuyButtonText;
+            vm.ButtonText = vm.ButtonText.Replace("{0}", vm.PriceFormatted).Replace("{Price}", vm.PriceFormatted);
+            vm.InStock = vm.Inventory is null or > 0;
+            return vm;
+        }
+
+        private string GetItemPriceFormatted(AppItem item, string currency)
+        {
+            if (item.PriceType == AppItemPriceType.Topup) return "Any amount";
+            if (item.Price == 0) return "Free";
+            var formatted = _displayFormatter.Currency(item.Price ?? 0, currency, DisplayFormatter.CurrencyFormat.Symbol);
+            return item.PriceType == AppItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
         }
 
         [HttpPost("/")]
@@ -330,6 +362,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                           selectedChoices.Any(c => c.PriceType == AppItemPriceType.Topup);
 
             var receiptData = PosReceiptData.Create(isTopup, selectedChoices, jposData, order, summary, settings.Currency, _displayFormatter);
+            if (!isTopup && summary.PriceTaxIncludedWithTips <= 0m && settings.DisableZeroAmountInvoice is true)
+                return Error(StringLocalizer["Zero amount invoices are disabled"].Value);
+
             try
             {
                 var invoice = await _invoiceController.CreateInvoiceCoreRaw(new CreateInvoiceRequest
@@ -520,7 +555,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     ["id"] = i.Id,
                     ["date"] = i.InvoiceTime,
                     ["price"] = _displayFormatter.Currency(i.Price, i.Currency, DisplayFormatter.CurrencyFormat.Symbol),
-                    ["status"] = i.GetInvoiceState().Status.ToString(),
+                    ["status"] = i.GetInvoiceState().ToString(),
                     ["url"] = Url.Action(nameof(UIInvoiceController.Invoice), "UIInvoice", new { invoiceId = i.Id })
                 });
             return Json(recent);
@@ -566,6 +601,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 Description = settings.Description,
                 NotificationUrl = settings.NotificationUrl,
                 RedirectUrl = settings.RedirectUrl,
+                DisableZeroAmountInvoice = settings.DisableZeroAmountInvoice is true,
                 SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"appid:{app.Id}",
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue ? settings.RedirectAutomatically.Value ? "true" : "false" : "",
                 FormId = settings.FormId
@@ -607,7 +643,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             vm.ExampleCallback = "{\n  \"id\":\"SkdsDghkdP3D3qkj7bLq3\",\n  \"url\":\"https://btcpay.example.com/invoice?id=SkdsDghkdP3D3qkj7bLq3\",\n  \"status\":\"paid\",\n  \"price\":10,\n  \"currency\":\"EUR\",\n  \"invoiceTime\":1520373130312,\n  \"expirationTime\":1520374030312,\n  \"currentTime\":1520373179327,\n  \"exceptionStatus\":false,\n  \"buyerFields\":{\n    \"buyerEmail\":\"customer@example.com\",\n    \"buyerNotify\":false\n  },\n  \"paymentSubtotals\": {\n    \"BTC\":114700\n  },\n  \"paymentTotals\": {\n    \"BTC\":118400\n  },\n  \"transactionCurrency\": \"BTC\",\n  \"amountPaid\": \"1025900\",\n  \"exchangeRates\": {\n    \"BTC\": {\n      \"EUR\": 8721.690715789999,\n      \"USD\": 10817.99\n    }\n  }\n}";
 
             await FillUsers(vm);
-            return View("PointOfSale/UpdatePointOfSale", vm);
+            return View("/Plugins/PointOfSale/Views/UpdatePointOfSale.cshtml", vm);
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -620,7 +656,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
             vm.Id = app.Id;
             if (!ModelState.IsValid)
-                return View("PointOfSale/UpdatePointOfSale", vm);
+                return View("/Plugins/PointOfSale/Views/UpdatePointOfSale.cshtml", vm);
 
             vm.Currency = await GetStoreDefaultCurrentIfEmpty(app.StoreDataId, vm.Currency);
             if (_currencies.GetCurrencyData(vm.Currency, false) == null)
@@ -636,7 +672,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             if (!ModelState.IsValid)
             {
                 await FillUsers(vm);
-                return View("PointOfSale/UpdatePointOfSale", vm);
+                return View("/Plugins/PointOfSale/Views/UpdatePointOfSale.cshtml", vm);
             }
 
             var settings = new PointOfSaleSettings
@@ -661,6 +697,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 HtmlLang = vm.HtmlLang,
                 HtmlMetaTags = _safe.RawMeta(vm.HtmlMetaTags, out bool wasHtmlModified),
                 Description = vm.Description,
+                DisableZeroAmountInvoice = vm.DisableZeroAmountInvoice,
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? null : bool.Parse(vm.RedirectAutomatically),
                 FormId = vm.FormId
             };
@@ -703,14 +740,14 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
 
-        private AppData GetCurrentApp() => HttpContext.GetAppData();
+        private AppData GetCurrentApp() => HttpContext.GetAppDataOrNull();
 
         private async Task FillUsers(UpdatePointOfSaleViewModel vm)
         {
             var users = await _storeRepository.GetStoreUsers(GetCurrentStore().Id);
 
             if (!User.IsInRole(Roles.ServerAdmin))
-                users = users.Where(u => u.Id == _userManager.GetUserId(User)).ToArray();
+                users = users.Where(u => u.Id == User.GetId()).ToArray();
 
             vm.StoreUsers = users.Select(u => (u.Id, u.Email, u.StoreRole.Role))
                 .ToDictionary(u => u.Id, u => $"{u.Email} ({u.Role})");

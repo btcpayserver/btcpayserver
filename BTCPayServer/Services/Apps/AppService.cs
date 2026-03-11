@@ -40,10 +40,12 @@ namespace BTCPayServer.Services.Apps
         private static JsonSerializerSettings _defaultSerializer;
 
         readonly ApplicationDbContextFactory _ContextFactory;
+        public ApplicationDbContextFactory ContextFactory => _ContextFactory;
         private readonly InvoiceRepository _InvoiceRepository;
         readonly CurrencyNameTable _Currencies;
         private readonly StoreRepository _storeRepository;
         private readonly EventAggregator _eventAggregator;
+        public EventAggregator EventAggregator => _eventAggregator;
         public CurrencyNameTable Currencies => _Currencies;
         private readonly string[] _paidStatuses = [
             InvoiceStatus.Processing.ToString(),
@@ -206,7 +208,7 @@ namespace BTCPayServer.Services.Apps
         {
             return invoice.GetInternalTags("APP#");
         }
-        
+
         public static string GetRandomOrderId(int length = 16)
         {
             return Encoders.Base58.EncodeData(RandomUtils.GetBytes(length));
@@ -341,9 +343,9 @@ namespace BTCPayServer.Services.Apps
             return await query.FirstOrDefaultAsync();
         }
 
-        public Task<StoreData?> GetStore(AppData app)
+        public async Task<StoreData> GetStore(AppData app)
         {
-            return _storeRepository.FindStore(app.StoreDataId);
+            return await _storeRepository.FindStore(app.StoreDataId) ?? throw new Exception("App's store is not found");
         }
 
         public static string SerializeTemplate(AppItem[] items)
@@ -447,7 +449,8 @@ retry:
                 goto retry;
         }
 
-        public async Task UpdateOrCreateApp(AppData app)
+        public Task UpdateOrCreateApp(AppData app) => UpdateOrCreateApp(app, true);
+        public async Task UpdateOrCreateApp(AppData app, bool sendEvents)
         {
             await using var ctx = _ContextFactory.CreateContext();
             var newApp = string.IsNullOrEmpty(app.Id);
@@ -465,10 +468,13 @@ retry:
                 ctx.Entry(app).Property(data => data.AppType).IsModified = false;
             }
             await ctx.SaveChangesAsync();
-            if (newApp)
-                _eventAggregator.Publish(new AppEvent.Created(app));
-            else
-                _eventAggregator.Publish(new AppEvent.Updated(app));
+            if (sendEvents)
+            {
+                if (newApp)
+                    _eventAggregator.Publish(new AppEvent.Created(app));
+                else
+                    _eventAggregator.Publish(new AppEvent.Updated(app));
+            }
         }
 
         private static bool TryParseJson(string json, [MaybeNullWhen(false)] out JObject result)
@@ -485,7 +491,7 @@ retry:
             }
         }
 #nullable enable
-        
+
         public static bool TryParsePosCartItems(JObject? posData, [MaybeNullWhen(false)] out List<AppCartItem> cartItems)
         {
             cartItems = null;

@@ -2,10 +2,8 @@ using System.Collections.Generic;
 using BTCPayServer.Hosting;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
-using NBXplorer;
 
 namespace BTCPayServer.Plugins.Altcoins;
 
@@ -22,7 +20,7 @@ public partial class AltcoinsPlugin
             DefaultRateRules = new[]
             {
                     "LTC_X = LTC_BTC * BTC_X",
-                    "LTC_BTC = coingecko(LTC_BTC)"
+                    "LTC_BTC = kraken(LTC_BTC)"
                 },
             CryptoImagePath = "imlegacy/litecoin.svg",
             LightningImagePath = "imlegacy/litecoin-lightning.svg",

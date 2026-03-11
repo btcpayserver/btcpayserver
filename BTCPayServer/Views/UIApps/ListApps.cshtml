@@ -1,10 +1,9 @@
 @using BTCPayServer.Services.Apps
-@using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Client
 @model ListAppsViewModel
 @inject AppService AppService
 @{
-    ViewData.SetActivePage(AppsNavPages.Index, "Apps");
+    ViewData.SetLayoutModel(new(nameof(AppsNavPages), "Apps"));
     var nextAppNameSortOrder = (string)ViewData["AppNameNextSortOrder"];
     var nextAppTypeSortOrder = (string)ViewData["AppTypeNextSortOrder"];
     var nextStoreNameSortOrder = (string)ViewData["StoreNameNextSortOrder"];
@@ -41,7 +40,7 @@
             </a>
         </small>
     </h2>
-	<a id="page-primary" asp-action="CreateApp" asp-route-storeId="@Context.GetStoreData().Id" class="btn btn-primary" role="button">Create a new app</a>
+	<a id="page-primary" asp-action="CreateApp" asp-route-storeId="@Context.GetStoreData().Id" class="btn btn-primary" role="button" text-translate="true">Create a new app</a>
 </div>
 
 <div class="table-responsive-md">
@@ -136,4 +135,4 @@
     }
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" />
+<partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", StringLocalizer["Delete"]))" />

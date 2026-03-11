@@ -1,11 +1,9 @@
 @using BTCPayServer.Client
-@using BTCPayServer.Client.Models
 @using BTCPayServer.Services
-@using SetPasswordViewModel = BTCPayServer.Models.ManageViewModels.SetPasswordViewModel
 @inject DisplayFormatter DisplayFormatter
 @model InvoicesModel
 @{
-    ViewData.SetActivePage(InvoiceNavPages.Index, StringLocalizer["Invoices"]);
+    ViewData.SetLayoutModel(new("Invoices", StringLocalizer["Invoices"]));
     var statusFilterCount = CountArrayFilter("status") + CountArrayFilter("exceptionstatus") + (HasBooleanFilter("includearchived") ? 1 : 0) + (HasBooleanFilter("unusual") ? 1 : 0);
     var hasDateFilter = HasArrayFilter("startdate") || HasArrayFilter("enddate");
     var appFilterCount = Model.Apps.Count(app => HasArrayFilter("appid", app.Id));
@@ -54,7 +52,7 @@
 }
 
 @section PageFootContent {
-    @*Without async, somehow selenium do not manage to click on links in this page*@
+    @*Script must be async to ensure proper page loading*@
     <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
 
     @* Custom Range Modal *@
@@ -168,7 +166,7 @@
             </div>
             <div class="modal-body">
                 <div class="form-group row">
-                    <label for="dtpStartDate" class="col-sm-3 col-form-label">Start Date</label>
+                    <label for="dtpStartDate" class="col-sm-3 col-form-label" text-translate="true">Start Date</label>
                     <div class="col-sm-9">
                         <div class="input-group">
                             <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
@@ -426,7 +424,7 @@
 }
 else
 {
-    <p class="text-secondary mt-3" text-translate="true">
+    <p data-testid="no-invoices" class="text-secondary mt-3" text-translate="true">
         There are no invoices matching your criteria.
     </p>
 }

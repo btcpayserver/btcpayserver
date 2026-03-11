@@ -1,7 +1,7 @@
-@using BTCPayServer.Abstractions.Models
 @model TwoFactorAuthenticationViewModel
 @{
-    ViewData.SetActivePage(ManageNavPages.TwoFactorAuthentication, StringLocalizer["Two-Factor Authentication"]);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ManageNavPages.TwoFactorAuthentication), StringLocalizer["Two-Factor Authentication"])
+        .SetCategory(nameof(ManageNavPages)));
 }
 <div class="sticky-header">
 	<h2 class="my-1">@ViewData["Title"]</h2>
@@ -115,11 +115,11 @@
 
                         @if (device.Type == Fido2Credential.CredentialType.FIDO2)
                         {
-                            <a asp-controller="UIFido2" asp-action="Remove" asp-route-id="@device.Id" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="@StringLocalizer["Remove security device"]" data-description="@ViewLocalizer["Your account will no longer have the security device <strong>{0}</strong> as an option for two-factor authentication.", Html.Encode(name)]" data-confirm="@StringLocalizer["Remove"]" data-confirm-input="@StringLocalizer["REMOVE"]" text-translate="true">Remove</a>
+                            <a asp-controller="UIFido2" asp-action="Remove" asp-route-id="@device.Id" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="@StringLocalizer["Remove security device"]" data-description="@ViewLocalizer["Your account will no longer have the security device <strong>{0}</strong> as an option for two-factor authentication.", Html.Encode(name)]" data-confirm="@StringLocalizer["Delete"]" data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Remove</a>
                         }
                         else if (device.Type == Fido2Credential.CredentialType.LNURLAuth)
                         {
-                            <a asp-controller="UILNURLAuth" asp-action="Remove" asp-route-id="@device.Id" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="@StringLocalizer["Remove Lightning security"]" data-description="@ViewLocalizer["Your account will no longer be linked to the lightning node <strong>{0}</strong> as an option for two-factor authentication.", Html.Encode(name)]" data-confirm="@StringLocalizer["Remove"]" data-confirm-input="@StringLocalizer["REMOVE"]" text-translate="true">Remove</a>
+                            <a asp-controller="UILNURLAuth" asp-action="Remove" asp-route-id="@device.Id" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="@StringLocalizer["Remove Lightning security"]" data-description="@ViewLocalizer["Your account will no longer be linked to the lightning node <strong>{0}</strong> as an option for two-factor authentication.", Html.Encode(name)]" data-confirm="@StringLocalizer["Delete"]" data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Remove</a>
                         }
                     </div>
                 }
@@ -131,7 +131,7 @@
                 <input type="text" class="form-control" name="Name" placeholder="@StringLocalizer["Security device name"]"/>
                 <select asp-items="@Html.GetEnumSelectList<Fido2Credential.CredentialType>()" class="form-select w-auto" name="type"></select>
                 <button id="btn-add" type="submit" class="btn btn-primary" text-translate="true">
-                    Add 
+                    Add
                 </button>
             </div>
         </form>

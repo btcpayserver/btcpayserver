@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Claims;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,25 +14,20 @@ using BTCPayServer.Events;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
-using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Localization;
-using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
-using MimeKit;
 
 namespace BTCPayServer.Controllers;
 
@@ -53,14 +45,12 @@ public class UIStoreOnChainWalletsController : Controller
         PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
         PoliciesSettings policiesSettings,
         IAuthorizationService authorizationService,
+        OnChainWalletSettingsAuthorization walletSettingsAuthorization,
+        OnChainWalletSetupService onChainWalletSetupService,
         WalletFileParsers onChainWalletParsers,
         EventAggregator eventAggregator,
         IHtmlHelper html,
-        IDataProtectionProvider dataProtector,
-        IStringLocalizer stringLocalizer,
-        EmailSenderFactory emailSenderFactory,
-        MultisigRecipientsService multisigRecipientsService,
-        ILogger<UIStoreOnChainWalletsController> logger)
+        IStringLocalizer stringLocalizer)
     {
         _btcPayEnv = btcpayEnv;
         _storeRepo = storeRepo;
@@ -69,14 +59,11 @@ public class UIStoreOnChainWalletsController : Controller
         _handlers = paymentMethodHandlerDictionary;
         _policiesSettings = policiesSettings;
         _authorizationService = authorizationService;
+        _walletSettingsAuthorization = walletSettingsAuthorization;
+        _onChainWalletSetupService = onChainWalletSetupService;
         _onChainWalletParsers = onChainWalletParsers;
         _eventAggregator = eventAggregator;
         _html = html;
-        _dataProtector = dataProtector.CreateProtector("ConfigProtector");
-        _multisigInviteProtector = dataProtector.CreateProtector("MultisigInviteLink");
-        _emailSenderFactory = emailSenderFactory;
-        _multisigRecipientsService = multisigRecipientsService;
-        _logger = logger;
         StringLocalizer = stringLocalizer;
     }
 
@@ -87,22 +74,18 @@ public class UIStoreOnChainWalletsController : Controller
     private readonly PaymentMethodHandlerDictionary _handlers;
     private readonly PoliciesSettings _policiesSettings;
     private readonly IAuthorizationService _authorizationService;
+    private readonly OnChainWalletSettingsAuthorization _walletSettingsAuthorization;
+    private readonly OnChainWalletSetupService _onChainWalletSetupService;
     private readonly WalletFileParsers _onChainWalletParsers;
     private readonly EventAggregator _eventAggregator;
     private readonly IHtmlHelper _html;
-    private readonly IDataProtector _dataProtector;
-    private readonly IDataProtector _multisigInviteProtector;
-    private readonly EmailSenderFactory _emailSenderFactory;
-    private readonly MultisigRecipientsService _multisigRecipientsService;
-    private readonly ILogger<UIStoreOnChainWalletsController> _logger;
-    private const string PendingMultisigSettingPrefix = "PendingMultisigSetup";
 
     public IStringLocalizer StringLocalizer { get; }
 
     [HttpGet("{storeId}/onchain/{cryptoCode}")]
     public async Task<ActionResult> SetupWallet(WalletSetupViewModel vm)
     {
-        if (!await AuthorizeOnchainWalletSettingsAsync(vm.StoreId, vm.CryptoCode))
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, vm.StoreId, vm.CryptoCode))
             return Forbid();
         var checkResult = IsAvailable(vm.CryptoCode, out var store, out _);
         if (checkResult != null)
@@ -118,10 +101,11 @@ public class UIStoreOnChainWalletsController : Controller
 
         return StoreView("SetupWallet", vm);
     }
-    [HttpGet("{storeId}/onchain/{cryptoCode}/import/{method?}")]
+    [HttpGet("{storeId}/onchain/{cryptoCode}/import")]
+    [HttpGet("{storeId}/onchain/{cryptoCode}/import/{method:regex(^(hardware|file|xpub|scan|seed)$)}")]
     public async Task<IActionResult> ImportWallet(WalletSetupViewModel vm)
     {
-        if (!await AuthorizeOnchainWalletSettingsAsync(vm.StoreId, vm.CryptoCode))
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, vm.StoreId, vm.CryptoCode))
             return Forbid();
         var checkResult = IsAvailable(vm.CryptoCode, out _, out var network);
         if (checkResult != null)
@@ -139,10 +123,6 @@ public class UIStoreOnChainWalletsController : Controller
         {
             vm.Method = WalletSetupMethod.ImportOptions;
         }
-        else if (vm.Method == WalletSetupMethod.Multisig)
-        {
-            await PopulateMultisigImportViewModel(vm);
-        }
         else if (vm.Method == WalletSetupMethod.Seed)
         {
             vm.SetupRequest = new WalletSetupRequest();
@@ -151,38 +131,11 @@ public class UIStoreOnChainWalletsController : Controller
         return StoreView(vm.ViewName, vm);
     }
 
-    private async Task PopulateMultisigImportViewModel(WalletSetupViewModel vm)
-    {
-        vm.MultisigScriptType ??= "p2wsh";
-        vm.MultisigRequiredSigners ??= 2;
-        vm.MultisigTotalSigners ??= 3;
-        vm.MultisigSigners ??= Enumerable.Repeat(string.Empty, vm.MultisigTotalSigners.Value).ToArray();
-        vm.MultisigSignerFingerprints ??= Enumerable.Repeat(string.Empty, vm.MultisigTotalSigners.Value).ToArray();
-        vm.MultisigSignerKeyPaths ??= Enumerable.Repeat(string.Empty, vm.MultisigTotalSigners.Value).ToArray();
-        vm.MultisigPendingSetup = string.IsNullOrEmpty(vm.MultisigRequestId)
-            ? await GetLatestPendingMultisigSetup(vm.StoreId, vm.CryptoCode)
-            : await GetPendingMultisigSetup(vm.StoreId, vm.CryptoCode, vm.MultisigRequestId);
-        if (vm.MultisigPendingSetup is not null)
-        {
-            vm.MultisigRequiredSigners = vm.MultisigPendingSetup.RequiredSigners;
-            vm.MultisigTotalSigners = vm.MultisigPendingSetup.TotalSigners;
-            vm.MultisigScriptType = vm.MultisigPendingSetup.ScriptType;
-            vm.MultisigParticipantUserIds = vm.MultisigPendingSetup.Participants?
-                .Select(p => p.UserId)
-                .Where(id => !string.IsNullOrWhiteSpace(id))
-                .Distinct(StringComparer.Ordinal)
-                .ToArray();
-        }
-        await PopulateMultisigStoreUsers(vm);
-        vm.MultisigRequestId ??= vm.MultisigPendingSetup?.RequestId;
-        PopulateMultisigInviteLinks(vm);
-    }
-
     [HttpPost("{storeId}/onchain/{cryptoCode}/modify")]
-    [HttpPost("{storeId}/onchain/{cryptoCode}/import/{method}")]
+    [HttpPost("{storeId}/onchain/{cryptoCode}/import/{method:regex(^(hardware|file|xpub|scan|seed)$)}")]
     public async Task<IActionResult> UpdateWallet(WalletSetupViewModel vm, string command = null)
     {
-        if (!await AuthorizeOnchainWalletSettingsAsync(vm.StoreId, vm.CryptoCode))
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, vm.StoreId, vm.CryptoCode))
             return Forbid();
         var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
         if (checkResult != null)
@@ -191,126 +144,11 @@ public class UIStoreOnChainWalletsController : Controller
         }
 
         vm.Network = network;
-        PendingMultisigSetupData finalizedMultisigRequest = null;
-        if (vm.Method == WalletSetupMethod.Multisig)
-        {
-            await PopulateMultisigStoreUsers(vm);
-        }
-
-        switch (vm.Method)
-        {
-            case WalletSetupMethod.Multisig when string.Equals(command, "create-request", StringComparison.OrdinalIgnoreCase):
-                return await CreateMultisigRequest(vm);
-            case WalletSetupMethod.Multisig when string.Equals(command, "reset-request", StringComparison.OrdinalIgnoreCase):
-                await _storeRepo.UpdateSetting<PendingMultisigSetupData>(vm.StoreId, GetPendingMultisigSettingName(vm.CryptoCode), null);
-                TempData[WellKnownTempData.SuccessMessage] = "Multisig request was reset.";
-                return RedirectToAction(nameof(ImportWallet), new
-                {
-                    storeId = vm.StoreId,
-                    cryptoCode = vm.CryptoCode,
-                    method = "multisig"
-                });
-            case WalletSetupMethod.Multisig when string.Equals(command, "remove-signer", StringComparison.OrdinalIgnoreCase):
-                return await RemoveMultisigSigner(vm);
-            case WalletSetupMethod.Multisig when string.Equals(command, "finalize-request", StringComparison.OrdinalIgnoreCase):
-            {
-                var pending = await GetPendingMultisigSetup(vm.StoreId, vm.CryptoCode, vm.MultisigRequestId);
-                if (pending is null)
-                {
-                    ModelState.AddModelError(nameof(vm.MultisigRequestId), "The multisig request was not found or has expired.");
-                    return StoreView(vm.ViewName, vm);
-                }
-
-                var requestedRequired = vm.MultisigRequiredSigners ?? pending.RequiredSigners;
-                var requestedTotal = vm.MultisigTotalSigners ?? pending.TotalSigners;
-                var requestedScriptType = (vm.MultisigScriptType ?? pending.ScriptType ?? "p2wsh").Trim();
-                var pendingScriptType = (pending.ScriptType ?? "p2wsh").Trim();
-                var requiredMismatch = requestedRequired != pending.RequiredSigners;
-                var scriptMismatch = !string.Equals(requestedScriptType, pendingScriptType, StringComparison.OrdinalIgnoreCase);
-                var totalReduced = requestedTotal < pending.TotalSigners;
-                var totalExpanded = requestedTotal > pending.TotalSigners;
-                if (requiredMismatch || scriptMismatch || totalReduced || totalExpanded)
-                {
-                    var configLabel = $"{pending.RequiredSigners}-of-{pending.TotalSigners} ({pendingScriptType.ToUpperInvariant()})";
-                    string message;
-                    if (scriptMismatch)
-                    {
-                        message = $"This request is {configLabel}. Reset request to change script type.";
-                    }
-                    else if (totalReduced)
-                    {
-                        message = $"This request is {configLabel}. Reset request to reduce total signers.";
-                    }
-                    else if (totalExpanded)
-                    {
-                        var missing = requestedTotal - pending.TotalSigners;
-                        var signerWord = missing == 1 ? "signer" : "signers";
-                        message = $"This request is {configLabel}. To continue with {requestedRequired}-of-{requestedTotal} add {missing} more {signerWord}.";
-                    }
-                    else
-                    {
-                        message = $"This request is {configLabel}. To continue with {requestedRequired}-of-{requestedTotal}, click \"Send requests\".";
-                    }
-                    ModelState.AddModelError(nameof(vm.MultisigRequestId), message);
-                    vm.MultisigPendingSetup = pending;
-                    vm.MultisigRequestId = pending.RequestId;
-                    return StoreView(vm.ViewName, vm);
-                }
-
-                if (pending.Participants.Count != pending.TotalSigners || pending.Participants.Any(p => string.IsNullOrWhiteSpace(p.AccountKey)))
-                {
-                    ModelState.AddModelError(nameof(vm.MultisigRequestId), "Complete signer collection before creating the multisig wallet.");
-                    vm.MultisigPendingSetup = pending;
-                    return StoreView(vm.ViewName, vm);
-                }
-                var selectedIds = (vm.MultisigParticipantUserIds ?? Array.Empty<string>())
-                    .Where(id => !string.IsNullOrWhiteSpace(id))
-                    .Distinct(StringComparer.Ordinal)
-                    .ToHashSet(StringComparer.Ordinal);
-                if (selectedIds.Count != pending.TotalSigners ||
-                    pending.Participants.Any(p => !selectedIds.Contains(p.UserId)))
-                {
-                    ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds),
-                        $"Select exactly {pending.TotalSigners} signers from this request before creating the multisig wallet.");
-                    vm.MultisigPendingSetup = pending;
-                    vm.MultisigRequestId = pending.RequestId;
-                    return StoreView(vm.ViewName, vm);
-                }
-
-                vm.MultisigRequiredSigners = pending.RequiredSigners;
-                vm.MultisigTotalSigners = pending.TotalSigners;
-                vm.MultisigScriptType = pending.ScriptType;
-                vm.MultisigSigners = pending.Participants.Select(p => p.AccountKey).ToArray();
-                vm.MultisigSignerFingerprints = pending.Participants.Select(p => p.MasterFingerprint ?? string.Empty).ToArray();
-                vm.MultisigSignerKeyPaths = pending.Participants.Select(p => p.AccountKeyPath ?? string.Empty).ToArray();
-                finalizedMultisigRequest = pending;
-                break;
-            }
-        }
 
         DerivationSchemeSettings strategy = null;
-        PaymentMethodId paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
-        BitcoinLikePaymentHandler handler = (BitcoinLikePaymentHandler)_handlers[paymentMethodId];
-        var wallet = _walletProvider.GetWallet(network);
-        if (wallet == null)
+        if (_walletProvider.GetWallet(network) == null)
         {
             return NotFound();
-        }
-
-        if (vm.Method == WalletSetupMethod.Multisig &&
-            string.IsNullOrEmpty(vm.Config) &&
-            string.IsNullOrEmpty(vm.DerivationScheme) &&
-            vm.WalletFile is null &&
-            string.IsNullOrEmpty(vm.WalletFileContent))
-        {
-            if (!TryBuildMultisigDerivationScheme(vm, network, out var multisigDerivation, out var multisigValidationError))
-            {
-                ModelState.AddModelError(nameof(vm.DerivationScheme), multisigValidationError);
-                return StoreView(vm.ViewName, vm);
-            }
-
-            vm.DerivationScheme = multisigDerivation;
-            ModelState.Remove(nameof(vm.DerivationScheme));
         }
 
         if (vm.WalletFile != null)
@@ -345,10 +183,6 @@ public class UIStoreOnChainWalletsController : Controller
             {
                 strategy = ParseDerivationStrategy(vm.DerivationScheme, network);
                 strategy.Source = "ManualDerivationScheme";
-                if (vm.Method == WalletSetupMethod.Multisig)
-                {
-                    ApplyMultisigSignerOrigins(vm, strategy);
-                }
                 if (!string.IsNullOrEmpty(vm.AccountKey))
                 {
                     var accountKey = new BitcoinExtPubKey(vm.AccountKey, network.NBitcoinNetwork);
@@ -374,11 +208,7 @@ public class UIStoreOnChainWalletsController : Controller
         }
         else if (!string.IsNullOrEmpty(vm.Config))
         {
-            try
-            {
-                strategy = handler.ParsePaymentMethodConfig(JToken.Parse(_dataProtector.UnprotectString(vm.Config)));
-            }
-            catch
+            if (!_onChainWalletSetupService.TryParseProtectedConfig(vm.CryptoCode, vm.Config, out strategy))
             {
                 ModelState.AddModelError(nameof(vm.Config), StringLocalizer["Config file was not in the correct format"]);
                 return StoreView(vm.ViewName, vm);
@@ -390,56 +220,17 @@ public class UIStoreOnChainWalletsController : Controller
             ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer["Please provide your extended public key"]);
             return StoreView(vm.ViewName, vm);
         }
-        if (vm.Method == WalletSetupMethod.Multisig)
-        {
-            strategy.IsMultiSigOnServer = true;
-            strategy.DefaultIncludeNonWitnessUtxo = true;
-
-            if (finalizedMultisigRequest is null && !string.IsNullOrEmpty(vm.MultisigRequestId))
-            {
-                finalizedMultisigRequest = await GetPendingMultisigSetup(vm.StoreId, vm.CryptoCode, vm.MultisigRequestId)
-                                          ?? await GetLatestPendingMultisigSetup(vm.StoreId, vm.CryptoCode);
-            }
-
-            if (finalizedMultisigRequest is not null)
-            {
-                ApplyMultisigSignerIdentities(finalizedMultisigRequest, strategy, network);
-            }
-        }
-
-        vm.Config = _dataProtector.ProtectString(JToken.FromObject(strategy, handler.Serializer).ToString());
+        vm.Config = _onChainWalletSetupService.ProtectConfig(vm.CryptoCode, strategy);
         ModelState.Remove(nameof(vm.Config));
 
-        var storeBlob = store.GetStoreBlob();
         if (vm.Confirmation)
         {
-            try
+            var saveResult = await _onChainWalletSetupService.SaveWallet(store, network, strategy, vm.SetupRequest);
+            if (!saveResult.Success)
             {
-                await wallet.TrackAsync(strategy.AccountDerivation);
-                store.SetPaymentMethodConfig(_handlers[paymentMethodId], strategy);
-                storeBlob.SetExcluded(paymentMethodId, false);
-                storeBlob.PayJoinEnabled = strategy.IsHotWallet && !(vm.SetupRequest?.PayJoinEnabled is false);
-                store.SetStoreBlob(storeBlob);
-            }
-            catch
-            {
-                ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer["NBXplorer is unable to track this derivation scheme. You may need to update it."]);
+                ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer[saveResult.ErrorMessage ?? "Wallet setup failed."]);
                 return StoreView(vm.ViewName, vm);
             }
-            await _storeRepo.UpdateStore(store);
-            if (vm.Method == WalletSetupMethod.Multisig && finalizedMultisigRequest is null && !string.IsNullOrEmpty(vm.MultisigRequestId))
-            {
-                finalizedMultisigRequest = await GetPendingMultisigSetup(vm.StoreId, vm.CryptoCode, vm.MultisigRequestId)
-                                          ?? await GetLatestPendingMultisigSetup(vm.StoreId, vm.CryptoCode);
-            }
-            if (vm.Method == WalletSetupMethod.Multisig && finalizedMultisigRequest is not null)
-                await SendMultisigWalletCreatedEmails(vm.StoreId, vm.CryptoCode, finalizedMultisigRequest);
-
-            if (vm.Method == WalletSetupMethod.Multisig && !string.IsNullOrEmpty(vm.MultisigRequestId))
-                await _storeRepo.UpdateSetting<PendingMultisigSetupData>(vm.StoreId, GetPendingMultisigSettingName(vm.CryptoCode), null);
-
-            _eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
-
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Wallet settings for {0} have been updated.", network.CryptoCode].Value;
 
             // This is success case when derivation scheme is added to the store
@@ -450,7 +241,7 @@ public class UIStoreOnChainWalletsController : Controller
     [HttpGet("{storeId}/onchain/{cryptoCode}/generate/{method?}")]
     public async Task<IActionResult> GenerateWallet(WalletSetupViewModel vm)
     {
-        if (!await AuthorizeOnchainWalletSettingsAsync(vm.StoreId, vm.CryptoCode))
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, vm.StoreId, vm.CryptoCode))
             return Forbid();
         var checkResult = IsAvailable(vm.CryptoCode, out _, out var network);
         if (checkResult != null)
@@ -490,7 +281,7 @@ public class UIStoreOnChainWalletsController : Controller
     [HttpPost("{storeId}/onchain/{cryptoCode}/generate/{method}")]
     public async Task<IActionResult> GenerateWallet(string storeId, string cryptoCode, WalletSetupMethod method, WalletSetupRequest request)
     {
-        if (!await AuthorizeOnchainWalletSettingsAsync(storeId, cryptoCode))
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, storeId, cryptoCode))
             return Forbid();
         var checkResult = IsAvailable(cryptoCode, out _, out var network);
         if (checkResult != null)
@@ -505,7 +296,6 @@ public class UIStoreOnChainWalletsController : Controller
         {
             return NotFound();
         }
-        var handler = _handlers.GetBitcoinHandler(cryptoCode);
         var client = _explorerProvider.GetExplorerClient(cryptoCode);
         var isImport = method == WalletSetupMethod.Seed;
         var vm = new WalletSetupViewModel
@@ -568,7 +358,7 @@ public class UIStoreOnChainWalletsController : Controller
         vm.RootFingerprint = response.AccountKeyPath.MasterFingerprint.ToString();
         vm.AccountKey = response.AccountHDKey.Neuter().ToWif();
         vm.KeyPath = response.AccountKeyPath.KeyPath.ToString();
-        vm.Config = _dataProtector.ProtectString(JToken.FromObject(derivationSchemeSettings, handler.Serializer).ToString());
+        vm.Config = _onChainWalletSetupService.ProtectConfig(cryptoCode, derivationSchemeSettings);
 
         var result = await UpdateWallet(vm);
 
@@ -610,7 +400,7 @@ public class UIStoreOnChainWalletsController : Controller
     [HttpGet("{storeId}/onchain/{cryptoCode}/generate/confirm")]
     public async Task<ActionResult> GenerateWalletConfirm(string storeId, string cryptoCode)
     {
-        if (!await AuthorizeOnchainWalletSettingsAsync(storeId, cryptoCode))
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, storeId, cryptoCode))
             return Forbid();
         var checkResult = IsAvailable(cryptoCode, out _, out var network);
         if (checkResult != null)
@@ -626,7 +416,7 @@ public class UIStoreOnChainWalletsController : Controller
     [HttpGet("{storeId}/onchain/{cryptoCode}/settings")]
     public async Task<IActionResult> WalletSettings(string storeId, string cryptoCode)
     {
-        if (!await AuthorizeOnchainWalletSettingsAsync(storeId, cryptoCode))
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, storeId, cryptoCode))
             return Forbid();
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
         if (checkResult != null)
@@ -672,10 +462,9 @@ public class UIStoreOnChainWalletsController : Controller
                     AccountKey = e.AccountKey.ToString(),
                     MasterFingerprint = e.RootFingerprint is { } fp ? fp.ToString() : null,
                     AccountKeyPath = e.AccountKeyPath == null ? "" : $"m/{e.AccountKeyPath}",
-                    SignerUserId = e.SignerUserId,
                     SignerEmail = e.SignerEmail
                 }).ToList(),
-            Config = _dataProtector.ProtectString(JToken.FromObject(derivation, handler.Serializer).ToString()),
+            Config = _onChainWalletSetupService.ProtectConfig(cryptoCode, derivation),
             PayJoinEnabled = storeBlob.PayJoinEnabled,
             CanUsePayJoin = perm.CanCreateHotWallet && network.SupportPayJoin && derivation.IsHotWallet,
             CanUseHotWallet = perm.CanCreateHotWallet,
@@ -694,7 +483,7 @@ public class UIStoreOnChainWalletsController : Controller
     [HttpPost("{storeId}/onchain/{cryptoCode}/settings/wallet")]
     public async Task<IActionResult> UpdateWalletSettings(WalletSettingsViewModel vm)
     {
-        if (!await AuthorizeOnchainWalletSettingsAsync(vm.StoreId, vm.CryptoCode))
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, vm.StoreId, vm.CryptoCode))
             return Forbid();
         var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
         if (checkResult != null)
@@ -805,7 +594,7 @@ public class UIStoreOnChainWalletsController : Controller
         [HttpGet("{storeId}/onchain/{cryptoCode}/seed")]
         public async Task<IActionResult> WalletSeed(string storeId, string cryptoCode, CancellationToken cancellationToken = default)
     {
-        if (!await AuthorizeOnchainWalletSettingsAsync(storeId, cryptoCode))
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, storeId, cryptoCode))
             return Forbid();
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
         if (checkResult != null)
@@ -849,7 +638,7 @@ public class UIStoreOnChainWalletsController : Controller
         [HttpGet("{storeId}/onchain/{cryptoCode}/replace")]
         public async Task<ActionResult> ReplaceWallet(string storeId, string cryptoCode)
     {
-        if (!await AuthorizeOnchainWalletSettingsAsync(storeId, cryptoCode))
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, storeId, cryptoCode))
             return Forbid();
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
         if (checkResult != null)
@@ -869,7 +658,7 @@ public class UIStoreOnChainWalletsController : Controller
         [HttpPost("{storeId}/onchain/{cryptoCode}/replace")]
         public async Task<IActionResult> ConfirmReplaceWallet(string storeId, string cryptoCode)
     {
-        if (!await AuthorizeOnchainWalletSettingsAsync(storeId, cryptoCode))
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, storeId, cryptoCode))
             return Forbid();
         var checkResult = IsAvailable(cryptoCode, out var store, out _);
         if (checkResult != null)
@@ -888,7 +677,7 @@ public class UIStoreOnChainWalletsController : Controller
         [HttpGet("{storeId}/onchain/{cryptoCode}/delete")]
         public async Task<ActionResult> DeleteWallet(string storeId, string cryptoCode)
     {
-        if (!await AuthorizeOnchainWalletSettingsAsync(storeId, cryptoCode))
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, storeId, cryptoCode))
             return Forbid();
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
         if (checkResult != null)
@@ -908,7 +697,7 @@ public class UIStoreOnChainWalletsController : Controller
         [HttpPost("{storeId}/onchain/{cryptoCode}/delete")]
         public async Task<IActionResult> ConfirmDeleteWallet(string storeId, string cryptoCode)
     {
-        if (!await AuthorizeOnchainWalletSettingsAsync(storeId, cryptoCode))
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, storeId, cryptoCode))
             return Forbid();
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
         if (checkResult != null)
@@ -986,561 +775,6 @@ public class UIStoreOnChainWalletsController : Controller
         return await stream.ReadToEndAsync();
     }
 
-    private async Task PopulateMultisigStoreUsers(WalletSetupViewModel vm)
-    {
-        var users = await _storeRepo.GetStoreUsers(vm.StoreId);
-        var selected = vm.MultisigParticipantUserIds ?? Array.Empty<string>();
-        vm.MultisigStoreUsers = users.Select(user => new MultisigStoreUserItem
-        {
-            UserId = user.Id,
-            Email = user.Email,
-            Name = user.UserBlob?.Name,
-            Selected = selected.Contains(user.Id, StringComparer.Ordinal)
-        }).ToList();
-    }
-
-    private void PopulateMultisigInviteLinks(WalletSetupViewModel vm)
-    {
-        vm.MultisigInviteLinks = new Dictionary<string, string>(StringComparer.Ordinal);
-        if (vm.MultisigPendingSetup?.Participants is null)
-            return;
-
-        foreach (var participant in vm.MultisigPendingSetup.Participants)
-        {
-            var token = CreateMultisigInviteToken(vm.StoreId, vm.CryptoCode, vm.MultisigPendingSetup.RequestId, participant.UserId);
-            var link = Url.Action(
-                nameof(UIMultisigInviteController.SubmitMultisigSigner),
-                "UIMultisigInvite",
-                new { storeId = vm.StoreId, cryptoCode = vm.CryptoCode, token },
-                Request.Scheme);
-            if (!string.IsNullOrEmpty(link))
-                vm.MultisigInviteLinks[participant.UserId] = link;
-        }
-    }
-
-    private async Task<IActionResult> CreateMultisigRequest(WalletSetupViewModel vm)
-    {
-        var selectedIds = (vm.MultisigParticipantUserIds ?? Array.Empty<string>())
-            .Where(id => !string.IsNullOrWhiteSpace(id))
-            .Distinct(StringComparer.Ordinal)
-            .ToArray();
-
-        var totalSigners = vm.MultisigTotalSigners ?? 0;
-        if (totalSigners is <= 0 or > 15)
-        {
-            ModelState.AddModelError(nameof(vm.MultisigTotalSigners), "Total signers must be between 1 and 15.");
-            return StoreView(vm.ViewName, vm);
-        }
-
-        var usersById = vm.MultisigStoreUsers.ToDictionary(u => u.UserId, u => u, StringComparer.Ordinal);
-        if (!selectedIds.All(usersById.ContainsKey))
-        {
-            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), "One or more selected users are invalid.");
-            return StoreView(vm.ViewName, vm);
-        }
-
-        var requesterUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var requesterStoreUser = vm.MultisigStoreUsers.FirstOrDefault(u => string.Equals(u.UserId, requesterUserId, StringComparison.Ordinal));
-        var requesterEmail = requesterStoreUser?.Email ?? User.FindFirstValue(ClaimTypes.Email) ?? User.Identity?.Name;
-        var requesterName = requesterStoreUser?.Name;
-
-        var pending = await GetLatestPendingMultisigSetup(vm.StoreId, vm.CryptoCode);
-        var isNewRequest = pending is null;
-        if (isNewRequest)
-        {
-            pending = new PendingMultisigSetupData
-            {
-                RequestId = Guid.NewGuid().ToString("N"),
-                CryptoCode = vm.CryptoCode,
-                RequestedByUserId = requesterUserId,
-                RequestedByEmail = requesterEmail,
-                RequestedByName = requesterName,
-                ScriptType = vm.MultisigScriptType ?? "p2wsh",
-                TotalSigners = totalSigners,
-                CreatedAt = DateTimeOffset.UtcNow,
-                ExpiresAt = DateTimeOffset.UtcNow.AddDays(7)
-            };
-        }
-        else
-        {
-            var requestedScriptType = (vm.MultisigScriptType ?? pending.ScriptType ?? "p2wsh").Trim();
-            var pendingScriptType = (pending.ScriptType ?? "p2wsh").Trim();
-            if (!string.Equals(requestedScriptType, pendingScriptType, StringComparison.OrdinalIgnoreCase))
-            {
-                ModelState.AddModelError(nameof(vm.MultisigScriptType),
-                    $"This request is configured for {pendingScriptType.ToUpperInvariant()}. Reset request to change script type.");
-                vm.MultisigPendingSetup = pending;
-                vm.MultisigRequestId ??= pending.RequestId;
-                return StoreView(vm.ViewName, vm);
-            }
-
-            if (totalSigners < pending.TotalSigners)
-            {
-                ModelState.AddModelError(nameof(vm.MultisigTotalSigners),
-                    $"This request is configured for {pending.TotalSigners} signers. Reset request to reduce N.");
-                vm.MultisigPendingSetup = pending;
-                vm.MultisigRequestId ??= pending.RequestId;
-                return StoreView(vm.ViewName, vm);
-            }
-
-            if (totalSigners > pending.TotalSigners)
-                pending.TotalSigners = totalSigners;
-        }
-
-        pending.Participants ??= new List<PendingMultisigSetupParticipantData>();
-
-        var existingIds = pending.Participants.Select(p => p.UserId).ToHashSet(StringComparer.Ordinal);
-        var newIds = selectedIds.Where(id => !existingIds.Contains(id)).ToArray();
-        var resendIds = selectedIds
-            .Where(existingIds.Contains)
-            .Where(id => pending.Participants.Any(p =>
-                string.Equals(p.UserId, id, StringComparison.Ordinal) &&
-                string.IsNullOrWhiteSpace(p.AccountKey)))
-            .ToArray();
-        var availableSlots = pending.TotalSigners - pending.Participants.Count;
-        if (availableSlots <= 0 && newIds.Length > 0)
-        {
-            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), $"This request already has {pending.TotalSigners} signers. Replace a pending signer or reset request.");
-            vm.MultisigPendingSetup = pending;
-            vm.MultisigRequestId ??= pending.RequestId;
-            return StoreView(vm.ViewName, vm);
-        }
-        if (newIds.Length > availableSlots)
-        {
-            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), $"Only {availableSlots} signer slot(s) left for this request.");
-            vm.MultisigPendingSetup = pending;
-            vm.MultisigRequestId ??= pending.RequestId;
-            return StoreView(vm.ViewName, vm);
-        }
-
-        // Keep request persistent: merge newly selected users into the same active request.
-        foreach (var selectedId in newIds)
-        {
-            var selectedUser = usersById[selectedId];
-            pending.Participants.Add(new PendingMultisigSetupParticipantData
-            {
-                UserId = selectedUser.UserId,
-                Email = selectedUser.Email,
-                Name = selectedUser.Name
-            });
-        }
-
-        if (pending.Participants.Count == 0)
-        {
-            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), "Select at least one signer.");
-            return StoreView(vm.ViewName, vm);
-        }
-
-        if (pending.Participants.Count != pending.TotalSigners)
-        {
-            var missing = pending.TotalSigners - pending.Participants.Count;
-            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds),
-                $"Select exactly {pending.TotalSigners} signers for this request. Missing {missing} signer(s).");
-            vm.MultisigPendingSetup = pending;
-            vm.MultisigRequestId ??= pending.RequestId;
-            return StoreView(vm.ViewName, vm);
-        }
-
-        var required = vm.MultisigRequiredSigners ?? pending.RequiredSigners;
-        if (required <= 0 || required > pending.TotalSigners)
-        {
-            ModelState.AddModelError(nameof(vm.MultisigRequiredSigners), "Required signatures must be between 1 and total signers (N).");
-            return StoreView(vm.ViewName, vm);
-        }
-
-        pending.RequiredSigners = required;
-        pending.ExpiresAt = DateTimeOffset.UtcNow.AddDays(7);
-
-        await _storeRepo.UpdateSetting(vm.StoreId, GetPendingMultisigSettingName(vm.CryptoCode), pending);
-        var emailTargetIds = newIds.Concat(resendIds).Distinct(StringComparer.Ordinal).ToArray();
-        await SendMultisigRequestEmails(vm.StoreId, vm.CryptoCode, pending, emailTargetIds);
-        TempData[WellKnownTempData.SuccessMessage] = isNewRequest
-            ? "Multisig signer requests were created."
-            : "Multisig signer requests were updated.";
-        // PRG: avoid recreating a new request id when user refreshes after POST.
-        return RedirectToAction(nameof(ImportWallet), new
-        {
-            storeId = vm.StoreId,
-            cryptoCode = vm.CryptoCode,
-            method = "multisig",
-            multisigRequestId = pending.RequestId
-        });
-    }
-
-    private async Task<IActionResult> RemoveMultisigSigner(WalletSetupViewModel vm)
-    {
-        var pending = await GetPendingMultisigSetup(vm.StoreId, vm.CryptoCode, vm.MultisigRequestId)
-                      ?? await GetLatestPendingMultisigSetup(vm.StoreId, vm.CryptoCode);
-        if (pending is null)
-        {
-            ModelState.AddModelError(nameof(vm.MultisigRequestId), "No active multisig request was found.");
-            return StoreView(vm.ViewName, vm);
-        }
-
-        if (string.IsNullOrWhiteSpace(vm.MultisigRemoveUserId))
-        {
-            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), "Select a signer to remove.");
-            vm.MultisigPendingSetup = pending;
-            vm.MultisigRequestId = pending.RequestId;
-            return StoreView(vm.ViewName, vm);
-        }
-
-        var removed = pending.Participants.RemoveAll(p => string.Equals(p.UserId, vm.MultisigRemoveUserId, StringComparison.Ordinal));
-        if (removed == 0)
-        {
-            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), "Selected signer is not part of this request.");
-            vm.MultisigPendingSetup = pending;
-            vm.MultisigRequestId = pending.RequestId;
-            return StoreView(vm.ViewName, vm);
-        }
-
-        pending.ExpiresAt = DateTimeOffset.UtcNow.AddDays(7);
-        await _storeRepo.UpdateSetting(vm.StoreId, GetPendingMultisigSettingName(vm.CryptoCode), pending);
-        TempData[WellKnownTempData.SuccessMessage] = "Signer removed from request.";
-        return RedirectToAction(nameof(ImportWallet), new
-        {
-            storeId = vm.StoreId,
-            cryptoCode = vm.CryptoCode,
-            method = "multisig",
-            multisigRequestId = pending.RequestId
-        });
-    }
-
-    private async Task<PendingMultisigSetupData> GetPendingMultisigSetup(string storeId, string cryptoCode, string requestId)
-    {
-        if (string.IsNullOrWhiteSpace(requestId))
-            return null;
-        var pending = await _storeRepo.GetSettingAsync<PendingMultisigSetupData>(storeId, GetPendingMultisigSettingName(cryptoCode));
-        if (pending is null || !string.Equals(pending.RequestId, requestId, StringComparison.Ordinal))
-            return null;
-        if (pending.ExpiresAt < DateTimeOffset.UtcNow || pending.Finalized)
-            return null;
-        return pending;
-    }
-
-    private async Task<PendingMultisigSetupData> GetLatestPendingMultisigSetup(string storeId, string cryptoCode)
-    {
-        var pending = await _storeRepo.GetSettingAsync<PendingMultisigSetupData>(storeId, GetPendingMultisigSettingName(cryptoCode));
-        if (pending is null)
-            return null;
-        if (pending.ExpiresAt < DateTimeOffset.UtcNow || pending.Finalized)
-            return null;
-        return pending;
-    }
-
-    private async Task SendMultisigRequestEmails(string storeId, string cryptoCode, PendingMultisigSetupData pending, IEnumerable<string> participantIds = null)
-    {
-        if (!await _emailSenderFactory.IsComplete(storeId))
-            return;
-
-        var sender = await _emailSenderFactory.GetEmailSender(storeId);
-        var allowedIds = participantIds?.ToHashSet(StringComparer.Ordinal);
-        foreach (var participant in pending.Participants.Where(p => string.IsNullOrWhiteSpace(p.AccountKey)))
-        {
-            if (allowedIds is not null && !allowedIds.Contains(participant.UserId))
-                continue;
-            var token = CreateMultisigInviteToken(storeId, cryptoCode, pending.RequestId, participant.UserId);
-            var link = Url.Action(
-                nameof(UIMultisigInviteController.SubmitMultisigSigner),
-                "UIMultisigInvite",
-                new { storeId, cryptoCode, token },
-                Request.Scheme);
-            if (string.IsNullOrEmpty(link))
-                continue;
-
-            if (!TrySendMultisigEmail(
-                sender,
-                participant.Email,
-                $"Multisig signer request for {cryptoCode}",
-                $"A multisig wallet setup requires your account key.<br/>Open this link and submit your signer key:<br/><a href=\"{link}\">{link}</a>",
-                storeId,
-                participant.UserId))
-            {
-                continue;
-            }
-        }
-    }
-
-    private async Task SendMultisigWalletCreatedEmails(string storeId, string cryptoCode, PendingMultisigSetupData pending)
-    {
-        if (!await _emailSenderFactory.IsComplete(storeId))
-            return;
-
-        var sender = await _emailSenderFactory.GetEmailSender(storeId);
-        var walletId = new WalletId(storeId, cryptoCode).ToString();
-        var walletLink = Url.Action(
-            nameof(UIWalletsController.WalletTransactions),
-            "UIWallets",
-            new { walletId },
-            Request.Scheme);
-        if (string.IsNullOrEmpty(walletLink))
-            return;
-
-        var participantIds = pending.Participants
-            .Select(p => p.UserId)
-            .Where(id => !string.IsNullOrWhiteSpace(id))
-            .ToHashSet(StringComparer.Ordinal);
-
-        var recipients = await _multisigRecipientsService.GetWalletScopedRecipients(
-            storeId,
-            cryptoCode,
-            anyPolicies: new[]
-            {
-                Policies.CanCreateWalletTransactions,
-                Policies.CanManageWalletTransactions,
-                Policies.CanViewWallet
-            },
-            includeUserIds: participantIds);
-
-        foreach (var recipient in recipients)
-        {
-            TrySendMultisigEmail(
-                sender,
-                recipient,
-                $"Multisig wallet created for {cryptoCode}",
-                $"The multisig wallet setup is complete.<br/>Open wallet: <a href=\"{walletLink}\">{walletLink}</a>",
-                storeId);
-        }
-    }
-
-    private bool TrySendMultisigEmail(
-        IEmailSender sender,
-        string recipient,
-        string subject,
-        string body,
-        string storeId,
-        string userId = null)
-    {
-        if (!MailboxAddressValidator.TryParse(recipient, out var mailboxAddress))
-        {
-            _logger.LogWarning(
-                "Skipping multisig email for store {StoreId} and user {UserId}: invalid email '{Email}'",
-                storeId,
-                userId ?? string.Empty,
-                recipient);
-            return false;
-        }
-
-        try
-        {
-            sender.SendEmail(mailboxAddress, subject, body);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(
-                ex,
-                "Failed to send multisig email for store {StoreId} and user {UserId}",
-                storeId,
-                userId ?? string.Empty);
-            return false;
-        }
-    }
-
-    private string CreateMultisigInviteToken(string storeId, string cryptoCode, string requestId, string userId)
-    {
-        var payload = $"{storeId}|{cryptoCode}|{requestId}|{userId}|{DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeSeconds()}";
-        var protectedPayload = _multisigInviteProtector.Protect(payload);
-        return WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(protectedPayload));
-    }
-
-    internal static string GetPendingMultisigSettingName(string cryptoCode)
-    {
-        return $"{PendingMultisigSettingPrefix}-{cryptoCode?.ToUpperInvariant()}";
-    }
-
-    private static bool TryBuildMultisigDerivationScheme(WalletSetupViewModel vm, BTCPayNetwork network, out string derivationScheme, out string validationError)
-    {
-        derivationScheme = null;
-        validationError = null;
-
-        if (!string.IsNullOrWhiteSpace(vm.MultisigManualDerivationScheme))
-        {
-            derivationScheme = vm.MultisigManualDerivationScheme.Trim();
-            return true;
-        }
-
-        var requiredSigners = vm.MultisigRequiredSigners ?? 0;
-        var totalSigners = vm.MultisigTotalSigners ?? 0;
-        if (requiredSigners <= 0 || totalSigners <= 0 || requiredSigners > totalSigners)
-        {
-            validationError = "Invalid M-of-N configuration.";
-            return false;
-        }
-
-        if (totalSigners > 15)
-        {
-            validationError = "Too many signers. Use 15 or fewer keys.";
-            return false;
-        }
-
-        var rawSignerKeys = vm.MultisigSigners ?? Array.Empty<string>();
-        var rawFingerprints = vm.MultisigSignerFingerprints ?? Array.Empty<string>();
-        var rawKeyPaths = vm.MultisigSignerKeyPaths ?? Array.Empty<string>();
-
-        var signerKeys = rawSignerKeys.Select(k => k?.Trim()).ToArray();
-
-        signerKeys = signerKeys.Where(k => !string.IsNullOrWhiteSpace(k)).ToArray();
-
-        if (signerKeys.Length != totalSigners)
-        {
-            validationError = "Please provide all signer keys.";
-            return false;
-        }
-
-        var normalizedSignerKeys = new string[signerKeys.Length];
-        for (var i = 0; i < signerKeys.Length; i++)
-        {
-            if (!TryNormalizeAccountKeyForNetwork(signerKeys[i], network, out var normalizedSignerKey))
-            {
-                validationError = $"Signer {i + 1}: invalid account key.";
-                return false;
-            }
-            normalizedSignerKeys[i] = normalizedSignerKey;
-        }
-
-        if (normalizedSignerKeys.Distinct(StringComparer.Ordinal).Count() != normalizedSignerKeys.Length)
-        {
-            validationError = "Signer keys must be unique.";
-            return false;
-        }
-
-        var suffix = vm.MultisigScriptType?.ToLowerInvariant() switch
-        {
-            "p2wsh" => string.Empty,
-            "p2sh-p2wsh" => "-[p2sh]",
-            "p2sh" => "-[legacy]",
-            _ => null
-        };
-        if (suffix is null)
-        {
-            validationError = "Invalid multisig script type.";
-            return false;
-        }
-
-        var hasPartialOriginInfo = false;
-        for (var i = 0; i < totalSigners; i++)
-        {
-            var fp = (rawFingerprints.ElementAtOrDefault(i) ?? string.Empty).Trim();
-            var path = (rawKeyPaths.ElementAtOrDefault(i) ?? string.Empty).Trim();
-            var hasOrigin = !string.IsNullOrWhiteSpace(fp) || !string.IsNullOrWhiteSpace(path);
-            if (hasOrigin && (string.IsNullOrWhiteSpace(fp) || string.IsNullOrWhiteSpace(path)))
-            {
-                hasPartialOriginInfo = true;
-            }
-
-            if (!hasOrigin)
-            {
-                continue;
-            }
-
-            if (!Regex.IsMatch(fp, "^[0-9a-fA-F]{8}$"))
-            {
-                validationError = $"Signer {i + 1}: invalid fingerprint.";
-                return false;
-            }
-
-            var normalizedPath = path
-                .Replace("’", "'")
-                .Replace("`", "'")
-                .Replace("′", "'")
-                .Replace(" ", string.Empty);
-            normalizedPath = Regex.Replace(normalizedPath, @"([0-9]+)[hH]", "$1'");
-            normalizedPath = normalizedPath.StartsWith("m/", StringComparison.OrdinalIgnoreCase) ? normalizedPath[2..] : normalizedPath;
-            if (KeyPath.TryParse(normalizedPath, out _)) continue;
-            validationError = $"Signer {i + 1}: invalid account key path.";
-            return false;
-        }
-
-        if (hasPartialOriginInfo)
-        {
-            validationError = "For each signer, provide both fingerprint and account key path, or leave both empty.";
-            return false;
-        }
-
-        derivationScheme = $"{requiredSigners}-of-{string.Join("-", normalizedSignerKeys)}{suffix}";
-        return true;
-    }
-
-    private static void ApplyMultisigSignerOrigins(WalletSetupViewModel vm, DerivationSchemeSettings strategy)
-    {
-        if (strategy.AccountKeySettings is null || strategy.AccountKeySettings.Length == 0)
-            return;
-
-        for (var i = 0; i < strategy.AccountKeySettings.Length; i++)
-        {
-            var fp = (vm.MultisigSignerFingerprints?.ElementAtOrDefault(i) ?? string.Empty).Trim();
-            var path = (vm.MultisigSignerKeyPaths?.ElementAtOrDefault(i) ?? string.Empty).Trim();
-            if (string.IsNullOrWhiteSpace(fp) || string.IsNullOrWhiteSpace(path))
-                continue;
-
-            var normalizedPath = path
-                .Replace("’", "'")
-                .Replace("`", "'")
-                .Replace("′", "'")
-                .Replace(" ", string.Empty);
-            normalizedPath = Regex.Replace(normalizedPath, @"([0-9]+)[hH]", "$1'");
-            normalizedPath = normalizedPath.StartsWith("m/", StringComparison.OrdinalIgnoreCase) ? normalizedPath[2..] : normalizedPath;
-
-            if (!KeyPath.TryParse(normalizedPath, out var parsedPath))
-                continue;
-            if (!Regex.IsMatch(fp, "^[0-9a-fA-F]{8}$"))
-                continue;
-
-            strategy.AccountKeySettings[i].AccountKeyPath = parsedPath;
-            strategy.AccountKeySettings[i].RootFingerprint = new HDFingerprint(Encoders.Hex.DecodeData(fp));
-        }
-    }
-
-    private static void ApplyMultisigSignerIdentities(PendingMultisigSetupData pending, DerivationSchemeSettings strategy, BTCPayNetwork network)
-    {
-        if (pending?.Participants is null || pending.Participants.Count == 0 || strategy.AccountKeySettings is null || strategy.AccountKeySettings.Length == 0)
-            return;
-
-        var participantsByKey = new Dictionary<string, PendingMultisigSetupParticipantData>(StringComparer.Ordinal);
-        foreach (var participant in pending.Participants)
-        {
-            var key = NormalizeAccountKey(participant.AccountKey, network);
-            if (string.IsNullOrEmpty(key) || participantsByKey.ContainsKey(key))
-                continue;
-            participantsByKey[key] = participant;
-        }
-
-        foreach (var accountSettings in strategy.AccountKeySettings)
-        {
-            var key = NormalizeAccountKey(accountSettings.AccountKey?.ToString(), network);
-            if (string.IsNullOrEmpty(key) || !participantsByKey.TryGetValue(key, out var participant))
-                continue;
-
-            accountSettings.SignerUserId = participant.UserId;
-            accountSettings.SignerEmail = participant.Email;
-        }
-    }
-
-    internal static bool TryNormalizeAccountKeyForNetwork(string accountKey, BTCPayNetwork network, out string normalizedAccountKey)
-    {
-        normalizedAccountKey = null;
-        if (string.IsNullOrWhiteSpace(accountKey) || network?.NBitcoinNetwork is null)
-            return false;
-
-        try
-        {
-            normalizedAccountKey = new BitcoinExtPubKey(accountKey.Trim(), network.NBitcoinNetwork).ToString();
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static string NormalizeAccountKey(string accountKey, BTCPayNetwork network)
-    {
-        return TryNormalizeAccountKeyForNetwork(accountKey, network, out var normalizedAccountKey)
-            ? normalizedAccountKey
-            : null;
-    }
-
     private string WalletWarning(bool isHotWallet, string info)
     {
         var walletType = isHotWallet ? "hot" : "watch-only";
@@ -1564,39 +798,6 @@ public class UIStoreOnChainWalletsController : Controller
     {
         return WalletWarning(isHotWallet,
             $"The store won't be able to receive {cryptoCode} onchain payments until a new wallet is set up.");
-    }
-
-    private async Task<bool> AuthorizeOnchainWalletSettingsAsync(string storeId, string cryptoCode)
-    {
-        if ((await _authorizationService.AuthorizeAsync(User, storeId, Policies.CanManageWallets)).Succeeded)
-        {
-            if (HttpContext.GetStoreData() is null)
-            {
-                var store = await _storeRepo.FindStore(storeId);
-                if (store != null)
-                {
-                    HttpContext.SetStoreData(store);
-                }
-            }
-            return true;
-        }
-        var walletTypePolicy = cryptoCode.Equals("BTC", StringComparison.OrdinalIgnoreCase)
-            ? Policies.CanModifyBitcoinOnchain
-            : Policies.CanModifyOtherWallets;
-        foreach (var policy in new[] { walletTypePolicy, Policies.CanManageWalletSettings })
-        {
-            if (!(await _authorizationService.AuthorizeAsync(User, storeId, policy)).Succeeded)
-                return false;
-        }
-        if (HttpContext.GetStoreData() is null)
-        {
-            var store = await _storeRepo.FindStore(storeId);
-            if (store != null)
-            {
-                HttpContext.SetStoreData(store);
-            }
-        }
-        return true;
     }
 
     internal static DerivationSchemeSettings ParseDerivationStrategy(string derivationScheme, BTCPayNetwork network)

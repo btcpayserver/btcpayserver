@@ -34,7 +34,6 @@ using BTCPayServer.Services.Wallets.Export;
 using BTCPayServer.Plugins.Emails.Services;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
@@ -81,9 +80,7 @@ namespace BTCPayServer.Controllers
         private readonly InvoiceRepository _invoiceRepository;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
         private readonly WalletHistogramService _walletHistogramService;
-        private readonly IDataProtector _multisigInviteProtector;
-        private readonly MultisigRecipientsService _multisigRecipientsService;
-        private readonly ILogger<UIWalletsController> _logger;
+        private readonly PermissionService _permissionService;
 
         private readonly PendingTransactionService _pendingTransactionService;
         readonly CurrencyNameTable _currencyTable;
@@ -95,7 +92,6 @@ namespace BTCPayServer.Controllers
             WalletRepository walletRepository,
             CurrencyNameTable currencyTable,
             BTCPayNetworkProvider networkProvider,
-            IDataProtectionProvider dataProtectionProvider,
             NBXplorerDashboard dashboard,
             WalletHistogramService walletHistogramService,
             RateFetcher rateProvider,
@@ -109,21 +105,20 @@ namespace BTCPayServer.Controllers
             PayjoinClient payjoinClient,
             IServiceProvider serviceProvider,
             PullPaymentHostedService pullPaymentHostedService,
+            PermissionService permissionService,
             LabelService labelService,
-            MultisigRecipientsService multisigRecipientsService,
             DefaultRulesCollection defaultRules,
             PaymentMethodHandlerDictionary handlers,
             Dictionary<PaymentMethodId, ICheckoutModelExtension> paymentModelExtensions,
             IStringLocalizer stringLocalizer,
             TransactionLinkProviders transactionLinkProviders,
             InvoiceRepository invoiceRepository,
-            DisplayFormatter displayFormatter,
-            ILogger<UIWalletsController> logger)
+            DisplayFormatter displayFormatter)
         {
             _pendingTransactionService = pendingTransactionService;
             _currencyTable = currencyTable;
             _labelService = labelService;
-            _multisigRecipientsService = multisigRecipientsService;
+            _permissionService = permissionService;
             _defaultRules = defaultRules;
             _handlers = handlers;
             _paymentModelExtensions = paymentModelExtensions;
@@ -135,7 +130,6 @@ namespace BTCPayServer.Controllers
             _authorizationService = authorizationService;
             NetworkProvider = networkProvider;
             _dashboard = dashboard;
-            _multisigInviteProtector = dataProtectionProvider.CreateProtector("MultisigInviteLink");
             ExplorerClientProvider = explorerProvider;
             _feeRateProvider = feeRateProvider;
             _walletProvider = walletProvider;
@@ -146,7 +140,6 @@ namespace BTCPayServer.Controllers
             _pullPaymentHostedService = pullPaymentHostedService;
             ServiceProvider = serviceProvider;
             _walletHistogramService = walletHistogramService;
-            _logger = logger;
             StringLocalizer = stringLocalizer;
             _displayFormatter = displayFormatter;
         }
@@ -460,8 +453,7 @@ namespace BTCPayServer.Controllers
                 switch (model.Command)
                 {
                     case "createpending":
-                        var feeBumpPending = await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl());
-                        await NotifyMultisigSignersOfPendingTransaction(walletId, feeBumpPending);
+                        await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl());
                         return RedirectToWalletList(walletId);
                     default:
                         // case "sign":
@@ -586,7 +578,6 @@ namespace BTCPayServer.Controllers
             }
             var wallets = new ListWalletsViewModel();
             var stores = await Repository.GetStoresByUserId(userId);
-            wallets.MultisigInProgress = await GetMultisigInProgress(stores, userId);
 
             var onChainWallets = stores
                 .SelectMany(s => s.GetPaymentMethodConfigs<DerivationSchemeSettings>(_handlers)
@@ -601,8 +592,8 @@ namespace BTCPayServer.Controllers
                         var walletTypePolicy = o.Network.CryptoCode.Equals("BTC", StringComparison.OrdinalIgnoreCase)
                             ? Policies.CanModifyBitcoinOnchain
                             : Policies.CanModifyOtherWallets;
-                        return permissionSet.Contains(Policies.CanViewWallet, s.Id) &&
-                               permissionSet.Contains(walletTypePolicy, s.Id);
+                        return permissionSet.HasPermission(Policies.CanViewWallet, s.Id, _permissionService) &&
+                               permissionSet.HasPermission(walletTypePolicy, s.Id, _permissionService);
                     })
                     .Select(o => (Wallet: o.Wallet,
                         Store: s,
@@ -630,119 +621,6 @@ namespace BTCPayServer.Controllers
             }
 
             return View(wallets);
-        }
-
-        private async Task<List<MultisigInProgressViewModel>> GetMultisigInProgress(IEnumerable<StoreData> stores, string userId)
-        {
-            var result = new List<MultisigInProgressViewModel>();
-            var storesById = stores.ToDictionary(s => s.Id, s => s, StringComparer.Ordinal);
-            var storeNames = storesById.ToDictionary(s => s.Key, s => s.Value.StoreName, StringComparer.Ordinal);
-            var storeIds = storesById.Keys.ToHashSet(StringComparer.Ordinal);
-            if (storeIds.Count == 0)
-                return result;
-
-            var cryptoCodes = _handlers.OfType<BitcoinLikePaymentHandler>()
-                .Select(h => h.Network.CryptoCode)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            foreach (var cryptoCode in cryptoCodes)
-            {
-                var settings = await Repository.GetSettingsAsync<PendingMultisigSetupData>(
-                    UIStoreOnChainWalletsController.GetPendingMultisigSettingName(cryptoCode));
-                foreach (var (storeId, pending) in settings)
-                {
-                    if (!storeIds.Contains(storeId) || pending is null)
-                        continue;
-                    if (pending.ExpiresAt < DateTimeOffset.UtcNow || pending.Finalized)
-                        continue;
-
-                    var participant = pending.Participants.FirstOrDefault(p =>
-                        string.Equals(p.UserId, userId, StringComparison.Ordinal));
-                    if (participant is null)
-                        continue;
-                    var yourKeySubmitted = !string.IsNullOrWhiteSpace(participant.AccountKey);
-
-                    var requestedCryptoCode = pending.CryptoCode ?? cryptoCode;
-                    var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(requestedCryptoCode);
-                    if (storesById.TryGetValue(storeId, out var storeData) &&
-                        _handlers.Support(paymentMethodId))
-                    {
-                        var existingWalletConfig = storeData.GetPaymentMethodConfig<DerivationSchemeSettings>(paymentMethodId, _handlers);
-                        if (existingWalletConfig is not null)
-                            continue;
-                    }
-
-                    var submittedSigners = pending.Participants.Count(p => !string.IsNullOrWhiteSpace(p.AccountKey));
-                    var token = CreateMultisigInviteToken(storeId, requestedCryptoCode, pending.RequestId, userId, pending.ExpiresAt);
-                    var inviteUrl = Url.Action(
-                        nameof(UIMultisigInviteController.SubmitMultisigSigner),
-                        "UIMultisigInvite",
-                        new { storeId, cryptoCode = requestedCryptoCode, token },
-                        Request.Scheme);
-                    var setupUrl = await CanManagePendingMultisigSetup(storeId, requestedCryptoCode)
-                        ? Url.Action(
-                            nameof(UIStoreOnChainWalletsController.ImportWallet),
-                            "UIStoreOnChainWallets",
-                            new
-                            {
-                                storeId,
-                                cryptoCode = requestedCryptoCode,
-                                method = "multisig",
-                                multisigRequestId = pending.RequestId
-                            },
-                            Request.Scheme)
-                        : null;
-
-                    result.Add(new MultisigInProgressViewModel
-                    {
-                        StoreId = storeId,
-                        StoreName = storeNames.TryGetValue(storeId, out var storeName) ? storeName : storeId,
-                        CryptoCode = requestedCryptoCode,
-                        RequestId = pending.RequestId,
-                        ScriptType = pending.ScriptType,
-                        RequiredSigners = pending.RequiredSigners,
-                        TotalSigners = pending.TotalSigners,
-                        SubmittedSigners = submittedSigners,
-                        DidParticipate = true,
-                        YourKeySubmitted = yourKeySubmitted,
-                        ExpiresAt = pending.ExpiresAt,
-                        InviteUrl = inviteUrl,
-                        SetupUrl = setupUrl
-                    });
-                }
-            }
-
-            return result
-                .OrderBy(m => m.YourKeySubmitted)
-                .ThenBy(m => m.ExpiresAt)
-                .ThenBy(m => m.StoreName)
-                .ToList();
-        }
-
-        private string CreateMultisigInviteToken(string storeId, string cryptoCode, string requestId, string userId, DateTimeOffset expiresAt)
-        {
-            var payload = $"{storeId}|{cryptoCode}|{requestId}|{userId}|{expiresAt.ToUnixTimeSeconds()}";
-            var protectedPayload = _multisigInviteProtector.Protect(payload);
-            return WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(protectedPayload));
-        }
-
-        private async Task<bool> CanManagePendingMultisigSetup(string storeId, string cryptoCode)
-        {
-            if ((await _authorizationService.AuthorizeAsync(User, storeId, Policies.CanManageWallets)).Succeeded)
-                return true;
-
-            var walletTypePolicy = cryptoCode.Equals("BTC", StringComparison.OrdinalIgnoreCase)
-                ? Policies.CanModifyBitcoinOnchain
-                : Policies.CanModifyOtherWallets;
-
-            foreach (var policy in new[] { walletTypePolicy, Policies.CanManageWalletSettings })
-            {
-                if (!(await _authorizationService.AuthorizeAsync(User, storeId, policy)).Succeeded)
-                    return false;
-            }
-
-            return true;
         }
 
         [HttpGet("{walletId}")]
@@ -1461,8 +1339,7 @@ namespace BTCPayServer.Controllers
             switch (command)
             {
                 case "createpending":
-                    var createPending = await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl());
-                    await NotifyMultisigSignersOfPendingTransaction(walletId, createPending);
+                    await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl());
                     return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                 case "sign":
                     return await WalletSign(walletId, new WalletPSBTViewModel
@@ -1584,9 +1461,11 @@ namespace BTCPayServer.Controllers
                 if (network is null)
                     return NotFound();
                 var psbt = PSBT.Parse(vm.SigningContext.PSBT, network);
-                var pendingTransaction = await _pendingTransactionService.CollectSignature(GetPendingTxId(walletId, vm.SigningContext.PendingTransactionId), psbt, CancellationToken.None);
-                if (pendingTransaction is not null)
-                    await NotifyPendingTransactionSignatureCollected(walletId, pendingTransaction, GetUserId());
+                var pendingTransaction = await _pendingTransactionService.CollectSignature(
+                    GetPendingTxId(walletId, vm.SigningContext.PendingTransactionId),
+                    psbt,
+                    CancellationToken.None,
+                    GetUserId());
 
                 if (pendingTransaction != null)
                     return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
@@ -2201,7 +2080,7 @@ namespace BTCPayServer.Controllers
         {
             if (walletId?.StoreId is null)
                 return null;
-            var currentStore = HttpContext.GetStoreData();
+            var currentStore = HttpContext.GetStoreDataOrNull();
             if (currentStore?.Id == walletId.StoreId)
                 return currentStore;
 
@@ -2235,125 +2114,6 @@ namespace BTCPayServer.Controllers
                     return true;
             }
             return false;
-        }
-
-        private async Task NotifyMultisigSignersOfPendingTransaction(WalletId walletId, PendingTransaction pendingTransaction)
-        {
-            if (walletId?.StoreId is null || pendingTransaction is null)
-                return;
-
-            var derivation = GetDerivationSchemeSettings(walletId);
-            if (derivation?.AccountKeySettings is null || derivation.AccountKeySettings.Length <= 1)
-                return;
-
-            var emailSenderFactory = ServiceProvider.GetService<EmailSenderFactory>();
-            if (emailSenderFactory is null || !await emailSenderFactory.IsComplete(walletId.StoreId))
-                return;
-
-            var recipients = await _multisigRecipientsService.GetWalletScopedRecipients(
-                walletId.StoreId,
-                walletId.CryptoCode,
-                allPolicies: new[] { Policies.CanViewWallet },
-                anyPolicies: new[] { Policies.CanSignWalletTransactions, Policies.CanManageWalletTransactions });
-
-            if (recipients.Length == 0)
-                return;
-
-            var sender = await emailSenderFactory.GetEmailSender(walletId.StoreId);
-            var pendingLink = Url.Action(
-                nameof(ViewPendingTransaction),
-                "UIWallets",
-                new { walletId = walletId.ToString(), pendingTransactionId = pendingTransaction.Id },
-                Request.Scheme);
-
-            foreach (var recipient in recipients)
-            {
-                TrySendWalletNotificationEmail(
-                    sender,
-                    recipient,
-                    $"Pending multisig transaction requires signatures ({walletId.CryptoCode})",
-                    $"A pending multisig transaction was created and needs signatures.<br/>" +
-                    $"<a href=\"{pendingLink}\">Open pending transaction</a>",
-                    walletId.StoreId);
-            }
-        }
-
-        private async Task NotifyPendingTransactionSignatureCollected(WalletId walletId, PendingTransaction pendingTransaction, string? signerUserId)
-        {
-            if (walletId?.StoreId is null || pendingTransaction is null)
-                return;
-
-            var derivation = GetDerivationSchemeSettings(walletId);
-            if (derivation?.AccountKeySettings is null || derivation.AccountKeySettings.Length <= 1)
-                return;
-
-            var emailSenderFactory = ServiceProvider.GetService<EmailSenderFactory>();
-            if (emailSenderFactory is null || !await emailSenderFactory.IsComplete(walletId.StoreId))
-                return;
-
-            var recipients = await _multisigRecipientsService.GetWalletScopedRecipients(
-                walletId.StoreId,
-                walletId.CryptoCode,
-                allPolicies: new[] { Policies.CanViewWallet },
-                anyPolicies: new[] { Policies.CanCreateWalletTransactions, Policies.CanManageWalletTransactions },
-                excludeUserId: signerUserId);
-
-            if (recipients.Length == 0)
-                return;
-
-            var sender = await emailSenderFactory.GetEmailSender(walletId.StoreId);
-            var pendingLink = Url.Action(
-                nameof(ViewPendingTransaction),
-                "UIWallets",
-                new { walletId = walletId.ToString(), pendingTransactionId = pendingTransaction.Id },
-                Request.Scheme);
-            var blob = pendingTransaction.GetBlob();
-            var progress = blob is null
-                ? "Signature was collected."
-                : $"Progress: <b>{blob.SignaturesCollected}/{blob.SignaturesNeeded ?? blob.SignaturesTotal ?? 0}</b> signatures.";
-
-            foreach (var recipient in recipients)
-            {
-                TrySendWalletNotificationEmail(
-                    sender,
-                    recipient,
-                    $"Multisig signature collected ({walletId.CryptoCode})",
-                    $"A signer submitted a signature for the pending multisig transaction.<br/>" +
-                    $"{progress}<br/>" +
-                    $"<a href=\"{pendingLink}\">Open pending transaction</a>",
-                    walletId.StoreId);
-            }
-        }
-
-        private bool TrySendWalletNotificationEmail(
-            IEmailSender sender,
-            string recipient,
-            string subject,
-            string body,
-            string storeId)
-        {
-            if (!MailboxAddressValidator.TryParse(recipient, out var mailboxAddress))
-            {
-                _logger.LogWarning(
-                    "Skipping wallet notification email for store {StoreId}: invalid email '{Email}'",
-                    storeId,
-                    recipient);
-                return false;
-            }
-
-            try
-            {
-                sender.SendEmail(mailboxAddress, subject, body);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(
-                    ex,
-                    "Failed to send wallet notification email for store {StoreId}",
-                    storeId);
-                return false;
-            }
         }
 
         private string? GetUserId() => User.GetIdOrNull();

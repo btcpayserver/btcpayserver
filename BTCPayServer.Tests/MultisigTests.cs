@@ -8,7 +8,9 @@ using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Plugins.Multisig.Models;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
@@ -163,6 +165,31 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Page.ClickAsync("#ConfirmContinue");
         await s.FindAlertMessage(partialText: "Aborted Pending Transaction");
 
+        // Collecting without a user id should still notify via the pending transaction event.
+        await s.GoToWallet(navPages: WalletsNavPages.Send);
+        await s.Page.FillAsync("#Outputs_0__DestinationAddress", address);
+        await s.Page.FillAsync("#Outputs_0__Amount", "0.3");
+        var pendingCreatedWithoutSignerEmail = await s.Server.AssertHasEmail(async () =>
+        {
+            await s.Page.ClickAsync("#CreatePendingTransaction");
+        });
+        Assert.Equal("Pending multisig transaction requires signatures (BTC)", pendingCreatedWithoutSignerEmail.Subject);
+
+        var pendingTransactionService = s.Server.PayTester.GetService<PendingTransactionService>();
+        var pendingWithoutSigner = Assert.Single(await pendingTransactionService.GetPendingTransactions(cryptoCode, storeId));
+        var pendingWithoutSignerBlob = pendingWithoutSigner.GetBlob();
+        Assert.NotNull(pendingWithoutSignerBlob?.PSBT);
+        var signedWithoutSigner = SignWithSeed(pendingWithoutSignerBlob.PSBT, derivationScheme, resp1);
+        var signatureCollectedWithoutSignerEmail = await s.Server.AssertHasEmail(async () =>
+        {
+            await pendingTransactionService.CollectSignature(
+                new PendingTransactionService.PendingTransactionFullId(cryptoCode, storeId, pendingWithoutSigner.Id),
+                PSBT.Parse(signedWithoutSigner, network.NBitcoinNetwork),
+                CancellationToken.None,
+                signerUserId: null);
+        });
+        Assert.Equal("Multisig signature collected (BTC)", signatureCollectedWithoutSignerEmail.Subject);
+
         s.TestLogs.LogInformation($"Finished MultiSig Flow");
     }
 
@@ -233,7 +260,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
             return currentPending.RequestId;
         }
 
-        async Task SubmitSigner(string email, string requestId, string userId, string accountKey, string fingerprint, string expectedMessage, bool submitForm = true, bool useVaultCallback = false, bool expectNotification = true)
+        async Task SubmitSigner(string email, string requestId, string userId, string accountKey, string fingerprint, string accountKeyPath, string expectedMessage, bool submitForm = true, bool useVaultCallback = false, bool expectNotification = true)
         {
             await s.Logout();
             await s.GoToLogin();
@@ -241,6 +268,10 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
             var expires = DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeSeconds();
             var protectedToken = protector.Protect($"{storeId}|BTC|{requestId}|{userId}|{expires}");
             var token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(protectedToken));
+            if (useVaultCallback)
+            {
+                await InstallMockVaultAsync(s.Page, accountKey, fingerprint);
+            }
             await s.GoToUrl($"/stores/{storeId}/onchain/BTC/multisig/invite/{Uri.EscapeDataString(token)}");
             if (submitForm)
             {
@@ -248,22 +279,20 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
                 {
                     await Expect(s.Page.Locator("#SubmitSignerKeyButton")).ToBeDisabledAsync();
                     await Expect(s.Page.Locator("#SignerKeyFields")).ToHaveClassAsync(new Regex("d-none"));
-                    await s.Page.WaitForFunctionAsync("() => !!window.vault && typeof window.vault.setMultisigInviteXPub === 'function'");
-                    await s.Page.EvaluateAsync(
-                        "([key, fp]) => vault.setMultisigInviteXPub({ accountKey: key, masterFingerprint: fp, accountKeyPath: \"m/84'/1'/0'\" })",
-                        new[] { accountKey, fingerprint });
+                    await Expect(s.Page.Locator("#vault-confirm")).ToBeVisibleAsync();
+                    await s.Page.ClickAsync("#vault-confirm");
                     await Expect(s.Page.Locator("#SignerKeyFields")).Not.ToHaveClassAsync(new Regex("d-none"));
                     await Expect(s.Page.Locator("#SubmitSignerKeyButton")).ToBeEnabledAsync();
                     Assert.Equal(accountKey, await s.Page.InputValueAsync("#AccountKey"));
                     Assert.Equal(fingerprint, await s.Page.InputValueAsync("#MasterFingerprint"));
-                    Assert.Equal("m/84'/1'/0'", await s.Page.InputValueAsync("#AccountKeyPath"));
+                    Assert.Equal(accountKeyPath, await s.Page.InputValueAsync("#AccountKeyPath"));
                 }
                 else
                 {
                     await s.Page.ClickAsync("#EntryModeManual");
                     await s.Page.FillAsync("#AccountKey", accountKey);
                     await s.Page.FillAsync("#MasterFingerprint", fingerprint);
-                    await s.Page.FillAsync("#AccountKeyPath", "m/84'/1'/0'");
+                    await s.Page.FillAsync("#AccountKeyPath", accountKeyPath);
                 }
                 if (expectNotification)
                 {
@@ -281,7 +310,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
             await Expect(s.Page.Locator("body")).ToContainTextAsync(expectedMessage);
         }
 
-        var signerAKey = CreateTestMultisigSignerKey("all all all all all all all all all all all all");
+        var signerAKey = CreateTestMultisigSignerKey("all all all all all all all all all all all all", "48'/1'/0'/2'");
         var signerBKey = CreateTestMultisigSignerKey("click chunk owner kingdom faint steak safe evidence bicycle repeat bulb wheel");
         var walletManagerKey = CreateTestMultisigSignerKey("letter advice cage absurd amount doctor acoustic avoid letter advice cage above");
 
@@ -303,20 +332,20 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var redirectedBody = await s.Page.TextContentAsync("body") ?? string.Empty;
         Assert.DoesNotContain("404", redirectedBody, StringComparison.OrdinalIgnoreCase);
 
-        await SubmitSigner(signerA, firstRequestId, signerAUser.Id, signerAKey.AccountKey, signerAKey.MasterFingerprint, "Your signer key is submitted.", useVaultCallback: true);
+        await SubmitSigner(signerA, firstRequestId, signerAUser.Id, signerAKey.AccountKey, signerAKey.MasterFingerprint, signerAKey.AccountKeyPath, "Your signer key is submitted.", useVaultCallback: true);
         var pendingAfterFirstSubmit = await storeRepo.GetSettingAsync<PendingMultisigSetupData>(storeId, "PendingMultisigSetup-BTC");
         var signerAParticipant = pendingAfterFirstSubmit.Participants.Single(p => p.UserId == signerAUser.Id);
         Assert.Equal(signerAKey.AccountKey, signerAParticipant.AccountKey);
         Assert.NotNull(signerAParticipant.SubmittedAt);
         var signerAFirstSubmittedAt = signerAParticipant.SubmittedAt;
 
-        await SubmitSigner(signerA, firstRequestId, signerAUser.Id, signerBKey.AccountKey, signerBKey.MasterFingerprint, "Your signer key is submitted.", submitForm: false);
+        await SubmitSigner(signerA, firstRequestId, signerAUser.Id, signerBKey.AccountKey, signerBKey.MasterFingerprint, signerBKey.AccountKeyPath, "Your signer key is submitted.", submitForm: false);
         var pendingAfterResubmit = await storeRepo.GetSettingAsync<PendingMultisigSetupData>(storeId, "PendingMultisigSetup-BTC");
         var signerAAfterResubmit = pendingAfterResubmit.Participants.Single(p => p.UserId == signerAUser.Id);
         Assert.Equal(signerAKey.AccountKey, signerAAfterResubmit.AccountKey);
         Assert.Equal(signerAFirstSubmittedAt, signerAAfterResubmit.SubmittedAt);
 
-        await SubmitSigner(signerB, firstRequestId, signerBUser.Id, signerAKey.AccountKey, signerAKey.MasterFingerprint, "This signer key is already used in this multisig request.", expectNotification: false);
+        await SubmitSigner(signerB, firstRequestId, signerBUser.Id, signerAKey.AccountKey, signerAKey.MasterFingerprint, signerAKey.AccountKeyPath, "This signer key is already used in this multisig request.", expectNotification: false);
         var pendingAfterDuplicate = await storeRepo.GetSettingAsync<PendingMultisigSetupData>(storeId, "PendingMultisigSetup-BTC");
         var signerBParticipant = pendingAfterDuplicate.Participants.Single(p => p.UserId == signerBUser.Id);
         Assert.True(string.IsNullOrWhiteSpace(signerBParticipant.AccountKey));
@@ -332,7 +361,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var signerBForLegacyFinalize = pendingForLegacyFinalize.Participants.Single(p => p.UserId == signerBUser.Id);
         signerBForLegacyFinalize.AccountKey = signerAKey.AccountKey;
         signerBForLegacyFinalize.MasterFingerprint = signerAKey.MasterFingerprint;
-        signerBForLegacyFinalize.AccountKeyPath = "m/84'/1'/0'";
+        signerBForLegacyFinalize.AccountKeyPath = signerAKey.AccountKeyPath;
         signerBForLegacyFinalize.SubmittedAt = DateTimeOffset.UtcNow;
         await storeRepo.UpdateSetting(storeId, "PendingMultisigSetup-BTC", pendingForLegacyFinalize);
 
@@ -344,8 +373,8 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await storeRepo.UpdateSetting<PendingMultisigSetupData>(storeId, "PendingMultisigSetup-BTC", null);
 
         var secondRequestId = await CreateRequest(walletManager, signerB);
-        await SubmitSigner(walletManager, secondRequestId, walletManagerUser.Id, walletManagerKey.AccountKey, walletManagerKey.MasterFingerprint, "Your signer key is submitted.");
-        await SubmitSigner(signerB, secondRequestId, signerBUser.Id, signerBKey.AccountKey, signerBKey.MasterFingerprint, "Your signer key is submitted.");
+        await SubmitSigner(walletManager, secondRequestId, walletManagerUser.Id, walletManagerKey.AccountKey, walletManagerKey.MasterFingerprint, walletManagerKey.AccountKeyPath, "Your signer key is submitted.");
+        await SubmitSigner(signerB, secondRequestId, signerBUser.Id, signerBKey.AccountKey, signerBKey.MasterFingerprint, signerBKey.AccountKeyPath, "Your signer key is submitted.");
 
         await s.Logout();
         await s.GoToLogin();
@@ -416,13 +445,61 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         return resp1;
     }
 
-    private static (string AccountKey, string MasterFingerprint) CreateTestMultisigSignerKey(string mnemonic)
+    private static async Task InstallMockVaultAsync(IPage page, string accountKey, string fingerprint)
+    {
+        await page.Context.AddInitScriptAsync($$"""
+            (() => {
+                const originalFetch = window.fetch.bind(window);
+                const accountKey = {{System.Text.Json.JsonSerializer.Serialize(accountKey)}};
+                const fingerprint = {{System.Text.Json.JsonSerializer.Serialize(fingerprint)}};
+                window.__vaultRequests = [];
+                window.fetch = async (input, init) => {
+                    const url = typeof input === 'string' ? input : input.url;
+                    if (!url.startsWith('http://127.0.0.1:65092/hwi-bridge/v1')) {
+                        return originalFetch(input, init);
+                    }
+
+                    if (url.endsWith('/request-permission')) {
+                        return new Response('', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+                    }
+
+                    const requestBody = init && typeof init.body === 'string' ? JSON.parse(init.body) : {};
+                    const params = Array.isArray(requestBody.params) ? requestBody.params : [];
+                    const command = params.join(' ');
+                    window.__vaultRequests.push(command);
+
+                    if (command.includes('--version')) {
+                        return new Response('hwi 2.4.0', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+                    }
+
+                    if (command.includes('enumerate')) {
+                        return new Response(JSON.stringify([{
+                            model: 'trezor_safe_3',
+                            path: 'mock-device-path',
+                            fingerprint,
+                            needs_pin_sent: false,
+                            needs_passphrase_sent: false
+                        }]), { status: 200, headers: { 'Content-Type': 'text/plain' } });
+                    }
+
+                    if (command.includes('getxpub')) {
+                        return new Response(JSON.stringify({ xpub: accountKey }), { status: 200, headers: { 'Content-Type': 'text/plain' } });
+                    }
+
+                    return new Response(JSON.stringify({ success: false, error: 'unexpected command: ' + command }), { status: 200, headers: { 'Content-Type': 'text/plain' } });
+                };
+            })();
+            """);
+    }
+
+    private static (string AccountKey, string MasterFingerprint, string AccountKeyPath) CreateTestMultisigSignerKey(string mnemonic, string accountKeyPath = "84'/1'/0'")
     {
         var rootKey = new Mnemonic(mnemonic).DeriveExtKey();
-        var accountKeyPath = KeyPath.Parse("84'/1'/0'");
+        var path = KeyPath.Parse(accountKeyPath);
         return (
-            rootKey.Derive(accountKeyPath).Neuter().ToString(Network.RegTest),
-            rootKey.GetPublicKey().GetHDFingerPrint().ToString());
+            rootKey.Derive(path).Neuter().ToString(Network.RegTest),
+            rootKey.GetPublicKey().GetHDFingerPrint().ToString(),
+            $"m/{path}");
     }
 
 

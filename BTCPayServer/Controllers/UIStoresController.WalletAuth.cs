@@ -23,11 +23,12 @@ public partial class UIStoresController
 
     private async Task EnsureStoreContextAsync(string storeId)
     {
-        if (HttpContext.GetStoreData() is null)
-        {
-            var store = await _storeRepo.FindStore(storeId);
-            if (store != null)
-                HttpContext.SetStoreData(store);
-        }
+        var currentStore = HttpContext.GetStoreDataOrNull();
+        if (currentStore?.Id == storeId)
+            return;
+
+        var store = await _storeRepo.FindStore(storeId);
+        if (store != null)
+            HttpContext.SetStoreData(store);
     }
 }

@@ -53,9 +53,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public string AccountKeyPath { get; set; }
 
         [JsonIgnore]
-        public string SignerUserId { get; set; }
-
-        [JsonIgnore]
         public string SignerEmail { get; set; }
     }
 }

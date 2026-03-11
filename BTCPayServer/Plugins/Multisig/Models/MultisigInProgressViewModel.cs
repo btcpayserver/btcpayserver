@@ -1,6 +1,6 @@
 using System;
 
-namespace BTCPayServer.Models;
+namespace BTCPayServer.Plugins.Multisig.Models;
 
 public class MultisigInProgressViewModel
 {

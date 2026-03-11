@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace BTCPayServer.Models.StoreViewModels;
+namespace BTCPayServer.Plugins.Multisig.Models;
 
 public class PendingMultisigSetupData
 {

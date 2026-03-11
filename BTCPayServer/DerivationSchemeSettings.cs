@@ -146,7 +146,6 @@ namespace BTCPayServer
     {
         public HDFingerprint? RootFingerprint { get; set; }
         public KeyPath AccountKeyPath { get; set; }
-        public string SignerUserId { get; set; }
         public string SignerEmail { get; set; }
 
         public RootedKeyPath GetRootedKeyPath()

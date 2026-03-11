@@ -34,7 +34,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NBitcoin" Version="9.0.4" />
+    <PackageReference Include="NBitcoin" Version="9.0.5" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
     <PackageReference Include="BIP78.Sender" Version="0.2.5" />
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.6" />
@@ -43,7 +43,7 @@
     <PackageReference Include="Fido2" Version="4.0.0" />
     <PackageReference Include="Fido2.AspNet" Version="4.0.0" />
     <PackageReference Include="LNURL" Version="0.0.36" />
-    <PackageReference Include="MailKit" Version="4.14.1" />
+    <PackageReference Include="MailKit" Version="4.15.1" />
     <PackageReference Include="QRCoder" Version="1.7.0" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.39" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
@@ -59,8 +59,8 @@
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.26.1" />
     <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.26.1" />
     <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.26.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="10.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="10.0.4" />
   </ItemGroup>
 
 	<ItemGroup>

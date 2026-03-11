@@ -8,6 +8,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Views.Server;
@@ -323,15 +324,16 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         Assert.NotNull(walletManagerUser);
         Assert.NotNull(multisignerUser);
         Assert.NotNull(multisignerGuestUser);
+        var permissionService = s.Server.PayTester.GetService<PermissionService>();
         await storeRepo.AddOrUpdateStoreUser(storeId, walletManagerUser.Id, new StoreRoleId("Wallet Manager"));
         await storeRepo.AddOrUpdateStoreUser(storeId, multisignerUser.Id, new StoreRoleId("Multisigner"));
         await storeRepo.AddOrUpdateStoreUser(storeId, multisignerGuestUser.Id, new StoreRoleId("Multisigner Guest"));
         var walletManagerStore = await storeRepo.FindStore(storeId, walletManagerUser.Id);
         Assert.NotNull(walletManagerStore);
         var walletManagerPermissionSet = walletManagerStore.GetPermissionSet(walletManagerUser.Id);
-        Assert.True(walletManagerPermissionSet.Contains(Policies.CanManageWallets, storeId));
-        Assert.True(walletManagerPermissionSet.Contains(Policies.CanManageWalletSettings, storeId));
-        Assert.True(walletManagerPermissionSet.Contains(Policies.CanModifyBitcoinOnchain, storeId));
+        Assert.True(walletManagerPermissionSet.HasPermission(Policies.CanManageWallets, storeId, permissionService));
+        Assert.True(walletManagerPermissionSet.HasPermission(Policies.CanManageWalletSettings, storeId, permissionService));
+        Assert.True(walletManagerPermissionSet.HasPermission(Policies.CanModifyBitcoinOnchain, storeId, permissionService));
 
         string StoreIndex(string id) => $"/stores/{id}/index";
         string StorePath(string id, string subPath) => $"/stores/{id}/{subPath}";

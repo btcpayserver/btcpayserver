@@ -138,13 +138,14 @@ public class PendingTransactionService(
         EventAggregator.Publish(new PendingTransactionEvent
         {
             Data = pendingTransaction,
+            SignerUserId = null,
             Type = PendingTransactionEvent.Created
         });
 
         return pendingTransaction;
     }
 
-    public async Task<PendingTransaction?> CollectSignature(PendingTransactionFullId id, PSBT psbt, CancellationToken cancellationToken)
+    public async Task<PendingTransaction?> CollectSignature(PendingTransactionFullId id, PSBT psbt, CancellationToken cancellationToken, string? signerUserId = null)
     {
         await using var ctx = dbContextFactory.CreateContext();
         var pendingTransaction = await ctx.PendingTransactions.FirstOrDefaultAsync(p =>
@@ -214,6 +215,7 @@ public class PendingTransactionService(
         EventAggregator.Publish(new PendingTransactionEvent
         {
             Data = pendingTransaction,
+            SignerUserId = signerUserId,
             Type = PendingTransactionEvent.SignatureCollected
         });
         return pendingTransaction;
@@ -249,6 +251,7 @@ public class PendingTransactionService(
         EventAggregator.Publish(new PendingTransactionEvent
         {
             Data = pt,
+            SignerUserId = null,
             Type = PendingTransactionEvent.Cancelled
         });
     }
@@ -265,6 +268,7 @@ public class PendingTransactionService(
         EventAggregator.Publish(new PendingTransactionEvent
         {
             Data = pt,
+            SignerUserId = null,
             Type = PendingTransactionEvent.Broadcast
         });
     }
@@ -277,6 +281,7 @@ public class PendingTransactionService(
         public const string Cancelled = nameof(Cancelled);
 
         public PendingTransaction Data { get; set; } = null!;
+        public string? SignerUserId { get; set; }
         public string Type { get; set; } = null!;
     }
 

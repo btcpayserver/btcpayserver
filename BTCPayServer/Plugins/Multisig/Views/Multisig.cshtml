@@ -1,4 +1,4 @@
-@model WalletSetupViewModel
+@model MultisigSetupViewModel
 @{
     ViewData.SetTitle(StringLocalizer["Multisig setup"]);
     var pending = Model.MultisigPendingSetup;
@@ -20,7 +20,7 @@
 }
 
 @section Navbar {
-    <a asp-controller="UIStoreOnChainWallets" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+    <a asp-area="" asp-controller="UIStoreOnChainWallets" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
         <vc:icon symbol="back" />
     </a>
 }
@@ -30,9 +30,8 @@
     <p class="lead text-secondary mt-3" text-translate="true">Build your multisig derivation using guided inputs, then import it in one step.</p>
 </header>
 
-<form asp-controller="UIStoreOnChainWallets" asp-action="UpdateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="multisig" method="post" class="my-5">
+<form asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigSetup" asp-action="SetupMultisig" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" method="post" class="my-5">
     <input asp-for="CryptoCode" type="hidden" />
-    <input asp-for="Method" type="hidden" />
     <input asp-for="MultisigRequestId" type="hidden" />
     <input asp-for="MultisigRemoveUserId" type="hidden" />
 
@@ -173,7 +172,7 @@
     </div>
 
     <div class="d-flex gap-3 mt-4">
-        <a asp-controller="UIStoreOnChainWallets" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="xpub" class="btn btn-secondary" text-translate="true">Use manual xpub entry</a>
+        <a asp-area="" asp-controller="UIStoreOnChainWallets" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="xpub" class="btn btn-secondary" text-translate="true">Use manual xpub entry</a>
     </div>
 </form>
 
@@ -365,7 +364,6 @@
                         button.classList.add("text-secondary");
                     }, 1200);
                 } catch {
-                    // Ignore clipboard errors.
                 }
             });
         });

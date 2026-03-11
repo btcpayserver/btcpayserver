@@ -1,10 +1,10 @@
-@model WalletSetupViewModel
+@model MultisigSetupViewModel
 @{
     ViewData.SetTitle(StringLocalizer["Confirm addresses"]);
 }
 
 @section Navbar {
-    <a asp-controller="UIStoreOnChainWallets" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="@Model.Method">
+    <a asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigSetup" asp-action="SetupMultisig" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-multisigRequestId="@Model.MultisigRequestId">
         <vc:icon symbol="back" />
     </a>
 }
@@ -14,13 +14,10 @@
     <p class="lead text-secondary mt-3" text-translate="true">Please check that your wallet is generating the same addresses as below.</p>
 </header>
 
-<form method="post" asp-controller="UIStoreOnChainWallets" asp-action="UpdateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+<form method="post" asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigSetup" asp-action="SetupMultisig" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
     <input asp-for="Config" type="hidden"/>
     <input asp-for="Confirmation" type="hidden"/>
-    <input asp-for="Method" type="hidden" />
-    <input asp-for="AccountKey" type="hidden" />
-    <input asp-for="RootFingerprint" type="hidden" />
-    <input asp-for="KeyPath" type="hidden" />
+    <input asp-for="MultisigRequestId" type="hidden" />
 
     <div class="table-responsive-sm">
         <table class="table table-hover w-auto mx-auto">

@@ -188,8 +188,7 @@ namespace BTCPayServer.Controllers
                 case "createpending":
                     if (!await AuthorizeWalletAsync(walletId, Policies.CanCreateWalletTransactions))
                         return Forbid();
-                    var pending = await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl());
-                    await NotifyMultisigSignersOfPendingTransaction(walletId, pending);
+                    await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl());
                     return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                 case "sign":
                     if (!await AuthorizeWalletAsync(walletId, Policies.CanSignWalletTransactions))

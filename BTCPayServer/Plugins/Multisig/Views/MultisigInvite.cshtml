@@ -1,6 +1,6 @@
 @using BTCPayServer.Blazor
 @using BTCPayServer.Blazor.VaultBridge
-@model BTCPayServer.Models.StoreViewModels.MultisigInviteViewModel
+@model MultisigInviteViewModel
 @{
     Layout = "~/Views/Shared/_LayoutSimple.cshtml";
     ViewData["Title"] = "Submit multisig signer key";
@@ -26,7 +26,7 @@
                         <div class="alert alert-success mb-3">Your signer key is submitted.</div>
                         <p class="text-secondary mb-0">You can close this page now. The wallet owner will receive your submission and will notify next steps.</p>
                         <div class="mt-4">
-                            <a asp-controller="UIWallets" asp-action="ListWallets" class="btn btn-secondary">Back to wallets</a>
+                            <a asp-area="" asp-controller="UIWallets" asp-action="ListWallets" class="btn btn-secondary">Back to wallets</a>
                         </div>
                     }
                     else
@@ -42,7 +42,7 @@
                         <div id="HardwareFlowSection" class="mb-4">
                             <h2 class="h5 mb-2">Extract from BTCPay Server Vault</h2>
                             <p class="text-secondary mb-3">Use your hardware wallet to auto-fill account key, fingerprint, and key path.</p>
-                            <component type="typeof(VaultBridgeUI)"
+                            <component type="typeof(BTCPayServer.Blazor.VaultBridge.VaultBridgeUI)"
                                        param-Controller="@(new GetMultisigAccountKeyController
                                                           {
                                                               CryptoCode = Model.CryptoCode,
@@ -72,7 +72,7 @@
                             </div>
                             <div class="d-flex flex-wrap gap-3 mt-4">
                                 <button type="submit" id="SubmitSignerKeyButton" class="btn btn-primary">Submit signer key</button>
-                                <a asp-controller="UIWallets" asp-action="ListWallets" class="btn btn-secondary">Back to wallets</a>
+                                <a asp-area="" asp-controller="UIWallets" asp-action="ListWallets" class="btn btn-secondary">Back to wallets</a>
                             </div>
                         </form>
                     }

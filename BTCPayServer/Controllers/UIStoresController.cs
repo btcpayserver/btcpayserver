@@ -38,6 +38,7 @@ public partial class UIStoresController : Controller
         BTCPayServerEnvironment btcpayEnv,
         StoreRepository storeRepo,
         UserManager<ApplicationUser> userManager,
+        PermissionService permissionService,
         BTCPayWalletProvider walletProvider,
         BTCPayNetworkProvider networkProvider,
         RateFetcher rateFactory,
@@ -68,6 +69,7 @@ public partial class UIStoresController : Controller
         _rateFactory = rateFactory;
         _storeRepo = storeRepo;
         _userManager = userManager;
+        _permissionService = permissionService;
         _langService = langService;
         _walletProvider = walletProvider;
         _handlers = paymentMethodHandlerDictionary;
@@ -90,7 +92,6 @@ public partial class UIStoresController : Controller
         _html = html;
         _defaultRules = defaultRules;
         _dataProtector = dataProtector.CreateProtector("ConfigProtector");
-        _multisigInviteProtector = dataProtector.CreateProtector("MultisigInviteLink");
         _lightningNetworkOptions = lightningNetworkOptions.Value;
         _lnHistogramService = lnHistogramService;
         _lightningClientFactory = lightningClientFactory;
@@ -104,6 +105,7 @@ public partial class UIStoresController : Controller
     private readonly BTCPayWalletProvider _walletProvider;
     private readonly StoreRepository _storeRepo;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly PermissionService _permissionService;
     private readonly RateFetcher _rateFactory;
     private readonly CurrencyNameTable _currencyNameTable;
     private readonly ExplorerClientProvider _explorerProvider;
@@ -124,7 +126,6 @@ public partial class UIStoresController : Controller
     private readonly IHtmlHelper _html;
     private readonly LightningNetworkOptions _lightningNetworkOptions;
     private readonly IDataProtector _dataProtector;
-    private readonly IDataProtector _multisigInviteProtector;
     private readonly LightningHistogramService _lnHistogramService;
     private readonly LightningClientFactoryService _lightningClientFactory;
     private readonly StoreLabelRepository _storeLabelRepository;
@@ -154,7 +155,7 @@ public partial class UIStoresController : Controller
             return RedirectToAction("ListInvoices", "UIInvoice", new { storeId });
         }
         var permissionSet = store.GetPermissionSet(userId);
-        if (permissionSet.Contains(Policies.CanViewWallet, store.Id))
+        if (permissionSet.HasPermission(Policies.CanViewWallet, store.Id, _permissionService))
         {
             var walletId = _handlers.OfType<BitcoinLikePaymentHandler>()
                 .Select(handler => handler.Network.CryptoCode)
@@ -168,7 +169,7 @@ public partial class UIStoresController : Controller
                         ? Policies.CanModifyBitcoinOnchain
                         : Policies.CanModifyOtherWallets
                 })
-                .Where(wallet => wallet.HasWallet && permissionSet.Contains(wallet.WalletTypePolicy, store.Id))
+                .Where(wallet => wallet.HasWallet && permissionSet.HasPermission(wallet.WalletTypePolicy, store.Id, _permissionService))
                 .Select(wallet => new WalletId(storeId, wallet.CryptoCode).ToString())
                 .FirstOrDefault();
 

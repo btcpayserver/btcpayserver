@@ -1,6 +1,6 @@
 using System;
 
-namespace BTCPayServer.Models.StoreViewModels;
+namespace BTCPayServer.Plugins.Multisig.Models;
 
 public class MultisigInviteViewModel
 {

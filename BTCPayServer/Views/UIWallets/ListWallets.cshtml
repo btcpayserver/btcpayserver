@@ -6,51 +6,7 @@
 
 <partial name="_StatusMessage" />
 
-@if (Model.MultisigInProgress.Any())
-{
-    <h3 class="h5 mb-2" text-translate="true">Multisig setup in progress</h3>
-    <div class="table-responsive-md mb-4" id="Wallets-MultisigInProgress">
-        <table class="table table-hover">
-            <thead>
-            <tr>
-                <th text-translate="true">Store Name</th>
-                <th text-translate="true">Wallet</th>
-                <th text-translate="true">Status</th>
-                <th class="text-end" text-translate="true">Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach (var multisig in Model.MultisigInProgress)
-            {
-                var keyStatus = multisig.YourKeySubmitted ? "Your key submitted" : "Your key missing";
-                var remainingSigners = Math.Max(0, multisig.TotalSigners - multisig.SubmittedSigners);
-                var progressStatus = multisig.YourKeySubmitted
-                    ? (remainingSigners == 0 ? "All signer keys submitted" : $"Waiting for {remainingSigners} signer(s)")
-                    : keyStatus;
-                <tr>
-                    <td>@multisig.StoreName</td>
-                    <td>@($"{multisig.RequiredSigners}-of-{multisig.TotalSigners} {multisig.CryptoCode}")</td>
-                    <td class="text-secondary">@($"{multisig.SubmittedSigners}/{multisig.TotalSigners} submitted · {progressStatus}")</td>
-                    <td class="text-end">
-                        @if (multisig.CanSubmitSignerKey)
-                        {
-                            <a href="@multisig.InviteUrl" text-translate="true">Continue</a>
-                        }
-                        else if (multisig.ReadyToCreateWallet && !string.IsNullOrEmpty(multisig.SetupUrl))
-                        {
-                            <a href="@multisig.SetupUrl" text-translate="true">Create wallet</a>
-                        }
-                        else
-                        {
-                            <span class="text-secondary" text-translate="true">No action needed</span>
-                        }
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
-    </div>
-}
+<vc:ui-extension-point location="wallets-top" model="@Model" />
 
 <div class="d-sm-flex justify-content-between mb-2">
     <h2 class="mb-0">

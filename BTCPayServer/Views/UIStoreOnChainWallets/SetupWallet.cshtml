@@ -42,18 +42,4 @@
     </div>
 }
 
-<br>
-<div class="mt-5">
-    <div class="list-group">
-        <a asp-controller="UIStoreOnChainWallets" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="multisig" id="ImportMultisigWizardLink" class="list-group-item list-group-item-action">
-            <div class="image">
-                <vc:icon symbol="wallet-xpub"/>
-            </div>
-            <div class="content">
-                <h4 text-translate="true">Multisig setup</h4>
-                <p class="mb-0 text-secondary" text-translate="true">Invite signers, collect account keys, and create the multisig wallet</p>
-            </div>
-            <vc:icon symbol="caret-right" />
-        </a>
-    </div>
-</div>
+<vc:ui-extension-point location="store-onchain-wallet-setup" model="@Model" />

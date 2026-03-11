@@ -447,7 +447,7 @@ namespace BTCPayServer.Plugins
                         File.Delete(fileName);
                         if (File.Exists(manifestFileName))
                         {
-                            File.Move(manifestFileName, Path.Combine(dirName, Path.GetFileName(manifestFileName)));
+                            File.Move(manifestFileName, Path.Combine(dirName, Path.GetFileName(manifestFileName)), true);
                         }
                     }
                     break;

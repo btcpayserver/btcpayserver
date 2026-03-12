@@ -194,18 +194,6 @@ namespace BTCPayServer.Controllers
             return View("RecoverySeedBackup", vm);
         }
 
-        [HttpPost]
-        [Route("postredirect-callback-test")]
-        public ActionResult PostRedirectCallbackTestpage(IFormCollection data)
-        {
-            var list = data.Keys.Aggregate(new Dictionary<string, string>(), (res, key) =>
-            {
-                res.Add(key, data[key]);
-                return res;
-            });
-            return Json(list);
-        }
-
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });

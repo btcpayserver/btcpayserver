@@ -167,18 +167,19 @@ namespace BTCPayServer.Plugins
             var debugPlugins = config["DEBUG_PLUGINS"] ?? "";
             foreach (var plugin in debugPlugins.Split(';', StringSplitOptions.RemoveEmptyEntries))
             {
+                var contentRoot = config["contentRoot"] as string ?? ".";
                 // Formatted either as "<PLUGIN_IDENTIFIER>::<PathToDll>" or "<PathToDll>"
                 var idx = plugin.IndexOf("::", StringComparison.Ordinal);
                 var filePath = plugin;
                 if (idx != -1)
                 {
                     filePath = plugin[(idx + 1)..];
-                    filePath = Path.GetFullPath(filePath);
+                    filePath = Path.GetFullPath(Path.Combine(contentRoot, filePath));
                     pluginsToPreload.Add((plugin[0..idx], filePath));
                 }
                 else
                 {
-                    filePath = Path.GetFullPath(filePath);
+                    filePath = Path.GetFullPath(Path.Combine(contentRoot, filePath));
 
                     pluginsToPreload.Add((Path.GetFileNameWithoutExtension(plugin), filePath));
                 }

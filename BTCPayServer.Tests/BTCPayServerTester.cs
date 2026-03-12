@@ -127,11 +127,12 @@ namespace BTCPayServer.Tests
                 config.AppendLine($"btc.explorer.cookiefile=0");
             }
 
+            var btcpayserverTestDataDir = Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName,"BTCPayServer.Tests", "TestData");
             if (UseLightning)
             {
                 config.AppendLine($"btc.lightning={IntegratedLightning}");
                 var localLndBackupFile = Path.Combine(_Directory, "walletunlock.json");
-                File.Copy(TestUtils.GetTestDataFullPath("LndSeedBackup/walletunlock.json"), localLndBackupFile, true);
+                File.Copy(Path.Combine(btcpayserverTestDataDir, "LndSeedBackup/walletunlock.json"), localLndBackupFile, true);
                 config.AppendLine($"btc.external.lndseedbackup={localLndBackupFile}");
             }
 
@@ -148,7 +149,7 @@ namespace BTCPayServer.Tests
             if (CheatMode)
                 config.AppendLine("cheatmode=1");
 
-            config.AppendLine($"torrcfile={TestUtils.GetTestDataFullPath("Tor/torrc")}");
+            config.AppendLine($"torrcfile={Path.Combine(btcpayserverTestDataDir, "Tor/torrc")}");
             config.AppendLine($"socksendpoint={SocksEndpoint}");
             config.AppendLine($"debuglog=debug.log");
             config.AppendLine($"nocsp={NoCSP.ToString().ToLowerInvariant()}");

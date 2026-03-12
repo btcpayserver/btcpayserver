@@ -4,11 +4,18 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Views.Manage;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Playwright;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -47,6 +54,7 @@ namespace BTCPayServer.Tests
                 var txt = await s.Page.ContentAsync();
                 Assert.DoesNotContain(permission, txt);
             }
+
             async Task AssertPermission(string permission)
             {
                 await s.Page.Locator($".text-muted:has-text('{permission}')").WaitForAsync();
@@ -70,7 +78,8 @@ namespace BTCPayServer.Tests
             var superApiKey = await (await s.FindAlertMessage()).Locator("code").TextContentAsync();
 
             //this api key has access to everything
-            await TestApiAgainstAccessToken(superApiKey, tester, user, Policies.CanModifyServerSettings, Policies.CanModifyStoreSettings, Policies.CanViewProfile);
+            await TestApiAgainstAccessToken(superApiKey, tester, user, Policies.CanModifyServerSettings, Policies.CanModifyStoreSettings,
+                Policies.CanViewProfile);
 
             await s.ClickPagePrimary();
             await s.Page.SetCheckedAsync("#btcpay\\.server\\.canmodifyserversettings", true);
@@ -134,14 +143,16 @@ namespace BTCPayServer.Tests
 
             // No upfront store selection with selectiveStores being false
             authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
-                new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, selectiveStores: false, applicationDetails: (appidentifier, new Uri(callbackUrl))).ToString();
+                new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, selectiveStores: false,
+                applicationDetails: (appidentifier, new Uri(callbackUrl))).ToString();
             await s.GoToUrl(authUrl);
             await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             Assert.True(await s.Page.Locator("select#StoreId").CountAsync() == 0);
 
             // Now with store settings
             authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
-                new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, selectiveStores: true, applicationDetails: (appidentifier, new Uri(callbackUrl))).ToString();
+                new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, selectiveStores: true,
+                applicationDetails: (appidentifier, new Uri(callbackUrl))).ToString();
             await s.GoToUrl(authUrl);
             var storeSettingsPageContent = await s.Page.ContentAsync();
             Assert.Contains(appidentifier, storeSettingsPageContent);
@@ -150,10 +161,10 @@ namespace BTCPayServer.Tests
             await s.Page.SelectOptionAsync("#StoreId", user.StoreId);
             await s.Page.Locator("#continue").ClickAsync();
 
-            Assert.Equal("hidden", (await s.Page.GetAttributeAsync("#btcpay\\.store\\.canmodifystoresettings", "type")).ToLowerInvariant());
-            Assert.Equal("true", (await s.Page.GetAttributeAsync("#btcpay\\.store\\.canmodifystoresettings", "value")).ToLowerInvariant());
-            Assert.Equal("hidden", (await s.Page.GetAttributeAsync("#btcpay\\.server\\.canmodifyserversettings", "type")).ToLowerInvariant());
-            Assert.Equal("true", (await s.Page.GetAttributeAsync("#btcpay\\.server\\.canmodifyserversettings", "value")).ToLowerInvariant());
+            Assert.Equal("hidden", (await s.Page.GetAttributeAsync("#btcpay\\.store\\.canmodifystoresettings", "type"))?.ToLowerInvariant());
+            Assert.Equal("true", (await s.Page.GetAttributeAsync("#btcpay\\.store\\.canmodifystoresettings", "value"))?.ToLowerInvariant());
+            Assert.Equal("hidden", (await s.Page.GetAttributeAsync("#btcpay\\.server\\.canmodifyserversettings", "type"))?.ToLowerInvariant());
+            Assert.Equal("true", (await s.Page.GetAttributeAsync("#btcpay\\.server\\.canmodifyserversettings", "value"))?.ToLowerInvariant());
             var pageContent2 = await s.Page.ContentAsync();
             Assert.DoesNotContain("change-store-mode", pageContent2);
 
@@ -177,10 +188,10 @@ namespace BTCPayServer.Tests
             await s.Page.SelectOptionAsync("#StoreId", user.StoreId);
             await s.Page.Locator("#continue").ClickAsync();
 
-            Assert.Equal("checkbox", (await s.Page.GetAttributeAsync("#btcpay\\.store\\.canmodifystoresettings", "type")).ToLowerInvariant());
-            Assert.Equal("true", (await s.Page.GetAttributeAsync("#btcpay\\.store\\.canmodifystoresettings", "value")).ToLowerInvariant());
-            Assert.Equal("checkbox", (await s.Page.GetAttributeAsync("#btcpay\\.server\\.canmodifyserversettings", "type")).ToLowerInvariant());
-            Assert.Equal("true", (await s.Page.GetAttributeAsync("#btcpay\\.server\\.canmodifyserversettings", "value")).ToLowerInvariant());
+            Assert.Equal("checkbox", (await s.Page.GetAttributeAsync("#btcpay\\.store\\.canmodifystoresettings", "type"))?.ToLowerInvariant());
+            Assert.Equal("true", (await s.Page.GetAttributeAsync("#btcpay\\.store\\.canmodifystoresettings", "value"))?.ToLowerInvariant());
+            Assert.Equal("checkbox", (await s.Page.GetAttributeAsync("#btcpay\\.server\\.canmodifyserversettings", "type"))?.ToLowerInvariant());
+            Assert.Equal("true", (await s.Page.GetAttributeAsync("#btcpay\\.server\\.canmodifyserversettings", "value"))?.ToLowerInvariant());
 
             await s.Page.SetCheckedAsync("#btcpay\\.server\\.canmodifyserversettings", false);
             await s.Page.Locator("#consent-yes").ClickAsync();
@@ -211,7 +222,8 @@ namespace BTCPayServer.Tests
 
             //same app but different redirect = nono
             authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
-                new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, false, true, (appidentifier, new Uri("https://international.local/callback"))).ToString();
+                new[] { Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings }, false, true,
+                (appidentifier, new Uri("https://international.local/callback"))).ToString();
 
             await s.GoToUrl(authUrl);
 
@@ -374,6 +386,7 @@ namespace BTCPayServer.Tests
                     await TestApiAgainstAccessToken<string>(accessToken, $"{TestApiPath}/me/id", tester.PayTester.HttpClient);
                 });
             }
+
             //create a second user to see if any of its data gets messed up in our results.
             TestLogs.LogInformation("Testing second user");
             var secondUser = tester.NewAccount();
@@ -404,7 +417,8 @@ namespace BTCPayServer.Tests
                 }
 
                 bool shouldBeAuthorized = false;
-                if (permissions.Contains(canModifyAllStores) || storePermissions.Contains(Permission.Create(Policies.CanViewStoreSettings, testAccount.StoreId)))
+                if (permissions.Contains(canModifyAllStores) ||
+                    storePermissions.Contains(Permission.Create(Policies.CanViewStoreSettings, testAccount.StoreId)))
                 {
                     Assert.True(await TestApiAgainstAccessToken<bool>(accessToken,
                         $"{TestApiPath}/me/stores/{testAccount.StoreId}/can-view",
@@ -413,7 +427,9 @@ namespace BTCPayServer.Tests
                         data => data.Id.Equals(testAccount.StoreId, StringComparison.InvariantCultureIgnoreCase));
                     shouldBeAuthorized = true;
                 }
-                if (permissions.Contains(canModifyAllStores) || storePermissions.Contains(Permission.Create(Policies.CanModifyStoreSettings, testAccount.StoreId)))
+
+                if (permissions.Contains(canModifyAllStores) ||
+                    storePermissions.Contains(Permission.Create(Policies.CanModifyStoreSettings, testAccount.StoreId)))
                 {
                     Assert.True(await TestApiAgainstAccessToken<bool>(accessToken,
                         $"{TestApiPath}/me/stores/{testAccount.StoreId}/can-view",
@@ -431,14 +447,14 @@ namespace BTCPayServer.Tests
                     await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
                     {
                         await TestApiAgainstAccessToken<bool>(accessToken,
-                        $"{TestApiPath}/me/stores/{testAccount.StoreId}/can-edit",
-                        tester.PayTester.HttpClient);
+                            $"{TestApiPath}/me/stores/{testAccount.StoreId}/can-edit",
+                            tester.PayTester.HttpClient);
                     });
                     await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
                     {
                         await TestApiAgainstAccessToken<bool>(accessToken,
-                        $"{TestApiPath}/me/stores/{testAccount.StoreId}/can-view",
-                        tester.PayTester.HttpClient);
+                            $"{TestApiPath}/me/stores/{testAccount.StoreId}/can-view",
+                            tester.PayTester.HttpClient);
                     });
                     Assert.DoesNotContain(resultStores,
                         data => data.Id.Equals(testAccount.StoreId, StringComparison.InvariantCultureIgnoreCase));
@@ -474,6 +490,7 @@ namespace BTCPayServer.Tests
                 await TestApiAgainstAccessToken<bool>(accessToken, $"{TestApiPath}/me/stores/{secondUser.StoreId}/can-edit",
                     tester.PayTester.HttpClient);
             }
+
             TestLogs.LogInformation("Testing can edit store for second user expectation met");
 
             TestLogs.LogInformation($"Testing CanModifyServer with {permissions.Contains(canModifyServer)}");
@@ -492,12 +509,13 @@ namespace BTCPayServer.Tests
                         tester.PayTester.HttpClient);
                 });
             }
+
             TestLogs.LogInformation("Testing CanModifyServer expectation met");
         }
 
         private async Task<T> TestApiAgainstAccessToken<T>(string apikey, string url, HttpClient client)
         {
-            var uri = new Uri(client.BaseAddress, url);
+            var uri = new Uri(client.BaseAddress!, url);
             var httpRequest = new HttpRequestMessage(HttpMethod.Get, uri);
             httpRequest.Headers.Authorization = new AuthenticationHeaderValue("token", apikey);
             TestLogs.LogInformation($"Testing {uri}");
@@ -518,8 +536,81 @@ namespace BTCPayServer.Tests
         private async Task<string> GetAccessTokenFromCallbackResult(PlaywrightTester tester)
         {
             var source = await tester.Page.Locator("body").TextContentAsync();
-            var json = JObject.Parse(source);
+            var json = JObject.Parse(source ?? "{}");
             return json.GetValue("apiKey")!.Value<string>();
+        }
+    }
+
+    [Route("api/test/apikey")]
+    [ApiController]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+    [EnableCors(CorsPolicies.All)]
+    public class GreenfieldTestApiKeyController(
+        UserManager<ApplicationUser> userManager,
+        GreenfieldStoresController greenfieldStoresController)
+        : ControllerBase
+    {
+        [HttpGet("me/id")]
+        [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public string GetCurrentUserId() => User.GetId();
+
+        [HttpGet("me")]
+        [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<ApplicationUser> GetCurrentUser()
+        {
+            return await userManager.GetUserAsync(User);
+        }
+
+        [HttpGet("me/is-admin")]
+        [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public bool AmIAnAdmin()
+        {
+            return true;
+        }
+
+        [HttpGet("me/stores")]
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<BTCPayServer.Client.Models.StoreData[]> GetCurrentUserStores()
+        {
+            var storesData = HttpContext.GetStoresData();
+            var stores = new List<Client.Models.StoreData>();
+            foreach (var storeData in storesData)
+            {
+                stores.Add(await greenfieldStoresController.FromModel(storeData));
+            }
+
+            return stores.ToArray();
+        }
+
+        [HttpGet("me/stores/{storeId}/can-view")]
+        [Authorize(Policy = Policies.CanViewStoreSettings,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public bool CanViewStore(string storeId)
+        {
+            return true;
+        }
+
+        [HttpGet("me/stores/{storeId}/can-edit")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public bool CanEditStore(string storeId)
+        {
+            return true;
+        }
+    }
+
+    public class UITestApiKeyController : Controller
+    {
+        [HttpPost]
+        [Route("postredirect-callback-test")]
+        public ActionResult PostRedirectCallbackTestpage(IFormCollection data)
+        {
+            var list = data.Keys.Aggregate(new Dictionary<string, string>(), (res, key) =>
+            {
+                res.Add(key, data[key]);
+                return res;
+            });
+            return Json(list);
         }
     }
 }

@@ -26,6 +26,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -224,6 +225,12 @@ namespace BTCPayServer.Tests
                         {
                             if (RuntimeCompilation)
                                 services.AddMvcCore().AddRazorRuntimeCompilation();
+
+                            services.AddMvcCore().ConfigureApplicationPartManager(apm =>
+                            {
+                                var assembly = typeof(BTCPayServerTester).Assembly;
+                                apm.ApplicationParts.Add(new AssemblyPart(assembly));
+                            }).AddControllersAsServices();
                             services.TryAddSingleton<IFeeProviderFactory>(
                                 new BTCPayServer.Services.Fees.FixedFeeProvider(new FeeRate(100L, 1)));
                         });

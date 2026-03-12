@@ -837,6 +837,8 @@ namespace BTCPayServer
         public static void SetPullPaymentData(this HttpContext ctx, PullPaymentData? pullPaymentData)
             => ctx.Items["BTCPAY.PULLPAYMENTDATA"] = pullPaymentData;
 
+        public static AppData? GetAppData(this HttpContext ctx)
+            => GetAppDataOrNull(ctx) ?? throw new InvalidOperationException("AppData is not set");
         public static AppData? GetAppDataOrNull(this HttpContext ctx)
         => ctx.Items.TryGet("BTCPAY.APPDATA") as AppData;
 

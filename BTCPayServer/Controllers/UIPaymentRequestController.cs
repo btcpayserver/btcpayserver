@@ -227,6 +227,8 @@ namespace BTCPayServer.Controllers
             var store = GetCurrentStore();
             var paymentRequest = GetCurrentPaymentRequest();
 
+            viewModel.StoreId = store.Id;
+
             if ((paymentRequest == null && !string.IsNullOrEmpty(payReqId)) ||
                 (paymentRequest != null && paymentRequest.Id != payReqId))
                 return NotFound();
@@ -243,7 +245,7 @@ namespace BTCPayServer.Controllers
                 var existingPaymentRequests = await _PaymentRequestRepository.FindPaymentRequests(
                     new PaymentRequestQuery
                     {
-                        StoreId = viewModel.StoreId,
+                        StoreId = store.Id,
                         SearchText = viewModel.ReferenceId
                     });
 
@@ -263,7 +265,7 @@ namespace BTCPayServer.Controllers
 
 
             var data = paymentRequest ?? new PaymentRequestData();
-            data.StoreDataId = viewModel.StoreId;
+            data.StoreDataId = store.Id;
             data.Archived = viewModel.Archived;
             var blob = data.GetBlob();
 

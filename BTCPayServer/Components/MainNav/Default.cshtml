@@ -106,7 +106,7 @@
                                         ? Policies.CanModifyBitcoinOnchain
                                         : Policies.CanModifyOtherWallets;
                                     var walletViewPermission = $"{walletTypePolicy},{Policies.CanViewWallet}";
-                                    var walletCreatePermission = $"{walletTypePolicy},{Policies.CanCreateWalletTransactions}";
+                                    var walletCreatePermission = $"{walletViewPermission},{Policies.CanCreateWalletTransactions}";
                                     var walletSettingsPermission = $"{walletTypePolicy},{Policies.CanManageWalletSettings}";
                                     <li class="nav-item" data-testid="Wallet-@scheme.Crypto">
                                         @if (isSetUp && scheme.WalletSupported)

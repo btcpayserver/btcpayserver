@@ -2065,7 +2065,7 @@ namespace BTCPayServer.Controllers
                 return false;
             if (await EnsureWalletStoreContextAsync(walletId) is null)
                 return false;
-            var requiredPolicies = new List<string> { GetWalletTypePolicy(walletId) };
+            var requiredPolicies = new List<string> { GetWalletTypePolicy(walletId), Policies.CanViewWallet };
             if (policies?.Length > 0)
                 requiredPolicies.AddRange(policies.Where(p => !string.IsNullOrWhiteSpace(p)));
             foreach (var policy in requiredPolicies.Distinct(StringComparer.OrdinalIgnoreCase))

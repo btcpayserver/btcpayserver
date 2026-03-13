@@ -321,7 +321,7 @@ namespace BTCPayServer.Hosting
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
             };
-            forwardingOptions.KnownIPNetworks.Clear();
+            forwardingOptions.KnownNetworks.Clear();
             forwardingOptions.KnownProxies.Clear();
             forwardingOptions.ForwardedHeaders = ForwardedHeaders.All;
             app.UseForwardedHeaders(forwardingOptions);

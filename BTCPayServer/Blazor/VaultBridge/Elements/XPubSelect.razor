@@ -58,11 +58,13 @@
     public int AccountNumber { get; set; }
     public bool CanUseTaproot { get; }
     public bool CanUseSegwit { get; }
-    TaskCompletionSource<XPubSelect> _cts;
+    private TaskCompletionSource<XPubSelect> _cts;
+    private Feedback _selectionFeedback;
 
     public Task<XPubSelect> GetXPubSelect()
     {
-        ui.ShowFeedback(FeedbackType.Loading, ui.StringLocalizer["Select your address type and account"]);
+        _selectionFeedback = new Feedback(ui.StringLocalizer["Select your address type and account"], FeedbackType.Loading);
+        ui.ShowFeedback(_selectionFeedback);
         ui.AddElement(this);
         _cts = new TaskCompletionSource<XPubSelect>(TaskCreationOptions.RunContinuationsAsynchronously);
         return _cts.Task;
@@ -71,10 +73,12 @@
     public void OnConfirmXPubClick()
     {
         ui.Elements.Remove(this);
-        ui.Elements.RemoveAt(ui.Elements.Count - 1);
+        if (_selectionFeedback is not null)
+            ui.Elements.Remove(_selectionFeedback);
         ui.StateHasChanged();
         _cts?.TrySetResult(this);
         _cts = null;
+        _selectionFeedback = null;
     }
 
     public void Dispose() => _cts?.TrySetCanceled();

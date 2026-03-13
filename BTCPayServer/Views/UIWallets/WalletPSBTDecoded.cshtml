@@ -3,12 +3,13 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model WalletPSBTViewModel
 @{
-	var walletId = Context.GetRouteValue("walletId").ToString();
+    var walletId = Context.GetRouteValue("walletId").ToString();
     var walletTypePolicy = Model.CryptoCode?.Equals("BTC", StringComparison.OrdinalIgnoreCase) is true
         ? Policies.CanModifyBitcoinOnchain
         : Policies.CanModifyOtherWallets;
-    var walletExportPermission = $"{walletTypePolicy},{Policies.CanCreateWalletTransactions}";
-    var walletBroadcastPermission = $"{walletTypePolicy},{Policies.CanBroadcastWalletTransactions}";
+    var walletViewPermission = $"{walletTypePolicy},{Policies.CanViewWallet}";
+    var walletExportPermission = $"{walletViewPermission},{Policies.CanCreateWalletTransactions}";
+    var walletBroadcastPermission = $"{walletViewPermission},{Policies.CanBroadcastWalletTransactions}";
 	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
 	var isReady = !Model.HasErrors;
     var isSignable = !isReady;

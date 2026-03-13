@@ -101,7 +101,7 @@ public class MultisigNotificationService(
 
         var sender = await emailSenderFactory.GetEmailSender(storeId);
         var walletId = new WalletId(storeId, cryptoCode).ToString();
-        var walletLink = $"/wallets/{walletId}";
+        var walletLink = $"{httpContext.Request.PathBase}/wallets/{walletId}";
         if (httpContext.Request.Host.HasValue)
             walletLink = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}{walletLink}";
 
@@ -215,7 +215,7 @@ public class MultisigNotificationService(
         IEnumerable<string>? anyPolicies = null,
         string? excludeUserId = null,
         IEnumerable<string>? includeUserIds = null,
-        bool requireWalletTypePolicy = false)
+        bool requireWalletTypePolicy = true)
     {
         if (string.IsNullOrWhiteSpace(storeId) || string.IsNullOrWhiteSpace(cryptoCode))
             return Array.Empty<string>();

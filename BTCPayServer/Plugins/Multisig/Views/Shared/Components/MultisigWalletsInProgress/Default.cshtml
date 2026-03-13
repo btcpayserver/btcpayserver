@@ -14,11 +14,17 @@
         <tbody>
         @foreach (var multisig in Model)
         {
-            var keyStatus = multisig.YourKeySubmitted ? "Your key submitted" : "Your key missing";
+            var keyStatus = !multisig.DidParticipate
+                ? "You are not a signer"
+                : multisig.YourKeySubmitted
+                    ? "Your key submitted"
+                    : "Your key missing";
             var remainingSigners = Math.Max(0, multisig.TotalSigners - multisig.SubmittedSigners);
-            var progressStatus = multisig.YourKeySubmitted
-                ? (remainingSigners == 0 ? "All signer keys submitted" : $"Waiting for {remainingSigners} signer(s)")
-                : keyStatus;
+            var progressStatus = !multisig.DidParticipate
+                ? keyStatus
+                : multisig.YourKeySubmitted
+                    ? (remainingSigners == 0 ? "All signer keys submitted" : $"Waiting for {remainingSigners} signer(s)")
+                    : keyStatus;
             <tr>
                 <td>@multisig.StoreName</td>
                 <td>@($"{multisig.RequiredSigners}-of-{multisig.TotalSigners} {multisig.CryptoCode}")</td>

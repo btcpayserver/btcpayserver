@@ -339,7 +339,6 @@ namespace BTCPayServer.Tests
 
         public async Task Logout()
         {
-            await GoToUrl("/account");
             await Page.Locator("#menu-item-Account").ClickAsync();
             await Page.Locator("#Nav-Logout").ClickAsync();
         }
@@ -446,11 +445,8 @@ namespace BTCPayServer.Tests
                         .ToString()! + "-[legacy]";
             }
 
-            var walletExists = WalletId != null && WalletId.StoreId == StoreId && WalletId.CryptoCode == cryptoCode;
-            if (walletExists)
+            if (!(await Page.ContentAsync()).Contains($"Setup {cryptoCode} Wallet"))
                 await GoToWalletSettings(cryptoCode);
-            else
-                await GoToUrl($"/stores/{StoreId}/onchain/{cryptoCode}");
 
             await Page.Locator("#ImportWalletOptionsLink").ClickAsync();
             await Page.Locator("#ImportXpubLink").ClickAsync();
@@ -458,7 +454,6 @@ namespace BTCPayServer.Tests
             await Page.Locator("#Continue").ClickAsync();
             await Page.Locator("#Confirm").ClickAsync();
             await FindAlertMessage();
-            WalletId = new WalletId(StoreId, cryptoCode);
         }
 
         public async Task AddLightningNode(string connectionType = null, bool test = true)

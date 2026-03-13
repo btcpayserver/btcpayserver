@@ -18,7 +18,7 @@ namespace BTCPayServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.1")
+                .HasAnnotation("ProductVersion", "8.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -302,7 +302,7 @@ namespace BTCPayServer.Migrations
                         .HasColumnName("additional_data")
                         .HasDefaultValueSql("'{}'::jsonb");
 
-                    b.PrimitiveCollection<string[]>("BCC")
+                    b.Property<string[]>("BCC")
                         .IsRequired()
                         .HasColumnType("text[]")
                         .HasColumnName("bcc");
@@ -312,7 +312,7 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("text")
                         .HasColumnName("body");
 
-                    b.PrimitiveCollection<string[]>("CC")
+                    b.Property<string[]>("CC")
                         .IsRequired()
                         .HasColumnType("text[]")
                         .HasColumnName("cc");
@@ -347,7 +347,7 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("text")
                         .HasColumnName("subject");
 
-                    b.PrimitiveCollection<string[]>("To")
+                    b.Property<string[]>("To")
                         .IsRequired()
                         .HasColumnType("text[]")
                         .HasColumnName("to");
@@ -839,7 +839,7 @@ namespace BTCPayServer.Migrations
                     b.Property<DateTimeOffset?>("Expiry")
                         .HasColumnType("timestamp with time zone");
 
-                    b.PrimitiveCollection<string[]>("OutpointsUsed")
+                    b.Property<string[]>("OutpointsUsed")
                         .HasColumnType("text[]");
 
                     b.Property<int>("State")
@@ -1045,7 +1045,7 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
-                    b.PrimitiveCollection<List<string>>("Permissions")
+                    b.Property<List<string>>("Permissions")
                         .HasColumnType("text[]");
 
                     b.Property<string>("Role")

@@ -51,7 +51,7 @@ public partial class UIOfferingController(
         string? prefilledEmail = null)
     {
         await using var ctx = DbContextFactory.CreateContext();
-        var plan = await ctx.Plans.GetPlanFromId(planId);
+        var plan = await ctx.Plans.GetPlanFromId(planId, offeringId, storeId);
         if (plan is null)
             return NotFound();
 

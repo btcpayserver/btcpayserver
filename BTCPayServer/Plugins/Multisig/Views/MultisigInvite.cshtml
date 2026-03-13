@@ -8,6 +8,7 @@
     var hasPrefilledValues = !string.IsNullOrWhiteSpace(Model.AccountKey) ||
                              !string.IsNullOrWhiteSpace(Model.MasterFingerprint) ||
                              !string.IsNullOrWhiteSpace(Model.AccountKeyPath);
+    var serverEntryMode = "manual";
     var initialEntryMode = hasPrefilledValues ? "manual" : "hardware";
 }
 
@@ -54,7 +55,7 @@
 
                         <form method="post" id="SubmitSignerKeyForm">
                             <div asp-validation-summary="ModelOnly" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
-                            <div id="SignerKeyFields" class="@(initialEntryMode == "hardware" ? "d-none" : string.Empty)">
+                            <div id="SignerKeyFields" class="@(serverEntryMode == "hardware" ? "d-none" : string.Empty)">
                                 <div class="mb-3">
                                     <label asp-for="AccountKey" class="form-label">Account key (xpub/tpub)</label>
                                     <input asp-for="AccountKey" class="form-control font-monospace" />
@@ -159,6 +160,8 @@
                 const raw = (accountKey.value || "").trim();
                 const match = raw.match(/^\[([0-9a-fA-F]{8})(\/[0-9hH'\/]+)\](.+)$/);
                 if (!match) {
+                    masterFingerprint.value = "";
+                    accountKeyPath.value = "";
                     return;
                 }
 
@@ -166,6 +169,8 @@
                 const path = match[2].replace(/[hH]/g, "'");
                 const xpub = (match[3] || "").trim();
                 if (!xpub) {
+                    masterFingerprint.value = "";
+                    accountKeyPath.value = "";
                     return;
                 }
 

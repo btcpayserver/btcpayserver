@@ -109,11 +109,13 @@
         _ => "P2WSH"
     };
 
-    TaskCompletionSource<MultisigXPubSelect> _tcs;
+    private TaskCompletionSource<MultisigXPubSelect> _tcs;
+    private Feedback _selectionFeedback;
 
     public Task<MultisigXPubSelect> GetSelection()
     {
-        ui.ShowFeedback(FeedbackType.Loading, ui.StringLocalizer["Select account settings"]);
+        _selectionFeedback = new Feedback(ui.StringLocalizer["Select account settings"], FeedbackType.Loading);
+        ui.ShowFeedback(_selectionFeedback);
         ui.AddElement(this);
         _tcs = new TaskCompletionSource<MultisigXPubSelect>(TaskCreationOptions.RunContinuationsAsynchronously);
         return _tcs.Task;
@@ -137,10 +139,12 @@
         }
 
         ui.Elements.Remove(this);
-        ui.Elements.RemoveAt(ui.Elements.Count - 1);
+        if (_selectionFeedback is not null)
+            ui.Elements.Remove(_selectionFeedback);
         ui.StateHasChanged();
         _tcs?.TrySetResult(this);
         _tcs = null;
+        _selectionFeedback = null;
     }
 
     public void Dispose()

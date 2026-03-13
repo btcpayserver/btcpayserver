@@ -376,6 +376,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.AssertPageAccess(false, StorePath(storeId, "payment-requests"));
         await s.AssertPageAccess(false, StorePath(storeId, "pull-payments"));
         await s.AssertPageAccess(false, StorePath(storeId, "payouts"));
+        await s.GoToUrl(StoreIndex(storeId));
         await s.Logout();
 
         await s.LogIn(multisignerGuest);
@@ -390,6 +391,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.AssertPageAccess(false, StorePath(storeId, "payment-requests"));
         await s.AssertPageAccess(false, StorePath(storeId, "pull-payments"));
         await s.AssertPageAccess(false, StorePath(storeId, "payouts"));
+        await s.GoToUrl(StoreIndex(storeId));
         await s.Logout();
 
         foreach (var url in new[]

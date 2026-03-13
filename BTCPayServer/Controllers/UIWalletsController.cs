@@ -2065,7 +2065,7 @@ namespace BTCPayServer.Controllers
                 return false;
             if (await EnsureWalletStoreContextAsync(walletId) is null)
                 return false;
-            var requiredPolicies = new List<string> { GetWalletTypePolicy(walletId) };
+            var requiredPolicies = new List<string> { GetWalletTypePolicy(walletId), Policies.CanViewWallet };
             if (policies?.Length > 0)
                 requiredPolicies.AddRange(policies.Where(p => !string.IsNullOrWhiteSpace(p)));
             foreach (var policy in requiredPolicies.Distinct(StringComparer.OrdinalIgnoreCase))
@@ -2082,7 +2082,11 @@ namespace BTCPayServer.Controllers
                 return null;
             var currentStore = HttpContext.GetStoreDataOrNull();
             if (currentStore?.Id == walletId.StoreId)
+            {
+                if (User.Identity?.AuthenticationType == AuthenticationSchemes.Cookie)
+                    HttpContext.SetNavStoreData(currentStore);
                 return currentStore;
+            }
 
             var userId = GetUserId();
             if (string.IsNullOrEmpty(userId))
@@ -2093,6 +2097,8 @@ namespace BTCPayServer.Controllers
                 return null;
 
             HttpContext.SetStoreData(store);
+            if (User.Identity?.AuthenticationType == AuthenticationSchemes.Cookie)
+                HttpContext.SetNavStoreData(store);
             return store;
         }
 

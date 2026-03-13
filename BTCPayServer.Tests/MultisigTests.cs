@@ -235,6 +235,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
         async Task<string> CreateRequest(params string[] participantEmails)
         {
+            await s.GoToHome();
             await s.Logout();
             await s.GoToLogin();
             await s.LogIn(owner);
@@ -262,6 +263,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
         async Task SubmitSigner(string email, string requestId, string userId, string accountKey, string fingerprint, string accountKeyPath, string expectedMessage, bool submitForm = true, bool useVaultCallback = false, bool expectNotification = true)
         {
+            await s.GoToHome();
             await s.Logout();
             await s.GoToLogin();
             await s.LogIn(email);
@@ -320,6 +322,8 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var signerBToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(signerBProtectedToken));
         var signerBInvitePath = $"/stores/{storeId}/onchain/BTC/multisig/invite/{Uri.EscapeDataString(signerBToken)}";
 
+        await s.Page.ClickAsync("a.cancel");
+        await s.Page.Locator("#menu-item-Account").WaitForAsync();
         await s.Logout();
         await s.GoToLogin();
         await s.LogIn(signerA);
@@ -351,6 +355,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         Assert.True(string.IsNullOrWhiteSpace(signerBParticipant.AccountKey));
         Assert.Null(signerBParticipant.SubmittedAt);
 
+        await s.GoToHome();
         await s.Logout();
         await s.GoToLogin();
         await s.LogIn(owner);
@@ -376,6 +381,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await SubmitSigner(walletManager, secondRequestId, walletManagerUser.Id, walletManagerKey.AccountKey, walletManagerKey.MasterFingerprint, walletManagerKey.AccountKeyPath, "Your signer key is submitted.");
         await SubmitSigner(signerB, secondRequestId, signerBUser.Id, signerBKey.AccountKey, signerBKey.MasterFingerprint, signerBKey.AccountKeyPath, "Your signer key is submitted.");
 
+        await s.GoToHome();
         await s.Logout();
         await s.GoToLogin();
         await s.LogIn(walletManager);

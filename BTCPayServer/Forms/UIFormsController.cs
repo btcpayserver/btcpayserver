@@ -154,7 +154,7 @@ public class UIFormsController : Controller
         }
 
         if (!formData.Public &&
-            !(await _authorizationService.AuthorizeAsync(User, Policies.CanViewStoreSettings)).Succeeded)
+            !(await _authorizationService.AuthorizeAsync(User, formData.StoreId, Policies.CanViewStoreSettings)).Succeeded)
         {
             return NotFound();
         }
@@ -192,7 +192,7 @@ public class UIFormsController : Controller
         }
 
         if (!formData.Public &&
-            !(await _authorizationService.AuthorizeAsync(User, Policies.CanViewStoreSettings)).Succeeded)
+            !(await _authorizationService.AuthorizeAsync(User, formData.StoreId, Policies.CanViewStoreSettings)).Succeeded)
         {
             return NotFound();
         }

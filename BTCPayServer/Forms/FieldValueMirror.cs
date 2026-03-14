@@ -23,10 +23,15 @@ public class FieldValueMirror : IFormComponentProvider
     public string GetValue(Form form, Field field)
     {
         var rawValue = form.GetFieldByFullName(field.Value)?.Value;
-        if (rawValue is not null && field.AdditionalData?.TryGetValue("valuemap", out var valueMap) is true &&
-            valueMap is JObject map && map.TryGetValue(rawValue, out var mappedValue))
+        if (string.IsNullOrEmpty(rawValue))
+            return null;
+
+        if (field.AdditionalData?.TryGetValue("valuemap", out var valueMap) is true &&
+            valueMap is JObject map)
         {
-            return mappedValue.Value<string>();
+            return map.TryGetValue(rawValue, out var mappedValue)
+                ? mappedValue.Value<string>()
+                : null;
         }
 
         return rawValue;

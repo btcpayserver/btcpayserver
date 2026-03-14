@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Models.ManageViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -91,13 +92,13 @@ namespace BTCPayServer.Controllers
             }
 
             await _userManager.SetTwoFactorEnabledAsync(user, true);
-            _logger.LogInformation("User {Email} has enabled 2FA with an authenticator app", user.Email);
             var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
             TempData[RecoveryCodesKey] = recoveryCodes.ToArray();
 
-            return RedirectToAction(nameof(GenerateRecoveryCodes), new { confirm = false });
+            return RedirectToAction(nameof(GenerateRecoveryCodes));
         }
 
+        [HttpPost]
         public async Task<IActionResult> ResetAuthenticator()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -106,25 +107,36 @@ namespace BTCPayServer.Controllers
 
             await _userManager.SetTwoFactorEnabledAsync(user, false);
             await _userManager.ResetAuthenticatorKeyAsync(user);
-            _logger.LogInformation("User {Email} has reset their authentication app key", user.Email);
-
             return RedirectToAction(nameof(EnableAuthenticator));
         }
 
-        public async Task<IActionResult> GenerateRecoveryCodes()
+        [HttpPost]
+        [ActionName(nameof(GenerateRecoveryCodes))]
+        public async Task<IActionResult> GenerateRecoveryCodesPost()
         {
-            var recoveryCodes = (string[])TempData[RecoveryCodesKey];
-            if (recoveryCodes == null)
-            {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null)
-                    return NotFound();
+            var user = await _userManager.GetUserAsync(User);
+            if (user is null)
+                return NotFound();
+            var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
+            TempData[RecoveryCodesKey] = recoveryCodes.ToArray();
+            return RedirectToAction(nameof(GenerateRecoveryCodes));
+        }
 
-                recoveryCodes = (await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10)).ToArray();
+        [HttpGet]
+        public IActionResult GenerateRecoveryCodes()
+        {
+            if (TempData[RecoveryCodesKey] is string[] recoveryCodes)
+            {
+                var model = new GenerateRecoveryCodesViewModel { RecoveryCodes = recoveryCodes };
+                return View(model);
             }
 
-            var model = new GenerateRecoveryCodesViewModel { RecoveryCodes = recoveryCodes };
-            return View(model);
+            return View("Confirm", new ConfirmModel(
+                title: StringLocalizer["Generate new recovery codes"],
+                desc: StringLocalizer["This action will generate new recovery codes for your account. Please confirm to proceed."],
+                action: StringLocalizer["Generate"],
+                buttonClass: "btn-primary"
+            ));
         }
 
         private string GenerateQrCodeUri(string email, string unformattedKey)

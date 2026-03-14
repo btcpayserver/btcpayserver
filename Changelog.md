@@ -4,6 +4,7 @@
 
 ### New Features
 
+* Wallets: Add filtering using search bar on the label filter dropdown when labels exceed more than 20 (#7210 #7109) @rollforsats
 * API: Include a payment method in the Get invoices endpoint (#6757 #2394) @TChukwuleta
 * BTCPay Invoice Modal: Add a `paymentMethodId` parameter (#7209 #7208) @pwnfoo
 * Security: Include API key permission analysis metadata (#6771 #3196) @TChukwuleta

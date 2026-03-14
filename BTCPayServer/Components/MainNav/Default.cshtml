@@ -25,6 +25,10 @@
     // For example, if on the Server settings page, GetStoreData should be
     // null, but the navigation menu should show the last selected store.
     using var _ = this.Context.SwitchStoreData(Model.Store);
+
+    // Give times for extensions to switch to MainNavViewModel.Store
+    // or HttpContext.GetStoreDataOrNull
+    using var __ = this.Context.SwitchNavRendering();
 }
 
 

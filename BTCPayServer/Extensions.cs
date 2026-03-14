@@ -787,6 +787,12 @@ namespace BTCPayServer
             ctx.SetStoreData(storeData);
             return new ActionDisposable(() => { ctx.SetStoreData(old); });
         }
+        public static IDisposable SwitchNavRendering(this HttpContext ctx)
+        {
+            var old = ctx.Items["BTCPAY.NAVRENDERING"] ;
+            ctx.Items["BTCPAY.NAVRENDERING"] = true;
+            return new ActionDisposable(() => { ctx.Items["BTCPAY.NAVRENDERING"] = old; });
+        }
 
         /// <summary>
         /// Set after authorization succeed. If your route is authorized, this is guaranteed to not be null.
@@ -801,7 +807,11 @@ namespace BTCPayServer
         /// <param name="ctx"></param>
         /// <returns></returns>
         public static StoreData GetStoreData(this HttpContext ctx)
-            => GetStoreDataOrNull(ctx) ?? throw new InvalidOperationException("StoreData is not set");
+        // Give times for extensions to switch to MainNavViewModel.Store
+        // or HttpContext.GetStoreDataOrNull
+            => GetStoreDataOrNull(ctx) ??
+               (ctx.Items["BTCPAY.NAVRENDERING"]  is true ? null
+               : throw new InvalidOperationException("StoreData is not set"));
         public static void SetStoreData(this HttpContext ctx, StoreData? storeData)
             => ctx.Items["BTCPAY.STOREDATA"] = storeData;
         public static string? GetCurrentStoreId(this HttpContext ctx)

@@ -381,7 +381,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
 
 
             await using var ctx = _dbContextFactory.CreateContext();
-            var payout = await ctx.Payouts
+            var payouts = await ctx.Payouts
                 .Include(o => o.StoreData)
                 .Include(o => o.PullPaymentData)
                 .Where(p => p.State == PayoutState.AwaitingPayment)
@@ -389,15 +389,14 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
 #pragma warning disable CA1307 // Specify StringComparison
                 .Where(p => destination.Equals(p.DedupId))
 #pragma warning restore CA1307 // Specify StringComparison
-                .FirstOrDefaultAsync();
+                .ToListAsync();
+
+            var payout = payouts.FirstOrDefault(p =>
+                p.Amount is not null &&
+                destinationSum ==
+                BTCPayServer.Extensions.RoundUp(p.Amount.Value, Network.Divisibility));
 
             if (payout is null)
-                return;
-            if (payout.Amount is null ||
-                // The round up here is not strictly necessary, this is temporary to fix existing payout before we
-                // were properly roundup the crypto amount
-                destinationSum !=
-                BTCPayServer.Extensions.RoundUp(payout.Amount.Value, Network.Divisibility))
                 return;
 
             var derivationSchemeSettings = payout.StoreData

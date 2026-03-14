@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
@@ -86,11 +87,11 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             await ClickClaimAmount();
             await s.FindAlertMessage();
 
-            // We should not be able to use an address already used
+            // We should be able to reuse the same address for another payout
             await s.Page.FillAsync("#Destination", address.ToString());
             await s.Page.FillAsync("#ClaimedAmount", "20");
-            await s.Page.PressAsync("#ClaimedAmount", "Enter");
-            await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error);
+            await ClickClaimAmount();
+            await s.FindAlertMessage();
 
             address = await s.Server.ExplorerNode.GetNewAddressAsync();
             await s.Page.FillAsync("#Destination", address.ToString());
@@ -112,7 +113,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
         payouts = s.Page.Locator(".pp-payout");
         await payouts.First.ClickAsync();
-        await Expect(s.Page.Locator(".payout")).ToHaveCountAsync(2);
+        await Expect(s.Page.Locator(".payout")).ToHaveCountAsync(3);
 
         await s.Page.CheckAsync(".mass-action-select-all");
         await s.Page.ClickAsync($"#{PayoutState.AwaitingApproval}-approve-pay");
@@ -1063,5 +1064,261 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
                 throw;
             }
         }
+    }
+
+    [Fact]
+    [Trait("Integration", "Integration")]
+    public async Task CanCreateDuplicateDestinationPayouts()
+    {
+        using var tester = CreateServerTester();
+        await tester.StartAsync();
+        var acc = tester.NewAccount();
+        await acc.GrantAccessAsync(true);
+        var storeId = (await acc.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
+        var client = await acc.CreateClient();
+
+        var pp = await client.CreatePullPayment(storeId, new CreatePullPaymentRequest()
+        {
+            Name = "Duplicate Destination Test",
+            Amount = 1.0m,
+            Currency = "BTC",
+            PayoutMethods = new[] { "BTC" }
+        });
+
+        var destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
+
+        // Create first payout to the address
+        var payout1 = await client.CreatePayout(pp.Id, new CreatePayoutRequest()
+        {
+            Destination = destination,
+            Amount = 0.001m,
+            PayoutMethodId = "BTC"
+        });
+        Assert.Equal(PayoutState.AwaitingApproval, payout1.State);
+
+        // Create second payout to the SAME address -- should succeed, not throw duplicate-destination
+        var payout2 = await client.CreatePayout(pp.Id, new CreatePayoutRequest()
+        {
+            Destination = destination,
+            Amount = 0.002m,
+            PayoutMethodId = "BTC"
+        });
+        Assert.Equal(PayoutState.AwaitingApproval, payout2.State);
+        Assert.NotEqual(payout1.Id, payout2.Id);
+
+        // Approve both
+        payout1 = await client.ApprovePayout(storeId, payout1.Id, new ApprovePayoutRequest());
+        payout2 = await client.ApprovePayout(storeId, payout2.Id, new ApprovePayoutRequest());
+        Assert.Equal(PayoutState.AwaitingPayment, payout1.State);
+        Assert.Equal(PayoutState.AwaitingPayment, payout2.State);
+
+        // Verify both exist
+        var payouts = await client.GetPayouts(pp.Id);
+        Assert.Equal(2, payouts.Length);
+        Assert.All(payouts, p => Assert.Equal(PayoutState.AwaitingPayment, p.State));
+    }
+
+    [Fact]
+    [Trait("Integration", "Integration")]
+    public async Task CanMatchPayoutsToSameAddressByAmount()
+    {
+        using var tester = CreateServerTester();
+        await tester.StartAsync();
+        var acc = tester.NewAccount();
+        await acc.GrantAccessAsync(true);
+        var storeId = (await acc.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
+        var client = await acc.CreateClient();
+
+        // Fund the store wallet so we can send internal payments
+        var storeAddress = (await client.GetOnChainWalletReceiveAddress(storeId, "BTC", true)).Address;
+        await tester.ExplorerNode.SendToAddressAsync(
+            BitcoinAddress.Create(storeAddress, tester.ExplorerClient.Network.NBitcoinNetwork),
+            Money.Coins(1m));
+        await tester.ExplorerNode.GenerateAsync(1);
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            var utxos = await client.GetOnChainWalletUTXOs(storeId, "BTC");
+            Assert.NotEmpty(utxos);
+        });
+
+        var destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
+
+        // Create two payouts to the same address with different amounts
+        var payout1 = await client.CreatePayout(storeId, new CreatePayoutThroughStoreRequest()
+        {
+            Destination = destination,
+            Amount = 0.001m,
+            Approved = true,
+            PayoutMethodId = "BTC"
+        });
+        var payout2 = await client.CreatePayout(storeId, new CreatePayoutThroughStoreRequest()
+        {
+            Destination = destination,
+            Amount = 0.002m,
+            Approved = true,
+            PayoutMethodId = "BTC"
+        });
+
+        Assert.Equal(PayoutState.AwaitingPayment, payout1.State);
+        Assert.Equal(PayoutState.AwaitingPayment, payout2.State);
+
+        // Send 0.001 BTC from the store wallet (internal) to the destination address
+        await client.CreateOnChainTransaction(storeId, "BTC",
+            new CreateOnChainTransactionRequest()
+            {
+                Destinations = new List<CreateOnChainTransactionRequest.CreateOnChainTransactionRequestDestination>()
+                {
+                    new() { Destination = destination, Amount = 0.001m }
+                },
+                FeeRate = new FeeRate(5m)
+            });
+        await tester.ExplorerNode.GenerateAsync(1);
+
+        // Payout1 (0.001) should be matched (InProgress or Completed), payout2 (0.002) should stay AwaitingPayment
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            var payouts = await client.GetStorePayouts(storeId);
+            var p1 = payouts.First(p => p.Id == payout1.Id);
+            var p2 = payouts.First(p => p.Id == payout2.Id);
+            Assert.True(p1.State == PayoutState.InProgress || p1.State == PayoutState.Completed,
+                $"Expected payout1 to be InProgress or Completed, but was {p1.State}");
+            Assert.Equal(PayoutState.AwaitingPayment, p2.State);
+        });
+
+        // Send 0.002 BTC from the store wallet (internal) to the same destination address
+        await client.CreateOnChainTransaction(storeId, "BTC",
+            new CreateOnChainTransactionRequest()
+            {
+                Destinations = new List<CreateOnChainTransactionRequest.CreateOnChainTransactionRequestDestination>()
+                {
+                    new() { Destination = destination, Amount = 0.002m }
+                },
+                FeeRate = new FeeRate(5m)
+            });
+        await tester.ExplorerNode.GenerateAsync(1);
+
+        // Payout2 (0.002) should now also be matched
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            var payouts = await client.GetStorePayouts(storeId);
+            var p2 = payouts.First(p => p.Id == payout2.Id);
+            Assert.True(p2.State == PayoutState.InProgress || p2.State == PayoutState.Completed,
+                $"Expected payout2 to be InProgress or Completed, but was {p2.State}");
+        });
+    }
+
+    [Fact]
+    [Trait("Integration", "Integration")]
+    public async Task CanProcessThreePayoutsToSameAddress()
+    {
+        using var tester = CreateServerTester();
+        await tester.StartAsync();
+        var acc = tester.NewAccount();
+        await acc.GrantAccessAsync(true);
+        var storeId = (await acc.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
+        var client = await acc.CreateClient();
+
+        // Fund the store wallet
+        var storeAddress = (await client.GetOnChainWalletReceiveAddress(storeId, "BTC", true)).Address;
+        await tester.ExplorerNode.SendToAddressAsync(
+            BitcoinAddress.Create(storeAddress, tester.ExplorerClient.Network.NBitcoinNetwork),
+            Money.Coins(1m));
+        await tester.ExplorerNode.GenerateAsync(1);
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            var utxos = await client.GetOnChainWalletUTXOs(storeId, "BTC");
+            Assert.NotEmpty(utxos);
+        });
+
+        var destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
+        var amount = 0.001m;
+
+        // Create 3 payouts to the same address, each for 0.001 BTC
+        var payout1 = await client.CreatePayout(storeId, new CreatePayoutThroughStoreRequest()
+        {
+            Destination = destination,
+            Amount = amount,
+            Approved = true,
+            PayoutMethodId = "BTC"
+        });
+        var payout2 = await client.CreatePayout(storeId, new CreatePayoutThroughStoreRequest()
+        {
+            Destination = destination,
+            Amount = amount,
+            Approved = true,
+            PayoutMethodId = "BTC"
+        });
+        var payout3 = await client.CreatePayout(storeId, new CreatePayoutThroughStoreRequest()
+        {
+            Destination = destination,
+            Amount = amount,
+            Approved = true,
+            PayoutMethodId = "BTC"
+        });
+
+        Assert.All(new[] { payout1, payout2, payout3 }, p => Assert.Equal(PayoutState.AwaitingPayment, p.State));
+
+        // Send first payment from the store wallet (internal)
+        await client.CreateOnChainTransaction(storeId, "BTC",
+            new CreateOnChainTransactionRequest()
+            {
+                Destinations = new List<CreateOnChainTransactionRequest.CreateOnChainTransactionRequestDestination>()
+                {
+                    new() { Destination = destination, Amount = amount }
+                },
+                FeeRate = new FeeRate(5m)
+            });
+        await tester.ExplorerNode.GenerateAsync(1);
+
+        // Exactly 1 payout should be matched, 2 still awaiting
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            var payouts = await client.GetStorePayouts(storeId, false);
+            var matched = payouts.Where(p => p.State != PayoutState.AwaitingPayment).ToArray();
+            var awaiting = payouts.Where(p => p.State == PayoutState.AwaitingPayment).ToArray();
+            Assert.Single(matched);
+            Assert.Equal(2, awaiting.Length);
+        });
+
+        // Send second payment from the store wallet (internal)
+        await client.CreateOnChainTransaction(storeId, "BTC",
+            new CreateOnChainTransactionRequest()
+            {
+                Destinations = new List<CreateOnChainTransactionRequest.CreateOnChainTransactionRequestDestination>()
+                {
+                    new() { Destination = destination, Amount = amount }
+                },
+                FeeRate = new FeeRate(5m)
+            });
+        await tester.ExplorerNode.GenerateAsync(1);
+
+        // 2 payouts should be matched, 1 still awaiting
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            var payouts = await client.GetStorePayouts(storeId, false);
+            var matched = payouts.Where(p => p.State != PayoutState.AwaitingPayment).ToArray();
+            var awaiting = payouts.Where(p => p.State == PayoutState.AwaitingPayment).ToArray();
+            Assert.Equal(2, matched.Length);
+            Assert.Single(awaiting);
+        });
+
+        // Send third payment from the store wallet (internal)
+        await client.CreateOnChainTransaction(storeId, "BTC",
+            new CreateOnChainTransactionRequest()
+            {
+                Destinations = new List<CreateOnChainTransactionRequest.CreateOnChainTransactionRequestDestination>()
+                {
+                    new() { Destination = destination, Amount = amount }
+                },
+                FeeRate = new FeeRate(5m)
+            });
+        await tester.ExplorerNode.GenerateAsync(1);
+
+        // All 3 payouts should be matched (no longer AwaitingPayment)
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            var payouts = await client.GetStorePayouts(storeId, false);
+            Assert.All(payouts, p => Assert.NotEqual(PayoutState.AwaitingPayment, p.State));
+        });
     }
 }

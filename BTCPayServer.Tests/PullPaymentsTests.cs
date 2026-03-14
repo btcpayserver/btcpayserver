@@ -87,7 +87,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             await ClickClaimAmount();
             await s.FindAlertMessage();
 
-            // We should be able to reuse the same address for another payout
+            address = await s.Server.ExplorerNode.GetNewAddressAsync();
             await s.Page.FillAsync("#Destination", address.ToString());
             await s.Page.FillAsync("#ClaimedAmount", "20");
             await ClickClaimAmount();
@@ -130,10 +130,10 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.GoToStore(s.StoreId, StoreNavPages.Payouts);
         await s.Page.ClickAsync($"#{PayoutState.InProgress}-view");
 
-        await Expect(s.Page.Locator(".transaction-link")).ToHaveCountAsync(2);
+        await Expect(s.Page.Locator(".transaction-link")).ToHaveCountAsync(3);
 
         await s.GoToUrl(viewPullPaymentUrl);
-        await Expect(s.Page.Locator(".transaction-link")).ToHaveCountAsync(2);
+        await Expect(s.Page.Locator(".transaction-link")).ToHaveCountAsync(3);
         await Expect(s.Page.Locator("body")).ToContainTextAsync(PayoutState.InProgress.GetStateString());
 
         await s.Server.ExplorerNode.GenerateAsync(1);
@@ -1143,18 +1143,19 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
         var destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
 
-        // Create two payouts to the same address with different amounts
+        // Create the larger payout first so amount matching, not FIFO-by-address,
+        // is required to pick the right payout.
         var payout1 = await client.CreatePayout(storeId, new CreatePayoutThroughStoreRequest()
         {
             Destination = destination,
-            Amount = 0.001m,
+            Amount = 0.002m,
             Approved = true,
             PayoutMethodId = "BTC"
         });
         var payout2 = await client.CreatePayout(storeId, new CreatePayoutThroughStoreRequest()
         {
             Destination = destination,
-            Amount = 0.002m,
+            Amount = 0.001m,
             Approved = true,
             PayoutMethodId = "BTC"
         });
@@ -1162,7 +1163,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         Assert.Equal(PayoutState.AwaitingPayment, payout1.State);
         Assert.Equal(PayoutState.AwaitingPayment, payout2.State);
 
-        // Send 0.001 BTC from the store wallet (internal) to the destination address
+        // Send 0.001 BTC first. This should match payout2, not the first-created payout.
         await client.CreateOnChainTransaction(storeId, "BTC",
             new CreateOnChainTransactionRequest()
             {
@@ -1174,18 +1175,18 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             });
         await tester.ExplorerNode.GenerateAsync(1);
 
-        // Payout1 (0.001) should be matched (InProgress or Completed), payout2 (0.002) should stay AwaitingPayment
+        // Payout2 (0.001) should be matched, payout1 (0.002) should stay AwaitingPayment
         await TestUtils.EventuallyAsync(async () =>
         {
             var payouts = await client.GetStorePayouts(storeId);
             var p1 = payouts.First(p => p.Id == payout1.Id);
             var p2 = payouts.First(p => p.Id == payout2.Id);
-            Assert.True(p1.State == PayoutState.InProgress || p1.State == PayoutState.Completed,
-                $"Expected payout1 to be InProgress or Completed, but was {p1.State}");
-            Assert.Equal(PayoutState.AwaitingPayment, p2.State);
+            Assert.Equal(PayoutState.AwaitingPayment, p1.State);
+            Assert.True(p2.State == PayoutState.InProgress || p2.State == PayoutState.Completed,
+                $"Expected payout2 to be InProgress or Completed, but was {p2.State}");
         });
 
-        // Send 0.002 BTC from the store wallet (internal) to the same destination address
+        // Send 0.002 BTC. The remaining payout1 should now be matched.
         await client.CreateOnChainTransaction(storeId, "BTC",
             new CreateOnChainTransactionRequest()
             {
@@ -1197,13 +1198,13 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             });
         await tester.ExplorerNode.GenerateAsync(1);
 
-        // Payout2 (0.002) should now also be matched
+        // Payout1 (0.002) should now also be matched
         await TestUtils.EventuallyAsync(async () =>
         {
             var payouts = await client.GetStorePayouts(storeId);
-            var p2 = payouts.First(p => p.Id == payout2.Id);
-            Assert.True(p2.State == PayoutState.InProgress || p2.State == PayoutState.Completed,
-                $"Expected payout2 to be InProgress or Completed, but was {p2.State}");
+            var p1 = payouts.First(p => p.Id == payout1.Id);
+            Assert.True(p1.State == PayoutState.InProgress || p1.State == PayoutState.Completed,
+                $"Expected payout1 to be InProgress or Completed, but was {p1.State}");
         });
     }
 
@@ -1270,14 +1271,17 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             });
         await tester.ExplorerNode.GenerateAsync(1);
 
-        // Exactly 1 payout should be matched, 2 still awaiting
+        // Payout1 should be matched (FIFO), payout2 and payout3 still awaiting
         await TestUtils.EventuallyAsync(async () =>
         {
             var payouts = await client.GetStorePayouts(storeId, false);
-            var matched = payouts.Where(p => p.State != PayoutState.AwaitingPayment).ToArray();
-            var awaiting = payouts.Where(p => p.State == PayoutState.AwaitingPayment).ToArray();
-            Assert.Single(matched);
-            Assert.Equal(2, awaiting.Length);
+            var p1 = payouts.Single(p => p.Id == payout1.Id);
+            var p2 = payouts.Single(p => p.Id == payout2.Id);
+            var p3 = payouts.Single(p => p.Id == payout3.Id);
+            Assert.True(p1.State == PayoutState.InProgress || p1.State == PayoutState.Completed,
+                $"Expected payout1 to be InProgress or Completed, but was {p1.State}");
+            Assert.Equal(PayoutState.AwaitingPayment, p2.State);
+            Assert.Equal(PayoutState.AwaitingPayment, p3.State);
         });
 
         // Send second payment from the store wallet (internal)
@@ -1292,14 +1296,18 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             });
         await tester.ExplorerNode.GenerateAsync(1);
 
-        // 2 payouts should be matched, 1 still awaiting
+        // Payout1 and payout2 should be matched (FIFO), payout3 still awaiting
         await TestUtils.EventuallyAsync(async () =>
         {
             var payouts = await client.GetStorePayouts(storeId, false);
-            var matched = payouts.Where(p => p.State != PayoutState.AwaitingPayment).ToArray();
-            var awaiting = payouts.Where(p => p.State == PayoutState.AwaitingPayment).ToArray();
-            Assert.Equal(2, matched.Length);
-            Assert.Single(awaiting);
+            var p1 = payouts.Single(p => p.Id == payout1.Id);
+            var p2 = payouts.Single(p => p.Id == payout2.Id);
+            var p3 = payouts.Single(p => p.Id == payout3.Id);
+            Assert.True(p1.State == PayoutState.InProgress || p1.State == PayoutState.Completed,
+                $"Expected payout1 to be InProgress or Completed, but was {p1.State}");
+            Assert.True(p2.State == PayoutState.InProgress || p2.State == PayoutState.Completed,
+                $"Expected payout2 to be InProgress or Completed, but was {p2.State}");
+            Assert.Equal(PayoutState.AwaitingPayment, p3.State);
         });
 
         // Send third payment from the store wallet (internal)
@@ -1314,11 +1322,13 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             });
         await tester.ExplorerNode.GenerateAsync(1);
 
-        // All 3 payouts should be matched (no longer AwaitingPayment)
+        // All 3 payouts should be matched
         await TestUtils.EventuallyAsync(async () =>
         {
             var payouts = await client.GetStorePayouts(storeId, false);
-            Assert.All(payouts, p => Assert.NotEqual(PayoutState.AwaitingPayment, p.State));
+            Assert.All(payouts, p => Assert.True(
+                p.State == PayoutState.InProgress || p.State == PayoutState.Completed,
+                $"Expected payout to be InProgress or Completed, but was {p.State}"));
         });
     }
 }

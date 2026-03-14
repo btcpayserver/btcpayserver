@@ -383,21 +383,24 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
             await using var ctx = _dbContextFactory.CreateContext();
             var txId = newTransaction.NewTransactionEvent.TransactionData.TransactionHash;
 
-            // Check if this transaction is already claimed by an InProgress payout for this destination.
+            // Check if this transaction is already claimed by any non-AwaitingPayment payout for this destination.
             // This prevents a single transaction from matching multiple payouts when the event fires
             // more than once (e.g. mempool detection then block confirmation).
-            var inProgressPayouts = await ctx.Payouts
-                .Where(p => p.State == PayoutState.InProgress)
+            // We check both InProgress (Candidates) and Completed (TransactionId, since Candidates is cleared on completion).
+            var claimedPayouts = await ctx.Payouts
+                .Where(p => p.State == PayoutState.InProgress || p.State == PayoutState.Completed)
                 .Where(p => p.PayoutMethodId == PaymentMethodId.ToString())
 #pragma warning disable CA1307 // Specify StringComparison
                 .Where(p => destination.Equals(p.DedupId))
 #pragma warning restore CA1307 // Specify StringComparison
                 .ToListAsync();
 
-            foreach (var existing in inProgressPayouts)
+            foreach (var existing in claimedPayouts)
             {
                 var existingProof = ParseProof(existing) as PayoutTransactionOnChainBlob;
-                if (existingProof?.Candidates.Contains(txId) == true)
+                if (existingProof?.Candidates?.Contains(txId) == true)
+                    return;
+                if (existingProof?.TransactionId == txId)
                     return;
             }
 

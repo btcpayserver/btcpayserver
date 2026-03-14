@@ -617,13 +617,21 @@ namespace BTCPayServer.Controllers
             // We can't filter at the database level if we need to apply label filter
             var preFiltering = string.IsNullOrEmpty(labelFilter);
             var model = new ListTransactionsViewModel { Skip = skip, Count = count };
+            const int maxVisibleLabels = 20;
 
             model.PendingTransactions = await _pendingTransactionService.GetPendingTransactions(walletId.CryptoCode, walletId.StoreId);
             model.Rates = GetCurrentStore().GetStoreBlob().GetTrackedRates().ToList();
 
-            model.Labels.AddRange(
-                (await WalletRepository.GetWalletLabelsByLinkedType(walletId, WalletObjectData.Types.Tx))
-                .Select(c => (c.Label, c.Color, ColorPalette.Default.TextColor(c.Color))));
+            var labelsWithUsage = await WalletRepository.GetWalletLabelsByLinkedTypeWithUsage(walletId, WalletObjectData.Types.Tx, includeUnusedLabels: true);
+            model.Labels.AddRange(labelsWithUsage
+                .Select(c => (c.Label, c.Color, ColorPalette.Default.TextColor(c.Color), c.UsageCount)));
+            model.PopularLabels = labelsWithUsage
+                .OrderByDescending(c => c.UsageCount)
+                .ThenBy(c => c.Label, StringComparer.OrdinalIgnoreCase)
+                .Take(maxVisibleLabels)
+                .OrderBy(c => c.Label, StringComparer.OrdinalIgnoreCase)
+                .Select(c => (c.Label, c.Color, ColorPalette.Default.TextColor(c.Color), c.UsageCount))
+                .ToList();
 
             IList<TransactionHistoryLine>? transactions = null;
             Dictionary<string, WalletTransactionInfo>? walletTransactionsInfo = null;

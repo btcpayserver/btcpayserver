@@ -381,6 +381,26 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
 
 
             await using var ctx = _dbContextFactory.CreateContext();
+            var txId = newTransaction.NewTransactionEvent.TransactionData.TransactionHash;
+
+            // Check if this transaction is already claimed by an InProgress payout for this destination.
+            // This prevents a single transaction from matching multiple payouts when the event fires
+            // more than once (e.g. mempool detection then block confirmation).
+            var inProgressPayouts = await ctx.Payouts
+                .Where(p => p.State == PayoutState.InProgress)
+                .Where(p => p.PayoutMethodId == PaymentMethodId.ToString())
+#pragma warning disable CA1307 // Specify StringComparison
+                .Where(p => destination.Equals(p.DedupId))
+#pragma warning restore CA1307 // Specify StringComparison
+                .ToListAsync();
+
+            foreach (var existing in inProgressPayouts)
+            {
+                var existingProof = ParseProof(existing) as PayoutTransactionOnChainBlob;
+                if (existingProof?.Candidates.Contains(txId) == true)
+                    return;
+            }
+
             var payouts = await ctx.Payouts
                 .Include(o => o.StoreData)
                 .Include(o => o.PullPaymentData)
@@ -389,7 +409,18 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
 #pragma warning disable CA1307 // Specify StringComparison
                 .Where(p => destination.Equals(p.DedupId))
 #pragma warning restore CA1307 // Specify StringComparison
+                .OrderBy(p => p.Date)
                 .ToListAsync();
+
+            // Also check AwaitingPayment payouts for already-claimed txIds.
+            // This covers external payments where the payout stays in AwaitingPayment
+            // but already had its proof updated by a previous event (e.g. mempool detection).
+            foreach (var p in payouts)
+            {
+                var existingProof = ParseProof(p) as PayoutTransactionOnChainBlob;
+                if (existingProof?.Candidates.Contains(txId) == true)
+                    return;
+            }
 
             var payout = payouts.FirstOrDefault(p =>
                 p.Amount is not null &&
@@ -412,7 +443,6 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
 
             var proof = ParseProof(payout) as PayoutTransactionOnChainBlob ??
                         new PayoutTransactionOnChainBlob() { Accounted = isInternal };
-            var txId = newTransaction.NewTransactionEvent.TransactionData.TransactionHash;
             if (!proof.Candidates.Add(txId))
                 return;
             if (isInternal)

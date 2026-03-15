@@ -89,7 +89,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (request.AutoApproveClaims)
             {
-                if (!(await _authorizationService.AuthorizeAsync(User, null,
+                if (!(await _authorizationService.AuthorizeAsync(User, storeId,
                         new PolicyRequirement(Policies.CanCreatePullPayments))).Succeeded)
                 {
                     return this.CreateAPIPermissionError(Policies.CanCreatePullPayments);
@@ -479,7 +479,7 @@ retry:
         {
             if (request?.Approved is true)
             {
-                if (!(await _authorizationService.AuthorizeAsync(User, null,
+                if (!(await _authorizationService.AuthorizeAsync(User, storeId,
                         new PolicyRequirement(Policies.CanCreatePullPayments))).Succeeded)
                 {
                     return this.CreateAPIPermissionError(Policies.CanCreatePullPayments);

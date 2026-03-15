@@ -14,9 +14,15 @@ using BTCPayServer.Events;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Stores;
+using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Localization;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer;
@@ -25,12 +31,62 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers;
 
-public partial class UIStoresController
+[Route("stores")]
+[Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+[Authorize(Policy = Policies.CanManageWalletSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+[AutoValidateAntiforgeryToken]
+public class UIStoreOnChainWalletsController : Controller
 {
+    public UIStoreOnChainWalletsController(
+        BTCPayServerEnvironment btcpayEnv,
+        StoreRepository storeRepo,
+        BTCPayWalletProvider walletProvider,
+        ExplorerClientProvider explorerProvider,
+        PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
+        PoliciesSettings policiesSettings,
+        IAuthorizationService authorizationService,
+        OnChainWalletSettingsAuthorization walletSettingsAuthorization,
+        OnChainWalletSetupService onChainWalletSetupService,
+        WalletFileParsers onChainWalletParsers,
+        EventAggregator eventAggregator,
+        IHtmlHelper html,
+        IStringLocalizer stringLocalizer)
+    {
+        _btcPayEnv = btcpayEnv;
+        _storeRepo = storeRepo;
+        _walletProvider = walletProvider;
+        _explorerProvider = explorerProvider;
+        _handlers = paymentMethodHandlerDictionary;
+        _policiesSettings = policiesSettings;
+        _authorizationService = authorizationService;
+        _walletSettingsAuthorization = walletSettingsAuthorization;
+        _onChainWalletSetupService = onChainWalletSetupService;
+        _onChainWalletParsers = onChainWalletParsers;
+        _eventAggregator = eventAggregator;
+        _html = html;
+        StringLocalizer = stringLocalizer;
+    }
+
+    private readonly BTCPayServerEnvironment _btcPayEnv;
+    private readonly StoreRepository _storeRepo;
+    private readonly BTCPayWalletProvider _walletProvider;
+    private readonly ExplorerClientProvider _explorerProvider;
+    private readonly PaymentMethodHandlerDictionary _handlers;
+    private readonly PoliciesSettings _policiesSettings;
+    private readonly IAuthorizationService _authorizationService;
+    private readonly OnChainWalletSettingsAuthorization _walletSettingsAuthorization;
+    private readonly OnChainWalletSetupService _onChainWalletSetupService;
+    private readonly WalletFileParsers _onChainWalletParsers;
+    private readonly EventAggregator _eventAggregator;
+    private readonly IHtmlHelper _html;
+
+    public IStringLocalizer StringLocalizer { get; }
+
     [HttpGet("{storeId}/onchain/{cryptoCode}")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<ActionResult> SetupWallet(WalletSetupViewModel vm)
     {
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, vm.StoreId, vm.CryptoCode))
+            return Forbid();
         var checkResult = IsAvailable(vm.CryptoCode, out var store, out _);
         if (checkResult != null)
         {
@@ -43,13 +99,14 @@ public partial class UIStoresController
         var perm = await CanUseHotWallet();
         vm.SetPermission(perm);
 
-        return View(vm);
+        return StoreView("SetupWallet", vm);
     }
-
-    [HttpGet("{storeId}/onchain/{cryptoCode}/import/{method?}")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [HttpGet("{storeId}/onchain/{cryptoCode}/import")]
+    [HttpGet("{storeId}/onchain/{cryptoCode}/import/{method:regex(^(hardware|file|xpub|scan|seed)$)}")]
     public async Task<IActionResult> ImportWallet(WalletSetupViewModel vm)
     {
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, vm.StoreId, vm.CryptoCode))
+            return Forbid();
         var checkResult = IsAvailable(vm.CryptoCode, out _, out var network);
         if (checkResult != null)
         {
@@ -71,14 +128,15 @@ public partial class UIStoresController
             vm.SetupRequest = new WalletSetupRequest();
         }
 
-        return View(vm.ViewName, vm);
+        return StoreView(vm.ViewName, vm);
     }
 
     [HttpPost("{storeId}/onchain/{cryptoCode}/modify")]
-    [HttpPost("{storeId}/onchain/{cryptoCode}/import/{method}")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public async Task<IActionResult> UpdateWallet(WalletSetupViewModel vm)
+    [HttpPost("{storeId}/onchain/{cryptoCode}/import/{method:regex(^(hardware|file|xpub|scan|seed)$)}")]
+    public async Task<IActionResult> UpdateWallet(WalletSetupViewModel vm, string command = null)
     {
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, vm.StoreId, vm.CryptoCode))
+            return Forbid();
         var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
         if (checkResult != null)
         {
@@ -86,11 +144,9 @@ public partial class UIStoresController
         }
 
         vm.Network = network;
+
         DerivationSchemeSettings strategy = null;
-        PaymentMethodId paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
-        BitcoinLikePaymentHandler handler = (BitcoinLikePaymentHandler)_handlers[paymentMethodId];
-        var wallet = _walletProvider.GetWallet(network);
-        if (wallet == null)
+        if (_walletProvider.GetWallet(network) == null)
         {
             return NotFound();
         }
@@ -110,7 +166,7 @@ public partial class UIStoresController
             if (fileContent is null || !_onChainWalletParsers.TryParseWalletFile(fileContent, network, out strategy, out _))
             {
                 ModelState.AddModelError(nameof(vm.WalletFile), StringLocalizer["Import failed, make sure you import a compatible wallet format"]);
-                return View(vm.ViewName, vm);
+                return StoreView(vm.ViewName, vm);
             }
         }
         else if (!string.IsNullOrEmpty(vm.WalletFileContent))
@@ -118,7 +174,7 @@ public partial class UIStoresController
             if (!_onChainWalletParsers.TryParseWalletFile(vm.WalletFileContent, network, out strategy, out var error))
             {
                 ModelState.AddModelError(nameof(vm.WalletFileContent), StringLocalizer["QR import failed: {0}", error]);
-                return View(vm.ViewName, vm);
+                return StoreView(vm.ViewName, vm);
             }
         }
         else if (!string.IsNullOrEmpty(vm.DerivationScheme))
@@ -147,50 +203,34 @@ public partial class UIStoresController
             catch (Exception ex)
             {
                 ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer["Invalid wallet format: {0}", ex.Message]);
-                return View(vm.ViewName, vm);
+                return StoreView(vm.ViewName, vm);
             }
         }
         else if (!string.IsNullOrEmpty(vm.Config))
         {
-            try
-            {
-                strategy = handler.ParsePaymentMethodConfig(JToken.Parse(_dataProtector.UnprotectString(vm.Config)));
-            }
-            catch
+            if (!_onChainWalletSetupService.TryParseProtectedConfig(vm.CryptoCode, vm.Config, out strategy))
             {
                 ModelState.AddModelError(nameof(vm.Config), StringLocalizer["Config file was not in the correct format"]);
-                return View(vm.ViewName, vm);
+                return StoreView(vm.ViewName, vm);
             }
         }
 
         if (strategy is null)
         {
             ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer["Please provide your extended public key"]);
-            return View(vm.ViewName, vm);
+            return StoreView(vm.ViewName, vm);
         }
-
-        vm.Config = _dataProtector.ProtectString(JToken.FromObject(strategy, handler.Serializer).ToString());
+        vm.Config = _onChainWalletSetupService.ProtectConfig(vm.CryptoCode, strategy);
         ModelState.Remove(nameof(vm.Config));
 
-        var storeBlob = store.GetStoreBlob();
         if (vm.Confirmation)
         {
-            try
+            var saveResult = await _onChainWalletSetupService.SaveWallet(store, network, strategy, vm.SetupRequest);
+            if (!saveResult.Success)
             {
-                await wallet.TrackAsync(strategy.AccountDerivation);
-                store.SetPaymentMethodConfig(_handlers[paymentMethodId], strategy);
-                storeBlob.SetExcluded(paymentMethodId, false);
-                storeBlob.PayJoinEnabled = strategy.IsHotWallet && !(vm.SetupRequest?.PayJoinEnabled is false);
-                store.SetStoreBlob(storeBlob);
+                ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer[saveResult.ErrorMessage ?? "Wallet setup failed."]);
+                return StoreView(vm.ViewName, vm);
             }
-            catch
-            {
-                ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer["NBXplorer is unable to track this derivation scheme. You may need to update it."]);
-                return View(vm.ViewName, vm);
-            }
-            await _storeRepo.UpdateStore(store);
-            _eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
-
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Wallet settings for {0} have been updated.", network.CryptoCode].Value;
 
             // This is success case when derivation scheme is added to the store
@@ -198,11 +238,11 @@ public partial class UIStoresController
         }
         return ConfirmAddresses(vm, strategy, network);
     }
-
     [HttpGet("{storeId}/onchain/{cryptoCode}/generate/{method?}")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> GenerateWallet(WalletSetupViewModel vm)
     {
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, vm.StoreId, vm.CryptoCode))
+            return Forbid();
         var checkResult = IsAvailable(vm.CryptoCode, out _, out var network);
         if (checkResult != null)
         {
@@ -212,9 +252,7 @@ public partial class UIStoresController
         var isHotWallet = vm.Method == WalletSetupMethod.HotWallet;
         var isColdWallet = vm.Method == WalletSetupMethod.WatchOnly;
         var perm = await CanUseHotWallet();
-        if (isHotWallet && !perm.CanCreateHotWallet)
-            return NotFound();
-        if (isColdWallet && !perm.CanCreateColdWallet)
+        if (isHotWallet && !perm.CanCreateHotWallet || isColdWallet && !perm.CanCreateColdWallet)
             return NotFound();
         vm.SetPermission(perm);
         vm.SupportTaproot = network.NBitcoinNetwork.Consensus.SupportTaproot;
@@ -236,15 +274,15 @@ public partial class UIStoresController
             };
         }
 
-        return View(vm.ViewName, vm);
+        return StoreView(vm.ViewName, vm);
     }
 
     internal GenerateWalletResponse GenerateWalletResponse;
-
     [HttpPost("{storeId}/onchain/{cryptoCode}/generate/{method}")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> GenerateWallet(string storeId, string cryptoCode, WalletSetupMethod method, WalletSetupRequest request)
     {
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, storeId, cryptoCode))
+            return Forbid();
         var checkResult = IsAvailable(cryptoCode, out _, out var network);
         if (checkResult != null)
         {
@@ -258,7 +296,6 @@ public partial class UIStoresController
         {
             return NotFound();
         }
-        var handler = _handlers.GetBitcoinHandler(cryptoCode);
         var client = _explorerProvider.GetExplorerClient(cryptoCode);
         var isImport = method == WalletSetupMethod.Seed;
         var vm = new WalletSetupViewModel
@@ -278,7 +315,7 @@ public partial class UIStoresController
         if (isImport && string.IsNullOrEmpty(request.ExistingMnemonic))
         {
             ModelState.AddModelError(nameof(request.ExistingMnemonic), StringLocalizer["Please provide your existing seed"]);
-            return View(vm.ViewName, vm);
+            return StoreView(vm.ViewName, vm);
         }
 
         GenerateWalletResponse response;
@@ -297,7 +334,7 @@ public partial class UIStoresController
                 Severity = StatusMessageModel.StatusSeverity.Error,
                 Message = StringLocalizer["There was an error generating your wallet: {0}", e.Message].Value
             });
-            return View(vm.ViewName, vm);
+            return StoreView(vm.ViewName, vm);
         }
 
         var derivationSchemeSettings = new DerivationSchemeSettings(response.DerivationScheme, network);
@@ -321,7 +358,7 @@ public partial class UIStoresController
         vm.RootFingerprint = response.AccountKeyPath.MasterFingerprint.ToString();
         vm.AccountKey = response.AccountHDKey.Neuter().ToWif();
         vm.KeyPath = response.AccountKeyPath.KeyPath.ToString();
-        vm.Config = _dataProtector.ProtectString(JToken.FromObject(derivationSchemeSettings, handler.Serializer).ToString());
+        vm.Config = _onChainWalletSetupService.ProtectConfig(cryptoCode, derivationSchemeSettings);
 
         var result = await UpdateWallet(vm);
 
@@ -361,9 +398,10 @@ public partial class UIStoresController
     // The purpose of this action is to show the user a success message, which confirms
     // that the store settings have been updated after generating a new wallet.
     [HttpGet("{storeId}/onchain/{cryptoCode}/generate/confirm")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public ActionResult GenerateWalletConfirm(string storeId, string cryptoCode)
+    public async Task<ActionResult> GenerateWalletConfirm(string storeId, string cryptoCode)
     {
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, storeId, cryptoCode))
+            return Forbid();
         var checkResult = IsAvailable(cryptoCode, out _, out var network);
         if (checkResult != null)
         {
@@ -375,11 +413,11 @@ public partial class UIStoresController
         var walletId = new WalletId(storeId, cryptoCode);
         return RedirectToAction(nameof(UIWalletsController.WalletTransactions), "UIWallets", new { walletId });
     }
-
     [HttpGet("{storeId}/onchain/{cryptoCode}/settings")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> WalletSettings(string storeId, string cryptoCode)
     {
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, storeId, cryptoCode))
+            return Forbid();
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
         if (checkResult != null)
         {
@@ -423,9 +461,10 @@ public partial class UIStoresController
                 {
                     AccountKey = e.AccountKey.ToString(),
                     MasterFingerprint = e.RootFingerprint is { } fp ? fp.ToString() : null,
-                    AccountKeyPath = e.AccountKeyPath == null ? "" : $"m/{e.AccountKeyPath}"
+                    AccountKeyPath = e.AccountKeyPath == null ? "" : $"m/{e.AccountKeyPath}",
+                    SignerEmail = e.SignerEmail
                 }).ToList(),
-            Config = _dataProtector.ProtectString(JToken.FromObject(derivation, handler.Serializer).ToString()),
+            Config = _onChainWalletSetupService.ProtectConfig(cryptoCode, derivation),
             PayJoinEnabled = storeBlob.PayJoinEnabled,
             CanUsePayJoin = perm.CanCreateHotWallet && network.SupportPayJoin && derivation.IsHotWallet,
             CanUseHotWallet = perm.CanCreateHotWallet,
@@ -439,13 +478,13 @@ public partial class UIStoresController
         ViewData["ReplaceDescription"] = WalletReplaceWarning(derivation.IsHotWallet);
         ViewData["RemoveDescription"] = WalletRemoveWarning(derivation.IsHotWallet, network.CryptoCode);
 
-        return View(vm);
+        return StoreView("WalletSettings", vm);
     }
-
     [HttpPost("{storeId}/onchain/{cryptoCode}/settings/wallet")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> UpdateWalletSettings(WalletSettingsViewModel vm)
     {
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, vm.StoreId, vm.CryptoCode))
+            return Forbid();
         var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
         if (checkResult != null)
         {
@@ -552,11 +591,11 @@ public partial class UIStoresController
 
         return RedirectToAction(nameof(WalletSettings), new { vm.StoreId, vm.CryptoCode });
     }
-
-    [HttpGet("{storeId}/onchain/{cryptoCode}/seed")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public async Task<IActionResult> WalletSeed(string storeId, string cryptoCode, CancellationToken cancellationToken = default)
+        [HttpGet("{storeId}/onchain/{cryptoCode}/seed")]
+        public async Task<IActionResult> WalletSeed(string storeId, string cryptoCode, CancellationToken cancellationToken = default)
     {
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, storeId, cryptoCode))
+            return Forbid();
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
         if (checkResult != null)
         {
@@ -596,11 +635,11 @@ public partial class UIStoresController
 
         return RedirectToAction(nameof(WalletSettings));
     }
-
-    [HttpGet("{storeId}/onchain/{cryptoCode}/replace")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public ActionResult ReplaceWallet(string storeId, string cryptoCode)
+        [HttpGet("{storeId}/onchain/{cryptoCode}/replace")]
+        public async Task<ActionResult> ReplaceWallet(string storeId, string cryptoCode)
     {
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, storeId, cryptoCode))
+            return Forbid();
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
         if (checkResult != null)
         {
@@ -616,11 +655,11 @@ public partial class UIStoresController
             Action = StringLocalizer["Setup new wallet"]
         });
     }
-
-    [HttpPost("{storeId}/onchain/{cryptoCode}/replace")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public IActionResult ConfirmReplaceWallet(string storeId, string cryptoCode)
+        [HttpPost("{storeId}/onchain/{cryptoCode}/replace")]
+        public async Task<IActionResult> ConfirmReplaceWallet(string storeId, string cryptoCode)
     {
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, storeId, cryptoCode))
+            return Forbid();
         var checkResult = IsAvailable(cryptoCode, out var store, out _);
         if (checkResult != null)
         {
@@ -635,11 +674,11 @@ public partial class UIStoresController
 
         return RedirectToAction(nameof(SetupWallet), new { storeId, cryptoCode });
     }
-
-    [HttpGet("{storeId}/onchain/{cryptoCode}/delete")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public ActionResult DeleteWallet(string storeId, string cryptoCode)
+        [HttpGet("{storeId}/onchain/{cryptoCode}/delete")]
+        public async Task<ActionResult> DeleteWallet(string storeId, string cryptoCode)
     {
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, storeId, cryptoCode))
+            return Forbid();
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
         if (checkResult != null)
         {
@@ -655,11 +694,11 @@ public partial class UIStoresController
             Action = StringLocalizer["Delete"]
         });
     }
-
-    [HttpPost("{storeId}/onchain/{cryptoCode}/delete")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public async Task<IActionResult> ConfirmDeleteWallet(string storeId, string cryptoCode)
+        [HttpPost("{storeId}/onchain/{cryptoCode}/delete")]
+        public async Task<IActionResult> ConfirmDeleteWallet(string storeId, string cryptoCode)
     {
+        if (!await _walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, storeId, cryptoCode))
+            return Forbid();
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
         if (checkResult != null)
         {
@@ -680,7 +719,7 @@ public partial class UIStoresController
         TempData[WellKnownTempData.SuccessMessage] =
             $"On-Chain payment for {network.CryptoCode} has been removed.";
 
-        return RedirectToAction(nameof(GeneralSettings), new { storeId });
+        return RedirectToAction(nameof(UIStoresController.GeneralSettings), "UIStores", new { storeId });
     }
 
     private IActionResult ConfirmAddresses(WalletSetupViewModel vm, DerivationSchemeSettings strategy, BTCPayNetwork network)
@@ -697,12 +736,18 @@ public partial class UIStoresController
         }
         vm.Confirmation = true;
         ModelState.Remove(nameof(vm.Config)); // Remove the cached value
-        return View("ImportWallet/ConfirmAddresses", vm);
+        return StoreView("ImportWallet/ConfirmAddresses", vm);
+    }
+
+    private ViewResult StoreView(string viewName, object model = null)
+    {
+        var path = $"~/Views/UIStoreOnChainWallets/{viewName}.cshtml";
+        return model is null ? View(path) : View(path, model);
     }
 
     private ActionResult IsAvailable(string cryptoCode, out StoreData store, out BTCPayNetwork network)
     {
-        store = HttpContext.GetStoreDataOrNull();
+        store = HttpContext.GetStoreData();
         network = cryptoCode == null ? null : _explorerProvider.GetNetwork(cryptoCode);
         return store == null || network == null ? NotFound() : null;
     }

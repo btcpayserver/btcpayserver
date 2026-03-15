@@ -1,0 +1,203 @@
+@using BTCPayServer.Blazor
+@using BTCPayServer.Blazor.VaultBridge
+@model MultisigInviteViewModel
+@{
+    Layout = "~/Views/Shared/_LayoutSimple.cshtml";
+    ViewData["Title"] = "Submit multisig signer key";
+    ViewData.SetBlazorAllowed(true);
+    var hasPrefilledValues = !string.IsNullOrWhiteSpace(Model.AccountKey) ||
+                             !string.IsNullOrWhiteSpace(Model.MasterFingerprint) ||
+                             !string.IsNullOrWhiteSpace(Model.AccountKeyPath);
+    var serverEntryMode = "manual";
+    var initialEntryMode = hasPrefilledValues ? "manual" : "hardware";
+}
+
+<main class="py-4 py-lg-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8">
+                <div class="bg-tile m-0 p-3 p-sm-5 rounded">
+                    <h1 class="h3 mb-3">Submit multisig signer key</h1>
+                    <p class="text-secondary mb-4">
+                        Request <span class="font-monospace">@Model.RequestId</span> - @Model.RequiredSigners/@Model.TotalSigners (@Model.ScriptType.ToUpperInvariant()).
+                    </p>
+
+                    @if (Model.Submitted)
+                    {
+                        <div class="alert alert-success mb-3">Your signer key is submitted.</div>
+                        <p class="text-secondary mb-0">You can close this page now. The wallet owner will receive your submission and will notify next steps.</p>
+                        <div class="mt-4">
+                            <a asp-area="" asp-controller="UIWallets" asp-action="ListWallets" class="btn btn-secondary">Back to wallets</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mb-4">
+                            <label class="form-label d-block mb-2">Signer key input</label>
+                            <div class="nav btcpay-pills align-items-center gap-2" role="tablist" aria-label="Signer key input mode">
+                                <a id="EntryModeHardware" class="btcpay-pill" role="tab" aria-selected="false" href="#">Hardware wallet</a>
+                                <a id="EntryModeManual" class="btcpay-pill" role="tab" aria-selected="false" href="#">Manual entry</a>
+                            </div>
+                        </div>
+
+                        <div id="HardwareFlowSection" class="mb-4">
+                            <h2 class="h5 mb-2">Extract from BTCPay Server Vault</h2>
+                            <p class="text-secondary mb-3">Use your hardware wallet to auto-fill account key, fingerprint, and key path.</p>
+                            <component type="typeof(BTCPayServer.Blazor.VaultBridge.VaultBridgeUI)"
+                                       param-Controller="@(new GetMultisigAccountKeyController
+                                                          {
+                                                              CryptoCode = Model.CryptoCode,
+                                                              ScriptType = Model.ScriptType
+                                                          })"
+                                       render-mode="Server" />
+                            <p id="HardwareFetchHint" class="text-secondary mt-3 mb-0">Fetch signer data from device to continue.</p>
+                        </div>
+
+                        <form method="post" id="SubmitSignerKeyForm">
+                            <div asp-validation-summary="ModelOnly" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
+                            <div id="SignerKeyFields" class="@(serverEntryMode == "hardware" ? "d-none" : string.Empty)">
+                                <div class="mb-3">
+                                    <label asp-for="AccountKey" class="form-label">Account key (xpub/tpub)</label>
+                                    <input asp-for="AccountKey" class="form-control font-monospace" />
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label asp-for="MasterFingerprint" class="form-label">Master fingerprint</label>
+                                        <input asp-for="MasterFingerprint" class="form-control font-monospace" placeholder="d90c6a4f" />
+                                    </div>
+                                    <div class="col-md-8">
+                                        <label asp-for="AccountKeyPath" class="form-label">Account key path</label>
+                                        <input asp-for="AccountKeyPath" class="form-control font-monospace" placeholder="m/48'/1'/0'/2'" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-3 mt-4">
+                                <button type="submit" id="SubmitSignerKeyButton" class="btn btn-primary">Submit signer key</button>
+                                <a asp-area="" asp-controller="UIWallets" asp-action="ListWallets" class="btn btn-secondary">Back to wallets</a>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section PageFootContent
+{
+    <script src="~/js/vaultbridge.js" asp-append-version="true"></script>
+    <script>
+        (() => {
+            const initialMode = "@initialEntryMode";
+            const hardwareButton = document.getElementById("EntryModeHardware");
+            const manualButton = document.getElementById("EntryModeManual");
+            const hardwareFlow = document.getElementById("HardwareFlowSection");
+            const hardwareHint = document.getElementById("HardwareFetchHint");
+            const signerFields = document.getElementById("SignerKeyFields");
+            const submitButton = document.getElementById("SubmitSignerKeyButton");
+            const accountKey = document.getElementById("AccountKey");
+            const masterFingerprint = document.getElementById("MasterFingerprint");
+            const accountKeyPath = document.getElementById("AccountKeyPath");
+
+            if (!hardwareButton || !manualButton || !hardwareFlow || !signerFields || !submitButton || !accountKey || !masterFingerprint || !accountKeyPath) {
+                return;
+            }
+
+            let currentMode = initialMode;
+
+            function hasRequiredSignerValues() {
+                return !!(accountKey.value && accountKey.value.trim());
+            }
+
+            function setReadonly(readonly) {
+                accountKey.readOnly = readonly;
+                masterFingerprint.readOnly = readonly;
+                accountKeyPath.readOnly = readonly;
+            }
+
+            function refreshHardwareState() {
+                const ready = hasRequiredSignerValues();
+                signerFields.classList.toggle("d-none", !ready);
+                if (hardwareHint) {
+                    hardwareHint.classList.toggle("d-none", ready);
+                }
+                submitButton.disabled = !ready;
+            }
+
+            function setMode(mode) {
+                const useHardware = mode === "hardware";
+                currentMode = mode;
+                hardwareButton.classList.toggle("active", useHardware);
+                manualButton.classList.toggle("active", !useHardware);
+                hardwareButton.setAttribute("aria-selected", useHardware ? "true" : "false");
+                manualButton.setAttribute("aria-selected", !useHardware ? "true" : "false");
+                hardwareFlow.classList.toggle("d-none", !useHardware);
+                setReadonly(useHardware);
+
+                if (useHardware) {
+                    refreshHardwareState();
+                } else {
+                    signerFields.classList.remove("d-none");
+                    if (hardwareHint) {
+                        hardwareHint.classList.add("d-none");
+                    }
+                    submitButton.disabled = false;
+                }
+            }
+
+            hardwareButton.addEventListener("click", (evt) => {
+                evt.preventDefault();
+                setMode("hardware");
+            });
+            manualButton.addEventListener("click", (evt) => {
+                evt.preventDefault();
+                setMode("manual");
+            });
+
+            setMode(initialMode);
+
+            function parseAccountOrigin() {
+                const raw = (accountKey.value || "").trim();
+                const match = raw.match(/^\[([0-9a-fA-F]{8})(\/[0-9hH'\/]+)\](.+)$/);
+                if (!match) {
+                    masterFingerprint.value = "";
+                    accountKeyPath.value = "";
+                    return;
+                }
+
+                const fingerprint = match[1].toLowerCase();
+                const path = match[2].replace(/[hH]/g, "'");
+                const xpub = (match[3] || "").trim();
+                if (!xpub) {
+                    masterFingerprint.value = "";
+                    accountKeyPath.value = "";
+                    return;
+                }
+
+                accountKey.value = xpub;
+                masterFingerprint.value = fingerprint;
+                accountKeyPath.value = `m${path}`;
+            }
+
+            accountKey.addEventListener("input", () => {
+                parseAccountOrigin();
+                if (currentMode === "hardware") {
+                    refreshHardwareState();
+                }
+            });
+            accountKey.addEventListener("change", () => {
+                parseAccountOrigin();
+                if (currentMode === "hardware") {
+                    refreshHardwareState();
+                }
+            });
+
+            vault.setMultisigInviteXPub = function (data) {
+                accountKey.value = data.accountKey || "";
+                masterFingerprint.value = data.masterFingerprint || "";
+                accountKeyPath.value = data.accountKeyPath || "";
+                setMode("hardware");
+            };
+        })();
+    </script>
+}

@@ -27,7 +27,7 @@ namespace BTCPayServer.Components.StoreSelector
                     Value = store.Id,
                     Selected = store.Id == currentStore?.Id
                 })
-                .OrderBy(s => s.Text)
+                .OrderBy(store => store.Text)
                 .ToList();
 
             var blob = currentStore?.GetStoreBlob();

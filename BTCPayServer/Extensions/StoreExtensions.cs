@@ -44,6 +44,11 @@ namespace BTCPayServer
             return false;
         }
 
+        public static bool HasPermission(this PermissionSet permissionSet, string policy, string? scope, PermissionService permissionService)
+        {
+            return Permission.TryCreatePermission(policy, scope, out var permission) && permissionSet.HasPermission(permission, permissionService);
+        }
+
         public static DerivationSchemeSettings? GetDerivationSchemeSettings(this StoreData store, PaymentMethodHandlerDictionary handlers, string cryptoCode, bool onlyEnabled = false)
         {
             var pmi = Payments.PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);

@@ -6,6 +6,8 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Abstractions.Services;
+using BTCPayServer.Blazor;
+using BTCPayServer.Client;
 using BTCPayServer.Common;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
@@ -175,6 +177,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<PaymentService>();
             services.AddSingleton<BTCPayServerEnvironment>();
             services.TryAddSingleton<WalletRepository>();
+            services.TryAddSingleton<UserSettingsRepository>();
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<UserService>();
@@ -389,6 +392,7 @@ namespace BTCPayServer.Hosting
             services.AddScheduledTask<GithubVersionFetcher>(TimeSpan.FromDays(1));
             services.AddScheduledTask<PluginUpdateFetcher>(TimeSpan.FromDays(1));
 
+            services.AddDashboardServices();
             services.AddReportProvider<PaymentsReportProvider>();
             services.AddReportProvider<OnChainWalletReportProvider>();
             services.AddReportProvider<ProductsReportProvider>();

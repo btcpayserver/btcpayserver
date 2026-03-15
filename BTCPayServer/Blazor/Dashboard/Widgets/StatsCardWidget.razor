@@ -1,0 +1,109 @@
+@using BTCPayServer.Blazor.Dashboard.Models
+@using BTCPayServer.Client
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Services.Invoices
+@inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<StatsCardWidget.StatsCardConfig>
+
+@inject InvoiceRepository InvoiceRepository
+
+@if (!HasAccess)
+{
+    <p class="text-muted small">No access.</p>
+}
+else if (Loading)
+{
+    <div class="d-flex align-items-center gap-2">
+        <div class="spinner-border spinner-border-sm" role="status"></div>
+        <span class="small text-muted">Loading...</span>
+    </div>
+}
+else
+{
+    <div class="text-center">
+        <div class="small text-muted mb-1">@(TypedConfig?.Label ?? "Stats")</div>
+        <div class="fs-3 fw-bold">@_value</div>
+        <div class="small text-muted">last @(TypedConfig?.TimeRangeDays ?? 7) days</div>
+    </div>
+}
+
+@code {
+    private int _value;
+
+    public class StatsCardConfig
+    {
+        public string Label { get; set; } = "Invoices";
+        public string Metric { get; set; } = "InvoiceCount";
+        public int TimeRangeDays { get; set; } = 7;
+    }
+
+    protected override System.Threading.Tasks.Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            _ = Fetch();
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+    protected override System.Threading.Tasks.Task TypedConfigChanged()
+    {
+        _ = Fetch();
+        return base.TypedConfigChanged();
+    }
+
+    private async System.Threading.Tasks.Task Fetch()
+    {
+        if (TypedConfig is null || string.IsNullOrEmpty(StoreId)) return;
+        Loading = true;
+        try
+        {
+            var query = new InvoiceQuery
+            {
+                StoreId = new[] { StoreId },
+                StartDate = System.DateTimeOffset.UtcNow.AddDays(-TypedConfig.TimeRangeDays),
+                IncludeArchived = false
+            };
+            if (TypedConfig.Metric == "PaidInvoiceCount")
+            {
+                query.Status = new[] { InvoiceStatus.Settled.ToString() };
+            }
+            var invoices = await InvoiceRepository.GetInvoices(query);
+            _value = invoices.Length;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch { }
+        finally { Loading = false; }
+    }
+
+    public static readonly WidgetDescriptor Descriptor = new()
+    {
+        Type = "StatsCard",
+        Name = "Stats Card",
+        Description = "Single metric with a number",
+        Category = "Data",
+        Scope = WidgetScope.Store,
+        MinColumnSize = 2,
+        MaxColumnSize = 6,
+        DefaultColumnSize = 3,
+        RequiredPermissions = new[] { Policies.CanViewInvoices },
+        ConfigSchema = new()
+        {
+            ["Label"] = new ConfigFieldSchema { Label = "Label", FieldType = ConfigFieldType.Text },
+            ["Metric"] = new ConfigFieldSchema
+            {
+                Label = "Metric",
+                FieldType = ConfigFieldType.Select,
+                Options = new()
+                {
+                    ("InvoiceCount", "Invoice Count"),
+                    ("PaidInvoiceCount", "Paid Invoice Count")
+                }
+            },
+            ["TimeRangeDays"] = new ConfigFieldSchema
+            {
+                Label = "Time Range (days)",
+                FieldType = ConfigFieldType.Number,
+                Min = 1,
+                Max = 365
+            }
+        }
+    };
+}

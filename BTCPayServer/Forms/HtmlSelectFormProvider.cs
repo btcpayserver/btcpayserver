@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using BTCPayServer.Abstractions.Form;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Forms;
 
@@ -19,6 +21,16 @@ public class HtmlSelectFormProvider : FormComponentProviderBase
         if (field.Required)
         {
             ValidateField<RequiredAttribute>(field);
+        }
+
+        if (field.ValidationErrors.Count != 0 || string.IsNullOrEmpty(field.Value))
+            return;
+
+        var selectField = field as SelectField ?? JObject.FromObject(field).ToObject<SelectField>();
+        if (selectField?.Options != null &&
+            !selectField.Options.Any(o => string.Equals(o.Value, field.Value, System.StringComparison.Ordinal)))
+        {
+            field.ValidationErrors.Add($"{field.Label} contains an invalid option");
         }
     }
 }

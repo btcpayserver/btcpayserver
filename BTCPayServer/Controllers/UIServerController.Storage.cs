@@ -89,86 +89,6 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        [HttpGet("server/files/{fileId}/tmp")]
-        public async Task<IActionResult> CreateTemporaryFileUrl(string fileId)
-        {
-            var file = await _StoredFileRepository.GetFile(fileId);
-
-            if (file == null)
-            {
-                return NotFound();
-            }
-
-            return View(new CreateTemporaryFileUrlViewModel());
-        }
-
-        [HttpPost("server/files/{fileId}/tmp")]
-        public async Task<IActionResult> CreateTemporaryFileUrl(string fileId,
-            CreateTemporaryFileUrlViewModel viewModel)
-        {
-            if (viewModel.TimeAmount <= 0)
-            {
-                ModelState.AddModelError(nameof(viewModel.TimeAmount), StringLocalizer["Time must be at least 1"]);
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return View(viewModel);
-            }
-
-            var file = await _StoredFileRepository.GetFile(fileId);
-
-            if (file == null)
-            {
-                return NotFound();
-            }
-
-            var expiry = DateTimeOffset.UtcNow;
-            switch (viewModel.TimeType)
-            {
-                case CreateTemporaryFileUrlViewModel.TmpFileTimeType.Seconds:
-                    expiry = expiry.AddSeconds(viewModel.TimeAmount);
-                    break;
-                case CreateTemporaryFileUrlViewModel.TmpFileTimeType.Minutes:
-                    expiry = expiry.AddMinutes(viewModel.TimeAmount);
-                    break;
-                case CreateTemporaryFileUrlViewModel.TmpFileTimeType.Hours:
-                    expiry = expiry.AddHours(viewModel.TimeAmount);
-                    break;
-                case CreateTemporaryFileUrlViewModel.TmpFileTimeType.Days:
-                    expiry = expiry.AddDays(viewModel.TimeAmount);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
-            var url = await _fileService.GetTemporaryFileUrl(Request.GetAbsoluteRootUri(), fileId, expiry, viewModel.IsDownload);
-            TempData.SetStatusMessageModel(new StatusMessageModel()
-            {
-                Severity = StatusMessageModel.StatusSeverity.Success,
-                Html = $"Generated Temporary Url for file {file.FileName} which expires at {expiry.ToBrowserDate()}. <a href='{url}' target='_blank'>{url}</a>"
-            });
-            return RedirectToAction(nameof(Files), new
-            {
-                fileIds = new string[] { fileId }
-            });
-
-        }
-
-        public class CreateTemporaryFileUrlViewModel
-        {
-            public enum TmpFileTimeType
-            {
-                Seconds,
-                Minutes,
-                Hours,
-                Days
-            }
-            public int TimeAmount { get; set; }
-            public TmpFileTimeType TimeType { get; set; }
-            public bool IsDownload { get; set; }
-        }
-
         [HttpPost("server/files/upload")]
         public async Task<IActionResult> CreateFiles(List<IFormFile> files)
         {
@@ -223,10 +143,7 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        private string GetUserId()
-        {
-            return _UserManager.GetUserId(ControllerContext.HttpContext.User);
-        }
+        private string GetUserId() => ControllerContext.HttpContext.User.GetIdOrNull();
 
         [HttpGet("server/storage")]
         public async Task<IActionResult> Storage(bool forceChoice = false)

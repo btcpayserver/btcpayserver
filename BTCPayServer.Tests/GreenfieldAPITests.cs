@@ -11,6 +11,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Lightning;
+using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
@@ -1029,6 +1030,8 @@ namespace BTCPayServer.Tests
             var adminAcc = tester.NewAccount();
             adminAcc.UserId = admin.Id;
             adminAcc.IsAdmin = true;
+            adminAcc.RegisterDetails = new RegisterViewModel() { Email = "admin@gmail.com",
+                Password = "abceudhqw" };
             var adminClient = await adminAcc.CreateClient(Policies.CanModifyProfile);
 
             // We should be forbidden to create a new user without proper admin permissions
@@ -1065,6 +1068,7 @@ namespace BTCPayServer.Tests
             var user1Acc = tester.NewAccount();
             user1Acc.UserId = user1.Id;
             user1Acc.IsAdmin = false;
+            user1Acc.RegisterDetails = new RegisterViewModel() { Email = "test@gmail.com", Password = "abceudhqw" };
             var user1Client = await user1Acc.CreateClient(Policies.CanModifyServerSettings);
 
             // User1 trying to get server management would still fail to create user
@@ -1122,6 +1126,7 @@ namespace BTCPayServer.Tests
             var adminAcc = tester.NewAccount();
             adminAcc.UserId = admin.Id;
             adminAcc.IsAdmin = true;
+            adminAcc.RegisterDetails = new RegisterViewModel() { Email = "admin@gmail.com", Password = "abceudhqw"};
             var adminClient = await adminAcc.CreateClient(Policies.CanModifyProfile);
 
             // Invalid email
@@ -1353,6 +1358,9 @@ namespace BTCPayServer.Tests
 
             //remove store
             await client.RemoveStore(newStore.Id);
+            // Can still access, because the user is admin!
+            await client.GetStore(newStore.Id);
+            await user.MakeAdmin(false);
             await AssertHttpError(403, async () =>
             {
                 await client.GetStore(newStore.Id);
@@ -1516,180 +1524,6 @@ namespace BTCPayServer.Tests
             Assert.Contains("BTC-LN", serverInfoData.SupportedPaymentMethods);
             Assert.NotNull(serverInfoData.SyncStatus);
             Assert.Single(serverInfoData.SyncStatus.Select(s => s.PaymentMethodId == "BTC-CHAIN"));
-        }
-
-        [Fact(Timeout = TestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task PaymentControllerTests()
-        {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            await user.GrantAccessAsync();
-            await user.MakeAdmin();
-            var client = await user.CreateClient(Policies.Unrestricted);
-            var viewOnly = await user.CreateClient(Policies.CanViewPaymentRequests);
-
-            //create payment request
-
-            //validation errors
-            await AssertValidationError(new[] { "Amount" }, async () =>
-            {
-                await client.CreatePaymentRequest(user.StoreId, new() { Title = "A" });
-            });
-            await AssertValidationError(new[] { "Amount" }, async () =>
-            {
-                await client.CreatePaymentRequest(user.StoreId,
-                    new() { Title = "A", Currency = "BTC", Amount = 0 });
-            });
-            await AssertValidationError(new[] { "Currency" }, async () =>
-            {
-                await client.CreatePaymentRequest(user.StoreId,
-                    new() { Title = "A", Currency = "helloinvalid", Amount = 1 });
-            });
-            await AssertHttpError(403, async () =>
-            {
-                await viewOnly.CreatePaymentRequest(user.StoreId,
-                    new() { Title = "A", Currency = "helloinvalid", Amount = 1 });
-            });
-            var newPaymentRequest = await client.CreatePaymentRequest(user.StoreId,
-                new() { Title = "A", Currency = "USD", Amount = 1, ReferenceId = "1234"});
-
-            //list payment request
-            var paymentRequests = await viewOnly.GetPaymentRequests(user.StoreId);
-
-            Assert.NotNull(paymentRequests);
-            Assert.Single(paymentRequests);
-            Assert.Equal(newPaymentRequest.Id, paymentRequests.First().Id);
-
-            //get payment request
-            var paymentRequest = await viewOnly.GetPaymentRequest(user.StoreId, newPaymentRequest.Id);
-            Assert.Equal(newPaymentRequest.Title, paymentRequest.Title);
-            Assert.Equal(newPaymentRequest.StoreId, user.StoreId);
-            Assert.Equal(newPaymentRequest.ReferenceId, paymentRequest.ReferenceId);
-
-            //update payment request
-            var updateRequest = paymentRequest;
-            updateRequest.Title = "B";
-            updateRequest.ReferenceId = "EmperorNicolasGeneralRockstar";
-            await AssertHttpError(403, async () =>
-            {
-                await viewOnly.UpdatePaymentRequest(user.StoreId, paymentRequest.Id, updateRequest);
-            });
-            await client.UpdatePaymentRequest(user.StoreId, paymentRequest.Id, updateRequest);
-            paymentRequest = await client.GetPaymentRequest(user.StoreId, newPaymentRequest.Id);
-            Assert.Equal(updateRequest.Title, paymentRequest.Title);
-            Assert.Equal(updateRequest.ReferenceId, paymentRequest.ReferenceId);
-
-            //archive payment request
-            await AssertHttpError(403, async () =>
-            {
-                await viewOnly.ArchivePaymentRequest(user.StoreId, paymentRequest.Id);
-            });
-
-            await client.ArchivePaymentRequest(user.StoreId, paymentRequest.Id);
-            Assert.DoesNotContain(paymentRequest.Id,
-                (await client.GetPaymentRequests(user.StoreId)).Select(data => data.Id));
-            var archivedPrId = paymentRequest.Id;
-            //let's test some payment stuff with the UI
-            await user.RegisterDerivationSchemeAsync("BTC");
-            var paymentTestPaymentRequest = await client.CreatePaymentRequest(user.StoreId,
-                new() { Amount = 0.1m, Currency = "BTC", Title = "Payment test title" });
-
-            var invoiceId = Assert.IsType<string>(Assert.IsType<OkObjectResult>(await user.GetController<UIPaymentRequestController>()
-                .PayPaymentRequest(paymentTestPaymentRequest.Id, false)).Value);
-
-            async Task Pay(string invoiceId, bool partialPayment = false)
-            {
-                TestLogs.LogInformation($"Paying invoice {invoiceId}");
-                var invoice = user.BitPay.GetInvoice(invoiceId);
-                await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
-                {
-                    TestLogs.LogInformation($"Paying address {invoice.BitcoinAddress}");
-                    await tester.ExplorerNode.SendToAddressAsync(
-                        BitcoinAddress.Create(invoice.BitcoinAddress, tester.ExplorerNode.Network), invoice.BtcDue);
-                });
-                await TestUtils.EventuallyAsync(async () =>
-                {
-                    Assert.Equal(Invoice.STATUS_PAID, (await user.BitPay.GetInvoiceAsync(invoiceId)).Status);
-                    if (!partialPayment)
-                        Assert.Equal(PaymentRequestStatus.Processing, (await client.GetPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id)).Status);
-                });
-                await tester.ExplorerNode.GenerateAsync(1);
-                await TestUtils.EventuallyAsync(async () =>
-                {
-                    Assert.Equal(Invoice.STATUS_COMPLETE, (await user.BitPay.GetInvoiceAsync(invoiceId)).Status);
-                    if (!partialPayment)
-                        Assert.Equal(PaymentRequestStatus.Completed, (await client.GetPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id)).Status);
-                });
-            }
-            await Pay(invoiceId);
-
-            //Same thing, but with the API
-            paymentTestPaymentRequest = await client.CreatePaymentRequest(user.StoreId,
-                new() { Amount = 0.1m, Currency = "BTC", Title = "Payment test title" });
-            var paidPrId = paymentTestPaymentRequest.Id;
-            var invoiceData = await client.PayPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id, new PayPaymentRequestRequest());
-            await Pay(invoiceData.Id);
-
-            // Can't update amount once invoice has been created
-            await AssertValidationError(new[] { "Amount" }, () => client.UpdatePaymentRequest(user.StoreId, paymentTestPaymentRequest.Id, new()
-            {
-                Amount = 294m
-            }));
-
-            // Let's tests some unhappy path
-            paymentTestPaymentRequest = await client.CreatePaymentRequest(user.StoreId,
-                new() { Amount = 0.1m, AllowCustomPaymentAmounts = false, Currency = "BTC", Title = "Payment test title" });
-            await AssertValidationError(new[] { "Amount" }, () => client.PayPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id, new PayPaymentRequestRequest() { Amount = -0.04m }));
-            await AssertValidationError(new[] { "Amount" }, () => client.PayPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id, new PayPaymentRequestRequest() { Amount = 0.04m }));
-            await client.UpdatePaymentRequest(user.StoreId, paymentTestPaymentRequest.Id, new()
-            {
-                Amount = 0.1m,
-                AllowCustomPaymentAmounts = true,
-                Currency = "BTC",
-                Title = "Payment test title"
-            });
-            await AssertValidationError(new[] { "Amount" }, () => client.PayPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id, new PayPaymentRequestRequest() { Amount = -0.04m }));
-            invoiceData = await client.PayPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id, new PayPaymentRequestRequest() { Amount = 0.04m });
-            Assert.Equal(0.04m, invoiceData.Amount);
-            var firstPaymentId = invoiceData.Id;
-            await AssertAPIError("archived", () => client.PayPaymentRequest(user.StoreId, archivedPrId, new PayPaymentRequestRequest()));
-
-            await client.UpdatePaymentRequest(user.StoreId, paymentTestPaymentRequest.Id, new()
-            {
-                Amount = 0.1m,
-                AllowCustomPaymentAmounts = true,
-                Currency = "BTC",
-                Title = "Payment test title",
-                ExpiryDate = DateTimeOffset.UtcNow - TimeSpan.FromDays(1.0)
-            });
-
-            await AssertAPIError("expired", () => client.PayPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id, new PayPaymentRequestRequest()));
-            await AssertAPIError("already-paid", () => client.PayPaymentRequest(user.StoreId, paidPrId, new PayPaymentRequestRequest()));
-
-            await client.UpdatePaymentRequest(user.StoreId, paymentTestPaymentRequest.Id, new()
-            {
-                Amount = 0.1m,
-                AllowCustomPaymentAmounts = true,
-                Currency = "BTC",
-                Title = "Payment test title",
-                ExpiryDate = null
-            });
-
-            await Pay(firstPaymentId, true);
-            invoiceData = await client.PayPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id, new PayPaymentRequestRequest());
-
-            Assert.Equal(0.06m, invoiceData.Amount);
-            Assert.Equal("BTC", invoiceData.Currency);
-
-            var expectedInvoiceId = invoiceData.Id;
-            invoiceData = await client.PayPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id, new PayPaymentRequestRequest() { AllowPendingInvoiceReuse = true });
-            Assert.Equal(expectedInvoiceId, invoiceData.Id);
-
-            var notExpectedInvoiceId = invoiceData.Id;
-            invoiceData = await client.PayPaymentRequest(user.StoreId, paymentTestPaymentRequest.Id, new PayPaymentRequestRequest() { AllowPendingInvoiceReuse = false });
-            Assert.NotEqual(notExpectedInvoiceId, invoiceData.Id);
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -2034,8 +1868,13 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
-            await user.GrantAccessAsync(true);
-            await user.MakeAdmin();
+
+            await user.RegisterAsync(true);
+            await user.CreateStoreAsync();
+            var otherStoreId = user.StoreId;
+            await user.CreateStoreAsync();
+            await user.PairWithBitpayAPI();
+
             await user.SetupWebhook();
             var client = await user.CreateClient(Policies.Unrestricted);
             var viewOnly = await user.CreateClient(Policies.CanViewInvoices);
@@ -2074,11 +1913,13 @@ namespace BTCPayServer.Tests
 
             Assert.NotNull(invoices);
             Assert.Single(invoices);
+            Assert.NotNull(invoices.First().PaymentMethods);
             Assert.Equal(newInvoice.Id, invoices.First().Id);
 
             invoices = await viewOnly.GetInvoices(user.StoreId, textSearch: "Banana");
             Assert.NotNull(invoices);
             Assert.Single(invoices);
+            Assert.NotNull(invoices.First().PaymentMethods);
             Assert.Equal(newInvoice.Id, invoices.First().Id);
 
             invoices = await viewOnly.GetInvoices(user.StoreId, textSearch: "apples");
@@ -2091,6 +1932,7 @@ namespace BTCPayServer.Tests
                 endDate: DateTimeOffset.Now.AddHours(1));
 
             Assert.NotNull(invoicesFiltered);
+            Assert.NotNull(invoicesFiltered.First().PaymentMethods);
             Assert.Single(invoicesFiltered);
             Assert.Equal(newInvoice.Id, invoicesFiltered.First().Id);
 
@@ -2148,6 +1990,9 @@ namespace BTCPayServer.Tests
 
             //get
             var invoice = await viewOnly.GetInvoice(user.StoreId, newInvoice.Id);
+
+            await AssertEx.AssertApiError("missing-permission", async () => await viewOnly.GetInvoice("some-other-store", newInvoice.Id));
+            await AssertEx.AssertApiError("invoice-not-found", async () => await viewOnly.GetInvoice(otherStoreId, newInvoice.Id));
             Assert.True(JObject.DeepEquals(newInvoice.Metadata, invoice.Metadata));
             var paymentMethods = await viewOnly.GetInvoicePaymentMethods(user.StoreId, newInvoice.Id);
             Assert.Single(paymentMethods);
@@ -3217,6 +3062,7 @@ namespace BTCPayServer.Tests
             await employeeClient.RemoveStoreUser(user.StoreId, user.UserId);
 
             //test no access to api when unrelated to store at all
+            await user.MakeAdmin(false);
             await AssertPermissionError(Policies.CanViewStoreSettings, async () => await client.GetStore(user.StoreId));
             await AssertPermissionError(Policies.CanViewStoreSettings, async () => await client.GetStoreUsers(user.StoreId));
             await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await client.AddStoreUser(user.StoreId, new StoreUserData()));
@@ -3288,11 +3134,14 @@ namespace BTCPayServer.Tests
             {
                 await unapprovedUserBasicAuthClient.GetCurrentUser();
             });
+            await adminClient.ApproveUser(unapprovedUser.UserId, true, CancellationToken.None);
             var unapprovedUserApiKeyClient = await unapprovedUser.CreateClient(Policies.Unrestricted);
+            await adminClient.ApproveUser(unapprovedUser.UserId, false, CancellationToken.None);
             await AssertAPIError("unauthenticated", async () =>
             {
                 await unapprovedUserApiKeyClient.GetCurrentUser();
             });
+
             Assert.True((await adminClient.GetUserByIdOrEmail(unapprovedUser.UserId)).RequiresApproval);
             Assert.False((await adminClient.GetUserByIdOrEmail(unapprovedUser.UserId)).Approved);
             Assert.Single(await adminClient.GetNotifications(false));
@@ -3625,27 +3474,24 @@ namespace BTCPayServer.Tests
             var pluginHookService = tester.PayTester.GetService<IPluginHookService>();
             var beforeHookTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             var afterHookTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            string hookExpectedPullPayment = pullPayment.Id;
+            bool allowEmptyHook = false;
             TestLogs.LogInformation("Adding hook...");
             pluginHookService.ActionInvoked += (sender, tuple) =>
             {
                 switch (tuple.hook)
                 {
                     case "before-automated-payout-processing":
-                        beforeHookTcs.TrySetResult();
                         var bd = (BeforePayoutActionData)tuple.args;
-                        foreach (var p in bd.Payouts)
-                        {
-                            TestLogs.LogInformation("Before Processed: " + p.Id);
-                        }
+                        TestLogs.LogInformation("Before!");
+                        if (allowEmptyHook || bd.Payouts.Any(p => p.PullPaymentDataId == hookExpectedPullPayment))
+                            beforeHookTcs.TrySetResult();
                         break;
                     case "after-automated-payout-processing":
-                        TestLogs.LogInformation("afterHookTcs.TrySetResult();");
-                        afterHookTcs.TrySetResult();
+                        TestLogs.LogInformation("After!");
                         var ad = (AfterPayoutActionData)tuple.args;
-                        foreach (var p in ad.Payouts)
-                        {
-                            TestLogs.LogInformation("After Processed: " + p.Id);
-                        }
+                        if (allowEmptyHook || ad.Payouts.Any(p => p.PullPaymentDataId == hookExpectedPullPayment))
+                            afterHookTcs.TrySetResult();
                         break;
                 }
             };
@@ -3657,9 +3503,7 @@ namespace BTCPayServer.Tests
                 PayoutMethodId = "BTC",
                 Destination = (await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
             });
-            TestLogs.LogInformation("Waiting before hook...");
             await beforeHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
-            TestLogs.LogInformation("Waiting before after...");
             await afterHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
             payouts = await adminClient.GetStorePayouts(admin.StoreId);
             try
@@ -3678,8 +3522,10 @@ namespace BTCPayServer.Tests
                 throw;
             }
 
+            hookExpectedPullPayment = null;
             beforeHookTcs = new TaskCompletionSource();
             afterHookTcs = new TaskCompletionSource();
+            allowEmptyHook = true;
             //let's test the threshold limiter
             settings.Threshold = 0.5m;
             await adminClient.UpdateStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC", settings);
@@ -3687,6 +3533,7 @@ namespace BTCPayServer.Tests
             //quick test: when updating processor, it processes instantly
             await beforeHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
             await afterHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            allowEmptyHook = false;
 
             settings =
                 Assert.Single(await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC"));

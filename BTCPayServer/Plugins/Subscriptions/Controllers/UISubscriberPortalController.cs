@@ -12,7 +12,6 @@ using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Views.UIStoreMembership;
-using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +22,6 @@ using Microsoft.Extensions.Localization;
 namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 
 [AllowAnonymous]
-[AutoValidateAntiforgeryToken]
 [Area(SubscriptionsPlugin.Area)]
 [Route("subscriber-portal/{portalSessionId}")]
 public class UISubscriberPortalController(

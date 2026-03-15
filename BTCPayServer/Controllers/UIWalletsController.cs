@@ -33,7 +33,6 @@ using BTCPayServer.Services.Wallets.Export;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
@@ -50,7 +49,6 @@ namespace BTCPayServer.Controllers
 {
     [Route("wallets")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [AutoValidateAntiforgeryToken]
     //16mb psbts
     [RequestFormLimits(ValueLengthLimit = FormReader.DefaultValueLengthLimit * 4)]
     public partial class UIWalletsController : Controller
@@ -62,8 +60,6 @@ namespace BTCPayServer.Controllers
         private IServiceProvider ServiceProvider { get; }
         private RateFetcher RateFetcher { get; }
         private IStringLocalizer StringLocalizer { get; }
-
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly NBXplorerDashboard _dashboard;
         private readonly IAuthorizationService _authorizationService;
         private readonly IFeeProviderFactory _feeRateProvider;
@@ -91,7 +87,6 @@ namespace BTCPayServer.Controllers
             WalletRepository walletRepository,
             CurrencyNameTable currencyTable,
             BTCPayNetworkProvider networkProvider,
-            UserManager<ApplicationUser> userManager,
             NBXplorerDashboard dashboard,
             WalletHistogramService walletHistogramService,
             RateFetcher rateProvider,
@@ -127,7 +122,6 @@ namespace BTCPayServer.Controllers
             RateFetcher = rateProvider;
             _authorizationService = authorizationService;
             NetworkProvider = networkProvider;
-            _userManager = userManager;
             _dashboard = dashboard;
             ExplorerClientProvider = explorerProvider;
             _feeRateProvider = feeRateProvider;
@@ -623,13 +617,21 @@ namespace BTCPayServer.Controllers
             // We can't filter at the database level if we need to apply label filter
             var preFiltering = string.IsNullOrEmpty(labelFilter);
             var model = new ListTransactionsViewModel { Skip = skip, Count = count };
+            const int maxVisibleLabels = 20;
 
             model.PendingTransactions = await _pendingTransactionService.GetPendingTransactions(walletId.CryptoCode, walletId.StoreId);
             model.Rates = GetCurrentStore().GetStoreBlob().GetTrackedRates().ToList();
 
-            model.Labels.AddRange(
-                (await WalletRepository.GetWalletLabelsByLinkedType(walletId, WalletObjectData.Types.Tx))
-                .Select(c => (c.Label, c.Color, ColorPalette.Default.TextColor(c.Color))));
+            var labelsWithUsage = await WalletRepository.GetWalletLabelsByLinkedTypeWithUsage(walletId, WalletObjectData.Types.Tx, includeUnusedLabels: true);
+            model.Labels.AddRange(labelsWithUsage
+                .Select(c => (c.Label, c.Color, ColorPalette.Default.TextColor(c.Color), c.UsageCount)));
+            model.PopularLabels = labelsWithUsage
+                .OrderByDescending(c => c.UsageCount)
+                .ThenBy(c => c.Label, StringComparer.OrdinalIgnoreCase)
+                .Take(maxVisibleLabels)
+                .OrderBy(c => c.Label, StringComparer.OrdinalIgnoreCase)
+                .Select(c => (c.Label, c.Color, ColorPalette.Default.TextColor(c.Color), c.UsageCount))
+                .ToList();
 
             IList<TransactionHistoryLine>? transactions = null;
             Dictionary<string, WalletTransactionInfo>? walletTransactionsInfo = null;
@@ -1981,7 +1983,7 @@ namespace BTCPayServer.Controllers
             return null;
         }
 
-        private string? GetUserId() => _userManager.GetUserId(User)!;
+        private string? GetUserId() => User.GetIdOrNull();
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
     }

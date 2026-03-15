@@ -1,25 +1,14 @@
 #nullable enable
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using AngleSharp.Dom;
-using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
-using BTCPayServer.Lightning;
-using BTCPayServer.Logging;
-using BTCPayServer.Models;
-using BTCPayServer.Models.InvoicingModels;
-using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using NBitcoin;
-using NBitpayClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

@@ -14,11 +14,11 @@ namespace BTCPayServer.Controllers
         [HttpGet("{appId}/dashboard/app-top-items")]
         public IActionResult AppTopItems(string appId)
         {
-            var app = HttpContext.GetAppData();
+            var app = HttpContext.GetAppDataOrNull();
             if (app == null)
                 return NotFound();
 
-            app.StoreData = GetCurrentStore();
+            app.StoreData = HttpContext.GetStoreData();
 
             return ViewComponent("AppTopItems", new { appId = app.Id, appType = app.AppType });
         }
@@ -27,11 +27,11 @@ namespace BTCPayServer.Controllers
         [HttpGet("{appId}/dashboard/app-sales")]
         public IActionResult AppSales(string appId)
         {
-            var app = HttpContext.GetAppData();
+            var app = HttpContext.GetAppDataOrNull();
             if (app == null)
                 return NotFound();
 
-            app.StoreData = GetCurrentStore();
+            app.StoreData = HttpContext.GetStoreData();
             return ViewComponent("AppSales", new { appId = app.Id, appType = app.AppType });
         }
 
@@ -39,11 +39,11 @@ namespace BTCPayServer.Controllers
         [HttpGet("{appId}/dashboard/app-sales/{period}")]
         public async Task<IActionResult> AppSales(string appId, AppSalesPeriod period)
         {
-            var app = HttpContext.GetAppData();
+            var app = HttpContext.GetAppDataOrNull();
             if (app == null)
                 return NotFound();
 
-            app.StoreData = GetCurrentStore();
+            app.StoreData = HttpContext.GetStoreData();
 
             var days = period switch
             {
@@ -52,10 +52,7 @@ namespace BTCPayServer.Controllers
                 _ => throw new ArgumentException($"AppSalesPeriod {period} does not exist.")
             };
             var stats = await _appService.GetSalesStats(app, days);
-
-            return stats == null
-                ? NotFound()
-                : Json(stats);
+            return Json(stats);
         }
     }
 }

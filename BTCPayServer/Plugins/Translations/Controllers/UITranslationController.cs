@@ -1,10 +1,8 @@
 using System;
 using System.Data.Common;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Plugins.Translations.Views;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -17,7 +15,6 @@ namespace BTCPayServer.Plugins.Translations.Controllers;
 [Authorize(Policy = Client.Policies.CanModifyServerSettings,
     AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [Area(TranslationsPlugin.Area)]
-[AutoValidateAntiforgeryToken]
 public class UITranslationController(
     PoliciesSettings policiesSettings,
     IStringLocalizer stringLocalizer,

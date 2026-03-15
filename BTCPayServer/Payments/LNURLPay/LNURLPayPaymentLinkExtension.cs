@@ -1,10 +1,8 @@
 #nullable enable
-using BTCPayServer.Abstractions.Extensions;
 using System;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Mvc;
 using BTCPayServer.Payments.Lightning;
-using NBitcoin;
 
 namespace BTCPayServer.Payments.LNURLPay
 {

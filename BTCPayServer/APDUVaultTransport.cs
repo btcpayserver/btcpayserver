@@ -1,11 +1,8 @@
 using Newtonsoft.Json.Linq;
-using System.Net.WebSockets;
 using System.Threading.Tasks;
 using System.Threading;
 using BTCPayServer.NTag424;
 using NBitcoin.DataEncoders;
-using System;
-using SocketIOClient;
 
 namespace BTCPayServer
 {

@@ -2,17 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Security.Greenfield;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
@@ -27,8 +26,52 @@ namespace BTCPayServer.Controllers
             {
                 ApiKeyDatas = await _apiKeyRepository.GetKeys(new APIKeyRepository.APIKeyQuery()
                 {
-                    UserId = new[] { _userManager.GetUserId(User) }
+                    UserId = new[] { User.GetId() }
                 })
+            });
+        }
+
+        [HttpGet("~/api-keys/{id}/view-analysis")]
+        public async Task<IActionResult> APIKeyPermissionAnalysis(string id)
+        {
+            var key = await _apiKeyRepository.GetKey(id);
+            if (key == null || key.UserId != _userManager.GetUserId(User))
+                return NotFound();
+
+            var allPermissions = key.GetBlob().Permissions;
+            var usageRecords = await _apiKeyRepository.GetAPIPermissionUsageRecords(id);
+            var usageByPermission = usageRecords.ToDictionary(u => u.Permission, u => u);
+
+            var usedPermissions = new List<PermissionUsageViewModel>();
+            var unusedPermissions = new List<string>();
+            var allPermissionVMs = new List<PermissionViewModel>();
+
+            foreach (var permission in allPermissions)
+            {
+                if (usageByPermission.TryGetValue(permission, out var usage))
+                {
+                    var usageVM = new PermissionUsageViewModel
+                    {
+                        Permission = usage.Permission,
+                        LastUsed = usage.LastUsed,
+                        UsageCount = usage.UsageCount
+                    };
+                    usedPermissions.Add(usageVM);
+                    allPermissionVMs.Add(new PermissionViewModel { Permission = permission, Usage = usageVM });
+                }
+                else
+                {
+                    unusedPermissions.Add(permission);
+                    allPermissionVMs.Add(new PermissionViewModel { Permission = permission, Usage = null });
+                }
+            }
+            return View(new ApiKeyPermissionAnalyticsViewModel
+            {
+                ApiKey = key.Id,
+                Label = key.Label,
+                UsedPermissions = usedPermissions,
+                UnusedPermissions = unusedPermissions,
+                AllPermissions = allPermissionVMs
             });
         }
 
@@ -36,7 +79,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> DeleteAPIKey(string id)
         {
             var key = await _apiKeyRepository.GetKey(id);
-            if (key == null || key.UserId != _userManager.GetUserId(User))
+            if (key == null || key.UserId != User.GetId())
             {
                 return NotFound();
             }
@@ -53,11 +96,11 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> DeleteAPIKeyPost(string id)
         {
             var key = await _apiKeyRepository.GetKey(id);
-            if (key == null || key.UserId != _userManager.GetUserId(User))
+            if (key == null || key.UserId != User.GetId())
             {
                 return NotFound();
             }
-            await _apiKeyRepository.Remove(id, _userManager.GetUserId(User));
+            await _apiKeyRepository.Remove(id, User.GetId());
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
@@ -98,7 +141,9 @@ namespace BTCPayServer.Controllers
 
             permissions ??= Array.Empty<string>();
 
-            var requestPermissions = Permission.ToPermissions(permissions).ToList();
+            var requestPermissions = Permission.ToPermissions(permissions)
+                .Where(permission => _permissionService.IsValidPolicy(permission.Policy))
+                .ToList();
 
             if (redirect?.IsAbsoluteUri is false)
             {
@@ -208,7 +253,9 @@ namespace BTCPayServer.Controllers
                     var perms = viewModel.Permissions?.Split(';').ToArray() ?? Array.Empty<string>();
                     if (perms.Any())
                     {
-                        var requestPermissions = Permission.ToPermissions(perms).ToList();
+                        var requestPermissions = Permission.ToPermissions(perms)
+                            .Where(permission => _permissionService.IsValidPolicy(permission.Policy))
+                            .ToList();
                         var existingApiKey = await CheckForMatchingApiKey(requestPermissions, viewModel);
                         if (existingApiKey != null)
                         {
@@ -257,7 +304,7 @@ namespace BTCPayServer.Controllers
             //check if there is an app identifier that matches and belongs to the current user
             var keys = await _apiKeyRepository.GetKeys(new APIKeyRepository.APIKeyQuery
             {
-                UserId = new[] { _userManager.GetUserId(User) }
+                UserId = new[] { User.GetId() }
             });
             foreach (var key in keys)
             {
@@ -281,7 +328,7 @@ namespace BTCPayServer.Controllers
                         break;
                     }
 
-                    if (Policies.IsStorePolicy(requested.Key))
+                    if (IsStorePolicy(requested.Key))
                     {
                         if ((vm.SelectiveStores && !existing.Any(p => p.Scope == vm.StoreId)) ||
                             (!vm.SelectiveStores && existing.Any(p => !string.IsNullOrEmpty(p.Scope))))
@@ -309,13 +356,13 @@ namespace BTCPayServer.Controllers
             var permissions = vm.Permissions?.Split(';') ?? Array.Empty<string>();
             var permissionsWithStoreIDs = new List<string>();
 
-            vm.NeedsStorePermission = vm.SelectiveStores && (permissions.Any(Policies.IsStorePolicy) || !vm.Strict);
+            vm.NeedsStorePermission = vm.SelectiveStores && (permissions.Any(IsStorePolicy) || !vm.Strict);
 
             // Go over each permission and associated store IDs and join them
             // so that permission for a specific store is parsed correctly
             foreach (var permission in permissions)
             {
-                if (!Policies.IsStorePolicy(permission) || string.IsNullOrEmpty(vm.StoreId))
+                if (!IsStorePolicy(permission) || string.IsNullOrEmpty(vm.StoreId))
                 {
                     permissionsWithStoreIDs.Add(permission);
                 }
@@ -325,7 +372,9 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            var parsedPermissions = Permission.ToPermissions(permissionsWithStoreIDs.ToArray()).GroupBy(permission => permission.Policy);
+            var parsedPermissions = Permission.ToPermissions(permissionsWithStoreIDs.ToArray())
+                .Where(permission => _permissionService.IsValidPolicy(permission.Policy))
+                .GroupBy(permission => permission.Policy);
 
             for (var index = vm.PermissionValues.Count - 1; index >= 0; index--)
             {
@@ -353,7 +402,7 @@ namespace BTCPayServer.Controllers
                     // Set the value to true and adjust the other fields based on the policy type
                     permissionValue.Value = true;
 
-                    if (vm.SelectiveStores && Policies.IsStorePolicy(permissionValue.Permission) &&
+                    if (vm.SelectiveStores && permissionValue.IsStorePolicy &&
                         wanted.Any(permission => !string.IsNullOrEmpty(permission.Scope)))
                     {
                         permissionValue.StoreMode = AddApiKeyViewModel.ApiKeyStoreMode.Specific;
@@ -368,6 +417,9 @@ namespace BTCPayServer.Controllers
             }
         }
 
+        private bool IsStorePolicy(string policy)
+        => Permission.TryGetPolicyType(policy) is PolicyType.Store;
+
         private IActionResult HandleCommands(AddApiKeyViewModel viewModel)
         {
             if (string.IsNullOrEmpty(viewModel.Command))
@@ -376,7 +428,7 @@ namespace BTCPayServer.Controllers
             }
             var parts = viewModel.Command.Split(':', StringSplitOptions.RemoveEmptyEntries);
             var permission = parts[0];
-            if (!Policies.IsStorePolicy(permission))
+            if (!IsStorePolicy(permission))
             {
                 return null;
             }
@@ -427,7 +479,7 @@ namespace BTCPayServer.Controllers
             {
                 Id = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20)),
                 Type = APIKeyType.Permanent,
-                UserId = _userManager.GetUserId(User),
+                UserId = User.GetId(),
                 Label = viewModel.Label,
             };
             key.SetBlob(new APIKeyBlob
@@ -445,7 +497,7 @@ namespace BTCPayServer.Controllers
             var permissions = new List<Permission>();
             foreach (var p in viewModel.PermissionValues.Where(tuple => !tuple.Forbidden))
             {
-                if (Policies.IsStorePolicy(p.Permission))
+                if (p.IsStorePolicy)
                 {
                     if (p.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.AllStores && p.Value)
                     {
@@ -466,23 +518,34 @@ namespace BTCPayServer.Controllers
 
         private async Task<T> SetViewModelValues<T>(T viewModel) where T : AddApiKeyViewModel
         {
-            var stores = await _StoreRepository.GetStoresByUserId(_userManager.GetUserId(User));
+            var stores = await _StoreRepository.GetStoresByUserId(User.GetId());
             viewModel.Stores = stores.OrderBy(store => store.StoreName, StringComparer.InvariantCultureIgnoreCase).ToArray();
 
             var isAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings))
                 .Succeeded;
-            viewModel.PermissionValues ??= Policies.AllPolicies
-                .Where(p => AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions.ContainsKey(p))
-                .Select(s => new AddApiKeyViewModel.PermissionValueItem()
+            viewModel.PermissionValues ??= _permissionService.Definitions.Values.OrderBy(d => d.Policy)
+                .Select(definition => new AddApiKeyViewModel.PermissionValueItem()
                 {
-                    Permission = s,
+                    Permission = definition.Policy,
                     Value = false,
-                    Forbidden = Policies.IsServerPolicy(s) && !isAdmin
+                    Forbidden = definition.Type is PolicyType.Server && !isAdmin
                 }).ToList();
+
+            foreach (var permissionValue in viewModel.PermissionValues)
+            {
+                if (permissionValue.Permission == null)
+                    continue;
+                if (!_permissionService.TryGetDefinition(permissionValue.Permission, out var definition))
+                    continue;
+                permissionValue.AllStoresTitle = definition.Display?.Title;
+                permissionValue.AllStoresDescription = definition.Display?.Description;
+                permissionValue.StoreSpecificTitle = definition.ScopeDisplay?.Title;
+                permissionValue.StoreSpecificDescription = definition.ScopeDisplay?.Description;
+            }
 
             if (!isAdmin)
             {
-                foreach (var p in viewModel.PermissionValues.Where(item => item.Permission is null || Policies.IsServerPolicy(item.Permission)))
+                foreach (var p in viewModel.PermissionValues.Where(item => item.Permission is null || Permission.TryGetPolicyType(item.Permission) is PolicyType.Server))
                 {
                     p.Forbidden = true;
                 }
@@ -506,83 +569,42 @@ namespace BTCPayServer.Controllers
 
             public class PermissionValueItem
             {
-                public static readonly Dictionary<string, (string Title, string Description)> PermissionDescriptions = new Dictionary<string, (string Title, string Description)>()
-                {
-                    {Policies.Unrestricted, ("Unrestricted access", "Grants unrestricted access to your account.")},
-                    {Policies.CanViewUsers, ("View users", "Allows seeing all users on this server.")},
-                    {Policies.CanCreateUser, ("Create new users", "Allows creating new users on this server.")},
-                    {Policies.CanManageUsers, ("Manage users", "Allows creating/deleting API keys for users.")},
-                    {Policies.CanDeleteUser, ("Delete user", "Allows deleting the user to whom it is assigned. Admin users can delete any user without this permission.")},
-                    {Policies.CanModifyStoreSettings, ("Modify your stores", "Allows managing invoices on all your stores and modify their settings.")},
-                    {$"{Policies.CanModifyStoreSettings}:", ("Manage selected stores", "Allows managing invoices on the selected stores and modify their settings.")},
-                    {Policies.CanModifyWebhooks, ("Modify stores webhooks", "Allows modifying the webhooks of all your stores.")},
-                    {$"{Policies.CanModifyWebhooks}:", ("Modify selected stores' webhooks", "Allows modifying the webhooks of the selected stores.")},
-                    {Policies.CanViewStoreSettings, ("View your stores", "Allows viewing stores settings.")},
-                    {$"{Policies.CanViewStoreSettings}:", ("View your stores", "Allows viewing the selected stores' settings.")},
-                    {Policies.CanViewReports, ("View your reports", "Allows viewing reports.")},
-                    {$"{Policies.CanViewReports}:", ("View your selected stores' reports", "Allows viewing the selected stores' reports.")},
-                    {Policies.CanModifyServerSettings, ("Manage your server", "Grants total control on the server settings of your server.")},
-                    {Policies.CanViewProfile, ("View your profile", "Allows viewing your user profile.")},
-                    {Policies.CanModifyProfile, ("Manage your profile", "Allows viewing and modifying your user profile.")},
-                    {Policies.CanManageNotificationsForUser, ("Manage your notifications", "Allows viewing and modifying your user notifications.")},
-                    {Policies.CanViewNotificationsForUser, ("View your notifications", "Allows viewing your user notifications.")},
-                    {Policies.CanCreateInvoice, ("Create an invoice", "Allows creating new invoices.")},
-                    {$"{Policies.CanCreateInvoice}:", ("Create an invoice", "Allows creating new invoices on the selected stores.")},
-                    {Policies.CanViewInvoices, ("View invoices", "Allows viewing invoices.")},
-                    {Policies.CanModifyInvoices, ("Modify invoices", "Allows viewing and modifying invoices.")},
-                    {$"{Policies.CanViewInvoices}:", ("View invoices", "Allows viewing invoices on the selected stores.")},
-                    {$"{Policies.CanModifyInvoices}:", ("Modify invoices", "Allows viewing and modifying invoices on the selected stores.")},
-                    {Policies.CanModifyPaymentRequests, ("Modify your payment requests", "Allows viewing, modifying, deleting and creating new payment requests on all your stores.")},
-                    {$"{Policies.CanModifyPaymentRequests}:", ("Manage selected stores' payment requests", "Allows viewing, modifying, deleting and creating new payment requests on the selected stores.")},
-                    {Policies.CanViewPaymentRequests, ("View your payment requests", "Allows viewing payment requests.")},
-                    {$"{Policies.CanViewPaymentRequests}:", ("View your payment requests", "Allows viewing the selected stores' payment requests.")},
-                    {Policies.CanViewPullPayments, ("View your pull payments", "Allows viewing pull payments on all your stores.")},
-                    {$"{Policies.CanViewPullPayments}:", ("View selected stores' pull payments", "Allows viewing pull payments on the selected stores.")},
-                    {Policies.CanViewOfferings, ("View your offerings", "Allows viewing offerings on all your stores.")},
-                    {$"{Policies.CanViewOfferings}:", ("View your offerings", "Allows viewing offerings on the selected stores.")},
-                    {Policies.CanModifyOfferings, ("Modify your offerings", "Allows modifying offerings on all your stores.")},
-                    {$"{Policies.CanModifyOfferings}:", ("Modify your offerings", "Allows modifying offerings on the selected stores.")},
-                    {Policies.CanManageSubscribers, ("Manage your subscribers", "Allows managing subscribers on all your stores.")},
-                    {$"{Policies.CanManageSubscribers}:", ("Manage your subscribers", "Allows managing subscribers on the selected stores.")},
-                    {Policies.CanCreditSubscribers, ("Credit your subscribers", "Allows crediting subscribers on all your stores.")},
-                    {$"{Policies.CanCreditSubscribers}:", ("Credit your subscribers", "Allows crediting subscribers on the selected stores.")},
-                    {Policies.CanManagePullPayments, ("Manage your pull payments", "Allows viewing, modifying, deleting and creating pull payments on all your stores.")},
-                    {$"{Policies.CanManagePullPayments}:", ("Manage selected stores' pull payments", "Allows viewing, modifying, deleting and creating pull payments on the selected stores.")},
-                    {Policies.CanArchivePullPayments, ("Archive your pull payments", "Allows deleting pull payments on all your stores.")},
-                    {$"{Policies.CanArchivePullPayments}:", ("Archive selected stores' pull payments", "Allows deleting pull payments on the selected stores.")},
-                    {Policies.CanCreatePullPayments, ("Create pull payments", "Allows creating pull payments on all your stores.")},
-                    {$"{Policies.CanCreatePullPayments}:", ("Create pull payments in selected stores", "Allows creating pull payments on the selected stores.")},
-                    {Policies.CanManagePayouts, ("Manage payouts", "Allows managing payouts on all your stores.")},
-                    {$"{Policies.CanManagePayouts}:", ("Manage payouts in selected stores", "Allows managing payouts on the selected stores.")},
-                    {Policies.CanViewPayouts, ("View payouts", "Allows viewing payouts on all your stores.")},
-                    {$"{Policies.CanViewPayouts}:", ("View payouts in selected stores", "Allows viewing payouts on the selected stores.")},
-                    {Policies.CanCreateNonApprovedPullPayments, ("Create non-approved pull payments", "Allows creating pull payments without automatic approval on all your stores.")},
-                    {$"{Policies.CanCreateNonApprovedPullPayments}:", ("Create non-approved pull payments in selected stores", "Allows viewing, modifying, deleting and creating pull payments without automatic approval on the selected stores.")},
-                    {Policies.CanUseInternalLightningNode, ("Use the internal lightning node", "Allows using the internal BTCPay Server lightning node to create BOLT11 invoices, connect to other nodes, open new channels and pay BOLT11 invoices.")},
-                    {Policies.CanViewLightningInvoiceInternalNode, ("View invoices from internal lightning node", "Allows using the internal BTCPay Server lightning node to view BOLT11 invoices.")},
-                    {Policies.CanCreateLightningInvoiceInternalNode, ("Create invoices with internal lightning node", "Allows using the internal BTCPay Server lightning node to create BOLT11 invoices.")},
-                    {Policies.CanUseLightningNodeInStore, ("Use the lightning nodes associated with your stores", "Allows using the lightning nodes connected to all your stores to create BOLT11 invoices, connect to other nodes, open new channels and pay BOLT11 invoices.")},
-                    {Policies.CanViewLightningInvoiceInStore, ("View the lightning invoices associated with your stores", "Allows viewing the lightning invoices connected to all your stores.")},
-                    {Policies.CanCreateLightningInvoiceInStore, ("Create invoices from the lightning nodes associated with your stores", "Allows using the lightning nodes connected to all your stores to create BOLT11 invoices.")},
-                    {$"{Policies.CanUseLightningNodeInStore}:", ("Use the lightning nodes associated with your stores", "Allows using the lightning nodes connected to the selected stores to create BOLT11 invoices, connect to other nodes, open new channels and pay BOLT11 invoices.")},
-                    {$"{Policies.CanViewLightningInvoiceInStore}:", ("View the lightning invoices associated with your stores", "Allows viewing the lightning invoices connected to the selected stores.")},
-                    {$"{Policies.CanCreateLightningInvoiceInStore}:", ("Create invoices from the lightning nodes associated with your stores", "Allows using the lightning nodes connected to the selected stores to create BOLT11 invoices.")},
-                };
                 public string Title
                 {
                     get
                     {
-                        return PermissionDescriptions[$"{Permission}{(StoreMode == ApiKeyStoreMode.Specific ? ":" : "")}"].Title;
+                        if (StoreMode == ApiKeyStoreMode.Specific && !string.IsNullOrEmpty(StoreSpecificTitle))
+                            return StoreSpecificTitle;
+                        return AllStoresTitle;
                     }
                 }
                 public string Description
                 {
                     get
                     {
-                        return PermissionDescriptions[$"{Permission}{(StoreMode == ApiKeyStoreMode.Specific ? ":" : "")}"].Description;
+                        if (StoreMode == ApiKeyStoreMode.Specific && !string.IsNullOrEmpty(StoreSpecificDescription))
+                            return StoreSpecificDescription;
+                        return AllStoresDescription;
                     }
                 }
-                public string Permission { get; set; }
+                public string AllStoresTitle { get; set; }
+                public string AllStoresDescription { get; set; }
+                public string StoreSpecificTitle { get; set; }
+                public string StoreSpecificDescription { get; set; }
+
+                private string _permission;
+                public string Permission
+                {
+                    get => _permission;
+                    set
+                    {
+                        BTCPayServer.Client.Permission.TryParse(value, out var permission);
+                        _permission = permission?.ToString();
+                        IsStorePolicy = permission?.Type == PolicyType.Store;
+                    }
+                }
+                [BindNever]
+                public bool IsStorePolicy { get; private set; }
                 public bool Value { get; set; }
                 public bool Forbidden { get; set; }
 
@@ -607,6 +629,28 @@ namespace BTCPayServer.Controllers
         public class ApiKeysViewModel
         {
             public List<APIKeyData> ApiKeyDatas { get; set; }
+        }
+
+        public class ApiKeyPermissionAnalyticsViewModel
+        {
+            public string ApiKey { get; set; }
+            public string Label { get; set; }
+            public List<PermissionUsageViewModel> UsedPermissions { get; set; } = new();
+            public List<string> UnusedPermissions { get; set; } = new();
+            public List<PermissionViewModel> AllPermissions { get; set; } = new();
+            public int TotalPermissions => AllPermissions.Count;
+        }
+
+        public class PermissionUsageViewModel
+        {
+            public string Permission { get; set; }
+            public DateTimeOffset LastUsed { get; set; }
+            public int UsageCount { get; set; }
+        }
+        public class PermissionViewModel
+        {
+            public string Permission { get; set; }
+            public PermissionUsageViewModel Usage { get; set; }
         }
     }
 }

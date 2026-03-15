@@ -1,6 +1,5 @@
 #nullable enable
 using System;
-using BTCPayServer.Controllers;
 
 namespace BTCPayServer.Models
 {

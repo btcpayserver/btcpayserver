@@ -17,7 +17,6 @@ using Newtonsoft.Json.Linq;
 namespace BTCPayServer.Controllers;
 
 [Authorize(Policy = Policies.CanViewReports, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-[AutoValidateAntiforgeryToken]
 public partial class UIReportsController : Controller
 {
     public UIReportsController(

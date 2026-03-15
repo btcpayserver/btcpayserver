@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using BTCPayServer.Services.Labels;
 
 namespace BTCPayServer.Models.WalletViewModels
 {

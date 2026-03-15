@@ -1,22 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.IO.Compression;
-using System.IO;
-using System.Text;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 using System.Globalization;
 using Newtonsoft.Json;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using BTCPayServer.Migrations;
 using Newtonsoft.Json.Serialization;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace BTCPayServer.Data
 {

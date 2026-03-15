@@ -19,7 +19,6 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Views.UIStoreMembership;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -39,7 +38,6 @@ public class UIServerMonetizationController(
     SettingsRepository settingsRepository,
     AppService appService,
     CurrencyNameTable currencyNameTable,
-    UserManager<ApplicationUser> userManager,
     StoreRepository storeRepo,
     ViewLocalizer viewLocalizer,
     EmailSenderFactory emailSenderFactory,
@@ -83,7 +81,7 @@ public class UIServerMonetizationController(
                 .ToArrayAsync()).ToHashSet();
         }
 
-        var stores = await storeRepo.GetStoresByUserId(userManager.GetUserId(User)!);
+        var stores = await storeRepo.GetStoresByUserId(User.GetId());
         if (vm.Offering is null)
         {
             var vmSelect = new SelectExistingOfferingModalViewModel();
@@ -152,7 +150,7 @@ public class UIServerMonetizationController(
         if (command == "activate-monetization" && vm.ActivateModal is {} activateModal)
         {
             var selectedStore = vm.ActivateModal?.SelectedStoreId ?? "";
-            var store = await storeRepo.FindStore(selectedStore, userManager.GetUserId(User) ?? "");
+            var store = await storeRepo.FindStore(selectedStore, User.GetId());
             if (store is null)
             {
                 TempData.SetStatusMessageModel(new()
@@ -318,7 +316,7 @@ public class UIServerMonetizationController(
             var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>();
             var offeringAndPlan = await ctx.GetOfferingAndPlan(settings);
             if (offeringAndPlan is { Offering: { } offering } &&
-                await storeRepo.FindStore(offering.App.StoreDataId, userManager.GetUserId(User) ?? "") is { } store)
+                await storeRepo.FindStore(offering.App.StoreDataId, User.GetId()) is { } store)
             {
                 var storeBlob = store.GetStoreBlob();
                 var policies = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new();

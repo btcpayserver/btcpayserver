@@ -6,7 +6,6 @@ using BTCPayServer.Logging;
 using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBitpayClient;
 using NBXplorer;
 
 namespace BTCPayServer.Payments.PayJoin

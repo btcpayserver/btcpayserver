@@ -8,7 +8,6 @@ using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using NBitcoin;
 using NBXplorer;
 using NBXplorer.Models;
 

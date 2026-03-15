@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -7,6 +8,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
@@ -29,7 +31,8 @@ namespace BTCPayServer.Controllers
         LanguageService languageService,
         StoreRepository storeRepository,
         IWebHostEnvironment environment,
-        SignInManager<ApplicationUser> signInManager)
+        SignInManager<ApplicationUser> signInManager,
+        PermissionService permissionService)
         : Controller
     {
         private SignInManager<ApplicationUser> SignInManager { get; } = signInManager;
@@ -55,7 +58,7 @@ namespace BTCPayServer.Controllers
 
             if (SignInManager.IsSignedIn(User))
             {
-                var userId = SignInManager.UserManager.GetUserId(HttpContext.User);
+                var userId = HttpContext.User.GetIdOrNull();
                 var storeId = HttpContext.GetUserPrefsCookie()?.CurrentStoreId;
                 if (storeId != null && userId != null)
                 {
@@ -89,7 +92,18 @@ namespace BTCPayServer.Controllers
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
         public IActionResult Permissions()
         {
-            return Json(Client.Models.PermissionMetadata.PermissionNodes, new JsonSerializerSettings { Formatting = Formatting.Indented });
+            var nodes = new Dictionary<string, PermissionMetadata>();
+            foreach (var def in permissionService.Definitions.Values)
+            {
+                var m = new PermissionMetadata { PermissionName = def.Policy };
+                m.SubPermissions = permissionService.PermissionNodesByPolicy[m.PermissionName]
+                    .EnumerateDescendants(false).Select(e => e.Definition.Policy)
+                    .OrderBy(e => e, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                nodes.Add(def.Policy, m);
+            }
+            var metadata = nodes.Values.OrderBy(v => v.PermissionName, StringComparer.OrdinalIgnoreCase).ToArray();
+            return Json(metadata, new JsonSerializerSettings { Formatting = Formatting.Indented });
         }
         [Route("misc/translations/{resource}/{lang}")]
         [AllowAnonymous]
@@ -178,18 +192,6 @@ namespace BTCPayServer.Controllers
         public IActionResult RecoverySeedBackup(RecoverySeedBackupViewModel vm)
         {
             return View("RecoverySeedBackup", vm);
-        }
-
-        [HttpPost]
-        [Route("postredirect-callback-test")]
-        public ActionResult PostRedirectCallbackTestpage(IFormCollection data)
-        {
-            var list = data.Keys.Aggregate(new Dictionary<string, string>(), (res, key) =>
-            {
-                res.Add(key, data[key]);
-                return res;
-            });
-            return Json(list);
         }
 
         public IActionResult Error()

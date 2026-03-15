@@ -58,7 +58,6 @@ namespace BTCPayServer
         private readonly LinkGenerator _linkGenerator;
         private readonly LightningAddressService _lightningAddressService;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
-        private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
         private readonly IPluginHookService _pluginHookService;
         private readonly InvoiceActivator _invoiceActivator;
         private readonly PaymentMethodHandlerDictionary _handlers;
@@ -78,7 +77,6 @@ namespace BTCPayServer
             LinkGenerator linkGenerator,
             LightningAddressService lightningAddressService,
             PullPaymentHostedService pullPaymentHostedService,
-            BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
             IPluginHookService pluginHookService,
             IStringLocalizer stringLocalizer,
             InvoiceActivator invoiceActivator,
@@ -97,7 +95,6 @@ namespace BTCPayServer
             _linkGenerator = linkGenerator;
             _lightningAddressService = lightningAddressService;
             _pullPaymentHostedService = pullPaymentHostedService;
-            _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
             _pluginHookService = pluginHookService;
             _invoiceActivator = invoiceActivator;
             StringLocalizer = stringLocalizer;
@@ -470,7 +467,7 @@ namespace BTCPayServer
         public async Task<IActionResult> GetLNURLForLightningAddress(string cryptoCode, string username, [FromQuery] long? amount = null, string comment = null)
         {
             var lightningAddressSettings = await _lightningAddressService.ResolveByAddress(username);
-            if (lightningAddressSettings is null || username is null)
+            if (lightningAddressSettings is null)
                 return NotFound(StringLocalizer["Unknown username"]);
             var blob = lightningAddressSettings.GetBlob();
             var store = await _storeRepository.FindStore(lightningAddressSettings.StoreDataId);
@@ -594,7 +591,7 @@ namespace BTCPayServer
             var paymentMethodDetails = handler.ParsePaymentPromptDetails(pm.Details);
             bool updatePaymentMethodDetails = false;
             List<string> searchTerms = new List<string>();
-            if (lnUrlMetadata?.TryGetValue("text/identifier", out var lnAddress) is true && lnAddress is not null)
+            if (lnUrlMetadata.TryGetValue("text/identifier", out var lnAddress) && lnAddress is not null)
             {
                 paymentMethodDetails.ConsumedLightningAddress = lnAddress;
                 searchTerms.Add(lnAddress);
@@ -611,7 +608,7 @@ namespace BTCPayServer
             lnurlRequest.Callback = new Uri(_linkGenerator.GetUriByAction(
                         action: nameof(GetLNURLForInvoice),
                         controller: "UILNURL",
-                        values: new { cryptoCode, invoiceId = i.Id }, Request.Scheme, Request.Host, Request.PathBase));
+                        values: new { cryptoCode, invoiceId = i.Id }, Request.GetRequestBaseUrl()));
             lnurlRequest.Metadata = JsonConvert.SerializeObject(lnUrlMetadata.Select(kv => new[] { kv.Key, kv.Value }));
             if (i.Type != InvoiceType.TopUp)
             {
@@ -703,16 +700,14 @@ namespace BTCPayServer
                     return NotFound();
                 var handler = ((LNURLPayPaymentHandler)_handlers[pmi]);
                 var lightningPaymentMethod = i.GetPaymentPrompt(pmi);
-                var promptDetails = handler.ParsePaymentPromptDetails(lightningPaymentMethod.Details);
-                if (promptDetails is null)
+                if (lightningPaymentMethod is null)
                 {
                     if (!await _invoiceActivator.ActivateInvoicePaymentMethod(i.Id, pmi))
                         return NotFound();
                     i = await _invoiceRepository.GetInvoice(invoiceId, true);
-                    lightningPaymentMethod = i.GetPaymentPrompt(pmi);
-                    promptDetails = handler.ParsePaymentPromptDetails(lightningPaymentMethod.Details);
+                    lightningPaymentMethod = i.GetPaymentPrompt(pmi)!;
                 }
-
+                var promptDetails = handler.ParsePaymentPromptDetails(lightningPaymentMethod.Details);
                 var lnConfig = _handlers.GetLightningConfig(store, network);
                 if (lnConfig is null)
                     return NotFound();

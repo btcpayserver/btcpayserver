@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
@@ -35,18 +36,19 @@ namespace BTCPayServer.Plugins
 
         public static bool IsExceptionByPlugin(Exception exception, [MaybeNullWhen(false)] out PreloadedPlugin preloadedPlugin)
         {
+            if (ExtractPluginsFromStackTrace(exception, out preloadedPlugin)) return true;
+
             var fromAssembly = exception is TypeLoadException
                 ? Regex.Match(exception.Message, "from assembly '(.*?),").Groups[1].Value
                 : null;
-
             foreach (var plugin in _preloadedPlugins)
             {
                 var assembly = plugin.Assembly;
                 var assemblyName = assembly.GetName().Name;
                 if (assemblyName is null)
                     continue;
-                // Comparison is case sensitive as it is theoretically possible to have a different plugin
-                // with same name but different casing.
+                // Comparison is case-sensitive as it is theoretically possible to have a different plugin
+                // with the same name but different casing.
                 if (exception.Source is not null &&
                     assemblyName.Equals(exception.Source, StringComparison.Ordinal))
                 {
@@ -58,8 +60,27 @@ namespace BTCPayServer.Plugins
                     preloadedPlugin = plugin;
                     return true;
                 }
-                // For TypeLoadException, check if it might come from areferenced assembly
+                // For TypeLoadException, check if it might come from a referenced assembly
                 if (!string.IsNullOrEmpty(fromAssembly) && assembly.GetReferencedAssemblies().Select(a => a.Name).Contains(fromAssembly))
+                {
+                    preloadedPlugin = plugin;
+                    return true;
+                }
+            }
+            preloadedPlugin = null;
+            return false;
+        }
+
+        private static bool ExtractPluginsFromStackTrace(Exception exception, [MaybeNullWhen(false)] out PreloadedPlugin preloadedPlugin)
+        {
+            var pluginsByName = _preloadedPlugins.Where(p => p.Loader is not null).ToDictionary(p => p.Assembly.FullName ?? "", p => p);
+            var trace = new StackTrace(exception, true);
+            foreach (var frame in trace.GetFrames().Reverse())
+            {
+                var m = frame.GetMethod();
+                if (m is null)
+                    continue;
+                if (pluginsByName.TryGetValue(m.Module.Assembly.FullName ?? "", out var plugin))
                 {
                     preloadedPlugin = plugin;
                     return true;
@@ -146,18 +167,19 @@ namespace BTCPayServer.Plugins
             var debugPlugins = config["DEBUG_PLUGINS"] ?? "";
             foreach (var plugin in debugPlugins.Split(';', StringSplitOptions.RemoveEmptyEntries))
             {
+                var contentRoot = config["contentRoot"] as string ?? ".";
                 // Formatted either as "<PLUGIN_IDENTIFIER>::<PathToDll>" or "<PathToDll>"
                 var idx = plugin.IndexOf("::", StringComparison.Ordinal);
                 var filePath = plugin;
                 if (idx != -1)
                 {
                     filePath = plugin[(idx + 1)..];
-                    filePath = Path.GetFullPath(filePath);
+                    filePath = Path.GetFullPath(Path.Combine(contentRoot, filePath));
                     pluginsToPreload.Add((plugin[0..idx], filePath));
                 }
                 else
                 {
-                    filePath = Path.GetFullPath(filePath);
+                    filePath = Path.GetFullPath(Path.Combine(contentRoot, filePath));
 
                     pluginsToPreload.Add((Path.GetFileNameWithoutExtension(plugin), filePath));
                 }
@@ -426,7 +448,7 @@ namespace BTCPayServer.Plugins
                         File.Delete(fileName);
                         if (File.Exists(manifestFileName))
                         {
-                            File.Move(manifestFileName, Path.Combine(dirName, Path.GetFileName(manifestFileName)));
+                            File.Move(manifestFileName, Path.Combine(dirName, Path.GetFileName(manifestFileName)), true);
                         }
                     }
                     break;

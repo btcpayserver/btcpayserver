@@ -1,9 +1,4 @@
-using BTCPayServer.Payments;
-using BTCPayServer.Services.Invoices;
-using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace BTCPayServer.Payouts
 {

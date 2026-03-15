@@ -1,11 +1,9 @@
 using System;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Configuration;
-using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
 using BTCPayServer.Filters;
@@ -18,7 +16,6 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
 using Fido2NetLib;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
@@ -33,7 +30,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -157,7 +153,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<LnurlAuthService>();
             services.AddSingleton<LightningAddressService>();
             var mvcBuilder = services.AddMvc(o =>
-             {
+                {
                  o.Filters.Add(new XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.Deny));
                  o.Filters.Add(new XContentTypeOptionsAttribute("nosniff"));
                  o.Filters.Add(new XXSSProtectionAttribute());
@@ -166,7 +162,10 @@ namespace BTCPayServer.Hosting
                  if (!Configuration.GetOrDefault<bool>("nocsp", false))
                      o.Filters.Add(new ContentSecurityPolicyAttribute(CSPTemplate.AntiXSS));
                  o.Filters.Add(new JsonHttpExceptionFilter());
+                 // Note: Plugins should rather put controller-specific filters rather than this global one
+                 o.Filters.Add<Security.SetContextFilter>();
                  o.Filters.Add(new JsonObjectExceptionFilter());
+                 o.Filters.Add(new UIControllerAntiforgeryTokenAttribute());
              })
             .ConfigureApiBehaviorOptions(options =>
             {
@@ -332,7 +331,7 @@ namespace BTCPayServer.Hosting
             app.UseExceptionHandler("/errors/{0}");
             app.UsePayServer();
             app.UseRouting();
-            app.UseCors();
+            app.UseCors(CorsPolicies.All);
 
             app.UseStaticFiles(new StaticFileOptions
             {

@@ -1,5 +1,4 @@
 @using BTCPayServer.Forms
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Forms.ModifyForm
 @{
@@ -7,7 +6,7 @@
     var storeId = Context.GetCurrentStoreId();
     var formId = Context.GetRouteValue("id");
     var isNew = formId is null;
-    ViewData.SetActivePage(StoreNavPages.Forms, isNew ? StringLocalizer["Create Form"] : StringLocalizer["Edit Form"], Model.Name);
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Forms), isNew ? StringLocalizer["Create Form"] : StringLocalizer["Edit Form"]).SetCategory(WellKnownCategories.Store));
 }
 
 @section PageHeadContent {

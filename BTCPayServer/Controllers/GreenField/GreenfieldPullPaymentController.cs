@@ -89,7 +89,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (request.AutoApproveClaims)
             {
-                if (!(await _authorizationService.AuthorizeAsync(User, null,
+                if (!(await _authorizationService.AuthorizeAsync(User, storeId,
                         new PolicyRequirement(Policies.CanCreatePullPayments))).Succeeded)
                 {
                     return this.CreateAPIPermissionError(Policies.CanCreatePullPayments);
@@ -125,7 +125,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.BOLT11Expiration), $"The BOLT11 expiration should be positive");
             }
 
-            var supported = _payoutHandlers.GetSupportedPayoutMethods(HttpContext.GetStoreData());
+			var storeData = HttpContext.GetStoreData();
+			var supported = _payoutHandlers.GetSupportedPayoutMethods(storeData);
             if (request.PayoutMethods is not null)
             {
                 for (int i = 0; i < request.PayoutMethods.Length; i++)
@@ -144,7 +145,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
-            var ppId = await _pullPaymentService.CreatePullPayment(HttpContext.GetStoreData(), request);
+			var ppId = await _pullPaymentService.CreatePullPayment(storeData, request);
             var pp = await _pullPaymentService.GetPullPayment(ppId, false);
             return this.Ok(CreatePullPaymentData(pp));
         }
@@ -478,7 +479,7 @@ retry:
         {
             if (request?.Approved is true)
             {
-                if (!(await _authorizationService.AuthorizeAsync(User, null,
+                if (!(await _authorizationService.AuthorizeAsync(User, storeId,
                         new PolicyRequirement(Policies.CanCreatePullPayments))).Succeeded)
                 {
                     return this.CreateAPIPermissionError(Policies.CanCreatePullPayments);
@@ -584,11 +585,10 @@ retry:
         [Authorize(Policy = Policies.CanArchivePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> ArchivePullPayment(string storeId, string pullPaymentId)
         {
-            using var ctx = _dbContextFactory.CreateContext();
-            var pp = await ctx.PullPayments.FindAsync(pullPaymentId);
-            if (pp is null || pp.StoreId != storeId)
+            var pp = HttpContext.GetPullPaymentDataOrNull();
+            if (pp is null)
                 return PullPaymentNotFound();
-            await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(pullPaymentId));
+            await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(pp.Id));
             return Ok();
         }
 

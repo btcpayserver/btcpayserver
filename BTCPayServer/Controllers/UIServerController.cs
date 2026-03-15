@@ -32,12 +32,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MimeKit;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Renci.SshNet;
@@ -368,8 +366,8 @@ namespace BTCPayServer.Controllers
             if (command == "SetTemplate")
             {
                 ModelState.Clear();
-                var storeId = this.HttpContext.GetStoreData()?.Id;
-                if (storeId is null)
+                var navStore = this.HttpContext.GetNavStoreData();
+                if (navStore is null)
                 {
                     this.TempData.SetStatusMessageModel(new()
                     {
@@ -379,8 +377,8 @@ namespace BTCPayServer.Controllers
                 }
                 else
                 {
-                    await _StoreRepository.SetDefaultStoreTemplate(storeId, GetUserId());
-                    this.TempData.SetStatusSuccess(StringLocalizer["Store template created from store '{0}'. New stores will inherit these settings.", HttpContext.GetStoreData().StoreName]);
+                    await _StoreRepository.SetDefaultStoreTemplate(navStore.Id, GetUserId());
+                    this.TempData.SetStatusSuccess(StringLocalizer["Store template created from store '{0}'. New stores will inherit these settings.", navStore.StoreName]);
                 }
                 return RedirectToAction(nameof(Policies));
             }

@@ -641,9 +641,22 @@ public class SubscriptionHostedService(
     {
         await using var ctx = applicationDbContextFactory.CreateContext();
         var portal = await ctx.PortalSessions.GetActiveById(portalSessionId);
-        var plan = planId is null ? null : await ctx.Plans.GetPlanFromId(planId);
         if (portal is null)
             return null;
+
+        PlanData? plan = null;
+        if (planId is not null)
+        {
+            plan = await ctx.Plans.GetPlanFromId(planId, portal.Subscriber.OfferingId);
+            if (plan is null)
+                return null;
+
+            var isAllowedChange = portal.Subscriber.Plan.PlanChanges
+                .Any(pc => pc.PlanId == portal.Subscriber.PlanId && pc.PlanChangeId == planId);
+            if (!isAllowedChange)
+                return null;
+        }
+
         var checkout = new PlanCheckoutData(portal.Subscriber, plan)
         {
             SuccessRedirectUrl = linkGenerator.SubscriberPortalLink(portalSessionId, requestBaseUrl),

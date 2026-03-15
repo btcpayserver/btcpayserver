@@ -1,11 +1,6 @@
 #nullable enable
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Bitcoin;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Invoices

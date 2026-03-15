@@ -9,7 +9,6 @@ using BTCPayServer.Plugins.PayButton.Models;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -19,12 +18,10 @@ namespace BTCPayServer.Plugins.PayButton.Controllers
     [Route("stores")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [AutoValidateAntiforgeryToken]
     [Area(PayButtonPlugin.Area)]
     public class UIPayButtonController(
         StoreRepository repo,
         UIStoresController storesController,
-        UserManager<ApplicationUser> userManager,
         IStringLocalizer stringLocalizer,
         AppService appService)
         : Controller
@@ -52,7 +49,7 @@ namespace BTCPayServer.Plugins.PayButton.Controllers
                 return View("Enable", null);
             }
 
-            var apps = await appService.GetAllApps(userManager.GetUserId(User), false, store.Id);
+            var apps = await appService.GetAllApps(User.GetId(), false, store.Id);
             // unset app store data, because we don't need it and inclusion leads to circular references when serializing to JSON
             foreach (var app in apps)
             {

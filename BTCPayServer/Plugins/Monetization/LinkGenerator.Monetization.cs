@@ -1,7 +1,5 @@
 #nullable  enable
 using BTCPayServer.Abstractions;
-using BTCPayServer.Plugins.Emails;
-using BTCPayServer.Plugins.Emails.Controllers;
 using BTCPayServer.Plugins.Monetization;
 using BTCPayServer.Plugins.Monetization.Controllers;
 using Microsoft.AspNetCore.Routing;

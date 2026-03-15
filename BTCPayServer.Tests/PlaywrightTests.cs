@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using BTCPayServer.Abstractions.Models;
@@ -31,7 +30,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
 using NBitcoin;
 using NBitcoin.Altcoins;
-using NBitpayClient;
 using NBXplorer;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -1262,7 +1260,7 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             await s.RegisterNewUser(true);
             await s.CreateNewStore();
-            await s.GenerateWallet("BTC", "", true);
+            await s.GenerateWallet();
 
             // Create a payment request
             await s.GoToStore();
@@ -1445,7 +1443,7 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             await s.RegisterNewUser(true);
             await s.CreateNewStore();
-            await s.GenerateWallet("BTC", "", true);
+            await s.GenerateWallet();
 
             await s.GoToStore();
             await s.Page.ClickAsync("#menu-item-PaymentRequests");
@@ -1982,52 +1980,6 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        public async Task CanUsePairing()
-        {
-            await using var s = CreatePlaywrightTester();
-            await s.StartAsync();
-            await s.Page.GotoAsync(s.Link("/api-access-request"));
-            Assert.Contains("ReturnUrl", s.Page.Url);
-            await s.GoToRegister();
-            await s.RegisterNewUser();
-            await s.CreateNewStore();
-            await s.AddDerivationScheme();
-
-            await s.GoToStore(s.StoreId, StoreNavPages.Tokens);
-            await s.Page.Locator("#CreateNewToken").ClickAsync();
-            await s.ClickPagePrimary();
-            var url = s.Page.Url;
-            var pairingCode = Regex.Match(new Uri(url, UriKind.Absolute).Query, "pairingCode=([^&]*)").Groups[1].Value;
-
-            await s.ClickPagePrimary();
-            await s.FindAlertMessage();
-            Assert.Contains(pairingCode, await s.Page.ContentAsync());
-
-            var client = new Bitpay(new Key(), s.ServerUri);
-            await client.AuthorizeClient(new PairingCode(pairingCode));
-            await client.CreateInvoiceAsync(
-                new Invoice { Price = 1.000000012m, Currency = "USD", FullNotifications = true },
-                Facade.Merchant);
-
-            client = new Bitpay(new Key(), s.ServerUri);
-
-            var code = await client.RequestClientAuthorizationAsync("hehe", Facade.Merchant);
-            await s.Page.GotoAsync(code.CreateLink(s.ServerUri).ToString());
-            await s.ClickPagePrimary();
-
-            await client.CreateInvoiceAsync(
-                new Invoice { Price = 1.000000012m, Currency = "USD", FullNotifications = true },
-                Facade.Merchant);
-
-            await s.Page.GotoAsync(s.Link("/api-tokens"));
-            await s.ClickPagePrimary(); // Request
-            await s.ClickPagePrimary(); // Approve
-            var url2 = s.Page.Url;
-            var pairingCode2 = Regex.Match(new Uri(url2, UriKind.Absolute).Query, "pairingCode=([^&]*)").Groups[1].Value;
-            Assert.False(string.IsNullOrEmpty(pairingCode2));
-        }
-
-        [Fact]
         [Trait("Lightning", "Lightning")]
         public async Task CanCreateStores()
         {
@@ -2410,6 +2362,7 @@ namespace BTCPayServer.Tests
                 document.getElementById('EndDate').value = yst.toISOString();
             ");
             await s.ClickPagePrimary();
+            await s.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
             var pageContent = await s.Page.ContentAsync();
             Assert.Contains("End date cannot be before start date", pageContent);
             Assert.DoesNotContain("App updated", pageContent);
@@ -2524,6 +2477,7 @@ namespace BTCPayServer.Tests
             await s.PayInvoice(true, 20);
             invoiceId = s.Page.Url[(s.Page.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
             await s.GoToInvoice(invoiceId);
+            await s.Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
             pageContent = await s.Page.ContentAsync();
             Assert.Contains("test-with-perk@crowdfund.com", pageContent);
         }

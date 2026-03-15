@@ -9,11 +9,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Hosting;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Rating;
+using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
@@ -24,6 +26,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -124,11 +127,12 @@ namespace BTCPayServer.Tests
                 config.AppendLine($"btc.explorer.cookiefile=0");
             }
 
+            var btcpayserverTestDataDir = Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName,"BTCPayServer.Tests", "TestData");
             if (UseLightning)
             {
                 config.AppendLine($"btc.lightning={IntegratedLightning}");
                 var localLndBackupFile = Path.Combine(_Directory, "walletunlock.json");
-                File.Copy(TestUtils.GetTestDataFullPath("LndSeedBackup/walletunlock.json"), localLndBackupFile, true);
+                File.Copy(Path.Combine(btcpayserverTestDataDir, "LndSeedBackup/walletunlock.json"), localLndBackupFile, true);
                 config.AppendLine($"btc.external.lndseedbackup={localLndBackupFile}");
             }
 
@@ -145,7 +149,7 @@ namespace BTCPayServer.Tests
             if (CheatMode)
                 config.AppendLine("cheatmode=1");
 
-            config.AppendLine($"torrcfile={TestUtils.GetTestDataFullPath("Tor/torrc")}");
+            config.AppendLine($"torrcfile={Path.Combine(btcpayserverTestDataDir, "Tor/torrc")}");
             config.AppendLine($"socksendpoint={SocksEndpoint}");
             config.AppendLine($"debuglog=debug.log");
             config.AppendLine($"nocsp={NoCSP.ToString().ToLowerInvariant()}");
@@ -198,6 +202,7 @@ namespace BTCPayServer.Tests
                     logging.AddFilter("Microsoft", LogLevel.Error);
                     logging.AddFilter("Microsoft.EntityFrameworkCore.Migrations", LogLevel.Information);
                     logging.AddFilter("Fido2NetLib.DistributedCacheMetadataService", LogLevel.Error);
+                    logging.AddFilter("BTCPayServer.Security", LogLevel.Warning);
 
                     // If LoggerProvider is an ILoggerProvider instance:
                     logging.ClearProviders();
@@ -221,6 +226,12 @@ namespace BTCPayServer.Tests
                         {
                             if (RuntimeCompilation)
                                 services.AddMvcCore().AddRazorRuntimeCompilation();
+
+                            services.AddMvcCore().ConfigureApplicationPartManager(apm =>
+                            {
+                                var assembly = typeof(BTCPayServerTester).Assembly;
+                                apm.ApplicationParts.Add(new AssemblyPart(assembly));
+                            }).AddControllersAsServices();
                             services.TryAddSingleton<IFeeProviderFactory>(
                                 new BTCPayServer.Services.Fees.FixedFeeProvider(new FeeRate(100L, 1)));
                         });
@@ -368,7 +379,7 @@ namespace BTCPayServer.Tests
         public string HostEnvironment { get; set; } = Environments.Development;
         public bool RuntimeCompilation { get; set; }
 
-        public T GetController<T>(string userId = null, string storeId = null, bool isAdmin = false) where T : Controller
+        public T GetController<T>(string userId = null, string storeId = null, bool isAdmin = false) where T : ControllerBase
         {
             var context = new DefaultHttpContext();
             context.Request.Host = new HostString("127.0.0.1", Port);
@@ -380,6 +391,8 @@ namespace BTCPayServer.Tests
                 claims.Add(new Claim(ClaimTypes.NameIdentifier, userId));
                 if (isAdmin)
                     claims.Add(new Claim(ClaimTypes.Role, Roles.ServerAdmin));
+                claims.Add(new Claim(GreenfieldConstants.ClaimTypes.Permission,
+                    Permission.Create(Policies.Unrestricted).ToString()));
                 context.User = new ClaimsPrincipal(new ClaimsIdentity(claims.ToArray(), AuthenticationSchemes.Cookie));
             }
             if (storeId != null)

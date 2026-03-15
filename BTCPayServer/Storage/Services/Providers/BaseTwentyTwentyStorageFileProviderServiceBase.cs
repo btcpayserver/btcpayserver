@@ -46,25 +46,6 @@ namespace BTCPayServer.Storage.Services.Providers
             return provider.GetBlobUrl(providerConfiguration.ContainerName, storedFile.StorageFileName);
         }
 
-        public virtual async Task<string> GetTemporaryFileUrl(Uri baseUri, StoredFile storedFile,
-            StorageSettings configuration,
-            DateTimeOffset expiry, bool isDownload, BlobUrlAccess access = BlobUrlAccess.Read)
-        {
-            var providerConfiguration = GetProviderConfiguration(configuration);
-            var provider = await GetStorageProvider(providerConfiguration);
-            if (isDownload)
-            {
-                var descriptor =
-                    await provider.GetBlobDescriptorAsync(providerConfiguration.ContainerName,
-                        storedFile.StorageFileName);
-                return provider.GetBlobSasUrl(providerConfiguration.ContainerName, storedFile.StorageFileName, expiry,
-                    true, storedFile.FileName, descriptor.ContentType, access);
-            }
-
-            return provider.GetBlobSasUrl(providerConfiguration.ContainerName, storedFile.StorageFileName, expiry,
-                false, null, null, access);
-        }
-
         public async Task RemoveFile(StoredFile storedFile, StorageSettings configuration)
         {
             var providerConfiguration = GetProviderConfiguration(configuration);

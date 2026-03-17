@@ -80,11 +80,11 @@ public partial class UIStoresController
 
     [HttpGet("{storeId}/dashboard/{cryptoCode}/numbers")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public IActionResult StoreNumbers(string storeId, string cryptoCode)
+    public IActionResult StoreNumbers(string storeId, string cryptoCode, int days = 7)
     {
         var store = HttpContext.GetStoreDataOrNull();
         return store != null
-            ? ViewComponent("StoreNumbers", new { Store = store, CryptoCode = cryptoCode })
+            ? ViewComponent("StoreNumbers", new { Store = store, CryptoCode = cryptoCode, TimeframeDays = days })
             : NotFound();
     }
 

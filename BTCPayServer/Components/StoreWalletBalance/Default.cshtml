@@ -60,8 +60,6 @@
 
             const id = `StoreWalletBalance-${storeId}-${cryptoCode}`;
             const baseUrl = @Safe.Json(Url.Action("WalletHistogram", "UIWallets", new { walletId = Model.WalletId, type = HistogramType.Week }));
-            const numbersUrl = @Safe.Json(Url.Action("StoreNumbers", "UIStores", new { storeId = Model.StoreId, cryptoCode = Model.CryptoCode }));
-            const periodDays = { Week: 7, Month: 30, Year: 365 };
             const valueTransform = value => rate ? DashboardUtils.displayDefaultCurrency(value, rate, defaultCurrency, divisibility) : value
             const labelCount = 6
             const tooltip = Chartist.plugins.tooltip2({
@@ -121,14 +119,6 @@
                     const json = await response.json();
                     data = { ...json, labels: json.labels.map(l => new Date(l * 1000).toISOString()) };
                     render(data);
-                }
-                const days = periodDays[type] ?? 7;
-                const numbersEl = document.getElementById(`StoreNumbers-${storeId}`);
-                if (numbersEl) {
-                    const numbersResponse = await fetch(`${numbersUrl}?days=${days}`);
-                    if (numbersResponse.ok) {
-                        numbersEl.outerHTML = await numbersResponse.text();
-                    }
                 }
             };
 

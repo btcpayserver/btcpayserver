@@ -82,7 +82,6 @@ public partial class UIStoresController
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult StoreNumbers(string storeId, string cryptoCode, int days = 7)
     {
-        days = days is 7 or 30 or 365 ? days : 7;
         var store = HttpContext.GetStoreDataOrNull();
         return store != null
             ? ViewComponent("StoreNumbers", new { Store = store, CryptoCode = cryptoCode, TimeframeDays = days })

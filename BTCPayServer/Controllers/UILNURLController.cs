@@ -506,8 +506,8 @@ namespace BTCPayServer
             var handler = (LNURLPayPaymentHandler)_handlers[pmi];
             var details = handler.ParsePaymentPromptDetails(prompt.Details);
 
-            // Verify the payment hash matches
-            if (details.PaymentHash?.ToString() != paymentHash)
+            // Verify the payment hash matches (case-insensitive for hex)
+            if (!string.Equals(details.PaymentHash?.ToString(), paymentHash, StringComparison.OrdinalIgnoreCase))
                 return NotFound(new LNUrlStatusResponse { Status = "ERROR", Reason = "Not found" });
 
             var settled = invoice.Status == InvoiceStatus.Settled ||

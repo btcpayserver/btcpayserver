@@ -27,15 +27,14 @@ public class StoreNumbers : ViewComponent
         _invoiceRepository = invoiceRepository;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync(StoreData store, string cryptoCode, bool initialRendering = false, int timeframeDays = 7)
+    public async Task<IViewComponentResult> InvokeAsync(StoreData store, string cryptoCode, bool initialRendering)
     {
         var vm = new StoreNumbersViewModel
         {
             StoreId = store.Id,
             CryptoCode = cryptoCode,
             InitialRendering = initialRendering,
-            WalletId = new WalletId(store.Id, cryptoCode),
-            TimeframeDays = timeframeDays
+            WalletId = new WalletId(store.Id, cryptoCode)
         };
 
         if (vm.InitialRendering)

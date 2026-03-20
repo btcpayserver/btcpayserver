@@ -19,7 +19,7 @@ using NBXplorer;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.HostedServices
+namespace BTCPayServer.Plugins.Bitpay
 {
     public class BitpayIPNSender : IHostedService
     {

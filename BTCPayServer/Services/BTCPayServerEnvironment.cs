@@ -30,10 +30,11 @@ namespace BTCPayServer.Services
             CheatMode = opts.CheatMode;
         }
 
-        internal static string GetInformationalVersion()
-        {
-            return typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
-        }
+        public static string GetInformationalVersion()
+        => typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
+
+        public static System.Net.Http.Headers.ProductInfoHeaderValue GetUserAgentHeaderValue()
+        => new("BTCPayServer", GetInformationalVersion());
 
         public IWebHostEnvironment Environment
         {

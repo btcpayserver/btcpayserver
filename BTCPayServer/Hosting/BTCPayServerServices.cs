@@ -428,7 +428,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<DefaultRulesCollection>();
             services.AddSingleton<IHostedService, NBXplorerWaiters>();
             services.AddSingleton<IHostedService, InvoiceEventSaverService>();
-            services.AddSingleton<IHostedService, BitpayIPNSender>();
             services.AddSingleton<IHostedService, InvoiceWatcher>();
             services.AddScheduledDbScript("Invoice Cleanup",
                 """

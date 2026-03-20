@@ -3,10 +3,12 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Plugins.Bitpay.Controllers;
 using BTCPayServer.Plugins.Bitpay.Security;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace BTCPayServer.Plugins.Bitpay;
 
@@ -19,6 +21,14 @@ public class BitpayPlugin : BaseBTCPayServerPlugin
 
     public override void Execute(IServiceCollection services)
     {
+        services.AddSingleton<IHostedService, BitpayIPNSender>();
+        var userAgent = BTCPayServerEnvironment.GetUserAgentHeaderValue();
+        services.AddHttpClient(BitpayIPNSender.NamedClient)
+            .ConfigureHttpClient(client =>
+            {
+                client.DefaultRequestHeaders.UserAgent.Add(userAgent);
+            });
+
         services.AddSingleton<MatcherPolicy, BitpayEndpointSelectorPolicy>();
         services.TryAddSingleton<TokenRepository>();
         services.AddTransient<BitpayAccessTokenController>();

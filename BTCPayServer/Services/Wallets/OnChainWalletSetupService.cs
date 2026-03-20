@@ -62,14 +62,15 @@ public class OnChainWalletSetupService(
             storeBlob.SetExcluded(paymentMethodId, false);
             storeBlob.PayJoinEnabled = derivationSchemeSettings.IsHotWallet && !(setupRequest?.PayJoinEnabled is false);
             store.SetStoreBlob(storeBlob);
-            await storeRepository.UpdateStore(store);
-            eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(store.Id, network.CryptoCode) });
-            return new OnChainWalletSetupResult(true, null);
         }
         catch
         {
             return new OnChainWalletSetupResult(false, "NBXplorer is unable to track this derivation scheme. You may need to update it.");
         }
+
+        await storeRepository.UpdateStore(store);
+        eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(store.Id, network.CryptoCode) });
+        return new OnChainWalletSetupResult(true, null);
     }
 }
 

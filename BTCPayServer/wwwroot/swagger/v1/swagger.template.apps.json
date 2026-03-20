@@ -147,7 +147,7 @@
             "put": {
                 "operationId": "Apps_PutCrowdfundApp",
                 "summary": "Update a Crowdfund app",
-                "description": "Use this endpoint for updating the properties of a Crowdfund app",
+                "description": "Full update. GET the app first, modify the data, then PUT the complete payload.",
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -1017,6 +1017,12 @@
                             "displayPerksValue": {
                                 "type": "boolean",
                                 "description": "Whether perk values are displayed",
+                                "example": false,
+                                "nullable": true
+                            },
+                            "displayPerksRanking": {
+                                "type": "boolean",
+                                "description": "Whether perk ranking is displayed",
                                 "example": false,
                                 "nullable": true
                             },

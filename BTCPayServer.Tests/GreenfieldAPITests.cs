@@ -632,7 +632,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("test description", retrievedCfApp.Description);
             Assert.False(retrievedCfApp.Archived);
 
-            // Test that we can update the crowdfund app
+            // Full update: client GETs, modifies, then PUTs
             retrievedCfApp = await client.UpdateCrowdfundApp(
                 app.Id,
                 new CrowdfundAppRequest
@@ -640,6 +640,7 @@ namespace BTCPayServer.Tests
                     AppName = "updated app name",
                     Title = "updated title",
                     Description = "updated description",
+                    TargetCurrency = retrievedCfApp.TargetCurrency ?? "USD",
                     Archived = true
                 }
             );
@@ -648,19 +649,16 @@ namespace BTCPayServer.Tests
             Assert.Equal("updated description", retrievedCfApp.Description);
             Assert.True(retrievedCfApp.Archived);
 
-            // Test partial update preserves omitted fields
-            retrievedCfApp = await client.UpdateCrowdfundApp(
-                app.Id,
-                new CrowdfundAppRequest
-                {
-                    AppName = "partial update name",
-                    Archived = false
-                }
+            // Test validation: AppName is required for update
+            await AssertValidationError(new[] { "AppName" },
+                async () => await client.UpdateCrowdfundApp(app.Id,
+                    new CrowdfundAppRequest
+                    {
+                        Title = "updated title",
+                        Description = "updated description"
+                    }
+                )
             );
-            Assert.Equal("partial update name", retrievedCfApp.AppName);
-            Assert.Equal("updated title", retrievedCfApp.Title);
-            Assert.Equal("updated description", retrievedCfApp.Description);
-            Assert.False(retrievedCfApp.Archived);
 
             // Test validation: empty Description is rejected
             await AssertValidationError(new[] { "Description" },
@@ -674,6 +672,25 @@ namespace BTCPayServer.Tests
                     }
                 )
             );
+
+            // Failed validation must not persist: app state unchanged after invalid PUT
+            var stateBeforeFailedPut = await client.GetCrowdfundApp(app.Id);
+            await AssertValidationError(new[] { "Description" },
+                async () => await client.UpdateCrowdfundApp(app.Id,
+                    new CrowdfundAppRequest
+                    {
+                        AppName = "would overwrite",
+                        Title = "would overwrite",
+                        Description = "",
+                        TargetCurrency = stateBeforeFailedPut.TargetCurrency ?? "USD",
+                        Archived = true
+                    }
+                )
+            );
+            var stateAfterFailedPut = await client.GetCrowdfundApp(app.Id);
+            Assert.Equal(stateBeforeFailedPut.AppName, stateAfterFailedPut.AppName);
+            Assert.Equal(stateBeforeFailedPut.Title, stateAfterFailedPut.Title);
+            Assert.Equal(stateBeforeFailedPut.Description, stateAfterFailedPut.Description);
 
             // Make sure we return a 404 if we try to delete an app that doesn't exist
             await AssertHttpError(404, async () =>

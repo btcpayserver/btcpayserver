@@ -260,6 +260,41 @@
                         "description": "Subscriber not found."
                     }
                 }
+            },
+            "delete": {
+                "summary": "Delete a subscriber",
+                "description": "Deletes a subscriber for a specific offering by customer selector.",
+                "operationId": "DeleteSubscriber",
+                "tags": [
+                    "Subscriptions"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmanagesubscribers"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OfferingId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/CustomerSelector"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Subscriber deleted successfully."
+                    },
+                    "404": {
+                        "description": "Subscriber not found."
+                    }
+                }
             }
         },
         "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/credits/{currency}": {
@@ -1954,4 +1989,3 @@
         }
     ]
 }
-

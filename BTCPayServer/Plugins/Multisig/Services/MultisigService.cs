@@ -37,10 +37,13 @@ public class MultisigService(
     {
         vm.MultisigScriptType ??= "p2wsh";
         vm.MultisigRequiredSigners ??= 2;
-        vm.MultisigTotalSigners ??= 3;
-        vm.MultisigSigners ??= Enumerable.Repeat(string.Empty, vm.MultisigTotalSigners.Value).ToArray();
-        vm.MultisigSignerFingerprints ??= Enumerable.Repeat(string.Empty, vm.MultisigTotalSigners.Value).ToArray();
-        vm.MultisigSignerKeyPaths ??= Enumerable.Repeat(string.Empty, vm.MultisigTotalSigners.Value).ToArray();
+        var safeCount = vm.MultisigTotalSigners is > 0 and <= 15
+            ? vm.MultisigTotalSigners.Value
+            : 3;
+        vm.MultisigTotalSigners = safeCount;
+        vm.MultisigSigners ??= Enumerable.Repeat(string.Empty, safeCount).ToArray();
+        vm.MultisigSignerFingerprints ??= Enumerable.Repeat(string.Empty, safeCount).ToArray();
+        vm.MultisigSignerKeyPaths ??= Enumerable.Repeat(string.Empty, safeCount).ToArray();
         vm.MultisigPendingSetup = string.IsNullOrEmpty(vm.MultisigRequestId)
             ? await GetLatestPendingMultisigSetup(vm.StoreId, vm.CryptoCode)
             : await GetPendingMultisigSetup(vm.StoreId, vm.CryptoCode, vm.MultisigRequestId);
@@ -81,9 +84,7 @@ public class MultisigService(
         var pending = await storeRepository.GetSettingAsync<PendingMultisigSetupData>(storeId, GetPendingMultisigSettingName(cryptoCode));
         if (pending is null || !string.Equals(pending.RequestId, requestId, StringComparison.Ordinal))
             return null;
-        if (pending.ExpiresAt < DateTimeOffset.UtcNow || pending.Finalized)
-            return null;
-        return pending;
+        return pending.ExpiresAt < DateTimeOffset.UtcNow ? null : pending;
     }
 
     public async Task<PendingMultisigSetupData?> GetLatestPendingMultisigSetup(string storeId, string cryptoCode)
@@ -91,14 +92,13 @@ public class MultisigService(
         var pending = await storeRepository.GetSettingAsync<PendingMultisigSetupData>(storeId, GetPendingMultisigSettingName(cryptoCode));
         if (pending is null)
             return null;
-        if (pending.ExpiresAt < DateTimeOffset.UtcNow || pending.Finalized)
-            return null;
-        return pending;
+        return pending.ExpiresAt < DateTimeOffset.UtcNow ? null : pending;
     }
 
     public static string GetPendingMultisigSettingName(string cryptoCode)
     {
-        return $"{PendingMultisigSettingPrefix}-{cryptoCode?.ToUpperInvariant()}";
+        ArgumentException.ThrowIfNullOrWhiteSpace(cryptoCode);
+        return $"{PendingMultisigSettingPrefix}-{cryptoCode.ToUpperInvariant()}";
     }
 
     public string CreateInviteToken(string storeId, string cryptoCode, string requestId, string userId, DateTimeOffset expiresAt)
@@ -185,7 +185,7 @@ public class MultisigService(
         foreach (var cryptoCode in cryptoCodes)
         {
             var pending = await storeRepository.GetSettingAsync<PendingMultisigSetupData>(store.Id, GetPendingMultisigSettingName(cryptoCode));
-            if (pending is null || pending.ExpiresAt < DateTimeOffset.UtcNow || pending.Finalized)
+            if (pending is null || pending.ExpiresAt < DateTimeOffset.UtcNow)
                 continue;
 
             var requestedCryptoCode = pending.CryptoCode ?? cryptoCode;
@@ -223,7 +223,7 @@ public class MultisigService(
             {
                 if (!storesById.TryGetValue(storeId, out var store) || pending is null)
                     continue;
-                if (pending.ExpiresAt < DateTimeOffset.UtcNow || pending.Finalized)
+                if (pending.ExpiresAt < DateTimeOffset.UtcNow)
                     continue;
 
                 var requestedCryptoCode = pending.CryptoCode ?? cryptoCode;

@@ -15,7 +15,6 @@ public class PendingMultisigSetupData
     public int TotalSigners { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset ExpiresAt { get; set; }
-    public bool Finalized { get; set; }
     public List<PendingMultisigSetupParticipantData> Participants { get; set; } = new();
 }
 

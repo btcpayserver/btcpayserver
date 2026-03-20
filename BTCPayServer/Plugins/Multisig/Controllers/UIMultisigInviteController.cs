@@ -28,6 +28,7 @@ public class UIMultisigInviteController(
 {
     private static bool IsSupportedCryptoCode(string? cryptoCode) =>
         string.Equals(cryptoCode, "BTC", StringComparison.OrdinalIgnoreCase);
+    private const int UpdateRetries = 5;
 
     private enum InviteLoadStatus
     {
@@ -49,7 +50,7 @@ public class UIMultisigInviteController(
             return NotFound();
         var result = await LoadInviteViewModel(storeId, cryptoCode, token);
         if (result.Status is InviteLoadStatus.WrongUser)
-            return RedirectToAction("Login", "UIAccount", new { area = "", returnUrl = Request.Path + Request.QueryString });
+            return RedirectToAction("Login", "UIAccount", new { area = "", returnUrl = Request.PathBase + Request.Path + Request.QueryString });
         if (result.Status is not InviteLoadStatus.Ok)
             return NotFound();
         return View("MultisigInvite", result.ViewModel!);
@@ -62,28 +63,10 @@ public class UIMultisigInviteController(
             return NotFound();
         var result = await LoadInviteViewModel(storeId, cryptoCode, token);
         if (result.Status is InviteLoadStatus.WrongUser)
-            return RedirectToAction("Login", "UIAccount", new { area = "", returnUrl = Request.Path + Request.QueryString });
+            return RedirectToAction("Login", "UIAccount", new { area = "", returnUrl = Request.PathBase + Request.Path + Request.QueryString });
         if (result.Status is not InviteLoadStatus.Ok)
             return NotFound();
         var current = result.ViewModel!;
-
-        var pending = await storeRepository.GetSettingAsync<PendingMultisigSetupData>(storeId, MultisigService.GetPendingMultisigSettingName(cryptoCode));
-        if (pending is null || !string.Equals(pending.RequestId, current.RequestId, StringComparison.Ordinal))
-            return NotFound();
-
-        var participant = pending.Participants.Find(p => string.Equals(p.UserId, current.UserId, StringComparison.Ordinal));
-        if (participant is null)
-            return NotFound();
-
-        if (!string.IsNullOrWhiteSpace(participant.AccountKey))
-        {
-            current.AccountKey = participant.AccountKey;
-            current.MasterFingerprint = participant.MasterFingerprint;
-            current.AccountKeyPath = participant.AccountKeyPath;
-            current.Submitted = true;
-            TempData[WellKnownTempData.SuccessMessage] = "Your signer key is submitted.";
-            return View("MultisigInvite", current);
-        }
 
         var network = explorerProvider.GetNetwork(cryptoCode);
         if (network is null)
@@ -110,29 +93,65 @@ public class UIMultisigInviteController(
                 current.AccountKeyPath = $"m/{normalizedPath}";
         }
 
-        if (ModelState.IsValid)
+        var hasFingerprint = !string.IsNullOrWhiteSpace(current.MasterFingerprint);
+        var hasAccountKeyPath = !string.IsNullOrWhiteSpace(current.AccountKeyPath);
+        if (hasFingerprint && !hasAccountKeyPath)
+            ModelState.AddModelError(nameof(vm.AccountKeyPath), "Provide account key path when fingerprint is set.");
+        if (hasAccountKeyPath && !hasFingerprint)
+            ModelState.AddModelError(nameof(vm.MasterFingerprint), "Provide fingerprint when account key path is set.");
+
+        if (!ModelState.IsValid)
+            return View("MultisigInvite", current);
+
+        var settingName = MultisigService.GetPendingMultisigSettingName(cryptoCode);
+        for (var attempt = 0; attempt < UpdateRetries; attempt++)
         {
+            var setting = await storeRepository.GetSettingWithVersionAsync<PendingMultisigSetupData>(storeId, settingName);
+            if (setting is null || !string.Equals(setting.Value.RequestId, current.RequestId, StringComparison.Ordinal))
+                return NotFound();
+            var pending = setting.Value;
+
+            var participant = pending.Participants.Find(p => string.Equals(p.UserId, current.UserId, StringComparison.Ordinal));
+            if (participant is null)
+                return NotFound();
+
+            if (!string.IsNullOrWhiteSpace(participant.AccountKey))
+            {
+                // Invite links remain reusable for the intended signer until the request expires,
+                // but once a key is submitted the page is read-only and never overwrites it.
+                current.AccountKey = participant.AccountKey;
+                current.MasterFingerprint = participant.MasterFingerprint;
+                current.AccountKeyPath = participant.AccountKeyPath;
+                current.Submitted = true;
+                TempData[WellKnownTempData.SuccessMessage] = "Your signer key is submitted.";
+                return View("MultisigInvite", current);
+            }
+
             var duplicateKeyFound = pending.Participants
                 .Where(p => !string.Equals(p.UserId, current.UserId, StringComparison.Ordinal))
                 .Any(p =>
                     multisigService.TryNormalizeAccountKeyForNetwork(p.AccountKey, network, out var normalizedParticipantKey) &&
                     string.Equals(normalizedParticipantKey, current.AccountKey, StringComparison.Ordinal));
             if (duplicateKeyFound)
+            {
                 ModelState.AddModelError(string.Empty, "This signer key is already used in this multisig request.");
+                return View("MultisigInvite", current);
+            }
+
+            participant.AccountKey = current.AccountKey;
+            participant.MasterFingerprint = current.MasterFingerprint;
+            participant.AccountKeyPath = current.AccountKeyPath;
+            participant.SubmittedAt = DateTimeOffset.UtcNow;
+            if (!await storeRepository.TryUpdateSettingAsync(storeId, settingName, setting.XMin, pending))
+                continue;
+
+            await multisigNotificationService.NotifyRequesterOfSubmission(HttpContext, storeId, cryptoCode, pending, participant);
+            current.Submitted = true;
+            TempData[WellKnownTempData.SuccessMessage] = "Signer key submitted successfully.";
+            return View("MultisigInvite", current);
         }
 
-        if (!ModelState.IsValid)
-            return View("MultisigInvite", current);
-
-        participant.AccountKey = current.AccountKey;
-        participant.MasterFingerprint = current.MasterFingerprint;
-        participant.AccountKeyPath = current.AccountKeyPath;
-        participant.SubmittedAt = DateTimeOffset.UtcNow;
-        await storeRepository.UpdateSetting(storeId, MultisigService.GetPendingMultisigSettingName(cryptoCode), pending);
-        await multisigNotificationService.NotifyRequesterOfSubmission(HttpContext, storeId, cryptoCode, pending, participant);
-
-        current.Submitted = true;
-        TempData[WellKnownTempData.SuccessMessage] = "Signer key submitted successfully.";
+        ModelState.AddModelError(string.Empty, "This multisig request changed while you were submitting your signer key. Please try again.");
         return View("MultisigInvite", current);
     }
 
@@ -145,10 +164,12 @@ public class UIMultisigInviteController(
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!string.Equals(currentUserId, payload.UserId, StringComparison.Ordinal))
             return new InviteLoadResult { Status = InviteLoadStatus.WrongUser };
+        if (!(await storeRepository.GetStoreUsers(storeId)).Any(u => string.Equals(u.Id, payload.UserId, StringComparison.Ordinal)))
+            return new InviteLoadResult { Status = InviteLoadStatus.Invalid };
 
         var pending = await storeRepository.GetSettingAsync<PendingMultisigSetupData>(storeId, MultisigService.GetPendingMultisigSettingName(cryptoCode));
         if (pending is null || !string.Equals(pending.RequestId, payload.RequestId, StringComparison.Ordinal) ||
-            pending.ExpiresAt < DateTimeOffset.UtcNow || pending.Finalized)
+            pending.ExpiresAt < DateTimeOffset.UtcNow)
             return new InviteLoadResult { Status = InviteLoadStatus.Invalid };
 
         var participant = pending.Participants.Find(p => string.Equals(p.UserId, payload.UserId, StringComparison.Ordinal));

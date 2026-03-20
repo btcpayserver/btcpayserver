@@ -99,11 +99,13 @@
                 const low = Math.max(min - ((max - min) / 5), 0);
                 const renderOpts = Object.assign({}, chartOpts, { low, axisX: {
                         labelInterpolationFnc(date, i) {
-                            return i % labelEvery === 0 ? dateFormatter.format(new Date(date)) : null
+                            return i === pointCount - 1 || i % labelEvery === 0
+                                ? dateFormatter.format(new Date(date))
+                                : null
                         }
                     } });
                 const pointCount = series.length;
-                const labelEvery = pointCount / labelCount;
+                const labelEvery = Math.max(1, Math.ceil((pointCount - 1) / (labelCount - 1)));
                 new Chartist.Line(`#${id} .ct-chart`, {
                     labels: labels,
                     series: [series]
@@ -114,7 +116,8 @@
                 const url = baseUrl.replace(/\/week$/gi, `/${type}`);
                 const response = await fetch(url);
                 if (response.ok) {
-                    data = await response.json();
+                    const json = await response.json();
+                    data = { ...json, labels: json.labels.map(l => new Date(l * 1000).toISOString()) };
                     render(data);
                 }
             };

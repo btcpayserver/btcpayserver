@@ -8,6 +8,5 @@ namespace BTCPayServer
         public const string Shopify = nameof(Shopify);
         public const string ForgotPassword = "forgotpassword";
         public const string PublicInvoices = "publicinvoices";
-        public const string Verify = "verify";
     }
 }

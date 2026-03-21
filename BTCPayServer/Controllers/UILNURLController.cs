@@ -39,7 +39,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
 using NBitcoin;
-using NicolasDorier.RateLimits;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using LightningAddressData = BTCPayServer.Data.LightningAddressData;
@@ -469,7 +468,6 @@ namespace BTCPayServer
         [HttpGet("~/lnurlp/{username}/verify/{paymentHash}")]
         [EnableCors(CorsPolicies.All)]
         [IgnoreAntiforgeryToken]
-        [RateLimitsFilter(ZoneLimits.Verify, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> LnurlPayVerify(string username, string paymentHash)
         {
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(paymentHash))

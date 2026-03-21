@@ -294,7 +294,6 @@ namespace BTCPayServer.Hosting
                 rateLimits.SetZone($"zone={ZoneLimits.PayJoin} rate=1000r/min burst=100 nodelay");
                 rateLimits.SetZone($"zone={ZoneLimits.Shopify} rate=1000r/min burst=100 nodelay");
                 rateLimits.SetZone($"zone={ZoneLimits.ForgotPassword} rate=5r/d burst=3 nodelay");
-                rateLimits.SetZone($"zone={ZoneLimits.Verify} rate=1000r/min burst=100 nodelay");
             }
             else
             {
@@ -304,7 +303,6 @@ namespace BTCPayServer.Hosting
                 rateLimits.SetZone($"zone={ZoneLimits.PayJoin} rate=5r/min burst=3 nodelay");
                 rateLimits.SetZone($"zone={ZoneLimits.Shopify} rate=20r/min burst=3 nodelay");
                 rateLimits.SetZone($"zone={ZoneLimits.ForgotPassword} rate=5r/d burst=5 nodelay");
-                rateLimits.SetZone($"zone={ZoneLimits.Verify} rate=10r/min burst=5 nodelay");
             }
 
             // HACK: blazor server js hard code some path, making it works only on root path. This fix it.

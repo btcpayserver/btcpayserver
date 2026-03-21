@@ -473,6 +473,8 @@ namespace BTCPayServer
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(paymentHash))
                 return NotFound();
 
+            paymentHash = paymentHash.ToLowerInvariant();
+
             var lightningAddressSettings = await _lightningAddressService.ResolveByAddress(username);
             if (lightningAddressSettings is null)
                 return NotFound(new LNUrlStatusResponse { Status = "ERROR", Reason = "Unknown username" });
@@ -868,7 +870,7 @@ namespace BTCPayServer
                     if (promptDetails.PaymentHash is not null)
                     {
                         await _invoiceRepository.AddAddressInvoice(invoiceId, pmi,
-                            promptDetails.PaymentHash.ToString());
+                            promptDetails.PaymentHash.ToString().ToLowerInvariant());
                     }
                 }
 
@@ -890,7 +892,7 @@ namespace BTCPayServer
                     {
                         callbackResponse["verify"] = _linkGenerator.GetUriByAction(
                             nameof(LnurlPayVerify), "UILNURL",
-                            new { username, paymentHash = promptDetails.PaymentHash.ToString() },
+                            new { username, paymentHash = promptDetails.PaymentHash.ToString().ToLowerInvariant() },
                             Request.Scheme, Request.Host, Request.PathBase);
                     }
                 }

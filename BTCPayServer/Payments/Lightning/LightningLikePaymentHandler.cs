@@ -142,7 +142,7 @@ namespace BTCPayServer.Payments.Lightning
             // Track payment hash for LUD-21 verify lookup
             if (details.PaymentHash is not null)
             {
-                context.TrackedDestinations.Add(details.PaymentHash.ToString());
+                context.TrackedDestinations.Add(details.PaymentHash.ToString().ToLowerInvariant());
             }
         }
 

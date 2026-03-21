@@ -80,12 +80,22 @@ namespace BTCPayServer.Services.Invoices
         public async Task AddAddressInvoice(string invoiceId, PaymentMethodId paymentMethodId, string address)
         {
             await using var context = _applicationDbContextFactory.CreateContext();
-            await context.AddressInvoices.AddAsync(new AddressInvoiceData()
+            var pmiStr = paymentMethodId.ToString();
+            var existing = await context.AddressInvoices
+                .FirstOrDefaultAsync(a => a.Address == address && a.PaymentMethodId == pmiStr);
+            if (existing is null)
             {
-                InvoiceDataId = invoiceId,
-                Address = address,
-                PaymentMethodId = paymentMethodId.ToString()
-            });
+                await context.AddressInvoices.AddAsync(new AddressInvoiceData()
+                {
+                    InvoiceDataId = invoiceId,
+                    Address = address,
+                    PaymentMethodId = pmiStr
+                });
+            }
+            else
+            {
+                existing.InvoiceDataId = invoiceId;
+            }
             await context.SaveChangesAsync();
         }
 

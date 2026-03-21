@@ -138,6 +138,12 @@ namespace BTCPayServer.Payments.Lightning
                 NodeInfo = (await nodeInfo).FirstOrDefault()?.ToString()
             };
             paymentPrompt.Details = JObject.FromObject(details, Serializer);
+
+            // Track payment hash for LUD-21 verify lookup
+            if (details.PaymentHash is not null)
+            {
+                context.TrackedDestinations.Add(details.PaymentHash.ToString());
+            }
         }
 
 

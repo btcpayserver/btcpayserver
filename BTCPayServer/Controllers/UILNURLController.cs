@@ -39,6 +39,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
 using NBitcoin;
+using NicolasDorier.RateLimits;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using LightningAddressData = BTCPayServer.Data.LightningAddressData;
@@ -468,6 +469,7 @@ namespace BTCPayServer
         [HttpGet("~/lnurlp/{username}/verify/{paymentHash}")]
         [EnableCors(CorsPolicies.All)]
         [IgnoreAntiforgeryToken]
+        [RateLimitsFilter(ZoneLimits.Verify, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> LnurlPayVerify(string username, string paymentHash)
         {
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(paymentHash))
@@ -482,23 +484,14 @@ namespace BTCPayServer
                 return NotFound(new LNUrlStatusResponse { Status = "ERROR", Reason = "Unknown username" });
 
             var cryptoCode = "BTC";
-            if (GetLNUrlPaymentMethodId(cryptoCode, store, out var lnUrlMethod) is null ||
-                !lnUrlMethod.LUD21Enabled)
+            var pmi = GetLNUrlPaymentMethodId(cryptoCode, store, out var lnUrlMethod);
+            if (pmi is null || !lnUrlMethod.LUD21Enabled)
                 return NotFound(new LNUrlStatusResponse { Status = "ERROR", Reason = "Not available" });
 
-            // Find invoice by payment hash via search index
-            var invoices = await _invoiceRepository.GetInvoices(new InvoiceQuery
-            {
-                StoreId = new[] { store.Id },
-                TextSearch = $"lnurlpay:{paymentHash}",
-                Take = 1
-            });
-
-            if (invoices.Length == 0)
+            // Find invoice by payment hash via AddressInvoices index
+            var invoice = await _invoiceRepository.GetInvoiceFromAddress(pmi, paymentHash);
+            if (invoice is null || invoice.StoreId != store.Id)
                 return NotFound(new LNUrlStatusResponse { Status = "ERROR", Reason = "Not found" });
-
-            var invoice = invoices[0];
-            var pmi = PaymentTypes.LNURL.GetPaymentMethodId(cryptoCode);
             var prompt = invoice.GetPaymentPrompt(pmi);
             if (prompt is null)
                 return NotFound(new LNUrlStatusResponse { Status = "ERROR", Reason = "Not found" });
@@ -873,11 +866,11 @@ namespace BTCPayServer
                     await _invoiceRepository.UpdatePrompt(invoiceId, lightningPaymentMethod);
                     _eventAggregator.Publish(new InvoiceNewPaymentDetailsEvent(invoiceId, promptDetails, pmi));
 
-                    // Index payment hash for LUD-21 verify lookup
+                    // Index payment hash for LUD-21 verify lookup via AddressInvoices
                     if (promptDetails.PaymentHash is not null)
                     {
-                        await _invoiceRepository.AddSearchTerms(invoiceId,
-                            new List<string> { $"lnurlpay:{promptDetails.PaymentHash}" });
+                        await _invoiceRepository.AddAddressInvoice(invoiceId, pmi,
+                            promptDetails.PaymentHash.ToString());
                     }
                 }
 

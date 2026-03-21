@@ -77,6 +77,18 @@ namespace BTCPayServer.Services.Invoices
             return row is null ? null : ToEntity(row);
         }
 
+        public async Task AddAddressInvoice(string invoiceId, PaymentMethodId paymentMethodId, string address)
+        {
+            await using var context = _applicationDbContextFactory.CreateContext();
+            await context.AddressInvoices.AddAsync(new AddressInvoiceData()
+            {
+                InvoiceDataId = invoiceId,
+                Address = address,
+                PaymentMethodId = paymentMethodId.ToString()
+            });
+            await context.SaveChangesAsync();
+        }
+
         /// <summary>
         /// Returns all invoices which either:
         /// * Have the <paramref name="paymentMethodId"/> activated and are pending

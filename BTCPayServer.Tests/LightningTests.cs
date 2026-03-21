@@ -955,4 +955,85 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         Assert.Null(conf["useBech32Scheme"]); // default stripped
 #pragma warning restore CS0618 // Type or member is obsolete
     }
+
+    [Fact(Timeout = 60 * 20 * 1000)]
+    [Trait("Integration", "Integration")]
+    [Trait("Lightning", "Lightning")]
+    public async Task CanUseLUD21VerifyEndpoint()
+    {
+        using var tester = CreateServerTester();
+        tester.ActivateLightning();
+        await tester.StartAsync();
+        await tester.EnsureChannelsSetup();
+        var user = tester.NewAccount();
+        await user.GrantAccessAsync(true);
+        var client = await user.CreateClient(Policies.Unrestricted);
+
+        // Enable LNURL and Lightning
+        var methods = await client.GetStorePaymentMethods(user.StoreId);
+        await user.RegisterLightningNodeAsync("BTC", false);
+
+        // Set up a Lightning Address
+        var username = Guid.NewGuid().ToString("n").Substring(0, 8);
+        await client.AddOrUpdateStoreLightningAddress(user.StoreId, username,
+            new LightningAddressData());
+
+        // Verify endpoint returns 404 for unknown payment hash
+        var fakeHash = "0000000000000000000000000000000000000000000000000000000000000000";
+        var response = await tester.PayTester.HttpClient.GetAsync(
+            $"/lnurlp/{username}/verify/{fakeHash}");
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+
+        // Verify endpoint returns 404 for unknown username
+        response = await tester.PayTester.HttpClient.GetAsync(
+            $"/lnurlp/nonexistent/verify/{fakeHash}");
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+
+        // Create an invoice via LNURL-pay flow to get a real payment hash
+        var lnurlResponse = await tester.PayTester.HttpClient.GetAsync(
+            $"/lnurlp/{username}");
+        Assert.Equal(System.Net.HttpStatusCode.OK, lnurlResponse.StatusCode);
+        var lnurlPayRequest = JObject.Parse(await lnurlResponse.Content.ReadAsStringAsync());
+        var callback = lnurlPayRequest["callback"]?.ToString();
+        Assert.NotNull(callback);
+
+        // Make the callback with minimum amount to create a Lightning invoice
+        var minSendable = lnurlPayRequest["minSendable"]?.Value<long>() ?? 1000;
+        var callbackUri = new Uri(callback);
+        var callbackPath = callbackUri.PathAndQuery;
+        var separator = callbackPath.Contains('?') ? "&" : "?";
+        var callbackResponse = await tester.PayTester.HttpClient.GetAsync(
+            $"{callbackPath}{separator}amount={minSendable}");
+        Assert.Equal(System.Net.HttpStatusCode.OK, callbackResponse.StatusCode);
+        var callbackResult = JObject.Parse(await callbackResponse.Content.ReadAsStringAsync());
+
+        // Check if verify URL is present in callback response
+        var verifyUrl = callbackResult["verify"]?.ToString();
+        Assert.NotNull(verifyUrl);
+
+        // Extract payment hash from verify URL
+        var verifyUri = new Uri(verifyUrl);
+        var verifyPath = verifyUri.PathAndQuery;
+
+        // Call verify endpoint - invoice should exist but not be settled yet
+        var verifyResponse = await tester.PayTester.HttpClient.GetAsync(verifyPath);
+        Assert.Equal(System.Net.HttpStatusCode.OK, verifyResponse.StatusCode);
+        var verifyResult = JObject.Parse(await verifyResponse.Content.ReadAsStringAsync());
+        Assert.Equal("OK", verifyResult["status"]?.ToString());
+        Assert.False(verifyResult["settled"]?.Value<bool>());
+        Assert.Null(verifyResult["preimage"]?.ToString());
+        Assert.NotNull(verifyResult["pr"]?.ToString());
+
+        // Verify storeId isolation - create another store and Lightning Address
+        var store2 = (await client.CreateStore(new CreateStoreRequest { Name = "store2" })).Id;
+        var username2 = Guid.NewGuid().ToString("n").Substring(0, 8);
+        await client.AddOrUpdateStoreLightningAddress(store2, username2,
+            new LightningAddressData());
+
+        // Trying to look up store1's payment hash via store2's username should fail
+        var paymentHash = verifyPath.Split('/').Last();
+        var crossStoreResponse = await tester.PayTester.HttpClient.GetAsync(
+            $"/lnurlp/{username2}/verify/{paymentHash}");
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, crossStoreResponse.StatusCode);
+    }
 }

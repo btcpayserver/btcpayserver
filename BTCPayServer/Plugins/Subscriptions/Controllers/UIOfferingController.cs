@@ -100,7 +100,8 @@ public partial class UIOfferingController(
 
     [HttpPost("stores/{storeId}/offerings/{offeringId}/Subscribers")]
     public async Task<IActionResult> SubscriberSuspend(string storeId, string offeringId, string customerId, string? command = null,
-        string? suspensionReason = null, decimal? amount = null, string? description = null)
+        string? suspensionReason = null, decimal? amount = null, string? description = null,
+        string? startDate = null, string? expirationDate = null)
     {
         await using var ctx = DbContextFactory.CreateContext();
         var sub = await ctx.Subscribers.GetByCustomerId(customerId, offeringId: offeringId, storeId: storeId);
@@ -155,6 +156,27 @@ public partial class UIOfferingController(
                     AllowOverdraft = true
                 });
             TempData.SetStatusSuccess(message);
+        }
+        else if (command is "edit-dates")
+        {
+            if (DateTimeOffset.TryParse(startDate, null, System.Globalization.DateTimeStyles.AssumeUniversal, out var parsedStart))
+            {
+                DateTimeOffset? parsedExpiration = null;
+                if (!string.IsNullOrEmpty(expirationDate) &&
+                    DateTimeOffset.TryParse(expirationDate, null, System.Globalization.DateTimeStyles.AssumeUniversal, out var parsedExp))
+                    parsedExpiration = parsedExp;
+
+                await SubsService.UpdateDates(sub.Id, parsedStart, parsedExpiration);
+                TempData.SetStatusSuccess(StringLocalizer["Subscription dates updated for {0}", subName]);
+            }
+            else
+            {
+                TempData.SetStatusMessageModel(new()
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Html = StringLocalizer["Invalid start date provided."]
+                });
+            }
         }
 
         return GoToOffering(storeId, offeringId, SubscriptionSection.Subscribers);

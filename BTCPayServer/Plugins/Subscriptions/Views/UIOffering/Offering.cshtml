@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Client
+@using BTCPayServer.Client
 @using BTCPayServer.Plugins.Emails
 @using BTCPayServer.Plugins.Subscriptions
 @using BTCPayServer.Plugins.Subscriptions.Controllers
@@ -203,6 +203,8 @@
                 <tr>
                     <th text-translate="true">User</th>
                     <th text-translate="true">Credits</th>
+                    <th text-translate="true">Start Date</th>
+                    <th text-translate="true">Expiration</th>
                     <th text-translate="true">Plan</th>
                     <th text-translate="true">Phase</th>
                     <th text-translate="true">Status</th>
@@ -217,7 +219,10 @@
                         <tr data-subscriber-email="@subscriber.Data.Customer.Email.Get()"
                             data-subscriber-id="@subscriber.Data.CustomerId"
                             data-currency="@subscriber.Data.Plan.Currency"
-                            data-current-credit-value="@subscriber.Data.GetCredit()">
+                            data-current-credit-value="@subscriber.Data.GetCredit()"
+                            data-plan-started="@subscriber.Data.PlanStarted.UtcDateTime.ToString("yyyy-MM-dd")"
+                            data-expiration="@((subscriber.Data.TrialEnd ?? subscriber.Data.PeriodEnd)?.UtcDateTime.ToString("yyyy-MM-dd") ?? "")"
+                            data-is-trial="@(subscriber.Data.TrialEnd.HasValue ? "true" : "false")">
                             <td class="fw-semibold text-nowrap d-flex align-items-center subscriber-email-col">
                                 @if (subscriber.Data.TestAccount)
                                 {
@@ -272,6 +277,36 @@
                                 <span not-permission="@SubscriptionsPolicies.CanCreditSubscribers">
                                     @DisplayFormatter.Currency(subscriber.Data.GetCredit(), subscriber.Data.Plan.Currency, DisplayFormatter.CurrencyFormat.CodeAndSymbol)
                                 </span>
+                            </td>
+                            <td class="text-nowrap">
+                                <a href="#"
+                                   class="edit-dates-link text-decoration-none"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#editDatesModal"
+                                   title="@StringLocalizer["Edit dates"]">
+                                    @subscriber.Data.PlanStarted.ToString("d")
+                                    <span class="ms-1 text-muted small">&#x270E;</span>
+                                </a>
+                            </td>
+                            <td class="text-nowrap">
+                                @{
+                                    var subExpiry = subscriber.Data.TrialEnd ?? subscriber.Data.PeriodEnd;
+                                }
+                                @if (subExpiry.HasValue)
+                                {
+                                    <a href="#"
+                                       class="edit-dates-link text-decoration-none"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#editDatesModal"
+                                       title="@StringLocalizer["Edit dates"]">
+                                        @subExpiry.Value.ToString("d")
+                                        <span class="ms-1 text-muted small">&#x270E;</span>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
                             </td>
                             <td class="text-nowrap">@subscriber.Data.Plan.Name</td>
                             <td>
@@ -454,6 +489,7 @@
     <partial name="SuspendSubscriberModal" />
     <partial name="NewSubscriberModal" model="Model.SelectablePlans" />
     <partial name="ChangeCreditModal" />
+    <partial name="EditDatesModal" />
 </div>
 
 @section PageFootContent {

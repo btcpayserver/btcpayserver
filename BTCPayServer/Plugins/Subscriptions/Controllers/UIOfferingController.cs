@@ -162,9 +162,29 @@ public partial class UIOfferingController(
             if (DateTimeOffset.TryParse(startDate, null, System.Globalization.DateTimeStyles.AssumeUniversal, out var parsedStart))
             {
                 DateTimeOffset? parsedExpiration = null;
-                if (!string.IsNullOrEmpty(expirationDate) &&
-                    DateTimeOffset.TryParse(expirationDate, null, System.Globalization.DateTimeStyles.AssumeUniversal, out var parsedExp))
+                if (!string.IsNullOrEmpty(expirationDate))
+                {
+                    if (!DateTimeOffset.TryParse(expirationDate, null, System.Globalization.DateTimeStyles.AssumeUniversal, out var parsedExp))
+                    {
+                        TempData.SetStatusMessageModel(new()
+                        {
+                            Severity = StatusMessageModel.StatusSeverity.Error,
+                            Html = StringLocalizer["Invalid expiration date provided."]
+                        });
+                        return GoToOffering(storeId, offeringId, SubscriptionSection.Subscribers);
+                    }
                     parsedExpiration = parsedExp;
+                }
+
+                if (parsedExpiration.HasValue && parsedExpiration.Value <= parsedStart)
+                {
+                    TempData.SetStatusMessageModel(new()
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Error,
+                        Html = StringLocalizer["Expiration date must be after the start date."]
+                    });
+                    return GoToOffering(storeId, offeringId, SubscriptionSection.Subscribers);
+                }
 
                 await SubsService.UpdateDates(sub.Id, parsedStart, parsedExpiration);
                 TempData.SetStatusSuccess(StringLocalizer["Subscription dates updated for {0}", subName]);

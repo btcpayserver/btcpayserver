@@ -11,6 +11,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Controllers;
+using BTCPayServer.Plugins;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
@@ -2516,6 +2518,118 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             reader.Read();
             Assert.Equal("BTC-hasjdfhasjkfjlajn", new PaymentMethodIdJsonConverter().ReadJson(reader, typeof(PaymentMethodId), null,
                 JsonSerializer.CreateDefault()).ToString());
+        }
+
+        [Fact]
+        public void GetDisabledPluginUpdates_ReturnsUpdateWhenNewerVersionAvailable()
+        {
+            var disabled = new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } };
+            var installed = new Dictionary<string, Version> { { "BTCPayServer", new Version(2, 0, 0) } };
+            var available = new[] { MakeAvailablePlugin("TestPlugin", "1.1.0") };
+
+            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, installed, available);
+
+            Assert.Single(result);
+            Assert.Equal(new Version(1, 1, 0), result["TestPlugin"].Version);
+        }
+
+        [Fact]
+        public void GetDisabledPluginUpdates_NoUpdateWhenSameVersion()
+        {
+            var disabled = new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } };
+            var installed = new Dictionary<string, Version> { { "BTCPayServer", new Version(2, 0, 0) } };
+            var available = new[] { MakeAvailablePlugin("TestPlugin", "1.0.0") };
+
+            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, installed, available);
+
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void GetDisabledPluginUpdates_NoUpdateWhenNoAvailablePlugins()
+        {
+            var disabled = new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } };
+            var installed = new Dictionary<string, Version>();
+            var available = Array.Empty<PluginService.AvailablePlugin>();
+
+            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, installed, available);
+
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void GetDisabledPluginUpdates_SkipsNullVersion()
+        {
+            var disabled = new Dictionary<string, Version> { { "TestPlugin", null } };
+            var installed = new Dictionary<string, Version>();
+            var available = new[] { MakeAvailablePlugin("TestPlugin", "1.1.0") };
+
+            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, installed, available);
+
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void GetDisabledPluginUpdates_PrefersVersionWithDependenciesMet()
+        {
+            var disabled = new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } };
+            var installed = new Dictionary<string, Version> { { "BTCPayServer", new Version(2, 0, 0) } };
+            var available = new[]
+            {
+                MakeAvailablePlugin("TestPlugin", "1.2.0", ("BTCPayServer", ">= 99.0.0")), // deps not met
+                MakeAvailablePlugin("TestPlugin", "1.1.0", ("BTCPayServer", ">= 2.0.0"))   // deps met
+            };
+
+            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, installed, available);
+
+            Assert.Single(result);
+            Assert.Equal(new Version(1, 1, 0), result["TestPlugin"].Version);
+        }
+
+        [Fact]
+        public void GetDisabledPluginUpdates_FallsBackToLatestWhenNoDependenciesMet()
+        {
+            var disabled = new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } };
+            var installed = new Dictionary<string, Version> { { "BTCPayServer", new Version(1, 0, 0) } };
+            var available = new[]
+            {
+                MakeAvailablePlugin("TestPlugin", "1.2.0", ("BTCPayServer", ">= 99.0.0")),
+                MakeAvailablePlugin("TestPlugin", "1.1.0", ("BTCPayServer", ">= 99.0.0"))
+            };
+
+            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, installed, available);
+
+            Assert.Single(result);
+            Assert.Equal(new Version(1, 2, 0), result["TestPlugin"].Version);
+        }
+
+        [Fact]
+        public void GetDisabledPluginUpdates_CaseInsensitiveIdentifierMatching()
+        {
+            var disabled = new Dictionary<string, Version> { { "MyPlugin", new Version(1, 0, 0, 0) } };
+            var installed = new Dictionary<string, Version> { { "BTCPayServer", new Version(2, 0, 0) } };
+            var available = new[] { MakeAvailablePlugin("myplugin", "1.1.0") };
+
+            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, installed, available);
+
+            Assert.Single(result);
+            Assert.Equal(new Version(1, 1, 0), result["MyPlugin"].Version);
+        }
+
+        private static PluginService.AvailablePlugin MakeAvailablePlugin(
+            string identifier, string version, params (string id, string condition)[] dependencies)
+        {
+            return new PluginService.AvailablePlugin
+            {
+                Identifier = identifier,
+                Name = identifier,
+                Version = Version.Parse(version),
+                Dependencies = dependencies.Select(d => new IBTCPayServerPlugin.PluginDependency
+                {
+                    Identifier = d.id,
+                    Condition = d.condition
+                }).ToArray()
+            };
         }
     }
 }

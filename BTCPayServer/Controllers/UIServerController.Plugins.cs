@@ -22,9 +22,15 @@ namespace BTCPayServer.Controllers
             string search = null)
         {
             IEnumerable<PluginService.AvailablePlugin> availablePlugins;
+            IEnumerable<PluginService.AvailablePlugin> allPlugins;
             try
             {
-                availablePlugins = await pluginService.GetRemotePlugins(search);
+                allPlugins = await pluginService.GetRemotePlugins(null);
+                availablePlugins = string.IsNullOrEmpty(search)
+                    ? allPlugins
+                    : allPlugins.Where(p =>
+                        p.Identifier.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                        p.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
             }
             catch (Exception ex)
             {
@@ -34,19 +40,24 @@ namespace BTCPayServer.Controllers
                     Message = StringLocalizer["Remote plugins lookup failed. Try again later. Error: {0}", ex.Message].Value
                 });
                 availablePlugins = Array.Empty<PluginService.AvailablePlugin>();
+                allPlugins = [];
             }
             var availablePluginsByIdentifier = new Dictionary<string, AvailablePlugin>();
-            foreach (var p in availablePlugins)
+            foreach (var p in allPlugins)
                 availablePluginsByIdentifier.TryAdd(p.Identifier, p);
+            var disabled = pluginService.GetDisabledPlugins();
+            var installed = pluginService.Installed;
+            var disabledPluginUpdates = ListPluginsViewModel.GetDisabledPluginUpdates(disabled, installed, allPlugins);
             var res = new ListPluginsViewModel()
             {
                 Plugins = pluginService.LoadedPlugins,
-                Installed = pluginService.Installed,
+                Installed = installed,
                 Available = availablePlugins,
                 Commands = pluginService.GetPendingCommands(),
-                Disabled = pluginService.GetDisabledPlugins(),
+                Disabled = disabled,
                 CanShowRestart = true,
-                DownloadedPluginsByIdentifier = availablePluginsByIdentifier
+                DownloadedPluginsByIdentifier = availablePluginsByIdentifier,
+                DisabledPluginUpdates = disabledPluginUpdates
             };
             return View(res);
         }
@@ -60,6 +71,27 @@ namespace BTCPayServer.Controllers
             public Dictionary<string, Version> Disabled { get; set; }
             public Dictionary<string, AvailablePlugin> DownloadedPluginsByIdentifier { get; set; } = new Dictionary<string, AvailablePlugin>();
             public Dictionary<string, Version> Installed { get; set; }
+            public Dictionary<string, PluginService.AvailablePlugin> DisabledPluginUpdates { get; set; }
+
+            public static Dictionary<string, PluginService.AvailablePlugin> GetDisabledPluginUpdates(
+                Dictionary<string, Version> disabled,
+                Dictionary<string, Version> installed,
+                IEnumerable<PluginService.AvailablePlugin> allPlugins)
+            {
+                var result = new Dictionary<string, PluginService.AvailablePlugin>(StringComparer.InvariantCultureIgnoreCase);
+                foreach (var (disabledPlugin, disabledVersion) in disabled)
+                {
+                    if (disabledVersion == null) continue;
+                    var matched = allPlugins
+                        .Where(a => a.Identifier.Equals(disabledPlugin, StringComparison.InvariantCultureIgnoreCase) && a.Version > disabledVersion)
+                        .OrderByDescending(a => a.Version).ToArray();
+                    var recommendedUpdate = matched.FirstOrDefault(a => PluginManager.DependenciesMet(a.Dependencies, installed))
+                        ?? matched.FirstOrDefault();
+                    if (recommendedUpdate != null)
+                        result[disabledPlugin] = recommendedUpdate;
+                }
+                return result;
+            }
         }
 
         [HttpPost("server/plugins/uninstall-all")]

@@ -47,9 +47,16 @@ function updateLanguageSelect() {
     }
 }
 
+const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
+
+function updateLanguageDir(lang) {
+    document.documentElement.dir = RTL_LANGUAGES.includes(lang) ? 'rtl' : 'ltr';
+}
+
 function updateLanguage(lang) {
     if (isLanguageAvailable(lang)) {
         i18next.changeLanguage(lang);
+        updateLanguageDir(lang);
         urlParams.set('lang', lang);
         window.history.replaceState({}, '', `${location.pathname}?${urlParams}`);
         updateLanguageSelect();
@@ -82,6 +89,7 @@ const PaymentDetails = {
 }
 
 function initApp() {
+    updateLanguageDir(i18next.language);
     return new Vue({
         i18n,
         el: '#Checkout',

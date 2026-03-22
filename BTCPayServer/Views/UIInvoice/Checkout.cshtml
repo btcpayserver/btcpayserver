@@ -8,6 +8,8 @@
 	ViewData["Title"] = Model.HtmlTitle;
     ViewData["StoreBranding"] = Model.StoreBranding;
 	Csp.UnsafeEval();
+    var rtlLanguages = new[] { "ar", "he", "fa", "ur" };
+    var htmlDir = rtlLanguages.Contains(Model.DefaultLang) ? "rtl" : "ltr";
 }
 @functions {
     private string ToJsValue(object value)
@@ -16,7 +18,7 @@
     }
 }
 <!DOCTYPE html>
-<html lang="@Model.DefaultLang" class="@(Model.IsModal ? "checkout-modal" : "")"@(Env.IsDeveloping ? " data-devenv" : "")>
+<html lang="@Model.DefaultLang" dir="@htmlDir" class="@(Model.IsModal ? "checkout-modal" : "")"@(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <partial name="LayoutHead"/>
     <meta name="robots" content="noindex,nofollow">

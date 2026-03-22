@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -20,6 +20,11 @@ public class SubscriberModel
 
     [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
     public DateTimeOffset? GracePeriodEnd { get; set; }
+
+    public OfferingPlanModel? ScheduledPlan { get; set; }
+
+    [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
+    public DateTimeOffset? ScheduledPlanActivatesAt { get; set; }
 
     public bool IsActive { get; set; }
     public bool IsSuspended { get; set; }

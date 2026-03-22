@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -178,6 +178,7 @@ public static partial class ApplicationDbContextExtensions
     => sessions
         .Include(s => s.Subscriber).ThenInclude(s => s.Customer).ThenInclude(s => s.CustomerIdentities)
         .Include(s => s.Subscriber).ThenInclude(s => s.Credits)
+        .Include(s => s.Subscriber).ThenInclude(s => s.NewPlan)
         .Include(s => s.Subscriber).ThenInclude(s => s.Plan).ThenInclude(s => s.PlanChanges).ThenInclude(s => s.PlanChange)
         .Include(s => s.Subscriber).ThenInclude(s => s.Plan).ThenInclude(s => s.Offering).ThenInclude(s => s.App).ThenInclude(s => s.StoreData);
 

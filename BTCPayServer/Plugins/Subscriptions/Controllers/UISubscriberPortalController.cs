@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Linq;
 using System.Text.Encodings.Web;
@@ -212,6 +212,11 @@ public class UISubscriberPortalController(
             }
 
             var checkoutId = await SubsService.CreatePlanMigrationCheckout(session.Id, changedPlanId, onPay, Request.GetRequestBaseUrl());
+            if (checkoutId == SubscriptionHostedService.ScheduledResult)
+            {
+                TempData.SetStatusSuccess(StringLocalizer[ "Your plan will change at the end of your current billing period."]);
+                return RedirectToSubscriberPortal(portalSessionId);
+            }
             return await RedirectToPlanCheckoutPayment(checkoutId, cancellationToken);
         }
         else if (command == "update-auto-renewal")
@@ -219,7 +224,13 @@ public class UISubscriberPortalController(
             session.Subscriber.AutoRenew = !session.Subscriber.AutoRenew;
             await ctx.SaveChangesAsync(cancellationToken);
         }
-
+        else if (command == "cancel-scheduled-change")
+        {
+            session.Subscriber.NewPlanId = null;
+            session.Subscriber.NewPlan = null;
+            await ctx.SaveChangesAsync(cancellationToken);
+            TempData.SetStatusSuccess(StringLocalizer["Scheduled plan change cancelled."]);
+        }
         return RedirectToSubscriberPortal(portalSessionId);
     }
 

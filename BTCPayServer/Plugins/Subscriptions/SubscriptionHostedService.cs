@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,6 +37,7 @@ public class SubscriptionHostedService(
     Logs logger) : EventHostedServiceBase(eventAggregator, logger), IPeriodicTask
 {
     record Poll;
+    public const string ScheduledResult = "scheduled";
 
     public record SubscribeRequest(string CheckoutId);
 
@@ -270,14 +271,21 @@ public class SubscriptionHostedService(
                     }
                 }
 
+                if (newPhase is PhaseTypes.Expired or PhaseTypes.Grace && m is { NewPlan: not null, NewPlanId: not null } && m.NewPlanId != m.PlanId)
+                {
+                    var prevPlan = m.Plan;
+                    (m.PlanId, m.Plan) = (m.NewPlanId, m.NewPlan);
+                    (m.NewPlanId, m.NewPlan) = (null, null);
+                    subCtx.AddEvent(new SubscriptionEvent.PlanStarted(m, prevPlan)
+                    {
+                        PreviousPlan = prevPlan,
+                        AutoRenew = false
+                    });
+                }
+
                 if (newPhase is PhaseTypes.Expired)
                 {
                     m.PaidAmount = null;
-                    if (m is { NewPlan: not null, NewPlanId: not null } && m.NewPlanId != m.PlanId)
-                    {
-                        (m.PlanId, m.Plan) = (m.NewPlanId, m.NewPlan);
-                        (m.NewPlanId, m.NewPlan) = (null, null);
-                    }
                 }
 
                 if (prevPhase != newPhase)
@@ -651,10 +659,18 @@ public class SubscriptionHostedService(
             if (plan is null)
                 return null;
 
-            var isAllowedChange = portal.Subscriber.Plan.PlanChanges
-                .Any(pc => pc.PlanId == portal.Subscriber.PlanId && pc.PlanChangeId == planId);
-            if (!isAllowedChange)
+            var planChangeRecord  = portal.Subscriber.Plan.PlanChanges
+                .FirstOrDefault(pc => pc.PlanId == portal.Subscriber.PlanId && pc.PlanChangeId == planId);
+            if (planChangeRecord == null)
                 return null;
+
+            if (planChangeRecord.Timing == PlanChangeData.ChangeTiming.AtPeriodEnd)
+            {
+                portal.Subscriber.NewPlanId = planId;
+                portal.Subscriber.NewPlan = plan;
+                await ctx.SaveChangesAsync();
+                return ScheduledResult; 
+            }
         }
 
         var checkout = new PlanCheckoutData(portal.Subscriber, plan)

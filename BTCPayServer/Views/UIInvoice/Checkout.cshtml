@@ -9,7 +9,8 @@
     ViewData["StoreBranding"] = Model.StoreBranding;
 	Csp.UnsafeEval();
     var rtlLanguages = new[] { "ar", "he", "fa", "ur" };
-    var htmlDir = rtlLanguages.Contains(Model.DefaultLang) ? "rtl" : "ltr";
+    var baseLang = (Model.DefaultLang ?? string.Empty).Split('-', '_')[0];
+    var htmlDir = rtlLanguages.Contains(baseLang, StringComparer.OrdinalIgnoreCase) ? "rtl" : "ltr";
 }
 @functions {
     private string ToJsValue(object value)

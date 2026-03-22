@@ -50,7 +50,9 @@ function updateLanguageSelect() {
 const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
 
 function updateLanguageDir(lang) {
-    document.documentElement.dir = RTL_LANGUAGES.includes(lang) ? 'rtl' : 'ltr';
+    const baseLang = (lang || '').toLowerCase().split(/[-_]/)[0];
+    document.documentElement.dir = RTL_LANGUAGES.includes(baseLang) ? 'rtl' : 'ltr';
+    if (lang) document.documentElement.lang = lang;
 }
 
 function updateLanguage(lang) {

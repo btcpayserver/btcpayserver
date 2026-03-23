@@ -7,6 +7,7 @@
     var formId = Context.GetRouteValue("id");
     var isNew = formId is null;
     ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Forms), isNew ? StringLocalizer["Create Form"] : StringLocalizer["Edit Form"]).SetCategory(WellKnownCategories.Store));
+    Layout = "_Layout";
 }
 
 @section PageHeadContent {

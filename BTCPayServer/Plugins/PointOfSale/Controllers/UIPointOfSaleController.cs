@@ -485,7 +485,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 vm.RouteParameters.Add("viewType", viewType.Value.ToString());
             }
 
-            return View("Views/UIForms/View", vm);
+            return View("/Plugins/Forms/Views/View.cshtml", vm);
         }
 
         [HttpPost("/apps/{appId}/pos/form/submit/{viewType?}")]
@@ -535,7 +535,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             viewModel.Form = form;
             viewModel.FormParameters = formParameters;
             viewModel.StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
-            return View("Views/UIForms/View", viewModel);
+            return View("/Plugins/Forms/Views/View.cshtml", viewModel);
         }
 
         [Authorize(Policy = Policies.CanViewInvoices, AuthenticationSchemes = AuthenticationSchemes.Cookie)]

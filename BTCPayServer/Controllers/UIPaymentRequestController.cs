@@ -395,7 +395,7 @@ namespace BTCPayServer.Controllers
             var storeBlob = result.StoreData.GetStoreBlob();
             viewModel.StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
 
-            return View("Views/UIForms/View", viewModel);
+            return View("/Plugins/Forms/Views/View.cshtml", viewModel);
         }
 
         [HttpGet("{payReqId}/pay")]

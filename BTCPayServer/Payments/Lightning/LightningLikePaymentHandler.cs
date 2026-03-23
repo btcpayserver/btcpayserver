@@ -77,11 +77,6 @@ namespace BTCPayServer.Payments.Lightning
 
         public async Task ConfigurePrompt(PaymentMethodContext context)
         {
-            if (context.InvoiceEntity.Type == InvoiceType.TopUp)
-            {
-                throw new PaymentMethodUnavailableException("Lightning Network payment method is not available for top-up invoices");
-            }
-
             var paymentPrompt = context.Prompt;
 
             var preferOnion = Uri.TryCreate(context.InvoiceEntity.ServerUrl, UriKind.Absolute, out var u) && u.IsOnion();
@@ -96,6 +91,7 @@ namespace BTCPayServer.Payments.Lightning
             decimal due = paymentPrompt.Calculate().Due;
             var client = config.CreateLightningClient(_Network, Options.Value, _lightningClientFactory);
             var expiry = invoice.ExpirationTime - DateTimeOffset.UtcNow;
+            var isTopUpInvoice = invoice.Type == InvoiceType.TopUp;
             if (expiry < TimeSpan.Zero)
                 expiry = TimeSpan.FromSeconds(1);
 
@@ -109,14 +105,22 @@ namespace BTCPayServer.Payments.Lightning
             {
                 try
                 {
-                    var request = new CreateInvoiceParams(new LightMoney(due, LightMoneyUnit.BTC), description, expiry);
+                    // For top-up invoices, pass LightMoney.Zero to request an amountless bolt11.
+                    // The backend decides whether it supports this
+                    var invoiceAmount = isTopUpInvoice ? LightMoney.Zero : new LightMoney(due, LightMoneyUnit.BTC);
+                    var request = new CreateInvoiceParams(invoiceAmount, description, expiry);
                     request.PrivateRouteHints = storeBlob.LightningPrivateRouteHints;
                     lightningInvoice = await client.CreateInvoice(request, cts.Token);
-                    var diff = request.Amount - lightningInvoice.Amount;
-                    if (diff != LightMoney.Zero)
+
+                    // Since No Invoice Amount so Skip the Tweak Fee check
+                    if (!isTopUpInvoice)
                     {
-                        // Some providers doesn't round up to msat. So we tweak the fees so the due match the BOLT11's amount.
-                        paymentPrompt.AddTweakFee(-diff.ToUnit(LightMoneyUnit.BTC));
+                        var diff = request.Amount - lightningInvoice.Amount;
+                        if (diff != LightMoney.Zero)
+                        {
+                            // Some providers doesn't round up to msat. So we tweak the fees so the due match the BOLT11's amount.
+                            paymentPrompt.AddTweakFee(-diff.ToUnit(LightMoneyUnit.BTC));
+                        }
                     }
                 }
                 catch (OperationCanceledException) when (cts.IsCancellationRequested)

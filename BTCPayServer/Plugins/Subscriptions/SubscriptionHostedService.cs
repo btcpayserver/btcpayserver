@@ -272,11 +272,15 @@ public class SubscriptionHostedService(
 
                 if (newPhase is PhaseTypes.Expired or PhaseTypes.Grace && m is { NewPlan: not null, NewPlanId: not null } && m.NewPlanId != m.PlanId)
                 {
+                    var prevPlanId = m.PlanId;
                     var prevPlan = m.Plan;
                     (m.PlanId, m.Plan) = (m.NewPlanId, m.NewPlan);
                     (m.NewPlanId, m.NewPlan) = (null, null);
                     if (!m.Plan.FeaturesLoaded)
                         await ctx.PlanFeatures.FetchPlanFeaturesAsync(m.Plan);
+
+                    await UpdatePlanStats(ctx, prevPlanId);
+                    await UpdatePlanStats(ctx, m.PlanId);
                 }
 
                 if (newPhase is PhaseTypes.Expired)
@@ -662,10 +666,14 @@ public class SubscriptionHostedService(
 
             if (planChangeRecord.Timing == PlanChangeData.ChangeTiming.AtPeriodEnd)
             {
-                portal.Subscriber.NewPlanId = planId;
-                portal.Subscriber.NewPlan = plan;
-                await ctx.SaveChangesAsync();
-                return new PlanMigrationResult.Scheduled();
+                if (portal.Subscriber.PeriodEnd is not null && portal.Subscriber.PeriodEnd > DateTimeOffset.UtcNow
+                    && portal.Subscriber.Phase == SubscriberData.PhaseTypes.Normal)
+                {
+                    portal.Subscriber.NewPlanId = planId;
+                    portal.Subscriber.NewPlan = plan;
+                    await ctx.SaveChangesAsync();
+                    return new PlanMigrationResult.Scheduled();
+                }
             }
         }
 

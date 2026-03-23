@@ -1262,8 +1262,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
                     await s.Page.Locator($"#PlanChanges_{i}__SelectedType").SelectOptionAsync(new[] { PlanChanges[i].ToString() });
                 }
             }
-
-            if (PlanChangesWithTiming is not null)
+            else if (PlanChangesWithTiming is not null)
             {
                 for (var i = 0; i < PlanChangesWithTiming.Length; i++)
                 {

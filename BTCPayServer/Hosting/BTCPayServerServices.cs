@@ -490,7 +490,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<InvoiceActivator>();
 
             services.AddPayoutProcesors();
-            services.AddForms();
 
             services.AddSingleton<APIKeyRepository>();
             services.AddSingleton<IPermissionHandler, BuiltInPermissionHandler>();

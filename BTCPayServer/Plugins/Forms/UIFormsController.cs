@@ -12,6 +12,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Forms.Models;
 using BTCPayServer.Models;
+using BTCPayServer.Plugins.Forms;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -20,33 +21,23 @@ using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Forms;
 
+[Area(FormsPlugin.Area)]
 [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-public class UIFormsController : Controller
+public class UIFormsController(
+    FormDataService formDataService,
+    UIInvoiceController invoiceController,
+    UriResolver uriResolver,
+    IStringLocalizer stringLocalizer,
+    StoreRepository storeRepository,
+    IAuthorizationService authorizationService)
+    : Controller
 {
-    private readonly FormDataService _formDataService;
-    private readonly UriResolver _uriResolver;
-    private readonly IAuthorizationService _authorizationService;
-    private readonly StoreRepository _storeRepository;
-    private FormComponentProviders FormProviders { get; }
-    private IStringLocalizer StringLocalizer { get; }
-
-    public UIFormsController(FormComponentProviders formProviders, FormDataService formDataService,
-        UriResolver uriResolver,
-        IStringLocalizer stringLocalizer,
-        StoreRepository storeRepository, IAuthorizationService authorizationService)
-    {
-        FormProviders = formProviders;
-        _formDataService = formDataService;
-        _uriResolver = uriResolver;
-        _authorizationService = authorizationService;
-        _storeRepository = storeRepository;
-        StringLocalizer = stringLocalizer;
-    }
+    private IStringLocalizer StringLocalizer { get; } = stringLocalizer;
 
     [HttpGet("~/stores/{storeId}/forms")]
     public async Task<IActionResult> FormsList(string storeId)
     {
-        var forms = await _formDataService.GetForms(storeId);
+        var forms = await formDataService.GetForms(storeId);
 
         return View(forms);
     }
@@ -63,7 +54,7 @@ public class UIFormsController : Controller
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Modify(string storeId, string id)
     {
-        var form = await _formDataService.GetForm(storeId, id);
+        var form = await formDataService.GetForm(storeId, id);
         if (form is null)
             return NotFound();
 
@@ -77,13 +68,13 @@ public class UIFormsController : Controller
     {
         if (id is not null)
         {
-            if (await _formDataService.GetForm(storeId, id) is null)
+            if (await formDataService.GetForm(storeId, id) is null)
             {
                 return NotFound();
             }
         }
 
-        if (!_formDataService.IsFormSchemaValid(modifyForm.FormConfig, out var form, out var error))
+        if (!formDataService.IsFormSchemaValid(modifyForm.FormConfig, out var form, out var error))
         {
             ModelState.AddModelError(nameof(modifyForm.FormConfig), StringLocalizer["Form config was invalid: {0}", error!]);
         }
@@ -108,7 +99,7 @@ public class UIFormsController : Controller
                 Public = modifyForm.Public
             };
             var isNew = id is null;
-            await _formDataService.AddOrUpdateForm(formData);
+            await formDataService.AddOrUpdateForm(formData);
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
@@ -133,7 +124,7 @@ public class UIFormsController : Controller
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Remove(string storeId, string id)
     {
-        await _formDataService.RemoveForm(id, storeId);
+        await formDataService.RemoveForm(id, storeId);
         TempData.SetStatusMessageModel(new StatusMessageModel
         {
             Severity = StatusMessageModel.StatusSeverity.Success,
@@ -147,14 +138,14 @@ public class UIFormsController : Controller
     [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
     public async Task<IActionResult> ViewPublicForm(string? formId)
     {
-        FormData? formData = await _formDataService.GetForm(formId);
+        FormData? formData = await formDataService.GetForm(formId);
         if (formData?.Config is null)
         {
             return NotFound();
         }
 
         if (!formData.Public &&
-            !(await _authorizationService.AuthorizeAsync(User, formData.StoreId, Policies.CanViewStoreSettings)).Succeeded)
+            !(await authorizationService.AuthorizeAsync(User, formData.StoreId, Policies.CanViewStoreSettings)).Succeeded)
         {
             return NotFound();
         }
@@ -166,7 +157,7 @@ public class UIFormsController : Controller
     {
         form ??= Form.Parse(formData.Config);
         form.ApplyValuesFromForm(Request.Query);
-        var store = formData.Store ?? await _storeRepository.FindStore(formData.StoreId);
+        var store = formData.Store ?? await storeRepository.FindStore(formData.StoreId);
         var storeBlob = store?.GetStoreBlob();
 
         return View("View", new FormViewModel
@@ -174,25 +165,23 @@ public class UIFormsController : Controller
             FormName = formData.Name,
             Form = form,
             StoreName = store?.StoreName,
-            StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob)
+            StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, storeBlob)
         });
     }
 
     [AllowAnonymous]
     [HttpPost("~/forms/{formId}")]
     [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
-    public async Task<IActionResult> SubmitForm(string formId,
-        [FromServices] StoreRepository storeRepository,
-        [FromServices] UIInvoiceController invoiceController)
+    public async Task<IActionResult> SubmitForm(string formId)
     {
-        var formData = await _formDataService.GetForm(formId);
+        var formData = await formDataService.GetForm(formId);
         if (formData?.Config is null)
         {
             return NotFound();
         }
 
         if (!formData.Public &&
-            !(await _authorizationService.AuthorizeAsync(User, formData.StoreId, Policies.CanViewStoreSettings)).Succeeded)
+            !(await authorizationService.AuthorizeAsync(User, formData.StoreId, Policies.CanViewStoreSettings)).Succeeded)
         {
             return NotFound();
         }
@@ -203,7 +192,7 @@ public class UIFormsController : Controller
         var form = Form.Parse(formData.Config);
         form.ApplyValuesFromForm(Request.Form);
 
-        if (!_formDataService.Validate(form, ModelState))
+        if (!formDataService.Validate(form, ModelState))
             return await GetFormView(formData, form);
 
         // Create invoice after public form has been filled
@@ -213,7 +202,7 @@ public class UIFormsController : Controller
 
         try
         {
-            var request = _formDataService.GenerateInvoiceParametersFromForm(form);
+            var request = formDataService.GenerateInvoiceParametersFromForm(form);
             var inv = await invoiceController.CreateInvoiceCoreRaw(request, store, Request.GetAbsoluteRoot());
             if (inv.Price == 0 && inv.Type == InvoiceType.Standard && inv.ReceiptOptions?.Enabled is not false)
             {

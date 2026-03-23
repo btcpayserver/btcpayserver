@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
+using static BTCPayServer.Plugins.Subscriptions.SubscriptionHostedService;
 
 namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 
@@ -210,14 +211,15 @@ public class UISubscriberPortalController(
                 else
                     return RedirectToSubscriberPortal(portalSessionId, "plans");
             }
-
-            var checkoutId = await SubsService.CreatePlanMigrationCheckout(session.Id, changedPlanId, onPay, Request.GetRequestBaseUrl());
-            if (checkoutId == SubscriptionHostedService.ScheduledResult)
+            var result = await SubsService.CreatePlanMigrationCheckout(session.Id, changedPlanId, onPay, Request.GetRequestBaseUrl());
+            if (result is PlanMigrationResult.Scheduled)
             {
-                TempData.SetStatusSuccess(StringLocalizer[ "Your plan will change at the end of your current billing period."]);
+                TempData.SetStatusSuccess(StringLocalizer["Your plan will change at the end of your current billing period."]);
                 return RedirectToSubscriberPortal(portalSessionId);
             }
-            return await RedirectToPlanCheckoutPayment(checkoutId, cancellationToken);
+            return result is PlanMigrationResult.Checkout c
+                ? await RedirectToPlanCheckoutPayment(c.CheckoutId, cancellationToken)
+                : RedirectToSubscriberPortal(portalSessionId);
         }
         else if (command == "update-auto-renewal")
         {

@@ -1060,6 +1060,18 @@
                         "nullable": true,
                         "description": "Plan scheduled for next billing cycle."
                     },
+                    "scheduledPlan": {
+                        "$ref": "#/components/schemas/OfferingPlanModel",
+                        "nullable": true,
+                        "description": "Plan scheduled to activate at the end of the current billing period."
+                    },
+                    "scheduledPlanActivatesAt": {
+                        "type": "integer",
+                        "format": "unix-time",
+                        "nullable": true,
+                        "description": "Timestamp when the scheduled plan change will activate.",
+                        "example": 1713200000
+                    },
                     "phase": {
                         "$ref": "#/components/schemas/SubscriptionPhase"
                     }

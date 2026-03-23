@@ -37,7 +37,6 @@ public class SubscriptionHostedService(
     Logs logger) : EventHostedServiceBase(eventAggregator, logger), IPeriodicTask
 {
     record Poll;
-    public const string ScheduledResult = "scheduled";
 
     public record SubscribeRequest(string CheckoutId);
 
@@ -276,11 +275,8 @@ public class SubscriptionHostedService(
                     var prevPlan = m.Plan;
                     (m.PlanId, m.Plan) = (m.NewPlanId, m.NewPlan);
                     (m.NewPlanId, m.NewPlan) = (null, null);
-                    subCtx.AddEvent(new SubscriptionEvent.PlanStarted(m, prevPlan)
-                    {
-                        PreviousPlan = prevPlan,
-                        AutoRenew = false
-                    });
+                    if (!m.Plan.FeaturesLoaded)
+                        await ctx.PlanFeatures.FetchPlanFeaturesAsync(m.Plan);
                 }
 
                 if (newPhase is PhaseTypes.Expired)
@@ -644,32 +640,32 @@ public class SubscriptionHostedService(
         return checkout.InvoiceId;
     }
 
-    public async Task<string?> CreatePlanMigrationCheckout(string portalSessionId, string? planId, PlanCheckoutData.OnPayBehavior migrationType,
+    public async Task<PlanMigrationResult> CreatePlanMigrationCheckout(string portalSessionId, string? planId, PlanCheckoutData.OnPayBehavior migrationType,
         RequestBaseUrl requestBaseUrl)
     {
         await using var ctx = applicationDbContextFactory.CreateContext();
         var portal = await ctx.PortalSessions.GetActiveById(portalSessionId);
         if (portal is null)
-            return null;
+            return new PlanMigrationResult.NotFound();
 
         PlanData? plan = null;
         if (planId is not null)
         {
             plan = await ctx.Plans.GetPlanFromId(planId, portal.Subscriber.OfferingId);
             if (plan is null)
-                return null;
+                return new PlanMigrationResult.NotFound();
 
             var planChangeRecord  = portal.Subscriber.Plan.PlanChanges
                 .FirstOrDefault(pc => pc.PlanId == portal.Subscriber.PlanId && pc.PlanChangeId == planId);
             if (planChangeRecord == null)
-                return null;
+                return new PlanMigrationResult.NotFound();
 
             if (planChangeRecord.Timing == PlanChangeData.ChangeTiming.AtPeriodEnd)
             {
                 portal.Subscriber.NewPlanId = planId;
                 portal.Subscriber.NewPlan = plan;
                 await ctx.SaveChangesAsync();
-                return ScheduledResult; 
+                return new PlanMigrationResult.Scheduled();
             }
         }
 
@@ -681,6 +677,13 @@ public class SubscriptionHostedService(
         };
         ctx.PlanCheckouts.Add(checkout);
         await ctx.SaveChangesAsync();
-        return checkout.Id;
+        return new PlanMigrationResult.Checkout(checkout.Id);
+    }
+
+    public abstract record PlanMigrationResult
+    {
+        public record Checkout(string CheckoutId) : PlanMigrationResult;
+        public record Scheduled : PlanMigrationResult;
+        public record NotFound : PlanMigrationResult;
     }
 }

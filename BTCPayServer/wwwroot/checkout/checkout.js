@@ -52,12 +52,11 @@ const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
 function updateLanguageDir(lang) {
     const baseLang = (lang || '').toLowerCase().split(/[-_]/)[0];
     document.documentElement.dir = RTL_LANGUAGES.includes(baseLang) ? 'rtl' : 'ltr';
-    if (lang) document.documentElement.lang = lang;
 }
 
-function updateLanguage(lang) {
+async function updateLanguage(lang) {
     if (isLanguageAvailable(lang)) {
-        i18next.changeLanguage(lang);
+        await i18next.changeLanguage(lang);
         updateLanguageDir(lang);
         urlParams.set('lang', lang);
         window.history.replaceState({}, '', `${location.pathname}?${urlParams}`);
@@ -84,6 +83,11 @@ const PaymentDetails = {
         orderAmount: Number,
         paid: Number,
         due: Number
+    },
+    mounted() {
+        if (this.$i18n) {
+            this.$watch(() => this.$i18n.i18nLoadedAt, () => this.$forceUpdate());
+        }
     },
     methods: {
         asNumber

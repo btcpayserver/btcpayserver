@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Linq;
 using System.Text.Encodings.Web;
@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
+using static BTCPayServer.Plugins.Subscriptions.SubscriptionHostedService;
 
 namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 
@@ -210,16 +211,28 @@ public class UISubscriberPortalController(
                 else
                     return RedirectToSubscriberPortal(portalSessionId, "plans");
             }
-
-            var checkoutId = await SubsService.CreatePlanMigrationCheckout(session.Id, changedPlanId, onPay, Request.GetRequestBaseUrl());
-            return await RedirectToPlanCheckoutPayment(checkoutId, cancellationToken);
+            var result = await SubsService.CreatePlanMigrationCheckout(session.Id, changedPlanId, onPay, Request.GetRequestBaseUrl());
+            if (result is PlanMigrationResult.Scheduled)
+            {
+                TempData.SetStatusSuccess(StringLocalizer["Your plan will change at the end of your current billing period."]);
+                return RedirectToSubscriberPortal(portalSessionId);
+            }
+            return result is PlanMigrationResult.Checkout c
+                ? await RedirectToPlanCheckoutPayment(c.CheckoutId, cancellationToken)
+                : RedirectToSubscriberPortal(portalSessionId);
         }
         else if (command == "update-auto-renewal")
         {
             session.Subscriber.AutoRenew = !session.Subscriber.AutoRenew;
             await ctx.SaveChangesAsync(cancellationToken);
         }
-
+        else if (command == "cancel-scheduled-change")
+        {
+            session.Subscriber.NewPlanId = null;
+            session.Subscriber.NewPlan = null;
+            await ctx.SaveChangesAsync(cancellationToken);
+            TempData.SetStatusSuccess(StringLocalizer["Scheduled plan change cancelled."]);
+        }
         return RedirectToSubscriberPortal(portalSessionId);
     }
 

@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -505,7 +505,10 @@ public partial class UIOfferingController(
                     PlanName = p.Name,
                     SelectedType = plan?.PlanChanges
                         .FirstOrDefault(pc => pc.PlanChangeId == p.Id)?
-                        .Type.ToString() ?? "None"
+                        .Type.ToString() ?? "None",
+                    Timing = plan?.PlanChanges    
+                        .FirstOrDefault(pc => pc.PlanChangeId == p.Id)? 
+                        .Timing.ToString() ?? "Immediate"
                 })
                 .OrderBy(p => p.PlanName)
                 .ToList(),
@@ -583,6 +586,11 @@ public partial class UIOfferingController(
                 "Upgrade" => PlanChangeData.ChangeType.Upgrade,
                 "Downgrade" => PlanChangeData.ChangeType.Downgrade,
                 _ => PlanChangeData.ChangeType.Downgrade
+            };
+            existing.Timing = vmPC.Timing switch  
+            {                                   
+                "AtPeriodEnd" => PlanChangeData.ChangeTiming.AtPeriodEnd, 
+                _ => PlanChangeData.ChangeTiming.Immediate        
             };
         }
 

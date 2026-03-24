@@ -75,7 +75,9 @@ public static class Mapper
             AutoRenew = sub.AutoRenew,
             Metadata = JObject.Parse(sub.Metadata),
             ProcessingInvoiceId = sub.ProcessingInvoiceId,
-            NextPlan = MapPlan(sub.NextPlan)
+            NextPlan = MapPlan(sub.NextPlan),
+            ScheduledPlan = sub.NewPlanId is not null ? MapPlan(sub.NewPlan!) : null, 
+            ScheduledPlanActivatesAt = sub.NewPlanId is not null ? sub.PeriodEnd : null
         };
     }
 

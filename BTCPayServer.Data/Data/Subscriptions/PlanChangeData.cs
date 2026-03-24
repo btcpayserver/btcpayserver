@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -23,10 +23,21 @@ public class PlanChangeData
     [Required]
     [Column("type")]
     public ChangeType Type { get; set; }
+
+    [Required]
+    [Column("timing")]
+    public ChangeTiming Timing { get; set; } = ChangeTiming.Immediate;
+
     public enum ChangeType
     {
         Upgrade,
         Downgrade
+    }
+
+    public enum ChangeTiming
+    {
+        Immediate,
+        AtPeriodEnd
     }
 
     public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
@@ -34,6 +45,7 @@ public class PlanChangeData
         var b = builder.Entity<PlanChangeData>();
         b.HasKey(x => new { x.PlanId, x.PlanChangeId });
         b.Property(x => x.Type).HasConversion<string>();
+        b.Property(x => x.Timing).HasConversion<string>().HasDefaultValue(ChangeTiming.Immediate);
         b.HasOne(o => o.Plan).WithMany(o => o.PlanChanges).OnDelete(DeleteBehavior.Cascade);
         b.HasOne(o => o.PlanChange).WithMany().OnDelete(DeleteBehavior.Cascade);
     }

@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Plugins.Subscriptions
+@using BTCPayServer.Plugins.Subscriptions
 @model AddEditPlanViewModel
 
 @{
@@ -108,8 +108,11 @@
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
                             <thead>
-                            <th>Plan</th>
-                            <th>Change type</th>
+								<tr>
+									<th>Plan</th>
+									<th>Change type</th>
+									<th>When</th>
+								</tr>
                             </thead>
                             <tbody>
                             @for (int i = 0; i < Model.PlanChanges.Count; i++)
@@ -125,6 +128,13 @@
                                         <option value="Upgrade">Upgrade</option>
                                         <option value="None">None</option>
                                     </select></td>
+
+									<td>
+										<select class="form-select w-auto" asp-for="PlanChanges[i].Timing">
+											<option value="Immediate">Immediately</option>
+											<option value="AtPeriodEnd">At period end</option>
+										</select>
+									</td>
                                 </tr>
                             }
                             </tbody>

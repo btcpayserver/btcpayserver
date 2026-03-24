@@ -8,7 +8,7 @@
 @using BTCPayServer.Views.Apps
 @using BTCPayServer.Configuration
 @using BTCPayServer.Plugins.Emails
-@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContext;
+@using BTCPayServer.Plugins.Translations
 @inject BTCPayServerOptions BtcPayServerOptions
 @inject BTCPayServerEnvironment Env
 @inject SignInManager<ApplicationUser> SignInManager
@@ -19,6 +19,29 @@
 
 @model BTCPayServer.Components.MainNav.MainNavViewModel
 
+@{
+    // The store's context in navigation might be different
+    // from the rest of the page.
+    // For example, if on the Server settings page, GetStoreData should be
+    // null, but the navigation menu should show the last selected store.
+    using var _ = this.Context.SwitchStoreData(Model.Store);
+
+    // Give times for extensions to switch to MainNavViewModel.Store
+    // or HttpContext.GetStoreDataOrNull
+    using var __ = this.Context.SwitchNavRendering();
+}
+
+
+<div id="mainMenuHead">
+    <button id="mainMenuToggle" class="mainMenuButton" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span>Menu</span>
+    </button>
+    <vc:store-selector />
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <component type="typeof(BTCPayServer.Blazor.NotificationsDropDown)" render-mode="ServerPrerendered" />
+    }
+</div>
 <nav id="mainNav" class="d-flex flex-column justify-content-between">
     <div class="accordion px-3 px-lg-4">
         @if (SignInManager.IsSignedIn(User))
@@ -48,9 +71,7 @@
                                 <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a layout-menu-item="@(nameof(StoreNavPages.CheckoutAppearance))" asp-controller="UIStores" asp-action="CheckoutAppearance" asp-route-storeId="@Model.Store.Id" text-translate="true">Checkout Appearance</a>
                                 </li>
-                                <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
-                                    <a layout-menu-item="@nameof(StoreNavPages.Tokens)" asp-controller="UIStores" asp-action="ListTokens" asp-route-storeId="@Model.Store.Id" text-translate="true">Access Tokens</a>
-                                </li>
+
                                 <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a layout-menu-item="@(nameof(StoreNavPages.Users))" asp-controller="UIStores" asp-action="StoreUsers" asp-route-storeId="@Model.Store.Id" text-translate="true">Users</a>
                                 </li>
@@ -66,9 +87,7 @@
                                 <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a layout-menu-item="@(nameof(StoreNavPages.Emails))" asp-area="@EmailsPlugin.Area" asp-controller="UIStoresEmail" asp-action="StoreEmailSettings" asp-route-storeId="@Model.Store.Id" text-translate="true">Emails</a>
                                 </li>
-                                <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
-                                    <a layout-menu-item="@(nameof(StoreNavPages.Forms))" asp-controller="UIForms" asp-action="FormsList" asp-route-storeId="@Model.Store.Id" text-translate="true">Forms</a>
-                                </li>
+                                <vc:ui-extension-point location="store-category-nav" model="@Model"/>
                             }
                             <vc:ui-extension-point location="store-nav" model="@Model"/>
                         </ul>
@@ -281,7 +300,7 @@
                 })()
             </script>
         }
-        else if (Env.IsSecure(HttpContext.HttpContext))
+        else if (Env.IsSecure(Context))
         {
             <ul class="navbar-nav">
                 @if (!PoliciesSettings.LockSubscription)
@@ -323,7 +342,7 @@
                     <a layout-menu-item="@nameof(ServerNavPages.Branding)" asp-controller="UIServer" asp-action="Branding" text-translate="true">Branding</a>
                 </li>
                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
-                    <a layout-menu-item="@nameof(ServerNavPages.Translations)" asp-controller="UIServer" asp-action="ListDictionaries" text-translate="true">Translations</a>
+                    <a layout-menu-item="@nameof(ServerNavPages.Translations)" asp-area="@TranslationsPlugin.Area" asp-controller="UITranslation" asp-action="ListDictionaries" text-translate="true">Translations</a>
                 </li>
                 @if (BtcPayServerOptions.DockerDeployment)
                 {

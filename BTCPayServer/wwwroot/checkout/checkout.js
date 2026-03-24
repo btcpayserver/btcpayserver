@@ -47,9 +47,19 @@ function updateLanguageSelect() {
     }
 }
 
-function updateLanguage(lang) {
+const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
+
+function updateLanguageDir(lang) {
+    const normalizedLang = lang || document.documentElement.lang || 'en';
+    const baseLang = normalizedLang.toLowerCase().split(/[-_]/)[0];
+    document.documentElement.lang = normalizedLang.replace(/_/g, '-');
+    document.documentElement.dir = RTL_LANGUAGES.includes(baseLang) ? 'rtl' : 'ltr';
+}
+
+async function updateLanguage(lang) {
     if (isLanguageAvailable(lang)) {
-        i18next.changeLanguage(lang);
+        await i18next.changeLanguage(lang);
+        updateLanguageDir(lang);
         urlParams.set('lang', lang);
         window.history.replaceState({}, '', `${location.pathname}?${urlParams}`);
         updateLanguageSelect();
@@ -76,12 +86,18 @@ const PaymentDetails = {
         paid: Number,
         due: Number
     },
+    mounted() {
+        if (this.$i18n) {
+            this.$watch(() => this.$i18n.i18nLoadedAt, () => this.$forceUpdate());
+        }
+    },
     methods: {
         asNumber
     }
 }
 
 function initApp() {
+    updateLanguageDir(i18next.language);
     return new Vue({
         i18n,
         el: '#Checkout',

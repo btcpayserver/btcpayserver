@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -18,7 +17,6 @@ namespace BTCPayServer.Plugins.Emails.Controllers;
 [Route("server/rules")]
 [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-[AutoValidateAntiforgeryToken]
 public class UIServerEmailRulesController(
     EmailSenderFactory emailSenderFactory,
     EmailTriggerViewModels triggers,

@@ -11,6 +11,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -20,11 +21,12 @@ namespace BTCPayServer.Security.Greenfield
         APIKeyRepository apiKeyRepository,
         IOptionsMonitor<IdentityOptions> identityOptions,
         IOptionsMonitor<GreenfieldAuthenticationOptions> options,
+        IOptions<MvcNewtonsoftJsonOptions> mvcOptions,
         ILoggerFactory logger,
         UrlEncoder encoder,
         UserService userService,
         UserManager<ApplicationUser> userManager)
-        : AuthenticationHandler<GreenfieldAuthenticationOptions>(options, logger, encoder)
+        : GreenfieldAuthenticationHandler(options, logger, encoder, mvcOptions)
     {
         protected override Task HandleChallengeAsync(AuthenticationProperties properties)
         {
@@ -35,7 +37,7 @@ namespace BTCPayServer.Security.Greenfield
             // Now, if we aren't logged nor authenticated via greenfield, the AuthenticationHandlers get challenged.
             // The last handler to be challenged is the CookieAuthenticationHandler, which instruct to handle the challenge as a redirection to
             // the login page.
-            // But this isn't what we want when we call the API programmatically, instead we want an error 401 with a json error message.
+            // But this isn't what we want when we call the API programmatically, instead we want an error 401 with a JSON error message.
             // This hack modify a request's header to trick the CookieAuthenticationHandler to not do a redirection.
             if (!Request.Headers.Accept.Any(s => s != null && s.StartsWith("text/html", StringComparison.OrdinalIgnoreCase)))
                 Request.Headers.XRequestedWith = new Microsoft.Extensions.Primitives.StringValues("XMLHttpRequest");
@@ -48,11 +50,11 @@ namespace BTCPayServer.Security.Greenfield
                 return AuthenticateResult.NoResult();
 
             var key = await apiKeyRepository.GetKey(apiKey, true);
-            var loggingContext = new UserService.CanLoginContext(key?.User, baseUrl: Request.GetRequestBaseUrl());
-            if (!await userService.CanLogin(loggingContext) || key is null)
-            {
-                return AuthenticateResult.Fail($"ApiKey authentication failed: {loggingContext.Failures[0].Text.Value}");
-            }
+            if (key is null)
+                return Fail($"ApiKey authentication failed: Unknown API Key");
+            var loggingContext = new UserService.CanLoginContext(key.User, baseUrl: Request.GetRequestBaseUrl());
+            if (!await userService.CanLogin(loggingContext))
+                return Fail($"ApiKey authentication failed: {loggingContext.Failures[0].Text.Value}");
 
             var claims = new List<Claim> { new (identityOptions.CurrentValue.ClaimsIdentity.UserIdClaimType, key.UserId) };
             claims.AddRange((await userManager.GetRolesAsync(key.User)).Select(s => new Claim(identityOptions.CurrentValue.ClaimsIdentity.RoleClaimType, s)));
@@ -61,6 +63,12 @@ namespace BTCPayServer.Security.Greenfield
             return AuthenticateResult.Success(new AuthenticationTicket(
                 new ClaimsPrincipal(new ClaimsIdentity(claims, GreenfieldConstants.AuthenticationType)),
                 GreenfieldConstants.AuthenticationType));
+        }
+
+        AuthenticateResult Fail(string reason)
+        {
+            Context.Items.TryAdd(GreenfieldAuthenticationHandler.GreenfieldAuthFailureReason, reason);
+            return AuthenticateResult.Fail(reason);
         }
     }
 }

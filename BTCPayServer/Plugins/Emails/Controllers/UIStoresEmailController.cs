@@ -15,7 +15,6 @@ namespace BTCPayServer.Plugins.Emails.Controllers;
 [Route("stores/{storeId}")]
 [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-[AutoValidateAntiforgeryToken]
 public class UIStoresEmailController(
     EmailSenderFactory emailSenderFactory,
     StoreRepository storeRepository,

@@ -1,4 +1,4 @@
-﻿#nullable  enable
+#nullable  enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +17,7 @@ namespace BTCPayServer.Plugins.Subscriptions;
 
 public class SubscriptionContext(ApplicationDbContext ctx, EventAggregator aggregator, CurrencyNameTable currencyNameTable, CancellationToken cancellationToken) : IAsyncDisposable
 {
-    List<object> _evts = new List<object>();
+    private readonly List<object> _evts = new List<object>();
     public CancellationToken CancellationToken { get; } = cancellationToken;
     public DateTimeOffset Now { get; } = DateTimeOffset.UtcNow;
     public ApplicationDbContext Context => ctx;
@@ -106,12 +106,16 @@ public class SubscriptionContext(ApplicationDbContext ctx, EventAggregator aggre
 
     public async ValueTask DisposeAsync()
     {
-        var plans =
-            _evts.OfType<SubscriptionEvent.SubscriberEvent>()
-                .SelectMany(s => s.Subscriber.Offering.Plans)
-                .Where(p => !p.FeaturesLoaded)
-                .ToList();
-        await ctx.Plans.FetchPlanFeaturesAsync(plans);
+        HashSet<string> fetched = new();
+        foreach (var offering in
+                 _evts.OfType<SubscriptionEvent.SubscriberEvent>()
+                     .SelectMany(s => s.Subscriber.Offering.Plans)
+                     .Where(p => !p.FeaturesLoaded).ToList()
+                     .Select(p => p.Offering)
+                     .Where(o => fetched.Add(o.Id)))
+        {
+            await ctx.Offerings.GetOfferingData(offering.Id, fetchPlanFeatures: true);
+        }
         foreach (var evt in _evts)
         {
             aggregator.Publish(evt, evt.GetType());

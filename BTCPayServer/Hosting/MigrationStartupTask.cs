@@ -32,7 +32,6 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using YamlDotNet.RepresentationModel;
-using static BTCPayServer.Fido2.Models.Fido2CredentialBlob;
 using LightningAddressData = BTCPayServer.Data.LightningAddressData;
 
 namespace BTCPayServer.Hosting
@@ -782,8 +781,7 @@ WHERE cte.""Id""=p.""Id""
                     SignatureCounter = (uint)u2FDevice.Counter,
                     PublicKey = CreatePublicKeyFromU2fRegistrationData(u2FDevice.PublicKey).Encode(),
                     UserHandle = u2FDevice.KeyHandle,
-                    Descriptor = new DescriptorClass(u2FDevice.KeyHandle),
-                    CredType = "u2f"
+                    Descriptor = new PublicKeyCredentialDescriptor(u2FDevice.KeyHandle)
                 });
 
                 await ctx.AddAsync(fido2);

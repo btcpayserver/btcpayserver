@@ -1,7 +1,6 @@
 @model BTCPayServer.Models.InvoicingModels.InvoiceReceiptViewModel
 @using BTCPayServer.Client
 @using BTCPayServer.Client.Models
-@using BTCPayServer.Components.QRCode
 @using BTCPayServer.Services
 @inject BTCPayServerEnvironment Env
 @inject DisplayFormatter DisplayFormatter
@@ -125,42 +124,44 @@
                             <div class="table-responsive my-0 d-print-none">
                                 <table class="invoice table table-borderless">
                                     <thead>
-                                    <tr>
-                                        <th class="fw-normal text-secondary date-col w-125px">Date</th>
-                                        <th class="fw-normal text-secondary amount-col">Paid</th>
-                                        <th class="fw-normal text-secondary amount-col w-225px">Payment</th>
-                                    </tr>
+										<tr>
+											<th class="fw-normal text-secondary">Destination</th>
+											<th class="fw-normal text-secondary">Payment</th>
+											<th class="fw-normal text-secondary">Rate</th>
+											<th class="fw-normal text-secondary">Payment Method</th>
+											<th class="fw-normal text-secondary text-nowrap">Date</th>
+										</tr>
                                     </thead>
                                     @foreach (var payment in Model.Payments)
                                     {
                                         <tbody>
-                                        <tr>
-                                            <td class="date-col">@payment.ReceivedDate.ToBrowserDate()</td>
-                                            <td class="amount-col">@payment.PaidFormatted</td>
-                                            <td class="amount-col">@payment.AmountFormatted</td>
-                                        </tr>
-                                        @if (!string.IsNullOrEmpty(payment.Destination))
-                                        {
-                                            <tr>
-                                                <th class="fw-normal text-nowrap text-secondary">
-                                                    Destination
-                                                </th>
-                                                <td class="fw-normal" colspan="2">
-                                                    <vc:truncate-center text="@payment.Destination" classes="truncate-center-id" />
-                                                </td>
-                                            </tr>
-                                        }
-                                        @if (!string.IsNullOrEmpty(payment.PaymentProof))
-                                        {
-                                            <tr>
-                                                <th class="fw-normal text-nowrap text-secondary">
-                                                    Payment Proof
-                                                </th>
-                                                <td class="fw-normal" colspan="2">
-                                                    <vc:truncate-center text="@payment.PaymentProof" link="@payment.Link" classes="truncate-center-id" />
-                                                </td>
-                                            </tr>
-                                        }
+											<tr>
+												<td>
+													@if (!string.IsNullOrEmpty(payment.Destination))
+													{
+														<vc:truncate-center text="@payment.Destination" link="@payment.Link" classes="truncate-center-id" />
+													}
+												</td>
+												<td>
+													<span class="d-block fw-semibold text-nowrap">@payment.AmountFormatted</span>
+													<small class="text-muted text-nowrap">@payment.PaidFormatted</small>
+												</td>
+												<td class="text-nowrap">@payment.RateFormatted</td>
+												<td class="text-nowrap">@payment.PaymentMethod</td>
+												<td class="text-nowrap">@payment.ReceivedDate.ToBrowserDate()</td>
+											</tr>
+
+											@if (!string.IsNullOrEmpty(payment.PaymentProof))
+											{
+												<tr>
+													<th class="fw-normal text-nowrap text-secondary">
+														Payment Proof
+													</th>
+													<td class="fw-normal" colspan="4">
+														<vc:truncate-center text="@payment.PaymentProof" link="@payment.Link" classes="truncate-center-id" />
+													</td>
+												</tr>
+											}
                                         </tbody>
                                     }
                                 </table>

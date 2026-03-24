@@ -34,9 +34,4 @@ public class GreenfieldServerRolesController : ControllerBase
     {
         return data.Select(r => new RoleData() {Role = r.Role, Id = r.Id, Permissions = r.Permissions, IsServerRole = true}).ToList();
     }
-
-    private IActionResult StoreNotFound()
-    {
-        return this.CreateAPIError(404, "store-not-found", "The store was not found");
-    }
 }

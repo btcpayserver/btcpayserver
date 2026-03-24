@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using Microsoft.AspNetCore.Hosting;
@@ -26,7 +27,7 @@ public class DefaultSwaggerProvider : ISwaggerProvider
 
         JObject json = new JObject();
         var directoryContents = _fileProvider.GetDirectoryContents("swagger/v1");
-        foreach (IFileInfo fi in directoryContents)
+        foreach (IFileInfo fi in directoryContents.Where(fi => fi.Name.EndsWith(".json")))
         {
             await using var stream = fi.CreateReadStream();
             using var reader = new StreamReader(fi.CreateReadStream());

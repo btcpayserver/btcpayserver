@@ -122,7 +122,9 @@ namespace Microsoft.AspNetCore.Mvc
             RequestBaseUrl requestBaseUrl,
             FragmentString fragment = default,
             LinkOptions? options = null) => generator.GetUriByAction(action, controller, values, requestBaseUrl.Scheme, requestBaseUrl.Host, requestBaseUrl.PathBase, fragment, options) ?? throw new InvalidOperationException($"Bug, unable to generate link for {controller}.{action}");
+
 #nullable restore
+
         public static string PayoutLink(this LinkGenerator urlHelper, string walletIdOrStoreId, string pullPaymentId, PayoutState payoutState, string scheme, HostString host, string pathbase)
         {
             WalletId.TryParse(walletIdOrStoreId, out var wallet);

@@ -3,8 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Lightning;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Invoices;
-using NBitcoin;
 using static BTCPayServer.Payments.ICheckoutCheatModeExtension;
 
 namespace BTCPayServer.Payments.Lightning

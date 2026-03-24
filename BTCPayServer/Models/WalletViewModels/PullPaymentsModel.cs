@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Payments;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Models.WalletViewModels

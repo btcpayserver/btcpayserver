@@ -6,8 +6,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
@@ -31,16 +29,16 @@ public partial class UIStoresController
 
     [HttpPost("{storeId}/rates")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public async Task<IActionResult> Rates(RatesViewModel model, string? command = null, string? storeId = null, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Rates(RatesViewModel model, string storeId, string? command = null, CancellationToken cancellationToken = default)
     {
-        model.StoreId = storeId ?? model.StoreId;
+        model.StoreId = CurrentStore.Id;
 
         var storeBlob = CurrentStore.GetStoreBlob();
         try
         {
             var currencyPairs = model.DefaultCurrencyPairs?
                 .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(p => CurrencyPair.Parse(p))
+                .Select(CurrencyPair.Parse)
                 .ToArray();
             storeBlob.DefaultCurrencyPairs = currencyPairs;
         }
@@ -147,7 +145,7 @@ public partial class UIStoresController
         if (CurrentStore.SetStoreBlob(storeBlob))
         {
             await _storeRepo.UpdateStore(CurrentStore);
-            TempData[WellKnownTempData.SuccessMessage] = "Rate settings updated";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Rate settings updated"].Value;
         }
         return RedirectToAction(nameof(Rates), new
         {
@@ -165,8 +163,7 @@ public partial class UIStoresController
         blob.RateScripting = model.ShowScripting;
         if (model.ShowScripting)
         {
-            RateRules? rules;
-            if (!RateRules.TryParse(model.Script, out rules, out var errors))
+            if (!RateRules.TryParse(model.Script, out var rules, out var errors))
             {
                 errors ??= [];
                 var errorString = string.Join(", ", errors.ToArray());
@@ -185,7 +182,6 @@ public partial class UIStoresController
         if (model.PreferredExchange is not null && GetAvailableExchanges().All(a => a.Id != model.PreferredExchange))
         {
             ModelState.AddModelError(nameof(model.PreferredExchange), StringLocalizer["Unsupported exchange"]);
-            return;
         }
     }
 

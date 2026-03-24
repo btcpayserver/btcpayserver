@@ -33,6 +33,7 @@ async function verifyAssertionWithServer(assertedCredential) {
     let clientDataJSON = new Uint8Array(assertedCredential.response.clientDataJSON);
     let rawId = new Uint8Array(assertedCredential.rawId);
     let sig = new Uint8Array(assertedCredential.response.signature);
+    let userHandle = assertedCredential.response.userHandle ? new Uint8Array(assertedCredential.response.userHandle) : null;
     const data = {
         id: assertedCredential.id,
         rawId: coerceToBase64Url(rawId),
@@ -41,7 +42,8 @@ async function verifyAssertionWithServer(assertedCredential) {
         response: {
             authenticatorData: coerceToBase64Url(authData),
             clientDataJSON: coerceToBase64Url(clientDataJSON),
-            signature: coerceToBase64Url(sig)
+            signature: coerceToBase64Url(sig),
+            userHandle: userHandle ? coerceToBase64Url(userHandle): null
         }
     };
 

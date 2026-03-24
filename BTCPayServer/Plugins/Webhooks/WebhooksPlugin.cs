@@ -1,7 +1,6 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
@@ -38,8 +37,8 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
                 ServerCertificateCustomValidationCallback =
                     HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
             });
-        var userAgent = new System.Net.Http.Headers.ProductInfoHeaderValue("BTCPayServer", BTCPayServerEnvironment.GetInformationalVersion());
-        foreach (var clientName in WebhookSender.AllClients.Concat(new[] { BitpayIPNSender.NamedClient }))
+        var userAgent = BTCPayServerEnvironment.GetUserAgentHeaderValue();
+        foreach (var clientName in WebhookSender.AllClients)
         {
             services.AddHttpClient(clientName)
                 .ConfigureHttpClient(client =>

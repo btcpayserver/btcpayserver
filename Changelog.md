@@ -1,5 +1,54 @@
 # Changelog
 
+## 2.3.6
+
+### New Features
+
+* Wallets: Add filtering using search bar on the label filter dropdown when labels exceed more than 20 (#7210 #7109) @rollforsats
+* API: Include a payment method in the Get invoices endpoint (#6757 #2394) @TChukwuleta
+* BTCPay Invoice Modal: Add a `paymentMethodId` parameter (#7209 #7208) @pwnfoo
+* Security: Include API key permission analysis metadata (#6771 #3196) @TChukwuleta
+* A plugin can now create new permission policies (#7215 #7156) @NicolasDorier
+
+### Fixes
+
+* Fix: Dashboard layout issues on mobile, regression from 2.3.5 (#7223 #7217) @NicolasDorier
+* Fix: Subscriber portal sessions can be created again via API (#7200 #7198) @NicolasDorier
+* Fix: Can't upgrade/downgrade a Lifetime subscription (#7194 #7193) @NicolasDorier
+
+### Improvements
+
+* Update Wasabi wallet folder access instructions (#7192) @nopara73
+* Security: Apply CSRF protection globally to UI controllers (#7199) @NicolasDorier
+* Update many missing translations from the language packs @Abhijay007
+
+### Regression
+
+* Revert: Dashboard: Support multi-crypto wallet balance widgets (#7223) @NicolasDorier
+
+## 2.3.5
+
+### New Features
+
+* Allow BTCPay Server to start without any on-chain payment methods with `BTCPAY_NODEFAULTCHAIN` (#7180) @NicolasDorier
+* Add custom textbox for checkout (#7182) @pavlenex
+* Add CoinDCX rate provider for BTC/INR rates (#7173) @Abhijay007
+* Add Desiboard rate provider for BTC/USD and BTC/INR rates (#7169) @Abhijay007
+* Dashboard: Support multi-crypto wallet balance widgets (#7110) @Sup3rlativ3
+* Ability to update a previously downloaded language pack (#7185) @Abhijay007
+
+### Fixes
+
+* Fix: Images in Point of Sale Cart doesn't show on mobile (#7190) @NicolasDorier
+* Fix: Payments getting undetected on LND when the node restarted (#7176) @rockstardev
+* Fix: Do not show claim button in pull payments if it is archived (#7154 #7167) @NicolasDorier
+* Fix: Unable to edit roles when navigating from store level to Roles (#7157) @rockstardev
+
+### Improvements
+
+* Throttle Greenfield API calls with Basic auth (#7177) @NicolasDorier
+* Added missing translations strings for various files (#6897) @Abhijay007
+
 ## 2.3.4
 
 ### New Features

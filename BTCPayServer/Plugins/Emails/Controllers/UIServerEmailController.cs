@@ -7,14 +7,12 @@ using BTCPayServer.Plugins.Emails.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
-using MimeKit;
 
 namespace BTCPayServer.Plugins.Emails.Controllers;
 
 [Area(EmailsPlugin.Area)]
 [Authorize(Policy = Client.Policies.CanModifyServerSettings,
     AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-[AutoValidateAntiforgeryToken]
 public class UIServerEmailController(
     EmailSenderFactory emailSenderFactory,
     PoliciesSettings policiesSettings,

@@ -5,23 +5,20 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using BTCPayServer.Hosting;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Tests.Lnd;
 using BTCPayServer.Tests.Logging;
-using Microsoft.Extensions.Configuration.Memory;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.RPC;
 using NBitpayClient;
 using NBXplorer;
-using BTCPayServer.Abstractions.Contracts;
-using System.Diagnostics.Metrics;
 using System.Threading;
 using BTCPayServer.Events;
+using BTCPayServer.Hosting;
+using BTCPayServer.Services;
 
 namespace BTCPayServer.Tests
 {
@@ -80,6 +77,13 @@ namespace BTCPayServer.Tests
             PayTester.SSHKeyFile = GetEnvironment("TESTS_SSHKEYFILE", "");
             PayTester.SSHConnection = GetEnvironment("TESTS_SSHCONNECTION", "root@127.0.0.1:21622");
             PayTester.SocksEndpoint = GetEnvironment("TESTS_SOCKSENDPOINT", "localhost:9050");
+        }
+
+        public async Task RestartMigration()
+        {
+            var settings = PayTester.GetService<SettingsRepository>();
+            await settings.UpdateSetting<MigrationSettings>(new MigrationSettings());
+            await PayTester.RestartStartupTask<MigrationStartupTask>();
         }
 
         public string Scope { get; set; }

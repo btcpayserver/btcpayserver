@@ -1,5 +1,4 @@
 using NBitcoin;
-using NBitcoin.DataEncoders;
 using NBitcoin.JsonConverters;
 using Newtonsoft.Json;
 using System;

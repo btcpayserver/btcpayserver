@@ -1,16 +1,12 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
-using NBitcoin;
-using static BTCPayServer.Client.Models.InvoicePaymentMethodDataModel;
 
 namespace BTCPayServer.Services
 {

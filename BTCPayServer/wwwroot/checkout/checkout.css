@@ -26,7 +26,7 @@ nav button:hover {
     color: var(--btcpay-body-text-hover);
 }
 nav button#close {
-    right: 0;
+    inset-inline-end: 0;
 }
 nav button .icon {
     --navbutton-size: .8rem;
@@ -64,12 +64,12 @@ section dl > div dd {
     font-weight: var(--btcpay-font-weight-normal);
 }
 section dl > div dt {
-    text-align: left;
+    text-align: start;
     white-space: nowrap;
     color: var(--btcpay-body-text-muted);
 }
 section dl > div dd {
-    text-align: right;
+    text-align: end;
     word-wrap: break-word;
     word-break: break-word;
     max-width: 62.5%;
@@ -99,7 +99,7 @@ section dl > div dd {
     width: var(--btcpay-font-size-s);
     height: var(--btcpay-font-size-s);
     color: var(--btcpay-body-text-muted);
-    margin-right: var(--btcpay-space-xs);
+    margin-inline-end: var(--btcpay-space-xs);
     animation-duration: 1s;
 }
 .info .icon {
@@ -178,6 +178,13 @@ section dl > div dd {
 /* Plugins */
 .payment-box .plugins > .payment {
     margin-top: var(--btcpay-space-l);
+}
+
+.checkout-text {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    font-size: var(--btcpay-font-size-s);
+    line-height: 1.4;
 }
 
 @media (max-width: 400px) {

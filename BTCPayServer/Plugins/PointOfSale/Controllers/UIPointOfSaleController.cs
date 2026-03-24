@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
@@ -32,7 +31,6 @@ using Ganss.Xss;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using NBitcoin;
@@ -44,7 +42,6 @@ using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Plugins.PointOfSale.Controllers
 {
-    [AutoValidateAntiforgeryToken]
     [Route("apps")]
     public class UIPointOfSaleController : Controller
     {
@@ -60,7 +57,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             DisplayFormatter displayFormatter,
             IRateLimitService rateLimitService,
             IAuthorizationService authorizationService,
-            UserManager<ApplicationUser> userManager,
             HtmlSanitizer htmlSanitizer,
             Safe safe)
         {
@@ -73,7 +69,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             _displayFormatter = displayFormatter;
             _rateLimitService = rateLimitService;
             _authorizationService = authorizationService;
-            _userManager = userManager;
             _htmlSanitizer = htmlSanitizer;
             _safe = safe;
             StringLocalizer = stringLocalizer;
@@ -89,7 +84,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly DisplayFormatter _displayFormatter;
         private readonly IRateLimitService _rateLimitService;
         private readonly IAuthorizationService _authorizationService;
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly HtmlSanitizer _htmlSanitizer;
         private readonly Safe _safe;
         public FormDataService FormDataService { get; }
@@ -491,7 +485,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 vm.RouteParameters.Add("viewType", viewType.Value.ToString());
             }
 
-            return View("Views/UIForms/View", vm);
+            return View("/Plugins/Forms/Views/View.cshtml", vm);
         }
 
         [HttpPost("/apps/{appId}/pos/form/submit/{viewType?}")]
@@ -541,7 +535,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             viewModel.Form = form;
             viewModel.FormParameters = formParameters;
             viewModel.StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
-            return View("Views/UIForms/View", viewModel);
+            return View("/Plugins/Forms/Views/View.cshtml", viewModel);
         }
 
         [Authorize(Policy = Policies.CanViewInvoices, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -746,14 +740,14 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
 
-        private AppData GetCurrentApp() => HttpContext.GetAppData();
+        private AppData GetCurrentApp() => HttpContext.GetAppDataOrNull();
 
         private async Task FillUsers(UpdatePointOfSaleViewModel vm)
         {
             var users = await _storeRepository.GetStoreUsers(GetCurrentStore().Id);
 
             if (!User.IsInRole(Roles.ServerAdmin))
-                users = users.Where(u => u.Id == _userManager.GetUserId(User)).ToArray();
+                users = users.Where(u => u.Id == User.GetId()).ToArray();
 
             vm.StoreUsers = users.Select(u => (u.Id, u.Email, u.StoreRole.Role))
                 .ToDictionary(u => u.Id, u => $"{u.Email} ({u.Role})");

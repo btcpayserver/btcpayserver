@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -19,7 +18,6 @@ namespace BTCPayServer.Plugins.Webhooks.Controllers;
 [Route("stores")]
 [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-[AutoValidateAntiforgeryToken]
 [Area(WebhooksPlugin.Area)]
 public class UIStoreWebhooksController(
     StoreRepository storeRepo,

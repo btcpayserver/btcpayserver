@@ -1,10 +1,8 @@
 @using BTCPayServer.Client
-@using BTCPayServer.Views.Server
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.TagHelpers
-@using BTCPayServer.Controllers
+@using BTCPayServer.Services
 @using BTCPayServer.Views.Stores
 @model UpdateRoleViewModel
+@inject PermissionService PermissionService
 @{
     var role = Context.GetRouteValue("role") as string;
 
@@ -15,7 +13,7 @@
     var title = role is null ? StringLocalizer["Create role"] : StringLocalizer["Update Role"];
     var category = storeId is null ? WellKnownCategories.Server : WellKnownCategories.Store;
     ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Roles), title).SetCategory(category));
-    var storePolicies = Policies.AllPolicies.Where(Policies.IsStorePolicy).ToArray();
+    var storePolicies = PermissionService.Definitions.Values.Where(p => p.Type is PolicyType.Store).Select(s => s.Policy.ToString()).ToArray();
 }
 
 <form method="post">
@@ -29,7 +27,7 @@
             </ol>
             <h2>@ViewData["Title"]</h2>
         </nav>
-        <button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+        <button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save" text-translate="true">Save</button>
     </div>
 
     <div class="row">
@@ -53,43 +51,42 @@
             </div>
 
             <h4 class="mt-4 mb-3">Permissions</h4>
-            <select multiple="multiple" asp-for="Policies" class="form-select hide-when-js">
+            <select multiple="multiple" asp-for="Permissions" class="form-select hide-when-js">
                 @foreach (var policy in storePolicies)
                 {
-                    <option value="@policy" class="text-truncate" asp-selected="@(Model.Policies?.Contains(policy) ?? false)">@policy</option>
+                    <option value="@policy" class="text-truncate" asp-selected="@Model.Permissions.Contains(policy)">@policy</option>
                 }
             </select>
             <div class="list-group mb-2">
                 @{
-                    var storePolicyMap = Permission.PolicyMap.Where(pair => Policies.IsStorePolicy(pair.Key)).ToArray();
-                    var topMostPolicies = storePolicyMap.Where(pair => !storePolicyMap.Any(valuePair => valuePair.Value.Contains(pair.Key)));
+                    var topMostPolicies = PermissionService.UnrestrictedPermissionNode.Children.Where(pair => pair.Definition.Type is PolicyType.Store);
                     @foreach (var policy in topMostPolicies)
                     {
-                        RenderTree(policy, storePolicyMap, Model.Policies.Contains(policy.Key));
+                        RenderTree(policy, Model.Permissions.Contains(policy.Definition.Policy));
                     }
                 }
             </div>
-            <span asp-validation-for="Policies" class="text-danger"></span>
+            <span asp-validation-for="Permissions" class="text-danger"></span>
         </div>
     </div>
 </form>
 
 @{
-    void RenderTree(KeyValuePair<string, HashSet<string>> policy, KeyValuePair<string, HashSet<string>>[] storePolicyMap, bool isChecked)
+    void RenderTree(PermissionDefinitionNode permission, bool isChecked)
     {
+        var policy = permission.Definition.Policy;
         <div class="form-check mb-0">
-            <input type="checkbox" class="form-check-input policy-cb" checked="@isChecked" value="@policy.Key" id="Policy-@policy.Key.Replace(".", "_")" />
-            <label class="h5 fw-semibold form-check-label mb-1" for="Policy-@policy.Key.Replace(".", "_")" data-bs-toggle="tooltip" title="@policy.Key">
-                @UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions[policy.Key].Title
+            <input type="checkbox" class="form-check-input policy-cb" checked="@isChecked" value="@policy" id="Policy-@policy.Replace(".", "_")" />
+            <label class="h5 fw-semibold form-check-label mb-1" for="Policy-@policy.Replace(".", "_")" data-bs-toggle="tooltip" title="@policy">
+                @permission.Definition.Display.Title
             </label>
-            <p class="text-muted">@UIManageController.AddApiKeyViewModel.PermissionValueItem.PermissionDescriptions[policy.Key].Description</p>
-            @if (policy.Value?.Any() is true)
+            <p class="text-muted">@permission.Definition.Display.Description</p>
+            @if (permission.Children.Count != 0)
             {
                 <div class="list-group">
-                    @foreach (var subPolicy in policy.Value)
+                    @foreach (var subPermission in permission.Children)
                     {
-                        var match = storePolicyMap.SingleOrDefault(pair => pair.Key == subPolicy);
-                        RenderTree(match.Key is not null ? match : new KeyValuePair<string, HashSet<string>>(subPolicy, null), storePolicyMap, !isChecked && Model.Policies.Contains(subPolicy));
+                        RenderTree(subPermission, !isChecked && Model.Permissions.Contains(subPermission.Definition.Policy));
                     }
                 </div>
             }
@@ -98,8 +95,9 @@
 }
 <script>
     function handleCheckboxChange(element) {
-        const { checked, value: policy } = element;
-        const policySelect = document.getElementById('Policies');
+        const {checked, value} = element;
+        const policy = value;
+        const policySelect = document.getElementById('Permissions');
         const subPolicies = element.parentElement.querySelectorAll(`.list-group .policy-cb:not([value="${policy}"])`);
 
         policySelect.querySelector(`option[value="${policy}"]`).selected = checked;

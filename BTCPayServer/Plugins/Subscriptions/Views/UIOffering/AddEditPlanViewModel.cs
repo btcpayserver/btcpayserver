@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
-using Microsoft.AspNetCore.Mvc.Razor;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Views.UIStoreMembership
 {
@@ -62,6 +59,7 @@ namespace BTCPayServer.Views.UIStoreMembership
             public string PlanId { get; set; }
             public string PlanName { get; set; }
             public string SelectedType { get; set; }
+            public string Timing { get; set; } = "Immediate";
         }
 
         public class Feature

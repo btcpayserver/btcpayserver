@@ -1,5 +1,4 @@
 @using BTCPayServer.Services.PaymentRequests
-@using Microsoft.AspNetCore.Html
 @using BTCPayServer.Client
 @using BTCPayServer.Services
 @inject CallbackGenerator CallbackGenerator
@@ -60,9 +59,8 @@
             <vc:icon symbol="nav-reporting" />
             <span text-translate="true">Reporting</span>
         </a>
-        <a id="page-primary" asp-action="EditPaymentRequest" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button"
-           permission="@Policies.CanModifyPaymentRequests" text-translate="true">
-            Create Request
+        <a id="page-primary" asp-action="EditPaymentRequest" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" permission="@Policies.CanModifyPaymentRequests">
+            <span text-translate="true">Create Request</span>
         </a>
     </div>
 </div>

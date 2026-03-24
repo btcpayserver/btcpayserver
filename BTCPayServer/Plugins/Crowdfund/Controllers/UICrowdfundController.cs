@@ -25,7 +25,6 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using NBitcoin;
@@ -37,7 +36,6 @@ using CrowdfundResetEvery = BTCPayServer.Services.Apps.CrowdfundResetEvery;
 
 namespace BTCPayServer.Plugins.Crowdfund.Controllers
 {
-    [AutoValidateAntiforgeryToken]
     [Route("apps")]
     [Area(CrowdfundPlugin.Area)]
     public class UICrowdfundController(
@@ -48,7 +46,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         StoreRepository storeRepository,
         IFileService fileService,
         UIInvoiceController invoiceController,
-        UserManager<ApplicationUser> userManager,
         FormDataService formDataService,
         IStringLocalizer stringLocalizer,
         CrowdfundAppType appType,
@@ -307,7 +304,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 FormParameterPrefix = prefix
             };
 
-            return View("Views/UIForms/View", vm);
+            return View("/Plugins/Forms/Views/View.cshtml", vm);
         }
 
         [HttpPost("/apps/{appId}/crowdfund/form/submit")]
@@ -358,7 +355,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             viewModel.Form = form;
 
             viewModel.FormParameters = formParameters;
-            return View("Views/UIForms/View", viewModel);
+            return View("/Plugins/Forms/Views/View.cshtml", viewModel);
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -586,9 +583,9 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             return currency.Trim().ToUpperInvariant();
         }
 
-        private AppData GetCurrentApp() => HttpContext.GetAppData();
+        private AppData GetCurrentApp() => HttpContext.GetAppDataOrNull();
 
-        private string GetUserId() => userManager.GetUserId(User);
+        private string GetUserId() => User.GetIdOrNull();
 
         private async Task<ViewCrowdfundViewModel> GetAppInfo(string appId)
         {

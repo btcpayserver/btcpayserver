@@ -1,5 +1,4 @@
 @using BTCPayServer.Services
-@using BTCPayServer.Abstractions.Contracts
 @inject LanguageService LangService
 @inject BTCPayServerEnvironment Env
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
@@ -223,6 +222,11 @@
                 </div>
             </section>
         </main>
+        <main v-if="isActive && srvModel.checkoutText" class="tile checkout-text">
+            <section>
+                <div class="text-muted text-center" v-text="srvModel.checkoutText"></div>
+            </section>
+        </main>
         @if (Env.CheatMode)
         {
             <checkout-cheating invoice-id="@Model.InvoiceId" :due="due" :is-settled="isSettled" :is-processing="isProcessing" :payment-method-id="pmId" :crypto-code="srvModel.paymentMethodCurrency"></checkout-cheating>
@@ -310,6 +314,7 @@
     <script src="~/js/vue-utils.js" asp-append-version="true"></script>
     <script src="~/main/utils.js" asp-append-version="true"></script>
     <script src="~/checkout/checkout.js" asp-append-version="true"></script>
+    <script>updateLanguageDir(@Safe.Json(Model.DefaultLang))</script>
     @if (Env.CheatMode)
     {
         <partial name="Checkout-Cheating" model="@Model" />

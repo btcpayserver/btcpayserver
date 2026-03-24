@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -14,40 +15,50 @@ namespace BTCPayServer.Tests
 {
     public class CustomServer : IDisposable
     {
-        readonly IWebHost _Host = null;
-        readonly CancellationTokenSource _Closed = new CancellationTokenSource();
-        readonly Channel<JObject> _Requests = Channel.CreateUnbounded<JObject>();
+        readonly IHost _host;
+        readonly CancellationTokenSource _closed = new CancellationTokenSource();
+        readonly Channel<JObject> _requests = Channel.CreateUnbounded<JObject>();
         public CustomServer()
         {
             var port = Utils.FreeTcpPort();
-            _Host = new WebHostBuilder()
-                .Configure(app =>
+            _host = Host.CreateDefaultBuilder()
+                .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    app.Run(async req =>
-                    {
-                        await _Requests.Writer.WriteAsync(JsonConvert.DeserializeObject<JObject>(await new StreamReader(req.Request.Body).ReadToEndAsync()), _Closed.Token);
-                        req.Response.StatusCode = 200;
-                    });
+                    webBuilder
+                        .UseKestrel()
+                        .UseUrls($"http://127.0.0.1:{port}")
+                        .Configure(app =>
+                        {
+                            app.Run(async req =>
+                            {
+                                using var reader = new StreamReader(req.Request.Body);
+                                var body = await reader.ReadToEndAsync();
+
+                                await _requests.Writer.WriteAsync(
+                                    JsonConvert.DeserializeObject<JObject>(body),
+                                    _closed.Token);
+
+                                req.Response.StatusCode = 200;
+                            });
+                        });
                 })
-                .UseKestrel()
-                .UseUrls("http://127.0.0.1:" + port)
                 .Build();
-            _Host.Start();
+            _host.Start();
         }
 
         public Uri GetUri()
         {
-            return new Uri(_Host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.First());
+            return new Uri(_host.GetServerFeatures<IServerAddressesFeature>().Addresses.First());
         }
 
         public async Task<JObject> GetNextRequest()
         {
-            using CancellationTokenSource cancellation = new CancellationTokenSource(2000000);
+            using var cancellation = new CancellationTokenSource(2000000);
             try
             {
-                JObject req = null;
-                while (!await _Requests.Reader.WaitToReadAsync(cancellation.Token) ||
-                    !_Requests.Reader.TryRead(out req))
+                JObject req;
+                while (!await _requests.Reader.WaitToReadAsync(cancellation.Token) ||
+                    !_requests.Reader.TryRead(out req))
                 {
 
                 }
@@ -61,8 +72,8 @@ namespace BTCPayServer.Tests
 
         public void Dispose()
         {
-            _Closed.Cancel();
-            _Host.Dispose();
+            _closed.Cancel();
+            _host.Dispose();
         }
     }
 }

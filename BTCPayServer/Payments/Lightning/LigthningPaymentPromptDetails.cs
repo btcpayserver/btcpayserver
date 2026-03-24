@@ -1,10 +1,5 @@
-using System.Collections.Generic;
-using System.Linq;
-using BTCPayServer.Lightning;
-using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments.Lightning
 {

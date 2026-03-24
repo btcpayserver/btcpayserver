@@ -2,12 +2,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using BTCPayServer;
 using NBitcoin;
-using NBXplorer;
 using NBXplorer.DerivationStrategy;
-using AccountKeySettings = BTCPayServer.AccountKeySettings;
-using BTCPayNetwork = BTCPayServer.BTCPayNetwork;
 
 namespace BTCPayServer.Services.WalletFileParsing;
 public class BSMSWalletFileParser : IWalletFileParser

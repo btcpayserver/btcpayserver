@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Models;
-using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Mvc;

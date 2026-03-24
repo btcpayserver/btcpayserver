@@ -18,7 +18,7 @@ namespace BTCPayServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.11")
+                .HasAnnotation("ProductVersion", "10.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -74,6 +74,28 @@ namespace BTCPayServer.Migrations
                     b.HasIndex("InvoiceDataId");
 
                     b.ToTable("AddressInvoices");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.ApiKeyPermissionUsage", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ApiKey")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("LastUsed")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Permission")
+                        .HasColumnType("text");
+
+                    b.Property<int>("UsageCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ApiKeyPermissionUsages");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.AppData", b =>
@@ -280,7 +302,7 @@ namespace BTCPayServer.Migrations
                         .HasColumnName("additional_data")
                         .HasDefaultValueSql("'{}'::jsonb");
 
-                    b.Property<string[]>("BCC")
+                    b.PrimitiveCollection<string[]>("BCC")
                         .IsRequired()
                         .HasColumnType("text[]")
                         .HasColumnName("bcc");
@@ -290,7 +312,7 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("text")
                         .HasColumnName("body");
 
-                    b.Property<string[]>("CC")
+                    b.PrimitiveCollection<string[]>("CC")
                         .IsRequired()
                         .HasColumnType("text[]")
                         .HasColumnName("cc");
@@ -325,7 +347,7 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("text")
                         .HasColumnName("subject");
 
-                    b.Property<string[]>("To")
+                    b.PrimitiveCollection<string[]>("To")
                         .IsRequired()
                         .HasColumnType("text[]")
                         .HasColumnName("to");
@@ -817,7 +839,7 @@ namespace BTCPayServer.Migrations
                     b.Property<DateTimeOffset?>("Expiry")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string[]>("OutpointsUsed")
+                    b.PrimitiveCollection<string[]>("OutpointsUsed")
                         .HasColumnType("text[]");
 
                     b.Property<int>("State")
@@ -1023,7 +1045,7 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
-                    b.Property<List<string>>("Permissions")
+                    b.PrimitiveCollection<List<string>>("Permissions")
                         .HasColumnType("text[]");
 
                     b.Property<string>("Role")
@@ -1189,6 +1211,13 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("PlanChangeId")
                         .HasColumnType("text")
                         .HasColumnName("plan_change_id");
+
+                    b.Property<string>("Timing")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("Immediate")
+                        .HasColumnName("timing");
 
                     b.Property<string>("Type")
                         .IsRequired()

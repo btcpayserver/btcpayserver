@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -259,7 +259,6 @@ public class SubscriptionHostedService(
                             m.StartNextPlan(now);
                             subCtx.AddEvent(new SubscriptionEvent.PlanStarted(m, planBefore)
                             {
-                                PreviousPlan = planBefore,
                                 AutoRenew = planBefore.Id == m.PlanId
                             });
                         }
@@ -270,14 +269,20 @@ public class SubscriptionHostedService(
                     }
                 }
 
+                if (newPhase is PhaseTypes.Expired or PhaseTypes.Grace && m is { NewPlan: not null, NewPlanId: not null } && m.NewPlanId != m.PlanId)
+                {
+                    var prevPlan = m.Plan;
+                    (m.PlanId, m.Plan) = (m.NewPlanId, m.NewPlan);
+                    (m.NewPlanId, m.NewPlan) = (null, null);
+                    subCtx.AddEvent(new SubscriptionEvent.PlanStarted(m, prevPlan)
+                    {
+                        AutoRenew = false
+                    });
+                }
+
                 if (newPhase is PhaseTypes.Expired)
                 {
                     m.PaidAmount = null;
-                    if (m is { NewPlan: not null, NewPlanId: not null } && m.NewPlanId != m.PlanId)
-                    {
-                        (m.PlanId, m.Plan) = (m.NewPlanId, m.NewPlan);
-                        (m.NewPlanId, m.NewPlan) = (null, null);
-                    }
                 }
 
                 if (prevPhase != newPhase)
@@ -496,10 +501,7 @@ public class SubscriptionHostedService(
             }
         }
         if (checkout.PlanStarted)
-            subCtx.AddEvent(new SubscriptionEvent.PlanStarted(sub, prevPlan)
-            {
-                PreviousPlan = prevPlan
-            });
+            subCtx.AddEvent(new SubscriptionEvent.PlanStarted(sub, prevPlan));
     }
 
     record MoveTimeRequest(MemberSelector MemberSelector, TimeSpan Period);
@@ -636,14 +638,39 @@ public class SubscriptionHostedService(
         return checkout.InvoiceId;
     }
 
-    public async Task<string?> CreatePlanMigrationCheckout(string portalSessionId, string? planId, PlanCheckoutData.OnPayBehavior migrationType,
+    public async Task<PlanMigrationResult> CreatePlanMigrationCheckout(string portalSessionId, string? planId, PlanCheckoutData.OnPayBehavior migrationType,
         RequestBaseUrl requestBaseUrl)
     {
         await using var ctx = applicationDbContextFactory.CreateContext();
         var portal = await ctx.PortalSessions.GetActiveById(portalSessionId);
-        var plan = planId is null ? null : await ctx.Plans.GetPlanFromId(planId);
         if (portal is null)
-            return null;
+            return new PlanMigrationResult.NotFound();
+
+        PlanData? plan = null;
+        if (planId is not null)
+        {
+            plan = await ctx.Plans.GetPlanFromId(planId, portal.Subscriber.OfferingId);
+            if (plan is null)
+                return new PlanMigrationResult.NotFound();
+
+            var planChangeRecord  = portal.Subscriber.Plan.PlanChanges
+                .FirstOrDefault(pc => pc.PlanId == portal.Subscriber.PlanId && pc.PlanChangeId == planId);
+            if (planChangeRecord == null)
+                return new PlanMigrationResult.NotFound();
+
+            if (planChangeRecord.Timing == PlanChangeData.ChangeTiming.AtPeriodEnd)
+            {
+                if (portal.Subscriber.PeriodEnd is not null && portal.Subscriber.PeriodEnd > DateTimeOffset.UtcNow
+                    && portal.Subscriber.Phase == PhaseTypes.Normal)
+                {
+                    portal.Subscriber.NewPlanId = planId;
+                    portal.Subscriber.NewPlan = plan;
+                    await ctx.SaveChangesAsync();
+                    return new PlanMigrationResult.Scheduled();
+                }
+            }
+        }
+
         var checkout = new PlanCheckoutData(portal.Subscriber, plan)
         {
             SuccessRedirectUrl = linkGenerator.SubscriberPortalLink(portalSessionId, requestBaseUrl),
@@ -652,6 +679,13 @@ public class SubscriptionHostedService(
         };
         ctx.PlanCheckouts.Add(checkout);
         await ctx.SaveChangesAsync();
-        return checkout.Id;
+        return new PlanMigrationResult.Checkout(checkout.Id);
+    }
+
+    public abstract record PlanMigrationResult
+    {
+        public record Checkout(string CheckoutId) : PlanMigrationResult;
+        public record Scheduled : PlanMigrationResult;
+        public record NotFound : PlanMigrationResult;
     }
 }

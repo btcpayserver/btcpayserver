@@ -40,7 +40,7 @@
     iframe.style.zIndex = '2000';
     // Removed, see https://github.com/btcpayserver/btcpayserver/issues/2139#issuecomment-768223263
     // iframe.setAttribute('allowtransparency', 'true');
-    
+
     // https://web.dev/async-clipboard/#permissions-policy-integration
     iframe.setAttribute('allow', 'clipboard-read; clipboard-write')
 
@@ -96,7 +96,7 @@
         readerAbortController.signal.onabort = () => {
             this.scanning = false;
         };
-        ndef.scan({ signal:readerAbortController.signal }).then(() => {
+        ndef.scan({ signal: readerAbortController.signal }).then(() => {
             ndef.onreading = event => {
                 const message = event.message;
                 const record = message.records[0];
@@ -116,7 +116,7 @@
             };
         }).catch(console.error);
     }
-    
+
     function receiveMessage(event) {
         if (!origin.startsWith(event.origin) || !showingInvoice) {
             return;
@@ -143,8 +143,33 @@
     function appendInvoiceFrame(invoiceId, params) {
         showingInvoice = true;
         window.document.body.appendChild(iframe);
-        var invoiceUrl = origin + '/invoice?id=' + invoiceId + '&view=modal';
-        if (params && params.animateEntrance === false) {
+
+        var paymentMethodId = null;
+        var animateEntrance = params && typeof params === 'object'
+            ? params.animateEntrance
+            : undefined;
+
+        if (typeof params === 'string') {
+            // Shorthand: btcpay.showInvoice(id, "BTC-LN")
+            paymentMethodId = params;
+        } else if (params && typeof params === 'object') {
+            paymentMethodId = params.paymentMethodId || null;
+        }
+
+        var invoiceUrl;
+        if (paymentMethodId) {
+            invoiceUrl =
+                origin +
+                '/i/' +
+                invoiceId +
+                '/' +
+                encodeURIComponent(paymentMethodId) +
+                '?view=modal';
+        } else {
+            invoiceUrl = origin + '/invoice?id=' + invoiceId + '&view=modal';
+        }
+
+        if (animateEntrance === false) {
             invoiceUrl += '&animateEntrance=false';
         }
         iframe.src = invoiceUrl;

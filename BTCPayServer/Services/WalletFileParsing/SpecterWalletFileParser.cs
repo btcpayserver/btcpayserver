@@ -1,9 +1,7 @@
 #nullable enable
-using System;
 using System.Diagnostics.CodeAnalysis;
-using BTCPayServer;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+
 namespace BTCPayServer.Services.WalletFileParsing;
 public class SpecterWalletFileParser : IWalletFileParser
 {

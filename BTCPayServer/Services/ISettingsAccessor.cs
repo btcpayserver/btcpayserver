@@ -1,10 +1,5 @@
 #nullable enable
 using System;
-using System.Threading;
-using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Contracts;
-using BTCPayServer.Events;
-using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Services

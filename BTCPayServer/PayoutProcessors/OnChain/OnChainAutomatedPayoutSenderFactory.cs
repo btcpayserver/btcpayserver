@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
-using BTCPayServer.Payments;
 using BTCPayServer.Payouts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -61,6 +60,8 @@ public class OnChainAutomatedPayoutSenderFactory : EventHostedServiceBase, IPayo
             throw new NotSupportedException("This processor cannot handle the provided requirements");
         }
         var payoutMethodId = settings.GetPayoutMethodId();
+        if (!_handlers.TryGetValue(payoutMethodId, out _))
+            return Task.FromResult<IHostedService>(null);
         return Task.FromResult<IHostedService>(ActivatorUtilities.CreateInstance<OnChainAutomatedPayoutProcessor>(_serviceProvider, settings, payoutMethodId));
     }
 }

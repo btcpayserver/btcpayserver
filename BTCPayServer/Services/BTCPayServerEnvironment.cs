@@ -1,14 +1,12 @@
 using System;
 using System.Globalization;
 using System.Linq;
-using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using BTCPayServer.Configuration;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 using NBitcoin;
 
 namespace BTCPayServer.Services
@@ -32,10 +30,11 @@ namespace BTCPayServer.Services
             CheatMode = opts.CheatMode;
         }
 
-        internal static string GetInformationalVersion()
-        {
-            return typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
-        }
+        public static string GetInformationalVersion()
+        => typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
+
+        public static System.Net.Http.Headers.ProductInfoHeaderValue GetUserAgentHeaderValue()
+        => new("BTCPayServer", GetInformationalVersion());
 
         public IWebHostEnvironment Environment
         {

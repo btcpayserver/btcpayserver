@@ -19,7 +19,7 @@ namespace BTCPayServer.Abstractions.Models
         {
             set
             {
-                Message = value.Value;
+                Message = value?.Value;
             }
         }
 
@@ -29,9 +29,16 @@ namespace BTCPayServer.Abstractions.Models
         {
             set
             {
-                StringWriter w = new();
-                value.WriteTo(w, HtmlEncoder.Default);
-                Html = w.ToString();
+                if (value is null)
+                {
+                    Html = null;
+                }
+                else
+                {
+                    StringWriter w = new();
+                    value.WriteTo(w, HtmlEncoder.Default);
+                    Html = w.ToString();
+                }
             }
         }
         public StatusSeverity Severity { get; set; }

@@ -111,7 +111,8 @@ public class EmailSettings
 #pragma warning restore CA5359 // Do Not Disable Certificate Validation
             }
             await client.ConnectAsync(Server, Port.Value, MailKit.Security.SecureSocketOptions.Auto, connectCancel.Token);
-            if ((client.Capabilities & SmtpCapabilities.Authentication) != 0)
+            if ((client.Capabilities & SmtpCapabilities.Authentication) != 0
+                && !string.IsNullOrEmpty(Login) && !string.IsNullOrEmpty(Password))
                 await client.AuthenticateAsync(Login ?? string.Empty, Password ?? string.Empty, connectCancel.Token);
         }
         catch

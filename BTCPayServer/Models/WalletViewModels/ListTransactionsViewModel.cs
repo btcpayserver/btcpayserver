@@ -35,6 +35,7 @@ namespace BTCPayServer.Models.WalletViewModels
         public PendingTransaction[] PendingTransactions { get; set; }
         public List<string> Rates { get; set; } = new();
         public string SearchText { get; set; }
+        public string SearchInputText { get; set; }
         public SearchString Search { get; set; }
         public bool HasFilters { get; set; }
     }

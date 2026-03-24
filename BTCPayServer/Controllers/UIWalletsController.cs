@@ -607,6 +607,7 @@ namespace BTCPayServer.Controllers
             public SearchString Search { get; init; }
             public string SearchTerm { get; init; }
             public string SearchText { get; init; }
+            public string SearchInputText { get; init; }
             public string TextSearch { get; init; }
             public DateTimeOffset? StartDate { get; init; }
             public DateTimeOffset? EndDate { get; init; }
@@ -658,6 +659,7 @@ namespace BTCPayServer.Controllers
                 Search = search,
                 SearchTerm = search.WithoutSearchText(),
                 SearchText = search.TextCombined,
+                SearchInputText = search.TextSearch,
                 TextSearch = search.TextSearch,
                 StartDate = search.GetFilterDate("startdate", timezoneOffset),
                 EndDate = search.GetFilterDate("enddate", timezoneOffset),
@@ -748,6 +750,7 @@ namespace BTCPayServer.Controllers
                 Count = count,
                 Search = filter.Search,
                 SearchText = filter.SearchText,
+                SearchInputText = filter.SearchInputText,
                 SearchTerm = filter.SearchTerm,
                 TimezoneOffset = effectiveTimezoneOffset,
                 HasFilters = filter.HasFilters || !string.IsNullOrWhiteSpace(labelFilter),

@@ -124,10 +124,25 @@
         const $list = document.getElementById('WalletTransactionsList');
         const $dropdowns = document.getElementById('Dropdowns');
         const $indicator = document.getElementById('LoadingIndicator');
+        const $walletTransactionsSearch = document.getElementById('WalletTransactionsSearch');
+        const $searchTerm = $walletTransactionsSearch?.querySelector('input[name="SearchTerm"]');
 
         delegate('click', '#GoToTop', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
+
+        function setSearchFilters(search, key, values = []) {
+            const filters = (search || '')
+                .split(',')
+                .map(value => value.trim())
+                .filter(value => value && !value.toLowerCase().startsWith(`${key.toLowerCase()}:`));
+
+            values
+                .filter(value => value)
+                .forEach(value => filters.push(`${key}:${value}`));
+
+            return filters.join(',');
+        }
 
         const $labelSearch = document.getElementById('LabelSearch');
         if ($labelSearch) {
@@ -175,6 +190,16 @@
         if ($actions && $actions.offsetTop - window.innerHeight > 0) {
             document.getElementById('GoToTop').classList.remove('d-none');
         }
+
+        document.querySelectorAll('[data-direction-filter]').forEach($item => {
+            $item.addEventListener('click', () => {
+                if (!$walletTransactionsSearch || !$searchTerm) return;
+
+                const direction = $item.dataset.directionFilter;
+                $searchTerm.value = setSearchFilters($searchTerm.value, 'direction', direction ? [direction] : []);
+                $walletTransactionsSearch.submit();
+            });
+        });
 
         const count = @Safe.Json(Model.Count);
         const skipInitial = @Safe.Json(Model.Skip);
@@ -390,7 +415,7 @@
     {
         <input name="labelFilter" type="hidden" value="@labelFilter" />
     }
-    <input id="SearchText" name="SearchText" class="form-control" value="@Model.SearchText" placeholder="@StringLocalizer["Search transactions..."]" />
+    <input id="SearchText" name="SearchText" class="form-control" value="@Model.SearchInputText" placeholder="@StringLocalizer["Search transactions..."]" />
     <div class="dropdown">
         <button id="DirectionOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             @if (hasIncomingOnlyFilter)
@@ -407,9 +432,9 @@
             }
         </button>
         <div class="dropdown-menu" aria-labelledby="DirectionOptionsToggle">
-            <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter("direction")" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item @((!hasIncomingOnlyFilter && !hasOutgoingOnlyFilter) ? "custom-active" : string.Empty)" text-translate="true">All Directions</a>
-            <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter("direction", "in")" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item @(hasIncomingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Incoming</a>
-            <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter("direction", "out")" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item @(hasOutgoingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Outgoing</a>
+            <button type="button" class="dropdown-item @((!hasIncomingOnlyFilter && !hasOutgoingOnlyFilter) ? "custom-active" : string.Empty)" data-direction-filter="" text-translate="true">All Directions</button>
+            <button type="button" class="dropdown-item @(hasIncomingOnlyFilter ? "custom-active" : string.Empty)" data-direction-filter="in" text-translate="true">Incoming</button>
+            <button type="button" class="dropdown-item @(hasOutgoingOnlyFilter ? "custom-active" : string.Empty)" data-direction-filter="out" text-translate="true">Outgoing</button>
         </div>
     </div>
     @if (Model.Labels.Any())

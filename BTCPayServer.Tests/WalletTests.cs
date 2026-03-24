@@ -657,7 +657,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         }
 
         await s.GoToWalletTransactions(s.WalletId);
-        await s.Page.ClickAsync("#Filter button.dropdown-toggle");
+        await s.Page.ClickAsync("#LabelOptionsToggle");
         await s.Page.Locator("#LabelDropdownMenu").WaitForAsync();
         await s.Page.Locator("#LabelSearch").WaitForAsync();
 
@@ -689,11 +689,64 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Page.ClickAsync($"#LabelDropdownMenu .label-filter-item a:has-text('{targetLabel}')");
         await TestUtils.EventuallyAsync(() =>
         {
-            Assert.Contains($"labelFilter={targetLabel}", s.Page.Url);
+            Assert.Contains($"label:{targetLabel}", Uri.UnescapeDataString(s.Page.Url));
             return Task.CompletedTask;
         });
 
         await s.InWalletTransactions().AssertHasLabels(targetLabel);
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanFilterWalletTransactionsByDirectionWithoutPollutingSearchText()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.Server.ExplorerNode.GenerateAsync(1);
+        await s.RegisterNewUser(true);
+        await s.CreateNewStore();
+        await s.GenerateWallet(isHotWallet: true);
+
+        await s.GoToWallet(s.WalletId, WalletsNavPages.Receive);
+        var addressStr = await s.Page.GetAttributeAsync("#Address", "data-text");
+        var address = BitcoinAddress.Create(addressStr!, ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
+
+        await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(1.0m));
+        await s.Server.ExplorerNode.GenerateAsync(1);
+
+        var client = await s.AsTestAccount().CreateClient();
+        var nodeAddress = await s.Server.ExplorerNode.GetNewAddressAsync();
+        await client.CreateOnChainTransaction(s.StoreId, "BTC", new CreateOnChainTransactionRequest
+        {
+            Destinations =
+            [
+                new CreateOnChainTransactionRequest.CreateOnChainTransactionRequestDestination
+                {
+                    Destination = nodeAddress.ToString(),
+                    Amount = 0.1m
+                }
+            ],
+            FeeRate = new FeeRate(5m)
+        });
+        await s.Server.ExplorerNode.GenerateAsync(1);
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            Assert.True((await client.ShowOnChainWalletTransactions(s.StoreId, "BTC")).Count() >= 2);
+        });
+
+        await s.GoToWalletTransactions(s.WalletId);
+        Assert.Equal(string.Empty, await s.Page.InputValueAsync("#SearchText"));
+
+        await s.Page.EvaluateAsync("() => document.querySelector(\"[data-direction-filter='out']\")?.click()");
+
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            Assert.Contains("direction:out", await s.Page.GetAttributeAsync("input[name='SearchTerm']", "value"));
+            Assert.Contains("Outgoing", await s.Page.InnerTextAsync("#DirectionOptionsToggle"));
+            Assert.Equal(string.Empty, await s.Page.InputValueAsync("#SearchText"));
+            Assert.True(await s.Page.Locator(".transaction-row .amount-col .text-danger").CountAsync() > 0);
+            Assert.Equal(0, await s.Page.Locator(".transaction-row .amount-col .text-success").CountAsync());
+        });
     }
 
     private async Task CreateInvoices(PlaywrightTester tester)

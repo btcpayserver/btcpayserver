@@ -259,7 +259,6 @@ public class SubscriptionHostedService(
                             m.StartNextPlan(now);
                             subCtx.AddEvent(new SubscriptionEvent.PlanStarted(m, planBefore)
                             {
-                                PreviousPlan = planBefore,
                                 AutoRenew = planBefore.Id == m.PlanId
                             });
                         }
@@ -272,13 +271,11 @@ public class SubscriptionHostedService(
 
                 if (newPhase is PhaseTypes.Expired or PhaseTypes.Grace && m is { NewPlan: not null, NewPlanId: not null } && m.NewPlanId != m.PlanId)
                 {
-                    var prevPlanId = m.PlanId;
                     var prevPlan = m.Plan;
                     (m.PlanId, m.Plan) = (m.NewPlanId, m.NewPlan);
                     (m.NewPlanId, m.NewPlan) = (null, null);
                     subCtx.AddEvent(new SubscriptionEvent.PlanStarted(m, prevPlan)
                     {
-                        PreviousPlan = prevPlan,
                         AutoRenew = false
                     });
                 }
@@ -504,10 +501,7 @@ public class SubscriptionHostedService(
             }
         }
         if (checkout.PlanStarted)
-            subCtx.AddEvent(new SubscriptionEvent.PlanStarted(sub, prevPlan)
-            {
-                PreviousPlan = prevPlan
-            });
+            subCtx.AddEvent(new SubscriptionEvent.PlanStarted(sub, prevPlan));
     }
 
     record MoveTimeRequest(MemberSelector MemberSelector, TimeSpan Period);
@@ -667,7 +661,7 @@ public class SubscriptionHostedService(
             if (planChangeRecord.Timing == PlanChangeData.ChangeTiming.AtPeriodEnd)
             {
                 if (portal.Subscriber.PeriodEnd is not null && portal.Subscriber.PeriodEnd > DateTimeOffset.UtcNow
-                    && portal.Subscriber.Phase == SubscriberData.PhaseTypes.Normal)
+                    && portal.Subscriber.Phase == PhaseTypes.Normal)
                 {
                     portal.Subscriber.NewPlanId = planId;
                     portal.Subscriber.NewPlan = plan;

@@ -336,8 +336,10 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         await portal.AssertScheduledChange("Pro Plan");
 
 
-        await portal.GoToNextPhase(); // Normal to Grace period
-        await portal.GoToNextPhase(); // Grace period to Expired
+        await s.Server.WaitForEvent<SubscriptionEvent.PlanStarted>(async () =>
+        {
+            await portal.GoToNextPhase(); // Normal to Grace period
+        });
 
         await s.Page.ReloadAsync();
         await portal.AssertPlan("Pro Plan");

@@ -70,7 +70,7 @@ public class SubscriptionEvent
 
     public class PlanStarted(SubscriberData subscriber, PlanData previous) : SubscriberEvent(subscriber)
     {
-        public PlanData PreviousPlan { get; set; } = previous;
+        public PlanData PreviousPlan { get; } = previous;
         public bool AutoRenew { get; set; }
         public override string ToString() => $"Subscriber {Subscriber.ToNiceString()} started plan";
     }

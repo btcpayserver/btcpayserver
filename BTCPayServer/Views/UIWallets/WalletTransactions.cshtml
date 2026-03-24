@@ -284,7 +284,7 @@
                     </div>
                 </div>
                 <div class="form-group row">
-                    <label class="col-sm-3 col-form-label" text-translate="true">End Date</label>
+                    <label for="dtpEndDate" class="col-sm-3 col-form-label" text-translate="true">End Date</label>
                     <div class="col-sm-9">
                         <div class="input-group">
                             <input id="dtpEndDate" class="form-control flatdtpicker" type="datetime-local"
@@ -403,6 +403,8 @@
             }
         </button>
         <div class="dropdown-menu" aria-labelledby="DateOptionsToggle">
+            <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("startdate"), "enddate")" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item @((!HasArrayFilter("startdate") && !HasCustomDateFilter()) ? "custom-active" : string.Empty)" text-translate="true">All Time</a>
+            <hr class="dropdown-divider" />
             <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("enddate"), "startdate", "-1d")" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item @(HasArrayFilter("startdate", "-1d") ? "custom-active" : "")" text-translate="true">Last 24 hours</a>
             <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("enddate"), "startdate", "-3d")" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item @(HasArrayFilter("startdate", "-3d") ? "custom-active" : "")" text-translate="true">Last 3 days</a>
             <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("enddate"), "startdate", "-7d")" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item @(HasArrayFilter("startdate", "-7d") ? "custom-active" : "")" text-translate="true">Last 7 days</a>

@@ -265,8 +265,10 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             var subscriber = await ctx.Subscribers.GetBySelector(offeringId, customerSelector, storeId);
             if (subscriber is null)
                 return SubscriberNotFound();
-            var startDate = (request?.StartDate ?? subscriber.PlanStarted).ToUniversalTime();
-            var expirationDate = request?.ExpirationDate?.ToUniversalTime();
+            if (request.StartDate is null && request.ExpirationDate is null)
+                return this.CreateAPIError(400, "invalid-dates", "At least one of startDate or expirationDate must be provided.");
+            var startDate = (request.StartDate ?? subscriber.PlanStarted).ToUniversalTime();
+            var expirationDate = request.ExpirationDate?.ToUniversalTime();
             if (expirationDate is { } exp && exp <= startDate)
                 return this.CreateAPIError(400, "invalid-dates", "Expiration date must be after the start date.");
             await subscriptionHostedService.UpdateDates(subscriber.Id, startDate, expirationDate);

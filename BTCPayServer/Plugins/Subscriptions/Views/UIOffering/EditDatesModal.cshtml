@@ -17,6 +17,7 @@
                 <div class="modal-body pt-0">
                     <input name="customerId" type="hidden" />
                     <input name="timezoneOffset" type="hidden" class="edit-dates-tz" />
+                    <input name="expirationTimezoneOffset" type="hidden" class="edit-dates-expiry-tz" />
 
                     <div class="mb-3">
                         <label class="form-label" text-translate="true">Start Date</label>
@@ -52,6 +53,14 @@
         const expirationLabel = modalEl.querySelector('.edit-dates-expiration-label');
         const errorEl = modalEl.querySelector('.edit-dates-error');
         const saveBtn = modalEl.querySelector('.edit-dates-save');
+        const tzInput = modalEl.querySelector('.edit-dates-tz');
+        const expiryTzInput = modalEl.querySelector('.edit-dates-expiry-tz');
+
+        function offsetForDate(dateString) {
+            return dateString
+                ? new Date(dateString + 'T00:00:00').getTimezoneOffset()
+                : new Date().getTimezoneOffset();
+        }
 
         function validate() {
             const start = startInput.value;
@@ -66,8 +75,14 @@
             }
         }
 
-        startInput.addEventListener('change', validate);
-        expirationInput.addEventListener('change', validate);
+        startInput.addEventListener('change', function () {
+            tzInput.value = offsetForDate(this.value);
+            validate();
+        });
+        expirationInput.addEventListener('change', function () {
+            expiryTzInput.value = offsetForDate(this.value);
+            validate();
+        });
 
         modalEl.addEventListener('show.bs.modal', function (event) {
             const trigger = event.relatedTarget;
@@ -75,10 +90,14 @@
 
             const tr = trigger.closest('tr');
             modalEl.querySelector('input[name="customerId"]').value = tr.getAttribute('data-subscriber-id') || '';
-            modalEl.querySelector('.edit-dates-tz').value = new Date().getTimezoneOffset();
             modalEl.querySelector('.edit-dates-subscriber-name').innerText = tr.getAttribute('data-subscriber-email') || '';
-            startInput.value = tr.getAttribute('data-plan-started') || '';
-            expirationInput.value = tr.getAttribute('data-expiration') || '';
+
+            const startVal = tr.getAttribute('data-plan-started') || '';
+            const expVal = tr.getAttribute('data-expiration') || '';
+            startInput.value = startVal;
+            expirationInput.value = expVal;
+            tzInput.value = offsetForDate(startVal);
+            expiryTzInput.value = offsetForDate(expVal);
 
             const isTrial = tr.getAttribute('data-is-trial') === 'true';
             expirationLabel.innerText = isTrial ? 'Trial End Date' : 'Expiration Date';

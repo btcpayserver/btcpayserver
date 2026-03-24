@@ -500,6 +500,9 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
                 StartDate = DateTimeOffset.UtcNow.AddDays(10),
                 ExpirationDate = DateTimeOffset.UtcNow.AddDays(5)
             }));
+        await AssertEx.AssertApiError(400, "invalid-dates", () => client.UpdateSubscriberDates(
+            user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id,
+            new UpdateSubscriberDatesRequest()));
 
         var session = await client.CreatePortalSession(new()
         {

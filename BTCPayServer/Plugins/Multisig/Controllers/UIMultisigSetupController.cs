@@ -1,14 +1,13 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
-using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Plugins.Multisig.Models;
 using BTCPayServer.Plugins.Multisig.Services;
 using BTCPayServer.Services.Stores;
@@ -46,7 +45,7 @@ public class UIMultisigSetupController(
         if (!await walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, vm.StoreId, vm.CryptoCode))
             return Forbid();
 
-        var checkResult = GetContext(vm.StoreId, vm.CryptoCode, out _, out _);
+        var checkResult = GetContext(vm.CryptoCode, out _, out _);
         if (checkResult is not null)
             return checkResult;
 
@@ -62,7 +61,7 @@ public class UIMultisigSetupController(
         if (!await walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, vm.StoreId, vm.CryptoCode))
             return Forbid();
 
-        var checkResult = GetContext(vm.StoreId, vm.CryptoCode, out var store, out var network);
+        var checkResult = GetContext(vm.CryptoCode, out var store, out var network);
         if (checkResult is not null)
             return checkResult;
 
@@ -225,7 +224,7 @@ public class UIMultisigSetupController(
             pending = activePending;
         }
 
-        pending.Participants ??= new();
+        pending.Participants ??= new List<PendingMultisigSetupParticipantData>();
 
         var existingIds = pending.Participants.Select(p => p.UserId).ToHashSet(StringComparer.Ordinal);
         var newIds = selectedIds.Where(id => !existingIds.Contains(id)).ToArray();
@@ -315,7 +314,6 @@ public class UIMultisigSetupController(
         var xMin = setting!.XMin;
         if (!await storeRepository.TryDeleteSettingAsync(vm.StoreId, settingName, xMin))
         {
-            //todo: change error message "please try again"
             ModelState.AddModelError(nameof(vm.MultisigRequestId), "The multisig request changed. Reload the page and try again.");
             ApplyPendingContext(vm, pending);
             return View("Multisig", vm);
@@ -438,7 +436,7 @@ public class UIMultisigSetupController(
     private IActionResult ConfirmAddresses(MultisigSetupViewModel vm, DerivationSchemeSettings strategy, BTCPayNetwork network)
     {
         vm.DerivationScheme = strategy.AccountDerivation.ToString();
-        vm.AddressSamples = new();
+        vm.AddressSamples = new List<(string KeyPath, string Address)>();
         if (!string.IsNullOrEmpty(vm.DerivationScheme))
         {
             var result = BTCPayServer.Controllers.Greenfield.GreenfieldStoreOnChainPaymentMethodsController.GetPreviewResultData(0, 10, network, strategy.AccountDerivation);
@@ -513,9 +511,9 @@ public class UIMultisigSetupController(
         vm.MultisigInviteLinks = multisigService.CreateInviteLinks(HttpContext, vm.StoreId, vm.CryptoCode, pending);
     }
 
-    private IActionResult? GetContext(string storeId, string cryptoCode, out StoreData? store, out BTCPayNetwork? network)
+    private IActionResult? GetContext(string cryptoCode, out StoreData? store, out BTCPayNetwork? network)
     {
-        store = HttpContext.GetStoreData();
+        store = HttpContext.GetStoreDataOrNull();
         network = explorerProvider.GetNetwork(cryptoCode);
         return store is null || network is null ? NotFound() : null;
     }

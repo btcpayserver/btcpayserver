@@ -9,13 +9,10 @@ using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Plugins.Multisig.Models;
-using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using MimeKit;
-using NBXplorer.Models;
 
 namespace BTCPayServer.Plugins.Multisig.Services;
 
@@ -133,7 +130,7 @@ public class MultisigNotificationService(
 
     public async Task NotifyPendingTransactionCreated(WalletId walletId, PendingTransaction pendingTransaction, DerivationSchemeSettings derivation)
     {
-        if (!IsServerMultisig(walletId, derivation))
+        if (!IsServerMultisig(derivation))
             return;
         if (!await emailSenderFactory.IsComplete(walletId.StoreId))
             return;
@@ -161,7 +158,7 @@ public class MultisigNotificationService(
 
     public async Task NotifyPendingTransactionSignatureCollected(WalletId walletId, PendingTransaction pendingTransaction, DerivationSchemeSettings derivation, string? signerUserId)
     {
-        if (!IsServerMultisig(walletId, derivation))
+        if (!IsServerMultisig(derivation))
             return;
         if (!await emailSenderFactory.IsComplete(walletId.StoreId))
             return;
@@ -192,11 +189,9 @@ public class MultisigNotificationService(
         }
     }
 
-    private static bool IsServerMultisig(WalletId walletId, DerivationSchemeSettings derivation)
+    private static bool IsServerMultisig(DerivationSchemeSettings derivation)
     {
-        return walletId?.StoreId is not null &&
-               derivation?.AccountKeySettings is { Length: > 1 } &&
-               derivation.IsMultiSigOnServer;
+        return derivation is { AccountKeySettings.Length: > 1, IsMultiSigOnServer: true };
     }
 
     private string GetPendingTransactionLink(WalletId walletId, PendingTransaction pendingTransaction)
@@ -237,8 +232,7 @@ public class MultisigNotificationService(
 
         var storeUsers = await storeRepository.GetStoreUsers(storeId);
         return storeUsers
-            .Where(u => u is not null &&
-                        !string.IsNullOrWhiteSpace(u.Id) &&
+            .Where(u => !string.IsNullOrWhiteSpace(u.Id) &&
                         !string.IsNullOrWhiteSpace(u.Email))
             .Where(u => included is null || included.Contains(u.Id))
             .Where(u => excludeUserId is null || !string.Equals(u.Id, excludeUserId, StringComparison.Ordinal))
@@ -249,9 +243,7 @@ public class MultisigNotificationService(
                     return false;
                 if (requiredAll.Any(policy => !permissionSet.HasPermission(policy, storeId, permissionService)))
                     return false;
-                if (requiredAny.Length > 0 && !requiredAny.Any(policy => permissionSet.HasPermission(policy, storeId, permissionService)))
-                    return false;
-                return true;
+                return requiredAny.Length <= 0 || requiredAny.Any(policy => permissionSet.HasPermission(policy, storeId, permissionService));
             })
             .Select(u => u.Email)
             .Distinct(StringComparer.OrdinalIgnoreCase)

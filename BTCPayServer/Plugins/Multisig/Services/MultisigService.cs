@@ -7,7 +7,6 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Multisig.Models;
 using BTCPayServer.Payments;
@@ -19,7 +18,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using NBXplorer.Models;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Plugins.Multisig.Services;
@@ -87,7 +85,7 @@ public class MultisigService(
         return pending.ExpiresAt < DateTimeOffset.UtcNow ? null : pending;
     }
 
-    public async Task<PendingMultisigSetupData?> GetLatestPendingMultisigSetup(string storeId, string cryptoCode)
+    private async Task<PendingMultisigSetupData?> GetLatestPendingMultisigSetup(string storeId, string cryptoCode)
     {
         var pending = await storeRepository.GetSettingAsync<PendingMultisigSetupData>(storeId, GetPendingMultisigSettingName(cryptoCode));
         if (pending is null)
@@ -101,7 +99,7 @@ public class MultisigService(
         return $"{PendingMultisigSettingPrefix}-{cryptoCode.ToUpperInvariant()}";
     }
 
-    public string CreateInviteToken(string storeId, string cryptoCode, string requestId, string userId, DateTimeOffset expiresAt)
+    private string CreateInviteToken(string storeId, string cryptoCode, string requestId, string userId, DateTimeOffset expiresAt)
     {
         var payload = $"{storeId}|{cryptoCode}|{requestId}|{userId}|{expiresAt.ToUnixTimeSeconds()}";
         var protectedPayload = _inviteProtector.Protect(payload);
@@ -166,7 +164,7 @@ public class MultisigService(
             : path;
     }
 
-    public string? CreateSetupLink(HttpContext httpContext, string storeId, string cryptoCode, string requestId, bool absolute = false)
+    public string CreateSetupLink(HttpContext httpContext, string storeId, string cryptoCode, string requestId, bool absolute = false)
     {
         var path = $"{httpContext.Request.PathBase}/stores/{storeId}/onchain/{cryptoCode}/import/multisig?MultisigRequestId={requestId}";
         return absolute && httpContext.Request.Host.HasValue
@@ -275,7 +273,7 @@ public class MultisigService(
         var rawKeyPaths = vm.MultisigSignerKeyPaths ?? Array.Empty<string>();
 
         var signerKeys = rawSignerKeys
-            .Select(k => k?.Trim())
+            .Select(k => k.Trim())
             .Where(k => !string.IsNullOrWhiteSpace(k))
             .ToArray()!;
 
@@ -375,16 +373,17 @@ public class MultisigService(
 
     public void ApplySignerIdentities(PendingMultisigSetupData pending, DerivationSchemeSettings strategy, BTCPayNetwork network)
     {
-        if (pending?.Participants is null || pending.Participants.Count == 0 || strategy.AccountKeySettings is null || strategy.AccountKeySettings.Length == 0)
+        if (pending.Participants is null || pending.Participants.Count == 0 || strategy.AccountKeySettings is null || strategy.AccountKeySettings.Length == 0)
             return;
 
         var participantsByKey = new Dictionary<string, PendingMultisigSetupParticipantData>(StringComparer.Ordinal);
         foreach (var participant in pending.Participants)
         {
             var key = NormalizeAccountKey(participant.AccountKey, network);
-            if (string.IsNullOrEmpty(key) || participantsByKey.ContainsKey(key))
+            if (string.IsNullOrEmpty(key))
                 continue;
-            participantsByKey[key] = participant;
+
+            participantsByKey.TryAdd(key, participant);
         }
 
         foreach (var accountSettings in strategy.AccountKeySettings)
@@ -400,7 +399,7 @@ public class MultisigService(
     public bool TryNormalizeAccountKeyForNetwork(string? accountKey, BTCPayNetwork network, out string normalizedAccountKey)
     {
         normalizedAccountKey = string.Empty;
-        if (string.IsNullOrWhiteSpace(accountKey) || network?.NBitcoinNetwork is null)
+        if (string.IsNullOrWhiteSpace(accountKey) || network.NBitcoinNetwork is null)
             return false;
 
         try

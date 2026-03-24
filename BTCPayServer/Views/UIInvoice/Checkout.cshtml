@@ -314,6 +314,7 @@
     <script src="~/js/vue-utils.js" asp-append-version="true"></script>
     <script src="~/main/utils.js" asp-append-version="true"></script>
     <script src="~/checkout/checkout.js" asp-append-version="true"></script>
+    <script>updateLanguageDir(@Safe.Json(Model.DefaultLang))</script>
     @if (Env.CheatMode)
     {
         <partial name="Checkout-Cheating" model="@Model" />

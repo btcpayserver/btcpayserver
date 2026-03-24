@@ -385,7 +385,8 @@ namespace BTCPayServer.Tests
 
             var greenfield = await s.AsTestAccount().CreateClient();
             var paymentMethods = await greenfield.GetInvoicePaymentMethods(s.StoreId, i);
-            Assert.Single(paymentMethods, p => p.AdditionalData["providedComment"]!.Value<string>() == "lol2");
+            var lnurlMethod = Assert.Single(paymentMethods, p => p.PaymentMethodId == "BTC-LNURL");
+            Assert.Equal("lol2", lnurlMethod.AdditionalData["providedComment"]!.Value<string>());
             // Standard invoice test
             await s.GoToStore(storeId);
             i = await s.CreateInvoice(storeId, 0.0000001m, cryptoCode);

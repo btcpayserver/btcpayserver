@@ -444,6 +444,15 @@ namespace BTCPayServer.Tests
             var tx = Assert.Single(transactions.Transactions);
             Assert.Equal(tx.Id, txId.ToString());
 
+            transactions = Assert.IsType<ListTransactionsViewModel>(Assert
+                .IsType<ViewResult>(walletController.WalletTransactions(walletId, searchTerm: tx.Id[..12].ToUpperInvariant(), loadTransactions: true).Result).Model);
+            tx = Assert.Single(transactions.Transactions);
+            Assert.Equal(tx.Id, txId.ToString());
+
+            transactions = Assert.IsType<ListTransactionsViewModel>(Assert
+                .IsType<ViewResult>(walletController.WalletTransactions(walletId, searchTerm: "not-a-wallet-tx", loadTransactions: true).Result).Model);
+            Assert.Empty(transactions.Transactions);
+
             // Hijack the test to see if we can add label and comments
             Assert.IsType<RedirectToActionResult>(
                 await walletController.ModifyTransaction(walletId, tx.Id, addcomment: "hello-pouet"));

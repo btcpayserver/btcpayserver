@@ -13,6 +13,7 @@
     var sortedLabels = Model.Labels.OrderBy(l => l.Text, StringComparer.OrdinalIgnoreCase).ToList();
     var popularLabels = Model.PopularLabels.OrderBy(l => l.Text, StringComparer.OrdinalIgnoreCase).ToList();
     var initialLabels = popularLabels.Any() ? popularLabels : sortedLabels.Take(maxVisibleLabels).ToList();
+    var hasActiveFilters = !string.IsNullOrWhiteSpace(Model.SearchTerm) || !string.IsNullOrEmpty(labelFilter);
 
     ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Transactions)}-{Model.CryptoCode}", StringLocalizer["{0} Transactions", Model.CryptoCode])
         .SetCategory(WellKnownCategories.ForWallet(Model.CryptoCode)));
@@ -26,9 +27,22 @@
             max-width: 125px;
         }
 
+        #SearchTerm {
+            flex-shrink: 0;
+            min-width: 200px;
+            max-width: 300px;
+        }
+
         @@media (min-width: 990px) {
             .smMaxWidth {
                 max-width: 200px;
+            }
+        }
+
+        @@media (max-width: 568px) {
+            #SearchTerm {
+                width: 100%;
+                max-width: none;
             }
         }
 
@@ -100,6 +114,10 @@
         const $list = document.getElementById('WalletTransactionsList');
         const $dropdowns = document.getElementById('Dropdowns');
         const $indicator = document.getElementById('LoadingIndicator');
+        const hasActiveFilters = @Safe.Json(!string.IsNullOrWhiteSpace(Model.SearchTerm) || !string.IsNullOrEmpty(labelFilter));
+        const emptyStateMessage = @Safe.Json(hasActiveFilters
+            ? StringLocalizer["No transactions match the current filters."].Value
+            : StringLocalizer["There are no transactions yet."].Value);
 
         delegate('click', '#GoToTop', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -147,6 +165,11 @@
 
             // Keep the dropdown open while typing in the search box
             $labelSearch.addEventListener('click', e => e.stopPropagation());
+            $labelSearch.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                }
+            });
             $labelSearch.addEventListener('input', () => {
                 const query = $labelSearch.value.toLowerCase().trim();
                 renderLabelItems(query ? allLabels.filter(label => label.text.toLowerCase().includes(query)) : initialLabels);
@@ -159,7 +182,7 @@
 
         const count = @Safe.Json(Model.Count);
         const skipInitial = @Safe.Json(Model.Skip);
-		const loadMoreUrl = @Safe.Json(Url.Action("WalletTransactions", new {walletId, labelFilter, skip = Model.Skip, count = Model.Count, loadTransactions = true}));
+		const loadMoreUrl = @Safe.Json(Url.Action("WalletTransactions", new {walletId, labelFilter, searchTerm = Model.SearchTerm, skip = Model.Skip, count = Model.Count, loadTransactions = true}));
 		// The next time we load transactions, skip will become 0
         let skip = @Safe.Json(Model.Skip) - count;
 
@@ -189,14 +212,19 @@
                     $transactions.dataset.loaded = 'true';
                     // replace table and dropdowns if initial response was empty
                     if (responseEmpty) {
-                        $dropdowns.remove();
-                        $transactions.innerHTML = '<div class="text-secondary" data-loaded="true">There are no transactions yet.</div>';
+                        if (!hasActiveFilters) {
+                            $dropdowns.remove();
+                        }
+                        $transactions.innerHTML = `<div class="text-secondary" data-loaded="true">${emptyStateMessage}</div>`;
                     }
                 }
             }
 
             $indicator.classList.add('d-none');
-            formatDateTimes(document.querySelector('#WalletTransactions .switch-time-format').dataset.mode);
+            const $switchTimeFormat = document.querySelector('#WalletTransactions .switch-time-format');
+            if ($switchTimeFormat) {
+                formatDateTimes($switchTimeFormat.dataset.mode);
+            }
             initLabelManagers();
         }
 
@@ -217,10 +245,17 @@
 </div>
 <partial name="_StatusMessage" />
 
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3" id="Dropdowns">
+<form method="get" class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" id="Filter">
+    <input asp-for="Count" type="hidden" />
+    @if (!string.IsNullOrEmpty(labelFilter))
+    {
+        <input type="hidden" name="labelFilter" value="@labelFilter" />
+    }
+    <input asp-for="SearchTerm" class="form-control" placeholder="@StringLocalizer["Search by transaction ID…"]" />
+
     @if (Model.Labels.Any())
     {
-        <div class="btn-group" id="Filter">
+        <div class="dropdown">
             <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                 @if (string.IsNullOrEmpty(labelFilter))
                 {
@@ -249,7 +284,7 @@
                 @foreach (var label in visibleLabels)
                 {
                     <li class="label-filter-item">
-                        <a asp-route-labelFilter="@label.Text" class="dropdown-item transaction-label-text label-filter-link@(labelFilter == label.Text ? " active" : string.Empty)" style="--btcpay-dropdown-link-active-bg:@label.Color;--btcpay-dropdown-link-active-color:@label.TextColor;">
+                        <a asp-route-labelFilter="@label.Text" asp-route-searchTerm="@Model.SearchTerm" asp-route-count="@Model.Count" class="dropdown-item transaction-label-text label-filter-link@(labelFilter == label.Text ? " active" : string.Empty)" style="--btcpay-dropdown-link-active-bg:@label.Color;--btcpay-dropdown-link-active-color:@label.TextColor;">
                             <span class="label-filter-text">@label.Text</span>
                             <small class="label-filter-count@(label.UsageCount > 0 ? string.Empty : " d-none")">@label.UsageCount</small>
                         </a>
@@ -258,12 +293,12 @@
                 @if (!string.IsNullOrEmpty(labelFilter))
                 {
                     <li class="label-filter-divider"><hr class="dropdown-divider"></li>
-                    <li class="label-filter-clear"><a class="dropdown-item" asp-route-labelFilter="" text-translate="true">Clear filter</a></li>
+                    <li class="label-filter-clear"><a class="dropdown-item" asp-route-labelFilter="" asp-route-searchTerm="@Model.SearchTerm" asp-route-count="@Model.Count" text-translate="true">Clear filter</a></li>
                 }
             </ul>
             <template id="label-filter-item-template">
                 <li class="label-filter-item">
-                    <a asp-route-labelFilter="LABEL_PLACEHOLDER" class="dropdown-item transaction-label-text label-filter-link">
+                    <a asp-route-labelFilter="LABEL_PLACEHOLDER" asp-route-searchTerm="@Model.SearchTerm" asp-route-count="@Model.Count" class="dropdown-item transaction-label-text label-filter-link">
                         <span class="label-filter-text"></span>
                         <small class="label-filter-count d-none"></small>
                     </a>
@@ -271,8 +306,10 @@
             </template>
         </div>
     }
+</form>
 
-    <div class="dropdown d-inline-flex align-items-center gap-3 ms-auto" id="Export">
+<div class="d-flex flex-wrap align-items-center justify-content-end gap-3 mb-4" id="Dropdowns">
+    <div class="dropdown d-inline-flex align-items-center gap-3" id="Export">
         <a
             id="view-report"
             permission="@Policies.CanViewReports"

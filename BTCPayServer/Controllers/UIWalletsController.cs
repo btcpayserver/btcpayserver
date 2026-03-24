@@ -602,6 +602,7 @@ namespace BTCPayServer.Controllers
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId,
             string? labelFilter = null,
+            string? searchTerm = null,
             int skip = 0,
             int count = 50,
             bool loadTransactions = false,
@@ -613,10 +614,11 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             var network = _handlers.GetBitcoinHandler(walletId.CryptoCode).Network;
             var wallet = _walletProvider.GetWallet(network);
+            searchTerm = string.IsNullOrWhiteSpace(searchTerm) ? null : searchTerm.Trim();
 
-            // We can't filter at the database level if we need to apply label filter
-            var preFiltering = string.IsNullOrEmpty(labelFilter);
-            var model = new ListTransactionsViewModel { Skip = skip, Count = count };
+            // Only use source-level skip/count when we do not need BTCPay-side filtering by label or txid.
+            var preFiltering = string.IsNullOrEmpty(labelFilter) && searchTerm is null;
+            var model = new ListTransactionsViewModel { Skip = skip, Count = count, SearchTerm = searchTerm };
             const int maxVisibleLabels = 20;
 
             model.PendingTransactions = await _pendingTransactionService.GetPendingTransactions(walletId.CryptoCode, walletId.StoreId);
@@ -638,6 +640,12 @@ namespace BTCPayServer.Controllers
             if (loadTransactions)
             {
                 transactions = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, preFiltering ? skip : null, preFiltering ? count : null, cancellationToken: cancellationToken);
+                if (searchTerm is not null)
+                {
+                    transactions = transactions
+                        .Where(t => t.TransactionId.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                }
                 walletTransactionsInfo = await WalletRepository.GetWalletTransactionsInfo(walletId, transactions.Select(t => t.TransactionId.ToString()).ToArray());
             }
             if (labelFilter != null)

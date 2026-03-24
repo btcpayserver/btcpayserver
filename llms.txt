@@ -1,0 +1,132 @@
+# BTCPay Server
+
+> Accept Bitcoin payments. Free, open-source & self-hosted Bitcoin payment processor.
+
+## Project Overview
+
+BTCPay Server is a self-hosted, free, open-source cryptocurrency payment processor. It allows merchants and individuals to accept Bitcoin (on-chain and Lightning Network) and altcoin payments without fees or intermediaries. Built on ASP.NET Core (C# / .NET 10).
+
+## Architecture
+
+BTCPay Server is an ASP.NET Core web application using Blazor for server-side rendering with MVC fallback views.
+
+### Solution Structure (btcpayserver.sln)
+
+| Project | Purpose |
+|---------|---------|
+| `BTCPayServer` | Main web application (UI, controllers, services, plugins) |
+| `BTCPayServer.Abstractions` | Shared interfaces and contracts |
+| `BTCPayServer.Common` | Common utilities and shared logic |
+| `BTCPayServer.Data` | Data access layer (EF Core, migrations) |
+| `BTCPayServer.Client` | Client library for Greenfield API |
+| `BTCPayServer.Rating` | Exchange rate fetching and conversion |
+| `BTCPayServer.Tests` | Test suite |
+| `BTCPayServer.PluginPacker` | Plugin packaging utilities |
+
+### Key Directories
+
+| Path | Purpose |
+|------|---------|
+| `BTCPayServer/Controllers/` | MVC controllers (UI-prefixed) and Greenfield REST API |
+| `BTCPayServer/Services/` | Core business logic (invoices, wallets, payments, stores) |
+| `BTCPayServer/HostedServices/` | Background services (invoice watching, rate tracking, payouts) |
+| `BTCPayServer/Plugins/` | Plugin system (Altcoins, Lightning, Apps, Point of Sale, etc.) |
+| `BTCPayServer/Configuration/` | App settings and configuration loading |
+| `BTCPayServer/Views/` | Razor views |
+| `BTCPayServer/Blazor/` | Blazor components |
+| `BTCPayServer/Components/` | Shared UI components |
+| `docs/` | Development docs (Greenfield API, authorization) |
+| `Build/` | Build scripts and shared MSBuild props |
+
+### Plugin System
+
+BTCPay Server uses a plugin architecture for extensibility. Plugins are in `BTCPayServer/Plugins/`:
+
+- **Altcoins**: BGold, Dash, Dogecoin, Groestlcoin, Litecoin, Monacoin, Liquid (Elements)
+- **Bitcoin**: Core Bitcoin/Lightning payment processing
+- **Apps**: Crowdfund, Point of Sale, Payment Requests
+- **Store integrations**: Shopify
+- **Infrastructure**: Email, Forms, NFC, Monetization, Webhooks, Subscriptions, Pull Payments
+
+### Greenfield API (REST)
+
+RESTful API under `Controllers/GreenField/`. Endpoints include:
+- Invoice management, Store management, User management
+- Lightning node info, Payment methods, Wallets
+- Payment requests, Payout processors, Notifications
+- API keys, Server roles, Reports
+
+Documented at: https://docs.btcpayserver.org/API/Greenfield/v1/
+
+### Background Services
+
+Key hosted services in `BTCPayServer/HostedServices/`:
+- `InvoiceWatcher` — monitors invoice status changes
+- `PendingTransactionService` — tracks unconfirmed transactions
+- `RatesHostedService` — fetches exchange rates periodically
+- `PullPaymentHostedService` — processes pull payments
+- `NBXplorerWaiter` — waits for NBXplorer (Bitcoin indexer) readiness
+- `PluginUpdateFetcher` — checks for plugin updates
+
+### Key Dependencies
+
+- **NBitcoin** (9.x) — Bitcoin protocol implementation
+- **BTCPayServer.Lightning.All** — Lightning Network client (LND, c-lightning, Eclair, CLN)
+- **NBXplorer** — Bitcoin full-node indexer (separate process)
+- **LNURL** — Lightning URL protocol support
+- **MailKit** — Email sending
+- **Fido2** — WebAuthn/FIDO2 two-factor authentication
+- **Serilog** — Structured logging
+- **TwentyTwenty.Storage** — Multi-provider file storage (Amazon S3, Azure Blob, Google Cloud, local)
+
+## Building and Running
+
+```bash
+# Using Docker (recommended)
+docker run -d --name btcpay \
+  -v "btcpay_data:/data" \
+  -p 49392:49392 \
+  btcpayserver/btcpayserver:latest
+
+# From source
+git clone https://github.com/btcpayserver/btcpayserver.git
+cd btcpayserver
+dotnet build
+dotnet run --project BTCPayServer
+```
+
+Requires NBXplorer running for full Bitcoin functionality.
+
+## Testing
+
+```bash
+dotnet test
+```
+
+Test project: `BTCPayServer.Tests`
+
+## Contributing
+
+- PRs welcome (see badge in README)
+- Development docs: `docs/greenfield-development.md`, `docs/greenfield-authorization.md`
+- Community chat: https://chat.btcpayserver.org/
+- Security: security@btcpayserver.org or https://huntr.dev/repos/btcpayserver/btcpayserver/
+
+## Code Style
+
+- C# with standard .NET conventions
+- Uses `.editorconfig` for formatting rules
+- JetBrains annotations for code analysis
+- `.coderabbit.yaml` for AI code review configuration
+
+## Important Files
+
+| File | Purpose |
+|------|---------|
+| `Program.cs` | Application entry point and host setup |
+| `Dockerfile` | Multi-stage Docker build |
+| `docker-entrypoint.sh` | Docker container startup script |
+| `btcpayserver.sln` | Solution file |
+| `SECURITY.md` | Vulnerability disclosure policy |
+| `RELEASE-CHECKLIST.md` | Release process checklist |
+| `RELEASE-CYCLES.md` | Release cycle documentation |

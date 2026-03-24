@@ -312,40 +312,51 @@
     <div class="table-responsive-md">
         <table class="table table-hover ">
             <thead>
-                <th>Id</th>
-                <th>State</th>
-                <th>Signatures</th>
-                <th>Scheme</th>
-                <th>Actions</th>
+                <th text-translate="true">Id</th>
+                <th text-translate="true">State</th>
+                <th text-translate="true">Signatures</th>
+                <th text-translate="true">Scheme</th>
+                <th text-translate="true">Actions</th>
             </thead>
             @for (var index = 0; index < Model.PendingTransactions.Length; index++)
             {
                 var pendingTransaction = Model.PendingTransactions[index];
                 var ptblob = @pendingTransaction.GetBlob();
+                var collectedSignatures = ptblob?.SignaturesCollected?.ToString() ?? "-";
+                var missingSignatures = ptblob is null
+                    ? "-"
+                    : Math.Max(0, (ptblob.SignaturesNeeded ?? 0) - (ptblob.SignaturesCollected ?? 0)).ToString();
+                var primaryActionLabel = pendingTransaction.State == PendingTransactionState.Signed
+                    ? StringLocalizer["Broadcast"].Value
+                    : StringLocalizer["View"].Value;
                 <tr>
                     <td>@pendingTransaction.TransactionId</td>
                     <td>@pendingTransaction.State</td>
-                    <td><span id="Sigs_@(index)__Collected">@ptblob?.SignaturesCollected</span></td>
+                    <td>
+                        <span id="Sigs_@(index)__Collected">@collectedSignatures</span> @StringLocalizer["collected"]
+                        ·
+                        <span id="Sigs_@(index)__Missing">@missingSignatures</span> @StringLocalizer["missing"]
+                    </td>
                     <td><span id="Sigs_@(index)__Scheme">@ptblob?.SignaturesNeeded/@ptblob?.SignaturesTotal</span></td>
                     <td>
                         @if (pendingTransaction.State == PendingTransactionState.Signed)
                         {
                             <a permission="@walletBroadcastTxPermission" and-mode="true"
                                asp-action="ViewPendingTransaction" asp-route-walletId="@walletId"
-                               asp-route-pendingTransactionId="@pendingTransaction.Id">Broadcast</a>
+                               asp-route-pendingTransactionId="@pendingTransaction.Id">@StringLocalizer["Broadcast"]</a>
                             <a not-permission="@walletBroadcastTxPermission" and-mode="true"
                                asp-action="ViewPendingTransaction" asp-route-walletId="@walletId"
-                               asp-route-pendingTransactionId="@pendingTransaction.Id">View</a>
+                               asp-route-pendingTransactionId="@pendingTransaction.Id">@StringLocalizer["View"]</a>
                         }
                         else
                         {
                             <a asp-action="ViewPendingTransaction" asp-route-walletId="@walletId"
-                               asp-route-pendingTransactionId="@pendingTransaction.Id">View</a>
+                               asp-route-pendingTransactionId="@pendingTransaction.Id">@primaryActionLabel</a>
                         }
                         <span permission="@walletCancelTxPermission" and-mode="true">
                             -
                             <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId"
-                               asp-route-pendingTransactionId="@pendingTransaction.Id">Abort</a>
+                               asp-route-pendingTransactionId="@pendingTransaction.Id">@StringLocalizer["Abort"]</a>
                         </span>
                     </td>
                 </tr>

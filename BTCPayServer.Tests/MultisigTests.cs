@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
@@ -19,6 +20,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
 using NBitcoin;
 using NBitcoin.RPC;
@@ -62,6 +64,184 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
         var signedPsbt = SignWithSeed(testPSBT, derivationScheme, resp1);
         s.TestLogs.LogInformation($"Signed PSBT: {signedPsbt}");
+    }
+
+    [Fact]
+    [Trait("Integration", "Integration")]
+    public async Task PendingMultisigTransactionTracksPerInputProgress()
+    {
+        var dbTester = CreateDBTester();
+        await dbTester.MigrateAsync();
+        var contextFactory = dbTester.CreateContextFactory();
+        var storeId = await CreateTestStore(contextFactory);
+        var pendingTransactionService = new PendingTransactionService(
+            CreateNetworkProvider(),
+            dbTester.CreateContextFactory(),
+            new EventAggregator(BTCPayLogs),
+            LoggerFactory.CreateLogger<PendingTransactionService>());
+        var requestBaseUrl = RequestBaseUrl.FromUrl("https://example.com");
+        var testPsbt = CreatePendingMultisigPsbt();
+
+        var pendingTransaction = await pendingTransactionService.CreatePendingTransaction(
+            storeId,
+            "BTC",
+            testPsbt.BasePsbt,
+            requestBaseUrl,
+            cancellationToken: CancellationToken.None);
+        var blob = pendingTransaction.GetBlob();
+        Assert.NotNull(blob);
+        Assert.Equal(2, blob.SignaturesNeeded);
+        Assert.Equal(3, blob.SignaturesTotal);
+        Assert.Equal(0, blob.SignaturesCollected);
+
+        var signerAAllInputs = SignInputs(testPsbt.BasePsbt, testPsbt.SignerA, 0, 1);
+        pendingTransaction = await pendingTransactionService.CollectSignature(
+            new PendingTransactionService.PendingTransactionFullId("BTC", storeId, pendingTransaction.Id),
+            signerAAllInputs,
+            CancellationToken.None);
+        Assert.NotNull(pendingTransaction);
+        blob = pendingTransaction.GetBlob();
+        Assert.Equal(1, blob.SignaturesCollected);
+        Assert.Equal(1, Math.Max(0, (blob.SignaturesNeeded ?? 0) - (blob.SignaturesCollected ?? 0)));
+        Assert.Equal(PendingTransactionState.Pending, pendingTransaction.State);
+        Assert.Single(blob.CollectedSignatures);
+
+        pendingTransaction = await pendingTransactionService.CollectSignature(
+            new PendingTransactionService.PendingTransactionFullId("BTC", storeId, pendingTransaction.Id),
+            signerAAllInputs,
+            CancellationToken.None);
+        blob = pendingTransaction!.GetBlob();
+        Assert.Single(blob.CollectedSignatures);
+        Assert.Equal(1, blob.SignaturesCollected);
+        Assert.Equal(PendingTransactionState.Pending, pendingTransaction.State);
+
+        var signerBFirstInput = SignInputs(testPsbt.BasePsbt, testPsbt.SignerB, 0);
+        pendingTransaction = await pendingTransactionService.CollectSignature(
+            new PendingTransactionService.PendingTransactionFullId("BTC", storeId, pendingTransaction.Id),
+            signerBFirstInput,
+            CancellationToken.None);
+        blob = pendingTransaction!.GetBlob();
+        Assert.Equal(2, blob.CollectedSignatures.Count);
+        Assert.Equal(1, blob.SignaturesCollected);
+        Assert.Equal(PendingTransactionState.Pending, pendingTransaction.State);
+
+        var signerBSecondInput = SignInputs(testPsbt.BasePsbt, testPsbt.SignerB, 1);
+        pendingTransaction = await pendingTransactionService.CollectSignature(
+            new PendingTransactionService.PendingTransactionFullId("BTC", storeId, pendingTransaction.Id),
+            signerBSecondInput,
+            CancellationToken.None);
+        blob = pendingTransaction!.GetBlob();
+        Assert.Equal(3, blob.CollectedSignatures.Count);
+        Assert.Equal(2, blob.SignaturesCollected);
+        Assert.Equal(0, Math.Max(0, (blob.SignaturesNeeded ?? 0) - (blob.SignaturesCollected ?? 0)));
+        Assert.Equal(PendingTransactionState.Signed, pendingTransaction.State);
+
+        var secondPendingTransaction = await pendingTransactionService.CreatePendingTransaction(
+            storeId,
+            "BTC",
+            testPsbt.BasePsbt,
+            requestBaseUrl,
+            cancellationToken: CancellationToken.None);
+        secondPendingTransaction = await pendingTransactionService.CollectSignature(
+            new PendingTransactionService.PendingTransactionFullId("BTC", storeId, secondPendingTransaction.Id),
+            signerAAllInputs,
+            CancellationToken.None);
+        blob = secondPendingTransaction!.GetBlob();
+        Assert.Equal(1, blob.SignaturesCollected);
+
+        var signerBAllInputs = SignInputs(testPsbt.BasePsbt, testPsbt.SignerB, 0, 1);
+        secondPendingTransaction = await pendingTransactionService.CollectSignature(
+            new PendingTransactionService.PendingTransactionFullId("BTC", storeId, secondPendingTransaction.Id),
+            signerBAllInputs,
+            CancellationToken.None);
+        blob = secondPendingTransaction!.GetBlob();
+        Assert.Equal(2, blob.SignaturesCollected);
+        Assert.Equal(PendingTransactionState.Signed, secondPendingTransaction.State);
+        Assert.Equal(2, blob.CollectedSignatures.Count);
+    }
+
+    [Fact]
+    [Trait("Integration", "Integration")]
+    public async Task PendingMultisigTransactionCountsFinalizedInputsAndSelfHealsStoredProgress()
+    {
+        var dbTester = CreateDBTester();
+        await dbTester.MigrateAsync();
+        var dbContextFactory = dbTester.CreateContextFactory();
+        var storeId = await CreateTestStore(dbContextFactory);
+        var pendingTransactionService = new PendingTransactionService(
+            CreateNetworkProvider(),
+            dbTester.CreateContextFactory(),
+            new EventAggregator(BTCPayLogs),
+            LoggerFactory.CreateLogger<PendingTransactionService>());
+        var requestBaseUrl = RequestBaseUrl.FromUrl("https://example.com");
+        var testPsbt = CreatePendingMultisigPsbt();
+
+        var pendingTransaction = await pendingTransactionService.CreatePendingTransaction(
+            storeId,
+            "BTC",
+            testPsbt.BasePsbt,
+            requestBaseUrl,
+            cancellationToken: CancellationToken.None);
+
+        var finalizedInputSubmission = SignInputs(testPsbt.BasePsbt, testPsbt.SignerA, 0, 1);
+        finalizedInputSubmission.Inputs[0].Sign(testPsbt.SignerB);
+        finalizedInputSubmission.Inputs[0].FinalizeInput();
+        pendingTransaction = await pendingTransactionService.CollectSignature(
+            new PendingTransactionService.PendingTransactionFullId("BTC", storeId, pendingTransaction.Id),
+            finalizedInputSubmission,
+            CancellationToken.None);
+
+        var blob = pendingTransaction!.GetBlob();
+        Assert.Equal(1, blob.SignaturesCollected);
+        Assert.Equal(PendingTransactionState.Pending, pendingTransaction.State);
+        Assert.True(finalizedInputSubmission.Inputs[0].IsFinalized());
+        Assert.NotNull(finalizedInputSubmission.Inputs[0].FinalScriptWitness);
+        Assert.Empty(finalizedInputSubmission.Inputs[0].PartialSigs);
+
+        await using (var ctx = dbContextFactory.CreateContext())
+        {
+            var staleTransaction = await ctx.PendingTransactions.FindAsync(pendingTransaction.Id);
+            Assert.NotNull(staleTransaction);
+            staleTransaction!.SetBlob(new PendingTransactionBlob
+            {
+                PSBT = blob.PSBT,
+                RequestBaseUrl = blob.RequestBaseUrl,
+                CollectedSignatures = blob.CollectedSignatures,
+                SignaturesNeeded = 0,
+                SignaturesTotal = 0,
+                SignaturesCollected = 99
+            });
+            await ctx.SaveChangesAsync();
+        }
+
+        var refreshed = await pendingTransactionService.GetPendingTransaction(
+            new PendingTransactionService.PendingTransactionFullId("BTC", storeId, pendingTransaction.Id));
+        blob = refreshed!.GetBlob();
+        Assert.Equal(2, blob.SignaturesNeeded);
+        Assert.Equal(3, blob.SignaturesTotal);
+        Assert.Equal(1, blob.SignaturesCollected);
+
+        await using (var ctx = dbContextFactory.CreateContext())
+        {
+            var staleTransaction = await ctx.PendingTransactions.FindAsync(pendingTransaction.Id);
+            Assert.NotNull(staleTransaction);
+            staleTransaction!.SetBlob(new PendingTransactionBlob
+            {
+                PSBT = blob.PSBT,
+                RequestBaseUrl = blob.RequestBaseUrl,
+                CollectedSignatures = blob.CollectedSignatures,
+                SignaturesNeeded = 9,
+                SignaturesTotal = 9,
+                SignaturesCollected = 9
+            });
+            await ctx.SaveChangesAsync();
+        }
+
+        var refreshedList = await pendingTransactionService.GetPendingTransactions("BTC", storeId);
+        blob = Assert.Single(refreshedList).GetBlob();
+        Assert.Equal(2, blob.SignaturesNeeded);
+        Assert.Equal(3, blob.SignaturesTotal);
+        Assert.Equal(1, blob.SignaturesCollected);
     }
 
     [Fact]
@@ -137,14 +317,18 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
         // validating the state of UI
         Assert.Equal("0", await s.Page.TextContentAsync("#Sigs_0__Collected"));
+        Assert.Equal("2", await s.Page.TextContentAsync("#Sigs_0__Missing"));
         Assert.Equal("2/3", await s.Page.TextContentAsync("#Sigs_0__Scheme"));
 
         // now proceeding to click on sign button and sign transactions
-        await SignPendingTransactionWithKey(s, address, derivationScheme, resp1, "Multisig signature collected (BTC)");
+        var signatureCollectedEmail = await SignPendingTransactionWithKey(s, address, derivationScheme, resp1, "Multisig signature collected (BTC)");
         Assert.Equal("1", await s.Page.TextContentAsync("#Sigs_0__Collected"));
+        Assert.Equal("1", await s.Page.TextContentAsync("#Sigs_0__Missing"));
+        Assert.Contains("Progress: <b>1/2</b> collected, 1 missing.", signatureCollectedEmail!.Html ?? signatureCollectedEmail.Text ?? string.Empty, StringComparison.OrdinalIgnoreCase);
 
         await SignPendingTransactionWithKey(s, address, derivationScheme, resp2);
         Assert.Equal("2", await s.Page.TextContentAsync("#Sigs_0__Collected"));
+        Assert.Equal("0", await s.Page.TextContentAsync("#Sigs_0__Missing"));
 
         // we should now have enough signatures to broadcast transaction
         await s.Page.ClickAsync("//a[text()='Broadcast']");
@@ -400,7 +584,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         Assert.Equal("Multisig wallet created for BTC", walletCreatedEmail.Subject);
     }
 
-    private async Task SignPendingTransactionWithKey(PlaywrightTester s, string address,
+    private async Task<MailPitClient.Message> SignPendingTransactionWithKey(PlaywrightTester s, string address,
         DerivationStrategyBase derivationScheme, GenerateWalletResponse signingKey, string expectedNotificationSubject = null)
     {
         // getting to pending transaction page
@@ -422,7 +606,10 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Page.FillAsync("#ImportedPSBT", signedPsbt);
 
         if (string.IsNullOrEmpty(expectedNotificationSubject))
+        {
             await s.Page.ClickAsync("#Collect");
+            return null;
+        }
         else
         {
             var signatureCollectedEmail = await s.Server.AssertHasEmail(async () =>
@@ -430,6 +617,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
                 await s.Page.ClickAsync("#Collect");
             });
             Assert.Equal(expectedNotificationSubject, signatureCollectedEmail.Subject);
+            return signatureCollectedEmail;
         }
     }
 
@@ -536,4 +724,57 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         // Return the updated and signed PSBT
         return psbt.ToBase64();
     }
+
+    private static TestPendingMultisigPsbt CreatePendingMultisigPsbt()
+    {
+        var network = Network.RegTest;
+        var signerA = new Key();
+        var signerB = new Key();
+        var signerC = new Key();
+        var witnessScript = PayToMultiSigTemplate.Instance.GenerateScriptPubKey(2, signerA.PubKey, signerB.PubKey, signerC.PubKey);
+        var scriptPubKey = witnessScript.WitHash.ScriptPubKey;
+
+        var previousTransactionA = network.CreateTransaction();
+        previousTransactionA.Outputs.Add(Money.Coins(1.0m), scriptPubKey);
+        var previousTransactionB = network.CreateTransaction();
+        previousTransactionB.Outputs.Add(Money.Coins(1.1m), scriptPubKey);
+
+        var builder = network.CreateTransactionBuilder();
+        builder.AddCoins(
+            previousTransactionA.Outputs.AsCoins().First().ToScriptCoin(witnessScript),
+            previousTransactionB.Outputs.AsCoins().First().ToScriptCoin(witnessScript));
+        builder.Send(new Key().PubKey.WitHash.ScriptPubKey, Money.Coins(1.5m));
+        builder.SetChange(new Key().PubKey.WitHash.ScriptPubKey);
+        builder.SendFees(Money.Satoshis(10_000));
+
+        return new TestPendingMultisigPsbt(builder.BuildPSBT(false), signerA, signerB, signerC);
+    }
+
+    private static PSBT SignInputs(PSBT basePsbt, Key signer, params int[] inputIndexes)
+    {
+        var psbt = basePsbt.Clone();
+        foreach (var inputIndex in inputIndexes)
+        {
+            psbt.Inputs[inputIndex].Sign(signer);
+        }
+
+        return psbt;
+    }
+
+    private static async Task<string> CreateTestStore(ApplicationDbContextFactory contextFactory)
+    {
+        await using var ctx = contextFactory.CreateContext();
+        var store = new StoreData
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            StoreName = "Test Store",
+            DerivationStrategies = "{}",
+            StoreBlob = "{}"
+        };
+        ctx.Stores.Add(store);
+        await ctx.SaveChangesAsync();
+        return store.Id;
+    }
+
+    private sealed record TestPendingMultisigPsbt(PSBT BasePsbt, Key SignerA, Key SignerB, Key SignerC);
 }

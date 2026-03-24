@@ -170,6 +170,20 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
         }
 
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = SubscriptionsPolicies.CanManageSubscribers)]
+        [HttpDelete("~/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}")]
+        public async Task<IActionResult> DeleteSubscriber(string storeId, string offeringId,
+            [ModelBinder<CustomerSelectorModelBinder>]
+            CustomerSelector customerSelector)
+        {
+            var subscriber = await ctx.Subscribers.GetBySelector(offeringId, customerSelector, storeId);
+            if (subscriber is null)
+                return SubscriberNotFound();
+            ctx.Subscribers.Remove(subscriber);
+            await ctx.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = SubscriptionsPolicies.CanManageSubscribers)]
         [HttpGet("~/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/credits/{currency}")]
         public async Task<IActionResult> GetCredit(string storeId, string offeringId,
             [ModelBinder<CustomerSelectorModelBinder>]

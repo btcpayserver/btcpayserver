@@ -41,6 +41,9 @@ public partial class BTCPayServerClient
     public async Task<SubscriberModel> GetSubscriber(string storeId, string offeringId, string customerSelector, CancellationToken token = default)
     => await SendHttpRequest<SubscriberModel>($"api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{Uri.EscapeDataString(customerSelector)}", null, HttpMethod.Get, token);
 
+    public async Task DeleteSubscriber(string storeId, string offeringId, string customerSelector, CancellationToken token = default)
+        => await SendHttpRequest($"api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{Uri.EscapeDataString(customerSelector)}", null, HttpMethod.Delete, token);
+
     public async Task<SubscriberModel> SuspendSubscriber(string storeId, string offeringId, string customerSelector, string? reason = null,
         CancellationToken token = default)
         => await SendHttpRequest<SubscriberModel>($"api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{Uri.EscapeDataString(customerSelector)}/suspend", new SuspendSubscriberRequest()

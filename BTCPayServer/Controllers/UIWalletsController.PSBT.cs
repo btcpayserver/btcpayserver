@@ -576,6 +576,12 @@ namespace BTCPayServer.Controllers
                             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Transaction broadcasted successfully ({0})", transaction.GetHash()].Value;
                         }
 
+                        if (!string.IsNullOrEmpty(vm.SigningContext?.Comment))
+                        {
+                            var txObjId = new WalletObjectId(walletId, WalletObjectData.Types.Tx, transaction.GetHash().ToString());
+                            await WalletRepository.SetWalletObjectComment(txObjId, vm.SigningContext.Comment);
+                        }
+
                         if (vm.SigningContext.PendingTransactionId is not null)
                         {
                             await _pendingTransactionService.Broadcasted(GetPendingTxId(walletId, vm.SigningContext.PendingTransactionId));

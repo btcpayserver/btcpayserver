@@ -20,5 +20,6 @@ namespace BTCPayServer.Models.WalletViewModels
 
         public string PendingTransactionId { get; set; }
         public long BalanceChangeFromReplacement { get; set; }
+        public string Comment { get; set; }
     }
 }

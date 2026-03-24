@@ -14,7 +14,7 @@ public class MultisigDashboardSetupGuide(MultisigService multisigService) : View
         var httpContext = ViewContext.HttpContext;
         var store = httpContext.GetStoreData();
         var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (store is null || string.IsNullOrEmpty(userId))
+        if (string.IsNullOrEmpty(userId))
             return Content(string.Empty);
 
         var items = await multisigService.GetInProgressForStore(store, userId, httpContext);

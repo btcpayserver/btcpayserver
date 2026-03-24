@@ -2,7 +2,6 @@
 
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Plugins.Multisig.Services;
 using BTCPayServer.Services.Invoices;

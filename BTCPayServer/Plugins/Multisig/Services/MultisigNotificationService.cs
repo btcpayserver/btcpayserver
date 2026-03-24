@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions;
 using BTCPayServer.Client;
@@ -43,7 +44,7 @@ public class MultisigNotificationService(
                 sender,
                 participant.Email,
                 $"Multisig signer request for {cryptoCode}",
-                $"A multisig wallet setup requires your account key.<br/>Open this link and submit your signer key:<br/><a href=\"{link}\">{link}</a>",
+                $"A multisig wallet setup requires your account key.<br/>Open this link and submit your signer key:<br/>{HtmlLink(link)}",
                 storeId,
                 participant.UserId);
         }
@@ -75,12 +76,14 @@ public class MultisigNotificationService(
             var setupLink = multisigService.CreateSetupLink(httpContext, storeId, cryptoCode, pending.RequestId, absolute: true);
             foreach (var recipient in recipientEmails)
             {
+                var participantLabel = Html(participant.Name ?? participant.Email ?? participant.UserId);
+                var requestId = Html(pending.RequestId);
                 TrySendEmail(
                     sender,
                     recipient,
                     $"Multisig signer submitted ({cryptoCode})",
-                    $"<b>{participant.Name ?? participant.Email ?? participant.UserId}</b> submitted a signer key for request <span class=\"font-monospace\">{pending.RequestId}</span>.<br/>" +
-                    (string.IsNullOrEmpty(setupLink) ? string.Empty : $"Open request: <a href=\"{setupLink}\">{setupLink}</a>"),
+                    $"<b>{participantLabel}</b> submitted a signer key for request <span class=\"font-monospace\">{requestId}</span>.<br/>" +
+                    (string.IsNullOrEmpty(setupLink) ? string.Empty : $"Open request: {HtmlLink(setupLink)}"),
                     storeId,
                     participant.UserId);
             }
@@ -123,7 +126,7 @@ public class MultisigNotificationService(
                 sender,
                 recipient,
                 $"Multisig wallet created for {cryptoCode}",
-                $"The multisig wallet setup is complete.<br/>Open wallet: <a href=\"{walletLink}\">{walletLink}</a>",
+                $"The multisig wallet setup is complete.<br/>Open wallet: {HtmlLink(walletLink)}",
                 storeId);
         }
     }
@@ -151,7 +154,7 @@ public class MultisigNotificationService(
                 sender,
                 recipient,
                 $"Pending multisig transaction requires signatures ({walletId.CryptoCode})",
-                $"A pending multisig transaction was created and needs signatures.<br/><a href=\"{pendingLink}\">Open pending transaction</a>",
+                $"A pending multisig transaction was created and needs signatures.<br/><a href=\"{Html(pendingLink)}\">Open pending transaction</a>",
                 walletId.StoreId);
         }
     }
@@ -177,17 +180,20 @@ public class MultisigNotificationService(
         var blob = pendingTransaction.GetBlob();
         var progress = blob is null
             ? "Signature was collected."
-            : $"Progress: <b>{blob.SignaturesCollected}/{blob.SignaturesNeeded ?? blob.SignaturesTotal ?? 0}</b> signatures.";
+            : $"Progress: <b>{blob.SignaturesCollected ?? 0}/{blob.SignaturesNeeded ?? blob.SignaturesTotal ?? 0}</b> collected, {Math.Max(0, (blob.SignaturesNeeded ?? blob.SignaturesTotal ?? 0) - (blob.SignaturesCollected ?? 0))} missing.";
         foreach (var recipient in recipients)
         {
             TrySendEmail(
                 sender,
                 recipient,
                 $"Multisig signature collected ({walletId.CryptoCode})",
-                $"A signer submitted a signature for the pending multisig transaction.<br/>{progress}<br/><a href=\"{pendingLink}\">Open pending transaction</a>",
+                $"A signer submitted a signature for the pending multisig transaction.<br/>{progress}<br/><a href=\"{Html(pendingLink)}\">Open pending transaction</a>",
                 walletId.StoreId);
         }
     }
+
+    private static string Html(string? value) => HtmlEncoder.Default.Encode(value ?? string.Empty);
+    private static string HtmlLink(string url) => $"<a href=\"{Html(url)}\">{Html(url)}</a>";
 
     private static bool IsServerMultisig(DerivationSchemeSettings derivation)
     {

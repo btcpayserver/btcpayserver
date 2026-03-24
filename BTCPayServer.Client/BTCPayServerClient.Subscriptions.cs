@@ -54,6 +54,10 @@ public partial class BTCPayServerClient
     public async Task<SubscriberModel> UnsuspendSubscriber(string storeId, string offeringId, string customerSelector, CancellationToken token = default)
         => await SendHttpRequest<SubscriberModel>($"api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/unsuspend", null, HttpMethod.Post, token);
 
+    public async Task<SubscriberModel> UpdateSubscriberDates(string storeId, string offeringId, string customerSelector,
+        UpdateSubscriberDatesRequest request, CancellationToken token = default)
+        => await SendHttpRequest<SubscriberModel>($"api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{Uri.EscapeDataString(customerSelector)}/dates", request, HttpMethod.Put, token);
+
     public async Task<PortalSessionModel> CreatePortalSession(CreatePortalSessionRequest request, CancellationToken token = default)
         => await SendHttpRequest<PortalSessionModel>($"api/v1/subscriber-portal", request, HttpMethod.Post, token);
     public async Task<PortalSessionModel> GetPortalSession(string portalSessionId, CancellationToken token = default)

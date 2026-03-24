@@ -255,6 +255,25 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             return await GetSubscriber(storeId, offeringId, customerSelector);
         }
 
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = SubscriptionsPolicies.CanManageSubscribers)]
+        [HttpPut("~/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/dates")]
+        public async Task<IActionResult> UpdateSubscriberDates(string storeId, string offeringId,
+            [ModelBinder<CustomerSelectorModelBinder>]
+            CustomerSelector customerSelector,
+            [FromBody] UpdateSubscriberDatesRequest request)
+        {
+            var subscriber = await ctx.Subscribers.GetBySelector(offeringId, customerSelector, storeId);
+            if (subscriber is null)
+                return SubscriberNotFound();
+            var startDate = (request?.StartDate ?? subscriber.PlanStarted).ToUniversalTime();
+            var expirationDate = request?.ExpirationDate?.ToUniversalTime();
+            if (expirationDate is { } exp && exp <= startDate)
+                return this.CreateAPIError(400, "invalid-dates", "Expiration date must be after the start date.");
+            await subscriptionHostedService.UpdateDates(subscriber.Id, startDate, expirationDate);
+            ctx.ChangeTracker.Clear();
+            return await GetSubscriber(storeId, offeringId, customerSelector);
+        }
+
         [AllowAnonymous]
         [HttpPost("~/api/v1/plan-checkout/{checkoutId}")]
         public async Task<IActionResult> ProceedPlanCheckout(string checkoutId, [FromQuery] string? email = null)

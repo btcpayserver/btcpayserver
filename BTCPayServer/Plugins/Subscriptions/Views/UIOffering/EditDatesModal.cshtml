@@ -16,6 +16,7 @@
                 </div>
                 <div class="modal-body pt-0">
                     <input name="customerId" type="hidden" />
+                    <input name="timezoneOffset" type="hidden" class="edit-dates-tz" />
 
                     <div class="mb-3">
                         <label class="form-label" text-translate="true">Start Date</label>
@@ -74,6 +75,7 @@
 
             const tr = trigger.closest('tr');
             modalEl.querySelector('input[name="customerId"]').value = tr.getAttribute('data-subscriber-id') || '';
+            modalEl.querySelector('.edit-dates-tz').value = new Date().getTimezoneOffset();
             modalEl.querySelector('.edit-dates-subscriber-name').innerText = tr.getAttribute('data-subscriber-email') || '';
             startInput.value = tr.getAttribute('data-plan-started') || '';
             expirationInput.value = tr.getAttribute('data-expiration') || '';

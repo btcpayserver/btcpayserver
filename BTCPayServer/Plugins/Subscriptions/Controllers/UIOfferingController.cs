@@ -101,7 +101,7 @@ public partial class UIOfferingController(
     [HttpPost("stores/{storeId}/offerings/{offeringId}/Subscribers")]
     public async Task<IActionResult> SubscriberSuspend(string storeId, string offeringId, string customerId, string? command = null,
         string? suspensionReason = null, decimal? amount = null, string? description = null,
-        string? startDate = null, string? expirationDate = null)
+        DateOnly? startDate = null, DateOnly? expirationDate = null, int? timezoneOffset = null)
     {
         await using var ctx = DbContextFactory.CreateContext();
         var sub = await ctx.Subscribers.GetByCustomerId(customerId, offeringId: offeringId, storeId: storeId);
@@ -159,24 +159,24 @@ public partial class UIOfferingController(
         }
         else if (command is "edit-dates")
         {
-            if (DateTimeOffset.TryParse(startDate, null, System.Globalization.DateTimeStyles.AssumeUniversal, out var parsedStart))
+            if (startDate is null)
             {
-                DateTimeOffset? parsedExpiration = null;
-                if (!string.IsNullOrEmpty(expirationDate))
+                TempData.SetStatusMessageModel(new()
                 {
-                    if (!DateTimeOffset.TryParse(expirationDate, null, System.Globalization.DateTimeStyles.AssumeUniversal, out var parsedExp))
-                    {
-                        TempData.SetStatusMessageModel(new()
-                        {
-                            Severity = StatusMessageModel.StatusSeverity.Error,
-                            Html = StringLocalizer["Invalid expiration date provided."]
-                        });
-                        return GoToOffering(storeId, offeringId, SubscriptionSection.Subscribers);
-                    }
-                    parsedExpiration = parsedExp;
-                }
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Html = StringLocalizer["Invalid start date provided."]
+                });
+                return GoToOffering(storeId, offeringId, SubscriptionSection.Subscribers);
+            }
 
-                if (parsedExpiration.HasValue && parsedExpiration.Value <= parsedStart)
+            var browserOffset = TimeSpan.FromMinutes(-(timezoneOffset ?? 0));
+            var parsedStart = new DateTimeOffset(startDate.Value.ToDateTime(TimeOnly.MinValue), browserOffset).ToUniversalTime();
+
+            DateTimeOffset? parsedExpiration = null;
+            if (expirationDate is not null)
+            {
+                parsedExpiration = new DateTimeOffset(expirationDate.Value.ToDateTime(TimeOnly.MinValue), browserOffset).ToUniversalTime();
+                if (parsedExpiration.Value <= parsedStart)
                 {
                     TempData.SetStatusMessageModel(new()
                     {
@@ -185,18 +185,10 @@ public partial class UIOfferingController(
                     });
                     return GoToOffering(storeId, offeringId, SubscriptionSection.Subscribers);
                 }
+            }
 
-                await SubsService.UpdateDates(sub.Id, parsedStart, parsedExpiration);
-                TempData.SetStatusSuccess(StringLocalizer["Subscription dates updated for {0}", subName]);
-            }
-            else
-            {
-                TempData.SetStatusMessageModel(new()
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    Html = StringLocalizer["Invalid start date provided."]
-                });
-            }
+            await SubsService.UpdateDates(sub.Id, parsedStart, parsedExpiration);
+            TempData.SetStatusSuccess(StringLocalizer["Subscription dates updated for {0}", subName]);
         }
 
         return GoToOffering(storeId, offeringId, SubscriptionSection.Subscribers);

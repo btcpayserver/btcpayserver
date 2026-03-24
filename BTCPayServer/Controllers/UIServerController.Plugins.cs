@@ -47,7 +47,7 @@ namespace BTCPayServer.Controllers
                 availablePluginsByIdentifier.TryAdd(p.Identifier, p);
             var disabled = pluginService.GetDisabledPlugins();
             var installed = pluginService.Installed;
-            var disabledPluginUpdates = ListPluginsViewModel.GetDisabledPluginUpdates(disabled, installed, allPlugins);
+            var disabledPluginUpdates = ListPluginsViewModel.GetDisabledPluginUpdates(disabled, availablePluginsByIdentifier);
             var res = new ListPluginsViewModel()
             {
                 Plugins = pluginService.LoadedPlugins,
@@ -75,20 +75,17 @@ namespace BTCPayServer.Controllers
 
             public static Dictionary<string, PluginService.AvailablePlugin> GetDisabledPluginUpdates(
                 Dictionary<string, Version> disabled,
-                Dictionary<string, Version> installed,
-                IEnumerable<PluginService.AvailablePlugin> allPlugins)
+                Dictionary<string, AvailablePlugin> availablePluginsByIdentifier)
             {
-                var result = new Dictionary<string, PluginService.AvailablePlugin>(StringComparer.InvariantCultureIgnoreCase);
+                var result = new Dictionary<string, PluginService.AvailablePlugin>();
                 foreach (var (disabledPlugin, disabledVersion) in disabled)
                 {
                     if (disabledVersion == null) continue;
-                    var matched = allPlugins
-                        .Where(a => a.Identifier.Equals(disabledPlugin, StringComparison.InvariantCultureIgnoreCase) && a.Version > disabledVersion)
-                        .OrderByDescending(a => a.Version).ToArray();
-                    var recommendedUpdate = matched.FirstOrDefault(a => PluginManager.DependenciesMet(a.Dependencies, installed))
-                        ?? matched.FirstOrDefault();
-                    if (recommendedUpdate != null)
-                        result[disabledPlugin] = recommendedUpdate;
+                    if (availablePluginsByIdentifier.TryGetValue(disabledPlugin, out var available))
+                    {
+                        if (available.Version > disabledVersion)
+                            result[disabledPlugin] = available;
+                    }
                 }
                 return result;
             }

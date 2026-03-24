@@ -102,9 +102,9 @@
                             }
                         </span>
 						@{
-							var uninstalled = Model.Commands.Any(c => c.plugin == plugin && c.command == "delete");
-                            var enabled = Model.Commands.Any(c => c.plugin == plugin && c.command == "enable");
-                            var pendingInstall = Model.Commands.Any(c => c.plugin == plugin && c.command == "install");
+							var uninstalled = Model.Commands.Any(c => c.plugin.Equals(plugin, StringComparison.InvariantCultureIgnoreCase) && c.command == "delete");
+                            var enabled = Model.Commands.Any(c => c.plugin.Equals(plugin, StringComparison.InvariantCultureIgnoreCase) && c.command == "enable");
+                            var pendingInstall = Model.Commands.Any(c => c.plugin.Equals(plugin, StringComparison.InvariantCultureIgnoreCase) && c.command == "install");
                             Model.DisabledPluginUpdates.TryGetValue(plugin, out var recommendedUpdate);
 						}
                         <div class="d-flex gap-2">

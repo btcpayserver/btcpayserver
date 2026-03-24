@@ -276,11 +276,11 @@ public class SubscriptionHostedService(
                     var prevPlan = m.Plan;
                     (m.PlanId, m.Plan) = (m.NewPlanId, m.NewPlan);
                     (m.NewPlanId, m.NewPlan) = (null, null);
-                    if (!m.Plan.FeaturesLoaded)
-                        await ctx.PlanFeatures.FetchPlanFeaturesAsync(m.Plan);
-
-                    await UpdatePlanStats(ctx, prevPlanId);
-                    await UpdatePlanStats(ctx, m.PlanId);
+                    subCtx.AddEvent(new SubscriptionEvent.PlanStarted(m, prevPlan)
+                    {
+                        PreviousPlan = prevPlan,
+                        AutoRenew = false
+                    });
                 }
 
                 if (newPhase is PhaseTypes.Expired)

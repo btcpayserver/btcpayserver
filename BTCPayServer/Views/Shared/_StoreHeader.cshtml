@@ -1,9 +1,0 @@
-@model (string Title, StoreBrandingViewModel StoreBranding)
-
-<header class="store-header" v-pre>
-    @if (!string.IsNullOrEmpty(Model.StoreBranding.LogoUrl))
-    {
-        <img src="@Model.StoreBranding.LogoUrl" alt="@Model.Title" class="store-logo"/>
-    }
-    <h1 class="store-name">@Model.Title</h1>
-</header>

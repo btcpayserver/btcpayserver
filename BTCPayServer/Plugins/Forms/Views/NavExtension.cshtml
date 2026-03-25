@@ -1,6 +1,0 @@
-@using BTCPayServer.Client
-@model BTCPayServer.Components.MainNav.MainNavViewModel
-
-<li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
-    <a layout-menu-item="@(nameof(StoreNavPages.Forms))" asp-area="@FormsPlugin.Area" asp-controller="UIForms" asp-action="FormsList" asp-route-storeId="@Model.Store.Id" text-translate="true">Forms</a>
-</li>

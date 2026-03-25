@@ -309,7 +309,10 @@ public class SubscriptionHostedService(
                 if (newActive)
                     subCtx.AddEvent(new SubscriptionEvent.SubscriberActivated(m));
                 else
-                    subCtx.AddEvent(new SubscriptionEvent.SubscriberDisabled(m));
+                    subCtx.AddEvent(new SubscriptionEvent.SubscriberDisabled(
+                        m,
+                        m.IsSuspended ? SubscriptionEvent.DisabledReason.Suspension : SubscriptionEvent.DisabledReason.Expired,
+                        m.SuspensionReason));
             }
         }
 

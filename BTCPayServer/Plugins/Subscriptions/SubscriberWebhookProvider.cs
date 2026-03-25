@@ -90,10 +90,12 @@ public class SubscriberWebhookProvider : WebhookTriggerProvider<SubscriptionEven
                     CurrentPhase = Mapper.Map(sub.Phase)
                 };
 
-            case SubscriptionEvent.SubscriberDisabled:
+            case SubscriptionEvent.SubscriberDisabled disabled:
                 return new WebhookSubscriptionEvent.SubscriberDisabledEvent(storeId)
                 {
-                    Subscriber = model
+                    Subscriber = model,
+                    Reason = Map(disabled.Reason),
+                    SuspensionReason = disabled.SuspensionReason
                 };
 
             case SubscriptionEvent.PaymentReminder:
@@ -117,4 +119,12 @@ public class SubscriberWebhookProvider : WebhookTriggerProvider<SubscriptionEven
                 throw new ArgumentOutOfRangeException(nameof(evt), evt.GetType(), "Unsupported subscription event type");
         }
     }
+
+    private WebhookSubscriptionEvent.SubscriberDisabledEvent.DisabledReason Map(SubscriptionEvent.DisabledReason disabledReason)
+        => disabledReason switch
+        {
+            SubscriptionEvent.DisabledReason.Expired => WebhookSubscriptionEvent.SubscriberDisabledEvent.DisabledReason.Expired,
+            SubscriptionEvent.DisabledReason.Suspension => WebhookSubscriptionEvent.SubscriberDisabledEvent.DisabledReason.Suspension,
+            _ => throw new ArgumentOutOfRangeException(nameof(disabledReason), disabledReason, null)
+        };
 }

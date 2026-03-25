@@ -485,13 +485,13 @@ namespace BTCPayServer.Tests
 
             var txTimestamp = tx.Timestamp;
             AssertSearchWalletTransaction(walletController, walletId, true, tx.Id,
-                $"startdate:{txTimestamp.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)}", null);
+                $"startdate:{txTimestamp.ToString("o", CultureInfo.InvariantCulture)}", null);
             AssertSearchWalletTransaction(walletController, walletId, true, tx.Id,
-                $"enddate:{txTimestamp.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)}", null);
+                $"enddate:{txTimestamp.ToString("o", CultureInfo.InvariantCulture)}", null);
             AssertSearchWalletTransaction(walletController, walletId, false, tx.Id,
-                $"startdate:{txTimestamp.AddSeconds(1).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)}", null);
+                $"startdate:{txTimestamp.AddSeconds(1).ToString("o", CultureInfo.InvariantCulture)}", null);
             AssertSearchWalletTransaction(walletController, walletId, false, tx.Id,
-                $"enddate:{txTimestamp.AddSeconds(-1).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)}", null);
+                $"enddate:{txTimestamp.AddSeconds(-1).ToString("o", CultureInfo.InvariantCulture)}", null);
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]

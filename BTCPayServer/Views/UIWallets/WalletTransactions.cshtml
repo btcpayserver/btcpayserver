@@ -245,7 +245,7 @@
 </div>
 <partial name="_StatusMessage" />
 
-<form method="get" class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" id="Filter">
+<form method="get" asp-action="WalletTransactions" asp-route-walletId="@walletId" class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" id="Filter">
     <input asp-for="Count" type="hidden" />
     @if (!string.IsNullOrEmpty(labelFilter))
     {

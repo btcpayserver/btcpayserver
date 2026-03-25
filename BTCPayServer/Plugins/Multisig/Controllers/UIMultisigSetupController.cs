@@ -38,8 +38,11 @@ public class UIMultisigSetupController(
         string.Equals(cryptoCode, "BTC", StringComparison.OrdinalIgnoreCase);
 
     [HttpGet("{storeId}/onchain/{cryptoCode}/import/multisig")]
-    public async Task<IActionResult> SetupMultisig(MultisigSetupViewModel vm)
+    public async Task<IActionResult> SetupMultisig(string storeId, string cryptoCode, MultisigSetupViewModel vm)
     {
+        vm.StoreId = storeId;
+        vm.CryptoCode = cryptoCode;
+
         if (!IsSupportedCryptoCode(vm.CryptoCode))
             return NotFound();
         if (!await walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, vm.StoreId, vm.CryptoCode))
@@ -54,8 +57,11 @@ public class UIMultisigSetupController(
     }
 
     [HttpPost("{storeId}/onchain/{cryptoCode}/import/multisig")]
-    public async Task<IActionResult> SetupMultisig(MultisigSetupViewModel vm, string? command = null)
+    public async Task<IActionResult> SetupMultisig(string storeId, string cryptoCode, MultisigSetupViewModel vm, string? command = null)
     {
+        vm.StoreId = storeId;
+        vm.CryptoCode = cryptoCode;
+
         if (!IsSupportedCryptoCode(vm.CryptoCode))
             return NotFound();
         if (!await walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, vm.StoreId, vm.CryptoCode))
@@ -84,23 +90,24 @@ public class UIMultisigSetupController(
     {
         if (!onChainWalletSetupService.TryParseProtectedConfig(vm.CryptoCode, vm.Config, out var strategy) || strategy is null)
         {
-            ModelState.AddModelError(nameof(vm.Config), "Config file was not in the correct format");
+            ModelState.AddModelError(nameof(vm.Config), stringLocalizer["Config file was not in the correct format"].Value);
             return View("MultisigConfirm", vm);
         }
 
         if (string.IsNullOrEmpty(vm.MultisigRequestId))
         {
-            ModelState.AddModelError(nameof(vm.MultisigRequestId), "The multisig request was not found or has expired.");
+            ModelState.AddModelError(nameof(vm.MultisigRequestId), stringLocalizer["The multisig request was not found or has expired."].Value);
             return View("MultisigConfirm", vm);
         }
 
-        var pending = await multisigService.GetPendingMultisigSetup(vm.StoreId, vm.CryptoCode, vm.MultisigRequestId);
-        if (pending is null)
+        var pendingSetting = await GetPendingRequestWithVersion(vm.StoreId, vm.CryptoCode, vm.MultisigRequestId);
+        if (pendingSetting is null)
         {
-            ModelState.AddModelError(nameof(vm.MultisigRequestId), "The multisig request was not found or has expired.");
+            ModelState.AddModelError(nameof(vm.MultisigRequestId), stringLocalizer["The multisig request was not found or has expired."].Value);
             return View("MultisigConfirm", vm);
         }
 
+        var pending = pendingSetting.Value.Pending;
         if (!TryBuildPendingStrategy(vm.StoreId, vm.CryptoCode, pending, network, out var currentStrategy, out var validationError))
         {
             ModelState.AddModelError(nameof(vm.MultisigRequestId), validationError);
@@ -109,7 +116,7 @@ public class UIMultisigSetupController(
 
         if (!HasSameMultisigStrategy(strategy, currentStrategy))
         {
-            ModelState.AddModelError(nameof(vm.MultisigRequestId), "This multisig request changed. Please review it again before creating the wallet.");
+            ModelState.AddModelError(nameof(vm.MultisigRequestId), stringLocalizer["This multisig request changed. Please review it again before creating the wallet."].Value);
             vm.Config = onChainWalletSetupService.ProtectConfig(vm.CryptoCode, currentStrategy);
             return ConfirmAddresses(vm, currentStrategy, network);
         }
@@ -121,15 +128,16 @@ public class UIMultisigSetupController(
             return ConfirmAddresses(vm, strategy, network);
         }
 
-        var finalizedMultisigRequest = await multisigService.GetPendingMultisigSetup(vm.StoreId, vm.CryptoCode, vm.MultisigRequestId);
-        if (finalizedMultisigRequest is not null)
-            await storeRepository.UpdateSetting<PendingMultisigSetupData>(vm.StoreId, MultisigService.GetPendingMultisigSettingName(vm.CryptoCode), null);
-
-        if (finalizedMultisigRequest is not null)
+        var finalizedPendingSetting = await GetPendingRequestWithVersion(vm.StoreId, vm.CryptoCode, vm.MultisigRequestId);
+        if (finalizedPendingSetting is not null &&
+            await storeRepository.TryDeleteSettingAsync(
+                vm.StoreId,
+                MultisigService.GetPendingMultisigSettingName(vm.CryptoCode),
+                finalizedPendingSetting.Value.XMin))
         {
             try
             {
-                await multisigNotificationService.SendWalletCreatedEmails(HttpContext, vm.StoreId, vm.CryptoCode, finalizedMultisigRequest);
+                await multisigNotificationService.SendWalletCreatedEmails(HttpContext, vm.StoreId, vm.CryptoCode, finalizedPendingSetting.Value.Pending);
             }
             catch (Exception ex)
             {
@@ -151,14 +159,22 @@ public class UIMultisigSetupController(
         var totalSigners = vm.MultisigTotalSigners ?? 0;
         if (totalSigners is <= 0 or > 15)
         {
-            ModelState.AddModelError(nameof(vm.MultisigTotalSigners), "Total signers must be between 1 and 15.");
+            ModelState.AddModelError(nameof(vm.MultisigTotalSigners), stringLocalizer["Total signers must be between 1 and 15."].Value);
             return View("Multisig", vm);
         }
+
+        var scriptType = NormalizeMultisigScriptType(vm.MultisigScriptType);
+        if (scriptType is null)
+        {
+            ModelState.AddModelError(nameof(vm.MultisigScriptType), stringLocalizer["Invalid multisig script type."].Value);
+            return View("Multisig", vm);
+        }
+        vm.MultisigScriptType = scriptType;
 
         var usersById = vm.MultisigStoreUsers.ToDictionary(u => u.UserId, u => u, StringComparer.Ordinal);
         if (!selectedIds.All(usersById.ContainsKey))
         {
-            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), "One or more selected users are invalid.");
+            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), stringLocalizer["One or more selected users are invalid."].Value);
             return View("Multisig", vm);
         }
 
@@ -175,7 +191,7 @@ public class UIMultisigSetupController(
         {
             if (!string.IsNullOrEmpty(vm.MultisigRequestId))
             {
-                ModelState.AddModelError(nameof(vm.MultisigRequestId), "The multisig request changed. Reload the page and try again.");
+                ModelState.AddModelError(nameof(vm.MultisigRequestId), stringLocalizer["The multisig request changed. Reload the page and try again."].Value);
                 return View("Multisig", vm);
             }
 
@@ -186,7 +202,7 @@ public class UIMultisigSetupController(
                 RequestedByUserId = requesterUserId,
                 RequestedByEmail = requesterEmail,
                 RequestedByName = requesterName,
-                ScriptType = vm.MultisigScriptType ?? "p2wsh",
+                ScriptType = scriptType,
                 TotalSigners = totalSigners,
                 CreatedAt = DateTimeOffset.UtcNow,
                 ExpiresAt = DateTimeOffset.UtcNow.AddDays(7)
@@ -197,23 +213,23 @@ public class UIMultisigSetupController(
             var activePending = pending!;
             if (!string.Equals(vm.MultisigRequestId, activePending.RequestId, StringComparison.Ordinal))
             {
-                ModelState.AddModelError(nameof(vm.MultisigRequestId), "The multisig request changed. Reload the page and try again.");
+                ModelState.AddModelError(nameof(vm.MultisigRequestId), stringLocalizer["The multisig request changed. Reload the page and try again."].Value);
                 ApplyPendingContext(vm, activePending);
                 return View("Multisig", vm);
             }
 
-            var requestedScriptType = (vm.MultisigScriptType ?? activePending.ScriptType ?? "p2wsh").Trim();
+            var requestedScriptType = scriptType;
             var pendingScriptType = (activePending.ScriptType ?? "p2wsh").Trim();
             if (!string.Equals(requestedScriptType, pendingScriptType, StringComparison.OrdinalIgnoreCase))
             {
-                ModelState.AddModelError(nameof(vm.MultisigScriptType), $"This request is configured for {pendingScriptType.ToUpperInvariant()}. Reset request to change script type.");
+                ModelState.AddModelError(nameof(vm.MultisigScriptType), stringLocalizer["This request is configured for {0}. Reset request to change script type.", pendingScriptType.ToUpperInvariant()].Value);
                 ApplyPendingContext(vm, activePending);
                 return View("Multisig", vm);
             }
 
             if (totalSigners < activePending.TotalSigners)
             {
-                ModelState.AddModelError(nameof(vm.MultisigTotalSigners), $"This request is configured for {activePending.TotalSigners} signers. Reset request to reduce N.");
+                ModelState.AddModelError(nameof(vm.MultisigTotalSigners), stringLocalizer["This request is configured for {0} signers. Reset request to reduce N.", activePending.TotalSigners].Value);
                 ApplyPendingContext(vm, activePending);
                 return View("Multisig", vm);
             }
@@ -237,13 +253,13 @@ public class UIMultisigSetupController(
         var availableSlots = pending.TotalSigners - pending.Participants.Count;
         if (availableSlots <= 0 && newIds.Length > 0)
         {
-            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), $"This request already has {pending.TotalSigners} signers. Replace a pending signer or reset request.");
+            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), stringLocalizer["This request already has {0} signers. Replace a pending signer or reset request.", pending.TotalSigners].Value);
             ApplyPendingContext(vm, pending);
             return View("Multisig", vm);
         }
         if (newIds.Length > availableSlots)
         {
-            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), $"Only {availableSlots} signer slot(s) left for this request.");
+            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), stringLocalizer["Only {0} signer slot(s) left for this request.", availableSlots].Value);
             ApplyPendingContext(vm, pending);
             return View("Multisig", vm);
         }
@@ -261,14 +277,14 @@ public class UIMultisigSetupController(
 
         if (pending.Participants.Count == 0)
         {
-            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), "Select at least one signer.");
+            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), stringLocalizer["Select at least one signer."].Value);
             return View("Multisig", vm);
         }
 
         if (pending.Participants.Count != pending.TotalSigners)
         {
             var missing = pending.TotalSigners - pending.Participants.Count;
-            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), $"Select exactly {pending.TotalSigners} signers for this request. Missing {missing} signer(s).");
+            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), stringLocalizer["Select exactly {0} signers for this request. Missing {1} signer(s).", pending.TotalSigners, missing].Value);
             ApplyPendingContext(vm, pending);
             return View("Multisig", vm);
         }
@@ -276,7 +292,7 @@ public class UIMultisigSetupController(
         var required = vm.MultisigRequiredSigners ?? pending.RequiredSigners;
         if (required <= 0 || required > pending.TotalSigners)
         {
-            ModelState.AddModelError(nameof(vm.MultisigRequiredSigners), "Required signatures must be between 1 and total signers (N).");
+            ModelState.AddModelError(nameof(vm.MultisigRequiredSigners), stringLocalizer["Required signatures must be between 1 and total signers (N)."].Value);
             return View("Multisig", vm);
         }
 
@@ -288,15 +304,15 @@ public class UIMultisigSetupController(
             : await storeRepository.TryUpdateSettingAsync(vm.StoreId, settingName, setting.XMin, pending);
         if (!updated)
         {
-            ModelState.AddModelError(nameof(vm.MultisigRequestId), "The multisig request changed. Reload the page and try again.");
+            ModelState.AddModelError(nameof(vm.MultisigRequestId), stringLocalizer["The multisig request changed. Reload the page and try again."].Value);
             return View("Multisig", vm);
         }
 
         await multisigNotificationService.SendSignerRequestEmails(HttpContext, vm.StoreId, vm.CryptoCode, pending, newIds.Concat(resendIds).Distinct(StringComparer.Ordinal).ToArray());
 
         TempData[WellKnownTempData.SuccessMessage] = isNewRequest
-            ? "Multisig signer requests were created."
-            : "Multisig signer requests were updated.";
+            ? stringLocalizer["Multisig signer requests were created."].Value
+            : stringLocalizer["Multisig signer requests were updated."].Value;
         return RedirectToAction(nameof(SetupMultisig), new { storeId = vm.StoreId, cryptoCode = vm.CryptoCode, multisigRequestId = pending.RequestId });
     }
 
@@ -307,19 +323,19 @@ public class UIMultisigSetupController(
         var pending = setting?.Value;
         if (pending is null || pending.ExpiresAt < DateTimeOffset.UtcNow || !string.Equals(pending.RequestId, vm.MultisigRequestId, StringComparison.Ordinal))
         {
-            ModelState.AddModelError(nameof(vm.MultisigRequestId), "The multisig request changed. Reload the page and try again.");
+            ModelState.AddModelError(nameof(vm.MultisigRequestId), stringLocalizer["The multisig request changed. Reload the page and try again."].Value);
             return View("Multisig", vm);
         }
 
         var xMin = setting!.XMin;
         if (!await storeRepository.TryDeleteSettingAsync(vm.StoreId, settingName, xMin))
         {
-            ModelState.AddModelError(nameof(vm.MultisigRequestId), "The multisig request changed. Reload the page and try again.");
+            ModelState.AddModelError(nameof(vm.MultisigRequestId), stringLocalizer["The multisig request changed. Reload the page and try again."].Value);
             ApplyPendingContext(vm, pending);
             return View("Multisig", vm);
         }
 
-        TempData[WellKnownTempData.SuccessMessage] = "Multisig request was reset.";
+        TempData[WellKnownTempData.SuccessMessage] = stringLocalizer["Multisig request was reset."].Value;
         return RedirectToAction(nameof(SetupMultisig), new { storeId = vm.StoreId, cryptoCode = vm.CryptoCode });
     }
 
@@ -330,13 +346,13 @@ public class UIMultisigSetupController(
         var pending = setting?.Value;
         if (pending is null || pending.ExpiresAt < DateTimeOffset.UtcNow || !string.Equals(pending.RequestId, vm.MultisigRequestId, StringComparison.Ordinal))
         {
-            ModelState.AddModelError(nameof(vm.MultisigRequestId), "The multisig request changed. Reload the page and try again.");
+            ModelState.AddModelError(nameof(vm.MultisigRequestId), stringLocalizer["The multisig request changed. Reload the page and try again."].Value);
             return View("Multisig", vm);
         }
 
         if (string.IsNullOrWhiteSpace(vm.MultisigRemoveUserId))
         {
-            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), "Select a signer to remove.");
+            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), stringLocalizer["Select a signer to remove."].Value);
             ApplyPendingContext(vm, pending);
             return View("Multisig", vm);
         }
@@ -344,7 +360,7 @@ public class UIMultisigSetupController(
         var removed = pending.Participants.RemoveAll(p => string.Equals(p.UserId, vm.MultisigRemoveUserId, StringComparison.Ordinal));
         if (removed == 0)
         {
-            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), "Selected signer is not part of this request.");
+            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), stringLocalizer["Selected signer is not part of this request."].Value);
             ApplyPendingContext(vm, pending);
             return View("Multisig", vm);
         }
@@ -353,12 +369,12 @@ public class UIMultisigSetupController(
         var xMin = setting!.XMin;
         if (!await storeRepository.TryUpdateSettingAsync(vm.StoreId, settingName, xMin, pending))
         {
-            ModelState.AddModelError(nameof(vm.MultisigRequestId), "The multisig request changed. Reload the page and try again.");
+            ModelState.AddModelError(nameof(vm.MultisigRequestId), stringLocalizer["The multisig request changed. Reload the page and try again."].Value);
             ApplyPendingContext(vm, pending);
             return View("Multisig", vm);
         }
 
-        TempData[WellKnownTempData.SuccessMessage] = "Signer removed from request.";
+        TempData[WellKnownTempData.SuccessMessage] = stringLocalizer["Signer removed from request."].Value;
         return RedirectToAction(nameof(SetupMultisig), new { storeId = vm.StoreId, cryptoCode = vm.CryptoCode, multisigRequestId = pending.RequestId });
     }
 
@@ -367,7 +383,7 @@ public class UIMultisigSetupController(
         var pending = await multisigService.GetPendingMultisigSetup(vm.StoreId, vm.CryptoCode, vm.MultisigRequestId);
         if (pending is null)
         {
-            ModelState.AddModelError(nameof(vm.MultisigRequestId), "The multisig request was not found or has expired.");
+            ModelState.AddModelError(nameof(vm.MultisigRequestId), stringLocalizer["The multisig request was not found or has expired."].Value);
             return View("Multisig", vm);
         }
 
@@ -383,12 +399,12 @@ public class UIMultisigSetupController(
         {
             var configLabel = $"{pending.RequiredSigners}-of-{pending.TotalSigners} ({pendingScriptType.ToUpperInvariant()})";
             var message = scriptMismatch
-                ? $"This request is {configLabel}. Reset request to change script type."
+                ? stringLocalizer["This request is {0}. Reset request to change script type.", configLabel].Value
                 : totalReduced
-                    ? $"This request is {configLabel}. Reset request to reduce total signers."
+                    ? stringLocalizer["This request is {0}. Reset request to reduce total signers.", configLabel].Value
                     : totalExpanded
-                        ? $"This request is {configLabel}. To continue with {requestedRequired}-of-{requestedTotal} add {requestedTotal - pending.TotalSigners} more {(requestedTotal - pending.TotalSigners == 1 ? "signer" : "signers")}."
-                        : $"This request is {configLabel}. To continue with {requestedRequired}-of-{requestedTotal}, click \"Send requests\".";
+                        ? stringLocalizer["This request is {0}. To continue with {1}-of-{2} add {3} more {4}.", configLabel, requestedRequired, requestedTotal, requestedTotal - pending.TotalSigners, requestedTotal - pending.TotalSigners == 1 ? stringLocalizer["signer"].Value : stringLocalizer["signers"].Value].Value
+                        : stringLocalizer["This request is {0}. To continue with {1}-of-{2}, click \"Send requests\".", configLabel, requestedRequired, requestedTotal].Value;
             ModelState.AddModelError(nameof(vm.MultisigRequestId), message);
             ApplyPendingContext(vm, pending);
             return View("Multisig", vm);
@@ -396,7 +412,7 @@ public class UIMultisigSetupController(
 
         if (pending.Participants.Count != pending.TotalSigners || pending.Participants.Any(p => string.IsNullOrWhiteSpace(p.AccountKey)))
         {
-            ModelState.AddModelError(nameof(vm.MultisigRequestId), "Complete signer collection before creating the multisig wallet.");
+            ModelState.AddModelError(nameof(vm.MultisigRequestId), stringLocalizer["Complete signer collection before creating the multisig wallet."].Value);
             ApplyPendingContext(vm, pending);
             return View("Multisig", vm);
         }
@@ -407,7 +423,7 @@ public class UIMultisigSetupController(
             .ToHashSet(StringComparer.Ordinal);
         if (selectedIds.Count != pending.TotalSigners || pending.Participants.Any(p => !selectedIds.Contains(p.UserId)))
         {
-            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), $"Select exactly {pending.TotalSigners} signers from this request before creating the multisig wallet.");
+            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), stringLocalizer["Select exactly {0} signers from this request before creating the multisig wallet.", pending.TotalSigners].Value);
             ApplyPendingContext(vm, pending);
             return View("Multisig", vm);
         }
@@ -509,6 +525,35 @@ public class UIMultisigSetupController(
         vm.MultisigPendingSetup = pending;
         vm.MultisigRequestId ??= pending.RequestId;
         vm.MultisigInviteLinks = multisigService.CreateInviteLinks(HttpContext, vm.StoreId, vm.CryptoCode, pending);
+    }
+
+    private async Task<(PendingMultisigSetupData Pending, uint XMin)?> GetPendingRequestWithVersion(string storeId, string cryptoCode, string? requestId)
+    {
+        if (string.IsNullOrWhiteSpace(requestId))
+            return null;
+
+        var setting = await storeRepository.GetSettingWithVersionAsync<PendingMultisigSetupData>(
+            storeId,
+            MultisigService.GetPendingMultisigSettingName(cryptoCode));
+        var pending = setting?.Value;
+        if (pending is null ||
+            pending.ExpiresAt < DateTimeOffset.UtcNow ||
+            !string.Equals(pending.RequestId, requestId, StringComparison.Ordinal))
+            return null;
+
+        return (pending, setting.XMin);
+    }
+
+    private static string? NormalizeMultisigScriptType(string? scriptType)
+    {
+        return scriptType?.Trim().ToLowerInvariant() switch
+        {
+            null or "" => "p2wsh",
+            "p2wsh" => "p2wsh",
+            "p2sh-p2wsh" => "p2sh-p2wsh",
+            "p2sh" => "p2sh",
+            _ => null
+        };
     }
 
     private IActionResult? GetContext(string cryptoCode, out StoreData? store, out BTCPayNetwork? network)

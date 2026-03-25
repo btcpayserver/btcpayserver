@@ -74,7 +74,7 @@ public class WebhookProviderHostedService(
     }
 
     private StoreWebhookEvent Clone(StoreWebhookEvent webhookEvent)
-    => (StoreWebhookEvent)JsonConvert.DeserializeObject(JsonConvert.SerializeObject(webhookEvent), webhookEvent.GetType(), WebhookSender.DefaultSerializerSettings)!;
+    => (StoreWebhookEvent)JsonConvert.DeserializeObject(JsonConvert.SerializeObject(webhookEvent, WebhookSender.DefaultSerializerSettings), webhookEvent.GetType(), WebhookSender.DefaultSerializerSettings)!;
 
     private async Task<StoreData?> GetStore(StoreWebhookEvent webhookEvent)
     {

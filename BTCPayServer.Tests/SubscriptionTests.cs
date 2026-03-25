@@ -714,7 +714,9 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             Status = InvoiceStatus.Invalid
         });
         var disabled = await waiting;
+        Assert.Equal(SubscriptionEvent.DisabledReason.Suspension, disabled.Reason);
         Assert.True(disabled.Subscriber.IsSuspended);
+        Assert.Equal(disabled.Subscriber.SuspensionReason, disabled.SuspensionReason);
         Assert.Equal("The plan has been started by an invoice which later became invalid.", disabled.Subscriber.SuspensionReason);
 
         await s.FastReloadAsync();
@@ -771,7 +773,9 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             var disabling = offering.WaitEvent<SubscriptionEvent.SubscriberDisabled>();
             await portal.GoToNextPhase();
             await portal.AssertCallToAction(PortalPMO.CallToAction.Danger, noticeTitle: "Access expired");
-            await disabling;
+            var expired = await disabling;
+            Assert.Equal(SubscriptionEvent.DisabledReason.Expired, expired.Reason);
+            Assert.Null(expired.SuspensionReason);
 
             await portal.AddCredit("19.00001");
             var addingCredit = offering.WaitEvent<SubscriptionEvent.SubscriberCredited>();

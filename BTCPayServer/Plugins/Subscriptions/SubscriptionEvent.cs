@@ -43,8 +43,16 @@ public class SubscriptionEvent
         public override string ToString() => $"Subscriber {Subscriber.ToNiceString()} changed phase from {PreviousPhase} to {Subscriber.Phase}";
     }
 
-    public class SubscriberDisabled(SubscriberData subscriber) : SubscriberEvent(subscriber)
+    public enum DisabledReason
     {
+        Suspension,
+        Expired
+    }
+
+    public class SubscriberDisabled(SubscriberData subscriber, DisabledReason reason, string? suspensionReason = null) : SubscriberEvent(subscriber)
+    {
+        public DisabledReason Reason { get; } = reason;
+        public string? SuspensionReason { get; } = reason is DisabledReason.Suspension ? suspensionReason : null;
         public override string ToString() => $"Subscriber {Subscriber.ToNiceString()} disabled";
     }
 

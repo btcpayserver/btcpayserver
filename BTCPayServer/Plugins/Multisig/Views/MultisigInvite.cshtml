@@ -3,7 +3,7 @@
 @model MultisigInviteViewModel
 @{
     Layout = "~/Views/Shared/_LayoutSimple.cshtml";
-    ViewData["Title"] = "Submit multisig signer key";
+    ViewData["Title"] = StringLocalizer["Submit multisig signer key"];
     ViewData.SetBlazorAllowed(true);
     var hasPrefilledValues = !string.IsNullOrWhiteSpace(Model.AccountKey) ||
                              !string.IsNullOrWhiteSpace(Model.MasterFingerprint) ||
@@ -17,32 +17,32 @@
         <div class="row justify-content-center">
             <div class="col-12 col-lg-8">
                 <div class="bg-tile m-0 p-3 p-sm-5 rounded">
-                    <h1 class="h3 mb-3">Submit multisig signer key</h1>
+                    <h1 class="h3 mb-3">@ViewData["Title"]</h1>
                     <p class="text-secondary mb-4">
-                        Request <span class="font-monospace">@Model.RequestId</span> - @Model.RequiredSigners/@Model.TotalSigners (@Model.ScriptType.ToUpperInvariant()).
+                        @StringLocalizer["Request {0} - {1}/{2} ({3}).", Model.RequestId, Model.RequiredSigners, Model.TotalSigners, Model.ScriptType.ToUpperInvariant()]
                     </p>
 
                     @if (Model.Submitted)
                     {
-                        <div class="alert alert-success mb-3">Your signer key is submitted.</div>
-                        <p class="text-secondary mb-0">You can close this page now. The wallet owner will receive your submission and will notify next steps.</p>
+                        <div class="alert alert-success mb-3">@StringLocalizer["Your signer key is submitted."]</div>
+                        <p class="text-secondary mb-0">@StringLocalizer["You can close this page now. The wallet owner will receive your submission and will notify next steps."]</p>
                         <div class="mt-4">
-                            <a asp-area="" asp-controller="UIWallets" asp-action="ListWallets" class="btn btn-secondary">Back to wallets</a>
+                            <a asp-area="" asp-controller="UIWallets" asp-action="ListWallets" class="btn btn-secondary" text-translate="true">Back to wallets</a>
                         </div>
                     }
                     else
                     {
                         <div class="mb-4">
-                            <label class="form-label d-block mb-2">Signer key input</label>
-                            <div class="nav btcpay-pills align-items-center gap-2" role="tablist" aria-label="Signer key input mode">
-                                <a id="EntryModeHardware" class="btcpay-pill" role="tab" aria-selected="false" href="#">Hardware wallet</a>
-                                <a id="EntryModeManual" class="btcpay-pill" role="tab" aria-selected="false" href="#">Manual entry</a>
+                            <label class="form-label d-block mb-2" text-translate="true">Signer key input</label>
+                            <div class="nav btcpay-pills align-items-center gap-2" role="tablist" aria-label="@StringLocalizer["Signer key input mode"]">
+                                <a id="EntryModeHardware" class="btcpay-pill" role="tab" aria-selected="false" href="#" text-translate="true">Hardware wallet</a>
+                                <a id="EntryModeManual" class="btcpay-pill" role="tab" aria-selected="false" href="#" text-translate="true">Manual entry</a>
                             </div>
                         </div>
 
                         <div id="HardwareFlowSection" class="mb-4">
-                            <h2 class="h5 mb-2">Extract from BTCPay Server Vault</h2>
-                            <p class="text-secondary mb-3">Use your hardware wallet to auto-fill account key, fingerprint, and key path.</p>
+                            <h2 class="h5 mb-2" text-translate="true">Extract from BTCPay Server Vault</h2>
+                            <p class="text-secondary mb-3" text-translate="true">Use your hardware wallet to auto-fill account key, fingerprint, and key path.</p>
                             <component type="typeof(BTCPayServer.Blazor.VaultBridge.VaultBridgeUI)"
                                        param-Controller="@(new GetMultisigAccountKeyController
                                                           {
@@ -50,30 +50,33 @@
                                                               ScriptType = Model.ScriptType
                                                           })"
                                        render-mode="Server" />
-                            <p id="HardwareFetchHint" class="text-secondary mt-3 mb-0">Fetch signer data from device to continue.</p>
+                            <p id="HardwareFetchHint" class="text-secondary mt-3 mb-0" text-translate="true">Fetch signer data from device to continue.</p>
                         </div>
 
                         <form method="post" id="SubmitSignerKeyForm">
                             <div asp-validation-summary="ModelOnly" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
                             <div id="SignerKeyFields" class="@(serverEntryMode == "hardware" ? "d-none" : string.Empty)">
                                 <div class="mb-3">
-                                    <label asp-for="AccountKey" class="form-label">Account key (xpub/tpub)</label>
+                                    <label asp-for="AccountKey" class="form-label" text-translate="true">Account key (xpub/tpub)</label>
                                     <input asp-for="AccountKey" class="form-control font-monospace" />
+                                    <span asp-validation-for="AccountKey" class="text-danger"></span>
                                 </div>
                                 <div class="row g-3">
                                     <div class="col-md-4">
-                                        <label asp-for="MasterFingerprint" class="form-label">Master fingerprint</label>
-                                        <input asp-for="MasterFingerprint" class="form-control font-monospace" placeholder="d90c6a4f" />
+                                        <label asp-for="MasterFingerprint" class="form-label" text-translate="true">Master fingerprint</label>
+                                        <input asp-for="MasterFingerprint" class="form-control font-monospace" placeholder="@StringLocalizer["d90c6a4f"]" />
+                                        <span asp-validation-for="MasterFingerprint" class="text-danger"></span>
                                     </div>
                                     <div class="col-md-8">
-                                        <label asp-for="AccountKeyPath" class="form-label">Account key path</label>
-                                        <input asp-for="AccountKeyPath" class="form-control font-monospace" placeholder="m/48'/1'/0'/2'" />
+                                        <label asp-for="AccountKeyPath" class="form-label" text-translate="true">Account key path</label>
+                                        <input asp-for="AccountKeyPath" class="form-control font-monospace" placeholder="@StringLocalizer["m/48'/1'/0'/2'"]" />
+                                        <span asp-validation-for="AccountKeyPath" class="text-danger"></span>
                                     </div>
                                 </div>
                             </div>
                             <div class="d-flex flex-wrap gap-3 mt-4">
-                                <button type="submit" id="SubmitSignerKeyButton" class="btn btn-primary">Submit signer key</button>
-                                <a asp-area="" asp-controller="UIWallets" asp-action="ListWallets" class="btn btn-secondary">Back to wallets</a>
+                                <button type="submit" id="SubmitSignerKeyButton" class="btn btn-primary" text-translate="true">Submit signer key</button>
+                                <a asp-area="" asp-controller="UIWallets" asp-action="ListWallets" class="btn btn-secondary" text-translate="true">Back to wallets</a>
                             </div>
                         </form>
                     }

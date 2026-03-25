@@ -61,20 +61,20 @@
         <p class="text-secondary mb-3" text-translate="true">Select users and send email requests. You can finalize setup once all keys are submitted.</p>
         <div class="d-flex align-items-center justify-content-between mb-3">
             <span class="small text-secondary">
-                <span id="SelectedSignerCount">0</span> selected ·
-                <span id="SelectedSignerSummary">0/@(Model.MultisigTotalSigners ?? 0)</span> total signers
+                <span id="SelectedSignerCount">0</span> @StringLocalizer["selected"] ·
+                <span id="SelectedSignerSummary">0/@(Model.MultisigTotalSigners ?? 0)</span> @StringLocalizer["total signers"]
             </span>
         </div>
         <div class="row g-2 mb-3">
             <div class="col-md-8">
-                <input id="SignerSearch" class="form-control" placeholder="Search by name or email" />
+                <input id="SignerSearch" class="form-control" placeholder="@StringLocalizer["Search by name or email"]" />
             </div>
             <div class="col-md-4">
                 <select id="SignerFilter" class="form-select">
-                    <option value="all">All users</option>
-                    <option value="selected">Selected</option>
-                    <option value="submitted">Submitted key</option>
-                    <option value="pending">Pending key</option>
+                    <option value="all">@StringLocalizer["All users"]</option>
+                    <option value="selected">@StringLocalizer["Selected"]</option>
+                    <option value="submitted">@StringLocalizer["Submitted key"]</option>
+                    <option value="pending">@StringLocalizer["Pending key"]</option>
                 </select>
             </div>
         </div>
@@ -98,11 +98,11 @@
                     {
                         if (isSubmitted)
                         {
-                            <span class="badge bg-success-subtle text-success border border-success-subtle">Submitted</span>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">@StringLocalizer["Submitted"]</span>
                         }
                         else if (isInvited)
                         {
-                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Pending</span>
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">@StringLocalizer["Pending"]</span>
                         }
                     }
                 </label>
@@ -112,16 +112,16 @@
             <button type="button" id="ToggleMoreSigners" class="btn btn-link px-0 py-1 d-none"></button>
         </div>
         <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
-            <button id="CreateSignerRequest" name="command" type="submit" value="create-request" class="btn btn-outline-primary text-nowrap">Send requests</button>
+            <button id="CreateSignerRequest" name="command" type="submit" value="create-request" class="btn btn-outline-primary text-nowrap" text-translate="true">Send requests</button>
             @if (hasPending)
             {
-                <button name="command" type="submit" value="reset-request" class="btn btn-secondary text-nowrap">Clear request</button>
+                <button name="command" type="submit" value="reset-request" class="btn btn-secondary text-nowrap" text-translate="true">Clear request</button>
             }
         </div>
         @if (hasPending)
         {
             <div class="mt-3">
-                <div class="small text-secondary mb-1">Request id: <span class="font-monospace">@pending.RequestId</span></div>
+                <div class="small text-secondary mb-1">@StringLocalizer["Request id:"] <span class="font-monospace">@pending.RequestId</span></div>
                 <ul class="mb-3">
                     @foreach (var participant in pending.Participants)
                     {
@@ -130,19 +130,19 @@
                             @participantName -
                             @if (!string.IsNullOrWhiteSpace(participant.AccountKey))
                             {
-                                <span class="text-success">submitted</span>
+                                <span class="text-success">@StringLocalizer["submitted"]</span>
                             }
                             else
                             {
-                                <span class="text-warning">pending</span>
+                                <span class="text-warning">@StringLocalizer["pending"]</span>
                             }
                             @if (Model.MultisigInviteLinks.TryGetValue(participant.UserId, out var inviteLink))
                             {
                                 <button type="button"
                                         class="btn btn-link btn-sm text-secondary p-0 ms-2 multisig-copy-invite"
                                         data-invite-link="@inviteLink"
-                                        title="Copy invite link"
-                                        aria-label="Copy invite link">
+                                        title="@StringLocalizer["Copy invite link"]"
+                                        aria-label="@StringLocalizer["Copy invite link"]">
                                     <vc:icon symbol="actions-copy" />
                                 </button>
                             }
@@ -151,15 +151,15 @@
                                     value="remove-signer"
                                     class="btn btn-link btn-sm text-danger p-0 ms-2 multisig-remove-signer"
                                     data-user-id="@participant.UserId"
-                                    title="Remove signer"
-                                    aria-label="Remove signer">
+                                    title="@StringLocalizer["Remove signer"]"
+                                    aria-label="@StringLocalizer["Remove signer"]">
                                 <vc:icon symbol="actions-trash" />
                             </button>
                         </li>
                     }
                 </ul>
                 <div class="d-flex justify-content-end">
-                    <button id="FinalizeMultisig" name="command" type="submit" value="finalize-request" class="btn btn-primary text-nowrap" disabled="@(!pendingComplete)">Create multisig</button>
+                    <button id="FinalizeMultisig" name="command" type="submit" value="finalize-request" class="btn btn-primary text-nowrap" disabled="@(!pendingComplete)" text-translate="true">Create multisig</button>
                 </div>
             </div>
         }
@@ -207,6 +207,8 @@
             masterFingerprint = p.MasterFingerprint,
             accountKeyPath = p.AccountKeyPath
         }));
+        const showFewerUsersText = @Json.Serialize(StringLocalizer["Show fewer users"].Value);
+        const showMoreUsersTemplate = @Json.Serialize(StringLocalizer["Show {0} more users", "__COUNT__"].Value);
 
         function parseCount(value, fallback) {
             const parsed = parseInt(value, 10);
@@ -308,8 +310,8 @@
             if (hiddenCount > 0) {
                 toggleMoreButton.classList.remove("d-none");
                 toggleMoreButton.textContent = showAllRows
-                    ? "Show fewer users"
-                    : `Show ${hiddenCount} more users`;
+                    ? showFewerUsersText
+                    : showMoreUsersTemplate.replace("__COUNT__", hiddenCount);
             } else {
                 toggleMoreButton.classList.add("d-none");
             }

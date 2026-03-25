@@ -12,6 +12,7 @@ using BTCPayServer.Plugins.Multisig.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using NBitcoin;
 
 namespace BTCPayServer.Plugins.Multisig.Controllers;
@@ -24,7 +25,8 @@ public class UIMultisigInviteController(
     StoreRepository storeRepository,
     ExplorerClientProvider explorerProvider,
     MultisigService multisigService,
-    MultisigNotificationService multisigNotificationService) : Controller
+    MultisigNotificationService multisigNotificationService,
+    IStringLocalizer stringLocalizer) : Controller
 {
     private static bool IsSupportedCryptoCode(string? cryptoCode) =>
         string.Equals(cryptoCode, "BTC", StringComparison.OrdinalIgnoreCase);
@@ -77,18 +79,18 @@ public class UIMultisigInviteController(
         current.AccountKeyPath = vm.AccountKeyPath?.Trim();
 
         if (string.IsNullOrWhiteSpace(current.AccountKey))
-            ModelState.AddModelError(nameof(vm.AccountKey), "Please provide your account key.");
+            ModelState.AddModelError(nameof(vm.AccountKey), stringLocalizer["Please provide your account key."].Value);
         else if (!multisigService.TryNormalizeAccountKeyForNetwork(current.AccountKey, network, out var normalizedAccountKey))
-            ModelState.AddModelError(string.Empty, "Invalid account key format.");
+            ModelState.AddModelError(string.Empty, stringLocalizer["Invalid account key format."].Value);
         else
             current.AccountKey = normalizedAccountKey;
         if (!string.IsNullOrWhiteSpace(current.MasterFingerprint) && !Regex.IsMatch(current.MasterFingerprint, "^[0-9a-fA-F]{8}$"))
-            ModelState.AddModelError(nameof(vm.MasterFingerprint), "Invalid fingerprint format.");
+            ModelState.AddModelError(nameof(vm.MasterFingerprint), stringLocalizer["Invalid fingerprint format."].Value);
         if (!string.IsNullOrWhiteSpace(current.AccountKeyPath))
         {
             var normalizedPath = MultisigService.NormalizePath(current.AccountKeyPath);
             if (!KeyPath.TryParse(normalizedPath, out _))
-                ModelState.AddModelError(nameof(vm.AccountKeyPath), "Invalid account key path.");
+                ModelState.AddModelError(nameof(vm.AccountKeyPath), stringLocalizer["Invalid account key path."].Value);
             else
                 current.AccountKeyPath = $"m/{normalizedPath}";
         }
@@ -96,9 +98,9 @@ public class UIMultisigInviteController(
         var hasFingerprint = !string.IsNullOrWhiteSpace(current.MasterFingerprint);
         var hasAccountKeyPath = !string.IsNullOrWhiteSpace(current.AccountKeyPath);
         if (hasFingerprint && !hasAccountKeyPath)
-            ModelState.AddModelError(nameof(vm.AccountKeyPath), "Provide account key path when fingerprint is set.");
+            ModelState.AddModelError(nameof(vm.AccountKeyPath), stringLocalizer["Provide account key path when fingerprint is set."].Value);
         if (hasAccountKeyPath && !hasFingerprint)
-            ModelState.AddModelError(nameof(vm.MasterFingerprint), "Provide fingerprint when account key path is set.");
+            ModelState.AddModelError(nameof(vm.MasterFingerprint), stringLocalizer["Provide fingerprint when account key path is set."].Value);
 
         if (!ModelState.IsValid)
             return View("MultisigInvite", current);
@@ -123,7 +125,7 @@ public class UIMultisigInviteController(
                 current.MasterFingerprint = participant.MasterFingerprint;
                 current.AccountKeyPath = participant.AccountKeyPath;
                 current.Submitted = true;
-                TempData[WellKnownTempData.SuccessMessage] = "Your signer key is submitted.";
+                TempData[WellKnownTempData.SuccessMessage] = stringLocalizer["Your signer key is submitted."].Value;
                 return View("MultisigInvite", current);
             }
 
@@ -134,7 +136,7 @@ public class UIMultisigInviteController(
                     string.Equals(normalizedParticipantKey, current.AccountKey, StringComparison.Ordinal));
             if (duplicateKeyFound)
             {
-                ModelState.AddModelError(string.Empty, "This signer key is already used in this multisig request.");
+                ModelState.AddModelError(string.Empty, stringLocalizer["This signer key is already used in this multisig request."].Value);
                 return View("MultisigInvite", current);
             }
 
@@ -147,11 +149,11 @@ public class UIMultisigInviteController(
 
             await multisigNotificationService.NotifyRequesterOfSubmission(HttpContext, storeId, cryptoCode, pending, participant);
             current.Submitted = true;
-            TempData[WellKnownTempData.SuccessMessage] = "Signer key submitted successfully.";
+            TempData[WellKnownTempData.SuccessMessage] = stringLocalizer["Signer key submitted successfully."].Value;
             return View("MultisigInvite", current);
         }
 
-        ModelState.AddModelError(string.Empty, "This multisig request changed while you were submitting your signer key. Please try again.");
+        ModelState.AddModelError(string.Empty, stringLocalizer["This multisig request changed while you were submitting your signer key. Please try again."].Value);
         return View("MultisigInvite", current);
     }
 

@@ -1577,6 +1577,39 @@
                     }
                 ]
             },
+            "WebhookSubscriberDisabledReason": {
+                "type": "string",
+                "description": "Reason why the subscriber was disabled.",
+                "enum": [
+                    "Suspension",
+                    "Expired"
+                ],
+                "example": "Suspension"
+            },
+            "WebhookSubscriberDisabledEvent": {
+                "description": "Callback sent if the `type` is `SubscriberDisabled`",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/WebhookSubscriberEvent"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "reason": {
+                                "$ref": "#/components/schemas/WebhookSubscriberDisabledReason",
+                                "description": "Whether the subscriber was disabled because of a suspension or expiration.",
+                                "example": "Suspension"
+                            },
+                            "suspensionReason": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Suspension reason provided by the merchant when `reason` is `Suspension`.",
+                                "example": "Spam behavior detected."
+                            }
+                        }
+                    }
+                ]
+            },
             "WebhookPlanStartedEvent": {
                 "description": "Callback sent if the `type` is `PlanStarted`",
                 "allOf": [
@@ -1842,7 +1875,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/WebhookSubscriberEvent"
+                                "$ref": "#/components/schemas/WebhookSubscriberDisabledEvent"
                             }
                         }
                     }

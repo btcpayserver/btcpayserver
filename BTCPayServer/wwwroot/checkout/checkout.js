@@ -82,10 +82,20 @@ function stripCurrency(val) {
     const match = str.match(/[\d.,]+/g);
     if (!match || match.length === 0) return '';
     const numericPart = match.join('');
-    // Detect if comma is decimal separator (European format like 1.234,56)
+    // Detect decimal vs thousand separators
     const lastComma = numericPart.lastIndexOf(',');
     const lastDot = numericPart.lastIndexOf('.');
     if (lastComma > lastDot) {
+        // Last separator is a comma — is it decimal or thousands?
+        // If dots exist before the comma (e.g. "1.234,56"), comma is decimal
+        // If no dots before comma and exactly 3 digits after (e.g. "¥1,000"), comma is thousands
+        const afterComma = numericPart.substring(lastComma + 1);
+        if (lastDot < 0 && afterComma.length === 3 && lastComma >= 1) {
+            // No dots present — comma with 3 trailing digits is likely thousands
+            const cleaned = numericPart.replace(/,/g, '');
+            const num = parseFloat(cleaned);
+            return isNaN(num) ? '' : num.toString();
+        }
         // Comma is decimal separator, dots are thousand separators
         const cleaned = numericPart.replace(/\./g, '').replace(',', '.');
         const num = parseFloat(cleaned);

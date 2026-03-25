@@ -11,6 +11,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Controllers;
+using BTCPayServer.Plugins;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
@@ -2516,6 +2518,115 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             reader.Read();
             Assert.Equal("BTC-hasjdfhasjkfjlajn", new PaymentMethodIdJsonConverter().ReadJson(reader, typeof(PaymentMethodId), null,
                 JsonSerializer.CreateDefault()).ToString());
+        }
+
+        [Fact]
+        public void GetDisabledPluginUpdates_ReturnsUpdateWhenNewerVersionAvailable()
+        {
+            var disabled = new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } };
+            var available = new Dictionary<string, PluginService.AvailablePlugin>()
+            {
+                { "TestPlugin", MakeAvailablePlugin("TestPlugin", "1.1.0") }
+            };
+
+            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, available);
+
+            Assert.Single(result);
+            Assert.Equal(new Version(1, 1, 0), result["TestPlugin"].Version);
+        }
+
+        [Fact]
+        public void GetDisabledPluginUpdates_NoUpdateWhenSameVersion()
+        {
+            var disabled = new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } };
+            var available = new Dictionary<string, PluginService.AvailablePlugin>()
+            {
+                { "TestPlugin", MakeAvailablePlugin("TestPlugin", "1.0.0") }
+            };
+
+            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, available);
+
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void GetDisabledPluginUpdates_NoUpdateWhenNoAvailablePlugins()
+        {
+            var disabled = new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } };
+            var available = new Dictionary<string, PluginService.AvailablePlugin>();
+
+            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, available);
+
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void GetDisabledPluginUpdates_SkipsNullVersion()
+        {
+            var disabled = new Dictionary<string, Version> { { "TestPlugin", null } };
+            var available = new Dictionary<string, PluginService.AvailablePlugin>()
+            {
+                { "TestPlugin", MakeAvailablePlugin("TestPlugin", "1.1.0") }
+            };
+
+            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, available);
+
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void GetDisabledPluginUpdates_CaseInsensitiveIdentifierMatching()
+        {
+            var disabled = new Dictionary<string, Version> { { "MyPlugin", new Version(1, 0, 0, 0) } };
+            var available = new Dictionary<string, PluginService.AvailablePlugin>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "myplugin", MakeAvailablePlugin("myplugin", "1.1.0") }
+            };
+
+            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, available);
+
+            Assert.Single(result);
+            Assert.Equal(new Version(1, 1, 0), result["MyPlugin"].Version);
+        }
+
+        [Fact]
+        public void GetDisabledPluginUpdates_UsesNewestVersionFromMultipleEntries()
+        {
+            var disabled = new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } };
+            // Build the dictionary the same way the controller does
+            var allPlugins = new[]
+            {
+                MakeAvailablePlugin("TestPlugin", "1.1.0"),
+                MakeAvailablePlugin("TestPlugin", "1.3.0"),
+                MakeAvailablePlugin("TestPlugin", "1.2.0")
+            };
+            var available = new Dictionary<string, PluginService.AvailablePlugin>(StringComparer.OrdinalIgnoreCase);
+            foreach (var p in allPlugins)
+            {
+                if (!available.TryGetValue(p.Identifier, out var existing) || p.Version > existing.Version)
+                    available[p.Identifier] = p;
+            }
+
+            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, available);
+
+            Assert.Single(result);
+            Assert.Equal(new Version(1, 3, 0), result["TestPlugin"].Version);
+        }
+
+        private static PluginService.AvailablePlugin MakeAvailablePlugin(
+            string identifier, string version, params (string id, string condition)[] dependencies)
+        {
+            return new PluginService.AvailablePlugin
+            {
+                Identifier = identifier,
+                Name = identifier,
+                Version = Version.Parse(version),
+                Dependencies = dependencies.Select(d => new IBTCPayServerPlugin.PluginDependency
+                {
+                    Identifier = d.id,
+                    Condition = d.condition
+                }).ToArray()
+            };
         }
     }
 }

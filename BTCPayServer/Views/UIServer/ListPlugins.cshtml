@@ -102,16 +102,35 @@
                             }
                         </span>
 						@{
-							var uninstalled = Model.Commands.Any(c => c.plugin == plugin && c.command == "delete");
-                            var enabled = Model.Commands.Any(c => c.plugin == plugin && c.command == "enable");
+							var uninstalled = Model.Commands.Any(c => c.plugin.Equals(plugin, StringComparison.InvariantCultureIgnoreCase) && c.command == "delete");
+                            var enabled = Model.Commands.Any(c => c.plugin.Equals(plugin, StringComparison.InvariantCultureIgnoreCase) && c.command == "enable");
+                            var pendingInstall = Model.Commands.Any(c => c.plugin.Equals(plugin, StringComparison.InvariantCultureIgnoreCase) && c.command == "install");
+                            Model.DisabledPluginUpdates.TryGetValue(plugin, out var recommendedUpdate);
 						}
                         <div class="d-flex gap-2">
+                            @if (pendingInstall)
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-primary" disabled text-translate="true">Marked for update</button>
+                            }
+                            else if (recommendedUpdate != null && !uninstalled && !enabled)
+                            {
+                                <form asp-action="InstallPlugin" asp-route-plugin="@plugin" asp-route-version="@recommendedUpdate.Version">
+                                    @if (PluginManager.DependenciesMet(recommendedUpdate.Dependencies, installed))
+                                    {
+                                        <button type="submit" class="btn btn-sm btn-primary" text-translate="true">Update</button>
+                                    }
+                                    else
+                                    {
+                                        <button title="Schedule upgrade for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-sm btn-primary" text-translate="true">Schedule update</button>
+                                    }
+                                </form>
+                            }
                             <form asp-action="EnablePlugin" asp-route-plugin="@plugin">
 							    @if (enabled)
 							    {
 								    <button type="submit" class="btn btn-sm btn-outline-primary" disabled text-translate="true">Marked for enabling</button>
 							    }
-							    else if (!uninstalled)
+							    else if (!uninstalled && !pendingInstall)
 							    {
 								    <button type="submit" class="btn btn-sm btn-outline-primary" text-translate="true">Enable</button>
 							    }
@@ -122,7 +141,7 @@
                                 {
                                     <button type="submit" class="btn btn-sm btn-outline-danger" disabled text-translate="true">Marked for deletion</button>
                                 }
-                                else if (!enabled)
+                                else if (!enabled && !pendingInstall)
                                 {
                                     <button type="submit" class="btn btn-sm btn-outline-danger" text-translate="true">Uninstall</button>
                                 }

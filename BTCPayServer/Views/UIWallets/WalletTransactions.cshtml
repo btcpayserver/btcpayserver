@@ -114,7 +114,7 @@
         const $list = document.getElementById('WalletTransactionsList');
         const $dropdowns = document.getElementById('Dropdowns');
         const $indicator = document.getElementById('LoadingIndicator');
-        const hasActiveFilters = @Safe.Json(!string.IsNullOrWhiteSpace(Model.SearchTerm) || !string.IsNullOrEmpty(labelFilter));
+        const hasActiveFilters = @Safe.Json(hasActiveFilters);
         const emptyStateMessage = @Safe.Json(hasActiveFilters
             ? StringLocalizer["No transactions match the current filters."].Value
             : StringLocalizer["There are no transactions yet."].Value);

@@ -67,7 +67,35 @@ async function updateLanguage(lang) {
 }
 
 function asNumber(val) {
-    return val && parseFloat(val.toString().replace(/\s/g, '')); // e.g. sats are formatted with spaces: 1 000 000
+    if (!val) return NaN;
+    const str = val.toString().replace(/\s/g, ''); // e.g. sats are formatted with spaces: 1 000 000
+    const num = parseFloat(str);
+    return isNaN(num) ? NaN : num;
+}
+
+function stripCurrency(val) {
+    if (!val) return '';
+    // Remove currency symbols, then extract the numeric value
+    // Handles formats like "$99.00", "€1.234,56", "¥1,000", "99,00 €"
+    const str = val.toString().trim();
+    // Match the numeric portion: digits, decimal separators, and thousand separators
+    const match = str.match(/[\d.,]+/g);
+    if (!match || match.length === 0) return '';
+    const numericPart = match.join('');
+    // Detect if comma is decimal separator (European format like 1.234,56)
+    const lastComma = numericPart.lastIndexOf(',');
+    const lastDot = numericPart.lastIndexOf('.');
+    if (lastComma > lastDot) {
+        // Comma is decimal separator, dots are thousand separators
+        const cleaned = numericPart.replace(/\./g, '').replace(',', '.');
+        const num = parseFloat(cleaned);
+        return isNaN(num) ? '' : num.toString();
+    } else {
+        // Dot is decimal separator (or none), commas are thousand separators
+        const cleaned = numericPart.replace(/,/g, '');
+        const num = parseFloat(cleaned);
+        return isNaN(num) ? '' : num.toString();
+    }
 }
 
 Vue.use(VueI18next);
@@ -92,7 +120,8 @@ const PaymentDetails = {
         }
     },
     methods: {
-        asNumber
+        asNumber,
+        stripCurrency
     }
 }
 
@@ -271,6 +300,7 @@ function initApp() {
         },
         methods: {
             asNumber,
+            stripCurrency,
             changePaymentMethod (id) { // payment method or plugin id
                 if (this.pmId !== id) {
                     this.paymentMethodId = id;

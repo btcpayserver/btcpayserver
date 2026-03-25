@@ -2574,6 +2574,45 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.Empty(result);
         }
 
+        [Fact]
+        public void GetDisabledPluginUpdates_CaseInsensitiveIdentifierMatching()
+        {
+            var disabled = new Dictionary<string, Version> { { "MyPlugin", new Version(1, 0, 0, 0) } };
+            var available = new Dictionary<string, PluginService.AvailablePlugin>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "myplugin", MakeAvailablePlugin("myplugin", "1.1.0") }
+            };
+
+            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, available);
+
+            Assert.Single(result);
+            Assert.Equal(new Version(1, 1, 0), result["MyPlugin"].Version);
+        }
+
+        [Fact]
+        public void GetDisabledPluginUpdates_UsesNewestVersionFromMultipleEntries()
+        {
+            var disabled = new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } };
+            // Build the dictionary the same way the controller does
+            var allPlugins = new[]
+            {
+                MakeAvailablePlugin("TestPlugin", "1.1.0"),
+                MakeAvailablePlugin("TestPlugin", "1.3.0"),
+                MakeAvailablePlugin("TestPlugin", "1.2.0")
+            };
+            var available = new Dictionary<string, PluginService.AvailablePlugin>(StringComparer.OrdinalIgnoreCase);
+            foreach (var p in allPlugins)
+            {
+                if (!available.TryGetValue(p.Identifier, out var existing) || p.Version > existing.Version)
+                    available[p.Identifier] = p;
+            }
+
+            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, available);
+
+            Assert.Single(result);
+            Assert.Equal(new Version(1, 3, 0), result["TestPlugin"].Version);
+        }
+
         private static PluginService.AvailablePlugin MakeAvailablePlugin(
             string identifier, string version, params (string id, string condition)[] dependencies)
         {

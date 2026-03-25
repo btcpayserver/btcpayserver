@@ -42,9 +42,13 @@ namespace BTCPayServer.Controllers
                 availablePlugins = Array.Empty<PluginService.AvailablePlugin>();
                 allPlugins = [];
             }
-            var availablePluginsByIdentifier = new Dictionary<string, AvailablePlugin>();
+            var availablePluginsByIdentifier = new Dictionary<string, AvailablePlugin>(StringComparer.OrdinalIgnoreCase);
             foreach (var p in allPlugins)
-                availablePluginsByIdentifier.TryAdd(p.Identifier, p);
+            {
+                if (!availablePluginsByIdentifier.TryGetValue(p.Identifier, out var existing) || p.Version > existing.Version)
+                    availablePluginsByIdentifier[p.Identifier] = p;
+            }
+            
             var disabled = pluginService.GetDisabledPlugins();
             var installed = pluginService.Installed;
             var disabledPluginUpdates = ListPluginsViewModel.GetDisabledPluginUpdates(disabled, availablePluginsByIdentifier);

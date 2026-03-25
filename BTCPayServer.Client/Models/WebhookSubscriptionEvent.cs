@@ -1,4 +1,7 @@
-﻿namespace BTCPayServer.Client.Models;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
+namespace BTCPayServer.Client.Models;
 
 public class WebhookSubscriptionEvent : StoreWebhookEvent
 {
@@ -108,6 +111,12 @@ public class WebhookSubscriptionEvent : StoreWebhookEvent
 
     public class SubscriberDisabledEvent : WebhookSubscriptionEvent.SubscriberEvent
     {
+        public enum DisabledReason
+        {
+            Suspension,
+            Expired
+        }
+
         public SubscriberDisabledEvent()
         {
         }
@@ -115,6 +124,10 @@ public class WebhookSubscriptionEvent : StoreWebhookEvent
         public SubscriberDisabledEvent(string storeId) : base(SubscriberDisabled, storeId)
         {
         }
+
+        [JsonConverter(typeof(StringEnumConverter))]
+        public DisabledReason Reason { get; set; }
+        public string SuspensionReason { get; set; }
     }
 
     public class PaymentReminderEvent : WebhookSubscriptionEvent.SubscriberEvent

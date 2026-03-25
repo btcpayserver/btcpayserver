@@ -3,6 +3,7 @@
 @{
     ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Forms), StringLocalizer["Forms"]).SetCategory(WellKnownCategories.Store));
     var storeId = Context.GetCurrentStoreId();
+    Layout = "_Layout";
 }
 
 <div class="sticky-header">

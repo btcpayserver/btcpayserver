@@ -237,7 +237,7 @@ services:
       - "postgres_test_datadir:/var/lib/postgresql"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.19.3-beta
+    image: btcpayserver/lnd:v0.19.3-beta-1
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -275,7 +275,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.19.3-beta
+    image: btcpayserver/lnd:v0.19.3-beta-1
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"

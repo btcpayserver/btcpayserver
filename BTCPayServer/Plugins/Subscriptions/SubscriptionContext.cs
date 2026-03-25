@@ -1,4 +1,4 @@
-﻿#nullable  enable
+#nullable  enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -110,7 +110,7 @@ public class SubscriptionContext(ApplicationDbContext ctx, EventAggregator aggre
         foreach (var offering in
                  _evts.OfType<SubscriptionEvent.SubscriberEvent>()
                      .SelectMany(s => s.Subscriber.Offering.Plans)
-                     .Where(p => !p.FeaturesLoaded)
+                     .Where(p => !p.FeaturesLoaded).ToList()
                      .Select(p => p.Offering)
                      .Where(o => fetched.Add(o.Id)))
         {

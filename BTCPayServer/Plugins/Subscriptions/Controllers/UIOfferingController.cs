@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -32,6 +32,7 @@ public partial class UIOfferingController(
     ApplicationDbContextFactory dbContextFactory,
     IStringLocalizer stringLocalizer,
     LinkGenerator linkGenerator,
+    IAuthorizationService authorizationService,
     EventAggregator eventAggregator,
     SubscriptionHostedService subsService,
     AppService appService,
@@ -98,7 +99,6 @@ public partial class UIOfferingController(
         => displayFormatter.Currency(req?.Amount ?? 0m, req?.Currency ?? "USD", DisplayFormatter.CurrencyFormat.CodeAndSymbol);
 
     [HttpPost("stores/{storeId}/offerings/{offeringId}/Subscribers")]
-    [Authorize(Policy = SubscriptionsPolicies.CanModifyOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> SubscriberSuspend(string storeId, string offeringId, string customerId, string? command = null,
         string? suspensionReason = null, decimal? amount = null, string? description = null)
     {
@@ -106,6 +106,14 @@ public partial class UIOfferingController(
         var sub = await ctx.Subscribers.GetByCustomerId(customerId, offeringId: offeringId, storeId: storeId);
         if (sub is null)
             return NotFound();
+        var permission = command switch
+        {
+            "credit" or "charge" => SubscriptionsPolicies.CanCreditSubscribers,
+            _ => SubscriptionsPolicies.CanManageSubscribers
+        };
+        if (!(await authorizationService.AuthorizeAsync(User, storeId, permission)).Succeeded)
+            return Forbid();
+
         var subName = sub.Customer.GetPrimaryIdentity() ?? sub.CustomerId;
         if (command is "unsuspend" or "suspend")
         {
@@ -125,6 +133,12 @@ public partial class UIOfferingController(
             sub.TestAccount = !sub.TestAccount;
             await ctx.SaveChangesAsync();
             TempData.SetStatusSuccess(StringLocalizer["Subscriber {0} is now {1}", subName, sub.TestAccount ? "test" : "live"]);
+        }
+        else if (command is "delete")
+        {
+            ctx.Subscribers.Remove(sub);
+            await ctx.SaveChangesAsync();
+            TempData.SetStatusSuccess(StringLocalizer["Subscriber {0} deleted", subName]);
         }
         else if (command is "credit" or "charge" && amount is > 0)
         {
@@ -505,7 +519,10 @@ public partial class UIOfferingController(
                     PlanName = p.Name,
                     SelectedType = plan?.PlanChanges
                         .FirstOrDefault(pc => pc.PlanChangeId == p.Id)?
-                        .Type.ToString() ?? "None"
+                        .Type.ToString() ?? "None",
+                    Timing = plan?.PlanChanges    
+                        .FirstOrDefault(pc => pc.PlanChangeId == p.Id)? 
+                        .Timing.ToString() ?? "Immediate"
                 })
                 .OrderBy(p => p.PlanName)
                 .ToList(),
@@ -584,6 +601,11 @@ public partial class UIOfferingController(
                 "Downgrade" => PlanChangeData.ChangeType.Downgrade,
                 _ => PlanChangeData.ChangeType.Downgrade
             };
+            existing.Timing = vmPC.Timing switch  
+            {                                   
+                "AtPeriodEnd" => PlanChangeData.ChangeTiming.AtPeriodEnd, 
+                _ => PlanChangeData.ChangeTiming.Immediate        
+            };
         }
 
         if (planId is null)
@@ -613,7 +635,7 @@ public partial class UIOfferingController(
     }
 
     [HttpGet("stores/{storeId}/offerings/{offeringId}/subscribers/{customerId}/create-portal")]
-    [Authorize(Policy = SubscriptionsPolicies.CanModifyOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = SubscriptionsPolicies.CanManageSubscribers, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> CreatePortalSession(string storeId, string offeringId, string customerId)
     {
         await using var ctx = DbContextFactory.CreateContext();

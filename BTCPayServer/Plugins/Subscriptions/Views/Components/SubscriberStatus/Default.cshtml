@@ -1,5 +1,7 @@
-﻿@model (bool, SubscriberData)
-
+﻿@using BTCPayServer.Plugins.Subscriptions
+@using Microsoft.AspNetCore.Authorization
+@model (bool, SubscriberData)
+@inject IAuthorizationService AuthorizationService
 @{
     var subscriber = Model.Item2;
     var canSuspend = Model.Item1;
@@ -9,6 +11,8 @@
         { IsActive: false, IsSuspended: true } => (StringLocalizer["Suspended"], "danger", true),
         _ => (StringLocalizer["Inactive"], "danger", subscriber.IsSuspended)
     };
+    if (canSuspend)
+        canSuspend = (await AuthorizationService.AuthorizeAsync(User, subscriber.Customer.StoreId, SubscriptionsPolicies.CanManageSubscribers)).Succeeded;
     hasDropdown = hasDropdown && canSuspend;
 }
 <span class="subscriber-status badge badge-translucent rounded-pill text-bg-@badge">

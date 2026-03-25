@@ -260,6 +260,41 @@
                         "description": "Subscriber not found."
                     }
                 }
+            },
+            "delete": {
+                "summary": "Delete a subscriber",
+                "description": "Deletes a subscriber for a specific offering by customer selector.",
+                "operationId": "DeleteSubscriber",
+                "tags": [
+                    "Subscriptions"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmanagesubscribers"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OfferingId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/CustomerSelector"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Subscriber deleted successfully."
+                    },
+                    "404": {
+                        "description": "Subscriber not found."
+                    }
+                }
             }
         },
         "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/credits/{currency}": {
@@ -1060,6 +1095,18 @@
                         "nullable": true,
                         "description": "Plan scheduled for next billing cycle."
                     },
+                    "scheduledPlan": {
+                        "$ref": "#/components/schemas/OfferingPlanModel",
+                        "nullable": true,
+                        "description": "Plan scheduled to activate at the end of the current billing period."
+                    },
+                    "scheduledPlanActivatesAt": {
+                        "type": "integer",
+                        "format": "unix-time",
+                        "nullable": true,
+                        "description": "Timestamp when the scheduled plan change will activate.",
+                        "example": 1713200000
+                    },
                     "phase": {
                         "$ref": "#/components/schemas/SubscriptionPhase"
                     }
@@ -1530,6 +1577,39 @@
                     }
                 ]
             },
+            "WebhookSubscriberDisabledReason": {
+                "type": "string",
+                "description": "Reason why the subscriber was disabled.",
+                "enum": [
+                    "Suspension",
+                    "Expired"
+                ],
+                "example": "Suspension"
+            },
+            "WebhookSubscriberDisabledEvent": {
+                "description": "Callback sent if the `type` is `SubscriberDisabled`",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/WebhookSubscriberEvent"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "reason": {
+                                "$ref": "#/components/schemas/WebhookSubscriberDisabledReason",
+                                "description": "Whether the subscriber was disabled because of a suspension or expiration.",
+                                "example": "Suspension"
+                            },
+                            "suspensionReason": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Suspension reason provided by the merchant when `reason` is `Suspension`.",
+                                "example": "Spam behavior detected."
+                            }
+                        }
+                    }
+                ]
+            },
             "WebhookPlanStartedEvent": {
                 "description": "Callback sent if the `type` is `PlanStarted`",
                 "allOf": [
@@ -1795,7 +1875,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/WebhookSubscriberEvent"
+                                "$ref": "#/components/schemas/WebhookSubscriberDisabledEvent"
                             }
                         }
                     }
@@ -1954,4 +2034,3 @@
         }
     ]
 }
-

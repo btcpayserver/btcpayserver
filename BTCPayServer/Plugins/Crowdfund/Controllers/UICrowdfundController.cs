@@ -304,7 +304,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 FormParameterPrefix = prefix
             };
 
-            return View("Views/UIForms/View", vm);
+            return View("/Plugins/Forms/Views/View.cshtml", vm);
         }
 
         [HttpPost("/apps/{appId}/crowdfund/form/submit")]
@@ -355,7 +355,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             viewModel.Form = form;
 
             viewModel.FormParameters = formParameters;
-            return View("Views/UIForms/View", viewModel);
+            return View("/Plugins/Forms/Views/View.cshtml", viewModel);
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]

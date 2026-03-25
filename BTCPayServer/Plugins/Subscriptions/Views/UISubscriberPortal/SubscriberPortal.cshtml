@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Plugins.Subscriptions
+@using BTCPayServer.Plugins.Subscriptions
 @using BTCPayServer.Services
 @using NBXplorer
 @model SubscriberPortalViewModel
@@ -23,6 +23,7 @@
     var daysRemaining = Model.Subscriber.NextPaymentDue is null ? 0 : CountDays(Model.Subscriber.NextPaymentDue.Value);
     var date = Model.Subscriber.NextPaymentDue is null ? "" : Model.Subscriber.NextPaymentDue.Value.ToString("D");
 
+	var hasPending = Model.Subscriber.NewPlanId is not null;
     var graceRemaining = Model.Subscriber.GracePeriodEnd is null ? 0 : CountDays(Model.Subscriber.GracePeriodEnd.Value);
     var currency = Model.Subscriber.Plan.Currency;
     SubscriberData.PhaseTypes? nextPhase = Model.Subscriber switch
@@ -481,6 +482,26 @@
                 <i class="fa fa-arrow-up me-2"></i>Plan Management
             </div>
             <div class="card-body">
+				@if (hasPending && Model.Subscriber.NewPlan is not null)
+				{
+					<div class="alert-translucent alert-info mb-3 scheduled-change-banner">
+						<div class="notice-content">
+							<i class="fa fa-clock-o alert-icon"></i>
+							<div class="alert-text">
+								<div class="notice-title">Plan change scheduled</div>
+								<p class="notice-subtitle">
+									Switching to <strong>@Model.Subscriber.NewPlan.Name</strong>
+									on @(Model.Subscriber.PeriodEnd?.ToString("D") ?? "period end")
+								</p>
+							</div>
+						</div>
+						<form method="post">
+								<button type="submit" name="command" value="cancel-scheduled-change" class="btn btn-sm btn-danger">
+								Cancel
+							</button>
+						</form>
+					</div>
+				}
                 <div class="plan-comparison">
                     @foreach (var batch in Model.PlanChanges.Batch(3))
                     {
@@ -508,25 +529,25 @@
                                             <input type="hidden" name="changedPlanId" value="@plan.PlanId" />
                                             @if (plan.ChangeType == PlanChangeData.ChangeType.Upgrade)
                                             {
-                                                <a
-                                                    href="#"
-                                                    class="btn btn-outline-primary btn-sm"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#changePlanModal"
-                                                    data-action="upgrade">
-                                                    Upgrade
-                                                </a>
+												<a href="#"
+												   class="btn btn-outline-primary btn-sm @(hasPending ? "disabled" : "")"
+												   @(hasPending ? "" : "data-bs-toggle=modal")
+												   @(hasPending ? "" : "data-bs-target=#changePlanModal")
+												   data-action="upgrade"
+												   title="@(hasPending ? "Cancel your scheduled change first" : "")">
+													Upgrade
+												</a>
                                             }
                                             else
                                             {
-                                                <a
-                                                    href="#"
-                                                    class="btn btn-outline-secondary btn-sm"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#changePlanModal"
-                                                    data-action="downgrade">
-                                                    Downgrade
-                                                </a>
+												<a href="#"
+												   class="btn btn-outline-secondary btn-sm @(hasPending ? "disabled" : "")"
+												   @(hasPending ? "" : "data-bs-toggle=modal")
+												   @(hasPending ? "" : "data-bs-target=#changePlanModal")
+												   data-action="downgrade"
+												   title="@(hasPending ? "Cancel your scheduled change first" : "")">
+													Downgrade
+												</a>
                                             }
 
                                     </div>

@@ -87,9 +87,6 @@
                                 <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a layout-menu-item="@(nameof(StoreNavPages.Emails))" asp-area="@EmailsPlugin.Area" asp-controller="UIStoresEmail" asp-action="StoreEmailSettings" asp-route-storeId="@Model.Store.Id" text-translate="true">Emails</a>
                                 </li>
-                                <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
-                                    <a layout-menu-item="@(nameof(StoreNavPages.Forms))" asp-controller="UIForms" asp-action="FormsList" asp-route-storeId="@Model.Store.Id" text-translate="true">Forms</a>
-                                </li>
                                 <vc:ui-extension-point location="store-category-nav" model="@Model"/>
                             }
                             <vc:ui-extension-point location="store-nav" model="@Model"/>

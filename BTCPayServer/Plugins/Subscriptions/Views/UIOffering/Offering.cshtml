@@ -29,7 +29,7 @@
 <div class="sticky-header">
     <h2>@ViewData["Title"]</h2>
     <div>
-        <a class="btn btn-secondary" asp-action="ConfigureOffering" asp-route-storeId="@storeId" asp-route-offeringId="@offeringId" text-translate="true">Configure</a>
+        <a class="btn btn-secondary" asp-action="ConfigureOffering" asp-route-storeId="@storeId" asp-route-offeringId="@offeringId" permission="@SubscriptionsPolicies.CanModifyOfferings" text-translate="true">Configure</a>
     </div>
 </div>
 
@@ -147,7 +147,8 @@
                                     <a class="edit-plan" asp-action="AddPlan"
                                        asp-route-storeId="@storeId"
                                        asp-route-offeringId="@offeringId"
-                                       asp-route-planId="@p.Data.Id">Edit</a>
+                                       asp-route-planId="@p.Data.Id"
+                                       permission="@SubscriptionsPolicies.CanModifyOfferings">Edit</a>
                                     <a
                                         asp-action="DeletePlan"
                                         asp-route-storeId="@storeId"
@@ -155,7 +156,8 @@
                                         asp-route-planId="@p.Data.Id"
                                         data-bs-toggle="modal" data-bs-target="#ConfirmModal"
                                         data-description="@ViewLocalizer["This action will remove the plan <b>{0}</b>.", Html.Encode(p.Data.Name)]"
-                                        data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Remove</a>
+                                        data-confirm-input="@StringLocalizer["Delete"]" text-translate="true"
+                                        permission="@SubscriptionsPolicies.CanModifyOfferings">Remove</a>
                                 </div>
                             </td>
                         </tr>
@@ -170,7 +172,7 @@
                 </tbody>
             </table>
         </div>
-        <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Remove plan"], StringLocalizer["This action will remove this plan. Are you sure?"], StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />
+        <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Remove plan"], StringLocalizer["This action will remove this plan. Are you sure?"], StringLocalizer["Delete"]))" />
     }
     else if (Model.Section == SubscriptionSection.Subscribers)
     {
@@ -217,11 +219,11 @@
                             data-currency="@subscriber.Data.Plan.Currency"
                             data-current-credit-value="@subscriber.Data.GetCredit()">
                             <td class="fw-semibold text-nowrap d-flex align-items-center subscriber-email-col">
-                                <form method="post" asp-antiforgery="true" class="me-2">
-                                    @if (subscriber.Data.TestAccount)
-                                    {
-                                        <span class="badge badge-translucent rounded-pill text-bg-info">Test</span>
-                                    }
+                                @if (subscriber.Data.TestAccount)
+                                {
+                                    <span class="badge badge-translucent rounded-pill text-bg-info">Test</span>
+                                }
+                                <form method="post" asp-antiforgery="true" class="me-2" permission="@SubscriptionsPolicies.CanManageSubscribers">
                                     <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         @subscriber.Data.Customer.Email.Get()
                                     </span>
@@ -239,9 +241,10 @@
                                         </button>
                                     </div>
                                 </form>
+                                <span class="me-2" not-permission="@SubscriptionsPolicies.CanManageSubscribers">@subscriber.Data.Customer.Email.Get()</span>
                             </td>
                             <td class="fw-semibold text-nowrap subscriber-credit-col">
-                                <span>
+                                <span permission="@SubscriptionsPolicies.CanCreditSubscribers">
                                     <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         <span>@DisplayFormatter.Currency(subscriber.Data.GetCredit(), subscriber.Data.Plan.Currency, DisplayFormatter.CurrencyFormat.CodeAndSymbol)</span>
                                     </span>
@@ -265,6 +268,9 @@
                                             Charge
                                         </a>
                                     </div>
+                                </span>
+                                <span not-permission="@SubscriptionsPolicies.CanCreditSubscribers">
+                                    @DisplayFormatter.Currency(subscriber.Data.GetCredit(), subscriber.Data.Plan.Currency, DisplayFormatter.CurrencyFormat.CodeAndSymbol)
                                 </span>
                             </td>
                             <td class="text-nowrap">@subscriber.Data.Plan.Name</td>
@@ -291,7 +297,20 @@
                             <td>
                                 <div class="d-inline-flex align-items-center gap-3">
                                     <a asp-action="CreatePortalSession" asp-route-storeId="@storeId" asp-route-offeringId="@subscriber.Data.OfferingId"
-                                       asp-route-customerId="@subscriber.Data.CustomerId" class="portal-link" target="_blank">View Portal</a>
+                                        permission="@SubscriptionsPolicies.CanManageSubscribers"
+                                        asp-route-customerId="@subscriber.Data.CustomerId" class="portal-link" target="_blank">View Portal</a>
+                                    <a asp-action="SubscriberSuspend"
+                                       asp-route-storeId="@storeId"
+                                       asp-route-offeringId="@offeringId"
+                                       asp-route-customerId="@subscriber.Data.CustomerId"
+                                       asp-route-command="delete"
+                                       class="remove-subscriber-link"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#ConfirmModal"
+                                       data-description="@ViewLocalizer["This action will remove the subscriber <b>{0}</b>.", Html.Encode(subscriber.Data.Customer.Email.Get())]"
+                                       data-confirm-input="@StringLocalizer["Delete"]"
+                                       permission="@SubscriptionsPolicies.CanManageSubscribers"
+                                       text-translate="true">Remove</a>
                                 </div>
                             </td>
                         </tr>
@@ -310,8 +329,9 @@
                 }
                 </tbody>
             </table>
-        </div>
-    }
+         </div>
+        <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Remove subscriber"], StringLocalizer["This action will remove this subscriber. Are you sure?"], StringLocalizer["Delete"]))" />
+     }
     else if (Model.Section == SubscriptionSection.Mails)
     {
         <form asp-antiforgery="true" method="post">

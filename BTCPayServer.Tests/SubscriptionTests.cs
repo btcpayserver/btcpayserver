@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -279,6 +279,73 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         }
     }
 
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanDowngradeAtPeriodEnd()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.RegisterNewUser();
+        await s.CreateNewStore();
+        await s.AddDerivationScheme();
+
+        var offering = await CreateNewSubscription(s);
+        var offeringPMO = new OfferingPMO(s);
+
+        var editEnterprise = await offeringPMO.Edit("Enterprise Plan");
+        editEnterprise.PlanChangesWithTiming =
+        [
+            (AddEditPlanPMO.PlanChangeType.Downgrade, AddEditPlanPMO.PlanChangeTiming.AtPeriodEnd),
+            (AddEditPlanPMO.PlanChangeType.Downgrade, AddEditPlanPMO.PlanChangeTiming.AtPeriodEnd)
+        ];
+        await editEnterprise.Save();
+
+        editEnterprise = await offeringPMO.Edit("Enterprise Plan");
+        await editEnterprise.ReadFields();
+        Assert.All(editEnterprise.PlanChangesWithTiming!, pc => Assert.Equal(AddEditPlanPMO.PlanChangeTiming.AtPeriodEnd, pc.Timing));
+        await s.Page.GetByTestId("offering-link").ClickAsync();
+
+        await offering.NewSubscriber("Enterprise Plan", "enterprise@example.com", true);
+        await offering.GoToSubscribers();
+
+        await using var portal = await offering.GoToPortal("enterprise@example.com");
+        await portal.ClickCallToAction();
+        await s.Server.WaitForEvent<SubscriptionEvent.SubscriberCredited>(async () =>
+        {
+            await s.PayInvoice(mine: true);
+        });
+        await s.ClickCheckoutRedirect();
+        await portal.AssertNoCallToAction();
+
+        await portal.Downgrade("Pro Plan");
+        await s.FindAlertMessage(partialText: "Your plan will change at the end of your current billing period.");
+        await portal.AssertScheduledChange("Pro Plan");
+
+        var downgradeBtn = s.Page.Locator(".changeplan-container[data-plan-name='Pro Plan'] a");
+        Assert.Contains("disabled", await downgradeBtn.GetAttributeAsync("class") ?? "");
+
+        await portal.AssertPlan("Enterprise Plan");
+
+        await portal.CancelScheduledChange();
+        await portal.AssertNoScheduledChange();
+
+        Assert.DoesNotContain("disabled", await downgradeBtn.GetAttributeAsync("class") ?? "");
+
+        await portal.Downgrade("Pro Plan");
+        await s.FindAlertMessage(partialText: "Your plan will change at the end of your current billing period.");
+        await portal.AssertScheduledChange("Pro Plan");
+
+
+        await s.Server.WaitForEvent<SubscriptionEvent.PlanStarted>(async () =>
+        {
+            await portal.GoToNextPhase(); // Normal to Grace period
+        });
+
+        await s.Page.ReloadAsync();
+        await portal.AssertPlan("Pro Plan");
+        await portal.AssertNoScheduledChange();
+    }
+
     private static decimal GetUnusedPeriodValue(int usedDays, decimal planPrice, int daysInPeriod)
     {
         var unused = (daysInPeriod - usedDays) / (double)daysInPeriod;
@@ -350,7 +417,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         Assert.Equal("can-access", offering2.Features[0].Id);
         Assert.Equal("can-access", offering.Features[0].Id);
 
-        var planCheckout = await client.CreatePlanCheckout(new CreatePlanCheckoutRequest()
+        var planCheckoutRequest = new CreatePlanCheckoutRequest()
         {
             StoreId = user.StoreId,
             OfferingId = offering.Id,
@@ -359,7 +426,8 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             InvoiceMetadata = new JObject() { ["inv"] = "invtest" },
             Metadata = new JObject() { ["checkout"] = "metatest" },
             PlanId = plan.Id,
-        });
+        };
+        var planCheckout = await client.CreatePlanCheckout(planCheckoutRequest);
 
         var planCheckout2 = await client.GetPlanCheckout(planCheckout.Id);
         Assert.Equal(planCheckout.Id, planCheckout2.Id);
@@ -476,11 +544,24 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         await MoveToExpiration(s, offering);
 
         // The price to renew is 10 USD, the user has 27 USD.
-        // The subscriber, should be renewed.
+        // The subscriber should be renewed.
         subscriber = await client.GetSubscriber(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id);
         Assert.True(subscriber.IsActive);
         result = await client.GetCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "current");
         Assert.Equal(-5m + 2m + 30m -10m, result.Value);
+
+        // Delete a user, then recreate it. Since it is the same email, it should be attached to the same customer.
+        await client.DeleteSubscriber(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id);
+        await AssertEx.AssertApiError(404, "subscriber-not-found", () => client.GetSubscriber(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id));
+        var planCheckoutB = await client.CreatePlanCheckout(planCheckoutRequest);
+        planCheckoutB = await client.ProceedPlanCheckout(planCheckoutB.Id);
+        await s.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await user.PayOnChain(planCheckoutB.InvoiceId);
+            await s.ExplorerNode.GenerateAsync(1);
+        });
+        planCheckoutB = await client.GetPlanCheckout(planCheckoutB.Id);
+        Assert.Equal(planCheckout.Subscriber.Customer.Id, planCheckoutB.Subscriber.Customer.Id);
     }
 
     private static async Task MoveToExpiration(ServerTester s, OfferingModel offering)
@@ -558,7 +639,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         await portal.AssertCallToAction(PortalPMO.CallToAction.Warning, noticeTitle: "Upgrade needed in 3 days");
         await portal.ClickCallToAction();
 
-        await s.Server.WaitForEvent<Events.SubscriptionEvent.PlanStarted>(async () =>
+        await s.Server.WaitForEvent<SubscriptionEvent.PlanStarted>(async () =>
         {
             await s.PayInvoice();
         });
@@ -627,13 +708,15 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         var invoiceId = invoice.Id;
         Assert.Equal("basic2@example.com", invoice.Metadata["buyerEmail"]?.ToString());
 
-        var waiting = offering.WaitEvent<SubscriptionEvent.SubscriberEvent.SubscriberDisabled>();
+        var waiting = offering.WaitEvent<SubscriptionEvent.SubscriberDisabled>();
         await api.MarkInvoiceStatus(storeId, invoiceId, new()
         {
             Status = InvoiceStatus.Invalid
         });
         var disabled = await waiting;
+        Assert.Equal(SubscriptionEvent.DisabledReason.Suspension, disabled.Reason);
         Assert.True(disabled.Subscriber.IsSuspended);
+        Assert.Equal(disabled.Subscriber.SuspensionReason, disabled.SuspensionReason);
         Assert.Equal("The plan has been started by an invoice which later became invalid.", disabled.Subscriber.SuspensionReason);
 
         await s.FastReloadAsync();
@@ -650,7 +733,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             await suspendedPortal.AssertCallToAction(PortalPMO.CallToAction.Danger, noticeTitle: "Access suspended");
         }
 
-        var activating = offering.WaitEvent<SubscriptionEvent.SubscriberEvent.SubscriberActivated>();
+        var activating = offering.WaitEvent<SubscriptionEvent.SubscriberActivated>();
         await s.Server.GetExplorerNode("BTC").EnsureGenerateAsync(1);
         var activated = await activating;
         Assert.Equal("basic@example.com", activated.Subscriber.Customer.GetPrimaryIdentity());
@@ -668,7 +751,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         {
             await portal.AssertCallToAction(PortalPMO.CallToAction.Info);
             await portal.ClickCallToAction();
-            var changingPhase = offering.WaitEvent<SubscriptionEvent.SubscriberEvent.SubscriberPhaseChanged>();
+            var changingPhase = offering.WaitEvent<SubscriptionEvent.SubscriberPhaseChanged>();
             await s.PayInvoice(mine: true, clickRedirect: true);
             var changeEvent = await changingPhase;
             Assert.Equal(
@@ -678,7 +761,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
 
             await portal.AssertNoCallToAction();
 
-            var sendingPaymentReminder = offering.WaitEvent<SubscriptionEvent.SubscriberEvent.PaymentReminder>();
+            var sendingPaymentReminder = offering.WaitEvent<SubscriptionEvent.PaymentReminder>();
             await portal.GoToReminder();
             await sendingPaymentReminder;
 
@@ -687,13 +770,15 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
 
             await portal.AssertCallToAction(PortalPMO.CallToAction.Danger, noticeTitle: "Payment due");
 
-            var disabling = offering.WaitEvent<SubscriptionEvent.SubscriberEvent.SubscriberDisabled>();
+            var disabling = offering.WaitEvent<SubscriptionEvent.SubscriberDisabled>();
             await portal.GoToNextPhase();
             await portal.AssertCallToAction(PortalPMO.CallToAction.Danger, noticeTitle: "Access expired");
-            await disabling;
+            var expired = await disabling;
+            Assert.Equal(SubscriptionEvent.DisabledReason.Expired, expired.Reason);
+            Assert.Null(expired.SuspensionReason);
 
             await portal.AddCredit("19.00001");
-            var addingCredit = offering.WaitEvent<SubscriptionEvent.SubscriberEvent.SubscriberCredited>();
+            var addingCredit = offering.WaitEvent<SubscriptionEvent.SubscriberCredited>();
             await s.PayInvoice(mine: true, clickRedirect: true);
             var addedCredit = await addingCredit;
             Assert.Equal((19.0m, 19.0m), (addedCredit.Amount, addedCredit.Total));
@@ -701,7 +786,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             await s.Page.ReloadAsync();
             await portal.AssertCredit("$299.00", "-$19.00", "$280.00");
 
-            addingCredit = offering.WaitEvent<SubscriptionEvent.SubscriberEvent.SubscriberCredited>();
+            addingCredit = offering.WaitEvent<SubscriptionEvent.SubscriberCredited>();
             await portal.ClickCallToAction();
             await s.PayInvoice(mine: true, clickRedirect: true);
             addedCredit = await addingCredit;
@@ -739,7 +824,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             await portal.GoToReminder();
             await portal.AssertCallToAction(PortalPMO.CallToAction.Warning, noticeTitle: "Payment due in 3 days");
             await portal.ClickCallToAction();
-            await s.Server.WaitForEvent<Events.SubscriptionEvent.SubscriberCredited>(async () =>
+            await s.Server.WaitForEvent<SubscriptionEvent.SubscriberCredited>(async () =>
             {
                 await s.PayInvoice(mine: true);
             });
@@ -753,6 +838,12 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         periodicTask.Now = DateTimeOffset.UtcNow.AddMonths(7);
         Assert.NotEqual(0, await periodicTask.RunScript("Portal Session Cleanup"));
         Assert.NotEqual(0, await periodicTask.RunScript("Checkout Session Cleanup"));
+
+        // Can delete a subscriber?
+        await offering.GoToSubscribers();
+        await offering.AssertHasSubscriber("enterprise@example.com");
+        await offering.DeleteSubscriber("enterprise@example.com");
+        await offering.AssertHasNotSubscriber("enterprise@example.com");
     }
 
     public class OfferingPMO(PlaywrightTester s)
@@ -799,6 +890,13 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
 
         public Task GoToMails()
             => s.Page.GetByRole(AriaRole.Link, new() { Name = "Mails" }).ClickAsync();
+
+        public async Task DeleteSubscriber(string subscriberEmail)
+        {
+            await s.Page.ClickAsync(SubscriberRowSelector(subscriberEmail) + " .remove-subscriber-link");
+            await s.ConfirmDeleteModal();
+            await s.FindAlertMessage(partialText: "deleted");
+        }
 
         public enum ActiveState
         {
@@ -1073,6 +1171,26 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
                     Assert.Equal(creditAmounts[i], await credits[i].InnerTextAsync());
             }
         }
+
+        public async Task AssertScheduledChange(string expectedPlanName)
+        {
+            await s.Page.Locator(".scheduled-change-banner").WaitForAsync();
+            var text = await s.Page.Locator(".scheduled-change-banner .notice-title").TextContentAsync();
+            Assert.Equal("Plan change scheduled", text?.Trim());
+            var subtitle = await s.Page.Locator(".scheduled-change-banner .notice-subtitle").TextContentAsync();
+            Assert.Contains(expectedPlanName, subtitle);
+        }
+
+        public async Task AssertNoScheduledChange()
+        {
+            Assert.Equal(0, await s.Page.Locator(".scheduled-change-banner").CountAsync());
+        }
+
+        public async Task CancelScheduledChange()
+        {
+            await s.Page.ClickAsync(".scheduled-change-banner button[value='cancel-scheduled-change']");
+            await s.FindAlertMessage(partialText: "cancelled");
+        }
     }
 
     class ConfigureOfferingPMO(PlaywrightTester tester)
@@ -1140,6 +1258,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         public List<string>? EnableFeatures { get; set; }
         public List<string>? DisableFeatures { get; set; }
         public PlanChangeType[]? PlanChanges { get; set; }
+        public (PlanChangeType Type, PlanChangeTiming Timing)[]? PlanChangesWithTiming { get; set; }
         public bool? Renewable { get; set; }
 
         public enum PlanChangeType
@@ -1147,6 +1266,12 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             Downgrade,
             Upgrade,
             None
+        }
+
+        public enum PlanChangeTiming
+        {
+            Immediate,
+            AtPeriodEnd
         }
 
         public async Task Save()
@@ -1168,6 +1293,14 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
                 for (var i = 0; i < PlanChanges.Length; i++)
                 {
                     await s.Page.Locator($"#PlanChanges_{i}__SelectedType").SelectOptionAsync(new[] { PlanChanges[i].ToString() });
+                }
+            }
+            else if (PlanChangesWithTiming is not null)
+            {
+                for (var i = 0; i < PlanChangesWithTiming.Length; i++)
+                {
+                    await s.Page.Locator($"#PlanChanges_{i}__SelectedType").SelectOptionAsync(new[] { PlanChangesWithTiming[i].Type.ToString() });
+                    await s.Page.Locator($"#PlanChanges_{i}__Timing").SelectOptionAsync(new[] { PlanChangesWithTiming[i].Timing.ToString() });
                 }
             }
 
@@ -1223,6 +1356,18 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             }
 
             PlanChanges = changes.ToArray();
+
+            List<(PlanChangeType, PlanChangeTiming)> changesWithTiming = new();
+            var timingSelects = await s.Page.Locator("[id^='PlanChanges_'][id$='__Timing']").AllAsync();
+            for (var i = 0; i < changes.Count; i++)
+            {
+                var timing = i < timingSelects.Count
+                    ? Enum.Parse<PlanChangeTiming>(await timingSelects[i].InputValueAsync())
+                    : PlanChangeTiming.Immediate;
+                changesWithTiming.Add((changes[i], timing));
+            }
+
+            PlanChangesWithTiming = changesWithTiming.ToArray();
         }
 
         public void AssertEqual(AddEditPlanPMO b)

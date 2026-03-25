@@ -18,8 +18,8 @@
     </li>
     @if (apps.Any())
     {
-        <li layout-menu-item="@nameof(SubscriptionsPlugin)" not-permission="@SubscriptionsPolicies.CanModifyOfferings" permission="@Policies.CanViewStoreSettings">
-            <span class="nav-link">
+        <li class="nav-item" not-permission="@SubscriptionsPolicies.CanModifyOfferings" permission="@SubscriptionsPolicies.CanViewOfferings">
+            <span layout-menu-item="@nameof(SubscriptionsPlugin)">
                 <vc:icon symbol="nav-reporting" />
                 <span text-translate="true">Subscriptions</span>
             </span>
@@ -28,14 +28,8 @@
     @foreach (var app in apps)
     {
         var offeringId = app.Data.GetSettings<SubscriptionsAppType.AppConfig>().OfferingId ?? "";
-
         <li class="nav-item nav-item-sub" permission="@SubscriptionsPolicies.CanViewOfferings">
             <a layout-menu-item="@nameof(SubscriptionsPlugin)-@offeringId" asp-area="Subscriptions" asp-controller="UIOffering" asp-action="Offering" asp-route-storeId="@Model.Store.Id" asp-route-offeringId="@offeringId" asp-route-section="Plans">
-                <span>@app.AppName</span>
-            </a>
-        </li>
-        <li class="nav-item nav-item-sub" not-permission="@SubscriptionsPolicies.CanViewOfferings">
-            <a layout-menu-item="@nameof(SubscriptionsPlugin)-@offeringId" asp-area="Subscriptions" asp-controller="UIOffering" asp-action="Offering" asp-route-storeId="@Model.Store.Id" asp-route-offeringId="@offeringId" asp-route-section="Plans" class="nav-link">
                 <span>@app.AppName</span>
             </a>
         </li>

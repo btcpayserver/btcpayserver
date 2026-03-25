@@ -470,13 +470,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<ExplorerClientProvider>();
             services.AddSingleton<IExplorerClientProvider, ExplorerClientProvider>(x =>
                 x.GetRequiredService<ExplorerClientProvider>());
-            services.TryAddSingleton<Bitpay>(o =>
-            {
-                if (o.GetRequiredService<BTCPayServerOptions>().NetworkType == ChainName.Mainnet)
-                    return new Bitpay(new Key(), new Uri("https://bitpay.com/"));
-                else
-                    return new Bitpay(new Key(), new Uri("https://test.bitpay.com/"));
-            });
+
             RegisterRateSources(services);
             services.TryAddSingleton<RateProviderFactory>();
             services.TryAddSingleton<RateFetcher>();
@@ -490,7 +484,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<InvoiceActivator>();
 
             services.AddPayoutProcesors();
-            services.AddForms();
 
             services.AddSingleton<APIKeyRepository>();
             services.AddSingleton<IPermissionHandler, BuiltInPermissionHandler>();

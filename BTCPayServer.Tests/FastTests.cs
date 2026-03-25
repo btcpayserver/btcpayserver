@@ -100,6 +100,18 @@ namespace BTCPayServer.Tests
         /// This test check that we don't forget to bump one image in both docker-compose.altcoins.yml and docker-compose.yml
         /// </summary>
         [Fact]
+        public void CanNormalizeWalletComment()
+        {
+            Assert.Null(WalletRepository.NormalizeComment(null));
+            Assert.Null(WalletRepository.NormalizeComment(string.Empty));
+            Assert.Null(WalletRepository.NormalizeComment("   "));
+
+            Assert.Equal("hello world", WalletRepository.NormalizeComment("  hello world  "));
+            Assert.Equal(new string('a', WalletRepository.MaxCommentSize),
+                WalletRepository.NormalizeComment(new string('a', WalletRepository.MaxCommentSize + 5)));
+        }
+
+        [Fact]
         public void CheckDockerComposeUpToDate()
         {
             var compose1 = File.ReadAllText(Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer.Tests", "docker-compose.yml"));

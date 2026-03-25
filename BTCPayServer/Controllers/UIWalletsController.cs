@@ -190,7 +190,7 @@ namespace BTCPayServer.Controllers
                 {
                     PendingTransactionId = pendingTransactionId,
                     PSBT = currentPsbt.ToBase64(),
-                    Comment = blob.Comment
+                    Comment = WalletRepository.NormalizeComment(blob.Comment)
                 },
             };
             await FetchTransactionDetails(walletId, derivationSchemeSettings, vm, network);
@@ -1178,6 +1178,8 @@ namespace BTCPayServer.Controllers
             if (!ModelState.IsValid)
                 return View(vm);
 
+            var normalizedComment = WalletRepository.NormalizeComment(vm.Comment);
+
             foreach (var transactionOutput in vm.Outputs.Where(output => output.Labels?.Any() is true))
             {
                 var labels = transactionOutput.Labels.Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
@@ -1291,7 +1293,7 @@ namespace BTCPayServer.Controllers
                 PayJoinBIP21 = vm.PayJoinBIP21,
                 EnforceLowR = psbtResponse.Suggestions?.ShouldEnforceLowR,
                 ChangeAddress = psbtResponse.ChangeAddress?.ToString(),
-                Comment = vm.Comment,
+                Comment = normalizedComment,
                 PSBT = psbt.ToHex()
             };
 
@@ -1300,7 +1302,7 @@ namespace BTCPayServer.Controllers
             switch (command)
             {
                 case "createpending":
-                    await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl(), comment: vm.Comment);
+                    await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl(), comment: normalizedComment);
                     return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                 case "sign":
                     return await WalletSign(walletId, new WalletPSBTViewModel

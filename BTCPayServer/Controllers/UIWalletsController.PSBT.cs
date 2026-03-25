@@ -166,6 +166,7 @@ namespace BTCPayServer.Controllers
             vm.BackUrl ??= HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath;
 
             vm.SigningContext.PSBT = vm.PSBT;
+            vm.SigningContext.Comment = WalletRepository.NormalizeComment(vm.SigningContext.Comment);
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
             if (vm.InvalidPSBT)
             {
@@ -448,6 +449,7 @@ namespace BTCPayServer.Controllers
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network is null)
                 return NotFound();
+            vm.SigningContext.Comment = WalletRepository.NormalizeComment(vm.SigningContext.Comment);
             PSBT psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
             if (vm.InvalidPSBT || psbt is null)
             {

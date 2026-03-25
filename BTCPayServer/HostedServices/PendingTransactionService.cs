@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -127,7 +128,7 @@ public class PendingTransactionService(
         pendingTransaction.SetBlob(new PendingTransactionBlob
         {
             PSBT = psbt.ToBase64(),
-            Comment = comment,
+            Comment = WalletRepository.NormalizeComment(comment),
             SignaturesCollected = 0,
             SignaturesNeeded = signaturesNeeded,
             SignaturesTotal = signaturesTotal,

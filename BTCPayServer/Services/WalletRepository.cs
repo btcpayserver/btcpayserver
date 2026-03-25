@@ -583,12 +583,18 @@ namespace BTCPayServer.Services
         }
 
         public static int MaxCommentSize = 200;
+        public static string? NormalizeComment(string? comment)
+        {
+            if (string.IsNullOrWhiteSpace(comment))
+                return null;
+            return comment.Trim().Truncate(MaxCommentSize);
+        }
         public async Task SetWalletObjectComment(WalletObjectId id, string comment)
         {
             ArgumentNullException.ThrowIfNull(id);
             ArgumentNullException.ThrowIfNull(comment);
-            if (!string.IsNullOrEmpty(comment))
-                await AddOrUpdateWalletObjectData(id, new UpdateOperation.MergeObject(new(){ ["comment"] = comment.Trim().Truncate(MaxCommentSize) }));
+            if (NormalizeComment(comment) is { } normalizedComment)
+                await AddOrUpdateWalletObjectData(id, new UpdateOperation.MergeObject(new(){ ["comment"] = normalizedComment }));
             else
                 await AddOrUpdateWalletObjectData(id, new UpdateOperation.RemoveProperty("comment"));
         }

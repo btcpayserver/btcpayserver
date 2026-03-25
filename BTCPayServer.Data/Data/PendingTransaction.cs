@@ -56,6 +56,7 @@ public class PendingTransaction: IHasBlob<PendingTransactionBlob>
     public class PendingTransactionBlob
     {
         public string PSBT { get; set; }
+        public string Comment { get; set; }
         public string RequestBaseUrl { get; set; }
         public List<CollectedSignature> CollectedSignatures { get; set; } = new();
 

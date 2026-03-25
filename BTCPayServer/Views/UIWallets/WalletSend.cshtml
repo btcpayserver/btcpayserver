@@ -159,6 +159,12 @@
         </div>
     }
 
+    <div class="form-group my-4">
+        <label asp-for="Comment" class="form-label"></label>
+        <textarea asp-for="Comment" rows="2" maxlength="200" class="form-control"></textarea>
+        <span asp-validation-for="Comment" class="text-danger"></span>
+    </div>
+
     <div class="d-flex flex-wrap gap-3 my-4">
         <div>
             <label asp-for="FeeSatoshiPerByte" class="form-label">

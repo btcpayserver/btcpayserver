@@ -179,7 +179,7 @@ namespace BTCPayServer.Controllers
             switch (command)
             {
                 case "createpending":
-                    await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl());
+                    await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl(), comment: vm.SigningContext.Comment);
                     return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                 case "sign":
                     return await WalletSign(walletId, vm);
@@ -225,9 +225,10 @@ namespace BTCPayServer.Controllers
                     });
 
                 case "broadcast":
+                    vm.SigningContext.PSBT = psbt.ToBase64();
                     return await RedirectToWalletPSBTReady(walletId, new WalletPSBTReadyViewModel
                     {
-                        SigningContext = new SigningContextModel(psbt),
+                        SigningContext = vm.SigningContext,
                         ReturnUrl = vm.ReturnUrl,
                         BackUrl = vm.BackUrl
                     });
@@ -574,6 +575,13 @@ namespace BTCPayServer.Controllers
                         if (!TempData.HasStatusMessage())
                         {
                             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Transaction broadcasted successfully ({0})", transaction.GetHash()].Value;
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(vm.SigningContext.Comment))
+                        {
+                            await WalletRepository.SetWalletObjectComment(
+                                new WalletObjectId(walletId, WalletObjectData.Types.Tx, transaction.GetHash().ToString()),
+                                vm.SigningContext.Comment);
                         }
 
                         if (vm.SigningContext.PendingTransactionId is not null)

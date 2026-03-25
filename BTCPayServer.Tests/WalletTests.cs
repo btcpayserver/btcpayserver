@@ -301,8 +301,10 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         // Send to bob
         var ws = await s.GoToWalletSend();
         var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
+        const string txComment = "send view comment";
         await ws.FillAddress(bob);
         await ws.FillAmount(1);
+        await ws.FillComment(txComment);
 
         // Add labels to the transaction output
         await TestUtils.EventuallyAsync(async () =>
@@ -328,6 +330,12 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         Assert.Equal(walletTransactionUri.ToString(), s.Page.Url);
         // Assert that the added label is associated with the transaction
         await wt.AssertHasLabels("tx-label");
+        var client = await s.AsTestAccount().CreateClient();
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            var transactions = (await client.ShowOnChainWalletTransactions(storeId, cryptoCode)).ToArray();
+            Assert.Contains(transactions, t => t.Comment == txComment);
+        });
 
         await s.GoToWallet(navPages: WalletsNavPages.Send);
 

@@ -821,6 +821,8 @@ namespace BTCPayServer.Tests
             public Task FillAddress(BitcoinAddress address) => page.FillAsync("[name='Outputs[0].DestinationAddress']",
                 address.ToString());
 
+            public Task FillComment(string comment) => page.FillAsync("[name='Comment']", comment);
+
             public Task SweepBalance() => page.ClickAsync("#SweepBalance");
 
             public Task Sign() => page.ClickAsync("#SignTransaction");

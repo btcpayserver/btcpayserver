@@ -190,6 +190,7 @@ namespace BTCPayServer.Controllers
                 {
                     PendingTransactionId = pendingTransactionId,
                     PSBT = currentPsbt.ToBase64(),
+                    Comment = blob.Comment
                 },
             };
             await FetchTransactionDetails(walletId, derivationSchemeSettings, vm, network);
@@ -1290,6 +1291,7 @@ namespace BTCPayServer.Controllers
                 PayJoinBIP21 = vm.PayJoinBIP21,
                 EnforceLowR = psbtResponse.Suggestions?.ShouldEnforceLowR,
                 ChangeAddress = psbtResponse.ChangeAddress?.ToString(),
+                Comment = vm.Comment,
                 PSBT = psbt.ToHex()
             };
 
@@ -1298,7 +1300,7 @@ namespace BTCPayServer.Controllers
             switch (command)
             {
                 case "createpending":
-                    await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl());
+                    await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl(), comment: vm.Comment);
                     return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                 case "sign":
                     return await WalletSign(walletId, new WalletPSBTViewModel
@@ -1465,6 +1467,7 @@ namespace BTCPayServer.Controllers
             redirectVm.FormParameters.Add("SigningContext.EnforceLowR",
                 signingContext.EnforceLowR?.ToString(CultureInfo.InvariantCulture));
             redirectVm.FormParameters.Add("SigningContext.ChangeAddress", signingContext.ChangeAddress);
+            redirectVm.FormParameters.Add("SigningContext.Comment", signingContext.Comment);
             redirectVm.FormParameters.Add("SigningContext.PendingTransactionId", signingContext.PendingTransactionId);
             redirectVm.FormParameters.Add("SigningContext.BalanceChangeFromReplacement", signingContext.BalanceChangeFromReplacement.ToString());
         }

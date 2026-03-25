@@ -66,6 +66,10 @@ namespace BTCPayServer.Models.WalletViewModels
         [Display(Name = "UTXOs to spend from")]
         public IEnumerable<string> SelectedInputs { get; set; }
 
+        [Display(Name = "Comment")]
+        [StringLength(200)]
+        public string Comment { get; set; }
+
         public string BackUrl { get; set; }
         public string ReturnUrl { get; set; }
         public bool IsMultiSigOnServer { get; set; }

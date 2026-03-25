@@ -85,6 +85,7 @@ public class PendingTransactionService(
 
     public async Task<PendingTransaction> CreatePendingTransaction(string storeId, string cryptoCode, PSBT psbt,
         RequestBaseUrl requestBaseUrl,
+        string? comment = null,
         DateTimeOffset? expiry = null, CancellationToken cancellationToken = default)
     {
         var network = networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
@@ -126,6 +127,7 @@ public class PendingTransactionService(
         pendingTransaction.SetBlob(new PendingTransactionBlob
         {
             PSBT = psbt.ToBase64(),
+            Comment = comment,
             SignaturesCollected = 0,
             SignaturesNeeded = signaturesNeeded,
             SignaturesTotal = signaturesTotal,

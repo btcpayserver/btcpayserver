@@ -606,7 +606,7 @@ public class SubscriptionHostedService(
                                                                       END) AS monthly_revenue
                               FROM subs_subscribers ss
                               JOIN subs_plans sp ON ss.plan_id = sp.id
-                              WHERE ss.plan_id = @id AND ss.active
+                              WHERE ss.plan_id = @id AND ss.active AND ss.phase != 'Trial'
                               GROUP BY ss.plan_id
                           )
                           UPDATE subs_plans AS sp

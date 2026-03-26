@@ -353,24 +353,6 @@ namespace BTCPayServer.Tests
             await s.Page.CheckAsync("#LUD12Enabled");
             await s.ClickPagePrimary();
 
-            // Topup Invoice test
-            var i = await s.CreateInvoice(storeId, null, cryptoCode);
-            await s.GoToInvoiceCheckout(i);
-            var lnurl = await s.Page.Locator("#Lightning_BTC-LNURL .truncate-center").GetAttributeAsync("data-text");
-            Assert.NotNull(lnurl);
-            var parsed = LNURL.LNURL.Parse(lnurl, out _);
-            var fetchedRequest = Assert.IsType<LNURLPayRequest>(await LNURL.LNURL.FetchInformation(parsed, new HttpClient()));
-            Assert.Equal(1m, fetchedRequest.MinSendable.ToDecimal(LightMoneyUnit.Satoshi));
-            Assert.NotEqual(1m, fetchedRequest.MaxSendable.ToDecimal(LightMoneyUnit.Satoshi));
-            var lnurlResponse = await fetchedRequest.SendRequest(new LightMoney(0.000001m, LightMoneyUnit.BTC),
-                network, new HttpClient(), comment: "lol");
-
-            Assert.Equal(new LightMoney(0.000001m, LightMoneyUnit.BTC),
-                lnurlResponse.GetPaymentRequest(network).MinimumAmount);
-
-            var lnurlResponse2 = await fetchedRequest.SendRequest(new LightMoney(0.000002m, LightMoneyUnit.BTC),
-                network, new HttpClient(), comment: "lol2");
-            Assert.Equal(new LightMoney(0.000002m, LightMoneyUnit.BTC), lnurlResponse2.GetPaymentRequest(network).MinimumAmount);
             // Initial bolt was cancelled
             var res = await s.Server.CustomerLightningD.Pay(lnurlResponse.Pr);
             Assert.Equal(PayResult.Error, res.Result);

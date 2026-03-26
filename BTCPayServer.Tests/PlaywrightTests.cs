@@ -433,13 +433,7 @@ namespace BTCPayServer.Tests
                 lnurlResponse2.GetPaymentRequest(network).MinimumAmount);
             await s.GoToHome();
 
-            i = await s.CreateInvoice(storeId, 0.000001m, cryptoCode);
-            await s.GoToInvoiceCheckout(i);
-
-            await s.GoToStore(storeId);
-            i = await s.CreateInvoice(storeId, null, cryptoCode);
-            await s.GoToInvoiceCheckout(i);
-
+            // Bech32 mode
             await s.GoToHome();
             await s.GoToLightningSettings();
             await s.Page.UncheckAsync("#LNURLBech32Mode");
@@ -452,12 +446,17 @@ namespace BTCPayServer.Tests
 
             i = await s.CreateInvoice(storeId, null, cryptoCode);
             await s.GoToInvoiceCheckout(i);
-            var lnurl = await s.Page.Locator("#Lightning_BTC-LNURL .truncate-center").GetAttributeAsync("data-text");
+            bolt11 = await s.Page.Locator("#Lightning_BTC-LN .truncate-center").GetAttributeAsync("data-text");
+            Assert.NotNull(bolt11);
+            BOLT11PaymentRequest.Parse(bolt11!, s.Server.ExplorerNode.Network);
+            paymentMethods = await greenfield.GetInvoicePaymentMethods(storeId, i);
+            lnurlMethod = Assert.Single(paymentMethods, p => p.PaymentMethodId == "BTC-LNURL");
+            var lnurl = lnurlMethod.PaymentLink.Replace("lightning:", "", StringComparison.OrdinalIgnoreCase);
             Assert.StartsWith("lnurlp", lnurl);
             LNURL.LNURL.Parse(lnurl, out _);
 
             await s.GoToHome();
-            await s.CreateNewStore(false);
+            var (_, newStoreId) = await s.CreateNewStore(false);
             await s.AddLightningNode(LightningConnectionType.LndREST, false);
             await s.GoToLightningSettings();
             await s.Page.CheckAsync("#LNURLEnabled");
@@ -465,7 +464,12 @@ namespace BTCPayServer.Tests
             Assert.Contains($"{cryptoCode} Lightning settings successfully updated", await (await s.FindAlertMessage()).TextContentAsync());
             var invForPP = await s.CreateInvoice(null, cryptoCode);
             await s.GoToInvoiceCheckout(invForPP);
-            lnurl = await s.Page.Locator("#Lightning_BTC-LNURL .truncate-center").GetAttributeAsync("data-text");
+            bolt11 = await s.Page.Locator("#Lightning_BTC-LN .truncate-center").GetAttributeAsync("data-text");
+            Assert.NotNull(bolt11);
+            BOLT11PaymentRequest.Parse(bolt11!, s.Server.ExplorerNode.Network);
+            paymentMethods = await greenfield.GetInvoicePaymentMethods(newStoreId, invForPP);
+            lnurlMethod = Assert.Single(paymentMethods, p => p.PaymentMethodId == "BTC-LNURL");
+            lnurl = lnurlMethod.PaymentLink.Replace("lightning:", "", StringComparison.OrdinalIgnoreCase);
             Assert.NotNull(lnurl);
             LNURL.LNURL.Parse(lnurl, out _);
 

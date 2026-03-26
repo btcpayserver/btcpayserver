@@ -353,6 +353,32 @@ namespace BTCPayServer.Tests
             await s.Page.CheckAsync("#LUD12Enabled");
             await s.ClickPagePrimary();
 
+            // Topup Invoice test
+            var i = await s.CreateInvoice(storeId, null, cryptoCode);
+            await s.GoToInvoiceCheckout(i);
+            // Top-up invoices now display a zero-amount BOLT11 on checkout, like standard invoices.
+            var bolt11 = await s.Page.Locator("#Lightning_BTC-LN .truncate-center").GetAttributeAsync("data-text");
+            Assert.NotNull(bolt11);
+            Assert.Null(BOLT11PaymentRequest.Parse(bolt11!, s.Server.ExplorerNode.Network).MinimumAmount);
+            var invoiceId = s.Page.Url.Split('/').Last();
+            LNURLPayRequest fetchedRequest;
+            using (var resp = await s.Server.PayTester.HttpClient.GetAsync("BTC/lnurl/pay/i/" + invoiceId))
+            {
+                resp.EnsureSuccessStatusCode();
+                fetchedRequest = JsonConvert.DeserializeObject<LNURLPayRequest>(await resp.Content.ReadAsStringAsync());
+            }
+            Assert.Equal(1m, fetchedRequest.MinSendable.ToDecimal(LightMoneyUnit.Satoshi));
+            Assert.NotEqual(1m, fetchedRequest.MaxSendable.ToDecimal(LightMoneyUnit.Satoshi));
+            var lnurlResponse = await fetchedRequest.SendRequest(new LightMoney(0.000001m, LightMoneyUnit.BTC),
+                network, new HttpClient(), comment: "lol");
+
+            Assert.Equal(new LightMoney(0.000001m, LightMoneyUnit.BTC),
+                lnurlResponse.GetPaymentRequest(network).MinimumAmount);
+
+            var lnurlResponse2 = await fetchedRequest.SendRequest(new LightMoney(0.000002m, LightMoneyUnit.BTC),
+                network, new HttpClient(), comment: "lol2");
+            Assert.Equal(new LightMoney(0.000002m, LightMoneyUnit.BTC), lnurlResponse2.GetPaymentRequest(network).MinimumAmount);
+
             // Initial bolt was cancelled
             var res = await s.Server.CustomerLightningD.Pay(lnurlResponse.Pr);
             Assert.Equal(PayResult.Error, res.Result);
@@ -374,9 +400,9 @@ namespace BTCPayServer.Tests
             i = await s.CreateInvoice(storeId, 0.0000001m, cryptoCode);
             await s.GoToInvoiceCheckout(i);
             // BOLT11 is also displayed for standard invoice (not LNURL, even if it is available)
-            var bolt11 = await s.Page.Locator("#Lightning_BTC-LN .truncate-center").GetAttributeAsync("data-text");
+            bolt11 = await s.Page.Locator("#Lightning_BTC-LN .truncate-center").GetAttributeAsync("data-text");
             BOLT11PaymentRequest.Parse(bolt11!, s.Server.ExplorerNode.Network);
-            var invoiceId = s.Page.Url.Split('/').Last();
+            invoiceId = s.Page.Url.Split('/').Last();
             using (var resp = await s.Server.PayTester.HttpClient.GetAsync("BTC/lnurl/pay/i/" + invoiceId))
             {
                 resp.EnsureSuccessStatusCode();
@@ -426,7 +452,7 @@ namespace BTCPayServer.Tests
 
             i = await s.CreateInvoice(storeId, null, cryptoCode);
             await s.GoToInvoiceCheckout(i);
-            lnurl = await s.Page.Locator("#Lightning_BTC-LNURL .truncate-center").GetAttributeAsync("data-text");
+            var lnurl = await s.Page.Locator("#Lightning_BTC-LNURL .truncate-center").GetAttributeAsync("data-text");
             Assert.StartsWith("lnurlp", lnurl);
             LNURL.LNURL.Parse(lnurl, out _);
 

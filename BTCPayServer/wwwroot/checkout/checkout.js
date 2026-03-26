@@ -82,30 +82,48 @@ function stripCurrency(val) {
     const match = str.match(/[\d.,]+/g);
     if (!match || match.length === 0) return '';
     const numericPart = match.join('');
-    // Detect decimal vs thousand separators
-    const lastComma = numericPart.lastIndexOf(',');
-    const lastDot = numericPart.lastIndexOf('.');
-    if (lastComma > lastDot) {
-        // Last separator is a comma — is it decimal or thousands?
-        // If dots exist before the comma (e.g. "1.234,56"), comma is decimal
-        // If no dots before comma and exactly 3 digits after (e.g. "¥1,000"), comma is thousands
-        const afterComma = numericPart.substring(lastComma + 1);
-        if (lastDot < 0 && afterComma.length === 3 && lastComma >= 1) {
-            // No dots present — comma with 3 trailing digits is likely thousands
-            const cleaned = numericPart.replace(/,/g, '');
-            const num = parseFloat(cleaned);
-            return isNaN(num) ? '' : num.toString();
-        }
-        // Comma is decimal separator, dots are thousand separators
-        const cleaned = numericPart.replace(/\./g, '').replace(',', '.');
-        const num = parseFloat(cleaned);
-        return isNaN(num) ? '' : num.toString();
-    } else {
-        // Dot is decimal separator (or none), commas are thousand separators
-        const cleaned = numericPart.replace(/,/g, '');
-        const num = parseFloat(cleaned);
-        return isNaN(num) ? '' : num.toString();
+
+    const hasComma = numericPart.includes(',');
+    const hasDot = numericPart.includes('.');
+    let cleaned = numericPart;
+
+    if (hasComma && hasDot) {
+        // Both separators present — use position to determine which is decimal.
+        // European format: "1.234,56" (comma last → comma is decimal)
+        // US/CJK format:  "1,234.56" (dot last → dot is decimal)
+        cleaned = numericPart.lastIndexOf(',') > numericPart.lastIndexOf('.')
+            ? numericPart.replace(/\./g, '').replace(',', '.')
+            : numericPart.replace(/,/g, '');
+    } else if (hasComma) {
+        // Only commas present — need to distinguish comma-as-thousands-separator
+        // from comma-as-decimal-separator.
+        //
+        // Heuristic: CJK currencies (¥, ₩) use comma as a thousands separator
+        // ("1,000", "1,234,567"), while European currencies (€) use comma as
+        // a decimal separator ("1,50", "1234,56").
+        //
+        // We test whether the entire numeric string matches the standard
+        // thousands-grouping pattern: 1–3 digits followed by one or more groups
+        // of comma + exactly 3 digits (e.g. "1,000", "12,345", "1,234,567").
+        // If it matches, all commas are thousands separators. Otherwise, the
+        // comma is treated as a decimal separator.
+        //
+        // Examples:
+        //   "1,000"     → matches pattern  → thousands → 1000
+        //   "1,234,567" → matches pattern  → thousands → 1234567
+        //   "12,345"    → matches pattern  → thousands → 12345
+        //   "1,50"      → no match (2 fractional digits)  → decimal → 1.50
+        //   "1234,56"   → no match (4 digits before comma) → decimal → 1234.56
+        //   "12,34"     → no match (2 fractional digits)  → decimal → 12.34
+        //   "1,2"       → no match (1 fractional digit)   → decimal → 1.2
+        cleaned = /^\d{1,3}(,\d{3})+$/.test(numericPart)
+            ? numericPart.replace(/,/g, '')
+            : numericPart.replace(',', '.');
     }
+    // If only dots (or no separators), the string is already parseable.
+
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? '' : num.toString();
 }
 
 Vue.use(VueI18next);

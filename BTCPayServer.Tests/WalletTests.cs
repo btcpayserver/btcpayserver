@@ -749,6 +749,50 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         });
     }
 
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanApplyWalletTransactionCustomDateFilterUsingClientTimezoneOffset()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.Server.ExplorerNode.GenerateAsync(1);
+        await s.RegisterNewUser(true);
+        await s.CreateNewStore();
+        await s.GenerateWallet(isHotWallet: true);
+
+        await s.GoToWallet(s.WalletId, WalletsNavPages.Receive);
+        var addressStr = await s.Page.GetAttributeAsync("#Address", "data-text");
+        var address = BitcoinAddress.Create(addressStr!, ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
+        await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(0.5m));
+        await s.Server.ExplorerNode.GenerateAsync(1);
+
+        var client = await s.AsTestAccount().CreateClient();
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            Assert.True((await client.ShowOnChainWalletTransactions(s.StoreId, "BTC")).Any());
+        });
+
+        await s.GoToWalletTransactions(s.WalletId);
+        var timezoneOffset = await s.Page.EvaluateAsync<int>("() => new Date().getTimezoneOffset()");
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            Assert.Equal(timezoneOffset.ToString(CultureInfo.InvariantCulture), await s.Page.InputValueAsync("#TimezoneOffset"));
+        });
+
+        await s.Page.ClickAsync("#DateOptionsToggle");
+        await s.Page.ClickAsync("[data-bs-target='#customRangeModal']");
+        await s.Page.EvaluateAsync("() => { document.getElementById('dtpStartDate').value = '2026-03-01T12:34:56'; }");
+        await s.Page.ClickAsync("#btnCustomRangeDate");
+
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            Assert.Contains($"timezoneOffset={timezoneOffset}", s.Page.Url);
+            Assert.Contains("startdate:2026-03-01T12:34:56", Uri.UnescapeDataString(s.Page.Url));
+            Assert.Contains("Custom", await s.Page.InnerTextAsync("#DateOptionsToggle"));
+            Assert.Contains($"timezoneOffset={timezoneOffset}", await s.Page.GetAttributeAsync("#ExportCSV", "href"));
+        });
+    }
+
     private async Task CreateInvoices(PlaywrightTester tester)
     {
         var client = await tester.AsTestAccount().CreateClient();

@@ -85,7 +85,7 @@ namespace BTCPayServer.Tests
             {
                 payUrl = await s.Page.Locator("#PayInWallet").GetAttributeAsync("href");
                 Assert.StartsWith("lightning:lnbcrt", payUrl);
-                Assert.StartsWith("lnurl", await s.Page.Locator("#Lightning_BTC-CHAIN .truncate-center").GetAttributeAsync("data-text"));
+                Assert.StartsWith("lnbcrt", await s.Page.Locator("#Lightning_BTC-CHAIN .truncate-center").GetAttributeAsync("data-text"));
                 await s.ElementDoesNotExist("#Address_BTC-CHAIN");
             });
 

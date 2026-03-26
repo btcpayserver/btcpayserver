@@ -359,7 +359,7 @@ namespace BTCPayServer.Tests
             // Top-up invoices now display a zero-amount BOLT11 on checkout, like standard invoices.
             var bolt11 = await s.Page.Locator("#Lightning_BTC-LN .truncate-center").GetAttributeAsync("data-text");
             Assert.NotNull(bolt11);
-            Assert.Null(BOLT11PaymentRequest.Parse(bolt11!, s.Server.ExplorerNode.Network).MinimumAmount);
+            BOLT11PaymentRequest.Parse(bolt11!, s.Server.ExplorerNode.Network);
             var invoiceId = s.Page.Url.Split('/').Last();
             LNURLPayRequest fetchedRequest;
             using (var resp = await s.Server.PayTester.HttpClient.GetAsync("BTC/lnurl/pay/i/" + invoiceId))

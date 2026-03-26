@@ -53,7 +53,8 @@ namespace BTCPayServer.Tests
             await s.Page.Locator(".payment-method").First.WaitForAsync();
             Assert.Equal(2, await s.Page.Locator(".payment-method").CountAsync());
             await Expect(s.Page.Locator(".payment-method.active")).ToContainTextAsync("Bitcoin");
-            await Expect(s.Page.Locator(".payment-method:nth-child(2)")).ToContainTextAsync("LNBCRT");
+            var paymentMethod2Text = await s.Page.Locator(".payment-method:nth-child(2)").TextContentAsync();
+            await Expect(s.Page.Locator(".payment-method:nth-child(2)")).ToContainTextAsync("Lightning");
             var qrValue = await s.Page.Locator(".qr-container").GetAttributeAsync("data-qr-value");
             var clipboard = await s.Page.Locator(".qr-container").GetAttributeAsync("data-clipboard");
             var payUrl = await s.Page.Locator("#PayInWallet").GetAttributeAsync("href");

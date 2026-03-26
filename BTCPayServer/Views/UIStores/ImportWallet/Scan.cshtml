@@ -1,7 +1,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model WalletSetupViewModel
 @{
-	Layout = "_LayoutWalletSetup";
+	Layout = "../_LayoutWalletSetup.cshtml";
     ViewData.SetTitle(StringLocalizer["Scan QR code"]);
 	Csp.UnsafeEval();
 }

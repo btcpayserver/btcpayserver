@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security;
 using System.Text;
@@ -16,6 +17,7 @@ using BTCPayServer.Plugins;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
+using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
@@ -1509,6 +1511,41 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.Single(modified.GetFilterArray("enddate"), "-7d");
             modified = new SearchString(modified.Toggle("enddate", "-7d"));
             Assert.Null(modified.GetFilterArray("enddate"));
+        }
+
+        [Fact]
+        public void BuildWalletTransactionsFilterSeparatesTextAndStructuredTerms()
+        {
+            var controller = (UIWalletsController)RuntimeHelpers.GetUninitializedObject(typeof(UIWalletsController));
+            var method = typeof(UIWalletsController).GetMethod("BuildWalletTransactionsFilter", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(method);
+
+            var result = method!.Invoke(controller, ["direction:out,label:primary-label,nolabel:true,startdate:2026-03-01T12:34:56", "abc123tx", "secondary-label", 120]);
+            Assert.NotNull(result);
+
+            string GetString(string propertyName) => (string)result!.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public)!.GetValue(result)!;
+            bool GetBool(string propertyName) => (bool)result!.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public)!.GetValue(result)!;
+            bool? GetNullableBool(string propertyName) => (bool?)result!.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public)!.GetValue(result);
+            DateTimeOffset? GetDate(string propertyName) => (DateTimeOffset?)result!.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public)!.GetValue(result);
+            IReadOnlyList<string> GetStrings(string propertyName) => (IReadOnlyList<string>)result!.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public)!.GetValue(result)!;
+
+            Assert.Equal("abc123tx", GetString("SearchInputText"));
+            Assert.Equal("abc123tx", GetString("SearchText"));
+            Assert.Equal("abc123tx", GetString("TextSearch"));
+
+            var structuredSearchTerm = GetString("SearchTerm");
+            Assert.Contains("direction:out", structuredSearchTerm);
+            Assert.Contains("label:primary-label", structuredSearchTerm);
+            Assert.Contains("nolabel:true", structuredSearchTerm);
+            Assert.Contains("startdate:2026-03-01T12:34:56", structuredSearchTerm);
+            Assert.DoesNotContain("abc123tx", structuredSearchTerm);
+
+            Assert.Equal(["primary-label", "secondary-label"], GetStrings("LabelFilters"));
+            Assert.True(GetBool("IncludeNoLabel"));
+            Assert.False(GetNullableBool("Positive"));
+            Assert.NotNull(GetDate("StartDate"));
+            Assert.True(GetBool("HasLabelFilter"));
+            Assert.True(GetBool("HasFilters"));
         }
 
         [Fact]

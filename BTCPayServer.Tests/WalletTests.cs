@@ -904,6 +904,96 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
     [Fact]
     [Trait("Playwright", "Playwright-2")]
+    public async Task CanCombineWalletDirectionAndLabelFilters()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.Server.ExplorerNode.GenerateAsync(1);
+        await s.RegisterNewUser(true);
+        await s.CreateNewStore();
+        await s.GenerateWallet(isHotWallet: true);
+
+        await s.GoToWallet(s.WalletId, WalletsNavPages.Receive);
+        var addressStr = await s.Page.GetAttributeAsync("#Address", "data-text");
+        var address = BitcoinAddress.Create(addressStr!, ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
+
+        await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(1.0m));
+        await s.Server.ExplorerNode.GenerateAsync(1);
+
+        var client = await s.AsTestAccount().CreateClient();
+        var nodeAddress = await s.Server.ExplorerNode.GetNewAddressAsync();
+        var outgoingTx = await client.CreateOnChainTransaction(s.StoreId, "BTC", new CreateOnChainTransactionRequest
+        {
+            Destinations =
+            [
+                new CreateOnChainTransactionRequest.CreateOnChainTransactionRequestDestination
+                {
+                    Destination = nodeAddress.ToString(),
+                    Amount = 0.1m
+                }
+            ],
+            FeeRate = new FeeRate(5m)
+        });
+        await s.Server.ExplorerNode.GenerateAsync(1);
+
+        var transactions = Array.Empty<OnChainWalletTransactionData>();
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            transactions = (await client.ShowOnChainWalletTransactions(s.StoreId, "BTC")).Take(2).ToArray();
+            Assert.Contains(transactions, tx => tx.TransactionHash == outgoingTx.TransactionHash);
+        });
+
+        var incomingTx = transactions.Single(tx => tx.TransactionHash != outgoingTx.TransactionHash);
+        const string targetLabel = "combined-wallet-filter-target";
+
+        await client.PatchOnChainWalletTransaction(
+            s.StoreId,
+            "BTC",
+            incomingTx.TransactionHash.ToString(),
+            new PatchOnChainTransactionRequest
+            {
+                Labels = new List<string> { targetLabel }
+            });
+        await client.PatchOnChainWalletTransaction(
+            s.StoreId,
+            "BTC",
+            outgoingTx.TransactionHash.ToString(),
+            new PatchOnChainTransactionRequest
+            {
+                Labels = new List<string> { targetLabel }
+            });
+
+        await s.GoToWalletTransactions(s.WalletId);
+        await s.Page.EvaluateAsync("() => document.querySelector(\"[data-direction-filter='out']\")?.click()");
+        await s.Page.WaitForLoadStateAsync();
+        await s.Page.ClickAsync("#LabelOptionsToggle");
+        await s.Page.Locator("#LabelDropdownMenu").WaitForAsync();
+        await s.Page.ClickAsync($"#LabelDropdownMenu .label-filter-item a:has-text('{targetLabel}')");
+        await s.Page.WaitForLoadStateAsync();
+
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            Assert.Contains("Outgoing", await s.Page.InnerTextAsync("#DirectionOptionsToggle"));
+            Assert.Contains(targetLabel, await s.Page.InnerTextAsync("#LabelOptionsToggle"));
+
+            var hiddenSearchTerm = await s.Page.InputValueAsync("input[name='SearchTerm']");
+            Assert.Contains("direction:out", hiddenSearchTerm);
+            Assert.Contains($"label:{targetLabel}", hiddenSearchTerm);
+
+            var urlAfterCombinedFilter = new Uri(s.Page.Url);
+            var qsAfterCombinedFilter = HttpUtility.ParseQueryString(urlAfterCombinedFilter.Query);
+            var searchTerm = Uri.UnescapeDataString(qsAfterCombinedFilter["SearchTerm"] ?? string.Empty);
+            Assert.Contains("direction:out", searchTerm);
+            Assert.Contains($"label:{targetLabel}", searchTerm);
+
+            Assert.True(await s.Page.Locator($".transaction-row[data-value='{outgoingTx.TransactionHash}']").IsVisibleAsync());
+            Assert.False(await s.Page.Locator($".transaction-row[data-value='{incomingTx.TransactionHash}']").IsVisibleAsync());
+            Assert.Equal(1, await s.Page.Locator(".transaction-row").CountAsync());
+        });
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
     public async Task CanFilterWalletTransactionsByDirectionWithoutPollutingSearchText()
     {
         await using var s = CreatePlaywrightTester();

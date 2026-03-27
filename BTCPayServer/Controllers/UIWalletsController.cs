@@ -170,6 +170,8 @@ namespace BTCPayServer.Controllers
             string pendingTransactionId)
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
+            if (network is null)
+                return NotFound();
             var pendingTransaction =
                 await _pendingTransactionService.GetPendingTransaction(GetPendingTxId(walletId, pendingTransactionId));
             if (pendingTransaction is null)
@@ -601,11 +603,11 @@ namespace BTCPayServer.Controllers
 
         private sealed class WalletTransactionsFilter
         {
-            public SearchString Search { get; init; }
-            public string SearchTerm { get; init; }
-            public string SearchText { get; init; }
-            public string SearchInputText { get; init; }
-            public string TextSearch { get; init; }
+            public SearchString Search { get; init; } = new(string.Empty);
+            public string SearchTerm { get; init; } = string.Empty;
+            public string SearchText { get; init; } = string.Empty;
+            public string SearchInputText { get; init; } = string.Empty;
+            public string TextSearch { get; init; } = string.Empty;
             public DateTimeOffset? StartDate { get; init; }
             public DateTimeOffset? EndDate { get; init; }
             public IReadOnlyList<string> LabelFilters { get; init; } = Array.Empty<string>();
@@ -753,12 +755,13 @@ namespace BTCPayServer.Controllers
                 HasFilters = filter.HasFilters || !string.IsNullOrWhiteSpace(labelFilter),
                 PaginationQuery = new Dictionary<string, object>
                 {
-                    { "labelFilter", labelFilter },
                     { "searchTerm", filter.SearchTerm },
                     { "searchText", filter.SearchText },
                     { "timezoneOffset", effectiveTimezoneOffset }
                 }
             };
+            if (!string.IsNullOrEmpty(labelFilter))
+                model.PaginationQuery.Add("labelFilter", labelFilter);
 
             model.PendingTransactions = await _pendingTransactionService.GetPendingTransactions(walletId.CryptoCode, walletId.StoreId);
             model.Rates = GetCurrentStore().GetStoreBlob().GetTrackedRates().ToList();
@@ -1559,7 +1562,11 @@ namespace BTCPayServer.Controllers
         {
             if (vm.SigningContext.PendingTransactionId is not null)
             {
-                var psbt = PSBT.Parse(vm.SigningContext.PSBT, NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode).NBitcoinNetwork);
+                var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
+                if (network is null)
+                    return NotFound();
+
+                var psbt = PSBT.Parse(vm.SigningContext.PSBT, network.NBitcoinNetwork);
                 var pendingTransaction = await _pendingTransactionService.CollectSignature(GetPendingTxId(walletId, vm.SigningContext.PendingTransactionId), psbt, CancellationToken.None);
 
                 if (pendingTransaction != null)

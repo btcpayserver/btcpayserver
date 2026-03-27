@@ -242,7 +242,7 @@ public class UISubscriberPortalController(
         else if (command == "refund-credit")
         {
             var amount = vm.RefundAmount;
-            if (amount is null || amount >= session.Subscriber.GetCredit())
+            if (amount is null || amount > session.Subscriber.GetCredit())
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {

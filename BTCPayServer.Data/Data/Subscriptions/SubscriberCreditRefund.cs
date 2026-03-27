@@ -11,19 +11,19 @@ public class SubscriberCreditRefund
 {
     [Key]
     [Column("pull_payment_id")]
-    public string PullPaymentId { get; set; } = null!;
+    public string PullPaymentId { get; set; }
 
     [Column("subscriber_id")]
     public long SubscriberId { get; set; }
 
     [ForeignKey(nameof(SubscriberId))]
-    public SubscriberData Subscriber { get; set; } = null!;
+    public SubscriberData Subscriber { get; set; }
 
     [Column("amount")]
     public decimal Amount { get; set; }
 
     [Column("currency")]
-    public string Currency { get; set; } = null!;
+    public string Currency { get; set; }
 
     [Column("deducted")]
     public bool Deducted { get; set; }

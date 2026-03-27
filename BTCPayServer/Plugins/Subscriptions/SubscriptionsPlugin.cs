@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -69,6 +69,20 @@ public class SubscriptionsPlugin : BaseBTCPayServerPlugin
             SELECT COUNT(*) FROM deleted_plan_checkout;
             """);
 
+        services.AddScheduledDbScript("Credit Refund Cleanup",
+            """
+            WITH completed_refunds AS (
+                SELECT pull_payment_id FROM subs_credit_refunds
+                WHERE deducted = false
+                ORDER BY pull_payment_id LIMIT 1000
+            ),
+            deleted AS (
+                DELETE FROM subs_credit_refunds
+                WHERE pull_payment_id IN (SELECT pull_payment_id FROM completed_refunds)
+                RETURNING *
+            )
+            SELECT COUNT(*) FROM deleted;
+            """);
 
         AddSubscriptionsWebhooks(services);
         AddPolicies(services);

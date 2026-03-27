@@ -780,6 +780,70 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
     [Fact]
     [Trait("Playwright", "Playwright-2")]
+    public async Task CanPreserveSearchTextWhenApplyingWalletDatePresetFilter()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.Server.ExplorerNode.GenerateAsync(1);
+        await s.RegisterNewUser(true);
+        await s.CreateNewStore();
+        await s.GenerateWallet(isHotWallet: true);
+
+        await s.GoToWallet(s.WalletId, WalletsNavPages.Receive);
+        var addressStr = await s.Page.GetAttributeAsync("#Address", "data-text");
+        var address = BitcoinAddress.Create(addressStr!, ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
+
+        await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(0.001m));
+        await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(0.002m));
+        await s.Server.ExplorerNode.GenerateAsync(1);
+
+        var client = await s.AsTestAccount().CreateClient();
+        var transactions = Array.Empty<OnChainWalletTransactionData>();
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            transactions = (await client.ShowOnChainWalletTransactions(s.StoreId, "BTC")).Take(2).ToArray();
+            Assert.Equal(2, transactions.Length);
+        });
+
+        var targetSearchText = transactions[0].TransactionHash.ToString()[..12];
+
+        await s.GoToWalletTransactions(s.WalletId);
+        await s.Page.FillAsync("#SearchText", targetSearchText);
+        await s.Page.PressAsync("#SearchText", "Enter");
+        await s.Page.WaitForLoadStateAsync();
+
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            Assert.Equal(targetSearchText, await s.Page.InputValueAsync("#SearchText"));
+
+            var urlAfterSearch = new Uri(s.Page.Url);
+            var qsAfterSearch = HttpUtility.ParseQueryString(urlAfterSearch.Query);
+            Assert.Equal(targetSearchText, qsAfterSearch["SearchText"]);
+            Assert.True(string.IsNullOrEmpty(qsAfterSearch["SearchTerm"]));
+        });
+
+        await s.Page.ClickAsync("#DateOptionsToggle");
+        await s.Page.ClickAsync("#DateOptionsToggle + .dropdown-menu a:text-is('Last 24 hours')");
+        await s.Page.WaitForLoadStateAsync();
+
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            Assert.Equal(targetSearchText, await s.Page.InputValueAsync("#SearchText"));
+            Assert.Contains("24 Hours", await s.Page.InnerTextAsync("#DateOptionsToggle"));
+
+            var hiddenSearchTerm = await s.Page.InputValueAsync("input[name='SearchTerm']");
+            Assert.Contains("startdate:-1d", hiddenSearchTerm);
+            Assert.DoesNotContain(targetSearchText, hiddenSearchTerm);
+
+            var urlAfterPreset = new Uri(s.Page.Url);
+            var qsAfterPreset = HttpUtility.ParseQueryString(urlAfterPreset.Query);
+            Assert.Equal(targetSearchText, qsAfterPreset["SearchText"]);
+            Assert.Contains("startdate:-1d", Uri.UnescapeDataString(qsAfterPreset["SearchTerm"] ?? string.Empty));
+        });
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
     public async Task CanFilterWalletTransactionsByDirectionWithoutPollutingSearchText()
     {
         await using var s = CreatePlaywrightTester();

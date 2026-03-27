@@ -896,7 +896,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         });
         Assert.Equal(0, card.Version);
         var card1Keys = new[] { card.K0, card.K1, card.K2, card.K3, card.K4 };
-        Assert.DoesNotContain(null, card1Keys);
+        Assert.All(card1Keys, Assert.NotNull);
 
         var card2 = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
         {
@@ -912,7 +912,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         Assert.StartsWith("lnurlw://", card2.LNURLW);
         Assert.EndsWith("/boltcard", card2.LNURLW);
         var card2Keys = new[] { card2.K0, card2.K1, card2.K2, card2.K3, card2.K4 };
-        Assert.DoesNotContain(null, card2Keys);
+        Assert.All(card2Keys, Assert.NotNull);
         for (var i = 0; i < card1Keys.Length; i++)
         {
             if (i == 1)

@@ -1132,6 +1132,124 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
     [Fact]
     [Trait("Playwright", "Playwright-2")]
+    public async Task CanPreserveWalletFiltersInExportLinks()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.Server.ExplorerNode.GenerateAsync(1);
+        await s.RegisterNewUser(true);
+        await s.CreateNewStore();
+        await s.GenerateWallet(isHotWallet: true);
+
+        await s.GoToWallet(s.WalletId, WalletsNavPages.Receive);
+        var addressStr = await s.Page.GetAttributeAsync("#Address", "data-text");
+        var address = BitcoinAddress.Create(addressStr!, ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
+
+        await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(1.0m));
+        await s.Server.ExplorerNode.GenerateAsync(1);
+
+        var client = await s.AsTestAccount().CreateClient();
+        var nodeAddress = await s.Server.ExplorerNode.GetNewAddressAsync();
+        var outgoingTx = await client.CreateOnChainTransaction(s.StoreId, "BTC", new CreateOnChainTransactionRequest
+        {
+            Destinations =
+            [
+                new CreateOnChainTransactionRequest.CreateOnChainTransactionRequestDestination
+                {
+                    Destination = nodeAddress.ToString(),
+                    Amount = 0.1m
+                }
+            ],
+            FeeRate = new FeeRate(5m)
+        });
+        await s.Server.ExplorerNode.GenerateAsync(1);
+
+        var transactions = Array.Empty<OnChainWalletTransactionData>();
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            transactions = (await client.ShowOnChainWalletTransactions(s.StoreId, "BTC")).Take(2).ToArray();
+            Assert.Contains(transactions, tx => tx.TransactionHash == outgoingTx.TransactionHash);
+        });
+
+        var incomingTx = transactions.Single(tx => tx.TransactionHash != outgoingTx.TransactionHash);
+        const string targetLabel = "export-wallet-filter-target";
+        const string otherLabel = "export-wallet-filter-other";
+        var targetSearchText = outgoingTx.TransactionHash.ToString()[..12];
+
+        await client.PatchOnChainWalletTransaction(
+            s.StoreId,
+            "BTC",
+            outgoingTx.TransactionHash.ToString(),
+            new PatchOnChainTransactionRequest
+            {
+                Labels = new List<string> { targetLabel }
+            });
+        await client.PatchOnChainWalletTransaction(
+            s.StoreId,
+            "BTC",
+            incomingTx.TransactionHash.ToString(),
+            new PatchOnChainTransactionRequest
+            {
+                Labels = new List<string> { otherLabel }
+            });
+
+        await s.GoToWalletTransactions(s.WalletId);
+        var timezoneOffset = await s.Page.EvaluateAsync<int>("() => new Date().getTimezoneOffset()");
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            Assert.Equal(timezoneOffset.ToString(CultureInfo.InvariantCulture), await s.Page.InputValueAsync("#TimezoneOffset"));
+        });
+
+        await s.Page.FillAsync("#SearchText", targetSearchText);
+        await s.Page.PressAsync("#SearchText", "Enter");
+        await s.Page.WaitForLoadStateAsync();
+
+        await s.Page.EvaluateAsync("() => document.querySelector(\"[data-direction-filter='out']\")?.click()");
+        await s.Page.WaitForLoadStateAsync();
+
+        await s.Page.ClickAsync("#LabelOptionsToggle");
+        await s.Page.Locator("#LabelDropdownMenu").WaitForAsync();
+        await s.Page.ClickAsync($"#LabelDropdownMenu .label-filter-item a:has-text('{targetLabel}')");
+        await s.Page.WaitForLoadStateAsync();
+
+        await s.Page.ClickAsync("#DateOptionsToggle");
+        await s.Page.ClickAsync("[data-bs-target='#customRangeModal']");
+        await s.Page.EvaluateAsync("() => { document.getElementById('dtpStartDate').value = '2026-03-01T12:34:56'; }");
+        await s.Page.ClickAsync("#btnCustomRangeDate");
+
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            Assert.Contains(targetSearchText, await s.Page.InputValueAsync("#SearchText"));
+
+            var hiddenSearchTerm = await s.Page.InputValueAsync("input[name='SearchTerm']");
+            Assert.Contains("direction:out", hiddenSearchTerm);
+            Assert.Contains($"label:{targetLabel}", hiddenSearchTerm);
+            Assert.Contains("startdate:2026-03-01T12:34:56", hiddenSearchTerm);
+
+            foreach (var exportSelector in new[] { "#ExportCSV", "#ExportJSON", "#ExportBIP329" })
+            {
+                var href = await s.Page.GetAttributeAsync(exportSelector, "href");
+                Assert.False(string.IsNullOrEmpty(href));
+
+                var exportUri = new Uri(href!, UriKind.RelativeOrAbsolute);
+                if (!exportUri.IsAbsoluteUri)
+                    exportUri = new Uri(new Uri(s.Page.Url), exportUri);
+
+                var qs = HttpUtility.ParseQueryString(exportUri.Query);
+                Assert.Equal(targetSearchText, qs["searchText"] ?? qs["SearchText"]);
+                Assert.Equal(timezoneOffset.ToString(CultureInfo.InvariantCulture), qs["timezoneOffset"] ?? qs["TimezoneOffset"]);
+
+                var exportSearchTerm = Uri.UnescapeDataString(qs["searchTerm"] ?? qs["SearchTerm"] ?? string.Empty);
+                Assert.Contains("direction:out", exportSearchTerm);
+                Assert.Contains($"label:{targetLabel}", exportSearchTerm);
+                Assert.Contains("startdate:2026-03-01T12:34:56", exportSearchTerm);
+                Assert.DoesNotContain(otherLabel, exportSearchTerm);
+            }
+        });
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
     public async Task CanApplyWalletTransactionCustomDateFilterUsingClientTimezoneOffset()
     {
         await using var s = CreatePlaywrightTester();

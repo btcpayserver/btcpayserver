@@ -699,6 +699,87 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
     [Fact]
     [Trait("Playwright", "Playwright-2")]
+    public async Task CanPreserveSearchTextWhenApplyingWalletLabelFilter()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.Server.ExplorerNode.GenerateAsync(1);
+        await s.RegisterNewUser(true);
+        await s.CreateNewStore();
+        await s.GenerateWallet(isHotWallet: true);
+
+        await s.GoToWallet(s.WalletId, WalletsNavPages.Receive);
+        var addressStr = await s.Page.GetAttributeAsync("#Address", "data-text");
+        var address = BitcoinAddress.Create(addressStr!, ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
+
+        await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(0.001m));
+        await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(0.002m));
+        await s.Server.ExplorerNode.GenerateAsync(1);
+
+        var client = await s.AsTestAccount().CreateClient();
+        var transactions = Array.Empty<OnChainWalletTransactionData>();
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            transactions = (await client.ShowOnChainWalletTransactions(s.StoreId, "BTC")).Take(2).ToArray();
+            Assert.Equal(2, transactions.Length);
+        });
+
+        const string targetLabel = "preserve-search-label";
+        const string otherLabel = "different-wallet-label";
+        var targetSearchText = transactions[0].TransactionHash.ToString()[..12];
+
+        await client.PatchOnChainWalletTransaction(
+            s.StoreId,
+            "BTC",
+            transactions[0].TransactionHash.ToString(),
+            new PatchOnChainTransactionRequest
+            {
+                Labels = new List<string> { targetLabel }
+            });
+        await client.PatchOnChainWalletTransaction(
+            s.StoreId,
+            "BTC",
+            transactions[1].TransactionHash.ToString(),
+            new PatchOnChainTransactionRequest
+            {
+                Labels = new List<string> { otherLabel }
+            });
+
+        await s.GoToWalletTransactions(s.WalletId);
+        await s.Page.FillAsync("#SearchText", targetSearchText);
+        await s.Page.EvaluateAsync("() => document.getElementById('SearchText')?.form?.submit()");
+        await s.Page.WaitForLoadStateAsync();
+
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            Assert.Equal(targetSearchText, await s.Page.InputValueAsync("#SearchText"));
+
+            var urlAfterSearch = new Uri(s.Page.Url);
+            var qsAfterSearch = HttpUtility.ParseQueryString(urlAfterSearch.Query);
+            Assert.Equal(targetSearchText, qsAfterSearch["SearchText"]);
+            Assert.True(string.IsNullOrEmpty(qsAfterSearch["SearchTerm"]));
+        });
+
+        await s.Page.ClickAsync("#LabelOptionsToggle");
+        await s.Page.Locator("#LabelDropdownMenu").WaitForAsync();
+        await s.Page.ClickAsync($"#LabelDropdownMenu .label-filter-item a:has-text('{targetLabel}')");
+        await s.Page.WaitForLoadStateAsync();
+
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            Assert.Equal(targetSearchText, await s.Page.InputValueAsync("#SearchText"));
+            Assert.Contains($"label:{targetLabel}", await s.Page.InputValueAsync("input[name='SearchTerm']"));
+            Assert.Contains(targetLabel, await s.Page.InnerTextAsync("#LabelOptionsToggle"));
+
+            var urlAfterLabelFilter = new Uri(s.Page.Url);
+            var qsAfterLabelFilter = HttpUtility.ParseQueryString(urlAfterLabelFilter.Query);
+            Assert.Equal(targetSearchText, qsAfterLabelFilter["SearchText"]);
+            Assert.Contains($"label:{targetLabel}", Uri.UnescapeDataString(qsAfterLabelFilter["SearchTerm"] ?? string.Empty));
+        });
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
     public async Task CanFilterWalletTransactionsByDirectionWithoutPollutingSearchText()
     {
         await using var s = CreatePlaywrightTester();

@@ -180,6 +180,7 @@
         const $indicator = document.getElementById('LoadingIndicator');
         const $walletTransactionsSearch = document.getElementById('WalletTransactionsSearch');
         const $searchTerm = $walletTransactionsSearch?.querySelector('input[name="SearchTerm"]');
+        const $searchText = document.getElementById('SearchText');
 
         delegate('click', '#GoToTop', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -254,6 +255,19 @@
                 $walletTransactionsSearch.submit();
             });
         });
+
+        if ($searchText && $walletTransactionsSearch) {
+            $searchText.addEventListener('keydown', event => {
+                if (event.key !== 'Enter') return;
+
+                event.preventDefault();
+                if (typeof $walletTransactionsSearch.requestSubmit === 'function') {
+                    $walletTransactionsSearch.requestSubmit();
+                } else {
+                    $walletTransactionsSearch.submit();
+                }
+            });
+        }
 
         const count = @Safe.Json(Model.Count);
         const skipInitial = @Safe.Json(Model.Skip);

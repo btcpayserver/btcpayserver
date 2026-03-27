@@ -747,7 +747,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
         await s.GoToWalletTransactions(s.WalletId);
         await s.Page.FillAsync("#SearchText", targetSearchText);
-        await s.Page.EvaluateAsync("() => document.getElementById('SearchText')?.form?.submit()");
+        await s.Page.PressAsync("#SearchText", "Enter");
         await s.Page.WaitForLoadStateAsync();
 
         await TestUtils.EventuallyAsync(async () =>

@@ -7,11 +7,13 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Payouts;
 using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Plugins.Subscriptions;
 using BTCPayServer.Tests.PMO;
@@ -344,6 +346,111 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         await s.Page.ReloadAsync();
         await portal.AssertPlan("Pro Plan");
         await portal.AssertNoScheduledChange();
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanUpdateNotificationEmail()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.RegisterNewUser();
+        await s.CreateNewStore();
+        await s.AddDerivationScheme();
+
+        var offering = await CreateNewSubscription(s);
+        await offering.NewSubscriber("Enterprise Plan", "enterprise@example.com", true);
+        await offering.GoToSubscribers();
+
+        await using var portal = await offering.GoToPortal("enterprise@example.com");
+
+        await portal.ClickCallToAction();
+        await s.Server.WaitForEvent<SubscriptionEvent.SubscriberCredited>(async () =>
+        {
+            await s.PayInvoice(mine: true);
+        });
+        await s.ClickCheckoutRedirect();
+        await portal.AssertNoCallToAction();
+
+        await portal.UpdateNotificationEmail("notify@example.com");
+        await s.FindAlertMessage(partialText: "Notification email updated");
+
+        var notifEmail = await s.Page.Locator("input[name='NotificationEmail']").InputValueAsync();
+        Assert.Equal("notify@example.com", notifEmail);
+
+        await portal.UpdateNotificationEmail("");
+        await s.FindAlertMessage(partialText: "Notification email updated");
+        notifEmail = await s.Page.Locator("input[name='NotificationEmail']").InputValueAsync();
+        Assert.Equal("", notifEmail);
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanRefundCredit()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.RegisterNewUser();
+        await s.CreateNewStore();
+        await s.AddDerivationScheme();
+
+        var offering = await CreateNewSubscription(s);
+        await offering.NewSubscriber("Enterprise Plan", "enterprise@example.com", true);
+        await offering.GoToSubscribers();
+
+        await using var portal = await offering.GoToPortal("enterprise@example.com");
+
+        await portal.ClickCallToAction();
+        await s.Server.WaitForEvent<SubscriptionEvent.SubscriberCredited>(async () =>
+        {
+            await s.PayInvoice(mine: true);
+        });
+        await s.ClickCheckoutRedirect();
+        await portal.AssertNoCallToAction();
+
+        Assert.Equal(0, await s.Page.Locator("button[value='refund-credit']").CountAsync());
+
+        await portal.AddCredit("150");
+        await s.Server.WaitForEvent<SubscriptionEvent.SubscriberCredited>(async () =>
+        {
+            await s.PayInvoice(mine: true);
+        });
+        await s.ClickCheckoutRedirect();
+
+        await s.Page.ReloadAsync();
+        await portal.AssertCredit(creditBalance: "$150.00");
+        Assert.Equal(1, await s.Page.Locator("button[value='refund-credit']").CountAsync());
+
+        var pullPaymentId = await portal.RequestRefund("100");
+
+        await s.Page.ReloadAsync();
+        await portal.AssertCredit(creditBalance: "$50.00");
+        await portal.AssertCreditHistory(["Credit refund (Pull Payment:"]);
+
+        var ppService = s.Server.PayTester.GetService<PullPaymentHostedService>();
+        var address = await s.Server.ExplorerNode.GetNewAddressAsync();
+        var claimResponse = await ppService.Claim(new ClaimRequest()
+        {
+            PullPaymentId = pullPaymentId,
+            Destination = new AddressClaimDestination(address),
+            ClaimedAmount = 100m,
+            PayoutMethodId = PayoutMethodId.Parse("BTC-CHAIN"),
+            StoreId = s.StoreId
+        });
+        Assert.Equal(ClaimRequest.ClaimResult.Ok, claimResponse.Result);
+
+        await s.Server.WaitForEvent<PayoutEvent>(async () =>
+        {
+            await ppService.Cancel(new PullPaymentHostedService.CancelRequest(
+                new[] { claimResponse.PayoutData.Id },
+                new[] { claimResponse.PayoutData.StoreDataId }));
+        }, e => e.Type == PayoutEvent.PayoutEventType.Updated && e.Payout.State == PayoutState.Cancelled);
+
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            await s.Page.ReloadAsync();
+            await portal.AssertCredit(creditBalance: "$150.00");
+        });
     }
 
     private static decimal GetUnusedPeriodValue(int usedDays, decimal planPrice, int daysInPeriod)
@@ -1208,6 +1315,22 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         {
             await s.Page.ClickAsync(".scheduled-change-banner button[value='cancel-scheduled-change']");
             await s.FindAlertMessage(partialText: "cancelled");
+        }
+
+        public async Task UpdateNotificationEmail(string email)
+        {
+            await s.Page.FillAsync("input[name='NotificationEmail']", email);
+            await s.Page.ClickAsync("button[value='update-email']");
+        }
+
+        public async Task<string> RequestRefund(string amount)
+        {
+            await s.Page.FillAsync("input[name='RefundAmount']", amount);
+            await s.Page.ClickAsync("button[value='refund-credit']");
+            await s.Page.WaitForURLAsync("**/pull-payments/**");
+            var pullPaymentId = s.Page.Url.Split('/').Last();
+            await s.Page.GoBackAsync();
+            return pullPaymentId;
         }
     }
 

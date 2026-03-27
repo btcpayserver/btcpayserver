@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Models;
@@ -91,6 +92,7 @@ public class UISubscriberPortalController(
             StoreName = store.StoreName,
             StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, store.GetStoreBlob()),
             PlanChanges = planChanges,
+            CanRefund = session.Subscriber.GetCredit() > 0,
             Refund = (refundValue, displayFormatter.Currency(refundValue, curr, DisplayFormatter.CurrencyFormat.Symbol)),
             Url = string.IsNullOrEmpty(store.StoreWebsite) ? Request.GetRequestBaseUrl().ToString() : store.StoreWebsite,
             BTCPayLogo = Url.Content("~/img/btcpay-logo.svg")
@@ -220,6 +222,48 @@ public class UISubscriberPortalController(
             return result is PlanMigrationResult.Checkout c
                 ? await RedirectToPlanCheckoutPayment(c.CheckoutId, cancellationToken)
                 : RedirectToSubscriberPortal(portalSessionId);
+        }
+        else if (command == "update-email")
+        {
+            var email = vm.NotificationEmail?.Trim();
+            if (!string.IsNullOrEmpty(email) && !email.IsValidEmail())
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Message = StringLocalizer["Please enter a valid email address."],
+                    Severity = StatusMessageModel.StatusSeverity.Error
+                });
+                return RedirectToSubscriberPortal(portalSessionId);
+            }
+            session.Subscriber.Customer.NotificationEmail.Set(string.IsNullOrEmpty(email) ? null : email);
+            await ctx.SaveChangesAsync(cancellationToken);
+            TempData.SetStatusSuccess(StringLocalizer["Notification email updated."]);
+        }
+        else if (command == "refund-credit")
+        {
+            var amount = vm.RefundAmount;
+            if (amount is null || amount >= session.Subscriber.GetCredit())
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Message = StringLocalizer["Please enter a valid amount."],
+                    Severity = StatusMessageModel.StatusSeverity.Error
+                });
+                return RedirectToSubscriberPortal(portalSessionId);
+            }
+            var pullPaymentId = await SubsService.CreateCreditRefund(session.Id, amount.Value);
+            if (pullPaymentId is null)
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Message = StringLocalizer["Unable to create refund. Check your credit balance."],
+                    Severity = StatusMessageModel.StatusSeverity.Error
+                });
+                return RedirectToSubscriberPortal(portalSessionId);
+            }
+            var refundUrl = Url.Action(nameof(UIPullPaymentController.ViewPullPayment), "UIPullPayment", new { pullPaymentId }, Request.Scheme);
+            TempData.SetStatusSuccess(StringLocalizer["Refund created."]);
+            return Redirect(refundUrl!);
         }
         else if (command == "update-auto-renewal")
         {

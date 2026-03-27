@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Models;
@@ -89,6 +89,10 @@ public class SubscriberPortalViewModel
     [ValidateNever]
     public PlanData Plan => Data.Subscriber.Plan;
 
+    [ValidateNever]
+    public string NotificationEmail { get; set; }
+    public decimal? RefundAmount { get; set; }
+    public bool CanRefund { get; set; }
     public string Anchor { get; set; }
     public string Url { get; set; }
     public string Logo => StoreBranding?.LogoUrl ?? BTCPayLogo;

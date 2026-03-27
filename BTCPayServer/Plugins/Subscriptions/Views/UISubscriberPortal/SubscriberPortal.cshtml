@@ -390,89 +390,123 @@
             </div>
         }
     }
-    <!-- Billing Information -->
-    <div class="card">
-        <div class="card-header">
-            <i class="fa fa-credit-card me-2"></i>Billing Information
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <h6 class="mb-2">Payment Method</h6>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex align-items-center">
-                            <span class="badge bg-light text-dark border">Credit balance</span>
-                            <span
-                                class="ms-2 fw-semibold credit-balance">@creditBalance</span>
-                        </div>
-                        <button id="add-credit" class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#credit-input"
-                                aria-expanded="false"
-                                aria-controls="credit-input">
-                            <i class="fa fa-credit-card"></i>
-                            Add credit
-                        </button>
-                    </div>
-                    <div class="collapse" id="credit-input">
-                        <form method="post">
-                            <div class="input-group">
-                                <button type="submit" name="command" value="add-credit" class="btn btn-primary">Proceed to payment</button>
-                                <input inputmode="decimal" class="form-control" placeholder="Enter credit amount" asp-for="Credit.InputAmount" min="0"
-                                       required />
-                            </div>
-                            <span asp-validation-for="Credit.InputAmount" class="text-danger"></span>
-                        </form>
-                    </div>
-                    @if (Model.Subscriber.Plan.RecurringType is not PlanData.RecurringInterval.Lifetime)
-                    {
-                        <hr>
-                        <div class="d-flex justify-content-between credit-plan-price">
-                            <div class="text-muted">Plan price</div>
-                            <div>@DisplayFormatter.Currency(Model.Subscriber.Plan.Price, Model.Subscriber.Plan.Currency, DisplayFormatter.CurrencyFormat.Symbol)</div>
-                        </div>
-                        @if (Model.Credit.CreditApplied > 0m)
-                        {
-                            <div class="d-flex justify-content-between credit-applied">
-                                <div class="text-muted">Credit applied</div>
-                                <div class="text-success">
-                                    - @DisplayFormatter.Currency(Model.Credit.CreditApplied, Model.Credit.Currency, DisplayFormatter.CurrencyFormat.Symbol)</div>
-                            </div>
-                        }
-                        @if (Model.Credit.CreditApplied < 0m)
-                        {
-                            <div class="d-flex justify-content-between credit-past-due">
-                                <div class="text-muted">Past due</div>
-                                <div class="text-danger">
-                                    - @DisplayFormatter.Currency((-Model.Credit.CreditApplied), Model.Credit.Currency, DisplayFormatter.CurrencyFormat.Symbol)</div>
-                            </div>
-                        }
-                        <div class="d-flex justify-content-between fw-semibold credit-next-charge">
-                            <div>Next charge on @date</div>
-                            <div>@DisplayFormatter.Currency(Model.Credit.NextCharge, Model.Credit.Currency, DisplayFormatter.CurrencyFormat.Symbol)</div>
-                        </div>
-                        <form method="post" class="d-flex mt-3">
-                            <input type="hidden" name="command" value="update-auto-renewal" />
-                            <input type="checkbox" class="btcpay-toggle me-2" id="autoRenewal" asp-for="Subscriber.AutoRenew">
-                            <label class="form-check-label" for="autoRenewal">Auto renewal</label>
-                        </form>
-                    }
-                </div>
-                @if (Model.Subscriber.Plan.RecurringType is not PlanData.RecurringInterval.Lifetime)
-                {
-                    <div class="col-md-6">
-                        <h6 class="mb-2">Notification</h6>
-                        <p class="text-muted mb-0">
-                            @foreach (var identity in Model.Subscriber.Customer.CustomerIdentities)
-                            {
-                                <vc:contact type="@identity.Type" value="@identity.Value"></vc:contact>
-                            }
-                        </p>
-                        <p class="form-text mb-0">Payment reminder will be sent <span class="fw-bold">@Model.Subscriber.PaymentReminderDaysOrDefault days</span> before
-                            expiration.</p>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
+	<!-- Billing Information -->
+	<div class="card">
+		<div class="card-header">
+			<i class="fa fa-credit-card me-2"></i>Billing Information
+		</div>
+		<div class="card-body">
+			<div class="row">
+				<div class="@(Model.CanRefund ? "col-md-6" : "col-12")">
+					<h6 class="mb-2">Payment Method</h6>
+					<div class="d-flex justify-content-between align-items-center mb-3">
+						<div class="d-flex align-items-center">
+							<span class="badge bg-light text-dark border">Credit balance</span>
+							<span class="ms-2 fw-semibold credit-balance">@creditBalance</span>
+						</div>
+						<button id="add-credit" class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#credit-input"
+								aria-expanded="false"
+								aria-controls="credit-input">
+							<i class="fa fa-credit-card"></i>
+							Add credit
+						</button>
+					</div>
+					<div class="collapse" id="credit-input">
+						<form method="post">
+							<div class="input-group">
+								<button type="submit" name="command" value="add-credit" class="btn btn-primary">Proceed to payment</button>
+								<input inputmode="decimal" class="form-control" placeholder="Enter credit amount" asp-for="Credit.InputAmount" min="0"
+										required />
+							</div>
+							<span asp-validation-for="Credit.InputAmount" class="text-danger"></span>
+						</form>
+					</div>
+					@if (Model.Subscriber.Plan.RecurringType is not PlanData.RecurringInterval.Lifetime)
+					{
+						<hr>
+						<div class="d-flex justify-content-between credit-plan-price">
+							<div class="text-muted">Plan price</div>
+							<div>@DisplayFormatter.Currency(Model.Subscriber.Plan.Price, Model.Subscriber.Plan.Currency, DisplayFormatter.CurrencyFormat.Symbol)</div>
+						</div>
+						@if (Model.Credit.CreditApplied > 0m)
+						{
+							<div class="d-flex justify-content-between credit-applied">
+								<div class="text-muted">Credit applied</div>
+								<div class="text-success">
+									- @DisplayFormatter.Currency(Model.Credit.CreditApplied, Model.Credit.Currency, DisplayFormatter.CurrencyFormat.Symbol)
+								</div>
+							</div>
+						}
+						@if (Model.Credit.CreditApplied < 0m)
+						{
+							<div class="d-flex justify-content-between credit-past-due">
+								<div class="text-muted">Past due</div>
+								<div class="text-danger">
+									- @DisplayFormatter.Currency((-Model.Credit.CreditApplied), Model.Credit.Currency, DisplayFormatter.CurrencyFormat.Symbol)
+								</div>
+							</div>
+						}
+						<div class="d-flex justify-content-between fw-semibold credit-next-charge">
+							<div>Next charge on @date</div>
+							<div>@DisplayFormatter.Currency(Model.Credit.NextCharge, Model.Credit.Currency, DisplayFormatter.CurrencyFormat.Symbol)</div>
+						</div>
+						<form method="post" class="d-flex mt-3">
+							<input type="hidden" name="command" value="update-auto-renewal" />
+							<input type="checkbox" class="btcpay-toggle me-2" id="autoRenewal" asp-for="Subscriber.AutoRenew">
+							<label class="form-check-label" for="autoRenewal">Auto renewal</label>
+						</form>
+					}
+				</div>
+				@if (Model.CanRefund)
+				{
+					<div class="col-md-6">
+						<h6 class="mb-2">Request Credit Refund</h6>
+						<form method="post">
+							<div class="input-group">
+								<input inputmode="decimal" class="form-control"
+										name="RefundAmount" placeholder="Amount to refund"
+										min="0.01" max="@Model.Credit.CurrentBalance" />
+								<button type="submit" name="command" value="refund-credit" class="btn btn-outline-secondary">
+									Refund
+								</button>
+							</div>
+						</form>
+					</div>
+				}
+			</div>
+		</div>
+	</div>
+
+	@if (Model.Subscriber.Plan.RecurringType is not PlanData.RecurringInterval.Lifetime)
+	{
+		<div class="card">
+			<div class="card-header">
+				<i class="fa fa-bell me-2"></i>Notification
+			</div>
+			<div class="card-body">
+				<p class="text-muted mb-3">
+					@foreach (var identity in Model.Subscriber.Customer.CustomerIdentities)
+					{
+						<vc:contact type="@identity.Type" value="@identity.Value"></vc:contact>
+					}
+				</p>
+				<form method="post" class="mb-3">
+					<label class="form-label">Notification email</label>
+					<div class="input-group">
+						<span class="input-group-text"><i class="fa fa-envelope"></i></span>
+						<input type="email" name="NotificationEmail"
+								class="form-control" value="@Model.Subscriber.Customer.NotificationEmail.Get()"
+								placeholder="@Model.Subscriber.Customer.Email.Get()" />
+						<button type="submit" name="command" value="update-email" class="btn btn-outline-secondary">
+							Update
+						</button>
+					</div>
+					<small class="text-muted">Leave blank to use subscription account email for notifications.</small>
+				</form>
+				<p class="form-text mb-0">Payment reminder will be sent <span class="fw-bold">@Model.Subscriber.PaymentReminderDaysOrDefault days</span> before expiration.</p>
+			</div>
+		</div>
+	}
 
     @if (Model.Plan.PlanChanges.Any())
     {

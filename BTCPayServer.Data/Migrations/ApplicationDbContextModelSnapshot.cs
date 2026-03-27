@@ -287,6 +287,35 @@ namespace BTCPayServer.Migrations
                     b.ToTable("customers_identities");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.Data.Subscriptions.SubscriberCreditRefund", b =>
+                {
+                    b.Property<string>("PullPaymentId")
+                        .HasColumnType("text")
+                        .HasColumnName("pull_payment_id");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("Currency")
+                        .HasColumnType("text")
+                        .HasColumnName("currency");
+
+                    b.Property<bool>("Deducted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("deducted");
+
+                    b.Property<long>("SubscriberId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("subscriber_id");
+
+                    b.HasKey("PullPaymentId");
+
+                    b.HasIndex("SubscriberId");
+
+                    b.ToTable("subs_credit_refunds");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.EmailRuleData", b =>
                 {
                     b.Property<long>("Id")
@@ -2110,6 +2139,17 @@ namespace BTCPayServer.Migrations
                         .IsRequired();
 
                     b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.Data.Subscriptions.SubscriberCreditRefund", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.Subscriptions.SubscriberData", "Subscriber")
+                        .WithMany()
+                        .HasForeignKey("SubscriberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Subscriber");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.EmailRuleData", b =>

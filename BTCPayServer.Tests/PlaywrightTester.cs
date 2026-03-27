@@ -921,14 +921,28 @@ namespace BTCPayServer.Tests
 
         public async Task FillAlertDialog(string text, Func<Task> openDialog)
         {
+            var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
             // Handle the alert dialog in Playwright
             // ReSharper disable once AsyncVoidMethod
-            async void Callback(object? sender, IDialog e)
-                => await e.AcceptAsync(text);
+            async void Callback(object? sender, IDialog dialog)
+            {
+                try
+                {
+                    await dialog.AcceptAsync(text);
+                    tcs.TrySetResult();
+                }
+                catch (Exception ex)
+                {
+                    tcs.TrySetException(ex);
+                }
+            }
+
             Page.Dialog += Callback;
             try
             {
                 await openDialog();
+                await tcs.Task;
             }
             finally
             {

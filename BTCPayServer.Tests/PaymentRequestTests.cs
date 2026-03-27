@@ -386,9 +386,9 @@ namespace BTCPayServer.Tests
             request.ExpiryDate = null;
             var paymentRequest = await repo.FindPaymentRequest(prId, null);
             paymentRequestController.HttpContext.SetPaymentRequestData(paymentRequest);
-            paymentRequestController.EditPaymentRequest(prId, request).Result
+            Assert.Equal(prId, paymentRequestController.EditPaymentRequest(prId, request).Result
                 .AssertType<RedirectToActionResult>()
-                .RouteValues.Last().Value.ToString();
+                .RouteValues!.Last().Value.ToString());
             paymentRequestController.HttpContext.SetPaymentRequestData(null);
             request = new UpdatePaymentRequestViewModel()
             {
@@ -400,9 +400,12 @@ namespace BTCPayServer.Tests
                 Description = "description"
             };
 
-            prId = paymentRequestController.EditPaymentRequest(null, request).Result
-                .AssertType<RedirectToActionResult>()
-                .RouteValues.Last().Value.ToString();
+            await tester.WaitForEvent<PaymentRequestEvent>(async () =>
+            {
+                prId = (await paymentRequestController.EditPaymentRequest(null, request))
+                    .AssertType<RedirectToActionResult>()
+                    .RouteValues!.Last().Value.ToString();
+            }, ev => ev.Data.Status == PaymentRequestStatus.Expired);
 
             (await paymentRequestController.PayPaymentRequest(prId, false)).AssertType<BadRequestObjectResult>();
         }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Services.PaymentRequests
@@ -100,13 +101,18 @@ namespace BTCPayServer.Services.PaymentRequests
         public async Task UpdatePaymentRequestStatus(string paymentRequestId, Client.Models.PaymentRequestStatus status, CancellationToken cancellationToken = default)
         {
             await using var context = _ContextFactory.CreateContext();
-            var paymentRequestData = await context.FindAsync<PaymentRequestData>(paymentRequestId);
-            if (paymentRequestData == null || paymentRequestData.Status == status)
+            var conn = context.Database.GetDbConnection();
+            var affectedRows = await conn.ExecuteAsync("""
+                                                 UPDATE "PaymentRequests"
+                                                 SET "Status" = @status
+                                                 WHERE "Id" = @id AND "Status" != @status;
+                                                 """, new{ id = paymentRequestId, status = status.ToString()});
+            if (affectedRows == 0)
                 return;
-            paymentRequestData.Status = status;
 
-            await context.SaveChangesAsync(cancellationToken);
-
+            var paymentRequestData = await context.FindAsync<PaymentRequestData>(paymentRequestId);
+            if (status != paymentRequestData?.Status)
+                return;
             _eventAggregator.Publish(new PaymentRequestEvent()
             {
                 Data = paymentRequestData,

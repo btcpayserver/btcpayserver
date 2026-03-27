@@ -844,6 +844,66 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
     [Fact]
     [Trait("Playwright", "Playwright-2")]
+    public async Task CanFilterWalletTransactionsByNoLabel()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.Server.ExplorerNode.GenerateAsync(1);
+        await s.RegisterNewUser(true);
+        await s.CreateNewStore();
+        await s.GenerateWallet(isHotWallet: true);
+
+        await s.GoToWallet(s.WalletId, WalletsNavPages.Receive);
+        var addressStr = await s.Page.GetAttributeAsync("#Address", "data-text");
+        var address = BitcoinAddress.Create(addressStr!, ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
+
+        await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(0.001m));
+        await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(0.002m));
+        await s.Server.ExplorerNode.GenerateAsync(1);
+
+        var client = await s.AsTestAccount().CreateClient();
+        var transactions = Array.Empty<OnChainWalletTransactionData>();
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            transactions = (await client.ShowOnChainWalletTransactions(s.StoreId, "BTC")).Take(2).ToArray();
+            Assert.Equal(2, transactions.Length);
+        });
+
+        var labeledTx = transactions[0];
+        var unlabeledTx = transactions[1];
+        const string targetLabel = "no-label-excluded";
+
+        await client.PatchOnChainWalletTransaction(
+            s.StoreId,
+            "BTC",
+            labeledTx.TransactionHash.ToString(),
+            new PatchOnChainTransactionRequest
+            {
+                Labels = new List<string> { targetLabel }
+            });
+
+        await s.GoToWalletTransactions(s.WalletId);
+        await s.Page.ClickAsync("#LabelOptionsToggle");
+        await s.Page.Locator("#LabelDropdownMenu").WaitForAsync();
+        await s.Page.ClickAsync("#LabelDropdownMenu a:text-is('No Label')");
+        await s.Page.WaitForLoadStateAsync();
+
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            Assert.Contains("No Label", await s.Page.InnerTextAsync("#LabelOptionsToggle"));
+            Assert.Contains("nolabel:true", await s.Page.InputValueAsync("input[name='SearchTerm']"));
+
+            var urlAfterNoLabelFilter = new Uri(s.Page.Url);
+            var qsAfterNoLabelFilter = HttpUtility.ParseQueryString(urlAfterNoLabelFilter.Query);
+            Assert.Contains("nolabel:true", Uri.UnescapeDataString(qsAfterNoLabelFilter["SearchTerm"] ?? string.Empty));
+
+            Assert.True(await s.Page.Locator($".transaction-row[data-value='{unlabeledTx.TransactionHash}']").IsVisibleAsync());
+            Assert.False(await s.Page.Locator($".transaction-row[data-value='{labeledTx.TransactionHash}']").IsVisibleAsync());
+        });
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
     public async Task CanFilterWalletTransactionsByDirectionWithoutPollutingSearchText()
     {
         await using var s = CreatePlaywrightTester();

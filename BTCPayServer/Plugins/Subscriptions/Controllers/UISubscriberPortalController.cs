@@ -251,19 +251,32 @@ public class UISubscriberPortalController(
                 });
                 return RedirectToSubscriberPortal(portalSessionId);
             }
-            var pullPaymentId = await SubsService.CreateCreditRefund(session.Id, amount.Value);
-            if (pullPaymentId is null)
+            try
+            {
+                var pullPaymentId = await SubsService.CreateCreditRefund(session.Id, amount.Value);
+                if (pullPaymentId is null)
+                {
+                    TempData.SetStatusMessageModel(new StatusMessageModel
+                    {
+                        Message = StringLocalizer["Unable to create refund. Check your credit balance."],
+                        Severity = StatusMessageModel.StatusSeverity.Error
+                    });
+                    return RedirectToSubscriberPortal(portalSessionId);
+                }
+                var refundUrl = Url.Action(nameof(UIPullPaymentController.ViewPullPayment), "UIPullPayment", new { pullPaymentId }, Request.Scheme);
+                TempData.SetStatusSuccess(StringLocalizer["Refund created."]);
+                return Redirect(refundUrl!);
+            }
+            catch (BitpayHttpException ex)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
-                    Message = StringLocalizer["Unable to create refund. Check your credit balance."],
-                    Severity = StatusMessageModel.StatusSeverity.Error
+                    Html = ex.Message.Replace("\n", "<br />", StringComparison.OrdinalIgnoreCase),
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    AllowDismiss = true
                 });
                 return RedirectToSubscriberPortal(portalSessionId);
             }
-            var refundUrl = Url.Action(nameof(UIPullPaymentController.ViewPullPayment), "UIPullPayment", new { pullPaymentId }, Request.Scheme);
-            TempData.SetStatusSuccess(StringLocalizer["Refund created."]);
-            return Redirect(refundUrl!);
         }
         else if (command == "update-auto-renewal")
         {

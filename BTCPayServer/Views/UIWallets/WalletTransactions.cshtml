@@ -484,7 +484,7 @@
         {
             <input name="labelFilter" type="hidden" value="@labelFilter" />
         }
-        <input id="SearchText" name="SearchText" class="form-control" value="@Model.SearchInputText" placeholder="@StringLocalizer["Search transactions..."]" />
+        <input id="SearchText" name="SearchText" class="form-control" value="@Model.SearchInputText" placeholder="@StringLocalizer["Search transactions..."]" aria-label="@StringLocalizer["Search transactions"]" />
         <div class="dropdown">
             <button id="DirectionOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                 @if (hasIncomingOnlyFilter)

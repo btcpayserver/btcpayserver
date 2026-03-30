@@ -808,6 +808,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var targetSearchText = transactions[0].TransactionHash.ToString()[..12];
 
         await s.GoToWalletTransactions(s.WalletId);
+        var timezoneOffset = await s.Page.EvaluateAsync<int>("() => new Date().getTimezoneOffset()");
         await s.Page.FillAsync("#SearchText", targetSearchText);
         await s.Page.PressAsync("#SearchText", "Enter");
         await s.Page.WaitForLoadStateAsync();
@@ -838,6 +839,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
             var urlAfterPreset = new Uri(s.Page.Url);
             var qsAfterPreset = HttpUtility.ParseQueryString(urlAfterPreset.Query);
             Assert.Equal(targetSearchText, qsAfterPreset["SearchText"]);
+            Assert.Equal(timezoneOffset.ToString(CultureInfo.InvariantCulture), qsAfterPreset["timezoneOffset"] ?? qsAfterPreset["TimezoneOffset"]);
             Assert.Contains("startdate:-1d", Uri.UnescapeDataString(qsAfterPreset["SearchTerm"] ?? string.Empty));
         });
     }

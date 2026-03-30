@@ -266,7 +266,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             if (subscriber is null)
                 return SubscriberNotFound();
             if (request is null || (request.StartDate is null && request.ExpirationDate is null))
-                return this.CreateAPIError(400, "invalid-dates", "At least one of startDate or expirationDate must be provided.");
+                return await GetSubscriber(storeId, offeringId, customerSelector);
             var startDate = (request.StartDate ?? subscriber.PlanStarted).ToUniversalTime();
             var expirationDate = request.ExpirationDate?.ToUniversalTime();
             if (expirationDate is { } exp && exp <= startDate)

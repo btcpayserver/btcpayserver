@@ -356,10 +356,27 @@ namespace BTCPayServer.Tests
             // Topup Invoice test
             var i = await s.CreateInvoice(storeId, null, cryptoCode);
             await s.GoToInvoiceCheckout(i);
-            var lnurl = await s.Page.Locator("#Lightning_BTC-LNURL .truncate-center").GetAttributeAsync("data-text");
-            Assert.NotNull(lnurl);
-            var parsed = LNURL.LNURL.Parse(lnurl, out _);
-            var fetchedRequest = Assert.IsType<LNURLPayRequest>(await LNURL.LNURL.FetchInformation(parsed, new HttpClient()));
+
+
+            async Task<BOLT11PaymentRequest> AssertBolt11(LightMoney expectedValue = null)
+            {
+                var bolt11 = await s.Page.Locator("#Lightning_BTC-LN .truncate-center").GetAttributeAsync("data-text");
+                Assert.NotNull(bolt11);
+                var b = BOLT11PaymentRequest.Parse(bolt11!, s.Server.ExplorerNode.Network);
+                if (expectedValue is not null)
+                    Assert.Equal(expectedValue, b.MinimumAmount);
+                return b;
+            }
+
+            // Top-up invoices now display a zero-amount BOLT11 on checkout, like standard invoices.
+            await AssertBolt11(LightMoney.Zero);
+            var invoiceId = s.Page.Url.Split('/').Last();
+            LNURLPayRequest fetchedRequest;
+            using (var resp = await s.Server.PayTester.HttpClient.GetAsync("BTC/lnurl/pay/i/" + invoiceId))
+            {
+                resp.EnsureSuccessStatusCode();
+                fetchedRequest = JsonConvert.DeserializeObject<LNURLPayRequest>(await resp.Content.ReadAsStringAsync());
+            }
             Assert.Equal(1m, fetchedRequest.MinSendable.ToDecimal(LightMoneyUnit.Satoshi));
             Assert.NotEqual(1m, fetchedRequest.MaxSendable.ToDecimal(LightMoneyUnit.Satoshi));
             var lnurlResponse = await fetchedRequest.SendRequest(new LightMoney(0.000001m, LightMoneyUnit.BTC),
@@ -371,6 +388,7 @@ namespace BTCPayServer.Tests
             var lnurlResponse2 = await fetchedRequest.SendRequest(new LightMoney(0.000002m, LightMoneyUnit.BTC),
                 network, new HttpClient(), comment: "lol2");
             Assert.Equal(new LightMoney(0.000002m, LightMoneyUnit.BTC), lnurlResponse2.GetPaymentRequest(network).MinimumAmount);
+
             // Initial bolt was cancelled
             var res = await s.Server.CustomerLightningD.Pay(lnurlResponse.Pr);
             Assert.Equal(PayResult.Error, res.Result);
@@ -385,15 +403,15 @@ namespace BTCPayServer.Tests
 
             var greenfield = await s.AsTestAccount().CreateClient();
             var paymentMethods = await greenfield.GetInvoicePaymentMethods(s.StoreId, i);
-            Assert.Single(paymentMethods, p => p.AdditionalData["providedComment"]!.Value<string>() == "lol2");
+            var lnurlMethod = Assert.Single(paymentMethods, p => p.PaymentMethodId == "BTC-LNURL");
+            Assert.Equal("lol2", lnurlMethod.AdditionalData["providedComment"]!.Value<string>());
             // Standard invoice test
             await s.GoToStore(storeId);
             i = await s.CreateInvoice(storeId, 0.0000001m, cryptoCode);
             await s.GoToInvoiceCheckout(i);
             // BOLT11 is also displayed for standard invoice (not LNURL, even if it is available)
-            var bolt11 = await s.Page.Locator("#Lightning_BTC-LN .truncate-center").GetAttributeAsync("data-text");
-            BOLT11PaymentRequest.Parse(bolt11!, s.Server.ExplorerNode.Network);
-            var invoiceId = s.Page.Url.Split('/').Last();
+            await AssertBolt11(LightMoney.Coins(0.0000001m));
+            invoiceId = s.Page.Url.Split('/').Last();
             using (var resp = await s.Server.PayTester.HttpClient.GetAsync("BTC/lnurl/pay/i/" + invoiceId))
             {
                 resp.EnsureSuccessStatusCode();
@@ -424,13 +442,7 @@ namespace BTCPayServer.Tests
                 lnurlResponse2.GetPaymentRequest(network).MinimumAmount);
             await s.GoToHome();
 
-            i = await s.CreateInvoice(storeId, 0.000001m, cryptoCode);
-            await s.GoToInvoiceCheckout(i);
-
-            await s.GoToStore(storeId);
-            i = await s.CreateInvoice(storeId, null, cryptoCode);
-            await s.GoToInvoiceCheckout(i);
-
+            // Bech32 mode
             await s.GoToHome();
             await s.GoToLightningSettings();
             await s.Page.UncheckAsync("#LNURLBech32Mode");
@@ -443,12 +455,15 @@ namespace BTCPayServer.Tests
 
             i = await s.CreateInvoice(storeId, null, cryptoCode);
             await s.GoToInvoiceCheckout(i);
-            lnurl = await s.Page.Locator("#Lightning_BTC-LNURL .truncate-center").GetAttributeAsync("data-text");
+            await AssertBolt11();
+            paymentMethods = await greenfield.GetInvoicePaymentMethods(storeId, i);
+            lnurlMethod = Assert.Single(paymentMethods, p => p.PaymentMethodId == "BTC-LNURL");
+            var lnurl = lnurlMethod.PaymentLink.Replace("lightning:", "", StringComparison.OrdinalIgnoreCase);
             Assert.StartsWith("lnurlp", lnurl);
             LNURL.LNURL.Parse(lnurl, out _);
 
             await s.GoToHome();
-            await s.CreateNewStore(false);
+            var (_, newStoreId) = await s.CreateNewStore(false);
             await s.AddLightningNode(LightningConnectionType.LndREST, false);
             await s.GoToLightningSettings();
             await s.Page.CheckAsync("#LNURLEnabled");
@@ -456,7 +471,10 @@ namespace BTCPayServer.Tests
             Assert.Contains($"{cryptoCode} Lightning settings successfully updated", await (await s.FindAlertMessage()).TextContentAsync());
             var invForPP = await s.CreateInvoice(null, cryptoCode);
             await s.GoToInvoiceCheckout(invForPP);
-            lnurl = await s.Page.Locator("#Lightning_BTC-LNURL .truncate-center").GetAttributeAsync("data-text");
+            await AssertBolt11();
+            paymentMethods = await greenfield.GetInvoicePaymentMethods(newStoreId, invForPP);
+            lnurlMethod = Assert.Single(paymentMethods, p => p.PaymentMethodId == "BTC-LNURL");
+            lnurl = lnurlMethod.PaymentLink.Replace("lightning:", "", StringComparison.OrdinalIgnoreCase);
             Assert.NotNull(lnurl);
             LNURL.LNURL.Parse(lnurl, out _);
 

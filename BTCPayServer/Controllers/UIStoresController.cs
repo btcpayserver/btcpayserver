@@ -130,10 +130,6 @@ public partial class UIStoresController : Controller
     [HttpGet("{storeId}/index")]
     public async Task<IActionResult> Index(string storeId)
     {
-        var store = await _storeRepo.FindStore(storeId, User.GetId());
-        if (store is null)
-            return NotFound();
-
         if ((await _authorizationService.AuthorizeAsync(User, Policies.CanModifyStoreSettings)).Succeeded)
         {
             HttpContext.SetPreferredStoreId(storeId);

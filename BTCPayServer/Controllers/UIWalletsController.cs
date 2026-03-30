@@ -635,6 +635,7 @@ namespace BTCPayServer.Controllers
             labelFilters = labelFilters
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
+            var textSearch = search.TextSearch ?? string.Empty;
 
             var directionFilters = search.GetFilterArray("direction");
             bool? positive = null;
@@ -656,9 +657,9 @@ namespace BTCPayServer.Controllers
             {
                 Search = search,
                 SearchTerm = search.WithoutSearchText(),
-                SearchText = search.TextCombined,
-                SearchInputText = search.TextSearch,
-                TextSearch = search.TextSearch,
+                SearchText = textSearch,
+                SearchInputText = textSearch,
+                TextSearch = textSearch,
                 StartDate = search.GetFilterDate("startdate", timezoneOffset),
                 EndDate = search.GetFilterDate("enddate", timezoneOffset),
                 LabelFilters = labelFilters,

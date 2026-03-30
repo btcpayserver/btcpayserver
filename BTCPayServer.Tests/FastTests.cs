@@ -1545,6 +1545,16 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.NotNull(GetDate("StartDate"));
             Assert.True(GetBool("HasLabelFilter"));
             Assert.True(GetBool("HasFilters"));
+
+            result = method.Invoke(controller, ["foo:bar", null, null, 120]);
+            Assert.NotNull(result);
+
+            Assert.Equal(string.Empty, GetString("SearchTerm"));
+            Assert.Equal(string.Empty, GetString("SearchText"));
+            Assert.Equal(string.Empty, GetString("SearchInputText"));
+            Assert.Equal(string.Empty, GetString("TextSearch"));
+            Assert.False(GetBool("HasLabelFilter"));
+            Assert.False(GetBool("HasFilters"));
         }
 
         [Fact]

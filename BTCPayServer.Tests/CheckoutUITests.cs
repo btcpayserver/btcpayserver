@@ -53,7 +53,7 @@ namespace BTCPayServer.Tests
             await s.Page.Locator(".payment-method").First.WaitForAsync();
             Assert.Equal(2, await s.Page.Locator(".payment-method").CountAsync());
             await Expect(s.Page.Locator(".payment-method.active")).ToContainTextAsync("Bitcoin");
-            await Expect(s.Page.Locator(".payment-method:nth-child(2)")).ToContainTextAsync("LNURL");
+            await Expect(s.Page.Locator(".payment-method:nth-child(2)")).ToContainTextAsync("Lightning");
             var qrValue = await s.Page.Locator(".qr-container").GetAttributeAsync("data-qr-value");
             var clipboard = await s.Page.Locator(".qr-container").GetAttributeAsync("data-clipboard");
             var payUrl = await s.Page.Locator("#PayInWallet").GetAttributeAsync("href");
@@ -83,8 +83,8 @@ namespace BTCPayServer.Tests
             await TestUtils.EventuallyAsync(async () =>
             {
                 payUrl = await s.Page.Locator("#PayInWallet").GetAttributeAsync("href");
-                Assert.StartsWith("lightning:lnurl", payUrl);
-                Assert.StartsWith("lnurl", await s.Page.Locator("#Lightning_BTC-CHAIN .truncate-center").GetAttributeAsync("data-text"));
+                Assert.StartsWith("lightning:lnbcrt", payUrl);
+                Assert.StartsWith("lnbcrt", await s.Page.Locator("#Lightning_BTC-CHAIN .truncate-center").GetAttributeAsync("data-text"));
                 await s.ElementDoesNotExist("#Address_BTC-CHAIN");
             });
 
@@ -320,12 +320,12 @@ namespace BTCPayServer.Tests
             copyAddressOnchain = await s.Page.Locator("#Address_BTC-CHAIN .truncate-center").GetAttributeAsync("data-text");
             copyAddressLightning = await s.Page.Locator("#Lightning_BTC-CHAIN .truncate-center").GetAttributeAsync("data-text");
             Assert.StartsWith($"bitcoin:{copyAddressOnchain}", payUrl);
-            Assert.Contains("?lightning=lnurl", payUrl);
+            Assert.Contains("?lightning=lnbcrt", payUrl);
             Assert.DoesNotContain("amount=", payUrl);
             Assert.StartsWith("bcrt", copyAddressOnchain);
-            Assert.StartsWith("lnurl", copyAddressLightning);
-            Assert.StartsWith($"bitcoin:{copyAddressOnchain!.ToUpperInvariant()}?lightning=LNURL", qrValue);
-            Assert.Contains($"bitcoin:{copyAddressOnchain}?lightning=lnurl", clipboard);
+            Assert.StartsWith("lnbcrt", copyAddressLightning);
+            Assert.StartsWith($"bitcoin:{copyAddressOnchain!.ToUpperInvariant()}?lightning=LNBCRT", qrValue);
+            Assert.Contains($"bitcoin:{copyAddressOnchain}?lightning=lnbcrt", clipboard);
             Assert.Equal(clipboard, payUrl);
 
             // Check details

@@ -676,16 +676,8 @@ namespace BTCPayServer.Controllers
             WalletTransactionsFilter filter,
             BTCPayNetwork network)
         {
-            if (filter.StartDate is { } startDate && tx.SeenAt < startDate)
+            if (!MatchesWalletTransactionBasicFilter(tx, filter, network))
                 return false;
-            if (filter.EndDate is { } endDate && tx.SeenAt > endDate)
-                return false;
-            if (filter.Positive is not null)
-            {
-                var positive = tx.BalanceChange.GetValue(network) >= 0;
-                if (positive != filter.Positive.Value)
-                    return false;
-            }
 
             if (filter.HasLabelFilter)
             {
@@ -718,6 +710,28 @@ namespace BTCPayServer.Controllers
             return true;
         }
 
+        private static bool MatchesWalletTransactionBasicFilter(
+            TransactionHistoryLine tx,
+            WalletTransactionsFilter filter,
+            BTCPayNetwork network)
+        {
+            if (filter.StartDate is { } startDate && tx.SeenAt < startDate)
+                return false;
+            if (filter.EndDate is { } endDate && tx.SeenAt > endDate)
+                return false;
+            if (filter.Positive is not null)
+            {
+                var positive = tx.BalanceChange.GetValue(network) >= 0;
+                if (positive != filter.Positive.Value)
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static bool RequiresWalletTransactionMetadataFiltering(WalletTransactionsFilter filter)
+            => filter.HasLabelFilter || !string.IsNullOrWhiteSpace(filter.TextSearch);
+
         [HttpGet("{walletId}")]
         [HttpGet("{walletId}/transactions")]
         public async Task<IActionResult> WalletTransactions(
@@ -741,8 +755,8 @@ namespace BTCPayServer.Controllers
             var effectiveTimezoneOffset = timezoneOffset ?? 0;
             var filter = BuildWalletTransactionsFilter(searchTerm, searchText, labelFilter, effectiveTimezoneOffset);
 
-            // We can't filter at the database level if we need to apply label or text search filters
-            var preFiltering = !filter.HasFilters;
+            var filterAtSource = !filter.HasFilters;
+            var requiresMetadataFiltering = RequiresWalletTransactionMetadataFiltering(filter);
             var model = new ListTransactionsViewModel
             {
                 Skip = skip,
@@ -782,7 +796,21 @@ namespace BTCPayServer.Controllers
             Dictionary<string, WalletTransactionInfo>? walletTransactionsInfo = null;
             if (loadTransactions)
             {
-                transactions = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, preFiltering ? skip : null, preFiltering ? count : null, cancellationToken: cancellationToken);
+                transactions = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, filterAtSource ? skip : null, filterAtSource ? count : null, cancellationToken: cancellationToken);
+                if (!filterAtSource)
+                {
+                    transactions = transactions
+                        .Where(tx => MatchesWalletTransactionBasicFilter(tx, filter, network))
+                        .ToList();
+
+                    model.Total = transactions.Count;
+
+                    if (!requiresMetadataFiltering)
+                    {
+                        transactions = transactions.Skip(skip).Take(count).ToList();
+                    }
+                }
+
                 walletTransactionsInfo = await WalletRepository.GetWalletTransactionsInfo(walletId, transactions.Select(t => t.TransactionId.ToString()).ToArray());
             }
 
@@ -796,6 +824,19 @@ namespace BTCPayServer.Controllers
                 var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(walletId.CryptoCode);
                 foreach (var tx in transactions)
                 {
+                    WalletTransactionInfo? transactionInfo = null;
+                    var labelValues = Array.Empty<string>();
+                    TransactionTagModel[] tags = [];
+                    if (walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var info))
+                    {
+                        transactionInfo = info;
+                        tags = _labelService.CreateTransactionTagModels(info, Request).ToArray();
+                        labelValues = info.LabelColors.Keys.ToArray();
+                    }
+
+                    if (requiresMetadataFiltering && !MatchesWalletTransactionFilter(tx, transactionInfo, labelValues, tags, filter, network))
+                        continue;
+
                     var vm = new ListTransactionsViewModel.TransactionViewModel
                     {
                         Id = tx.TransactionId.ToString(),
@@ -809,21 +850,13 @@ namespace BTCPayServer.Controllers
                                      (bumpable.Support is not BumpableSupport.Ok || (bumpable.TryGetValue(tx.TransactionId, out var i) ? i.RBF || i.CPFP : false))
                     };
 
-                    WalletTransactionInfo? transactionInfo = null;
-                    var labelValues = Array.Empty<string>();
-                    if (walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var info))
+                    if (transactionInfo is not null)
                     {
-                        transactionInfo = info;
-                        var labels = _labelService.CreateTransactionTagModels(info, Request);
-                        vm.Tags.AddRange(labels);
-                        labelValues = info.LabelColors.Keys.ToArray();
-                        vm.Comment = info.Comment;
-                        vm.InvoiceId = info.Attachments.FirstOrDefault(a => a.Type == WalletObjectData.Types.Invoice)?.Id;
-                        vm.WalletRateBook = info.Rates;
+                        vm.Tags.AddRange(tags);
+                        vm.Comment = transactionInfo.Comment;
+                        vm.InvoiceId = transactionInfo.Attachments.FirstOrDefault(a => a.Type == WalletObjectData.Types.Invoice)?.Id;
+                        vm.WalletRateBook = transactionInfo.Rates;
                     }
-
-                    if (!MatchesWalletTransactionFilter(tx, transactionInfo, labelValues, vm.Tags, filter, network))
-                        continue;
 
                     model.Transactions.Add(vm);
                 }
@@ -850,10 +883,9 @@ namespace BTCPayServer.Controllers
                     }
                 }
 
-                model.Total = preFiltering ? null : model.Transactions.Count;
-                // if we couldn't filter at the db level, we need to apply skip and count
-                if (!preFiltering)
+                if (requiresMetadataFiltering)
                 {
+                    model.Total = model.Transactions.Count;
                     model.Transactions = model.Transactions.Skip(skip).Take(count).ToList();
                 }
             }
@@ -1970,18 +2002,25 @@ namespace BTCPayServer.Controllers
             var wallet = _walletProvider.GetWallet(network);
             var effectiveTimezoneOffset = timezoneOffset ?? 0;
             var filter = BuildWalletTransactionsFilter(searchTerm, searchText, labelFilter, effectiveTimezoneOffset);
+            var requiresMetadataFiltering = RequiresWalletTransactionMetadataFiltering(filter);
 
-            var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId, (string[]?)null);
             var input = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, cancellationToken: cancellationToken);
-            var walletTransactionsInfo = await walletTransactionsInfoAsync;
-
             if (filter.HasFilters || !string.IsNullOrWhiteSpace(labelFilter))
+            {
+                input = input
+                    .Where(tx => MatchesWalletTransactionBasicFilter(tx, filter, network))
+                    .ToList();
+            }
+
+            var walletTransactionsInfo = await WalletRepository.GetWalletTransactionsInfo(walletId, input.Select(tx => tx.TransactionId.ToString()).ToArray());
+
+            if (requiresMetadataFiltering)
             {
                 input = input
                     .Where(tx =>
                     {
                         walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var info);
-                        var tags = _labelService.CreateTransactionTagModels(info, Request).ToArray();
+                        var tags = info is null ? [] : _labelService.CreateTransactionTagModels(info, Request).ToArray();
                         var labels = info?.LabelColors.Keys.ToArray() ?? Array.Empty<string>();
                         return MatchesWalletTransactionFilter(tx, info, labels, tags, filter, network);
                     })

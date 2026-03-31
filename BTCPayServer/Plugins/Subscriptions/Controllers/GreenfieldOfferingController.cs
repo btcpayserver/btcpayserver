@@ -260,12 +260,12 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
         public async Task<IActionResult> UpdateSubscriberDates(string storeId, string offeringId,
             [ModelBinder<CustomerSelectorModelBinder>]
             CustomerSelector customerSelector,
-            [FromBody] UpdateSubscriberDatesRequest request)
+            [FromBody] UpdateSubscriberDatesRequest? request)
         {
             var subscriber = await ctx.Subscribers.GetBySelector(offeringId, customerSelector, storeId);
             if (subscriber is null)
                 return SubscriberNotFound();
-            if (request is null || (request.StartDate is null && request.ExpirationDate is null))
+            if (request is null or { StartDate: null, ExpirationDate: null })
                 return await GetSubscriber(storeId, offeringId, customerSelector);
             var startDate = (request.StartDate ?? subscriber.PlanStarted).ToUniversalTime();
             var expirationDate = request.ExpirationDate?.ToUniversalTime();

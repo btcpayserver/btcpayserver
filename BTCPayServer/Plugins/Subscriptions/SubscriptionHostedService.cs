@@ -134,7 +134,41 @@ public class SubscriptionHostedService(
             await ctx.SaveChangesAsync();
             await UpdateSubscriptionStates(subCtx, move.MemberSelector);
         }
+        else if (evt is UpdateDatesRequest datesRequest)
+        {
+            var ctx = subCtx.Context;
+            var sub = await ctx.Subscribers.IncludeAll().FirstOrDefaultAsync(s => s.Id == datesRequest.SubId, cancellationToken);
+            if (sub is null)
+                throw new InvalidOperationException("Subscriber not found");
+
+            sub.PlanStarted = datesRequest.StartDate;
+            sub.PaymentReminded = false;
+
+            if (datesRequest.ExpirationDate is { } expDate)
+            {
+                if (sub.TrialEnd is not null)
+                {
+                    sub.TrialEnd = expDate;
+                    sub.ReminderDate = expDate - TimeSpan.FromDays(sub.PaymentReminderDaysOrDefault);
+                }
+                else if (sub.Plan.RecurringType != PlanData.RecurringInterval.Lifetime)
+                {
+                    sub.PeriodEnd = expDate;
+                    sub.TrialEnd = null;
+                    sub.GracePeriodEnd = sub.Plan.GracePeriodDays > 0 ? expDate.AddDays(sub.Plan.GracePeriodDays) : (DateTimeOffset?)null;
+                    sub.ReminderDate = expDate - TimeSpan.FromDays(sub.PaymentReminderDaysOrDefault);
+                }
+            }
+
+            await ctx.SaveChangesAsync(cancellationToken);
+            await UpdateSubscriptionStates(subCtx, datesRequest.SubId);
+        }
     }
+
+    record UpdateDatesRequest(long SubId, DateTimeOffset StartDate, DateTimeOffset? ExpirationDate);
+
+    public Task UpdateDates(long subId, DateTimeOffset startDate, DateTimeOffset? expirationDate)
+        => RunEvent(new UpdateDatesRequest(subId, startDate, expirationDate));
 
     SubscriptionContext CreateContext() => CreateContext(CancellationToken);
 

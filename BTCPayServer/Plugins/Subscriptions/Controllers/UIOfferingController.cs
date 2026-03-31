@@ -100,7 +100,9 @@ public partial class UIOfferingController(
 
     [HttpPost("stores/{storeId}/offerings/{offeringId}/Subscribers")]
     public async Task<IActionResult> SubscriberSuspend(string storeId, string offeringId, string customerId, string? command = null,
-        string? suspensionReason = null, decimal? amount = null, string? description = null)
+        string? suspensionReason = null, decimal? amount = null, string? description = null,
+        DateOnly? startDate = null, DateOnly? expirationDate = null,
+        int? timezoneOffset = null, int? expirationTimezoneOffset = null)
     {
         await using var ctx = DbContextFactory.CreateContext();
         var sub = await ctx.Subscribers.GetByCustomerId(customerId, offeringId: offeringId, storeId: storeId);
@@ -155,6 +157,53 @@ public partial class UIOfferingController(
                     AllowOverdraft = true
                 });
             TempData.SetStatusSuccess(message);
+        }
+        else if (command is "edit-dates")
+        {
+            if (startDate is null)
+            {
+                TempData.SetStatusMessageModel(new()
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Html = StringLocalizer["Invalid start date provided."]
+                });
+                return GoToOffering(storeId, offeringId, SubscriptionSection.Subscribers);
+            }
+
+            var startOffsetMinutes = timezoneOffset ?? 0;
+            var expOffsetMinutes = expirationTimezoneOffset ?? startOffsetMinutes;
+            if (startOffsetMinutes < -840 || startOffsetMinutes > 840 ||
+                expOffsetMinutes < -840 || expOffsetMinutes > 840)
+            {
+                TempData.SetStatusMessageModel(new()
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Html = StringLocalizer["Invalid timezone offset."]
+                });
+                return GoToOffering(storeId, offeringId, SubscriptionSection.Subscribers);
+            }
+
+            var parsedStart = new DateTimeOffset(startDate.Value.ToDateTime(TimeOnly.MinValue),
+                TimeSpan.FromMinutes(-startOffsetMinutes)).ToUniversalTime();
+
+            DateTimeOffset? parsedExpiration = null;
+            if (expirationDate is not null)
+            {
+                parsedExpiration = new DateTimeOffset(expirationDate.Value.ToDateTime(TimeOnly.MinValue),
+                    TimeSpan.FromMinutes(-expOffsetMinutes)).ToUniversalTime();
+                if (parsedExpiration.Value <= parsedStart)
+                {
+                    TempData.SetStatusMessageModel(new()
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Error,
+                        Html = StringLocalizer["Expiration date must be after the start date."]
+                    });
+                    return GoToOffering(storeId, offeringId, SubscriptionSection.Subscribers);
+                }
+            }
+
+            await SubsService.UpdateDates(sub.Id, parsedStart, parsedExpiration);
+            TempData.SetStatusSuccess(StringLocalizer["Subscription dates updated for {0}", subName]);
         }
 
         return GoToOffering(storeId, offeringId, SubscriptionSection.Subscribers);

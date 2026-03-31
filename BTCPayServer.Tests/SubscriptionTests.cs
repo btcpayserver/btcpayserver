@@ -1320,7 +1320,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         public async Task UpdateNotificationEmail(string email)
         {
             await s.Page.FillAsync("input[name='NotificationEmail']", email);
-            await s.Page.ClickAsync("button[value='update-email']");
+            await s.Page.ClickAsync("button[value='update-notification-email']");
         }
 
         public async Task<string> RequestRefund(string amount)

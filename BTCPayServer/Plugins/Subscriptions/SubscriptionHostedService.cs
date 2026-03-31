@@ -8,6 +8,7 @@ using BTCPayServer.Abstractions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
+using BTCPayServer.Data.Data.Subscriptions;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
@@ -29,6 +30,7 @@ namespace BTCPayServer.Plugins.Subscriptions;
 
 public class SubscriptionHostedService(
     EventAggregator eventAggregator,
+    PullPaymentHostedService pullPaymentService,
     ApplicationDbContextFactory applicationDbContextFactory,
     SettingsRepository settingsRepository,
     IServiceScopeFactory scopeFactory,
@@ -45,6 +47,7 @@ public class SubscriptionHostedService(
 
     protected override void SubscribeToEvents()
     {
+        this.Subscribe<PayoutEvent>();
         this.Subscribe<InvoiceEvent>();
         this.Subscribe<SubscriptionEvent.PlanUpdated>();
     }
@@ -72,6 +75,7 @@ public class SubscriptionHostedService(
             var from = (await settingsRepository.GetSettingAsync<MembershipServerSettings>("MembershipHostedService"))?.LastUpdate;
             var to = subCtx.Now;
             await UpdateSubscriptionStates(subCtx, new MemberSelector.PassedDate(from, to));
+            await ReconcileCancelledRefunds(subCtx);
             if (subCtx.Events.Count != 0)
                 await settingsRepository.UpdateSetting(new MembershipServerSettings(to), "MembershipHostedService");
         }
@@ -162,6 +166,31 @@ public class SubscriptionHostedService(
 
             await ctx.SaveChangesAsync(cancellationToken);
             await UpdateSubscriptionStates(subCtx, datesRequest.SubId);
+        }
+        else if (evt is PayoutEvent payoutEvent)
+        {
+            if (payoutEvent.Payout.State != PayoutState.Cancelled)
+                return;
+
+            if (payoutEvent.Type != PayoutEvent.PayoutEventType.Updated)
+                return;
+
+            var ctx = subCtx.Context;
+
+            var refund = await ctx.SubscriberCreditRefunds
+                .Include(r => r.Subscriber).ThenInclude(r => r.Plan).ThenInclude(p => p.Offering)
+                .Include(r => r.Subscriber).ThenInclude(s => s.Credits)
+                .Include(r => r.Subscriber).ThenInclude(s => s.Customer)
+                .FirstOrDefaultAsync(r => r.PullPaymentId == payoutEvent.Payout.PullPaymentDataId && r.Deducted);
+
+            if (refund is null)
+                return;
+
+            if (!await TryClaimRefundForRestoration(ctx, payoutEvent.Payout.PullPaymentDataId))
+                return;
+
+            await subCtx.TryCreditDebitSubscriber(refund.Subscriber, $"Credit refund cancelled — credit restored (Pull Payment: {refund.PullPaymentId})", refund.Amount, 0m);
+            await ctx.SaveChangesAsync();
         }
     }
 
@@ -356,6 +385,83 @@ public class SubscriptionHostedService(
         {
             await UpdatePlanStats(ctx, plan);
         }
+    }
+
+    public async Task<string?> CreateCreditRefund(string portalSessionId, decimal amount)
+    {
+        await using var subCtx = CreateContext(CancellationToken);
+        var ctx = subCtx.Context;
+        var portal = await ctx.PortalSessions.GetActiveById(portalSessionId);
+        if (portal is null)
+            return null;
+
+        var sub = portal.Subscriber;
+        var credit = sub.GetCredit();
+        if (amount <= 0 || amount > credit)
+            return null;
+
+        var store = sub.Plan.Offering.App.StoreData;
+        var pullPaymentId = await pullPaymentService.CreatePullPayment(store, new CreatePullPaymentRequest
+        {
+            Name = $"Credit refund for {sub.Customer.GetPrimaryIdentity()}",
+            Amount = amount,
+            Currency = sub.Plan.Currency,
+            AutoApproveClaims = false
+        });
+        var debitResult = await subCtx.TryCreditDebitSubscriber(sub, $"Credit refund (Pull Payment: {pullPaymentId})", 0m, amount);
+        if (debitResult is null)
+        {
+            await pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(pullPaymentId));
+            return null;
+        }
+        ctx.SubscriberCreditRefunds.Add(new SubscriberCreditRefund
+        {
+            PullPaymentId = pullPaymentId,
+            SubscriberId = sub.Id,
+            Amount = amount,
+            Currency = sub.Plan.Currency,
+            Deducted = true
+        });
+        await ctx.SaveChangesAsync();
+        return pullPaymentId;
+    }
+
+    private async Task ReconcileCancelledRefunds(SubscriptionContext subCtx)
+    {
+        var ctx = subCtx.Context;
+
+        var cancelledRefunds = await ctx.SubscriberCreditRefunds
+            .Include(r => r.Subscriber).ThenInclude(s => s.Plan).ThenInclude(p => p.Offering)
+            .Include(r => r.Subscriber).ThenInclude(s => s.Credits)
+            .Include(r => r.Subscriber).ThenInclude(s => s.Customer)
+            .Where(r => r.Deducted)
+            .Join(ctx.Payouts,
+                r => r.PullPaymentId,
+                p => p.PullPaymentDataId,
+                (r, p) => new { Refund = r, Payout = p })
+            .Where(x => x.Payout.State == PayoutState.Cancelled)
+            .Select(x => x.Refund).ToListAsync();
+
+        foreach (var refund in cancelledRefunds)
+        {
+            if (!await TryClaimRefundForRestoration(ctx, refund.PullPaymentId))
+                continue;
+
+            await subCtx.TryCreditDebitSubscriber(
+                refund.Subscriber, $"Credit refund cancelled — credit restored (Pull Payment: {refund.PullPaymentId})", refund.Amount, 0m);
+        }
+        if (cancelledRefunds.Count > 0)
+            await ctx.SaveChangesAsync();
+    }
+
+    private async Task<bool> TryClaimRefundForRestoration(ApplicationDbContext ctx, string pullPaymentId)
+    {
+        var rowsAffected = await ctx.Database.GetDbConnection().ExecuteAsync("""
+        UPDATE subs_credit_refunds
+        SET deducted = false
+        WHERE pull_payment_id = @pullPaymentId AND deducted = true
+        """, new { pullPaymentId });
+        return rowsAffected > 0;
     }
 
     private static HashSet<string> GetActiveMemberChangedPlans(SubscriptionContext subCtx)

@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260327171911_subs_credit_refunds")]
+    [Migration("20260331100927_subs_credit_refunds")]
     /// <inheritdoc />
     public partial class subs_credit_refunds : Migration
     {

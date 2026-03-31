@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace BTCPayServer.Plugins.Subscriptions.Controllers
 {
@@ -167,6 +168,17 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
                 return SubscriberNotFound();
             await subscriber.Plan.EnsureFeatureLoaded(ctx);
             return Ok(Mapper.MapToSubscriberModel(subscriber));
+        }
+
+        [HttpGet("~/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers")]
+        public async Task<IActionResult> GetSubscribers(string storeId, string offeringId)
+        {
+            var offering = await ctx.Offerings.GetOfferingData(offeringId, storeId: storeId, fetchPlanFeatures: true);
+            if (offering is null)
+                return OfferingNotFound();
+
+            var subscribers = await ctx.Subscribers.IncludeAll().Where(s => s.OfferingId == offeringId).ToListAsync();
+            return Ok(subscribers.Select(Mapper.MapToSubscriberModel));
         }
 
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = SubscriptionsPolicies.CanManageSubscribers)]

@@ -93,6 +93,8 @@ public class SubscriberPortalViewModel
     public string NotificationEmail { get; set; }
     public decimal? RefundAmount { get; set; }
     public bool CanRefund { get; set; }
+    [ValidateNever]
+    public string RenewalPullPaymentUrl { get; set; }
     public string Anchor { get; set; }
     public string Url { get; set; }
     public string Logo => StoreBranding?.LogoUrl ?? BTCPayLogo;

@@ -176,119 +176,135 @@ public class UISubscriberPortalController(
         var session = await ctx.PortalSessions.GetActiveById(portalSessionId);
         if (session is null)
             return NotFound();
-        if (command == "add-credit")
-        {
-            var value = vm.Credit?.InputAmount;
-            if (value is null || value.Value <= 0)
-                ModelState.AddModelError("Credit.InputAmount", StringLocalizer["Please enter a positive amount"]);
-            if (!ModelState.IsValid)
-                return await SubscriberPortal(portalSessionId, cancellationToken: cancellationToken);
 
-            try
-            {
-                var invoiceId = await SubsService.CreateCreditCheckout(session.Id, value);
-                if (invoiceId is not null)
-                {
-                    return RedirectToInvoiceCheckout(invoiceId);
-                }
-            }
-            catch (BitpayHttpException ex)
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Html = ex.Message.Replace("\n", "<br />", StringComparison.OrdinalIgnoreCase),
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    AllowDismiss = true
-                });
-                return RedirectToPlanCheckout(portalSessionId);
-            }
-        }
-        else if (command is "migrate" or "pay")
+        switch (command)
         {
-            var onPay = command == "migrate" ? PlanCheckoutData.OnPayBehavior.HardMigration : PlanCheckoutData.OnPayBehavior.SoftMigration;
-            if (command == "migrate" && changedPlanId is null)
-            {
-                if (session.Subscriber.Plan.PlanChanges.Count == 1)
-                    changedPlanId = session.Subscriber.Plan.PlanChanges[0].PlanChangeId;
-                else
-                    return RedirectToSubscriberPortal(portalSessionId, "plans");
-            }
-            var result = await SubsService.CreatePlanMigrationCheckout(session.Id, changedPlanId, onPay, Request.GetRequestBaseUrl());
-            if (result is PlanMigrationResult.Scheduled)
-            {
-                TempData.SetStatusSuccess(StringLocalizer["Your plan will change at the end of your current billing period."]);
-                return RedirectToSubscriberPortal(portalSessionId);
-            }
-            return result is PlanMigrationResult.Checkout c
-                ? await RedirectToPlanCheckoutPayment(c.CheckoutId, cancellationToken)
-                : RedirectToSubscriberPortal(portalSessionId);
-        }
-        else if (command == "update-email")
-        {
-            var email = vm.NotificationEmail?.Trim();
-            if (!string.IsNullOrEmpty(email) && !email.IsValidEmail())
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel
+            case "add-credit":
                 {
-                    Message = StringLocalizer["Please enter a valid email address."],
-                    Severity = StatusMessageModel.StatusSeverity.Error
-                });
-                return RedirectToSubscriberPortal(portalSessionId);
-            }
-            session.Subscriber.Customer.NotificationEmail.Set(string.IsNullOrEmpty(email) ? null : email);
-            await ctx.SaveChangesAsync(cancellationToken);
-            TempData.SetStatusSuccess(StringLocalizer["Notification email updated."]);
-        }
-        else if (command == "refund-credit")
-        {
-            var amount = vm.RefundAmount;
-            if (amount is null || amount > session.Subscriber.GetCredit())
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Message = StringLocalizer["Please enter a valid amount."],
-                    Severity = StatusMessageModel.StatusSeverity.Error
-                });
-                return RedirectToSubscriberPortal(portalSessionId);
-            }
-            try
-            {
-                var pullPaymentId = await SubsService.CreateCreditRefund(session.Id, amount.Value);
-                if (pullPaymentId is null)
-                {
-                    TempData.SetStatusMessageModel(new StatusMessageModel
+                    var value = vm.Credit?.InputAmount;
+                    if (value is null || value.Value <= 0)
+                        ModelState.AddModelError("Credit.InputAmount", StringLocalizer["Please enter a positive amount"]);
+                    if (!ModelState.IsValid)
+                        return await SubscriberPortal(portalSessionId, cancellationToken: cancellationToken);
+
+                    try
                     {
-                        Message = StringLocalizer["Unable to create refund. Check your credit balance."],
-                        Severity = StatusMessageModel.StatusSeverity.Error
-                    });
-                    return RedirectToSubscriberPortal(portalSessionId);
+                        var invoiceId = await SubsService.CreateCreditCheckout(session.Id, value);
+                        if (invoiceId is not null)
+                        {
+                            return RedirectToInvoiceCheckout(invoiceId);
+                        }
+                    }
+                    catch (BitpayHttpException ex)
+                    {
+                        TempData.SetStatusMessageModel(new StatusMessageModel
+                        {
+                            Html = ex.Message.Replace("\n", "<br />", StringComparison.OrdinalIgnoreCase),
+                            Severity = StatusMessageModel.StatusSeverity.Error,
+                            AllowDismiss = true
+                        });
+                        return RedirectToPlanCheckout(portalSessionId);
+                    }
+                    break;
                 }
-                var refundUrl = Url.Action(nameof(UIPullPaymentController.ViewPullPayment), "UIPullPayment", new { pullPaymentId }, Request.Scheme);
-                TempData.SetStatusSuccess(StringLocalizer["Refund created."]);
-                return Redirect(refundUrl!);
-            }
-            catch (BitpayHttpException ex)
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel
+
+            case "migrate" or "pay":
                 {
-                    Html = ex.Message.Replace("\n", "<br />", StringComparison.OrdinalIgnoreCase),
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    AllowDismiss = true
-                });
-                return RedirectToSubscriberPortal(portalSessionId);
-            }
-        }
-        else if (command == "update-auto-renewal")
-        {
-            session.Subscriber.AutoRenew = !session.Subscriber.AutoRenew;
-            await ctx.SaveChangesAsync(cancellationToken);
-        }
-        else if (command == "cancel-scheduled-change")
-        {
-            session.Subscriber.NewPlanId = null;
-            session.Subscriber.NewPlan = null;
-            await ctx.SaveChangesAsync(cancellationToken);
-            TempData.SetStatusSuccess(StringLocalizer["Scheduled plan change cancelled."]);
+                    var onPay = command == "migrate" ? PlanCheckoutData.OnPayBehavior.HardMigration : PlanCheckoutData.OnPayBehavior.SoftMigration;
+                    if (command == "migrate" && changedPlanId is null)
+                    {
+                        if (session.Subscriber.Plan.PlanChanges.Count == 1)
+                            changedPlanId = session.Subscriber.Plan.PlanChanges[0].PlanChangeId;
+                        else
+                            return RedirectToSubscriberPortal(portalSessionId, "plans");
+                    }
+                    var result = await SubsService.CreatePlanMigrationCheckout(session.Id, changedPlanId, onPay, Request.GetRequestBaseUrl());
+                    if (result is PlanMigrationResult.Scheduled)
+                    {
+                        TempData.SetStatusSuccess(StringLocalizer["Your plan will change at the end of your current billing period."]);
+                        return RedirectToSubscriberPortal(portalSessionId);
+                    }
+                    return result is PlanMigrationResult.Checkout c
+                        ? await RedirectToPlanCheckoutPayment(c.CheckoutId, cancellationToken)
+                        : RedirectToSubscriberPortal(portalSessionId);
+                }
+
+            case "update-notification-email":
+                {
+                    var email = vm.NotificationEmail?.Trim();
+                    if (!string.IsNullOrEmpty(email) && !email.IsValidEmail())
+                    {
+                        TempData.SetStatusMessageModel(new StatusMessageModel
+                        {
+                            Message = StringLocalizer["Please enter a valid email address."],
+                            Severity = StatusMessageModel.StatusSeverity.Error
+                        });
+                        return RedirectToSubscriberPortal(portalSessionId);
+                    }
+                    session.Subscriber.Customer.NotificationEmail.Set(string.IsNullOrEmpty(email) ? null : email);
+                    await ctx.SaveChangesAsync(cancellationToken);
+                    TempData.SetStatusSuccess(StringLocalizer["Notification email updated."]);
+                    break;
+                }
+
+            case "refund-credit":
+                {
+                    var amount = vm.RefundAmount;
+                    if (amount is null || amount > session.Subscriber.GetCredit())
+                    {
+                        TempData.SetStatusMessageModel(new StatusMessageModel
+                        {
+                            Message = StringLocalizer["Please enter a valid amount."],
+                            Severity = StatusMessageModel.StatusSeverity.Error
+                        });
+                        return RedirectToSubscriberPortal(portalSessionId);
+                    }
+                    try
+                    {
+                        var pullPaymentId = await SubsService.CreateCreditRefund(session.Id, amount.Value);
+                        if (pullPaymentId is null)
+                        {
+                            TempData.SetStatusMessageModel(new StatusMessageModel
+                            {
+                                Message = StringLocalizer["Unable to create refund. Check your credit balance."],
+                                Severity = StatusMessageModel.StatusSeverity.Error
+                            });
+                            return RedirectToSubscriberPortal(portalSessionId);
+                        }
+                        var refundUrl = Url.Action(nameof(UIPullPaymentController.ViewPullPayment), "UIPullPayment", new { pullPaymentId }, Request.Scheme);
+                        TempData.SetStatusSuccess(StringLocalizer["Refund created."]);
+                        return Redirect(refundUrl!);
+                    }
+                    catch (BitpayHttpException ex)
+                    {
+                        TempData.SetStatusMessageModel(new StatusMessageModel
+                        {
+                            Html = ex.Message.Replace("\n", "<br />", StringComparison.OrdinalIgnoreCase),
+                            Severity = StatusMessageModel.StatusSeverity.Error,
+                            AllowDismiss = true
+                        });
+                        return RedirectToSubscriberPortal(portalSessionId);
+                    }
+                }
+
+            case "update-auto-renewal":
+                {
+                    session.Subscriber.AutoRenew = !session.Subscriber.AutoRenew;
+                    await ctx.SaveChangesAsync(cancellationToken);
+                    break;
+                }
+
+            case "cancel-scheduled-change":
+                {
+                    session.Subscriber.NewPlanId = null;
+                    session.Subscriber.NewPlan = null;
+                    await ctx.SaveChangesAsync(cancellationToken);
+                    TempData.SetStatusSuccess(StringLocalizer["Scheduled plan change cancelled."]);
+                    break;
+                }
+
+            default:
+                break;
         }
         return RedirectToSubscriberPortal(portalSessionId);
     }

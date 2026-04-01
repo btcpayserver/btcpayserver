@@ -1,0 +1,109 @@
+<div class="modal fade" id="editDatesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" text-translate="true">Edit Subscription Dates</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                    <vc:icon symbol="close" />
+                </button>
+            </div>
+            <form method="post">
+                <div class="modal-body">
+                    <div>
+                        <span text-translate="true">Editing dates for</span>
+                        <span class="edit-dates-subscriber-name fw-semibold"></span>
+                    </div>
+                </div>
+                <div class="modal-body pt-0">
+                    <input name="customerId" type="hidden" />
+                    <input name="timezoneOffset" type="hidden" class="edit-dates-tz" />
+                    <input name="expirationTimezoneOffset" type="hidden" class="edit-dates-expiry-tz" />
+
+                    <div class="mb-3">
+                        <label class="form-label" text-translate="true">Start Date</label>
+                        <input type="date" name="startDate" class="form-control edit-dates-start" required />
+                    </div>
+
+                    <div class="mb-3 edit-dates-expiration-group">
+                        <label class="form-label edit-dates-expiration-label"></label>
+                        <input type="date" name="expirationDate" class="form-control edit-dates-expiration" />
+                        <div class="form-text text-muted" text-translate="true">
+                            Grace period and reminder date are recalculated automatically from plan settings.
+                            Leave blank for lifetime plans.
+                        </div>
+                    </div>
+                    <div class="text-danger edit-dates-error" style="display:none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" text-translate="true">Cancel</button>
+                    <button type="submit" class="btn btn-primary edit-dates-save" name="command" value="edit-dates" text-translate="true">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modalEl = document.getElementById('editDatesModal');
+        if (!modalEl) return;
+
+        const startInput = modalEl.querySelector('.edit-dates-start');
+        const expirationInput = modalEl.querySelector('.edit-dates-expiration');
+        const expirationLabel = modalEl.querySelector('.edit-dates-expiration-label');
+        const errorEl = modalEl.querySelector('.edit-dates-error');
+        const saveBtn = modalEl.querySelector('.edit-dates-save');
+        const tzInput = modalEl.querySelector('.edit-dates-tz');
+        const expiryTzInput = modalEl.querySelector('.edit-dates-expiry-tz');
+
+        function offsetForDate(dateString) {
+            return dateString
+                ? new Date(dateString + 'T00:00:00').getTimezoneOffset()
+                : new Date().getTimezoneOffset();
+        }
+
+        function validate() {
+            const start = startInput.value;
+            const expiration = expirationInput.value;
+            if (start && expiration && expiration <= start) {
+                errorEl.innerText = 'Expiration date must be after the start date.';
+                errorEl.style.display = '';
+                saveBtn.disabled = true;
+            } else {
+                errorEl.style.display = 'none';
+                saveBtn.disabled = false;
+            }
+        }
+
+        startInput.addEventListener('change', function () {
+            tzInput.value = offsetForDate(this.value);
+            validate();
+        });
+        expirationInput.addEventListener('change', function () {
+            expiryTzInput.value = offsetForDate(this.value);
+            validate();
+        });
+
+        modalEl.addEventListener('show.bs.modal', function (event) {
+            const trigger = event.relatedTarget;
+            if (!trigger) return;
+
+            const tr = trigger.closest('tr');
+            modalEl.querySelector('input[name="customerId"]').value = tr.getAttribute('data-subscriber-id') || '';
+            modalEl.querySelector('.edit-dates-subscriber-name').innerText = tr.getAttribute('data-subscriber-email') || '';
+
+            const startVal = tr.getAttribute('data-plan-started') || '';
+            const expVal = tr.getAttribute('data-expiration') || '';
+            startInput.value = startVal;
+            expirationInput.value = expVal;
+            tzInput.value = offsetForDate(startVal);
+            expiryTzInput.value = offsetForDate(expVal);
+
+            const isTrial = tr.getAttribute('data-is-trial') === 'true';
+            expirationLabel.innerText = isTrial ? 'Trial End Date' : 'Expiration Date';
+
+            errorEl.style.display = 'none';
+            saveBtn.disabled = false;
+        });
+    });
+</script>

@@ -70,6 +70,10 @@ namespace BTCPayServer.Models.WalletViewModels
         public string ReturnUrl { get; set; }
         public bool IsMultiSigOnServer { get; set; }
 
+        [Display(Name = "Transaction Comment")]
+        [MaxLength(200)]
+        public string Comment { get; set; }
+
         public class InputSelectionOption
         {
             public IEnumerable<TransactionTagModel> Labels { get; set; }

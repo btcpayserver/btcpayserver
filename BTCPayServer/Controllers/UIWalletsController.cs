@@ -1470,7 +1470,8 @@ namespace BTCPayServer.Controllers
                 PayJoinBIP21 = vm.PayJoinBIP21,
                 EnforceLowR = psbtResponse.Suggestions?.ShouldEnforceLowR,
                 ChangeAddress = psbtResponse.ChangeAddress?.ToString(),
-                PSBT = psbt.ToHex()
+                PSBT = psbt.ToHex(),
+                Comment = vm.Comment
             };
 
             if (!psbt.IsReadyToSign() && command == "sign")
@@ -1648,6 +1649,7 @@ namespace BTCPayServer.Controllers
             redirectVm.FormParameters.Add("SigningContext.ChangeAddress", signingContext.ChangeAddress);
             redirectVm.FormParameters.Add("SigningContext.PendingTransactionId", signingContext.PendingTransactionId);
             redirectVm.FormParameters.Add("SigningContext.BalanceChangeFromReplacement", signingContext.BalanceChangeFromReplacement.ToString());
+            redirectVm.FormParameters.Add("SigningContext.Comment", signingContext.Comment);
         }
 
         private IActionResult RedirectToWalletPSBT(WalletPSBTViewModel vm)

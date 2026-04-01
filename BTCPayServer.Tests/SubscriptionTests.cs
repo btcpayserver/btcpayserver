@@ -486,6 +486,24 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         Assert.False(subscriber.IsSuspended);
         Assert.Null(subscriber.SuspensionReason);
 
+        var newExpiration = DateTimeOffset.UtcNow.AddDays(90);
+        subscriber = await client.UpdateSubscriberDates(user.StoreId, offering.Id,
+            planCheckout.Subscriber.Customer.Id,
+            new UpdateSubscriberDatesRequest { ExpirationDate = newExpiration });
+        Assert.Equal(newExpiration.ToUnixTimeSeconds(), subscriber.PeriodEnd!.Value.ToUnixTimeSeconds());
+        Assert.True(subscriber.IsActive);
+
+        await AssertEx.AssertApiError(400, "invalid-dates", () => client.UpdateSubscriberDates(
+            user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id,
+            new UpdateSubscriberDatesRequest
+            {
+                StartDate = DateTimeOffset.UtcNow.AddDays(10),
+                ExpirationDate = DateTimeOffset.UtcNow.AddDays(5)
+            }));
+        var noOpResult = await client.UpdateSubscriberDates(user.StoreId, offering.Id,
+            planCheckout.Subscriber.Customer.Id, new UpdateSubscriberDatesRequest());
+        Assert.Equal(newExpiration.ToUnixTimeSeconds(), noOpResult.PeriodEnd!.Value.ToUnixTimeSeconds());
+
         var session = await client.CreatePortalSession(new()
         {
             StoreId = user.StoreId,

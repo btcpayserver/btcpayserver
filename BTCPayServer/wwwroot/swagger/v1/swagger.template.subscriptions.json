@@ -481,6 +481,69 @@
                 }
             }
         },
+        "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/dates": {
+            "put": {
+                "summary": "Update subscriber dates",
+                "description": "Manually overrides the subscription start date and/or expiration date for a subscriber.\n\nOmitting a field leaves the corresponding date unchanged. An empty body `{}` is a no-op and returns the subscriber unchanged.\n\nWhen `expirationDate` is provided, the grace period end and reminder date are recalculated automatically from the plan settings.",
+                "operationId": "UpdateSubscriberDates",
+                "tags": ["Subscriptions"],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmanagesubscribers"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OfferingId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/CustomerSelector"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "description": "Dates to update. All fields are optional — omitting a field leaves it unchanged.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateSubscriberDatesRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Subscriber dates updated (or unchanged if no fields were provided).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubscriberModel"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error code: `invalid-dates`. The expiration date must be after the start date.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Subscriber not found."
+                    }
+                }
+            }
+        },
         "/api/v1/plan-checkout/{checkoutId}": {
             "get": {
                 "summary": "Get a plan checkout",
@@ -917,6 +980,26 @@
                         "type": "string",
                         "description": "Reason for the suspension.",
                         "example": "Suspicious behavior detected"
+                    }
+                }
+            },
+            "UpdateSubscriberDatesRequest": {
+                "type": "object",
+                "description": "Request payload for updating subscriber dates. All fields are optional — omitting a field leaves the corresponding date unchanged.",
+                "properties": {
+                    "startDate": {
+                        "type": "integer",
+                        "format": "unix-time",
+                        "nullable": true,
+                        "description": "New subscription start date as a Unix timestamp. Omit to leave the current start date unchanged.",
+                        "example": 1710000000
+                    },
+                    "expirationDate": {
+                        "type": "integer",
+                        "format": "unix-time",
+                        "nullable": true,
+                        "description": "New expiration date as a Unix timestamp. Updates `trialEnd` if the subscriber is in a trial, otherwise updates `periodEnd`. Grace period end and reminder date are recalculated automatically. Omit to leave the current expiration date unchanged.",
+                        "example": 1712678400
                     }
                 }
             },

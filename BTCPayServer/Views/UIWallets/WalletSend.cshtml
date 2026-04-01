@@ -188,6 +188,12 @@
         }
     </div>
 
+    <div class="form-group">
+        <label asp-for="Comment" class="form-label"></label>
+        <textarea asp-for="Comment" class="form-control" rows="2" maxlength="200" placeholder="@StringLocalizer["Optional note about this transaction"]"></textarea>
+        <span asp-validation-for="Comment" class="text-danger"></span>
+    </div>
+
     <div class="my-4">
         <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
             <vc:icon symbol="caret-down"/>

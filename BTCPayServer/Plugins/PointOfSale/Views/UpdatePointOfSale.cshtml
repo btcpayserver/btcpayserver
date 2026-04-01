@@ -178,6 +178,13 @@
                     <div class="form-text" text-translate="true">This rate can also be overridden per item.</div>
                     <span asp-validation-for="DefaultTaxRate" class="text-danger"></span>
                 </div>
+				<div class="form-group d-flex align-items-center">
+					<input asp-for="TaxIncludedInPrice" type="checkbox" class="btcpay-toggle me-3" />
+					<div>
+						<label asp-for="TaxIncludedInPrice" class="form-check-label"></label>
+						<div class="text-muted" text-translate="true">When enabled, prices entered in the keypad are tax incluive.</div>
+					</div>
+				</div>
             </fieldset>
 
             <fieldset id="discounts" class="mt-2">

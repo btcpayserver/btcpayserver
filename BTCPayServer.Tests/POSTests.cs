@@ -878,7 +878,7 @@ goodies:
 
             await EnterKeypad(s, "123");
             await Expect(s.Page.Locator("#Amount")).ToContainTextAsync("1,23");
-            await AssertKeypadCalculation(s, "2 x Green Tea (1,00 €) = 2,00 € + 1 x Black Tea (1,00 €) = 1,00 € + 1,23 € + 0,42 € (10%)", "4,65 €");
+            await AssertKeypadCalculation(s, "2 x Green Tea (1,00 €) = 2,00 € + 1 x Black Tea (1,00 €) = 1,00 € + 1,23 € + 0,42 € (10% tax)", "4,65 €");
 
             // Pay
             await s.Page.ClickAsync("#pay-button");

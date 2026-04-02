@@ -28,6 +28,16 @@ public class MonetizationPlugin : BaseBTCPayServerPlugin
         services.AddSingleton<IEmailTriggerEventTransformer, MonetizationEmailTriggerTransformer>();
         services.AddDefaultTranslations(MonetizationEmailTriggerTransformer.TranslatedStrings);
 
-        services.AddMigration<ApplicationDbContext, Migrations.RemoveDeletedApplicationIdIdentities>();
+        services.AddMigration("20260106_cleanupappidentities",
+                                  """
+                                  WITH orphan AS (
+                                      SELECT value FROM customers_identities ci
+                                      LEFT JOIN "AspNetUsers" u ON u."Id" = value
+                                      WHERE ci.type = 'ApplicationUserId' AND u."Id" IS NULL
+                                  )
+                                  DELETE FROM customers_identities ci
+                                      USING orphan u
+                                          WHERE ci.type = 'ApplicationUserId' AND u.value = ci.value;
+                                  """);
     }
 }

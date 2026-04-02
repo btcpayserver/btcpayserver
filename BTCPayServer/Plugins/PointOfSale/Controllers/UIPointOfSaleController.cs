@@ -353,7 +353,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     if (invoiceRequest.Amount is not null && originalAmount != invoiceRequest.Amount.Value )
                     {
                         var diff = invoiceRequest.Amount.Value - originalAmount;
-                        order.AddLine(new("", 1, diff, settings.DefaultTaxRate, settings.TaxIncludedInPrice));
+                        order.AddLine(new("", 1, diff, settings.DefaultTaxRate, false));
                     }
                     break;
             }

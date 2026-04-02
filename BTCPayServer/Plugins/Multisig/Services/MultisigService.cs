@@ -66,13 +66,18 @@ public class MultisigService(
     {
         var users = await storeRepository.GetStoreUsers(storeId);
         var selected = (selectedUserIds ?? Array.Empty<string>()).ToHashSet(StringComparer.Ordinal);
-        return users.Select(user => new MultisigStoreUserItem
-        {
-            UserId = user.Id,
-            Email = user.Email,
-            Name = user.UserBlob?.Name,
-            Selected = selected.Contains(user.Id)
-        }).ToList();
+        return users
+            .Select(user => new MultisigStoreUserItem
+            {
+                UserId = user.Id,
+                Email = user.Email,
+                Name = user.UserBlob?.Name,
+                Selected = selected.Contains(user.Id)
+            })
+            .OrderBy(user => string.IsNullOrWhiteSpace(user.Name) ? user.Email : user.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(user => user.Email, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(user => user.UserId, StringComparer.Ordinal)
+            .ToList();
     }
 
     public async Task<PendingMultisigSetupData?> GetPendingMultisigSetup(string storeId, string cryptoCode, string? requestId)

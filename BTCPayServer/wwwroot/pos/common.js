@@ -84,7 +84,7 @@ class PoSOrder {
             ctx.discount += discount;
             linePrice -= discount;
 
-            let taxRate = item.taxRate ?? 0;
+            let taxRate = +(item.taxRate ?? 0);
             let tax, lineExcluded;
             if (item.taxIncluded && taxRate > 0) {
                 tax = this._round(linePrice * taxRate / (100 + taxRate));

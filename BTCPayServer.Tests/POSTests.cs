@@ -19,15 +19,16 @@ using BTCPayServer.Tests.PMO;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
 using LNURL;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Playwright;
-using static Microsoft.Playwright.Assertions;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
 using static BTCPayServer.Tests.UnitTest1;
+using static Microsoft.Playwright.Assertions;
 using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 
 namespace BTCPayServer.Tests
@@ -441,6 +442,7 @@ goodies:
 
             // Setup POS
             await s.CreateApp("PointOfSale");
+            var editUrl = s.Page.Url;
             await s.Page.ClickAsync("label[for='DefaultView_Cart']");
             await s.Page.FillAsync("#Currency", "EUR");
             Assert.False(await s.Page.IsCheckedAsync("#EnableTips"));
@@ -462,6 +464,7 @@ goodies:
 
             // View
             await ViewApp(s);
+            var keypadUrl = s.Page.Url;
             await s.Page.WaitForSelectorAsync("#PosItems");
             Assert.Empty(await s.Page.QuerySelectorAllAsync("#CartItems tr"));
             var posUrl = s.Page.Url;
@@ -576,7 +579,6 @@ goodies:
             await s.Page.WaitForSelectorAsync("#Checkout");
             await s.Page.ClickAsync("#DetailsToggle");
             await s.Page.WaitForSelectorAsync("#PaymentDetails-TotalFiat");
-            Assert.Contains("0,77 €", await s.Page.TextContentAsync("#PaymentDetails-TaxIncluded"));
             Assert.Contains("10,67 €", await s.Page.TextContentAsync("#PaymentDetails-TotalFiat"));
             //
             await s.PayInvoice(true);
@@ -617,6 +619,30 @@ goodies:
                 await s.TakeScreenshot("BadInventory.png");
                 throw;
             }
+
+            await s.GoToUrl(editUrl);
+            await s.Page.ClickAsync("#TaxIncludedInPrice");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "App updated");
+
+            await s.GoToUrl(posUrl);
+            await s.Page.WaitForSelectorAsync("#PosItems");
+            await s.Page.ClickAsync(".posItem:nth-child(1) .btn-primary");
+
+            await AssertCartSummary(s, new()
+            {
+                Subtotal = "0,91 €",
+                Taxes = "0,09 € (10%)",
+                Total = "1,00 €"
+            });
+
+            await s.Page.ClickAsync("#CartSubmit");
+            await s.Page.WaitForSelectorAsync("#Checkout");
+            await s.Page.ClickAsync("#DetailsToggle");
+            await s.Page.WaitForSelectorAsync("#PaymentDetails-TotalFiat");
+            Assert.Contains("0,09 €", await s.Page.TextContentAsync("#PaymentDetails-TaxIncluded"));
+            Assert.Contains("1,00 €", await s.Page.TextContentAsync("#PaymentDetails-TotalFiat"));
+            await s.PayInvoice(true);
 
 
             // Guest user can access recent transactions

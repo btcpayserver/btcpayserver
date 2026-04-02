@@ -402,7 +402,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         entity.ExtendedNotifications = true;
                         if (formResponseJObject is not null)
                         {
-                            var meta = entity.Metadata.ToJObject();
+                            var meta = entity.Metadata.ToJObject(); 
                             meta.Merge(formResponseJObject);
                             entity.Metadata = InvoiceMetadata.FromJObject(meta);
                         }

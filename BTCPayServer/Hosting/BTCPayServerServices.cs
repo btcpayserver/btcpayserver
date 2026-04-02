@@ -445,6 +445,12 @@ namespace BTCPayServer.Hosting
                 )
                 SELECT COUNT(*) FROM deleted_invoices;
                 """);
+            services.AddMigration("20260402_idx_invoices_expired_cleanup",
+                                  """
+                                  CREATE INDEX IF NOT EXISTS idx_invoices_expired_cleanup
+                                  ON "Invoices" ("Created", "Id")
+                                  WHERE "Status" = 'Expired' AND "ExceptionStatus" = '';
+                                  """);
 
             services.AddSingleton<RatesHostedService>();
             services.AddSingleton<IHostedService>(s => s.GetRequiredService<RatesHostedService>());

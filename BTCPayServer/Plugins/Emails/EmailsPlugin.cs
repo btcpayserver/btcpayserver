@@ -23,7 +23,18 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
         services.AddTransient<EmailTriggerViewModels>();
         services.AddSingleton<IHostedService, UserEventHostedService>();
         services.AddMigration<ApplicationDbContext, Migrations.DefaultServerEmailRulesMigration>();
-        services.AddMigration<ApplicationDbContext, Migrations.ServerEmailSettingsMigration>();
+        services.AddMigration("20251223_emailsettingsmigration", """
+                                  INSERT INTO "Settings" ("Id", "Value")
+                                  SELECT
+                                    'BTCPayServer.Plugins.Emails.Services.EmailSettings',
+                                    "Value"
+                                  FROM "Settings"
+                                  WHERE "Id" = 'BTCPayServer.Services.Mails.EmailSettings'
+                                  ON CONFLICT ("Id") DO NOTHING;
+
+                                  DELETE FROM "Settings"
+                                  WHERE "Id" = 'BTCPayServer.Services.Mails.EmailSettings';
+                                  """);
 
         services.AddSingleton<IEmailTriggerViewModelTransformer, ServerTransformer>();
         services.AddSingleton<IEmailTriggerEventTransformer, ServerTransformer>();

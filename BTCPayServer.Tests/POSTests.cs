@@ -579,6 +579,7 @@ goodies:
             await s.Page.WaitForSelectorAsync("#Checkout");
             await s.Page.ClickAsync("#DetailsToggle");
             await s.Page.WaitForSelectorAsync("#PaymentDetails-TotalFiat");
+            Assert.Contains("0,77 €", await s.Page.TextContentAsync("#PaymentDetails-TaxIncluded"));
             Assert.Contains("10,67 €", await s.Page.TextContentAsync("#PaymentDetails-TotalFiat"));
             //
             await s.PayInvoice(true);

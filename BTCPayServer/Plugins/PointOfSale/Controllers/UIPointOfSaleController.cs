@@ -377,7 +377,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         ItemCode = selectedChoices is [{} c1] ? c1.Id : null,
                         ItemDesc = selectedChoices is [{} c2] ? c2.Title : null,
                         BuyerEmail = email,
-                        TaxIncluded = settings.TaxIncludedInPrice && summary.Tax != 0m ? summary.Tax : null,
+                        TaxIncluded = summary.Tax == 0m ? null : summary.Tax,
                         OrderId = orderId ?? AppService.GetRandomOrderId(),
                         OrderUrl = Request.GetDisplayUrl(),
                         PosData = JObject.FromObject(jposData),

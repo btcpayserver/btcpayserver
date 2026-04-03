@@ -141,10 +141,13 @@ namespace BTCPayServer.Controllers
                 }
 
                 _logger.LogInformation("User {Email} logged in with a login code", user!.Email);
+                var now = DateTimeOffset.UtcNow;
                 var authProperties = new AuthenticationProperties
                 {
+                    IssuedUtc = now,
+                    AllowRefresh = false,
                     IsPersistent = true,
-                    ExpiresUtc = DateTimeOffset.UtcNow.AddHours(24)
+                    ExpiresUtc = now.AddDays(1)
                 };
                 await signInManager.SignInAsync(user, authProperties, "LoginCode");
                 return RedirectToLocal(returnUrl);

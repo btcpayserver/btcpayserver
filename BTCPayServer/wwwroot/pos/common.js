@@ -99,7 +99,7 @@ class PoSOrder {
         ctx.tip = this._round(this._tip);
         ctx.tip += this._round(ctx.priceTaxExcluded * this._tipPercent / 100);
         ctx.priceTaxIncluded = ctx.priceTaxExcluded + ctx.tax;
-        if (this._tipTaxRate != null && ctx.tip > 0) {
+        if (this._tipTaxRate != null && this._tipTaxRate > 0 && ctx.tip > 0) {
             ctx.taxOnTip = this._round(ctx.tip * this._tipTaxRate / 100);
             ctx.tax += ctx.taxOnTip;
         }

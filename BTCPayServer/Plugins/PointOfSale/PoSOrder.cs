@@ -54,7 +54,7 @@ public class PoSOrder
         ctx.PriceTaxExcluded = Round(ctx.PriceTaxExcluded);
         ctx.PriceTaxIncluded = ctx.PriceTaxExcluded + ctx.Tax;
         ctx.Tip = Round(_tip);
-        if (_tipTaxRate is { } rate && ctx.Tip > 0)
+        if (_tipTaxRate is { } rate && rate > 0 && ctx.Tip > 0)
         {
             ctx.TaxOnTip = Round(ctx.Tip * rate / 100.0m);
             ctx.Tax += ctx.TaxOnTip;

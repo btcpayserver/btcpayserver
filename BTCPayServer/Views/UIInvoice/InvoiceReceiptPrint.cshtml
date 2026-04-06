@@ -171,6 +171,13 @@
                                 <td class="val text-end">@posData.Tip</td>
                             </tr>
                         }
+						@if (posData.TaxOnTip != null)
+						{
+							<tr class="sums-data">
+								<td class="key text-secondary">Tax on tip</td>
+								<td class="val text-end">@posData.TaxOnTip</td>
+							</tr>
+						}
                         @if (posData.Total != null)
                         {
                             <tr>

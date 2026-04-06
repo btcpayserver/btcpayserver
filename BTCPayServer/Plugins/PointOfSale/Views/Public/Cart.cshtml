@@ -203,10 +203,16 @@
                                 <span>{{ formatCurrency(tipNumeric, true) }}</span> <span v-if="tipPercent">({{tipPercent}}%)</span>
                             </td>
                         </tr>
-                        <tr v-if="taxNumeric">
+						<tr v-if="summary.taxOnTip">
+							<td class="align-middle" text-translate="true">Tax on tip</td>
+							<td class="align-middle text-end" id="CartTaxOnTip">
+								{{ formatCurrency(summary.taxOnTip, true) }}
+							</td>
+						</tr>
+						<tr v-if="itemTaxNumeric">
                             <td class="align-middle" text-translate="true">Taxes</td>
                             <td class="align-middle text-end" id="CartTax">
-                                <span>{{ formatCurrency(taxNumeric, true) }}</span> <span v-if="taxPercent">({{taxPercent}}%)</span>
+								<span>{{ formatCurrency(itemTaxNumeric, true) }}</span> <span v-if="taxPercent">({{taxPercent}}%)</span>
                             </td>
                         </tr>
                         <tr>

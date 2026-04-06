@@ -66,6 +66,13 @@
                         <td class="text-end">@posData.Tip</td>
                 </tr>
             }
+			@if (posData.TaxOnTip != null)
+			{
+				<tr>
+					<th text-translate="true">Tax on tip</th>
+					<td class="text-end">@posData.TaxOnTip</td>
+				</tr>
+			}
             @if (posData.Total != null)
             {
                 <tr style="border-top-width:3px">

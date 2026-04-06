@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Plugins.PointOfSale;
@@ -15,6 +15,7 @@ public class PosReceiptData
     public string Subtotal { get; set; }
     public string Discount { get; set; }
     public string Tip { get; set; }
+    public string TaxOnTip { get; set; }
     public string Total { get; set; }
     public string ItemsTotal { get; set; }
     public string Tax { get; set; }
@@ -37,10 +38,18 @@ public class PosReceiptData
 
         if (summary.Tax > 0)
         {
-            var taxFormatted = displayFormatter.Currency(summary.Tax, currency, DisplayFormatter.CurrencyFormat.Symbol);
-            if (order.GetTaxRate() is { } r)
-                taxFormatted = $"{taxFormatted} ({r:0.######}%)";
-            Tax = taxFormatted;
+            var itemTax = summary.Tax - summary.TaxOnTip;
+            if (itemTax > 0)
+            {
+                var taxFormatted = displayFormatter.Currency(itemTax, currency, DisplayFormatter.CurrencyFormat.Symbol);
+                if (order.GetTaxRate() is { } r)
+                    taxFormatted = $"{taxFormatted} ({r:0.######}%)";
+                Tax = taxFormatted;
+            }
+            if (summary.TaxOnTip > 0)
+            {
+                TaxOnTip = displayFormatter.Currency(summary.TaxOnTip, currency, DisplayFormatter.CurrencyFormat.Symbol);
+            }
         }
 
         if (summary.ItemsTotal > 0)

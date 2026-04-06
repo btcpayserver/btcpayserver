@@ -396,6 +396,33 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             Price = 10m,
             Features = ["can-access"]
         });
+        Assert.Contains("can-access", plan.Features);
+        plan = await client.UpdateOfferingPlan(user.StoreId, offering.Id, plan.Id, new()
+        {
+            Name = "NewPlanV2",
+            Description = "Updated plan",
+            Price = 10m,
+            Features = []
+        });
+        Assert.Equal(("NewPlanV2", 10m), (plan.Name, plan.Price));
+        Assert.Equal("Updated plan", plan.Description);
+        Assert.DoesNotContain("can-access", plan.Features);
+        plan = await client.UpdateOfferingPlan(user.StoreId, offering.Id, plan.Id, new()
+        {
+            Name = "NewPlanV2",
+            Description = "Updated plan",
+            Price = 10m,
+            Features = ["can-access"]
+        });
+        Assert.Contains("can-access", plan.Features);
+        await AssertEx.AssertValidationError(new[] { "Features" }, () => client.UpdateOfferingPlan(user.StoreId, offering.Id, plan.Id, new()
+        {
+            Name = "NewPlanV2",
+            Description = "Updated plan",
+            Price = 10m,
+            Features = ["can-access2222"]
+        }));
+
         await client.CreateOfferingPlan(user.StoreId, offering.Id, new()
         {
             Name = "2NewPlan2",
@@ -424,9 +451,9 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         Assert.Equal(2, offering.Features.Count);
         Assert.Contains(offering.Features, f => f.Id == "can-access3");
 
-        Assert.Equal(("NewPlan", 10m, "USD"), (plan.Name, plan.Price, plan.Currency));
+        Assert.Equal(("NewPlanV2", 10m, "USD"), (plan.Name, plan.Price, plan.Currency));
         plan = await client.GetOfferingPlan(user.StoreId, offering.Id, plan.Id);
-        Assert.Equal(("NewPlan", 10m, "USD"), (plan.Name, plan.Price, plan.Currency));
+        Assert.Equal(("NewPlanV2", 10m, "USD"), (plan.Name, plan.Price, plan.Currency));
         Assert.Contains("can-access", plan.Features);
 
         offering = await client.GetOffering(offering.StoreId, offering.Id);

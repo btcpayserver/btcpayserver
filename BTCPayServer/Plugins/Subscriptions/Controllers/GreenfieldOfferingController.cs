@@ -199,6 +199,68 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             return await GetOfferingPlan(storeId, offeringId, data.Id);
         }
 
+        [HttpPut("~/api/v1/stores/{storeId}/offerings/{offeringId}/plans/{planId}")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = SubscriptionsPolicies.CanModifyOfferings)]
+        public async Task<IActionResult> UpdateOfferingPlan(string storeId, string offeringId, string planId, [FromBody] CreatePlanRequest request)
+        {
+            var offering = await ctx.Offerings.GetOfferingData(offeringId, storeId);
+            if (offering is null)
+                return OfferingNotFound();
+            var store = await ctx.Stores.FindAsync(storeId);
+            if (store is null)
+                return OfferingNotFound();
+            var plan = offering.Plans.FirstOrDefault(p => p.Id == planId);
+            if (plan is null)
+                return PlanNotFound();
+            if (request?.Price < 0m)
+                ModelState.AddModelError(nameof(request.Price), "Price cannot be negative");
+
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+            request ??= new();
+            plan.Name = request.Name ?? plan.Name;
+            plan.Description = request.Description ?? plan.Description;
+            plan.Currency = request.Currency ?? plan.Currency;
+            plan.GracePeriodDays = request.GracePeriodDays ?? plan.GracePeriodDays;
+            plan.TrialDays = request.TrialDays ?? plan.TrialDays;
+            plan.Price = request.Price ?? plan.Price;
+            plan.Metadata = request.Metadata?.ToString() ?? plan.Metadata;
+            if (request.RecurringType is not null)
+                plan.RecurringType = Mapper.Map(request.RecurringType.Value);
+            plan.OptimisticActivation = request.OptimisticActivation ?? plan.OptimisticActivation;
+            plan.Renewable = request.Renewable ?? plan.Renewable;
+
+            if (request.Features is not null)
+            {
+                var existingPlanFeatures = await ctx.PlanFeatures.Where(pf => pf.PlanId == plan.Id).ToArrayAsync();
+                if (existingPlanFeatures.Length > 0)
+                    ctx.PlanFeatures.RemoveRange(existingPlanFeatures);
+                var offeringFeatures = await ctx.Offerings.Where(o => o.Id == plan.OfferingId).SelectMany(o => o.Features).ToArrayAsync();
+                var featureByCustomId = offeringFeatures.ToDictionary(f => f.CustomId);
+                foreach (var f in request.Features.Distinct())
+                {
+                    if (!featureByCustomId.TryGetValue(f ?? "", out var offeringFeature))
+                    {
+                        ModelState.AddModelError(nameof(request.Features), $"A feature with id '{f}' does not exist on the offering.");
+                    }
+                    else
+                    {
+                        ctx.PlanFeatures.Add(new()
+                        {
+                            PlanId = plan.Id,
+                            FeatureId = offeringFeature.Id
+                        });
+                    }
+                }
+            }
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+
+            await ctx.SaveChangesAsync();
+            ctx.ChangeTracker.Clear();
+            return await GetOfferingPlan(storeId, offeringId, plan.Id);
+        }
+
         [HttpGet("~/api/v1/stores/{storeId}/offerings/{offeringId}/plans/{planId}")]
         public async Task<IActionResult> GetOfferingPlan(string storeId, string offeringId, string planId)
         {

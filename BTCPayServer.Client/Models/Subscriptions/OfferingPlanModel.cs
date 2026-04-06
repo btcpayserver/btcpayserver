@@ -1,4 +1,5 @@
-﻿using BTCPayServer.JsonConverters;
+﻿using System.Collections.Generic;
+using BTCPayServer.JsonConverters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -40,4 +41,6 @@ public class OfferingPlanModel
     public string[] Features { get; set; }
     public bool Renewable { get; set; }
     public JObject Metadata { get; set; }
+    [JsonExtensionData]
+    public Dictionary<string, JToken> AdditionalData { get; set; }
 }

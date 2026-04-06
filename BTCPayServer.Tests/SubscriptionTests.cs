@@ -402,6 +402,28 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             Price = 100m,
             Features = ["can-access2"]
         });
+
+        offering = await client.UpdateOffering(user.StoreId, offering.Id, new OfferingModel()
+        {
+            AppName = "Test Updated",
+            SuccessRedirectUrl = "https://example.com/ok",
+            Metadata = new JObject()
+            {
+                ["subscription"] = "updated"
+            },
+            Features =
+            [
+                new() { Id = "can-access", Description = "Can access the subscription API v2" },
+                new() { Id = "can-access3", Description = "Can access premium endpoints" }
+            ]
+        });
+
+        Assert.Equal("Test Updated", offering.AppName);
+        Assert.Equal("https://example.com/ok", offering.SuccessRedirectUrl);
+        Assert.Equal("updated", offering.Metadata["subscription"]?.ToString());
+        Assert.Equal(2, offering.Features.Count);
+        Assert.Contains(offering.Features, f => f.Id == "can-access3");
+
         Assert.Equal(("NewPlan", 10m, "USD"), (plan.Name, plan.Price, plan.Currency));
         plan = await client.GetOfferingPlan(user.StoreId, offering.Id, plan.Id);
         Assert.Equal(("NewPlan", 10m, "USD"), (plan.Name, plan.Price, plan.Currency));

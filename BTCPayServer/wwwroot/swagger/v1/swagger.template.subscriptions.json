@@ -39,6 +39,59 @@
                         "description": "Offering not found."
                     }
                 }
+            },
+            "put": {
+                "summary": "Update an offering",
+                "description": "Updates an existing offering for the specified store.",
+                "operationId": "UpdateOffering",
+                "tags": [
+                    "Subscriptions"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifyofferings"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OfferingId"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "description": "Offering data to update.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateOfferingModel"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Offering updated successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OfferingModel"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request data."
+                    },
+                    "404": {
+                        "description": "Offering not found."
+                    }
+                }
             }
         },
         "/api/v1/stores/{storeId}/offerings": {
@@ -211,6 +264,62 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "Plan not found."
+                    }
+                }
+            },
+            "put": {
+                "summary": "Update an offering plan",
+                "description": "Updates an existing plan for a specific offering.",
+                "operationId": "UpdateOfferingPlan",
+                "tags": [
+                    "Subscriptions"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifyofferings"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OfferingId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/PlanId"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "description": "Plan data to update for the offering.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreatePlanRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Plan updated successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OfferingPlanModel"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request data."
                     },
                     "404": {
                         "description": "Plan not found."

@@ -212,8 +212,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateValidationError(ModelState);
             }
 
-            app.Name = request.AppName!;
-            app.Archived = request.Archived ?? false;
+            app.Name = request.AppName ?? app.Name;
+            app.Archived = request.Archived ?? app.Archived;
             app.SetSettings(ToCrowdfundSettings(request));
 
             await _appService.UpdateOrCreateApp(app);

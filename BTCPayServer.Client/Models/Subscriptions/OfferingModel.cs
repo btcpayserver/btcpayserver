@@ -16,4 +16,6 @@ public class OfferingModel
     [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
     public List<FeatureModel> Features { get; set; }
     public JObject Metadata { get; set; }
+    [JsonExtensionData]
+    public Dictionary<string, JToken> AdditionalData { get; set; }
 }

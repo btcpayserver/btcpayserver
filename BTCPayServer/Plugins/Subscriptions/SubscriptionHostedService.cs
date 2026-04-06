@@ -484,7 +484,9 @@ public class SubscriptionHostedService(
             {
                 var expired = pc.PreviousPhase is PhaseTypes.Expired;
                 var newExpired = pc.Subscriber.Phase is PhaseTypes.Expired;
-                if (expired != newExpired)
+                var wasTrial = pc.PreviousPhase is PhaseTypes.Trial;
+                var isTrial = pc.Subscriber.Phase is PhaseTypes.Trial;
+                if (expired != newExpired || wasTrial != isTrial)
                     plansToUpdate.Add(evt.Subscriber.PlanId);
             }
         }
@@ -709,7 +711,7 @@ public class SubscriptionHostedService(
                                                                         WHEN 'Quarterly' THEN sp.price / 3.0::numeric
                                                                         WHEN 'Yearly' THEN sp.price / 12.0::numeric
                                                                         WHEN 'Lifetime' THEN 0
-                                                                      END) AS monthly_revenue
+                                                                      END) FILTER (WHERE ss.phase != 'Trial') AS monthly_revenue
                               FROM subs_subscribers ss
                               JOIN subs_plans sp ON ss.plan_id = sp.id
                               WHERE ss.plan_id = @id AND ss.active

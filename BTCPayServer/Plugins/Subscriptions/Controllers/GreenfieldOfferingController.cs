@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins.Subscriptions.Controllers
 {
@@ -57,6 +58,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
         {
             if (request?.AppName is null)
                 ModelState.AddModelError(nameof(request.AppName), "AppName is required");
+            ValidateOfferingFeatures(request);
             if (!ModelState.IsValid || request?.AppName is null)
                 return this.CreateValidationError(ModelState);
             var o = await appService.CreateOffering(storeId, request.AppName);
@@ -77,6 +79,59 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             await ctx.SaveChangesAsync();
             ctx.ChangeTracker.Clear();
             return await GetOffering(storeId, offering?.Id ?? "");
+        }
+
+        [HttpPut("~/api/v1/stores/{storeId}/offerings/{offeringId}")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = SubscriptionsPolicies.CanModifyOfferings)]
+        public async Task<IActionResult> UpdateOffering(string storeId, string offeringId, [FromBody] OfferingModel request)
+        {
+            if (request?.AppName is null)
+                ModelState.AddModelError(nameof(request.AppName), "AppName is required");
+            ValidateOfferingFeatures(request);
+            if (!ModelState.IsValid || request?.AppName is null)
+                return this.CreateValidationError(ModelState);
+
+            var offering = await ctx.Offerings.GetOfferingData(offeringId, storeId);
+            if (offering is null)
+                return OfferingNotFound();
+
+            offering.App.Name = request.AppName ?? offering.App.Name;
+            offering.SuccessRedirectUrl = request.SuccessRedirectUrl ?? offering.SuccessRedirectUrl;
+            offering.Metadata = request.Metadata?.ToString() ?? offering.Metadata;
+
+            if (request.Features is not null)
+            {
+                UIOfferingController.UpdateFeatures(ctx, offering, new()
+                {
+                    Features = request.Features.Select(f => new ConfigureOfferingViewModel.FeatureViewModel()
+                    {
+                        Id = f.Id,
+                        ShortDescription = f.Description
+                    }).ToList()
+                });
+            }
+
+            await ctx.SaveChangesAsync();
+            ctx.ChangeTracker.Clear();
+            return await GetOffering(storeId, offeringId);
+        }
+
+        private void ValidateOfferingFeatures(OfferingModel? request)
+        {
+            if (request?.Features is null)
+                return;
+            for (var i = 0; i < request.Features.Count; i++)
+            {
+                var feature = request.Features[i];
+                if (feature is null)
+                {
+                    ModelState.AddModelError($"{nameof(request.Features)}[{i}]", "Feature is required");
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(feature.Id))
+                    ModelState.AddModelError($"{nameof(request.Features)}[{i}].{nameof(feature.Id)}", "Feature id is required");
+            }
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/offerings/{offeringId}/plans")]

@@ -138,6 +138,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomTipText = settings.CustomTipText,
                 CustomTipPercentages = settings.CustomTipPercentages,
                 DefaultTaxRate =  settings.DefaultTaxRate,
+                TipTaxRate = settings.TipTaxRate,
                 AppId = appId,
                 StoreId = store.Id,
                 HtmlLang = settings.HtmlLang,
@@ -294,6 +295,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 order.AddDiscountRate(d);
             if (tip is { } t)
                 order.AddTip(t);
+            order.SetTipTaxRate(settings.TipTaxRate);
 
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
@@ -583,6 +585,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 AppName = app.Name,
                 Title = settings.Title,
                 DefaultTaxRate = settings.DefaultTaxRate,
+                TipTaxRate = settings.TipTaxRate,
                 DefaultView = settings.DefaultView,
                 ShowItems = settings.ShowItems,
                 ShowCustomAmount = settings.ShowCustomAmount,
@@ -680,6 +683,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 Title = vm.Title,
                 DefaultView = vm.DefaultView,
                 DefaultTaxRate = vm.DefaultTaxRate ?? 0,
+                TipTaxRate = vm.TipTaxRate ?? 0,
                 ShowItems = vm.ShowItems,
                 ShowCustomAmount = vm.ShowCustomAmount,
                 ShowDiscount = vm.ShowDiscount,

@@ -1,4 +1,4 @@
-﻿#nullable  enable
+#nullable  enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +10,7 @@ public class PoSOrder
     private readonly int _decimals;
     decimal _discount;
     decimal _tip;
+    decimal? _tipTaxRate;
     public List<ItemLine> ItemLines = new();
 
     public PoSOrder(int decimals)
@@ -27,6 +28,7 @@ public class PoSOrder
     {
         public decimal Discount { get; set; }
         public decimal Tax { get; set; }
+        public decimal TaxOnTip { get; set; }
         public decimal ItemsTotal { get; set; }
         public decimal PriceTaxExcluded { get; set; }
         public decimal Tip { get; set; }
@@ -51,9 +53,14 @@ public class PoSOrder
         }
         ctx.PriceTaxExcluded = Round(ctx.PriceTaxExcluded);
         ctx.PriceTaxIncluded = ctx.PriceTaxExcluded + ctx.Tax;
-        ctx.PriceTaxIncludedWithTips = ctx.PriceTaxIncluded + _tip;
-        ctx.PriceTaxIncludedWithTips = Round(ctx.PriceTaxIncludedWithTips);
         ctx.Tip = Round(_tip);
+        if (_tipTaxRate is { } rate && ctx.Tip > 0)
+        {
+            ctx.TaxOnTip = Round(ctx.Tip * rate / 100.0m);
+            ctx.Tax += ctx.TaxOnTip;
+        }
+        ctx.PriceTaxIncludedWithTips = ctx.PriceTaxIncluded + ctx.Tip + ctx.TaxOnTip;
+        ctx.PriceTaxIncludedWithTips = Round(ctx.PriceTaxIncludedWithTips);
         ctx.ItemsTotal = ctx.PriceTaxExcluded + ctx.Discount;
         return ctx;
     }
@@ -63,6 +70,11 @@ public class PoSOrder
     public void AddTip(decimal tip)
     {
         _tip = Round(tip);
+    }
+
+    public void SetTipTaxRate(decimal? tipTaxRate)
+    {
+        _tipTaxRate = tipTaxRate;
     }
 
     /// <summary>

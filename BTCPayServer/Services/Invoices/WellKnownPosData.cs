@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Invoices;
@@ -17,10 +17,11 @@ public class WellKnownPosData
     }
 
     public static bool IsWellKnown(string field)
-    => field.ToLowerInvariant() is "cart" or "subtotal" or "discount" or "tip" or "total" or "tax" or "itemstotal" or "discountamount";
+    => field.ToLowerInvariant() is "cart" or "subtotal" or "discount" or "tip" or "total" or "tax" or "itemstotal" or "discountamount" or "taxontip";
     public object Subtotal { get; set; }
     public object Discount { get; set; }
     public object Tip { get; set; }
+    public object TaxOnTip { get; set; }
     public object Total { get; set; }
     public object ItemsTotal { get; set; }
     public object Tax { get; set; }

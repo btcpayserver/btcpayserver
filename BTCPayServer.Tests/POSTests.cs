@@ -441,6 +441,7 @@ goodies:
 
             // Setup POS
             await s.CreateApp("PointOfSale");
+            var editUrl = s.Page.Url;
             await s.Page.ClickAsync("label[for='DefaultView_Cart']");
             await s.Page.FillAsync("#Currency", "EUR");
             Assert.False(await s.Page.IsCheckedAsync("#EnableTips"));
@@ -618,6 +619,44 @@ goodies:
                 throw;
             }
 
+            await s.GoToUrl(editUrl);
+            await s.Page.FillAsync("#TipTaxRate", "5");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "App updated");
+
+            await s.GoToUrl(posUrl);
+            await s.Page.WaitForSelectorAsync("#PosItems");
+            await s.Page.ClickAsync(".posItem:nth-child(1) .btn-primary");
+            await s.Page.ClickAsync("#Tip-10");
+
+            await AssertCartSummary(s, new()
+            {
+                Subtotal = "1,00 €",
+                Taxes = "0,10 € (10%)",
+                Tip = "0,10 € (10%)",
+                TaxOnTip = "0,01 €",
+                Total = "1,21 €"
+            });
+
+            await s.Page.ClickAsync("#CartSubmit");
+            await s.Page.WaitForSelectorAsync("#Checkout");
+            await s.PayInvoice(true);
+
+            await s.Page.ClickAsync("#ReceiptLink");
+            await s.Page.WaitForSelectorAsync("#CartData table");
+            await AssertReceipt(s, new()
+            {
+                Items = [
+                    new("Green Tea", "1 x 1,00 € = 1,00 €")
+                ],
+                Sums = [
+                    new("Subtotal", "1,00 €"),
+                    new("Tax", "0,10 € (10%)"),
+                    new("Tip", "0,10 € (10%)"),
+                    new("Tax on tip", "0,01 €"),
+                    new("Total", "1,21 €")
+                ]
+            });
 
             // Guest user can access recent transactions
             await s.GoToHome();
@@ -647,11 +686,12 @@ goodies:
             public string ItemsTotal { get; set; }
             public string Discount { get; set; }
             public string Tip { get; set; }
+            public string TaxOnTip { get; set; }
         }
         private async Task AssertCartSummary(PlaywrightTester s, CartSummaryAssertion o)
         {
-            string[] ids = ["CartItemsTotal", "CartDiscount", "CartAmount", "CartTip", "CartTax", "CartTotal"];
-            string[] values = [o.ItemsTotal, o.Discount, o.Subtotal, o.Tip, o.Taxes, o.Total];
+            string[] ids = ["CartItemsTotal", "CartDiscount", "CartAmount", "CartTip", "CartTaxOnTip", "CartTax", "CartTotal"];
+            string[] values = [o.ItemsTotal, o.Discount, o.Subtotal, o.Tip, o.TaxOnTip, o.Taxes, o.Total];
             for (int i = 0; i < ids.Length; i++)
             {
                 if (values[i] != null)

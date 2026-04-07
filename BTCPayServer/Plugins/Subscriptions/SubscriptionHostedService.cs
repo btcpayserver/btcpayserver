@@ -371,12 +371,12 @@ public class SubscriptionHostedService(
         if (amount <= 0 || amount > credit)
             return null;
 
-        var debitResult = await subCtx.TryCreditDebitSubscriber(sub, $"Credit refund (Subscriber Id: {subscriberId})", 0m, amount);
-        if (debitResult is null)
-            return null;
-
         var store = await ctx.Stores.FindAsync(sub.Plan.Offering.App.StoreDataId);
         if (store is null)
+            return null;
+
+        var debitResult = await subCtx.TryCreditDebitSubscriber(sub, $"Credit refund (Subscriber Id: {subscriberId})", 0m, amount);
+        if (debitResult is null)
             return null;
 
         var pullPaymentId = await pullPaymentService.CreatePullPayment(store, new CreatePullPaymentRequest
@@ -388,16 +388,6 @@ public class SubscriptionHostedService(
         });
         subCtx.AddEvent(new SubscriptionEvent.CreditRefunded(sub, amount, sub.Plan.Currency, pullPaymentId, requestBaseUrl));
         return pullPaymentId;
-    }
-
-    private async Task<bool> TryClaimRefundForRestoration(ApplicationDbContext ctx, string pullPaymentId)
-    {
-        var rowsAffected = await ctx.Database.GetDbConnection().ExecuteAsync("""
-        UPDATE subs_credit_refunds
-        SET deducted = false
-        WHERE pull_payment_id = @pullPaymentId AND deducted = true
-        """, new { pullPaymentId });
-        return rowsAffected > 0;
     }
 
     private static HashSet<string> GetActiveMemberChangedPlans(SubscriptionContext subCtx)

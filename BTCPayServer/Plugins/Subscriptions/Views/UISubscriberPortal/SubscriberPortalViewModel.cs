@@ -88,8 +88,6 @@ public class SubscriberPortalViewModel
     [BindingBehavior(BindingBehavior.Never)]
     [ValidateNever]
     public PlanData Plan => Data.Subscriber.Plan;
-    [ValidateNever]
-    public string RenewalPullPaymentUrl { get; set; }
     public string Anchor { get; set; }
     public string Url { get; set; }
     public string Logo => StoreBranding?.LogoUrl ?? BTCPayLogo;

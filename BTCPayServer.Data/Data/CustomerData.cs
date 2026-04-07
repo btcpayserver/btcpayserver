@@ -1,4 +1,4 @@
-﻿#nullable  enable
+#nullable  enable
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -65,6 +65,9 @@ public class CustomerData : BaseEntityData
 
     [NotMapped]
     public ContactSetter Email => new ContactSetter(this, "Email");
+
+    [NotMapped]
+    public ContactSetter NotificationEmail => new ContactSetter(this, "NotificationEmail");
 
     public void SetContact(string type, string? value)
     {

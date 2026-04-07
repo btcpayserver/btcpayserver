@@ -477,37 +477,6 @@
 		</div>
 	</div>
 
-	@if (Model.Subscriber.Plan.RecurringType is not PlanData.RecurringInterval.Lifetime)
-	{
-		<div class="card">
-			<div class="card-header">
-				<i class="fa fa-bell me-2"></i>Notification
-			</div>
-			<div class="card-body">
-				<p class="text-muted mb-3">
-					@foreach (var identity in Model.Subscriber.Customer.CustomerIdentities)
-					{
-						<vc:contact type="@identity.Type" value="@identity.Value"></vc:contact>
-					}
-				</p>
-				<form method="post" class="mb-3">
-					<label class="form-label">Notification email</label>
-					<div class="input-group">
-						<span class="input-group-text"><i class="fa fa-envelope"></i></span>
-						<input type="email" name="NotificationEmail"
-								class="form-control" value="@Model.Subscriber.Customer.NotificationEmail.Get()"
-								placeholder="@Model.Subscriber.Customer.Email.Get()" />
-						<button type="submit" name="command" value="update-notification-email" class="btn btn-outline-secondary">
-							Update
-						</button>
-					</div>
-					<small class="text-muted">Leave blank to use subscription account email for notifications.</small>
-				</form>
-				<p class="form-text mb-0">Payment reminder will be sent <span class="fw-bold">@Model.Subscriber.PaymentReminderDaysOrDefault days</span> before expiration.</p>
-			</div>
-		</div>
-	}
-
     @if (Model.Plan.PlanChanges.Any())
     {
         <!-- Plan Management -->

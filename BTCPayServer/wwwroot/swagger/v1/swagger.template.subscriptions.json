@@ -327,50 +327,6 @@
                 }
             }
         },
-        "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers": {
-            "get": {
-                "summary": "Get all subscribers",
-                "description": "Retrieves all subscribers for a specific offering.",
-                "operationId": "GetSubscribers",
-                "tags": [
-                    "Subscriptions"
-                ],
-                "security": [
-                    {
-                        "API_Key": [
-                            "btcpay.store.canviewofferings"
-                        ],
-                        "Basic": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/StoreId"
-                    },
-                    {
-                        "$ref": "#/components/parameters/OfferingId"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Subscribers retrieved successfully.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/SubscriberModel"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Offering not found."
-                    }
-                }
-            }
-        },
         "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}": {
             "get": {
                 "summary": "Get a subscriber",
@@ -455,7 +411,7 @@
                 "summary": "Get subscriber credit balance",
                 "description": "Retrieves the credit balance for a subscriber in the specified currency.",
                 "operationId": "GetCredit",
-                "tags": [ "Subscriptions" ],
+                "tags": ["Subscriptions"],
                 "security": [
                     {
                         "API_Key": [
@@ -495,7 +451,7 @@
                 "summary": "Update subscriber credit balance",
                 "description": "Adds credit or charges credit for a subscriber in a given currency.",
                 "operationId": "UpdateCredit",
-                "tags": [ "Subscriptions" ],
+                "tags": ["Subscriptions"],
                 "security": [
                     {
                         "API_Key": [
@@ -554,7 +510,7 @@
                 "summary": "Suspend a subscriber",
                 "description": "Suspends a subscriber for the specified offering.",
                 "operationId": "SuspendSubscriber",
-                "tags": [ "Subscriptions" ],
+                "tags": ["Subscriptions"],
                 "security": [
                     {
                         "API_Key": [
@@ -601,7 +557,7 @@
                 "summary": "Unsuspend a subscriber",
                 "description": "Removes suspension from a subscriber for the specified offering.",
                 "operationId": "UnsuspendSubscriber",
-                "tags": [ "Subscriptions" ],
+                "tags": ["Subscriptions"],
                 "security": [
                     {
                         "API_Key": [
@@ -639,7 +595,7 @@
                 "summary": "Update subscriber dates",
                 "description": "Manually overrides the subscription start date and/or expiration date for a subscriber.\n\nOmitting a field leaves the corresponding date unchanged. An empty body `{}` is a no-op and returns the subscriber unchanged.\n\nWhen `expirationDate` is provided, the grace period end and reminder date are recalculated automatically from the plan settings.",
                 "operationId": "UpdateSubscriberDates",
-                "tags": [ "Subscriptions" ],
+                "tags": ["Subscriptions"],
                 "security": [
                     {
                         "API_Key": [
@@ -702,7 +658,7 @@
                 "summary": "Get a plan checkout",
                 "description": "Retrieves the details of a plan checkout session.",
                 "operationId": "GetPlanCheckout",
-                "tags": [ "Subscriptions" ],
+                "tags": ["Subscriptions"],
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/PlanCheckoutId"
@@ -726,7 +682,7 @@
                 "summary": "Proceed with a plan checkout",
                 "description": "Continues a plan checkout session.\n\n**Behavior:**\n- If payment is required, the checkout assigns a BTCPay Server invoice and `invoiceId` will be set.\n- If no payment is required (for example, the subscriber already has enough credit or no credit purchase is needed), the plan will start immediately and `planStarted` will be `true`.",
                 "operationId": "ProceedPlanCheckout",
-                "tags": [ "Subscriptions" ],
+                "tags": ["Subscriptions"],
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/PlanCheckoutId"
@@ -771,7 +727,7 @@
                 "summary": "Create a plan checkout session",
                 "description": "Creates a checkout session for purchasing or activating a plan.",
                 "operationId": "CreatePlanCheckout",
-                "tags": [ "Subscriptions" ],
+                "tags": ["Subscriptions"],
                 "security": [
                     {
                         "API_Key": [
@@ -809,7 +765,7 @@
                 "summary": "Create a subscriber portal session",
                 "description": "Creates a portal session that allows a subscriber to manage their subscriptions, view billing details, or update account information.",
                 "operationId": "CreatePortalSession",
-                "tags": [ "Subscriptions" ],
+                "tags": ["Subscriptions"],
                 "security": [
                     {
                         "API_Key": [
@@ -846,7 +802,7 @@
                 "summary": "Get a subscriber portal session",
                 "description": "Retrieves the details of an existing subscriber portal session.",
                 "operationId": "GetPortalSession",
-                "tags": [ "Subscriptions" ],
+                "tags": ["Subscriptions"],
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/PortalSessionId"

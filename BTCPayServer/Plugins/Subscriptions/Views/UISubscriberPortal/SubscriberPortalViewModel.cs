@@ -88,9 +88,6 @@ public class SubscriberPortalViewModel
     [BindingBehavior(BindingBehavior.Never)]
     [ValidateNever]
     public PlanData Plan => Data.Subscriber.Plan;
-
-    [ValidateNever]
-    public string NotificationEmail { get; set; }
     public decimal? RefundAmount { get; set; }
     public bool CanRefund { get; set; }
     [ValidateNever]

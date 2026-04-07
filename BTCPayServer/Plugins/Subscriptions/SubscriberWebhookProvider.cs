@@ -31,7 +31,7 @@ public class SubscriberWebhookProvider : WebhookTriggerProvider<SubscriptionEven
         {
             ["Phase"] = evt.Subscriber.Phase.ToString(),
             // TODO: When the subscriber can customize the email, also check it!
-            ["Email"] = evt.Subscriber.Customer.NotificationEmail.Get() ?? evt.Subscriber.Customer.Email.Get(),
+            ["Email"] = evt.Subscriber.Customer.Email.Get(),
             ["Metadata"] = JObject.Parse(evt.Subscriber.Metadata)
         };
         model["Customer"] = new JObject()

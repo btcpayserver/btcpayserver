@@ -35,9 +35,6 @@ public class SubscriptionsPlugin : BaseBTCPayServerPlugin
         services.AddSingleton<SubscriptionHostedService>();
         services.AddSingleton<IHostedService>(s => s.GetRequiredService<SubscriptionHostedService>());
 
-        services.AddReportProvider<SubscriptionsReportProvider>();
-        services.AddReportProvider<SubscriptionTransactionsReportProvider>();
-
         services.AddSingleton(new BuiltInPermissionScopeProvider.RouteValueToStoreIdQuery(
             "offeringId", "SELECT a.\"StoreDataId\" FROM \"Apps\" a JOIN subs_offerings o ON o.app_id=a.\"Id\" WHERE o.id=@id"
         ));

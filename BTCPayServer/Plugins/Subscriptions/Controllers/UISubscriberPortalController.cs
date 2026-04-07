@@ -208,7 +208,8 @@ public class UISubscriberPortalController(
                     break;
                 }
 
-            case "migrate" or "pay":
+            case "migrate":
+            case "pay":
                 {
                     var onPay = command == "migrate" ? PlanCheckoutData.OnPayBehavior.HardMigration : PlanCheckoutData.OnPayBehavior.SoftMigration;
                     if (command == "migrate" && changedPlanId is null)
@@ -227,24 +228,6 @@ public class UISubscriberPortalController(
                     return result is PlanMigrationResult.Checkout c
                         ? await RedirectToPlanCheckoutPayment(c.CheckoutId, cancellationToken)
                         : RedirectToSubscriberPortal(portalSessionId);
-                }
-
-            case "update-notification-email":
-                {
-                    var email = vm.NotificationEmail?.Trim();
-                    if (!string.IsNullOrEmpty(email) && !email.IsValidEmail())
-                    {
-                        TempData.SetStatusMessageModel(new StatusMessageModel
-                        {
-                            Message = StringLocalizer["Please enter a valid email address."],
-                            Severity = StatusMessageModel.StatusSeverity.Error
-                        });
-                        return RedirectToSubscriberPortal(portalSessionId);
-                    }
-                    session.Subscriber.Customer.NotificationEmail.Set(string.IsNullOrEmpty(email) ? null : email);
-                    await ctx.SaveChangesAsync(cancellationToken);
-                    TempData.SetStatusSuccess(StringLocalizer["Notification email updated."]);
-                    break;
                 }
 
             case "refund-credit":

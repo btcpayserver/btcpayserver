@@ -10,9 +10,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Plugins.Subscriptions;
 
-public class SubscriptionsReportProvider(ApplicationDbContextFactory dbContextFactory, DisplayFormatter displayFormatter) : ReportProvider
+public class SubscribersReportProvider(ApplicationDbContextFactory dbContextFactory, DisplayFormatter displayFormatter) : ReportProvider
 {
-    public override string Name => "Subscriptions";
+    public override string Name => "Subscribers";
 
     public override async Task Query(QueryContext queryContext, CancellationToken cancellation)
     {
@@ -24,6 +24,7 @@ public class SubscriptionsReportProvider(ApplicationDbContextFactory dbContextFa
                 new("Offering", "text"),
                 new("Plan", "text"),
                 new("Email", "text"),
+                new("CustomerId", "text"),
                 new("Phase", "text"),
                 new("Active", "boolean"),
                 new("CreditBalance", "amount"),
@@ -42,7 +43,7 @@ public class SubscriptionsReportProvider(ApplicationDbContextFactory dbContextFa
         };
 
         await using var ctx = dbContextFactory.CreateContext();
-        var subscribers = await ctx.Subscribers
+        var subscribers = await ctx.Subscribers.AsNoTracking()
             .Include(s => s.Plan).ThenInclude(p => p.Offering).ThenInclude(o => o.App)
             .Include(s => s.Customer).ThenInclude(c => c.CustomerIdentities)
             .Include(s => s.Credits)
@@ -57,6 +58,7 @@ public class SubscriptionsReportProvider(ApplicationDbContextFactory dbContextFa
             data.Add(sub.Plan.Offering.App.Name);
             data.Add(sub.Plan.Name);
             data.Add(sub.Customer.GetPrimaryIdentity());
+            data.Add(sub.CustomerId);
             data.Add(sub.Phase.ToString());
             data.Add(sub.IsActive);
             data.Add(displayFormatter.ToFormattedAmount(sub.GetCredit(), sub.Plan.Currency));
@@ -65,9 +67,9 @@ public class SubscriptionsReportProvider(ApplicationDbContextFactory dbContextFa
     }
 }
 
-public class SubscriptionTransactionsReportProvider(ApplicationDbContextFactory dbContextFactory, DisplayFormatter displayFormatter) : ReportProvider
+public class SubscriberCreditHistoryReportProvider(ApplicationDbContextFactory dbContextFactory, DisplayFormatter displayFormatter) : ReportProvider
 {
-    public override string Name => "Subscription Transactions";
+    public override string Name => "Credit History";
 
     public override async Task Query(QueryContext queryContext, CancellationToken cancellation)
     {
@@ -78,6 +80,7 @@ public class SubscriptionTransactionsReportProvider(ApplicationDbContextFactory 
                 new("Date", "datetime"),
                 new("Email", "text"),
                 new("Offering", "text"),
+                new("OfferingId", "text"),
                 new("Plan", "text"),
                 new("Description", "text"),
                 new("Debit", "amount"),
@@ -97,7 +100,7 @@ public class SubscriptionTransactionsReportProvider(ApplicationDbContextFactory 
         };
 
         await using var ctx = dbContextFactory.CreateContext();
-        var history = await ctx.SubscriberCreditHistory
+        var history = await ctx.SubscriberCreditHistory.AsNoTracking()
             .Include(h => h.SubscriberCredit).ThenInclude(c => c.Subscriber).ThenInclude(s => s.Plan).ThenInclude(p => p.Offering).ThenInclude(o => o.App)
             .Include(h => h.SubscriberCredit).ThenInclude(c => c.Subscriber).ThenInclude(s => s.Customer).ThenInclude(c => c.CustomerIdentities)
             .Where(h => h.SubscriberCredit.Subscriber.Plan.Offering.App.StoreDataId == queryContext.StoreId)
@@ -112,6 +115,7 @@ public class SubscriptionTransactionsReportProvider(ApplicationDbContextFactory 
             data.Add(entry.CreatedAt);
             data.Add(sub.Customer.GetPrimaryIdentity());
             data.Add(sub.Plan.Offering.App.Name);
+            data.Add(sub.Plan.OfferingId);
             data.Add(sub.Plan.Name);
             data.Add(entry.Description);
             data.Add(entry.Debit > 0 ? displayFormatter.ToFormattedAmount(entry.Debit, currency) : null);

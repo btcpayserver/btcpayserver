@@ -99,7 +99,7 @@
                 "summary": "List offerings for a store",
                 "description": "Retrieves all offerings associated with the specified store.",
                 "operationId": "GetOfferings",
-                "tags": [ "Subscriptions" ],
+                "tags": ["Subscriptions"],
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/StoreId"

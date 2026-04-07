@@ -1,4 +1,4 @@
-using BTCPayServer.Data.Subscriptions;
+﻿using BTCPayServer.Data.Subscriptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Data;

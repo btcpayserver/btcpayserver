@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Models;
@@ -175,78 +174,64 @@ public class UISubscriberPortalController(
         var session = await ctx.PortalSessions.GetActiveById(portalSessionId);
         if (session is null)
             return NotFound();
-
-        switch (command)
+        if (command == "add-credit")
         {
-            case "add-credit":
+            var value = vm.Credit?.InputAmount;
+            if (value is null || value.Value <= 0)
+                ModelState.AddModelError("Credit.InputAmount", StringLocalizer["Please enter a positive amount"]);
+            if (!ModelState.IsValid)
+                return await SubscriberPortal(portalSessionId, cancellationToken: cancellationToken);
+
+            try
+            {
+                var invoiceId = await SubsService.CreateCreditCheckout(session.Id, value);
+                if (invoiceId is not null)
                 {
-                    var value = vm.Credit?.InputAmount;
-                    if (value is null || value.Value <= 0)
-                        ModelState.AddModelError("Credit.InputAmount", StringLocalizer["Please enter a positive amount"]);
-                    if (!ModelState.IsValid)
-                        return await SubscriberPortal(portalSessionId, cancellationToken: cancellationToken);
-
-                    try
-                    {
-                        var invoiceId = await SubsService.CreateCreditCheckout(session.Id, value);
-                        if (invoiceId is not null)
-                        {
-                            return RedirectToInvoiceCheckout(invoiceId);
-                        }
-                    }
-                    catch (BitpayHttpException ex)
-                    {
-                        TempData.SetStatusMessageModel(new StatusMessageModel
-                        {
-                            Html = ex.Message.Replace("\n", "<br />", StringComparison.OrdinalIgnoreCase),
-                            Severity = StatusMessageModel.StatusSeverity.Error,
-                            AllowDismiss = true
-                        });
-                        return RedirectToPlanCheckout(portalSessionId);
-                    }
-                    break;
+                    return RedirectToInvoiceCheckout(invoiceId);
                 }
-
-            case "migrate":
-            case "pay":
+            }
+            catch (BitpayHttpException ex)
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
                 {
-                    var onPay = command == "migrate" ? PlanCheckoutData.OnPayBehavior.HardMigration : PlanCheckoutData.OnPayBehavior.SoftMigration;
-                    if (command == "migrate" && changedPlanId is null)
-                    {
-                        if (session.Subscriber.Plan.PlanChanges.Count == 1)
-                            changedPlanId = session.Subscriber.Plan.PlanChanges[0].PlanChangeId;
-                        else
-                            return RedirectToSubscriberPortal(portalSessionId, "plans");
-                    }
-                    var result = await SubsService.CreatePlanMigrationCheckout(session.Id, changedPlanId, onPay, Request.GetRequestBaseUrl());
-                    if (result is PlanMigrationResult.Scheduled)
-                    {
-                        TempData.SetStatusSuccess(StringLocalizer["Your plan will change at the end of your current billing period."]);
-                        return RedirectToSubscriberPortal(portalSessionId);
-                    }
-                    return result is PlanMigrationResult.Checkout c
-                        ? await RedirectToPlanCheckoutPayment(c.CheckoutId, cancellationToken)
-                        : RedirectToSubscriberPortal(portalSessionId);
-                }
-
-            case "update-auto-renewal":
-                {
-                    session.Subscriber.AutoRenew = !session.Subscriber.AutoRenew;
-                    await ctx.SaveChangesAsync(cancellationToken);
-                    break;
-                }
-
-            case "cancel-scheduled-change":
-                {
-                    session.Subscriber.NewPlanId = null;
-                    session.Subscriber.NewPlan = null;
-                    await ctx.SaveChangesAsync(cancellationToken);
-                    TempData.SetStatusSuccess(StringLocalizer["Scheduled plan change cancelled."]);
-                    break;
-                }
-
-            default:
-                break;
+                    Html = ex.Message.Replace("\n", "<br />", StringComparison.OrdinalIgnoreCase),
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    AllowDismiss = true
+                });
+                return RedirectToPlanCheckout(portalSessionId);
+            }
+        }
+        else if (command is "migrate" or "pay")
+        {
+            var onPay = command == "migrate" ? PlanCheckoutData.OnPayBehavior.HardMigration : PlanCheckoutData.OnPayBehavior.SoftMigration;
+            if (command == "migrate" && changedPlanId is null)
+            {
+                if (session.Subscriber.Plan.PlanChanges.Count == 1)
+                    changedPlanId = session.Subscriber.Plan.PlanChanges[0].PlanChangeId;
+                else
+                    return RedirectToSubscriberPortal(portalSessionId, "plans");
+            }
+            var result = await SubsService.CreatePlanMigrationCheckout(session.Id, changedPlanId, onPay, Request.GetRequestBaseUrl());
+            if (result is PlanMigrationResult.Scheduled)
+            {
+                TempData.SetStatusSuccess(StringLocalizer["Your plan will change at the end of your current billing period."]);
+                return RedirectToSubscriberPortal(portalSessionId);
+            }
+            return result is PlanMigrationResult.Checkout c
+                ? await RedirectToPlanCheckoutPayment(c.CheckoutId, cancellationToken)
+                : RedirectToSubscriberPortal(portalSessionId);
+        }
+        else if (command == "update-auto-renewal")
+        {
+            session.Subscriber.AutoRenew = !session.Subscriber.AutoRenew;
+            await ctx.SaveChangesAsync(cancellationToken);
+        }
+        else if (command == "cancel-scheduled-change")
+        {
+            session.Subscriber.NewPlanId = null;
+            session.Subscriber.NewPlan = null;
+            await ctx.SaveChangesAsync(cancellationToken);
+            TempData.SetStatusSuccess(StringLocalizer["Scheduled plan change cancelled."]);
         }
         return RedirectToSubscriberPortal(portalSessionId);
     }

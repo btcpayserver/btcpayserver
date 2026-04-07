@@ -1,8 +1,10 @@
 #nullable enable
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Plugins.Bitpay.Controllers;
 using BTCPayServer.Plugins.Bitpay.Security;
+using BTCPayServer.Plugins.GlobalSearch;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Routing;
@@ -36,5 +38,16 @@ public class BitpayPlugin : BaseBTCPayServerPlugin
         services.AddAuthentication()
             .AddScheme<BitpayAuthenticationOptions, BitpayAuthenticationHandler>(AuthenticationSchemes.Bitpay, o => { });
         services.AddUIExtension("store-category-nav", "/Plugins/Bitpay/Views/NavExtension.cshtml");
+
+        services.AddStaticSearch(new ActionResultItemViewModel()
+        {
+            RequiredPolicy = Policies.CanViewStoreSettings,
+            Title = "Access Tokens",
+            Action = nameof(UIStoresTokenController.ListTokens),
+            Controller = "UIStoresToken",
+            Values = (ctx) => new { storeId = ctx.Store!.Id, area = Area },
+            Category = "Store",
+            Keywords = new[] { "Tokens" }
+        });
     }
 }

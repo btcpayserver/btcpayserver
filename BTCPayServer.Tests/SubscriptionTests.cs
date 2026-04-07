@@ -346,6 +346,42 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         await portal.AssertNoScheduledChange();
     }
 
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanUpdateNotificationEmail()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.RegisterNewUser();
+        await s.CreateNewStore();
+        await s.AddDerivationScheme();
+
+        var offering = await CreateNewSubscription(s);
+        await offering.NewSubscriber("Enterprise Plan", "enterprise@example.com", true);
+        await offering.GoToSubscribers();
+
+        await using var portal = await offering.GoToPortal("enterprise@example.com");
+
+        await portal.ClickCallToAction();
+        await s.Server.WaitForEvent<SubscriptionEvent.SubscriberCredited>(async () =>
+        {
+            await s.PayInvoice(mine: true);
+        });
+        await s.ClickCheckoutRedirect();
+        await portal.AssertNoCallToAction();
+
+        await portal.UpdateNotificationEmail("notify@example.com");
+        await s.FindAlertMessage(partialText: "Notification email updated");
+
+        var notifEmail = await s.Page.Locator("input[name='NotificationEmail']").InputValueAsync();
+        Assert.Equal("notify@example.com", notifEmail);
+
+        await portal.UpdateNotificationEmail("");
+        await s.FindAlertMessage(partialText: "Notification email updated");
+        notifEmail = await s.Page.Locator("input[name='NotificationEmail']").InputValueAsync();
+        Assert.Equal("", notifEmail);
+    }
+
     private static decimal GetUnusedPeriodValue(int usedDays, decimal planPrice, int daysInPeriod)
     {
         var unused = (daysInPeriod - usedDays) / (double)daysInPeriod;
@@ -1257,6 +1293,12 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         {
             await s.Page.ClickAsync(".scheduled-change-banner button[value='cancel-scheduled-change']");
             await s.FindAlertMessage(partialText: "cancelled");
+        }
+
+        public async Task UpdateNotificationEmail(string email)
+        {
+            await s.Page.FillAsync("input[name='NotificationEmail']", email);
+            await s.Page.ClickAsync("button[value='update-notification-email']");
         }
     }
 

@@ -350,7 +350,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
 
     [Fact]
     [Trait("Playwright", "Playwright-2")]
-    public async Task CanRefundCredit()
+    public async Task CanRefundCreditFromMerchant()
     {
         await using var s = CreatePlaywrightTester();
         await s.StartAsync();
@@ -362,59 +362,34 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         await offering.NewSubscriber("Enterprise Plan", "enterprise@example.com", true);
         await offering.GoToSubscribers();
 
-        await using var portal = await offering.GoToPortal("enterprise@example.com");
-
-        await portal.ClickCallToAction();
-        await s.Server.WaitForEvent<SubscriptionEvent.SubscriberCredited>(async () =>
+        await using (var portal = await offering.GoToPortal("enterprise@example.com"))
         {
-            await s.PayInvoice(mine: true);
-        });
-        await s.ClickCheckoutRedirect();
-        await portal.AssertNoCallToAction();
+            await portal.ClickCallToAction();
+            await s.Server.WaitForEvent<SubscriptionEvent.SubscriberCredited>(async () =>
+            {
+                await s.PayInvoice(mine: true);
+            });
+            await s.ClickCheckoutRedirect();
+            await portal.AssertNoCallToAction();
 
-        Assert.Equal(0, await s.Page.Locator("button[value='refund-credit']").CountAsync());
-
-        await portal.AddCredit("150");
-        await s.Server.WaitForEvent<SubscriptionEvent.SubscriberCredited>(async () =>
-        {
-            await s.PayInvoice(mine: true);
-        });
-        await s.ClickCheckoutRedirect();
-
-        await s.Page.ReloadAsync();
-        await portal.AssertCredit(creditBalance: "$150.00");
-        Assert.Equal(1, await s.Page.Locator("button[value='refund-credit']").CountAsync());
-
-        var pullPaymentId = await portal.RequestRefund("100");
-
-        await s.Page.ReloadAsync();
-        await portal.AssertCredit(creditBalance: "$50.00");
-        await portal.AssertCreditHistory(["Credit refund (Pull Payment:"]);
-
-        var ppService = s.Server.PayTester.GetService<PullPaymentHostedService>();
-        var address = await s.Server.ExplorerNode.GetNewAddressAsync();
-        var claimResponse = await ppService.Claim(new ClaimRequest()
-        {
-            PullPaymentId = pullPaymentId,
-            Destination = new AddressClaimDestination(address),
-            ClaimedAmount = 100m,
-            PayoutMethodId = PayoutMethodId.Parse("BTC-CHAIN"),
-            StoreId = s.StoreId
-        });
-        Assert.Equal(ClaimRequest.ClaimResult.Ok, claimResponse.Result);
-
-        await s.Server.WaitForEvent<PayoutEvent>(async () =>
-        {
-            await ppService.Cancel(new PullPaymentHostedService.CancelRequest(
-                new[] { claimResponse.PayoutData.Id },
-                new[] { claimResponse.PayoutData.StoreDataId }));
-        }, e => e.Type == PayoutEvent.PayoutEventType.Updated && e.Payout.State == PayoutState.Cancelled);
-
-        await TestUtils.EventuallyAsync(async () =>
-        {
-            await s.Page.ReloadAsync();
+            await portal.AddCredit("150");
+            await s.Server.WaitForEvent<SubscriptionEvent.SubscriberCredited>(async () =>
+            {
+                await s.PayInvoice(mine: true);
+            });
+            await s.ClickCheckoutRedirect();
             await portal.AssertCredit(creditBalance: "$150.00");
+        }
+
+        await offering.GoToSubscribers();
+        var refundedEvt = await s.Server.WaitForEvent<SubscriptionEvent.CreditRefunded>(async () =>
+        {
+            await offering.Refund("enterprise@example.com", 100m);
         });
+        Assert.Equal(100m, refundedEvt.Amount);
+        await s.FastReloadAsync();
+        var creditText = await s.Page.Locator($"tr[data-subscriber-email='enterprise@example.com'] .subscriber-credit-col").InnerTextAsync();
+        Assert.Contains("50.00", creditText);
     }
 
     private static decimal GetUnusedPeriodValue(int usedDays, decimal planPrice, int daysInPeriod)
@@ -1183,6 +1158,15 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             await s.Page.ClickAsync(SubscriberRowSelector(subscriber) + " .subscriber-email-col .dropdown-toggle");
             await s.Page.ClickAsync(SubscriberRowSelector(subscriber) + " .subscriber-email-col button");
         }
+        public async Task Refund(string subscriberEmail, decimal amount)
+        {
+            await s.Page.Locator($"{SubscriberRowSelector(subscriberEmail)} .subscriber-credit-col .dropdown-toggle").ClickAsync();
+            await s.Page.Locator($"{SubscriberRowSelector(subscriberEmail)} .subscriber-credit-col a[data-action='refund']").ClickAsync();
+            await s.Page.FillAsync("#updateCreditModal input[name='amount']", amount.ToString(CultureInfo.InvariantCulture));
+            await s.Page.Locator("#updateCreditModal button.refund-mode").ClickAsync();
+            await s.Page.WaitForURLAsync("**/pull-payments/**");
+            await s.Page.GoBackAsync();
+        }
     }
 
     public class PortalPMO(PlaywrightTester s, IAsyncDisposable? disposable) : IAsyncDisposable
@@ -1328,16 +1312,6 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         {
             await s.Page.ClickAsync(".scheduled-change-banner button[value='cancel-scheduled-change']");
             await s.FindAlertMessage(partialText: "cancelled");
-        }
-
-        public async Task<string> RequestRefund(string amount)
-        {
-            await s.Page.FillAsync("input[name='RefundAmount']", amount);
-            await s.Page.ClickAsync("button[value='refund-credit']");
-            await s.Page.WaitForURLAsync("**/pull-payments/**");
-            var pullPaymentId = s.Page.Url.Split('/').Last();
-            await s.Page.GoBackAsync();
-            return pullPaymentId;
         }
     }
 

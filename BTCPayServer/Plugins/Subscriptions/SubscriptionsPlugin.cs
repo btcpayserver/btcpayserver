@@ -69,21 +69,6 @@ public class SubscriptionsPlugin : BaseBTCPayServerPlugin
             SELECT COUNT(*) FROM deleted_plan_checkout;
             """);
 
-        services.AddScheduledDbScript("Credit Refund Cleanup",
-            """
-            WITH completed_refunds AS (
-                SELECT pull_payment_id FROM subs_credit_refunds
-                WHERE deducted = false
-                ORDER BY pull_payment_id LIMIT 1000
-            ),
-            deleted AS (
-                DELETE FROM subs_credit_refunds
-                WHERE pull_payment_id IN (SELECT pull_payment_id FROM completed_refunds)
-                RETURNING *
-            )
-            SELECT COUNT(*) FROM deleted;
-            """);
-
         AddSubscriptionsWebhooks(services);
         AddPolicies(services);
         base.Execute(services);
@@ -241,6 +226,18 @@ public class SubscriptionsPlugin : BaseBTCPayServerPlugin
                     To = ["{Subscriber.Email}"],
                     Subject = "Your subscription needs to be upgraded",
                     Body = "Hello {Customer.Name},\n\nYour subscription needs to be upgraded to continue using our service.\n\nRegards,\n{Store.Name}"
+                },
+                PlaceHolders = placeHolders
+            },
+            new()
+            {
+                Trigger = WebhookSubscriptionEvent.CreditRefunded,
+                Description = "Subscription - Credit refund issued",
+                DefaultEmail = new()
+                {
+                    To = ["{Subscriber.Email}"],
+                    Subject = "Your credit refund is ready to claim",
+                    Body = "Hello {Customer.Name},\n\nA credit refund of {Refund.Amount} {Refund.Currency} has been issued for your subscription.\n\nClaim your refund here: {Refund.ClaimUrl}\n\nRegards,\n{Store.Name}"
                 },
                 PlaceHolders = placeHolders
             },

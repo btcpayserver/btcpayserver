@@ -1,4 +1,3 @@
-using BTCPayServer.Data.Data.Subscriptions;
 using BTCPayServer.Data.Subscriptions;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +6,6 @@ namespace BTCPayServer.Data;
 public partial class ApplicationDbContext
 {
     public DbSet<FeatureData> Features { get; set; }
-    public DbSet<SubscriberCreditRefund> SubscriberCreditRefunds { get; set; }
     public DbSet<PlanFeatureData> PlanFeatures { get; set; }
     public DbSet<OfferingData> Offerings { get; set; }
     public DbSet<SubscriberData> Subscribers { get; set; }

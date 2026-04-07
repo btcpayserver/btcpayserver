@@ -397,7 +397,7 @@
 		</div>
 		<div class="card-body">
 			<div class="row">
-				<div class="@(Model.CanRefund ? "col-md-6" : "col-12")">
+				<div class="col-md-6">
 					<h6 class="mb-2">Payment Method</h6>
 					<div class="d-flex justify-content-between align-items-center mb-3">
 						<div class="d-flex align-items-center">
@@ -457,20 +457,20 @@
 						</form>
 					}
 				</div>
-				@if (Model.CanRefund)
+				@if (Model.Subscriber.Plan.RecurringType is not PlanData.RecurringInterval.Lifetime)
 				{
 					<div class="col-md-6">
-						<h6 class="mb-2">Request Credit Refund</h6>
-						<form method="post">
-							<div class="input-group">
-								<input inputmode="decimal" class="form-control"
-										name="RefundAmount" placeholder="Amount to refund"
-										min="0.01" max="@Model.Credit.CurrentBalance" />
-								<button type="submit" name="command" value="refund-credit" class="btn btn-outline-secondary">
-									Refund
-								</button>
-							</div>
-						</form>
+						<h6 class="mb-2">Notification</h6>
+						<p class="text-muted mb-0">
+							@foreach (var identity in Model.Subscriber.Customer.CustomerIdentities)
+							{
+								<vc:contact type="@identity.Type" value="@identity.Value"></vc:contact>
+							}
+						</p>
+						<p class="form-text mb-0">
+							Payment reminder will be sent <span class="fw-bold">@Model.Subscriber.PaymentReminderDaysOrDefault days</span> before
+							expiration.
+						</p>
 					</div>
 				}
 			</div>

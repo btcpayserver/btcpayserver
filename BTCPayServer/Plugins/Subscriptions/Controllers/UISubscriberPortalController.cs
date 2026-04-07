@@ -92,7 +92,6 @@ public class UISubscriberPortalController(
             StoreName = store.StoreName,
             StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, store.GetStoreBlob()),
             PlanChanges = planChanges,
-            CanRefund = session.Subscriber.GetCredit() > 0,
             Refund = (refundValue, displayFormatter.Currency(refundValue, curr, DisplayFormatter.CurrencyFormat.Symbol)),
             Url = string.IsNullOrEmpty(store.StoreWebsite) ? Request.GetRequestBaseUrl().ToString() : store.StoreWebsite,
             BTCPayLogo = Url.Content("~/img/btcpay-logo.svg")
@@ -228,46 +227,6 @@ public class UISubscriberPortalController(
                     return result is PlanMigrationResult.Checkout c
                         ? await RedirectToPlanCheckoutPayment(c.CheckoutId, cancellationToken)
                         : RedirectToSubscriberPortal(portalSessionId);
-                }
-
-            case "refund-credit":
-                {
-                    var amount = vm.RefundAmount;
-                    if (amount is null || amount > session.Subscriber.GetCredit())
-                    {
-                        TempData.SetStatusMessageModel(new StatusMessageModel
-                        {
-                            Message = StringLocalizer["Please enter a valid amount."],
-                            Severity = StatusMessageModel.StatusSeverity.Error
-                        });
-                        return RedirectToSubscriberPortal(portalSessionId);
-                    }
-                    try
-                    {
-                        var pullPaymentId = await SubsService.CreateCreditRefund(session.Id, amount.Value);
-                        if (pullPaymentId is null)
-                        {
-                            TempData.SetStatusMessageModel(new StatusMessageModel
-                            {
-                                Message = StringLocalizer["Unable to create refund. Check your credit balance."],
-                                Severity = StatusMessageModel.StatusSeverity.Error
-                            });
-                            return RedirectToSubscriberPortal(portalSessionId);
-                        }
-                        var refundUrl = Url.Action(nameof(UIPullPaymentController.ViewPullPayment), "UIPullPayment", new { pullPaymentId }, Request.Scheme);
-                        TempData.SetStatusSuccess(StringLocalizer["Refund created."]);
-                        return Redirect(refundUrl!);
-                    }
-                    catch (BitpayHttpException ex)
-                    {
-                        TempData.SetStatusMessageModel(new StatusMessageModel
-                        {
-                            Html = ex.Message.Replace("\n", "<br />", StringComparison.OrdinalIgnoreCase),
-                            Severity = StatusMessageModel.StatusSeverity.Error,
-                            AllowDismiss = true
-                        });
-                        return RedirectToSubscriberPortal(portalSessionId);
-                    }
                 }
 
             case "update-auto-renewal":

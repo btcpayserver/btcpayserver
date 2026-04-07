@@ -88,8 +88,6 @@ public class SubscriberPortalViewModel
     [BindingBehavior(BindingBehavior.Never)]
     [ValidateNever]
     public PlanData Plan => Data.Subscriber.Plan;
-    public decimal? RefundAmount { get; set; }
-    public bool CanRefund { get; set; }
     [ValidateNever]
     public string RenewalPullPaymentUrl { get; set; }
     public string Anchor { get; set; }

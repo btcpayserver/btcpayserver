@@ -56,7 +56,7 @@ namespace BTCPayServer.Tests
             await s.ClickOnAllSectionLinks("#mainNavSettings");
             await s.GoToServer(ServerNavPages.Services);
             s.TestLogs.LogInformation("Let's check if we can access the logs");
-            await s.Page.GetByRole(AriaRole.Link, new() { Name = "Logs" }).ClickAsync();
+            await s.GoToServer(ServerNavPages.Logs);
             await s.Page.Locator("a:has-text('.log')").First.ClickAsync();
             Assert.Contains("Starting listening NBXplorer", await s.Page.ContentAsync());
         }
@@ -858,7 +858,7 @@ namespace BTCPayServer.Tests
             await s.Page.ClickAsync("#disable");
             await s.Page.FillAsync("#ConfirmInput", "DISABLE");
             await s.Page.ClickAsync("#ConfirmContinue");
-            await s.GoToUrl("/server/services/ssh");
+            await s.GoToUrl("/server/services/ssh", true);
             Assert.True((await s.Page.ContentAsync()).Contains("404 - Page not found", StringComparison.OrdinalIgnoreCase));
 
             policies = await settings.GetSettingAsync<PoliciesSettings>();
@@ -1970,7 +1970,7 @@ namespace BTCPayServer.Tests
             await s.ClickPagePrimary();
 
             var o = s.Page.Context.WaitForPageAsync();
-            await s.Page.ClickAsync("text=View");
+            await s.Page.Locator(".actions-col a:has-text('View')").First.ClickAsync();
             var newPage = await o;
 
             var address = await s.Server.ExplorerNode.GetNewAddressAsync();
@@ -2294,21 +2294,21 @@ namespace BTCPayServer.Tests
             await s.GoToHome();
             await s.Logout();
 
-            await s.GoToUrl($"/i/{i}/receipt");
+            await s.GoToUrl($"/i/{i}/receipt", true);
             await TestUtils.EventuallyAsync(async () =>
             {
                 var title = await s.Page.TitleAsync();
                 Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
             });
 
-            await s.GoToUrl($"/i/{i}");
+            await s.GoToUrl($"/i/{i}", true);
             await TestUtils.EventuallyAsync(async () =>
             {
                 var title = await s.Page.TitleAsync();
                 Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
             });
 
-            await s.GoToUrl($"/i/{i}/status");
+            await s.GoToUrl($"/i/{i}/status", true);
             await TestUtils.EventuallyAsync(async () =>
             {
                 var title = await s.Page.TitleAsync();

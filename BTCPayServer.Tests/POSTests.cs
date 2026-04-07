@@ -1227,7 +1227,7 @@ goodies:
             var archivedText = await archivedLink.TextContentAsync();
             Assert.Contains("1 Archived App", archivedText);
 
-            await s.GoToUrl(posBaseUrl);
+            await s.GoToUrl(posBaseUrl, true);
             var title = await s.Page.TitleAsync();
             Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
             await s.Page.GoBackAsync();

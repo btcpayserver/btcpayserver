@@ -3,9 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Plugins.Emails.Views;
+using BTCPayServer.Plugins.GlobalSearch;
+using BTCPayServer.Plugins.Translations.Controllers;
+using BTCPayServer.Plugins.Webhooks.Controllers;
 using BTCPayServer.Plugins.Webhooks.HostedServices;
 using BTCPayServer.Plugins.Webhooks.TriggerProviders;
 using BTCPayServer.Services;
@@ -47,7 +51,18 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
                 });
         }
 
-        // Add built in webhooks
+        services.AddStaticSearch(new ActionResultItemViewModel()
+        {
+            RequiredPolicy = Policies.CanViewStoreSettings,
+            Title = "Configure webhooks",
+            Action = nameof(UIStoreWebhooksController.Webhooks),
+            Controller = "UIStoreWebhooks",
+            Values = ctx => new { area = Area, storeId = ctx.Store!.Id },
+            Category = "Store",
+            Keywords = ["Webhooks", "Configure"]
+        });
+
+        // Add built-in webhooks
         AddInvoiceWebhooks(services);
         AddPayoutWebhooks(services);
         AddPaymentRequestWebhooks(services);

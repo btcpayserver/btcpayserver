@@ -379,6 +379,12 @@ retry:
                         return;
                     invoiceEntity.SetPaymentPrompt(prompt.PaymentMethodId, prompt);
                     invoice.SetBlob(invoiceEntity);
+                    // Persist the blob update first, on its own SaveChanges.
+                    // A DbUpdateConcurrencyException here must propagate so the
+                    // outer catch can retry; a unique-key violation on
+                    // AddressInvoices must not be able to roll this back.
+                    await context.SaveChangesAsync();
+
                     if (trackedDestinations is not null)
                     {
                         var pmi = prompt.PaymentMethodId.ToString();
@@ -397,9 +403,16 @@ retry:
                             else
                                 existing.InvoiceDataId = invoiceId;
                         }
+                        // Scoped swallow: only a unique-key race on identical
+                        // (Address, PaymentMethodId) rows is safe to ignore.
+                        // DbUpdateConcurrencyException is a DbUpdateException
+                        // subtype and must still propagate to the outer retry.
+                        try { await context.SaveChangesAsync(); }
+                        catch (DbUpdateException ex) when (ex is not DbUpdateConcurrencyException)
+                        {
+                            /* concurrent tracked-destination insert of identical row */
+                        }
                     }
-                    try { await context.SaveChangesAsync(); }
-                    catch (DbUpdateException) { /* concurrent tracked-destination insert is fine */ }
                 }
                 catch (DbUpdateConcurrencyException)
                 {

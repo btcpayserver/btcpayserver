@@ -91,12 +91,23 @@ namespace BTCPayServer.Services.Invoices
                     Address = address,
                     PaymentMethodId = pmiStr
                 });
+                try
+                {
+                    await context.SaveChangesAsync();
+                }
+                catch (DbUpdateException)
+                {
+                    // Concurrent caller inserted the same (Address, PaymentMethodId)
+                    // row between the FirstOrDefaultAsync check above and SaveChangesAsync.
+                    // Both writers are inserting identical data, so swallowing the
+                    // unique-key violation keeps this method idempotent under contention.
+                }
             }
             else
             {
                 existing.InvoiceDataId = invoiceId;
+                await context.SaveChangesAsync();
             }
-            await context.SaveChangesAsync();
         }
 
         /// <summary>

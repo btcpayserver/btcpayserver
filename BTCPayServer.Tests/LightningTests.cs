@@ -1023,7 +1023,9 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         var verifyResult = JObject.Parse(await verifyResponse.Content.ReadAsStringAsync());
         Assert.Equal("OK", verifyResult["status"]?.ToString());
         Assert.False(verifyResult["settled"]?.Value<bool>());
-        Assert.Null(verifyResult["preimage"]?.ToString());
+        var preimageToken = verifyResult["preimage"];
+        Assert.True(preimageToken is null || preimageToken.Type == JTokenType.Null,
+            "Expected preimage to be null or absent for an unsettled invoice");
         Assert.NotNull(verifyResult["pr"]?.ToString());
 
         // Verify storeId isolation - create another store with Lightning + LNURL fully

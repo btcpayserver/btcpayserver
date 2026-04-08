@@ -989,9 +989,11 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
             $"/lnurlp/nonexistent/verify/{fakeHash}");
         Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
 
-        // Create an invoice via LNURL-pay flow to get a real payment hash
+        // Create an invoice via LNURL-pay flow to get a real payment hash.
+        // The Lightning Address resolver lives at /.well-known/lnurlp/{username}
+        // (LUD-16). The bare /lnurlp/{username} path has no route.
         var lnurlResponse = await tester.PayTester.HttpClient.GetAsync(
-            $"/lnurlp/{username}");
+            $"/.well-known/lnurlp/{username}");
         Assert.Equal(System.Net.HttpStatusCode.OK, lnurlResponse.StatusCode);
         var lnurlPayRequest = JObject.Parse(await lnurlResponse.Content.ReadAsStringAsync());
         var callback = lnurlPayRequest["callback"]?.ToString();

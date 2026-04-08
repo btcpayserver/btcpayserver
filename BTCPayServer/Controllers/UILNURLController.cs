@@ -473,6 +473,11 @@ namespace BTCPayServer
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(paymentHash))
                 return NotFound();
 
+            // A Lightning payment hash is exactly 32 bytes / 64 hex chars.
+            // Reject anything else up front to avoid pointless DB lookups on garbage input.
+            if (paymentHash.Length != 64 || !paymentHash.All(Uri.IsHexDigit))
+                return NotFound(new LNUrlStatusResponse { Status = "ERROR", Reason = "Not found" });
+
             paymentHash = paymentHash.ToLowerInvariant();
 
             var lightningAddressSettings = await _lightningAddressService.ResolveByAddress(username);

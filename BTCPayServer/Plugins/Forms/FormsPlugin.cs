@@ -28,12 +28,12 @@ public class FormsPlugin : BaseBTCPayServerPlugin
         services.AddStaticSearch(new ActionResultItemViewModel()
         {
             RequiredPolicy = Policies.CanViewStoreSettings,
-            Title = "Forms",
+            Title = "Configure customer's forms",
             Action = nameof(UIFormsController.FormsList),
             Controller = "UIForms",
             Values = ctx => new { area = Area, storeId = ctx.Store!.Id },
             Category = "Store",
-            Keywords = ["Forms"]
+            Keywords = ["Forms", "Configure"]
         });
     }
 }

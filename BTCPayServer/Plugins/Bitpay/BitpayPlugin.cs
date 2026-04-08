@@ -42,7 +42,7 @@ public class BitpayPlugin : BaseBTCPayServerPlugin
         services.AddStaticSearch(new ActionResultItemViewModel()
         {
             RequiredPolicy = Policies.CanViewStoreSettings,
-            Title = "Access Tokens",
+            Title = "View the access tokens (for legacy API access)",
             Action = nameof(UIStoresTokenController.ListTokens),
             Controller = "UIStoresToken",
             Values = (ctx) => new { storeId = ctx.Store!.Id, area = Area },

@@ -299,6 +299,7 @@
                     var all = [];
                     keywords.forEach(keyword => { all.push(keyword.toLowerCase()); })
                     all.push(title.toLowerCase());
+                    all.push(item.category.toLowerCase());
                     return normalized.every(n => all.some(a => a.startsWith(n)));
                 });
         };

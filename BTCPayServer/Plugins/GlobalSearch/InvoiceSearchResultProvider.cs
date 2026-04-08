@@ -42,9 +42,9 @@ public class InvoiceSearchResultProvider(InvoiceRepository invoice,
                 new ResultItemViewModel
                 {
                     Category = Category,
-                    Title = "Invoices list",
+                    Title = "Browse the invoices",
                     Url = context.Url.Action(nameof(UIInvoiceController.ListInvoices), "UIInvoice", new { storeId = store.Id }),
-                    Keywords = ["Payments", "List"],
+                    Keywords = ["Invoices", "List", "Browse"],
                     RequiredPolicy = Policies.CanViewInvoices
                 },
                 new ResultItemViewModel

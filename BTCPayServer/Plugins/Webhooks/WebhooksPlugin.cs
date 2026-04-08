@@ -54,12 +54,12 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
         services.AddStaticSearch(new ActionResultItemViewModel()
         {
             RequiredPolicy = Policies.CanViewStoreSettings,
-            Title = "Webhooks",
+            Title = "Configure webhooks",
             Action = nameof(UIStoreWebhooksController.Webhooks),
             Controller = "UIStoreWebhooks",
             Values = ctx => new { area = Area, storeId = ctx.Store!.Id },
             Category = "Store",
-            Keywords = ["Webhooks"]
+            Keywords = ["Webhooks", "Configure"]
         });
 
         // Add built-in webhooks

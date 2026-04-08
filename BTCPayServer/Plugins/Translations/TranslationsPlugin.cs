@@ -31,12 +31,12 @@ public class TranslationsPlugin : BaseBTCPayServerPlugin
         services.AddStaticSearch(new ActionResultItemViewModel()
         {
             RequiredPolicy = Policies.CanModifyServerSettings,
-            Title = "Translations",
+            Title = "Localize the user interface",
             Action = nameof(UITranslationController.ListDictionaries),
             Controller = "UITranslation",
             Values = _ => new { area = Area },
             Category = "Server",
-            Keywords = ["Server", "Settings", "Translations"]
+            Keywords = ["Server", "Settings", "Translations", "Language", "Dictionary", "Localization"]
         });
     }
 }

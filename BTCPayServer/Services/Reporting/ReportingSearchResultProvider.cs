@@ -27,19 +27,18 @@ public class ReportingSearchResultProvider(IEnumerable<ReportProvider> reportPro
         {
             RequiredPolicy = Policies.CanViewReports,
             Category = Category,
-            Title = "Reports",
-            Keywords = ["Reports"],
+            Title = "Go to Reports",
+            Keywords = ["Reports", "Go"],
             Url = context.Url.Action(nameof(UIReportsController.StoreReports), "UIReports", new { storeId = context.Store!.Id })
         });
 
-        var prefix = StringLocalizer["Reports"].Value + " ❯ ";
         context.ItemResults.AddRange(reportProviders.Select(provider => new ResultItemViewModel()
         {
             RequiredPolicy = Policies.CanViewReports,
             Category = Category,
             Url = context.Url.Action(nameof(UIReportsController.StoreReports), "UIReports", new { storeId = context.Store!.Id, viewName = provider.Name }),
-            Keywords = ["Reports", provider.Name],
-            Title = prefix + provider.Name
+            Keywords = ["Reports", "View", provider.Name],
+            Title = StringLocalizer["View report '{0}'", provider.Name]
         }));
         return Task.CompletedTask;
     }

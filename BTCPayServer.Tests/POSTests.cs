@@ -965,6 +965,23 @@ goodies:
                 ]
             });
 
+            await s.GoToUrl(editUrl);
+            await s.Page.FillAsync("#TipTaxRate", "5");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "App updated");
+
+            await s.GoToUrl(keypadUrl);
+            await EnterKeypad(s, "500");
+            await Expect(s.Page.Locator("#Amount")).ToContainTextAsync("5,00");
+            await s.Page.ClickAsync("label[for='ModeTablist-tip']");
+            await s.Page.ClickAsync("#Tip-10");
+            await s.Page.ClickAsync("label[for='ModeTablist-amounts']");
+            await AssertKeypadCalculation(s, "5,00 € + 0,50 € (10%) + 0,50 € (10%) + 0,03 € (tip tax)", "6,03 €");
+
+            await s.Page.ClickAsync("#pay-button");
+            await s.Page.WaitForSelectorAsync("#Checkout");
+            await s.PayInvoice(true);
+
             // Guest user can access recent transactions
             await s.GoToHome();
             await s.Logout();

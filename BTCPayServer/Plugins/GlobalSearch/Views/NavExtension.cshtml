@@ -3,7 +3,6 @@
 @inject SearchResultItemProviders SearchResultItemProviders
 
 @{
-    var searchUrl = Url.Action("Global", "UISearch", new { area = GlobalSearchPlugin.Area });
     var vm = await SearchResultItemProviders.GetViewModel(this.User, this.Context.GetNavStoreData(), this.Url);
 }
 
@@ -72,6 +71,9 @@
     window.globalSearch.translate = {
         "Type to search": @Safe.Json(StringLocalizer["Type to search"].Value),
         "No matches found": @Safe.Json(StringLocalizer["No matches found"].Value),
+        "Recent": @Safe.Json(StringLocalizer["Recent"].Value),
+        "Clear history": @Safe.Json(StringLocalizer["Clear history"].Value),
+        "Suggested": @Safe.Json(StringLocalizer["Suggested"].Value),
     };
 </script>
 <link href="~/plugins/GlobalSearch/global-search.css" rel="stylesheet" asp-append-version="true" />

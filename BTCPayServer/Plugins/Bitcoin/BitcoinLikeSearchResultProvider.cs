@@ -18,20 +18,21 @@ public class BitcoinLikeSearchResultProvider(
 {
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
 
-    public async Task ProvideAsync(SearchResultItemProviderContext context)
+    public Task ProvideAsync(SearchResultItemProviderContext context)
     {
+        if (context.UserQuery is not null)
+            return Task.CompletedTask;
         context.ItemResults.Add(new ResultItemViewModel()
         {
             Title = "On-chain wallets list",
             Category = "Wallets",
             Url = context.Url.Action(nameof(UIWalletsController.ListWallets), "UIWallets"),
-            Keywords = ["List", "Wallets"]
+            Keywords = ["List", "Wallets"],
+            RequiredPolicy = Policies.CanModifyStoreSettings
         });
         var storeId = context.Store?.Id;
-        if (storeId is null) return;
+        if (storeId is null) return Task.CompletedTask;
 
-        if (!await context.IsAuthorized(Policies.CanModifyStoreSettings))
-            return;
         foreach (var network in networks.GetAll().OfType<BTCPayNetwork>())
         {
             var walletId = new WalletId(storeId, network.CryptoCode);
@@ -45,29 +46,34 @@ public class BitcoinLikeSearchResultProvider(
                 {
                     Title = prefix + StringLocalizer["Send"].Value,
                     Category = "Wallets",
-                    Keywords = ["Send", "Wallets", network.CryptoCode, translated, untranslated]
+                    Keywords = ["Send", "Wallets", network.CryptoCode, translated, untranslated],
+                    RequiredPolicy = Policies.CanModifyStoreSettings
                 });
             context.ItemResults.Add(new ResultItemViewModel()
             {
                 Title = prefix + StringLocalizer["Receive"].Value,
                 Category = "Wallets",
                 Url = context.Url.WalletReceive(walletId),
-                Keywords = ["Receive", "Wallets", network.CryptoCode, translated, untranslated]
+                Keywords = ["Receive", "Wallets", network.CryptoCode, translated, untranslated],
+                RequiredPolicy = Policies.CanModifyStoreSettings
             });
             context.ItemResults.Add(new ResultItemViewModel()
             {
                 Title = prefix + StringLocalizer["Transactions"].Value,
                 Category = "Wallets",
                 Url = context.Url.WalletTransactions(walletId),
-                Keywords = ["Transactions", "Wallets", network.CryptoCode, translated, untranslated]
+                Keywords = ["Transactions", "Wallets", network.CryptoCode, translated, untranslated],
+                RequiredPolicy = Policies.CanModifyStoreSettings
             });
             context.ItemResults.Add(new ResultItemViewModel()
             {
                 Title = prefix + StringLocalizer["Settings"].Value,
                 Category = "Wallets",
                 Url = context.Url.WalletSettings(walletId),
-                Keywords = ["Settings", "Wallets", network.CryptoCode, translated, untranslated]
+                Keywords = ["Settings", "Wallets", network.CryptoCode, translated, untranslated],
+                RequiredPolicy = Policies.CanModifyStoreSettings
             });
         }
+        return Task.CompletedTask;
     }
 }

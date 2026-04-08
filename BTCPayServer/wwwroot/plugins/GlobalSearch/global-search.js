@@ -289,10 +289,10 @@
             const recent = refreshRecentMetadata(loadGlobalSearchRecents())
                 .map(normalizeResult)
                 .filter(Boolean);
-            const recentGroup = renderGroup('Recent', recent, 'Clear history', 'data-clear-search-history');
+            const recentGroup = renderGroup(vm.translate['Recent'], recent, vm.translate['Clear history'], 'data-clear-search-history');
             if (recentGroup) resultsElement.appendChild(recentGroup);
             const suggestions = suggestedQueries.map(toSuggestionResult);
-            const suggestedGroup = renderGroup('Suggested', suggestions);
+            const suggestedGroup = renderGroup(vm.translate['Suggested'], suggestions);
             if (suggestedGroup) {
                 resultsElement.appendChild(suggestedGroup);
             }
@@ -325,9 +325,9 @@
 
         const searchRemote = async query => {
             if (!query || query.length < 2) return [];
-            const cacheKey = `${query}|${vm.storeId || ''}`;
-            const cached = getCachedRemoteResults(cacheKey);
-            if (cached) return cached;
+            // const cacheKey = `${query}|${vm.storeId || ''}`;
+            // const cached = getCachedRemoteResults(cacheKey);
+            // if (cached) return cached;
             const url = new URL(vm.searchUrl, window.location.origin);
             url.searchParams.set('q', query);
             if (vm.storeId) url.searchParams.set('storeId', vm.storeId);
@@ -338,7 +338,7 @@
             const normalized = (Array.isArray(payload) ? payload : [])
                 .map(normalizeResult)
                 .filter(Boolean);
-            setCachedRemoteResults(cacheKey, normalized);
+            // setCachedRemoteResults(cacheKey, normalized);
             return normalized;
         };
 
@@ -401,15 +401,19 @@
             const token = ++latestSearchToken;
             const localMatches = searchLocal(query);
             renderResults(localMatches);
-            currentMatches = localMatches
-            // let remoteMatches = [];
-            // try {
-            //     remoteMatches = await searchRemote(query);
-            // } catch {
-            //     remoteMatches = [];
-            // }
-            // if (token !== latestSearchToken || !panelOpen) return;
-            // renderResults(mergeResults(remoteMatches, localMatches));
+            currentMatches = localMatches;
+
+            if (localMatches.length === 0)
+            {
+                let remoteMatches = [];
+                try {
+                    remoteMatches = await searchRemote(query);
+                } catch {
+                    remoteMatches = [];
+                }
+                if (token !== latestSearchToken || !panelOpen) return;
+                renderResults(mergeResults(remoteMatches));
+            }
         };
 
         mobileToggle?.addEventListener('click', () => {

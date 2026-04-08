@@ -19,6 +19,8 @@ public class ReportingSearchResultProvider(IEnumerable<ReportProvider> reportPro
     {
         if (context.Store is null)
             return Task.CompletedTask;
+        if (context.UserQuery is not null)
+            return Task.CompletedTask;
 
         context.ItemResults.Add(new ResultItemViewModel()
         {

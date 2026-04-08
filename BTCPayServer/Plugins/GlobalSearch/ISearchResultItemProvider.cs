@@ -19,6 +19,11 @@ public class SearchResultItemProviderContext(ClaimsPrincipal user, string userId
     public List<ResultItemViewModel> ItemResults { get; set; } = new();
     public IUrlHelper Url { get; } = url;
     public IAuthorizationService AuthorizationService { get; } = authorizationService;
+
+    /// <summary>
+    /// The user's query. When null, the items returned by <see cref="ISearchResultItemProvider" /> get filtered browser's side.
+    /// </summary>
+    public string? UserQuery { get; set; }
     public async Task<bool> IsAuthorized(string policy)
     {
         var type = Permission.TryGetPolicyType(policy);

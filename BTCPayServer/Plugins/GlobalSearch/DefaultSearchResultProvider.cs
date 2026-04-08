@@ -13,6 +13,8 @@ public class DefaultSearchResultProvider : ISearchResultItemProvider
 {
     public async Task ProvideAsync(SearchResultItemProviderContext context)
     {
+        if (context.UserQuery is not null)
+            return;
         var canModifyServer = await context.IsAuthorized(Policies.CanModifyServerSettings);
         var canViewProfile = await context.IsAuthorized(Policies.CanViewProfile);
         var canViewNotifications = await context.IsAuthorized(Policies.CanViewNotificationsForUser);

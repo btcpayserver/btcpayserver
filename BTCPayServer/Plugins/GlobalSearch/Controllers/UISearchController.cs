@@ -55,7 +55,6 @@ namespace BTCPayServer.Plugins.GlobalSearch
                 await AddTransactionResults(results, parsedQuery.TransactionSearch, take, context);
             }
 
-            results.AddRange(await BuildPageResults(context.Store, parsedQuery.RawQuery));
             // Let plugin providers contribute results without modifying this controller.
             await AddPluginResults(results, parsedQuery, storeId, take, context);
 
@@ -338,15 +337,6 @@ namespace BTCPayServer.Plugins.GlobalSearch
                     Keywords = walletId.StoreId
                 });
             }
-        }
-
-        private async Task<GlobalSearchResult[]> BuildPageResults(StoreData store, string query)
-        {
-            var results = new List<GlobalSearchResult>();
-
-
-
-            return results.ToArray();
         }
 
         private async Task<string[]> GetStoreIdsWithPermission(SearchContext context, string policy)

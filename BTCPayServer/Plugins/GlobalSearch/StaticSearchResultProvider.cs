@@ -25,6 +25,8 @@ public class StaticSearchResultProvider(
 {
     public async Task ProvideAsync(SearchResultItemProviderContext context)
     {
+        if (context.UserQuery is not null)
+            return;
         context.ItemResults.AddRange(items);
 
         foreach (var item in routeItems)

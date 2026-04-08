@@ -363,7 +363,7 @@ retry:
                 }
             }
         }
-        public async Task UpdatePrompt(string invoiceId, PaymentPrompt prompt)
+        public async Task UpdatePrompt(string invoiceId, PaymentPrompt prompt, IEnumerable<string> trackedDestinations = null)
         {
 retry:
             using (var context = _applicationDbContextFactory.CreateContext())
@@ -379,7 +379,27 @@ retry:
                         return;
                     invoiceEntity.SetPaymentPrompt(prompt.PaymentMethodId, prompt);
                     invoice.SetBlob(invoiceEntity);
-                    await context.SaveChangesAsync();
+                    if (trackedDestinations is not null)
+                    {
+                        var pmi = prompt.PaymentMethodId.ToString();
+                        foreach (var tracked in trackedDestinations)
+                        {
+                            var trackedLocal = tracked;
+                            var existing = await context.AddressInvoices
+                                .FirstOrDefaultAsync(a => a.Address == trackedLocal && a.PaymentMethodId == pmi);
+                            if (existing is null)
+                                await context.AddressInvoices.AddAsync(new AddressInvoiceData()
+                                {
+                                    InvoiceDataId = invoiceId,
+                                    Address = tracked,
+                                    PaymentMethodId = pmi
+                                });
+                            else
+                                existing.InvoiceDataId = invoiceId;
+                        }
+                    }
+                    try { await context.SaveChangesAsync(); }
+                    catch (DbUpdateException) { /* concurrent tracked-destination insert is fine */ }
                 }
                 catch (DbUpdateConcurrencyException)
                 {

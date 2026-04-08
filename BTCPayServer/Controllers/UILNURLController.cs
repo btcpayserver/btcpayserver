@@ -868,15 +868,13 @@ namespace BTCPayServer
 
                 if (updatePaymentMethod)
                 {
-                    await _invoiceRepository.UpdatePrompt(invoiceId, lightningPaymentMethod);
+                    // Index payment hash for LUD-21 verify lookup via AddressInvoices,
+                    // flushed atomically with the prompt update.
+                    var trackedDestinations = promptDetails.PaymentHash is not null
+                        ? new[] { promptDetails.PaymentHash.ToString().ToLowerInvariant() }
+                        : null;
+                    await _invoiceRepository.UpdatePrompt(invoiceId, lightningPaymentMethod, trackedDestinations);
                     _eventAggregator.Publish(new InvoiceNewPaymentDetailsEvent(invoiceId, promptDetails, pmi));
-
-                    // Index payment hash for LUD-21 verify lookup via AddressInvoices
-                    if (promptDetails.PaymentHash is not null)
-                    {
-                        await _invoiceRepository.AddAddressInvoice(invoiceId, pmi,
-                            promptDetails.PaymentHash.ToString().ToLowerInvariant());
-                    }
                 }
 
                 var callbackResponse = JObject.FromObject(new LNURLPayRequest.LNURLPayRequestCallbackResponse

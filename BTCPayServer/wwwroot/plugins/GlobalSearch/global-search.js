@@ -239,6 +239,7 @@
 
             // Optional action button
             if (actionLabel && actionDataAttribute) {
+                actionBtn.tabIndex = -1;
                 actionBtn.textContent = actionLabel;
                 actionBtn.setAttribute(actionDataAttribute, '1');
             } else {

@@ -6,6 +6,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Plugins.GlobalSearch;
 using BTCPayServer.Plugins.GlobalSearch.Views;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 
@@ -14,6 +15,7 @@ namespace BTCPayServer.Plugins.Bitcoin;
 public class BitcoinLikeSearchResultProvider(
     BTCPayNetworkProvider networks,
     IStringLocalizer stringLocalizer,
+    PaymentMethodHandlerDictionary paymentMethodHandlers,
     PrettyNameProvider prettyNameProvider) : ISearchResultItemProvider
 {
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
@@ -22,6 +24,10 @@ public class BitcoinLikeSearchResultProvider(
     {
         if (context.UserQuery is not null)
             return Task.CompletedTask;
+
+        if (context.Store is null)
+            return Task.CompletedTask;
+
         context.ItemResults.Add(new ResultItemViewModel()
         {
             Title = "On-chain wallets list",
@@ -36,43 +42,82 @@ public class BitcoinLikeSearchResultProvider(
         foreach (var network in networks.GetAll().OfType<BTCPayNetwork>())
         {
             var walletId = new WalletId(storeId, network.CryptoCode);
-            var translated = prettyNameProvider.PrettyName(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode), false);
-            var untranslated = prettyNameProvider.PrettyName(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode), true);
 
-            var prefix = StringLocalizer["Wallet ({0})", network.CryptoCode].Value + " ❯ ";
 
-            if (!network.ReadonlyWallet)
-                context.ItemResults.Add(new ResultItemViewModel()
+            if (paymentMethodHandlers.Support(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode)))
+            {
+                var prefix = StringLocalizer["Wallet ({0})", network.CryptoCode].Value + " ❯ ";
+                var translated = prettyNameProvider.PrettyName(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode), false);
+                var untranslated = prettyNameProvider.PrettyName(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode), true);
+
+                var settings = context.Store.GetDerivationSchemeSettings(paymentMethodHandlers, network.CryptoCode);
+                if (settings is null)
                 {
-                    Title = prefix + StringLocalizer["Send"].Value,
-                    Category = "Wallets",
-                    Keywords = ["Send", "Wallets", network.CryptoCode, translated, untranslated],
-                    RequiredPolicy = Policies.CanModifyStoreSettings
-                });
-            context.ItemResults.Add(new ResultItemViewModel()
+                    context.ItemResults.Add(new ResultItemViewModel()
+                    {
+                        Title = prefix + StringLocalizer["Set up a wallet"].Value,
+                        Category = "Wallets",
+                        Url = context.Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { storeId, cryptoCode = network.CryptoCode }),
+                        Keywords = ["Setup", "Wallets", network.CryptoCode, translated, untranslated],
+                        RequiredPolicy = Policies.CanModifyStoreSettings
+                    });
+                }
+                else
+                {
+                    if (!network.ReadonlyWallet)
+                        context.ItemResults.Add(new ResultItemViewModel()
+                        {
+                            Title = prefix + StringLocalizer["Send"].Value,
+                            Category = "Wallets",
+                            Keywords = ["Send", "Wallets", network.CryptoCode, translated, untranslated],
+                            RequiredPolicy = Policies.CanModifyStoreSettings
+                        });
+                    context.ItemResults.Add(new ResultItemViewModel()
+                    {
+                        Title = prefix + StringLocalizer["Receive"].Value,
+                        Category = "Wallets",
+                        Url = context.Url.WalletReceive(walletId),
+                        Keywords = ["Receive", "Wallets", network.CryptoCode, translated, untranslated],
+                        RequiredPolicy = Policies.CanModifyStoreSettings
+                    });
+                    context.ItemResults.Add(new ResultItemViewModel()
+                    {
+                        Title = prefix + StringLocalizer["Transactions"].Value,
+                        Category = "Wallets",
+                        Url = context.Url.WalletTransactions(walletId),
+                        Keywords = ["Transactions", "Wallets", network.CryptoCode, translated, untranslated],
+                        RequiredPolicy = Policies.CanModifyStoreSettings
+                    });
+                    context.ItemResults.Add(new ResultItemViewModel()
+                    {
+                        Title = prefix + StringLocalizer["Settings"].Value,
+                        Category = "Wallets",
+                        Url = context.Url.WalletSettings(walletId),
+                        Keywords = ["Settings", "Wallets", network.CryptoCode, translated, untranslated],
+                        RequiredPolicy = Policies.CanModifyStoreSettings
+                    });
+                }
+            }
+
+            if (paymentMethodHandlers.Support(PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode)))
             {
-                Title = prefix + StringLocalizer["Receive"].Value,
-                Category = "Wallets",
-                Url = context.Url.WalletReceive(walletId),
-                Keywords = ["Receive", "Wallets", network.CryptoCode, translated, untranslated],
-                RequiredPolicy = Policies.CanModifyStoreSettings
-            });
-            context.ItemResults.Add(new ResultItemViewModel()
-            {
-                Title = prefix + StringLocalizer["Transactions"].Value,
-                Category = "Wallets",
-                Url = context.Url.WalletTransactions(walletId),
-                Keywords = ["Transactions", "Wallets", network.CryptoCode, translated, untranslated],
-                RequiredPolicy = Policies.CanModifyStoreSettings
-            });
-            context.ItemResults.Add(new ResultItemViewModel()
-            {
-                Title = prefix + StringLocalizer["Settings"].Value,
-                Category = "Wallets",
-                Url = context.Url.WalletSettings(walletId),
-                Keywords = ["Settings", "Wallets", network.CryptoCode, translated, untranslated],
-                RequiredPolicy = Policies.CanModifyStoreSettings
-            });
+                var prefix = StringLocalizer["Lightning ({0})", network.CryptoCode].Value + " ❯ ";
+                var translated = prettyNameProvider.PrettyName(PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode), false);
+                var untranslated = prettyNameProvider.PrettyName(PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode), true);
+
+                var settings = paymentMethodHandlers.GetLightningConfig(context.Store, network);
+                if (settings is null)
+                {
+                    context.ItemResults.Add(new ResultItemViewModel()
+                    {
+                        Title = prefix + StringLocalizer["Set up a wallet"].Value,
+                        Category = "Wallets",
+                        Url = context.Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { storeId, cryptoCode = network.CryptoCode }),
+                        Keywords = ["Setup", "Wallets", network.CryptoCode, translated, untranslated],
+                        RequiredPolicy = Policies.CanModifyStoreSettings
+                    });
+                }
+            }
         }
         return Task.CompletedTask;
     }

@@ -280,13 +280,13 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         }
         await s.GoToStore(s.StoreId);
         await s.GoToStore(s.StoreId, StoreNavPages.Reporting);
-        await s.Page.SelectOptionAsync("#viewName", "Subscribers");
-        await s.ClickPagePrimary();
-        await s.Page.WaitForSelectorAsync(".report-table");
+        await s.Page.ClickAsync("a[data-view='Subscribers']");
+        await s.Page.ClickAsync("#searchBtn");
+        await s.Page.WaitForSelectorAsync("#raw-data-table table");
 
-        await s.Page.SelectOptionAsync("#viewName", "Credit History");
-        await s.ClickPagePrimary();
-        await s.Page.WaitForSelectorAsync(".report-table");
+        await s.Page.ClickAsync("a[data-view='Credit History']");
+        await s.Page.ClickAsync("#searchBtn");
+        await s.Page.WaitForSelectorAsync("#raw-data-table table");
     }
 
     [Fact]

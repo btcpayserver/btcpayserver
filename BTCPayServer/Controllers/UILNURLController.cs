@@ -482,11 +482,11 @@ namespace BTCPayServer
 
             var lightningAddressSettings = await _lightningAddressService.ResolveByAddress(username);
             if (lightningAddressSettings is null)
-                return NotFound(new LNUrlStatusResponse { Status = "ERROR", Reason = "Unknown username" });
+                return NotFound(new LNUrlStatusResponse { Status = "ERROR", Reason = "Not found" });
 
             var store = await _storeRepository.FindStore(lightningAddressSettings.StoreDataId);
             if (store is null)
-                return NotFound(new LNUrlStatusResponse { Status = "ERROR", Reason = "Unknown username" });
+                return NotFound(new LNUrlStatusResponse { Status = "ERROR", Reason = "Not found" });
 
             var cryptoCode = "BTC";
             var pmi = GetLNUrlPaymentMethodId(cryptoCode, store, out var lnUrlMethod);

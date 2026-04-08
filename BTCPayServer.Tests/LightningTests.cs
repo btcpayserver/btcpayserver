@@ -1028,6 +1028,39 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
             "Expected preimage to be null or absent for an unsettled invoice");
         Assert.NotNull(verifyResult["pr"]?.ToString());
 
+        // Repeat the callback with the SAME amount. Exercises the idempotent flush
+        // branch in UpdatePrompt(trackedDestinations): the AddressInvoices row for
+        // the payment hash already exists, so the flush loop should take the
+        // "existing is not null" path without throwing or duplicating rows, and
+        // the verify endpoint should still resolve the hash afterward.
+        var callbackResponse2 = await tester.PayTester.HttpClient.GetAsync(
+            $"{callbackPath}{separator}amount={minSendable}");
+        Assert.Equal(System.Net.HttpStatusCode.OK, callbackResponse2.StatusCode);
+        var verifyResponse2 = await tester.PayTester.HttpClient.GetAsync(verifyPath);
+        Assert.Equal(System.Net.HttpStatusCode.OK, verifyResponse2.StatusCode);
+
+        // Repeat the callback with a DIFFERENT amount. UpdatePrompt should persist
+        // the new prompt blob AND index the new payment hash in AddressInvoices so
+        // the new verify URL resolves.
+        var newAmount = minSendable * 2;
+        var callbackResponse3 = await tester.PayTester.HttpClient.GetAsync(
+            $"{callbackPath}{separator}amount={newAmount}");
+        Assert.Equal(System.Net.HttpStatusCode.OK, callbackResponse3.StatusCode);
+        var callbackResult3 = JObject.Parse(await callbackResponse3.Content.ReadAsStringAsync());
+        var verifyUrl3 = callbackResult3["verify"]?.ToString();
+        Assert.NotNull(verifyUrl3);
+        var verifyPath3 = new Uri(verifyUrl3).PathAndQuery;
+        var verifyResponse3 = await tester.PayTester.HttpClient.GetAsync(verifyPath3);
+        Assert.Equal(System.Net.HttpStatusCode.OK, verifyResponse3.StatusCode);
+
+        // Malformed paymentHash (non-hex / wrong length) must be rejected at the
+        // 64-hex guard before any DB lookup, returning Reason "Not found".
+        var malformedResponse = await tester.PayTester.HttpClient.GetAsync(
+            $"/lnurlp/{username}/verify/not-a-hex-hash");
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, malformedResponse.StatusCode);
+        var malformedBody = JObject.Parse(await malformedResponse.Content.ReadAsStringAsync());
+        Assert.Equal("Not found", malformedBody["reason"]?.ToString());
+
         // Verify storeId isolation - create another store with Lightning + LNURL fully
         // configured, then try to look up store1's payment hash via store2's username.
         var store2 = (await client.CreateStore(new CreateStoreRequest { Name = "store2" })).Id;

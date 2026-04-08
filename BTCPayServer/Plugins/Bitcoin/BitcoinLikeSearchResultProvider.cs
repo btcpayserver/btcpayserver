@@ -18,6 +18,7 @@ public class BitcoinLikeSearchResultProvider(
     PaymentMethodHandlerDictionary paymentMethodHandlers,
     PrettyNameProvider prettyNameProvider) : ISearchResultItemProvider
 {
+    private const string Category = "Wallets";
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
 
     public Task ProvideAsync(SearchResultItemProviderContext context)
@@ -31,7 +32,7 @@ public class BitcoinLikeSearchResultProvider(
         context.ItemResults.Add(new ResultItemViewModel()
         {
             Title = "On-chain wallets list",
-            Category = "Wallets",
+            Category = Category,
             Url = context.Url.Action(nameof(UIWalletsController.ListWallets), "UIWallets"),
             Keywords = ["List", "Wallets"],
             RequiredPolicy = Policies.CanModifyStoreSettings
@@ -56,7 +57,7 @@ public class BitcoinLikeSearchResultProvider(
                     context.ItemResults.Add(new ResultItemViewModel()
                     {
                         Title = prefix + StringLocalizer["Set up a wallet"].Value,
-                        Category = "Wallets",
+                        Category = Category,
                         Url = context.Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { storeId, cryptoCode = network.CryptoCode }),
                         Keywords = ["Setup", "Wallets", network.CryptoCode, translated, untranslated],
                         RequiredPolicy = Policies.CanModifyStoreSettings
@@ -68,14 +69,14 @@ public class BitcoinLikeSearchResultProvider(
                         context.ItemResults.Add(new ResultItemViewModel()
                         {
                             Title = prefix + StringLocalizer["Send"].Value,
-                            Category = "Wallets",
+                            Category = Category,
                             Keywords = ["Send", "Wallets", network.CryptoCode, translated, untranslated],
                             RequiredPolicy = Policies.CanModifyStoreSettings
                         });
                     context.ItemResults.Add(new ResultItemViewModel()
                     {
                         Title = prefix + StringLocalizer["Receive"].Value,
-                        Category = "Wallets",
+                        Category = Category,
                         Url = context.Url.WalletReceive(walletId),
                         Keywords = ["Receive", "Wallets", network.CryptoCode, translated, untranslated],
                         RequiredPolicy = Policies.CanModifyStoreSettings
@@ -83,7 +84,7 @@ public class BitcoinLikeSearchResultProvider(
                     context.ItemResults.Add(new ResultItemViewModel()
                     {
                         Title = prefix + StringLocalizer["Transactions"].Value,
-                        Category = "Wallets",
+                        Category = Category,
                         Url = context.Url.WalletTransactions(walletId),
                         Keywords = ["Transactions", "Wallets", network.CryptoCode, translated, untranslated],
                         RequiredPolicy = Policies.CanModifyStoreSettings
@@ -91,7 +92,7 @@ public class BitcoinLikeSearchResultProvider(
                     context.ItemResults.Add(new ResultItemViewModel()
                     {
                         Title = prefix + StringLocalizer["Settings"].Value,
-                        Category = "Wallets",
+                        Category = Category,
                         Url = context.Url.WalletSettings(walletId),
                         Keywords = ["Settings", "Wallets", network.CryptoCode, translated, untranslated],
                         RequiredPolicy = Policies.CanModifyStoreSettings
@@ -110,10 +111,21 @@ public class BitcoinLikeSearchResultProvider(
                 {
                     context.ItemResults.Add(new ResultItemViewModel()
                     {
-                        Title = prefix + StringLocalizer["Set up a wallet"].Value,
-                        Category = "Wallets",
+                        Title = prefix + StringLocalizer["Set up a Lightning node"].Value,
+                        Category = Category,
                         Url = context.Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { storeId, cryptoCode = network.CryptoCode }),
                         Keywords = ["Setup", "Wallets", network.CryptoCode, translated, untranslated],
+                        RequiredPolicy = Policies.CanModifyStoreSettings
+                    });
+                }
+                else
+                {
+                    context.ItemResults.Add(new ResultItemViewModel()
+                    {
+                        Title = prefix + StringLocalizer["Public Node Info"].Value,
+                        Category = Category,
+                        Url = context.Url.Action(nameof(UIPublicLightningNodeInfoController.ShowLightningNodeInfo), "UIPublicLightningNodeInfo", new { storeId, cryptoCode = network.CryptoCode }),
+                        Keywords = [translated, untranslated],
                         RequiredPolicy = Policies.CanModifyStoreSettings
                     });
                 }

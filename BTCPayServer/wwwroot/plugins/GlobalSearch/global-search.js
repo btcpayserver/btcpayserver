@@ -1,3 +1,7 @@
+let main = async function () {
+    // ...
+};
+
 (function () {
     var vm = window.globalSearch;
     var currentMatches = [];
@@ -535,6 +539,7 @@
 
 
     document.addEventListener("DOMContentLoaded", () => {
-        initGlobalSearch();
+        if (vm.items)
+            initGlobalSearch();
     });
 })();

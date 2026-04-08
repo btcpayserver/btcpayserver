@@ -1,5 +1,32 @@
 # Changelog
 
+## 2.3.7
+
+This release is the first release using .NET 10.
+We invite plugin developers to [follow our guide](https://blog.btcpayserver.org/migrating-to-net10/) for a smoother migration.
+
+We recommend that users update their plugins after upgrading to 2.3.7.
+
+### New Features
+
+* Wallets: Add the ability to add comment to the transaction on the Send view (#6687 #7265) @Abhijay007
+* Subscriptions: Add manual subscription date editing for admins (#7231 #7257) @Abhijay007
+* Invoices: When the lightning provider supports it, top-up invoices now generate an amount-less BOLT11 instead of LNURL. (#7263) @bigg-bb
+* Plugins: Add the Update button to the disabled plugins section (#7051 #7260) @rollforsats
+* Subscriptions: SubscriberDisabled webhook now includes the reason why the subscriber has been disabled (#7270) @NicolasDorier
+* Greenfield: Implement UpdateCrowdfundApp endpoint and client method (#7202) @webiumsk
+* Subscriptions/API: Can delete subscribers via UI and API (#7206 #7254) @NicolasDorier
+* Invoices: Add RTL Language support (Arabic, Hebrew, and Farsi) for invoice checkout (#444 #7259) @Abhijay007
+* Invoices: Show payment method on receipt (#7174 #7226) @TChukwuleta
+* Subscriptions: Allow upgrade/downgrade at the period end (#7147 #7258) @TChukwuleta
+
+### Fixes
+
+* Fix: If an admin was accessing a user's store from a user list, it was returning error 404 @NicolasDorier
+* Emails: skip SMTP AUTH when Login and Password are empty (#7267 #7269) @ThomsenDrake
+* Fix: Wallet balance time period switch was broken (#7246 #7247) @Abhijay007
+* Exclude trial subscribers from monthly revenue (#7272 #7273) @Abhijay007
+
 ## 2.3.6
 
 ### New Features

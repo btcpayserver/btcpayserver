@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -24,6 +25,7 @@ public class MigrationExecutor<TDbContext>(
     public async Task Execute(CancellationToken cancellationToken)
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        dbContext.Database.SetCommandTimeout(TimeSpan.FromDays(1.0));
         var history = dbContext.Database.GetService<IHistoryRepository>();
         var appliedMigrations = (await history.GetAppliedMigrationsAsync(cancellationToken)).Select(m => m.MigrationId).ToHashSet();
         var insertedRows = new List<HistoryRow>();

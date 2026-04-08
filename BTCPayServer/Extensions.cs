@@ -457,6 +457,20 @@ namespace BTCPayServer
             return services;
         }
 
+        /// <summary>
+        /// Add a raw SQL migration to run when BTCPay Server starts
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="migrationId">A unique id for the migration. Migrations execute in alphabetic order, so we suggest to prefix the date of creation of the migration. (eg. 20260106_cleanupappidentities)</param>
+        /// <param name="sql">The raw SQL of the migration</param>
+        /// <returns></returns>
+        public static IServiceCollection AddMigration(this IServiceCollection services, string migrationId, string sql)
+        {
+            services.TryAddSingleton<IMigrationExecutor, MigrationExecutor<ApplicationDbContext>>();
+            services.AddSingleton<MigrationBase<ApplicationDbContext>, RawSqlMigration>(_ => new RawSqlMigration(migrationId, sql));
+            return services;
+        }
+
         public static IServiceCollection AddMigration<TDbContext, TMigration>(this IServiceCollection services)
             where TDbContext : DbContext
             where TMigration : MigrationBase<TDbContext>

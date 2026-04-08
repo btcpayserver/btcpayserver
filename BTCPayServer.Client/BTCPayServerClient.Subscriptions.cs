@@ -11,8 +11,12 @@ public partial class BTCPayServerClient
 {
     public async Task<OfferingModel> CreateOffering(string storeId, OfferingModel offering, CancellationToken token = default)
     => await SendHttpRequest<OfferingModel>($"api/v1/stores/{storeId}/offerings", offering, HttpMethod.Post, token);
+    public async Task<OfferingModel> UpdateOffering(string storeId, string offeringId, OfferingModel offering, CancellationToken token = default)
+    => await SendHttpRequest<OfferingModel>($"api/v1/stores/{storeId}/offerings/{offeringId}", offering, HttpMethod.Put, token);
     public async Task<OfferingPlanModel> CreateOfferingPlan(string storeId, string offeringId, CreatePlanRequest request, CancellationToken token = default)
     => await SendHttpRequest<OfferingPlanModel>($"api/v1/stores/{storeId}/offerings/{offeringId}/plans", request, HttpMethod.Post, token);
+    public async Task<OfferingPlanModel> UpdateOfferingPlan(string storeId, string offeringId, string planId, CreatePlanRequest request, CancellationToken token = default)
+    => await SendHttpRequest<OfferingPlanModel>($"api/v1/stores/{storeId}/offerings/{offeringId}/plans/{planId}", request, HttpMethod.Put, token);
     public async Task<OfferingPlanModel> GetOfferingPlan(string storeId, string offeringId, string planId, CancellationToken token = default)
     => await SendHttpRequest<OfferingPlanModel>($"api/v1/stores/{storeId}/offerings/{offeringId}/plans/{planId}", null, HttpMethod.Get, token);
 

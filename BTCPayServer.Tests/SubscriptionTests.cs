@@ -15,6 +15,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Plugins.Subscriptions;
 using BTCPayServer.Tests.PMO;
+using BTCPayServer.Views.Stores;
 using Microsoft.Playwright;
 using NBitcoin;
 using NBXplorer;
@@ -277,6 +278,15 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             expectedBalance = 0m;
             await portal.AssertCredit(creditBalance: $"${expectedBalance.ToString("F2", CultureInfo.InvariantCulture)}");
         }
+        await s.GoToStore(s.StoreId);
+        await s.GoToStore(s.StoreId, StoreNavPages.Reporting);
+        await s.Page.SelectOptionAsync("#viewName", "Subscribers");
+        await s.ClickPagePrimary();
+        await s.Page.WaitForSelectorAsync(".report-table");
+
+        await s.Page.SelectOptionAsync("#viewName", "Credit History");
+        await s.ClickPagePrimary();
+        await s.Page.WaitForSelectorAsync(".report-table");
     }
 
     [Fact]

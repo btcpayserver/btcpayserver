@@ -1024,16 +1024,38 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         Assert.Null(verifyResult["preimage"]?.ToString());
         Assert.NotNull(verifyResult["pr"]?.ToString());
 
-        // Verify storeId isolation - create another store and Lightning Address
+        // Verify storeId isolation - create another store with Lightning + LNURL fully
+        // configured, then try to look up store1's payment hash via store2's username.
         var store2 = (await client.CreateStore(new CreateStoreRequest { Name = "store2" })).Id;
+        var connectionString = tester.GetLightningConnectionString(null, true);
+        await client.UpdateStorePaymentMethod(store2, "BTC-LN", new UpdatePaymentMethodRequest
+        {
+            Enabled = true,
+            Config = new JObject { ["connectionString"] = connectionString }
+        });
+        await client.UpdateStorePaymentMethod(store2, "BTC-LNURL", new UpdatePaymentMethodRequest
+        {
+            Enabled = true,
+            Config = new JObject
+            {
+                ["useBech32Scheme"] = true,
+                ["lud12Enabled"] = false,
+                ["lud21Enabled"] = true
+            }
+        });
         var username2 = Guid.NewGuid().ToString("n").Substring(0, 8);
         await client.AddOrUpdateStoreLightningAddress(store2, username2,
             new LightningAddressData());
 
-        // Trying to look up store1's payment hash via store2's username should fail
+        // Trying to look up store1's payment hash via store2's username should hit the
+        // invoice-lookup / store-isolation branch and fail with Reason "Not found",
+        // not the earlier "Not available" feature-gate branch.
         var paymentHash = verifyPath.Split('/').Last();
         var crossStoreResponse = await tester.PayTester.HttpClient.GetAsync(
             $"/lnurlp/{username2}/verify/{paymentHash}");
         Assert.Equal(System.Net.HttpStatusCode.NotFound, crossStoreResponse.StatusCode);
+        var crossStoreBody = JObject.Parse(await crossStoreResponse.Content.ReadAsStringAsync());
+        Assert.Equal("ERROR", crossStoreBody["status"]?.ToString());
+        Assert.Equal("Not found", crossStoreBody["reason"]?.ToString());
     }
 }

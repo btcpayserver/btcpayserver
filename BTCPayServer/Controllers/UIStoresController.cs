@@ -166,8 +166,8 @@ public partial class UIStoresController : Controller
                     CryptoCode = cryptoCode,
                     HasWallet = store.GetPaymentMethodConfig<DerivationSchemeSettings>(PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode), _handlers) is not null,
                     WalletTypePolicy = cryptoCode.Equals("BTC", StringComparison.OrdinalIgnoreCase)
-                        ? Policies.CanModifyBitcoinOnchain
-                        : Policies.CanModifyOtherWallets
+                        ? Policies.CanUseBitcoinOnchain
+                        : Policies.CanUseOtherWallets
                 })
                 .Where(wallet => wallet.HasWallet && permissionSet.HasPermission(wallet.WalletTypePolicy, store.Id, _permissionService))
                 .Select(wallet => new WalletId(storeId, wallet.CryptoCode).ToString())

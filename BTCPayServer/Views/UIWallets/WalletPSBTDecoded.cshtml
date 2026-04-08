@@ -5,8 +5,8 @@
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
     var walletTypePolicy = Model.CryptoCode?.Equals("BTC", StringComparison.OrdinalIgnoreCase) is true
-        ? Policies.CanModifyBitcoinOnchain
-        : Policies.CanModifyOtherWallets;
+        ? Policies.CanUseBitcoinOnchain
+        : Policies.CanUseOtherWallets;
     var walletViewPermission = $"{walletTypePolicy},{Policies.CanViewWallet}";
     var walletExportPermission = $"{walletViewPermission},{Policies.CanCreateWalletTransactions}";
     var walletBroadcastPermission = $"{walletViewPermission},{Policies.CanBroadcastWalletTransactions}";

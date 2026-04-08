@@ -12,7 +12,7 @@ public partial class UIStoresController
             await EnsureStoreContextAsync(storeId);
             return true;
         }
-        foreach (var policy in new[] { Policies.CanModifyBitcoinLightning, Policies.CanManageWalletSettings })
+        foreach (var policy in new[] { Policies.CanUseBitcoinLightning, Policies.CanManageWalletSettings })
         {
             if (!(await _authorizationService.AuthorizeAsync(User, storeId, policy)).Succeeded)
                 return false;

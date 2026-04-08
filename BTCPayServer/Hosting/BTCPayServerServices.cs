@@ -554,25 +554,25 @@ namespace BTCPayServer.Hosting
                     new PermissionDisplay("Manage selected stores' wallets", "Allows managing wallets on the selected stores, including wallet settings and transactions."),
                     new[]
                     {
-                        Policies.CanModifyBitcoinOnchain,
-                        Policies.CanModifyBitcoinLightning,
-                        Policies.CanModifyOtherWallets,
+                        Policies.CanUseBitcoinOnchain,
+                        Policies.CanUseBitcoinLightning,
+                        Policies.CanUseOtherWallets,
                         Policies.CanViewWallet,
                         Policies.CanManageWalletSettings,
                         Policies.CanManageWalletTransactions
                     }),
                 new PolicyDefinition(
-                    Policies.CanModifyBitcoinOnchain,
-                    new PermissionDisplay("Modify Bitcoin on-chain wallets", "Allows access to Bitcoin on-chain wallets on all your stores."),
-                    new PermissionDisplay("Modify selected stores' Bitcoin on-chain wallets", "Allows access to Bitcoin on-chain wallets on the selected stores.")),
+                    Policies.CanUseBitcoinOnchain,
+                    new PermissionDisplay("Use Bitcoin on-chain wallets", "Allows access to Bitcoin on-chain wallets on all your stores."),
+                    new PermissionDisplay("Use selected stores' Bitcoin on-chain wallets", "Allows access to Bitcoin on-chain wallets on the selected stores.")),
                 new PolicyDefinition(
-                    Policies.CanModifyBitcoinLightning,
-                    new PermissionDisplay("Modify Bitcoin Lightning wallets", "Allows access to Bitcoin Lightning wallets on all your stores."),
-                    new PermissionDisplay("Modify selected stores' Bitcoin Lightning wallets", "Allows access to Bitcoin Lightning wallets on the selected stores.")),
+                    Policies.CanUseBitcoinLightning,
+                    new PermissionDisplay("Use Bitcoin Lightning wallets", "Allows access to Bitcoin Lightning wallets on all your stores."),
+                    new PermissionDisplay("Use selected stores' Bitcoin Lightning wallets", "Allows access to Bitcoin Lightning wallets on the selected stores.")),
                 new PolicyDefinition(
-                    Policies.CanModifyOtherWallets,
-                    new PermissionDisplay("Modify other wallets", "Allows access to non-Bitcoin wallets on all your stores."),
-                    new PermissionDisplay("Modify selected stores' other wallets", "Allows access to non-Bitcoin wallets on the selected stores.")),
+                    Policies.CanUseOtherWallets,
+                    new PermissionDisplay("Use other wallets", "Allows access to non-Bitcoin wallets on all your stores."),
+                    new PermissionDisplay("Use selected stores' other wallets", "Allows access to non-Bitcoin wallets on the selected stores.")),
                 new PolicyDefinition(
                     Policies.CanViewWallet,
                     new PermissionDisplay("View wallets", "Allows viewing wallets, balances, and transactions."),

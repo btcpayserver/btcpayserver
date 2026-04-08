@@ -18,8 +18,8 @@
     var popularLabels = Model.PopularLabels.OrderBy(l => l.Text, StringComparer.OrdinalIgnoreCase).ToList();
     var initialLabels = popularLabels.Any() ? popularLabels : sortedLabels.Take(maxVisibleLabels).ToList();
     var walletTypePolicy = wallet.CryptoCode.Equals("BTC", StringComparison.OrdinalIgnoreCase)
-        ? Policies.CanModifyBitcoinOnchain
-        : Policies.CanModifyOtherWallets;
+        ? Policies.CanUseBitcoinOnchain
+        : Policies.CanUseOtherWallets;
     var walletViewPermission = $"{walletTypePolicy},{Policies.CanViewWallet}";
     var walletCreateTxPermission = $"{walletViewPermission},{Policies.CanCreateWalletTransactions}";
     var walletBroadcastTxPermission = $"{walletViewPermission},{Policies.CanBroadcastWalletTransactions}";

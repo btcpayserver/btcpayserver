@@ -233,8 +233,8 @@ public class MultisigNotificationService(
             .Where(id => !string.IsNullOrWhiteSpace(id))
             .ToHashSet(StringComparer.Ordinal);
         var walletTypePolicy = cryptoCode.Equals("BTC", StringComparison.OrdinalIgnoreCase)
-            ? Policies.CanModifyBitcoinOnchain
-            : Policies.CanModifyOtherWallets;
+            ? Policies.CanUseBitcoinOnchain
+            : Policies.CanUseOtherWallets;
 
         var storeUsers = await storeRepository.GetStoreUsers(storeId);
         return storeUsers

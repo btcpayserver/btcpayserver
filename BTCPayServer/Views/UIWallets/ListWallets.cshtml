@@ -46,8 +46,8 @@
                     @foreach (var wallet in Model.Wallets)
                     {
                     var walletTypePolicy = wallet.CryptoCode.Equals("BTC", StringComparison.OrdinalIgnoreCase)
-                        ? Policies.CanModifyBitcoinOnchain
-                        : Policies.CanModifyOtherWallets;
+                        ? Policies.CanUseBitcoinOnchain
+                        : Policies.CanUseOtherWallets;
                     var walletPermission = $"{walletTypePolicy},{Policies.CanViewWallet}";
                     <tr>
 

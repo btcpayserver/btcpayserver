@@ -22,9 +22,9 @@ namespace BTCPayServer.Client
         public const string CanCreateInvoice = "btcpay.store.cancreateinvoice";
         public const string CanModifyInvoices = "btcpay.store.canmodifyinvoices";
         public const string CanManageWallets = "btcpay.store.canmanagewallets";
-        public const string CanModifyBitcoinOnchain = "btcpay.store.canmodifybitcoinonchain";
-        public const string CanModifyBitcoinLightning = "btcpay.store.canmodifybitcoinlightning";
-        public const string CanModifyOtherWallets = "btcpay.store.canmodifyotherwallets";
+        public const string CanUseBitcoinOnchain = "btcpay.store.canusebitcoinonchain";
+        public const string CanUseBitcoinLightning = "btcpay.store.canusebitcoinlightning";
+        public const string CanUseOtherWallets = "btcpay.store.canuseotherwallets";
         public const string CanViewWallet = "btcpay.store.canviewwallet";
         public const string CanManageWalletSettings = "btcpay.store.canmanagewalletsettings";
         public const string CanManageWalletTransactions = "btcpay.store.canmanagewallettransactions";

@@ -104,8 +104,8 @@
                                 {
                                     var isSetUp = !string.IsNullOrWhiteSpace(scheme.Value);
                                     var walletTypePolicy = scheme.Crypto.Equals("BTC", StringComparison.OrdinalIgnoreCase)
-                                        ? Policies.CanModifyBitcoinOnchain
-                                        : Policies.CanModifyOtherWallets;
+                                        ? Policies.CanUseBitcoinOnchain
+                                        : Policies.CanUseOtherWallets;
                                     var walletViewPermission = $"{walletTypePolicy},{Policies.CanViewWallet}";
                                     var walletCreatePermission = $"{walletViewPermission},{Policies.CanCreateWalletTransactions}";
                                     var walletSettingsPermission = $"{walletTypePolicy},{Policies.CanManageWalletSettings}";
@@ -162,7 +162,7 @@
                                             <a
                                                 data-testid="Lightning-@scheme.CryptoCode"
                                                 layout-menu-item="@nameof(StoreNavPages.Lightning)-@scheme.CryptoCode"
-                                                asp-area="" asp-controller="UIStores" asp-action="Lightning" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" permission="@($"{Policies.CanModifyBitcoinLightning},{Policies.CanManageWalletSettings}")" and-mode="true">
+                                                asp-area="" asp-controller="UIStores" asp-action="Lightning" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" permission="@($"{Policies.CanUseBitcoinLightning},{Policies.CanManageWalletSettings}")" and-mode="true">
                                                 <span class="me-2 btcpay-status btcpay-status--@status"></span>
                                                 <span>@PrettyName.PrettyName(scheme.PaymentMethodId)</span>
                                             </a>
@@ -172,7 +172,7 @@
                                             <a
                                                 data-testid="Lightning-@scheme.CryptoCode"
                                                 layout-menu-item="@nameof(StoreNavPages.LightningSettings)-@scheme.CryptoCode"
-                                                asp-area="" asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" permission="@($"{Policies.CanModifyBitcoinLightning},{Policies.CanManageWalletSettings}")" and-mode="true">
+                                                asp-area="" asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" permission="@($"{Policies.CanUseBitcoinLightning},{Policies.CanManageWalletSettings}")" and-mode="true">
                                                 <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "pending")"></span>
                                                 <span>@PrettyName.PrettyName(scheme.PaymentMethodId)</span>
                                             </a>
@@ -181,7 +181,7 @@
                                     @if (ViewData.IsCategory(WellKnownCategories.ForLightning(scheme.CryptoCode)))
                                     {
                                         <li class="nav-item nav-item-sub">
-                                            <a layout-menu-item="@(nameof(StoreNavPages.LightningSettings))-@scheme.CryptoCode" asp-controller="UIStores" asp-action="LightningSettings" asp-route-storeId="@Model.Store.Id" asp-route-cryptoCode="@scheme.CryptoCode" text-translate="true" permission="@($"{Policies.CanModifyBitcoinLightning},{Policies.CanManageWalletSettings}")" and-mode="true">Settings</a>
+                                            <a layout-menu-item="@(nameof(StoreNavPages.LightningSettings))-@scheme.CryptoCode" asp-controller="UIStores" asp-action="LightningSettings" asp-route-storeId="@Model.Store.Id" asp-route-cryptoCode="@scheme.CryptoCode" text-translate="true" permission="@($"{Policies.CanUseBitcoinLightning},{Policies.CanManageWalletSettings}")" and-mode="true">Settings</a>
                                         </li>
                                         <vc:ui-extension-point location="lightning-nav" model="@Model"/>
                                     }

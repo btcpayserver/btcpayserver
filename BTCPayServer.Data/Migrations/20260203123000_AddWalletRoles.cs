@@ -28,7 +28,7 @@ namespace BTCPayServer.Migrations
                     {
                         "Multisigner", "Multisigner", new[]
                         {
-                            "btcpay.store.canmodifybitcoinonchain",
+                            "btcpay.store.canusebitcoinonchain",
                             "btcpay.store.canviewwallet",
                             "btcpay.store.canmanagewallettransactions"
                         }
@@ -36,7 +36,7 @@ namespace BTCPayServer.Migrations
                     {
                         "Multisigner Guest", "Multisigner Guest", new[]
                         {
-                            "btcpay.store.canmodifybitcoinonchain",
+                            "btcpay.store.canusebitcoinonchain",
                             "btcpay.store.canviewwallet",
                             "btcpay.store.cansigntransactions"
                         }

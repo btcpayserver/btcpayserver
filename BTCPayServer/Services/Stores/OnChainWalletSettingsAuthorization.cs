@@ -18,8 +18,8 @@ public class OnChainWalletSettingsAuthorization(
             return true;
 
         var walletTypePolicy = cryptoCode.Equals("BTC", StringComparison.OrdinalIgnoreCase)
-            ? Policies.CanModifyBitcoinOnchain
-            : Policies.CanModifyOtherWallets;
+            ? Policies.CanUseBitcoinOnchain
+            : Policies.CanUseOtherWallets;
         foreach (var policy in new[] { walletTypePolicy, Policies.CanManageWalletSettings })
         {
             if (!(await authorizationService.AuthorizeAsync(user, storeId, policy)).Succeeded)

@@ -333,7 +333,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         var walletManagerPermissionSet = walletManagerStore.GetPermissionSet(walletManagerUser.Id);
         Assert.True(walletManagerPermissionSet.HasPermission(Policies.CanManageWallets, storeId, permissionService));
         Assert.True(walletManagerPermissionSet.HasPermission(Policies.CanManageWalletSettings, storeId, permissionService));
-        Assert.True(walletManagerPermissionSet.HasPermission(Policies.CanModifyBitcoinOnchain, storeId, permissionService));
+        Assert.True(walletManagerPermissionSet.HasPermission(Policies.CanUseBitcoinOnchain, storeId, permissionService));
 
         string StoreIndex(string id) => $"/stores/{id}/index";
         string StorePath(string id, string subPath) => $"/stores/{id}/{subPath}";

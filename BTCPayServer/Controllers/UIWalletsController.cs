@@ -590,8 +590,8 @@ namespace BTCPayServer.Controllers
                     {
                         var permissionSet = s.GetPermissionSet(userId);
                         var walletTypePolicy = o.Network.CryptoCode.Equals("BTC", StringComparison.OrdinalIgnoreCase)
-                            ? Policies.CanModifyBitcoinOnchain
-                            : Policies.CanModifyOtherWallets;
+                            ? Policies.CanUseBitcoinOnchain
+                            : Policies.CanUseOtherWallets;
                         return permissionSet.HasPermission(Policies.CanViewWallet, s.Id, _permissionService) &&
                                permissionSet.HasPermission(walletTypePolicy, s.Id, _permissionService);
                     })
@@ -2057,8 +2057,8 @@ namespace BTCPayServer.Controllers
         private string GetWalletTypePolicy(WalletId walletId)
         {
             return walletId.CryptoCode.Equals("BTC", StringComparison.OrdinalIgnoreCase)
-                ? Policies.CanModifyBitcoinOnchain
-                : Policies.CanModifyOtherWallets;
+                ? Policies.CanUseBitcoinOnchain
+                : Policies.CanUseOtherWallets;
         }
 
         private async Task<bool> AuthorizeWalletAsync(WalletId walletId, params string[] policies)

@@ -128,33 +128,61 @@ public class PendingTransactionService(
 
     public async Task<PendingTransaction?> CollectSignature(PendingTransactionFullId id, PSBT psbt, CancellationToken cancellationToken, string? signerUserId = null)
     {
-        await using var ctx = dbContextFactory.CreateContext();
+        const int maxAttempts = 3;
+        var newPsbtBase64 = psbt.ToBase64();
+
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            await using var ctx = dbContextFactory.CreateContext();
+            try
+            {
+                var pendingTransaction = await TryCollectSignatureOnce(ctx, id, psbt, newPsbtBase64, cancellationToken);
+                if (pendingTransaction is null)
+                    return null;
+
+                await ctx.SaveChangesAsync(cancellationToken);
+                EventAggregator.Publish(new PendingTransactionEvent
+                {
+                    Data = pendingTransaction,
+                    SignerUserId = signerUserId,
+                    Type = PendingTransactionEvent.SignatureCollected
+                });
+                return pendingTransaction;
+            }
+            catch (DbUpdateConcurrencyException) when (attempt < maxAttempts - 1)
+            {
+                // Another signer updated the pending transaction first. Re-read the row,
+                // merge again on top of the latest effective PSBT, and retry.
+            }
+        }
+
+        throw new DbUpdateConcurrencyException("Failed to collect pending transaction signatures due to concurrent updates.");
+    }
+
+    private async Task<PendingTransaction?> TryCollectSignatureOnce(
+        ApplicationDbContext ctx,
+        PendingTransactionFullId id,
+        PSBT psbt,
+        string newPsbtBase64,
+        CancellationToken cancellationToken)
+    {
         var pendingTransaction = await ctx.PendingTransactions.FirstOrDefaultAsync(p =>
             p.CryptoCode == id.CryptoCode && p.StoreId == id.StoreId && p.Id == id.Id, cancellationToken);
 
         if (pendingTransaction?.State is not PendingTransactionState.Pending)
-        {
             return null;
-        }
 
         var blob = pendingTransaction.GetBlob();
         if (blob?.PSBT is null)
-        {
             return null;
-        }
 
         var network = networkProvider.GetNetwork<BTCPayNetwork>(pendingTransaction.CryptoCode)?.NBitcoinNetwork ?? psbt.Network;
 
-        // Deduplicate: Check if this exact PSBT (Base64) was already collected
-        var newPsbtBase64 = psbt.ToBase64();
+        // Deduplicate exact duplicates before doing any merge work.
         if (blob.CollectedSignatures.Any(s => s.ReceivedPSBT == newPsbtBase64))
-        {
-            return pendingTransaction; // Avoid duplicate signature collection
-        }
+            return pendingTransaction;
 
-        var currentPsbt = BuildEffectivePsbt(blob, network);
-        var beforeProgress = GetSignatureProgress(currentPsbt);
-
+        var beforeProgress = GetSignatureProgress(BuildEffectivePsbt(blob, network));
         var mergedPsbt = BuildEffectivePsbt(blob, network, psbt);
         var afterProgress = GetSignatureProgress(mergedPsbt);
 
@@ -175,14 +203,6 @@ public class PendingTransactionService(
             pendingTransaction.State = PendingTransactionState.Signed;
         }
         pendingTransaction.SetBlob(blob);
-
-        await ctx.SaveChangesAsync(cancellationToken);
-        EventAggregator.Publish(new PendingTransactionEvent
-        {
-            Data = pendingTransaction,
-            SignerUserId = signerUserId,
-            Type = PendingTransactionEvent.SignatureCollected
-        });
         return pendingTransaction;
     }
 

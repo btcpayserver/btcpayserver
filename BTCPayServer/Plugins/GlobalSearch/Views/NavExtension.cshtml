@@ -1,9 +1,14 @@
+@using BTCPayServer.Client
 @using BTCPayServer.Plugins.GlobalSearch
+@using BTCPayServer.Security
+@using Microsoft.AspNetCore.Authorization
 
 @inject SearchResultItemProviders SearchResultItemProviders
+@inject IAuthorizationService authorizationService
 
 @{
-    var vm = await SearchResultItemProviders.GetViewModel(this.User, this.Context.GetNavStoreData(), this.Url);
+    await authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanViewStoreSettings));
+    var vm = await SearchResultItemProviders.GetViewModel(this.User, Context.GetNavStoreData(), this.Url);
 }
 
 <button id="globalSearchMobileToggle"
@@ -56,7 +61,6 @@
             data-search-suggestion=""
         >
             <span class="globalSearch-item-title">
-                <span class="globalSearch-item-category"></span>
             </span>
             <div class="globalSearch-item-subtitle"></div>
         </a>

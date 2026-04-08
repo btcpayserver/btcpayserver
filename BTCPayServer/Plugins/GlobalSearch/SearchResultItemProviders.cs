@@ -1,15 +1,11 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.GlobalSearch.Views;
-using BTCPayServer.Security;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
@@ -20,21 +16,15 @@ public class SearchResultItemProviders(
     IEnumerable<ISearchResultItemProvider> providers,
     IAuthorizationService authorizationService,
     IStringLocalizer stringLocalizer,
-    IHttpContextAccessor httpContextAccessor,
     UserManager<ApplicationUser> userManager)
 {
-    public async Task<GlobalSearchViewModel> GetViewModel(ClaimsPrincipal user, StoreData? store, IUrlHelper url)
+    public async Task<GlobalSearchViewModel> GetViewModel(ClaimsPrincipal user, StoreData? store, IUrlHelper url, string? userQuery = null)
     {
-        if (store is null)
-        {
-            await authorizationService.AuthorizeAsync(user, null, new PolicyRequirement(Policies.CanViewStoreSettings));
-            store = httpContextAccessor.HttpContext?.GetNavStoreData();
-        }
-
         var id = userManager.GetUserId(user) ?? throw new InvalidOperationException("Invalid user");
         var ctx = new SearchResultItemProviderContext(user, id, url, authorizationService)
         {
-            Store = store
+            Store = store,
+            UserQuery = userQuery
         };
         foreach (var provider in providers)
         {

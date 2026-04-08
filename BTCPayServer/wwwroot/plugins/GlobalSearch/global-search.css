@@ -206,7 +206,7 @@
     line-height: 1.35;
 }
 
-#globalNav .globalSearch-item-category {
+#globalNav {
     color: var(--btcpay-body-text-muted);
     font-size: var(--btcpay-font-size-xs);
     font-weight: var(--btcpay-font-weight-semibold);

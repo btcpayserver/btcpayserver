@@ -11,6 +11,7 @@ public class GlobalSearchViewModel
 }
 public class ResultItemViewModel
 {
+    [JsonIgnore]
     public string RequiredPolicy { get; set; }
     public string Title { get; set; }
     public string SubTitle { get; set; }

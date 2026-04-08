@@ -195,7 +195,6 @@
             else
                 button.href = result.url;
             const title = fragment.querySelector('.globalSearch-item-title');
-            const category = fragment.querySelector('.globalSearch-item-category');
             const subtitle = fragment.querySelector('.globalSearch-item-subtitle');
 
             if (result.query)
@@ -205,11 +204,6 @@
 
             title.firstChild.textContent = result.title;
 
-            if (result.category) {
-                category.textContent = result.category;
-            } else {
-                category.remove();
-            }
             if (result.subtitle) {
                 subtitle.textContent = result.subtitle;
             } else {
@@ -412,7 +406,8 @@
                     remoteMatches = [];
                 }
                 if (token !== latestSearchToken || !panelOpen) return;
-                renderResults(mergeResults(remoteMatches));
+                renderResults(remoteMatches);
+                currentMatches = remoteMatches;
             }
         };
 

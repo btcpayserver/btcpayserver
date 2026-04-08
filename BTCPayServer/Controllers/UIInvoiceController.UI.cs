@@ -1071,7 +1071,7 @@ namespace BTCPayServer.Controllers
             model.Search = fs;
             model.SearchText = fs.TextCombined;
 
-            var apps = await _appService.GetAllApps(User.GetIdOrNull(), false, storeId);
+            var apps =  await _appService.GetAllApps(User.GetIdOrNull(), false, storeId);
             InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, apps, timezoneOffset);
             invoiceQuery.StoreId = storeIds.ToArray();
             invoiceQuery.Take = model.Count;
@@ -1112,7 +1112,11 @@ namespace BTCPayServer.Controllers
 
         private InvoiceQuery GetInvoiceQuery(SearchString fs, ListAppsViewModel.ListAppViewModel[] apps, int timezoneOffset = 0)
         {
-            var textSearch = fs.TextSearch;
+            var query = new InvoiceQuery()
+            {
+                UserId = GetUserIdForInvoiceQuery()
+            };
+            query.FillFromSearchText(fs, timezoneOffset);
             if (fs.GetFilterArray("appid") is { } appIds)
             {
                 var appsById = apps.ToDictionary(a => a.Id);
@@ -1120,22 +1124,10 @@ namespace BTCPayServer.Controllers
                     .Select(a => AppService.GetAppSearchTerm(a!.AppType, a.Id))
                     .ToList();
                 searchTexts.Add(fs.TextSearch);
-                textSearch = string.Join(' ', searchTexts.Where(t => !string.IsNullOrEmpty(t)).ToList());
+                var textSearch = string.Join(' ', searchTexts.Where(t => !string.IsNullOrEmpty(t)).ToList());
+                query.TextSearch = textSearch;
             }
-            return new InvoiceQuery
-            {
-                TextSearch = textSearch,
-                UserId = GetUserIdForInvoiceQuery(),
-                Unusual = fs.GetFilterBool("unusual"),
-                IncludeArchived = fs.GetFilterBool("includearchived") ?? false,
-                Status = fs.GetFilterArray("status"),
-                ExceptionStatus = fs.GetFilterArray("exceptionstatus"),
-                StoreId = fs.GetFilterArray("storeid"),
-                ItemCode = fs.GetFilterArray("itemcode"),
-                OrderId = fs.GetFilterArray("orderid"),
-                StartDate = fs.GetFilterDate("startdate", timezoneOffset),
-                EndDate = fs.GetFilterDate("enddate", timezoneOffset)
-            };
+            return query;
         }
 
         [HttpGet("/stores/{storeId}/invoices/create")]

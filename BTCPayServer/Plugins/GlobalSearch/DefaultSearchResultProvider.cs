@@ -15,6 +15,7 @@ public class DefaultSearchResultProvider : ISearchResultItemProvider
     {
         if (context.UserQuery is not null)
             return;
+
         var canModifyServer = await context.IsAuthorized(Policies.CanModifyServerSettings);
         var canViewProfile = await context.IsAuthorized(Policies.CanViewProfile);
         var canViewNotifications = await context.IsAuthorized(Policies.CanViewNotificationsForUser);
@@ -24,7 +25,7 @@ public class DefaultSearchResultProvider : ISearchResultItemProvider
         {
             var canViewStoreSettings = await context.IsAuthorized(Policies.CanViewStoreSettings);
             var canModifyStoreSettings = await context.IsAuthorized(Policies.CanModifyStoreSettings);
-            var canViewInvoices = await context.IsAuthorized(Policies.CanViewInvoices);
+
             var canViewPaymentRequests = await context.IsAuthorized(Policies.CanViewPaymentRequests);
             var canViewPullPayments = await context.IsAuthorized(Policies.CanViewPullPayments);
             var canViewPayouts = await context.IsAuthorized(Policies.CanViewPayouts);
@@ -45,14 +46,6 @@ public class DefaultSearchResultProvider : ISearchResultItemProvider
                 AddPage(results, "Store Roles", context.Url.Action(nameof(UIStoresController.ListRoles), "UIStores", new { storeId = store.Id }), "Store", ["Roles"]);
                 AddPage(results, "Payout Processors", context.Url.Action("ConfigureStorePayoutProcessors", "UIPayoutProcessors", new { storeId = store.Id }), "Store",
                     ["Payout", "Processors"]);
-            }
-
-            if (canViewInvoices)
-            {
-                AddPage(results, "Invoices list", context.Url.Action(nameof(UIInvoiceController.ListInvoices), "UIInvoice", new { storeId = store.Id }), "Payments",
-                    ["Payments", "List"]);
-                AddPage(results, "Create Invoice", context.Url.Action(nameof(UIInvoiceController.CreateInvoice), "UIInvoice", new { storeId = store.Id }), "Payments",
-                    ["Invoice"]);
             }
 
             if (canViewPaymentRequests)

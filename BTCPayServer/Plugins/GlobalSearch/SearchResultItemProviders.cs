@@ -1,7 +1,9 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.GlobalSearch.Views;
@@ -9,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Primitives;
 
 namespace BTCPayServer.Plugins.GlobalSearch;
 
@@ -18,21 +21,30 @@ public class SearchResultItemProviders(
     IStringLocalizer stringLocalizer,
     UserManager<ApplicationUser> userManager)
 {
-    public async Task<GlobalSearchViewModel> GetViewModel(ClaimsPrincipal user, StoreData? store, IUrlHelper url, string? userQuery = null)
+    public async Task<GlobalSearchViewModel> GetViewModel(
+        ClaimsPrincipal user,
+        StoreData? store,
+        IUrlHelper url,
+        string? userQuery = null,
+        int? maxResult = null,
+        CancellationToken cancellationToken = default)
     {
         var id = userManager.GetUserId(user) ?? throw new InvalidOperationException("Invalid user");
         var ctx = new SearchResultItemProviderContext(user, id, url, authorizationService)
         {
             Store = store,
-            UserQuery = userQuery
+            UserQuery = userQuery,
+            MaxResult = maxResult
         };
         foreach (var provider in providers)
         {
-            await provider.ProvideAsync(ctx);
+            await provider.ProvideAsync(ctx, cancellationToken);
         }
 
         await FilterAuthorizedItems(ctx);
         Translate(ctx);
+        if (ctx.ItemResults.Count > maxResult)
+            ctx.ItemResults = ctx.ItemResults.Take(maxResult.Value).ToList();
         return new GlobalSearchViewModel()
         {
             Items = ctx.ItemResults,

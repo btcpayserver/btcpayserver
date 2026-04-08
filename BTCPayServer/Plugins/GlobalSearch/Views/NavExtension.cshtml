@@ -8,7 +8,9 @@
 
 @{
     await authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanViewStoreSettings));
-    var vm = await SearchResultItemProviders.GetViewModel(this.User, Context.GetNavStoreData(), this.Url);
+    var vm = await SearchResultItemProviders.GetViewModel(this.User, Context.GetNavStoreData(), this.Url, cancellationToken: this.Context.RequestAborted);
+    var itemsHash = vm.GetItemsHash();
+    vm.Items = null;
 }
 
 <button id="globalSearchMobileToggle"
@@ -72,6 +74,7 @@
 
 <script>
     window.globalSearch = @Safe.Json(vm);
+    window.globalSearch.localItemsHash = @Safe.Json(itemsHash);
     window.globalSearch.translate = {
         "Type to search": @Safe.Json(StringLocalizer["Type to search"].Value),
         "No matches found": @Safe.Json(StringLocalizer["No matches found"].Value),

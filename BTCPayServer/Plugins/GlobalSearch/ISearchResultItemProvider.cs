@@ -1,6 +1,7 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
@@ -13,6 +14,7 @@ namespace BTCPayServer.Plugins.GlobalSearch;
 
 public class SearchResultItemProviderContext(ClaimsPrincipal user, string userId, IUrlHelper url, IAuthorizationService authorizationService)
 {
+    public int? MaxResult { get; set; }
     public StoreData? Store { get; set; }
     public ClaimsPrincipal User { get; } = user;
     public string UserId { get; } = userId;
@@ -44,5 +46,5 @@ public class SearchResultItemProviderContext(ClaimsPrincipal user, string userId
 
 public interface ISearchResultItemProvider
 {
-    Task ProvideAsync(SearchResultItemProviderContext context);
+    Task ProvideAsync(SearchResultItemProviderContext context, CancellationToken cancellationToken);
 }

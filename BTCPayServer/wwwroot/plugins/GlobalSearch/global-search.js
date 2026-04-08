@@ -1,10 +1,6 @@
-let main = async function () {
-    // ...
-};
-
 (function () {
     var vm = window.globalSearch;
-    var currentMatches = [];
+    var firstMatch;
 
     const initGlobalSearch = () => {
         // removeDups remove returns an array with no duplicates.
@@ -42,9 +38,6 @@ let main = async function () {
         vm.items.forEach(item => localIndexTmp.push(item));
         const localIndex = removeDups(localIndexTmp);
 
-
-        const remoteCache = new Map();
-        const maxRemoteCacheEntries = 32;
         const now = new Date();
         const todayIso = now.toISOString().slice(0, 10);
         const yesterday = new Date(now);
@@ -67,23 +60,6 @@ let main = async function () {
         };
 
         setBodySearchState(false);
-
-        const getCachedRemoteResults = cacheKey => {
-            const cached = remoteCache.get(cacheKey);
-            if (!Array.isArray(cached)) return null;
-            remoteCache.delete(cacheKey);
-            remoteCache.set(cacheKey, cached);
-            return cached.slice();
-        };
-        const setCachedRemoteResults = (cacheKey, value) => {
-            const cachedValue = Array.isArray(value) ? value.slice() : [];
-            if (remoteCache.has(cacheKey)) remoteCache.delete(cacheKey);
-            remoteCache.set(cacheKey, cachedValue);
-            if (remoteCache.size > maxRemoteCacheEntries) {
-                const oldestKey = remoteCache.keys().next().value;
-                if (oldestKey !== undefined) remoteCache.delete(oldestKey);
-            }
-        };
 
         const isMobileSearchOpen = () => nav.classList.contains('globalSearch-mobile-open');
         const setLoadingState = isLoading => {
@@ -285,6 +261,7 @@ let main = async function () {
             syncSearchActionState();
             showPanel();
             resultsElement.innerHTML = '';
+            firstMatch = null;
             const recent = refreshRecentMetadata(loadGlobalSearchRecents())
                 .map(normalizeResult)
                 .filter(Boolean);
@@ -298,6 +275,10 @@ let main = async function () {
 
             if (!recentGroup && !suggestedGroup) {
                 renderEmpty('Type to search');
+            }
+            else
+            {
+                firstMatch = recent[0] ?? suggestions[0] ?? null;
             }
         };
 
@@ -324,37 +305,16 @@ let main = async function () {
 
         const searchRemote = async query => {
             if (!query || query.length < 2) return [];
-            // const cacheKey = `${query}|${vm.storeId || ''}`;
-            // const cached = getCachedRemoteResults(cacheKey);
-            // if (cached) return cached;
-            const url = new URL(vm.searchUrl, window.location.origin);
+            const url = getSearchUrl();
             url.searchParams.set('q', query);
-            if (vm.storeId) url.searchParams.set('storeId', vm.storeId);
             url.searchParams.set('take', '25');
             const response = await fetch(url.toString(), {credentials: 'include'});
             if (!response.ok) return [];
-            const payload = await response.json();
-            const normalized = (Array.isArray(payload) ? payload : [])
-                .map(normalizeResult)
-                .filter(Boolean);
-            // setCachedRemoteResults(cacheKey, normalized);
-            return normalized;
-        };
-
-        const mergeResults = (remote, local) => {
-            const merged = [];
-            const seen = {};
-            [...remote, ...local].forEach(result => {
-                if (!result || !result.url || !result.title) return;
-                const key = `${result.url}|${result.title}`.toLowerCase();
-                if (seen[key]) return;
-                seen[key] = true;
-                merged.push(result);
-            });
-            return merged.slice(0, 25);
+            return await response.json();
         };
 
         const renderResults = entries => {
+            firstMatch = entries[0] ?? null;
             resultsElement.innerHTML = '';
             if (!entries.length) {
                 renderEmpty('No matches found');
@@ -375,9 +335,6 @@ let main = async function () {
         };
 
         const selectFirstMatch = () => {
-            const query = input.value.trim();
-            if (!query || !currentMatches.length) return false;
-            const firstMatch = currentMatches[0];
             if (!firstMatch?.url) return false;
             addGlobalSearchRecent(firstMatch);
             hidePanel();
@@ -400,7 +357,6 @@ let main = async function () {
             const token = ++latestSearchToken;
             const localMatches = searchLocal(query);
             renderResults(localMatches);
-            currentMatches = localMatches;
 
             if (localMatches.length === 0)
             {
@@ -412,7 +368,6 @@ let main = async function () {
                 }
                 if (token !== latestSearchToken || !panelOpen) return;
                 renderResults(remoteMatches);
-                currentMatches = remoteMatches;
             }
         };
 
@@ -537,9 +492,30 @@ let main = async function () {
         saveGlobalSearchRecents(current);
     };
 
+    const getSearchUrl = () => {
+        const url = new URL(vm.searchUrl, window.location.origin);
+        if (vm.storeId) url.searchParams.set('storeId', vm.storeId);
+        return url;
+    };
 
-    document.addEventListener("DOMContentLoaded", () => {
-        if (vm.items)
-            initGlobalSearch();
-    });
+    window.globalSearch.initGlobalSearch = initGlobalSearch;
+    window.globalSearch.getSearchUrl = getSearchUrl;
 })();
+
+let fetchItems = async function () {
+    var url = window.globalSearch.getSearchUrl();
+    // The local items are mainly static, including their hash in fetch will avoid refetching them if there was no change.
+    url.searchParams.set('hash', window.globalSearch.localItemsHash);
+    var response = await fetch(url);
+    if (!response.ok)
+        return;
+    window.globalSearch.items = await response.json();
+    if (document.readyState !== 'loading')
+        window.globalSearch.initGlobalSearch();
+};
+fetchItems();
+
+document.addEventListener("DOMContentLoaded", () => {
+    if (window.globalSearch.items)
+        window.globalSearch.initGlobalSearch();
+});

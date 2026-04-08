@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Controllers;
@@ -21,7 +22,7 @@ public class BitcoinLikeSearchResultProvider(
     private const string Category = "Wallets";
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
 
-    public Task ProvideAsync(SearchResultItemProviderContext context)
+    public Task ProvideAsync(SearchResultItemProviderContext context, CancellationToken cancellationToken)
     {
         if (context.UserQuery is not null)
             return Task.CompletedTask;

@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Controllers;
@@ -11,7 +12,7 @@ namespace BTCPayServer.Plugins.GlobalSearch;
 
 public class DefaultSearchResultProvider : ISearchResultItemProvider
 {
-    public async Task ProvideAsync(SearchResultItemProviderContext context)
+    public async Task ProvideAsync(SearchResultItemProviderContext context, CancellationToken cancellationToken)
     {
         if (context.UserQuery is not null)
             return;

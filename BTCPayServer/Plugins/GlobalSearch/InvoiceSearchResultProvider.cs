@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Controllers;
@@ -14,7 +15,7 @@ public class InvoiceSearchResultProvider(InvoiceRepository invoice,
 {
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
     const string Category = "Payments";
-    public async Task ProvideAsync(SearchResultItemProviderContext context)
+    public async Task ProvideAsync(SearchResultItemProviderContext context, CancellationToken cancellationToken)
     {
         if (context is { UserQuery: string q, Store: not null })
         {
@@ -23,7 +24,8 @@ public class InvoiceSearchResultProvider(InvoiceRepository invoice,
             invQuery.FillFromSearchText(search, 0);
             invQuery.StoreId = [context.Store.Id];
             invQuery.UserId = context.UserId;
-            foreach (var i in await invoice.GetInvoices(invQuery))
+            invQuery.Take = (context.MaxResult ?? 10);
+            foreach (var i in await invoice.GetInvoices(invQuery, cancellationToken))
             {
                 context.ItemResults.Add(new ResultItemViewModel()
                 {

@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Plugins.GlobalSearch.Views;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +24,7 @@ public class StaticSearchResultProvider(
     IEnumerable<ResultItemViewModel> items,
     IEnumerable<ActionResultItemViewModel> routeItems) : ISearchResultItemProvider
 {
-    public async Task ProvideAsync(SearchResultItemProviderContext context)
+    public async Task ProvideAsync(SearchResultItemProviderContext context, CancellationToken cancellationToken)
     {
         if (context.UserQuery is not null)
             return;

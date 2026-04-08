@@ -1,6 +1,7 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Controllers;
@@ -15,7 +16,7 @@ public class ReportingSearchResultProvider(IEnumerable<ReportProvider> reportPro
 {
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
     const string Category = "Reports";
-    public Task ProvideAsync(SearchResultItemProviderContext context)
+    public Task ProvideAsync(SearchResultItemProviderContext context, CancellationToken cancellationToken)
     {
         if (context.Store is null)
             return Task.CompletedTask;

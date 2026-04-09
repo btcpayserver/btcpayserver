@@ -20,10 +20,8 @@
     @if (apps.Any())
     {
         <li layout-menu-item="CreateApp-@appType.Type" class="nav-item" not-permission="@Policies.CanModifyStoreSettings" permission="@Policies.CanViewStoreSettings">
-            <span class="nav-link">
-                <vc:icon symbol="nav-crowdfund" />
-				<span text-translate="true">Crowdfund</span>
-            </span>
+            <vc:icon symbol="nav-crowdfund" />
+			<span text-translate="true">Crowdfund</span>
         </li>
     }
     @foreach (var app in apps)

@@ -80,34 +80,8 @@ namespace BTCPayServer.Services.Invoices
         public async Task AddAddressInvoice(string invoiceId, PaymentMethodId paymentMethodId, string address)
         {
             await using var context = _applicationDbContextFactory.CreateContext();
-            var pmiStr = paymentMethodId.ToString();
-            var existing = await context.AddressInvoices
-                .FirstOrDefaultAsync(a => a.Address == address && a.PaymentMethodId == pmiStr);
-            if (existing is null)
-            {
-                await context.AddressInvoices.AddAsync(new AddressInvoiceData()
-                {
-                    InvoiceDataId = invoiceId,
-                    Address = address,
-                    PaymentMethodId = pmiStr
-                });
-                try
-                {
-                    await context.SaveChangesAsync();
-                }
-                catch (DbUpdateException)
-                {
-                    // Concurrent caller inserted the same (Address, PaymentMethodId)
-                    // row between the FirstOrDefaultAsync check above and SaveChangesAsync.
-                    // Both writers are inserting identical data, so swallowing the
-                    // unique-key violation keeps this method idempotent under contention.
-                }
-            }
-            else
-            {
-                existing.InvoiceDataId = invoiceId;
-                await context.SaveChangesAsync();
-            }
+            await context.Database.ExecuteSqlInterpolatedAsync(
+                $"""INSERT INTO "AddressInvoices" ("Address", "PaymentMethodId", "InvoiceDataId") VALUES ({address}, {paymentMethodId.ToString()}, {invoiceId}) ON CONFLICT ("Address", "PaymentMethodId") DO NOTHING""");
         }
 
         /// <summary>
@@ -390,27 +364,8 @@ retry:
                         var pmi = prompt.PaymentMethodId.ToString();
                         foreach (var tracked in trackedDestinations)
                         {
-                            var trackedLocal = tracked;
-                            var existing = await context.AddressInvoices
-                                .FirstOrDefaultAsync(a => a.Address == trackedLocal && a.PaymentMethodId == pmi);
-                            if (existing is null)
-                                await context.AddressInvoices.AddAsync(new AddressInvoiceData()
-                                {
-                                    InvoiceDataId = invoiceId,
-                                    Address = tracked,
-                                    PaymentMethodId = pmi
-                                });
-                            else
-                                existing.InvoiceDataId = invoiceId;
-                        }
-                        // Scoped swallow: only a unique-key race on identical
-                        // (Address, PaymentMethodId) rows is safe to ignore.
-                        // DbUpdateConcurrencyException is a DbUpdateException
-                        // subtype and must still propagate to the outer retry.
-                        try { await context.SaveChangesAsync(); }
-                        catch (DbUpdateException ex) when (ex is not DbUpdateConcurrencyException)
-                        {
-                            /* concurrent tracked-destination insert of identical row */
+                            await context.Database.ExecuteSqlInterpolatedAsync(
+                                $"""INSERT INTO "AddressInvoices" ("Address", "PaymentMethodId", "InvoiceDataId") VALUES ({tracked}, {pmi}, {invoiceId}) ON CONFLICT ("Address", "PaymentMethodId") DO NOTHING""");
                         }
                     }
                 }
@@ -433,14 +388,11 @@ retry:
                 var existing = invoiceEntity.GetPaymentPrompt(prompt.PaymentMethodId);
                 if (existing.Destination != prompt.Destination && prompt.Activated && prompt.Destination is not null)
                 {
+                    var pmi = paymentPromptContext.PaymentMethodId.ToString();
                     foreach (var tracked in paymentPromptContext.TrackedDestinations)
                     {
-                        await context.AddressInvoices.AddAsync(new AddressInvoiceData()
-                        {
-                            InvoiceDataId = invoiceId,
-                            Address = tracked,
-                            PaymentMethodId = paymentPromptContext.PaymentMethodId.ToString()
-                        });
+                        await context.Database.ExecuteSqlInterpolatedAsync(
+                            $"""INSERT INTO "AddressInvoices" ("Address", "PaymentMethodId", "InvoiceDataId") VALUES ({tracked}, {pmi}, {invoiceId}) ON CONFLICT ("Address", "PaymentMethodId") DO NOTHING""");
                     }
                     AddToTextSearch(context, invoice, prompt.Destination);
                 }

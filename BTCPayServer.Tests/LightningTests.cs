@@ -981,12 +981,7 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         // Verify endpoint returns 404 for unknown payment hash
         var fakeHash = "0000000000000000000000000000000000000000000000000000000000000000";
         var response = await tester.PayTester.HttpClient.GetAsync(
-            $"/lnurlp/{username}/verify/{fakeHash}");
-        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
-
-        // Verify endpoint returns 404 for unknown username
-        response = await tester.PayTester.HttpClient.GetAsync(
-            $"/lnurlp/nonexistent/verify/{fakeHash}");
+            $"/lnurlp/verify/{fakeHash}");
         Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
 
         // Create an invoice via LNURL-pay flow to get a real payment hash.
@@ -1056,43 +1051,9 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         // Malformed paymentHash (non-hex / wrong length) must be rejected at the
         // 64-hex guard before any DB lookup, returning Reason "Not found".
         var malformedResponse = await tester.PayTester.HttpClient.GetAsync(
-            $"/lnurlp/{username}/verify/not-a-hex-hash");
+            $"/lnurlp/verify/not-a-hex-hash");
         Assert.Equal(System.Net.HttpStatusCode.NotFound, malformedResponse.StatusCode);
         var malformedBody = JObject.Parse(await malformedResponse.Content.ReadAsStringAsync());
         Assert.Equal("Not found", malformedBody["reason"]?.ToString());
-
-        // Verify storeId isolation - create another store with Lightning + LNURL fully
-        // configured, then try to look up store1's payment hash via store2's username.
-        var store2 = (await client.CreateStore(new CreateStoreRequest { Name = "store2" })).Id;
-        var connectionString = tester.GetLightningConnectionString(null, true);
-        await client.UpdateStorePaymentMethod(store2, "BTC-LN", new UpdatePaymentMethodRequest
-        {
-            Enabled = true,
-            Config = new JObject { ["connectionString"] = connectionString }
-        });
-        await client.UpdateStorePaymentMethod(store2, "BTC-LNURL", new UpdatePaymentMethodRequest
-        {
-            Enabled = true,
-            Config = new JObject
-            {
-                ["useBech32Scheme"] = true,
-                ["lud12Enabled"] = false,
-                ["lud21Enabled"] = true
-            }
-        });
-        var username2 = Guid.NewGuid().ToString("n").Substring(0, 8);
-        await client.AddOrUpdateStoreLightningAddress(store2, username2,
-            new LightningAddressData());
-
-        // Trying to look up store1's payment hash via store2's username should hit the
-        // invoice-lookup / store-isolation branch and fail with Reason "Not found",
-        // not the earlier "Not available" feature-gate branch.
-        var paymentHash = verifyPath.Split('/').Last();
-        var crossStoreResponse = await tester.PayTester.HttpClient.GetAsync(
-            $"/lnurlp/{username2}/verify/{paymentHash}");
-        Assert.Equal(System.Net.HttpStatusCode.NotFound, crossStoreResponse.StatusCode);
-        var crossStoreBody = JObject.Parse(await crossStoreResponse.Content.ReadAsStringAsync());
-        Assert.Equal("ERROR", crossStoreBody["status"]?.ToString());
-        Assert.Equal("Not found", crossStoreBody["reason"]?.ToString());
     }
 }

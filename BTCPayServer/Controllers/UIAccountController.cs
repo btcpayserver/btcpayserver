@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -87,8 +88,12 @@ namespace BTCPayServer.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login(string returnUrl = null, string email = null, bool allowLimitedLogin = false)
         {
-            if (User.Identity?.IsAuthenticated is true && string.IsNullOrEmpty(returnUrl))
-                return RedirectToLocal();
+            var allowRedirect =
+                (email is null && User.Identity?.IsAuthenticated is true) ||
+                (email is not null && User.FindFirst(ClaimTypes.Email)?.Value == email);
+
+            if (allowRedirect)
+                return RedirectToLocal(returnUrl);
 
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
@@ -223,6 +228,7 @@ namespace BTCPayServer.Controllers
                     ModelState.AddModelError(string.Empty, errorMessage!);
                     return View(model);
                 }
+
 
                 var result = await signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: true);
                 if (result.Succeeded)

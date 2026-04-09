@@ -29,9 +29,6 @@
 
 @code {
     [Parameter]
-    public string UserId { get; set; }
-
-    [Parameter]
     public string RedirectUrl { get; set; }
 
     [Parameter]
@@ -48,8 +45,8 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        UserId ??= await GetUserId();
-        if (!string.IsNullOrEmpty(UserId)) _user = await UserManager.FindByIdAsync(UserId);
+        var userId = await GetUserId();
+        if (!string.IsNullOrEmpty(userId)) _user = await UserManager.FindByIdAsync(userId);
         if (_user == null) return;
 
         GenerateCodeAndStartTimer();

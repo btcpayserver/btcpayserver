@@ -49,12 +49,6 @@ namespace BTCPayServer.Controllers.Greenfield
                     "This instance forbids non-admins from having a hot wallet for your store.");
             }
 
-            if (request.ImportKeysToRPC && !canUseHotWallet.CanRPCImport)
-            {
-                ModelState.AddModelError(nameof(request.ImportKeysToRPC),
-                    "This instance forbids non-admins from having importing the wallet addresses/keys to the underlying node.");
-            }
-
             if (!ModelState.IsValid)
             {
                 return this.CreateValidationError(ModelState);
@@ -72,7 +66,6 @@ namespace BTCPayServer.Controllers.Greenfield
                     WordCount = request.WordCount,
                     ScriptPubKeyType = request.ScriptPubKeyType,
                     Passphrase = request.Passphrase,
-                    ImportKeysToRPC = request.ImportKeysToRPC,
                     SavePrivateKeys = request.SavePrivateKeys,
                 });
                 if (response == null)
@@ -105,7 +98,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 derivationSchemeSettings);
             store.SetStoreBlob(storeBlob);
             await _storeRepository.UpdateStore(store);
-            
+
             var result = new GenerateOnChainWalletResponse()
             {
                 Enabled = !storeBlob.IsExcluded(paymentMethodId),

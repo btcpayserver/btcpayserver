@@ -34,8 +34,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public bool CanUseHotWallet { get; set; }
         [Display(Name = "Can create a new cold wallet")]
         public bool CanCreateNewColdWallet { get; set; }
-        [Display(Name = "Can use RPC import")]
-        public bool CanUseRPCImport { get; set; }
         public bool SupportSegwit { get; set; }
         public bool SupportTaproot { get; set; }
         public RootedKeyPath GetAccountKeypath()

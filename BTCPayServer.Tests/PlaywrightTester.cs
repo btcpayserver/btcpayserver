@@ -264,7 +264,7 @@ namespace BTCPayServer.Tests
             return (name, storeId);
         }
 
-        public async Task<Mnemonic> GenerateWallet(string cryptoCode = "BTC", string seed = "", bool? importkeys = null, bool isHotWallet = false,
+        public async Task<Mnemonic> GenerateWallet(string cryptoCode = "BTC", string seed = "", bool isHotWallet = false,
             ScriptPubKeyType format = ScriptPubKeyType.Segwit)
         {
             var isImport = !string.IsNullOrEmpty(seed);
@@ -298,8 +298,6 @@ namespace BTCPayServer.Tests
 
             await Page.SelectOptionAsync("#ScriptPubKeyType", new SelectOptionValue { Value = format.ToString() });
             await Page.ClickAsync("#AdvancedSettingsButton");
-            if (importkeys is bool v)
-                await Page.Locator("#ImportKeysToRPC").SetCheckedAsync(v);
             await Page.ClickAsync("#Continue");
 
             if (isImport)

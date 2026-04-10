@@ -657,6 +657,9 @@ retry:
         {
             return JsonConvert.SerializeObject(obj, SerializerSettings);
         }
+
+        public record StoreSettingWithVersion<T>(T Value, uint XMin) where T : class;
+
         public async Task<T?> GetSettingAsync<T>(string storeId, string name) where T : class
         {
             await using var ctx = _ContextFactory.CreateContext();
@@ -670,6 +673,78 @@ retry:
             await using var ctx = _ContextFactory.CreateContext();
             var data = await ctx.StoreSettings.Where(s => s.Name == name).ToDictionaryAsync(settingData => settingData.StoreId);
             return data.ToDictionary(pair => pair.Key, pair => Deserialize<T>(pair.Value.Value));
+        }
+
+        public async Task<StoreSettingWithVersion<T>?> GetSettingWithVersionAsync<T>(string storeId, string name) where T : class
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            var connection = ctx.Database.GetDbConnection();
+            var row = await connection.QueryFirstOrDefaultAsync<(string Value, uint XMin)>(
+                """
+                SELECT "Value", xmin
+                FROM "StoreSettings"
+                WHERE "StoreId" = @storeId AND "Name" = @name
+                """,
+                new { storeId, name });
+            if (row.Value is null)
+                return null;
+
+            var value = Deserialize<T>(row.Value);
+            return value is null ? null : new StoreSettingWithVersion<T>(value, row.XMin);
+        }
+
+        public async Task<bool> TryUpdateSettingAsync<T>(string storeId, string name, uint xMin, T obj) where T : class
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            var connection = ctx.Database.GetDbConnection();
+            return await connection.ExecuteAsync(
+                """
+                UPDATE "StoreSettings"
+                SET "Value" = @value::JSONB
+                WHERE "StoreId" = @storeId AND "Name" = @name AND xmin = @xMin
+                """,
+                new
+                {
+                    storeId,
+                    name,
+                    xMin = (int)xMin,
+                    value = Serialize(obj)
+                }) == 1;
+        }
+
+        public async Task<bool> TryCreateSettingAsync<T>(string storeId, string name, T obj) where T : class
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            var connection = ctx.Database.GetDbConnection();
+            return await connection.ExecuteAsync(
+                """
+                INSERT INTO "StoreSettings" ("StoreId", "Name", "Value")
+                VALUES (@storeId, @name, @value::JSONB)
+                ON CONFLICT ("StoreId", "Name") DO NOTHING
+                """,
+                new
+                {
+                    storeId,
+                    name,
+                    value = Serialize(obj)
+                }) == 1;
+        }
+
+        public async Task<bool> TryDeleteSettingAsync(string storeId, string name, uint xMin)
+        {
+            await using var ctx = _ContextFactory.CreateContext();
+            var connection = ctx.Database.GetDbConnection();
+            return await connection.ExecuteAsync(
+                """
+                DELETE FROM "StoreSettings"
+                WHERE "StoreId" = @storeId AND "Name" = @name AND xmin = @xMin
+                """,
+                new
+                {
+                    storeId,
+                    name,
+                    xMin = (int)xMin
+                }) == 1;
         }
 
         public async Task UpdateSetting<T>(string storeId, string name, T? obj) where T : class

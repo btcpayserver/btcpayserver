@@ -10,6 +10,8 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
+using BTCPayServer.Plugins.Emails.Services;
+using BTCPayServer.Services;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
@@ -269,7 +271,7 @@ namespace BTCPayServer.Tests
         {
             var isImport = !string.IsNullOrEmpty(seed);
             await GoToWalletSettings(cryptoCode);
-            // Replace previous wallet case
+
             var isSettings = Page.Url.EndsWith("/settings");
             if (isSettings)
             {
@@ -514,6 +516,20 @@ namespace BTCPayServer.Tests
             await Page.Locator("#page-primary").ClickAsync();
         }
 
+        public async Task ConfigureServerEmailWithMailPit(string from = "test@example.com", string login = "test@example.com", string password = "password")
+        {
+            var settings = Server.PayTester.GetService<SettingsRepository>();
+            await settings.UpdateSetting(new PoliciesSettings { DisableStoresToUseServerEmailSettings = false });
+            await settings.UpdateSetting(new EmailSettings
+            {
+                From = from,
+                Login = login,
+                Password = password,
+                Port = Server.MailPitSettings.SmtpPort,
+                Server = Server.MailPitSettings.Hostname
+            });
+        }
+
         public async Task AddStoreLabelAsync(ILocator row, string label)
         {
             var labelInput = row.Locator(".ts-control input");
@@ -649,7 +665,7 @@ namespace BTCPayServer.Tests
         {
             if (amount is not null)
             {
-                await Page.FillAsync("#test-payment-amount", amount.ToString());
+                await Page.FillAsync("#test-payment-amount", amount.Value.ToString(CultureInfo.InvariantCulture));
             }
 
             await Page.ClickAsync("#FakePayment");

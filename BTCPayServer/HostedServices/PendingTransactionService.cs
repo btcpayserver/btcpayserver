@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -92,25 +93,6 @@ public class PendingTransactionService(
             throw new NotSupportedException("CryptoCode not supported");
 
         var txId = psbt.GetGlobalTransaction().GetHash();
-
-        int signaturesNeeded = 0;
-        int signaturesTotal = 0;
-
-        foreach (var input in psbt.Inputs)
-        {
-            var script = input.WitnessScript ?? input.RedeemScript;
-            if (script is null)
-                continue;
-
-            var multisigParams = PayToMultiSigTemplate.Instance.ExtractScriptPubKeyParameters(script);
-            if (multisigParams != null)
-            {
-                signaturesNeeded = multisigParams.SignatureCount;
-                signaturesTotal = multisigParams.PubKeys.Length;
-                break; // assume consistent multisig scheme across all inputs
-            }
-        }
-
         await using var ctx = dbContextFactory.CreateContext();
         var pendingTransaction = new PendingTransaction
         {
@@ -123,14 +105,13 @@ public class PendingTransactionService(
             StoreId = storeId,
         };
 
-        pendingTransaction.SetBlob(new PendingTransactionBlob
+        var blob = new PendingTransactionBlob
         {
             PSBT = psbt.ToBase64(),
-            SignaturesCollected = 0,
-            SignaturesNeeded = signaturesNeeded,
-            SignaturesTotal = signaturesTotal,
             RequestBaseUrl = requestBaseUrl.ToString()
-        });
+        };
+        ApplyProgress(blob, GetSignatureProgress(psbt));
+        pendingTransaction.SetBlob(blob);
 
         ctx.PendingTransactions.Add(pendingTransaction);
         await ctx.SaveChangesAsync(cancellationToken);
@@ -138,87 +119,90 @@ public class PendingTransactionService(
         EventAggregator.Publish(new PendingTransactionEvent
         {
             Data = pendingTransaction,
+            SignerUserId = null,
             Type = PendingTransactionEvent.Created
         });
 
         return pendingTransaction;
     }
 
-    public async Task<PendingTransaction?> CollectSignature(PendingTransactionFullId id, PSBT psbt, CancellationToken cancellationToken)
+    public async Task<PendingTransaction?> CollectSignature(PendingTransactionFullId id, PSBT psbt, CancellationToken cancellationToken, string? signerUserId = null)
     {
-        await using var ctx = dbContextFactory.CreateContext();
+        const int maxAttempts = 3;
+        var newPsbtBase64 = psbt.ToBase64();
+
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            await using var ctx = dbContextFactory.CreateContext();
+            try
+            {
+                var pendingTransaction = await TryCollectSignatureOnce(ctx, id, psbt, newPsbtBase64, cancellationToken);
+                if (pendingTransaction is null)
+                    return null;
+
+                await ctx.SaveChangesAsync(cancellationToken);
+                EventAggregator.Publish(new PendingTransactionEvent
+                {
+                    Data = pendingTransaction,
+                    SignerUserId = signerUserId,
+                    Type = PendingTransactionEvent.SignatureCollected
+                });
+                return pendingTransaction;
+            }
+            catch (DbUpdateConcurrencyException) when (attempt < maxAttempts - 1)
+            {
+                // Another signer updated the pending transaction first. Re-read the row,
+                // merge again on top of the latest effective PSBT, and retry.
+            }
+        }
+
+        throw new DbUpdateConcurrencyException("Failed to collect pending transaction signatures due to concurrent updates.");
+    }
+
+    private async Task<PendingTransaction?> TryCollectSignatureOnce(
+        ApplicationDbContext ctx,
+        PendingTransactionFullId id,
+        PSBT psbt,
+        string newPsbtBase64,
+        CancellationToken cancellationToken)
+    {
         var pendingTransaction = await ctx.PendingTransactions.FirstOrDefaultAsync(p =>
             p.CryptoCode == id.CryptoCode && p.StoreId == id.StoreId && p.Id == id.Id, cancellationToken);
 
         if (pendingTransaction?.State is not PendingTransactionState.Pending)
-        {
             return null;
-        }
 
         var blob = pendingTransaction.GetBlob();
         if (blob?.PSBT is null)
-        {
             return null;
-        }
 
-        var dbPsbt = PSBT.Parse(blob.PSBT, psbt.Network);
+        var network = networkProvider.GetNetwork<BTCPayNetwork>(pendingTransaction.CryptoCode)?.NBitcoinNetwork ?? psbt.Network;
 
-        // Deduplicate: Check if this exact PSBT (Base64) was already collected
-        var newPsbtBase64 = psbt.ToBase64();
+        // Deduplicate exact duplicates before doing any merge work.
         if (blob.CollectedSignatures.Any(s => s.ReceivedPSBT == newPsbtBase64))
+            return pendingTransaction;
+
+        var beforeProgress = GetSignatureProgress(BuildEffectivePsbt(blob, network));
+        var mergedPsbt = BuildEffectivePsbt(blob, network, psbt);
+        var afterProgress = GetSignatureProgress(mergedPsbt);
+
+        if (!HasMeaningfulDelta(beforeProgress, afterProgress))
+            return pendingTransaction;
+
+        blob.CollectedSignatures.Add(new CollectedSignature
         {
-            return pendingTransaction; // Avoid duplicate signature collection
-        }
+            ReceivedPSBT = newPsbtBase64,
+            Timestamp = DateTimeOffset.UtcNow
+        });
+        ApplyProgress(blob, afterProgress);
 
-        foreach (var collectedSignature in blob.CollectedSignatures)
+        if (mergedPsbt.TryFinalize(out _))
         {
-            var collectedPsbt = PSBT.Parse(collectedSignature.ReceivedPSBT, psbt.Network);
-            dbPsbt.Combine(collectedPsbt); // combine changes the object
-        }
-
-        var newWorkingCopyPsbt = dbPsbt.Clone(); // Clone before modifying
-        newWorkingCopyPsbt.Combine(psbt);
-
-        // Check if new signatures were actually added
-        var oldPubKeys = dbPsbt.Inputs
-            .SelectMany(input => input.PartialSigs.Keys)
-            .ToHashSet();
-
-        var newPubKeys = newWorkingCopyPsbt.Inputs
-            .SelectMany(input => input.PartialSigs.Keys)
-            .ToHashSet();
-
-        newPubKeys.ExceptWith(oldPubKeys);
-
-        var newSignatures = newPubKeys.Count;
-        if (newSignatures > 0)
-        {
-            // TODO: For now we're going with estimation of how many signatures were collected until we find better way
-            // so for example if we have 4 new signatures and only 2 inputs - number of collected signatures will be 2
-            blob.SignaturesCollected += newSignatures / newWorkingCopyPsbt.Inputs.Count;
-            blob.CollectedSignatures.Add(new CollectedSignature
-            {
-                ReceivedPSBT = newPsbtBase64,
-                Timestamp = DateTimeOffset.UtcNow
-            });
-            pendingTransaction.SetBlob(blob);
-        }
-
-        if (newWorkingCopyPsbt.TryFinalize(out _))
-        {
-            // TODO: Better logic here
-            if (blob.SignaturesCollected < blob.SignaturesNeeded)
+            if ((blob.SignaturesCollected ?? 0) < (blob.SignaturesNeeded ?? 0))
                 blob.SignaturesCollected = blob.SignaturesNeeded;
-
             pendingTransaction.State = PendingTransactionState.Signed;
         }
-
-        await ctx.SaveChangesAsync(cancellationToken);
-        EventAggregator.Publish(new PendingTransactionEvent
-        {
-            Data = pendingTransaction,
-            Type = PendingTransactionEvent.SignatureCollected
-        });
+        pendingTransaction.SetBlob(blob);
         return pendingTransaction;
     }
 
@@ -227,17 +211,27 @@ public class PendingTransactionService(
     public async Task<PendingTransaction?> GetPendingTransaction(PendingTransactionFullId id)
     {
         await using var ctx = dbContextFactory.CreateContext();
-        return await ctx.PendingTransactions.FirstOrDefaultAsync(p =>
+        var pendingTransaction = await ctx.PendingTransactions.FirstOrDefaultAsync(p =>
             p.CryptoCode == id.CryptoCode && p.StoreId == id.StoreId && p.Id == id.Id);
+        if (pendingTransaction is null)
+            return null;
+        if (TryRefreshStoredProgress(pendingTransaction))
+            await ctx.SaveChangesAsync();
+        return pendingTransaction;
     }
 
     public async Task<PendingTransaction[]> GetPendingTransactions(string cryptoCode, string storeId)
     {
         await using var ctx = dbContextFactory.CreateContext();
-        return await ctx.PendingTransactions.Where(p =>
+        var pendingTransactions = await ctx.PendingTransactions.Where(p =>
                 p.CryptoCode == cryptoCode && p.StoreId == storeId && (p.State == PendingTransactionState.Pending ||
                                                                        p.State == PendingTransactionState.Signed))
             .ToArrayAsync();
+        var changed = pendingTransactions.Aggregate(false, (current, pendingTransaction) => current | TryRefreshStoredProgress(pendingTransaction));
+
+        if (changed)
+            await ctx.SaveChangesAsync();
+        return pendingTransactions;
     }
 
     public async Task CancelPendingTransaction(PendingTransactionFullId id)
@@ -252,6 +246,7 @@ public class PendingTransactionService(
         EventAggregator.Publish(new PendingTransactionEvent
         {
             Data = pt,
+            SignerUserId = null,
             Type = PendingTransactionEvent.Cancelled
         });
     }
@@ -268,6 +263,7 @@ public class PendingTransactionService(
         EventAggregator.Publish(new PendingTransactionEvent
         {
             Data = pt,
+            SignerUserId = null,
             Type = PendingTransactionEvent.Broadcast
         });
     }
@@ -280,7 +276,126 @@ public class PendingTransactionService(
         public const string Cancelled = nameof(Cancelled);
 
         public PendingTransaction Data { get; set; } = null!;
+        public string? SignerUserId { get; set; }
         public string Type { get; set; } = null!;
     }
 
+    private bool TryRefreshStoredProgress(PendingTransaction pendingTransaction)
+    {
+        var blob = pendingTransaction.GetBlob();
+        if (blob?.PSBT is null)
+            return false;
+
+        var network = networkProvider.GetNetwork<BTCPayNetwork>(pendingTransaction.CryptoCode)?.NBitcoinNetwork;
+        if (network is null)
+            return false;
+
+        var progress = GetSignatureProgress(BuildEffectivePsbt(blob, network));
+        if (blob.SignaturesNeeded == progress.SignaturesNeeded &&
+            blob.SignaturesTotal == progress.SignaturesTotal &&
+            blob.SignaturesCollected == progress.SignaturesCollected)
+            return false;
+
+        ApplyProgress(blob, progress);
+        pendingTransaction.SetBlob(blob);
+        return true;
+    }
+
+    private static PSBT BuildEffectivePsbt(PendingTransactionBlob blob, Network network, PSBT? additionalPsbt = null)
+    {
+        var effectivePsbt = PSBT.Parse(blob.PSBT, network);
+        foreach (var collectedSignature in blob.CollectedSignatures)
+        {
+            effectivePsbt.Combine(PSBT.Parse(collectedSignature.ReceivedPSBT, network));
+        }
+
+        if (additionalPsbt is not null)
+            effectivePsbt.Combine(additionalPsbt);
+
+        return effectivePsbt;
+    }
+
+    private static PendingTransactionSignatureProgress GetSignatureProgress(PSBT psbt)
+    {
+        var inputs = new List<PendingTransactionInputProgress>(psbt.Inputs.Count);
+        foreach (var input in psbt.Inputs)
+        {
+            var finalized = input.FinalScriptSig is not null || input.FinalScriptWitness is not null;
+            var script = input.WitnessScript ?? input.RedeemScript;
+            var multisigParams = script is null
+                ? null
+                : PayToMultiSigTemplate.Instance.ExtractScriptPubKeyParameters(script);
+
+            if (multisigParams is null)
+            {
+                inputs.Add(new PendingTransactionInputProgress(false, 0, 0, input.PartialSigs.Count, finalized));
+                continue;
+            }
+
+            var validExpectedPartialSigCount = input.PartialSigs.Keys.Count(multisigParams.PubKeys.Contains);
+            var collected = finalized
+                ? multisigParams.SignatureCount
+                : Math.Min(validExpectedPartialSigCount, multisigParams.SignatureCount);
+            inputs.Add(new PendingTransactionInputProgress(
+                true,
+                multisigParams.SignatureCount,
+                multisigParams.PubKeys.Length,
+                collected,
+                finalized));
+        }
+
+        var multisigInputs = inputs.Where(i => i.IsMultisig).ToArray();
+        if (multisigInputs.Length == 0)
+            return new PendingTransactionSignatureProgress(0, 0, 0, inputs);
+
+        // Broadcast readiness is limited by the least-signed multisig input, so the
+        // user-facing transaction progress is the minimum collected count across inputs.
+        return new PendingTransactionSignatureProgress(
+            multisigInputs[0].SignaturesNeeded,
+            multisigInputs[0].SignaturesTotal,
+            multisigInputs.Min(i => i.SignaturesCollected),
+            inputs);
+    }
+
+    private static bool HasMeaningfulDelta(PendingTransactionSignatureProgress before, PendingTransactionSignatureProgress after)
+    {
+        if (before.Inputs.Count != after.Inputs.Count)
+            return true;
+
+        for (var i = 0; i < before.Inputs.Count; i++)
+        {
+            var previous = before.Inputs[i];
+            var current = after.Inputs[i];
+            if (previous.IsMultisig != current.IsMultisig ||
+                previous.SignaturesNeeded != current.SignaturesNeeded ||
+                previous.SignaturesTotal != current.SignaturesTotal ||
+                previous.SignaturesCollected != current.SignaturesCollected ||
+                previous.IsFinalized != current.IsFinalized)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void ApplyProgress(PendingTransactionBlob blob, PendingTransactionSignatureProgress progress)
+    {
+        blob.SignaturesNeeded = progress.SignaturesNeeded;
+        blob.SignaturesTotal = progress.SignaturesTotal;
+        blob.SignaturesCollected = progress.SignaturesCollected;
+    }
+
+    private sealed record PendingTransactionSignatureProgress(
+        int SignaturesNeeded,
+        int SignaturesTotal,
+        int SignaturesCollected,
+        IReadOnlyList<PendingTransactionInputProgress> Inputs);
+
+    private sealed record PendingTransactionInputProgress(
+        bool IsMultisig,
+        int SignaturesNeeded,
+        int SignaturesTotal,
+        int SignaturesCollected,
+        bool IsFinalized);
 }

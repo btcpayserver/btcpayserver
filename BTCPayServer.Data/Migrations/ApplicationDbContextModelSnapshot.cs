@@ -851,6 +851,12 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("TransactionId")
                         .HasColumnType("text");
 
+                    b.Property<uint>("XMin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id");
 
                     b.HasIndex("StoreId");

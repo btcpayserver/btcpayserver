@@ -1,11 +1,10 @@
 @model WalletSetupViewModel
 @{
-    Layout = "../_LayoutWalletSetup.cshtml";
     ViewData.SetTitle(StringLocalizer["Enter your extended public key"]);
 }
 
 @section Navbar {
-    <a asp-controller="UIStores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
+    <a asp-controller="UIStoreOnChainWallets" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="">
         <vc:icon symbol="back" />
     </a>
 }

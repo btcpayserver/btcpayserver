@@ -1308,7 +1308,7 @@ namespace BTCPayServer.Controllers
             object text = _NetworkProvider.DefaultNetwork?.CryptoCode switch
             {
                 null => StringLocalizer["To create an invoice, you need to setup a wallet first"],
-                {} cryptoCode => ViewLocalizer["To create an invoice, you need to <a href='{0}'>setup a wallet</a> first", Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode, storeId })!]
+                {} cryptoCode => ViewLocalizer["To create an invoice, you need to <a href='{0}'>setup a wallet</a> first", Url.Action(nameof(UIStoreOnChainWalletsController.SetupWallet), "UIStoreOnChainWallets", new { cryptoCode, storeId })!]
             };
             TempData.SetStatusMessageModel(new StatusMessageModel
             {

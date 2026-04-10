@@ -51,5 +51,8 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Account key path")]
         [Validation.KeyPathValidator]
         public string AccountKeyPath { get; set; }
+
+        [JsonIgnore]
+        public string SignerEmail { get; set; }
     }
 }

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace BTCPayServer.Models.StoreViewModels
@@ -52,5 +54,6 @@ namespace BTCPayServer.Models.StoreViewModels
             ViewData.Add(nameof(SupportTaproot), SupportTaproot);
             ViewData.Add(nameof(Method), Method);
         }
+
     }
 }

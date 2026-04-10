@@ -515,6 +515,89 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
     [Fact]
     [Trait("Playwright", "Playwright-2")]
+    public async Task CanHideReservedAddressesFromReplacedWallet()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.RegisterNewUser(true);
+        await s.CreateNewStore();
+        var walletId = new WalletId(s.StoreId, "BTC");
+        s.WalletId = walletId;
+        var originalMnemonic = (await s.GenerateWallet()).ToString();
+
+        await s.GoToWallet(walletId, WalletsNavPages.Receive);
+
+        List<string> oldAddresses = [];
+        var currentAddress = await s.Page.GetAttributeAsync("#Address", "data-text") ?? string.Empty;
+        Assert.False(string.IsNullOrEmpty(currentAddress));
+        oldAddresses.Add(currentAddress);
+
+        for (var i = 0; i < 2; i++)
+        {
+            await s.Page.ClickAsync("button[value=generate-new-address]");
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var newAddress = await s.Page.GetAttributeAsync("#Address[data-text]", "data-text");
+                Assert.False(string.IsNullOrEmpty(newAddress));
+                Assert.NotEqual(currentAddress, newAddress);
+            });
+
+            currentAddress = await s.Page.GetAttributeAsync("#Address", "data-text") ?? string.Empty;
+            Assert.False(string.IsNullOrEmpty(currentAddress));
+            oldAddresses.Add(currentAddress);
+        }
+
+        await s.Page.ClickAsync("#reserved-addresses-button");
+        await s.Page.WaitForSelectorAsync("#reserved-addresses");
+        const string labelInputSelector = "#reserved-addresses table tbody tr .ts-control input";
+        await s.Page.WaitForSelectorAsync(labelInputSelector);
+        await s.Page.FillAsync(labelInputSelector, "old-wallet-label");
+        await s.Page.Keyboard.PressAsync("Enter");
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            var text = await s.Page.InnerTextAsync("#reserved-addresses table tbody");
+            Assert.Contains("old-wallet-label", text);
+        });
+        var oldReservedAddressesPage = await s.Page.ContentAsync();
+        foreach (var oldAddress in oldAddresses)
+        {
+            Assert.Contains(oldAddress, oldReservedAddressesPage);
+        }
+
+        await s.GenerateWallet(seed: "melody lizard phrase voice unique car opinion merge degree evil swift cargo");
+        await s.GoToWallet(walletId, WalletsNavPages.Receive);
+
+        var newAddress = await s.Page.GetAttributeAsync("#Address", "data-text") ?? string.Empty;
+        Assert.False(string.IsNullOrEmpty(newAddress));
+        Assert.DoesNotContain(newAddress, oldAddresses);
+
+        await s.Page.ClickAsync("#reserved-addresses-button");
+        await s.Page.WaitForSelectorAsync("#reserved-addresses");
+
+        var replacedWalletReservedAddressesPage = await s.Page.ContentAsync();
+        Assert.Contains(newAddress, replacedWalletReservedAddressesPage);
+        Assert.DoesNotContain("old-wallet-label", replacedWalletReservedAddressesPage);
+        foreach (var oldAddress in oldAddresses)
+        {
+            Assert.DoesNotContain(oldAddress, replacedWalletReservedAddressesPage);
+        }
+
+        await s.GenerateWallet(seed: originalMnemonic);
+        await s.GoToWallet(walletId, WalletsNavPages.Receive);
+        await s.Page.ClickAsync("#reserved-addresses-button");
+        await s.Page.WaitForSelectorAsync("#reserved-addresses");
+
+        var restoredWalletReservedAddressesPage = await s.Page.ContentAsync();
+        Assert.DoesNotContain(newAddress, restoredWalletReservedAddressesPage);
+        Assert.Contains("old-wallet-label", restoredWalletReservedAddressesPage);
+        foreach (var oldAddress in oldAddresses)
+        {
+            Assert.Contains(oldAddress, restoredWalletReservedAddressesPage);
+        }
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
     public async Task CanUseBumpFee()
     {
         await using var s = CreatePlaywrightTester();

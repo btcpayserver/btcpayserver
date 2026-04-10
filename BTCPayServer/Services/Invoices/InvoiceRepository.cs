@@ -80,8 +80,13 @@ namespace BTCPayServer.Services.Invoices
         public async Task AddAddressInvoice(string invoiceId, PaymentMethodId paymentMethodId, string address)
         {
             await using var context = _applicationDbContextFactory.CreateContext();
+            await UpsertAddressInvoice(context, invoiceId, paymentMethodId.ToString(), address);
+        }
+
+        private static async Task UpsertAddressInvoice(ApplicationDbContext context, string invoiceId, string paymentMethodId, string address)
+        {
             await context.Database.ExecuteSqlInterpolatedAsync(
-                $"""INSERT INTO "AddressInvoices" ("Address", "PaymentMethodId", "InvoiceDataId") VALUES ({address}, {paymentMethodId.ToString()}, {invoiceId}) ON CONFLICT ("Address", "PaymentMethodId") DO NOTHING""");
+                $"""INSERT INTO "AddressInvoices" ("Address", "PaymentMethodId", "InvoiceDataId") VALUES ({address}, {paymentMethodId}, {invoiceId}) ON CONFLICT ("Address", "PaymentMethodId") DO NOTHING""");
         }
 
         /// <summary>
@@ -364,8 +369,7 @@ retry:
                         var pmi = prompt.PaymentMethodId.ToString();
                         foreach (var tracked in trackedDestinations)
                         {
-                            await context.Database.ExecuteSqlInterpolatedAsync(
-                                $"""INSERT INTO "AddressInvoices" ("Address", "PaymentMethodId", "InvoiceDataId") VALUES ({tracked}, {pmi}, {invoiceId}) ON CONFLICT ("Address", "PaymentMethodId") DO NOTHING""");
+                            await UpsertAddressInvoice(context, invoiceId, pmi, tracked);
                         }
                     }
                 }
@@ -391,8 +395,7 @@ retry:
                     var pmi = paymentPromptContext.PaymentMethodId.ToString();
                     foreach (var tracked in paymentPromptContext.TrackedDestinations)
                     {
-                        await context.Database.ExecuteSqlInterpolatedAsync(
-                            $"""INSERT INTO "AddressInvoices" ("Address", "PaymentMethodId", "InvoiceDataId") VALUES ({tracked}, {pmi}, {invoiceId}) ON CONFLICT ("Address", "PaymentMethodId") DO NOTHING""");
+                        await UpsertAddressInvoice(context, invoiceId, pmi, tracked);
                     }
                     AddToTextSearch(context, invoice, prompt.Destination);
                 }

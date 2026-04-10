@@ -867,7 +867,7 @@ namespace BTCPayServer
                 {
                     // Index payment hash for LUD-21 verify lookup via AddressInvoices,
                     // flushed atomically with the prompt update.
-                    var trackedDestinations = promptDetails.PaymentHash is not null
+                    var trackedDestinations = lnurlSupportedPaymentMethod.LUD21Enabled && promptDetails.PaymentHash is not null
                         ? new[] { promptDetails.PaymentHash.ToString().ToLowerInvariant() }
                         : null;
                     await _invoiceRepository.UpdatePrompt(invoiceId, lightningPaymentMethod, trackedDestinations);

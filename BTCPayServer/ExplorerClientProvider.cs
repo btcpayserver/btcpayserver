@@ -70,9 +70,9 @@ namespace BTCPayServer
             return explorer;
         }
 
-        readonly Dictionary<string, ExplorerClient> _Clients = new Dictionary<string, ExplorerClient>();
+        protected readonly Dictionary<string, ExplorerClient> _Clients = new Dictionary<string, ExplorerClient>();
 
-        public ExplorerClient GetExplorerClient(string cryptoCode)
+        public virtual ExplorerClient GetExplorerClient(string cryptoCode)
         {
             var network = _NetworkProviders.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network == null)
@@ -81,24 +81,24 @@ namespace BTCPayServer
             return client;
         }
 
-        public ExplorerClient GetExplorerClient(BTCPayNetworkBase network)
+        public virtual ExplorerClient GetExplorerClient(BTCPayNetworkBase network)
         {
             ArgumentNullException.ThrowIfNull(network);
             return GetExplorerClient(network.CryptoCode);
         }
 
-        public bool IsAvailable(BTCPayNetworkBase network)
+        public virtual bool IsAvailable(BTCPayNetworkBase network)
         {
             return IsAvailable(network.CryptoCode);
         }
 
-        public bool IsAvailable(string cryptoCode)
+        public virtual bool IsAvailable(string cryptoCode)
         {
             cryptoCode = cryptoCode.ToUpperInvariant();
             return _Clients.ContainsKey(cryptoCode) && _Dashboard.IsFullySynched(cryptoCode, out var unused);
         }
 
-        public BTCPayNetwork GetNetwork(string cryptoCode)
+        public virtual BTCPayNetwork GetNetwork(string cryptoCode)
         {
             var network = _NetworkProviders.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network == null)
@@ -108,7 +108,7 @@ namespace BTCPayServer
             return null;
         }
 
-        public IEnumerable<(BTCPayNetwork, ExplorerClient)> GetAll()
+        public virtual IEnumerable<(BTCPayNetwork, ExplorerClient)> GetAll()
         {
             foreach (var net in _NetworkProviders.GetAll().OfType<BTCPayNetwork>())
             {

@@ -9,8 +9,7 @@
     ViewData.SetLayoutModel(new($"{nameof(PointOfSalePlugin)}-{Model.Id}",StringLocalizer["Update Point of Sale"]));
 	Csp.UnsafeEval();
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
-    var posPath = Url.Action("ViewPointOfSale", "UIPointOfSale", new { appId = Model.Id });
-    var posUrl = Url.ActionAbsolute(this.Context.Request, "ViewPointOfSale", "UIPointOfSale", new { appId = Model.Id }).AbsoluteUri;
+    var baseUrl = this.Context.Request.GetRequestBaseUrl().ToString();
 }
 
 @section PageHeadContent {
@@ -25,15 +24,15 @@
     <script src="~/pos/admin.js" asp-append-version="true"></script>
 }
 
-<form method="post" permissioned="@Policies.CanModifyStoreSettings">
+<form method="post">
     <div class="sticky-header">
         <h2>@ViewData["Title"]</h2>
         <div>
-            <button id="page-primary" type="submit" class="btn btn-primary order-sm-1" text-translate="true">Save</button>
+            <button id="page-primary" type="submit" class="btn btn-primary order-sm-1" text-translate="true" permissioned="@Policies.CanModifyStoreSettings">Save</button>
             <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm" text-translate="true">Invoices</a>
             @if (Model.Archived)
             {
-                <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False" text-translate="true">Unarchive</button>
+                <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False" text-translate="true" permissioned="@Policies.CanModifyStoreSettings">Unarchive</button>
             }
             else
             {
@@ -56,7 +55,7 @@
     {
         <div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
     }
-    <div class="row" style="max-width:540px;">
+    <div permissioned="@Policies.CanModifyStoreSettings" class="row" style="max-width:540px;">
         <div class="col-sm-6">
             <div class="form-group">
                 <label asp-for="AppName" class="form-label" data-required></label>
@@ -364,9 +363,9 @@ Please insert valid HTML here. Only meta tags accepted.'>
             </div>
             <div class="modal-body pt-0">
                 <component type="typeof(BTCPayServer.Blazor.PosLoginCode)" render-mode="ServerPrerendered"
-                           param-Users="@Model.StoreUsers"
-                           param-PosPath="@posPath"
-                           param-PosUrl="@posUrl"/>
+                           param-UserEmails="@Model.StoreUserEmails"
+                           param-AppId="@Model.Id"
+                           param-BaseUrl="@baseUrl"/>
             </div>
         </div>
     </div>

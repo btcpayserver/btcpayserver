@@ -2,12 +2,26 @@
 
 @if (!string.IsNullOrEmpty(Data))
 {
-    <img @attributes="Attrs" style="image-rendering:pixelated;image-rendering:-moz-crisp-edges;min-width:@(Size)px;min-height:@(Size)px" src="data:image/png;base64,@(GetBase64(Data))" class="@CssClass" alt="@Data" />
+    if (CanCopy)
+    {
+        <div class="qr-container clipboard-button" data-clipboard="@Data">
+        <img @attributes="Attrs" style="image-rendering:pixelated;image-rendering:-moz-crisp-edges;min-width:@(Size)px;min-height:@(Size)px"
+             src="data:image/png;base64,@(GetBase64(Data))" class="@CssClass" alt="@Data" />
+        </div>
+    }
+    else
+    {
+        <img @attributes="Attrs" style="image-rendering:pixelated;image-rendering:-moz-crisp-edges;min-width:@(Size)px;min-height:@(Size)px"
+             src="data:image/png;base64,@(GetBase64(Data))" class="@CssClass" alt="@Data" />
+    }
 }
 
 @code {
     [Parameter, EditorRequired]
     public string Data { get; set; }
+
+    [Parameter]
+    public bool CanCopy { get; set; }
 
     [Parameter]
     public int Size { get; set; } = 256;

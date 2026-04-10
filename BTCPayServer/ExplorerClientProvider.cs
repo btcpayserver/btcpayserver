@@ -22,6 +22,15 @@ namespace BTCPayServer
 
         readonly NBXplorerDashboard _Dashboard;
 
+        protected ExplorerClientProvider(
+            BTCPayNetworkProvider networkProviders,
+            NBXplorerDashboard dashboard)
+        {
+            Logs = new Logs();
+            _Dashboard = dashboard;
+            _NetworkProviders = networkProviders;
+        }
+
         public ExplorerClientProvider(
             IHttpClientFactory httpClientFactory,
             BTCPayNetworkProvider networkProviders,

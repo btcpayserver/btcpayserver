@@ -32,7 +32,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.StartAsync();
         await s.RegisterNewUser(true);
         (_, string storeId) = await s.CreateNewStore();
-        await s.GenerateWallet("BTC", "", false, true);
+        await s.GenerateWallet("BTC", "", false);
         var walletId = new WalletId(storeId, "BTC");
 
         await s.GoToWallet(walletId, WalletsNavPages.Receive);
@@ -243,7 +243,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await wt.AssertHasLabels("label2");
 
         //change the wallet and ensure old address is not there and generating a new one does not result in the prev one
-        await s.GenerateWallet(importkeys: true, isHotWallet: true);
+        await s.GenerateWallet(isHotWallet: true);
         await s.GoToWallet(null, WalletsNavPages.Receive);
         await s.Page.ClickAsync("button[value=generate-new-address]");
         var newAddr = await s.Page.Locator("#Address").GetAttributeAsync("data-text");
@@ -259,7 +259,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
             await s.Server.ExplorerNode.GetAddressInfoAsync(BitcoinAddress.Create(address, Network.RegTest));
         Assert.False(result.IsWatchOnly);
         await s.GoToStore(storeId);
-        var mnemonic = await s.GenerateWallet(cryptoCode, "", true, true);
+        var mnemonic = await s.GenerateWallet(cryptoCode, "", true);
 
         //let's import and save private keys
         invoiceId = await s.CreateInvoice(storeId);
@@ -1315,7 +1315,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.StartAsync();
         await s.RegisterNewUser(true);
         var (_, storeId) = await s.CreateNewStore();
-        await s.GenerateWallet("BTC", "", false, true);
+        await s.GenerateWallet("BTC", "", true);
         var walletId = new WalletId(storeId, "BTC");
         await s.GoToWallet(walletId, WalletsNavPages.Receive);
         var addressStr = await s.Page.Locator("#Address").GetAttributeAsync("data-text");

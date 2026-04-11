@@ -253,7 +253,6 @@ public partial class UIStoresController
 
         var perm = await CanUseHotWallet();
         if ((!perm.CanCreateHotWallet && request.SavePrivateKeys) ||
-            (!perm.CanRPCImport && request.ImportKeysToRPC) ||
             (!perm.CanCreateColdWallet && !request.SavePrivateKeys))
         {
             return NotFound();
@@ -429,7 +428,6 @@ public partial class UIStoresController
             PayJoinEnabled = storeBlob.PayJoinEnabled,
             CanUsePayJoin = perm.CanCreateHotWallet && network.SupportPayJoin && derivation.IsHotWallet,
             CanUseHotWallet = perm.CanCreateHotWallet,
-            CanUseRPCImport = perm.CanRPCImport,
             StoreName = store.StoreName,
             CanSetupMultiSig = (derivation.AccountKeySettings ?? []).Length > 1,
             IsMultiSigOnServer = derivation.IsMultiSigOnServer,

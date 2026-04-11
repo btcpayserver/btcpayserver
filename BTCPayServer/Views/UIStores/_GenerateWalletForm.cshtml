@@ -6,7 +6,6 @@
     var isImport = method is WalletSetupMethod.Seed;
     var isHotWallet = method is WalletSetupMethod.HotWallet;
     var canUseHotWallet = ViewData["CanUseHotWallet"] is true;
-    var canUseRpcImport = ViewData["CanUseRPCImport"] is true;
 }
 
 @if (!User.IsInRole(Roles.ServerAdmin))
@@ -83,17 +82,17 @@
                             </a>
                         </p>
                     </div>
-                </label>                 
+                </label>
             </div>
         }
     }
-    
+
     <div class="mb-4">
         <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
             <vc:icon symbol="caret-down"/>
             <span class="ms-1" text-translate="true">Advanced settings</span>
         </button>
-        <div id="AdvancedSettings" class="collapse @(string.IsNullOrEmpty(Model.Passphrase) && !Model.ImportKeysToRPC ? "" : "show")">
+        <div id="AdvancedSettings" class="collapse @(string.IsNullOrEmpty(Model.Passphrase) ? "" : "show")">
             <div class="pt-3">
                 @if (isImport) // hide account option when creating a wallet
                 {
@@ -113,26 +112,6 @@
                     <input type="text" name="passphrase_conf" id="passphrase_conf" class="form-control"/>
                     <span class="text-danger field-validation-valid" id="passphrase_conf_validation"></span>
                 </div>
-
-                @if (canUseRpcImport)
-                {
-                    <div class="form-group mt-4">
-                        <label class="d-flex align-items-center">
-                            <input type="checkbox" asp-for="ImportKeysToRPC" class="btcpay-toggle me-3"/>
-                            <div>
-                                <label asp-for="ImportKeysToRPC" class="form-check-label" text-translate="true">Import keys to RPC</label>
-                                <span asp-validation-for="ImportKeysToRPC" class="text-danger"></span>
-                                <p class="text-muted pt-2 mb-0">
-                                    <span text-translate="true">Each address generated will be imported into the node wallet and you can view your balance through the node.</span>
-                                    @if (isImport || isHotWallet)
-                                    {
-                                        <span text-translate="true">When this is enabled for a hot wallet, you are also able to use the node wallet to spend.</span>
-                                    }
-                                </p>
-                            </div>
-                        </label>
-                    </div>
-                }
             </div>
         </div>
     </div>

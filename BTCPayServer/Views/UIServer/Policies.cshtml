@@ -134,17 +134,6 @@
 							<span asp-validation-for="AllowCreateColdWalletForAll" class="text-danger"></span>
 						</div>
 					</div>
-                    <div class="d-flex my-3">
-                        <input asp-for="AllowHotWalletRPCImportForAll" type="checkbox" class="btcpay-toggle me-3"/>
-                        <div>
-                            <label asp-for="AllowHotWalletRPCImportForAll" class="form-check-label"></label>
-                            <span asp-validation-for="AllowHotWalletRPCImportForAll" class="text-danger"></span>
-                            <div class="info-note mt-2 text-warning" role="alert">
-                                <vc:icon symbol="warning"/>
-                                <span text-translate="true">Caution: Enabling this option, may simplify the onboarding and spending for third-parties but carries liabilities and security risks associated to storing private keys of third parties on a server.</span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="mb-5">

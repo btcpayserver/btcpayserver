@@ -26,5 +26,8 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Allow payee to pass a comment")]
         public bool LUD12Enabled { get; set; }
+
+        [Display(Name = "Enable LNURL-pay verify endpoint (LUD-21)")]
+        public bool LUD21Enabled { get; set; }
     }
 }

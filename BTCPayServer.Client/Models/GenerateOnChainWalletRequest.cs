@@ -23,7 +23,6 @@ namespace BTCPayServer.Client
         [JsonConverter(typeof(StringEnumConverter))]
         public NBitcoin.ScriptPubKeyType ScriptPubKeyType { get; set; } = ScriptPubKeyType.Segwit;
         public string Passphrase { get; set; }
-        public bool ImportKeysToRPC { get; set; }
         public bool SavePrivateKeys { get; set; }
     }
     public class GenerateOnChainWalletResponse : GenericPaymentMethodData

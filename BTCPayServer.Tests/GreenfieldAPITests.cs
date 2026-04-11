@@ -2446,12 +2446,11 @@ namespace BTCPayServer.Tests
                 await viewOnlyClient.GenerateOnChainWallet(store.Id, "BTC", new GenerateOnChainWalletRequest() { });
             });
 
-            await AssertValidationError(new[] { "SavePrivateKeys", "ImportKeysToRPC" }, async () =>
+            await AssertValidationError(new[] { "SavePrivateKeys" }, async () =>
               {
                   await client2.GenerateOnChainWallet(user2.StoreId, "BTC", new GenerateOnChainWalletRequest()
                   {
-                      SavePrivateKeys = true,
-                      ImportKeysToRPC = true
+                      SavePrivateKeys = true
                   });
               });
 

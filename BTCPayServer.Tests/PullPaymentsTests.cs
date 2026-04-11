@@ -48,7 +48,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Server.EnsureChannelsSetup();
         await s.RegisterNewUser(true);
         await s.CreateNewStore();
-        await s.GenerateWallet("BTC", "", true, true);
+        await s.GenerateWallet("BTC", "", true);
 
         await s.Server.ExplorerNode.GenerateAsync(1);
         await s.FundStoreWallet(denomination: 50.0m);
@@ -155,7 +155,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         //offline/external payout test
 
         await s.CreateNewStore();
-        await s.GenerateWallet("BTC", "", true, true);
+        await s.GenerateWallet("BTC", "", true);
         await s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
 
         await s.ClickPagePrimary();
@@ -214,7 +214,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.AddLightningNode();
 
         //Currently an onchain wallet is required to use the Lightning payouts feature…
-        await s.GenerateWallet("BTC", "", true, true);
+        await s.GenerateWallet("BTC", "", true);
         await s.GoToStore(newStore.storeId, StoreNavPages.PullPayments);
         await s.ClickPagePrimary();
 
@@ -1021,7 +1021,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.StartAsync();
         await s.RegisterNewUser(true);
         await s.CreateNewStore();
-        await s.GenerateWallet("BTC", "", true, true);
+        await s.GenerateWallet("BTC", "", true);
         await s.Server.ExplorerNode.GenerateAsync(1);
         await s.FundStoreWallet(denomination: 50.0m);
 

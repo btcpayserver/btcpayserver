@@ -955,4 +955,105 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         Assert.Null(conf["useBech32Scheme"]); // default stripped
 #pragma warning restore CS0618 // Type or member is obsolete
     }
+
+    [Fact(Timeout = 60 * 20 * 1000)]
+    [Trait("Integration", "Integration")]
+    [Trait("Lightning", "Lightning")]
+    public async Task CanUseLUD21VerifyEndpoint()
+    {
+        using var tester = CreateServerTester();
+        tester.ActivateLightning();
+        await tester.StartAsync();
+        await tester.EnsureChannelsSetup();
+        var user = tester.NewAccount();
+        await user.GrantAccessAsync(true);
+        var client = await user.CreateClient(Policies.Unrestricted);
+
+        // Enable LNURL and Lightning
+        var methods = await client.GetStorePaymentMethods(user.StoreId);
+        await user.RegisterLightningNodeAsync("BTC", false);
+
+        // Set up a Lightning Address
+        var username = Guid.NewGuid().ToString("n").Substring(0, 8);
+        await client.AddOrUpdateStoreLightningAddress(user.StoreId, username,
+            new LightningAddressData());
+
+        // Verify endpoint returns 404 for unknown payment hash
+        var fakeHash = "0000000000000000000000000000000000000000000000000000000000000000";
+        var response = await tester.PayTester.HttpClient.GetAsync(
+            $"/lnurlp/verify/{fakeHash}");
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+
+        // Create an invoice via LNURL-pay flow to get a real payment hash.
+        // The Lightning Address resolver lives at /.well-known/lnurlp/{username}
+        // (LUD-16). The bare /lnurlp/{username} path has no route.
+        var lnurlResponse = await tester.PayTester.HttpClient.GetAsync(
+            $"/.well-known/lnurlp/{username}");
+        Assert.Equal(System.Net.HttpStatusCode.OK, lnurlResponse.StatusCode);
+        var lnurlPayRequest = JObject.Parse(await lnurlResponse.Content.ReadAsStringAsync());
+        var callback = lnurlPayRequest["callback"]?.ToString();
+        Assert.NotNull(callback);
+
+        // Make the callback with minimum amount to create a Lightning invoice
+        var minSendable = lnurlPayRequest["minSendable"]?.Value<long>() ?? 1000;
+        var callbackUri = new Uri(callback);
+        var callbackPath = callbackUri.PathAndQuery;
+        var separator = callbackPath.Contains('?') ? "&" : "?";
+        var callbackResponse = await tester.PayTester.HttpClient.GetAsync(
+            $"{callbackPath}{separator}amount={minSendable}");
+        Assert.Equal(System.Net.HttpStatusCode.OK, callbackResponse.StatusCode);
+        var callbackResult = JObject.Parse(await callbackResponse.Content.ReadAsStringAsync());
+
+        // Check if verify URL is present in callback response
+        var verifyUrl = callbackResult["verify"]?.ToString();
+        Assert.NotNull(verifyUrl);
+
+        // Extract payment hash from verify URL
+        var verifyUri = new Uri(verifyUrl);
+        var verifyPath = verifyUri.PathAndQuery;
+
+        // Call verify endpoint - invoice should exist but not be settled yet
+        var verifyResponse = await tester.PayTester.HttpClient.GetAsync(verifyPath);
+        Assert.Equal(System.Net.HttpStatusCode.OK, verifyResponse.StatusCode);
+        var verifyResult = JObject.Parse(await verifyResponse.Content.ReadAsStringAsync());
+        Assert.Equal("OK", verifyResult["status"]?.ToString());
+        Assert.False(verifyResult["settled"]?.Value<bool>());
+        var preimageToken = verifyResult["preimage"];
+        Assert.True(preimageToken is null || preimageToken.Type == JTokenType.Null,
+            "Expected preimage to be null or absent for an unsettled invoice");
+        Assert.NotNull(verifyResult["pr"]?.ToString());
+
+        // Repeat the callback with the SAME amount. Exercises the idempotent flush
+        // branch in UpdatePrompt(trackedDestinations): the AddressInvoices row for
+        // the payment hash already exists, so the flush loop should take the
+        // "existing is not null" path without throwing or duplicating rows, and
+        // the verify endpoint should still resolve the hash afterward.
+        var callbackResponse2 = await tester.PayTester.HttpClient.GetAsync(
+            $"{callbackPath}{separator}amount={minSendable}");
+        Assert.Equal(System.Net.HttpStatusCode.OK, callbackResponse2.StatusCode);
+        var verifyResponse2 = await tester.PayTester.HttpClient.GetAsync(verifyPath);
+        Assert.Equal(System.Net.HttpStatusCode.OK, verifyResponse2.StatusCode);
+
+        // Repeat the callback with a DIFFERENT amount. UpdatePrompt should persist
+        // the new prompt blob AND index the new payment hash in AddressInvoices so
+        // the new verify URL resolves.
+        var newAmount = minSendable * 2;
+        var callbackResponse3 = await tester.PayTester.HttpClient.GetAsync(
+            $"{callbackPath}{separator}amount={newAmount}");
+        Assert.Equal(System.Net.HttpStatusCode.OK, callbackResponse3.StatusCode);
+        var callbackResult3 = JObject.Parse(await callbackResponse3.Content.ReadAsStringAsync());
+        var verifyUrl3 = callbackResult3["verify"]?.ToString();
+        Assert.NotNull(verifyUrl3);
+        var verifyPath3 = new Uri(verifyUrl3).PathAndQuery;
+        var verifyResponse3 = await tester.PayTester.HttpClient.GetAsync(verifyPath3);
+        Assert.Equal(System.Net.HttpStatusCode.OK, verifyResponse3.StatusCode);
+
+        // Malformed paymentHash (non-hex / wrong length) must be rejected at the
+        // 64-hex guard before any DB lookup, returning Reason "Not found".
+        var malformedResponse = await tester.PayTester.HttpClient.GetAsync(
+            $"/lnurlp/verify/not-a-hex-hash");
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, malformedResponse.StatusCode);
+        var malformedBody = JObject.Parse(await malformedResponse.Content.ReadAsStringAsync());
+        Assert.Equal("Not found", malformedBody["reason"]?.ToString());
+    }
 }

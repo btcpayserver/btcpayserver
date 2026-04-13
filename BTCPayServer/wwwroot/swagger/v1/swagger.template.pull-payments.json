@@ -306,6 +306,30 @@
                     "Pull payments (Public)"
                 ],
                 "security": []
+            },
+            "delete": {
+                "operationId": "PullPayments_ArchivePullPaymentWithoutStore",
+                "summary": "Archive a pull payment",
+                "description": "Archive this pull payment (Will cancel all payouts awaiting for payment). The store is resolved automatically from the pull payment.",
+                "responses": {
+                    "200": {
+                        "description": "The pull payment has been archived"
+                    },
+                    "404": {
+                        "description": "The pull payment has not been found"
+                    }
+                },
+                "tags": [
+                    "Pull payments (Management)"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canarchivepullpayments"
+                        ],
+                        "Basic": []
+                    }
+                ]
             }
         },
         "/api/v1/stores/{storeId}/pull-payments/{pullPaymentId}": {

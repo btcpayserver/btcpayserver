@@ -3794,5 +3794,129 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             await AssertValidationError(new[] { "PreferredSource", "currencyPair" }, () =>
 clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguration() { IsCustomScript = false, PreferredSource = "coingeckoOOO" }, new[] { "BTCUSDUSDBTC" }));
         }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanUseStoreIdLessRoutes()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+
+            var user = tester.NewAccount();
+            await user.RegisterAsync(true);
+            await user.CreateStoreAsync();
+            await user.RegisterDerivationSchemeAsync("BTC");
+
+            var client = await user.CreateClient(Policies.Unrestricted);
+            var viewOnlyClient = await user.CreateClient(Policies.CanViewInvoices);
+
+            // Invoices
+            var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest
+            {
+                Currency = "USD",
+                Amount = 10,
+                Metadata = JObject.Parse("{\"orderId\": \"test-storeless\"}")
+            });
+            Assert.NotNull(invoice);
+            Assert.Equal(user.StoreId, invoice.StoreId);
+
+            var fetchedById = await client.GetInvoice(null, invoice.Id);
+            Assert.Equal(invoice.Id, fetchedById.Id);
+            Assert.Equal(user.StoreId, fetchedById.StoreId);
+
+            var fetchedByViewOnly = await viewOnlyClient.GetInvoice(null, invoice.Id);
+            Assert.Equal(invoice.Id, fetchedByViewOnly.Id);
+
+            var paymentMethods = await client.GetInvoicePaymentMethods(null, invoice.Id);
+            Assert.Single(paymentMethods);
+            Assert.Equal("BTC-CHAIN", paymentMethods[0].PaymentMethodId);
+
+            var updatedInvoice = await client.UpdateInvoice(null, invoice.Id, new UpdateInvoiceRequest
+            {
+                Metadata = JObject.Parse("{\"orderId\": \"updated-storeless\"}")
+            });
+            Assert.Equal("updated-storeless", updatedInvoice.Metadata["orderId"]?.Value<string>());
+
+            var invoiceToMark = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest { Currency = "USD", Amount = 1 });
+            await client.MarkInvoiceStatus(null, invoiceToMark.Id, new MarkInvoiceStatusRequest { Status = InvoiceStatus.Settled });
+            // MarkInvoiceStatus returns the pre-update cached context; verify via a fresh GET
+            var markedInvoice = await client.GetInvoice(null, invoiceToMark.Id);
+            Assert.Equal(InvoiceStatus.Settled, markedInvoice.Status);
+
+            var invoiceToArchive = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest { Currency = "USD", Amount = 1 });
+            await client.ArchiveInvoice(null, invoiceToArchive.Id);
+            var activeInvoices = await client.GetInvoices(user.StoreId);
+            Assert.DoesNotContain(invoiceToArchive.Id, activeInvoices.Select(i => i.Id));
+
+            await client.UnarchiveInvoice(null, invoiceToArchive.Id);
+            var unarchivedInvoice = await client.GetInvoice(null, invoiceToArchive.Id);
+            Assert.False(unarchivedInvoice.Archived);
+
+            // Cross-store access is blocked for a different user's entities
+            var otherUser = tester.NewAccount();
+            await otherUser.RegisterAsync(false);
+            await otherUser.CreateStoreAsync();
+            var otherClient = await otherUser.CreateClient(Policies.Unrestricted);
+            await AssertEx.AssertApiError("missing-permission", async () => await otherClient.GetInvoice(null, invoice.Id));
+
+            // Payment requests
+            var pr = await client.CreatePaymentRequest(user.StoreId, new PaymentRequestBaseData
+            {
+                Title = "Test PR",
+                Amount = 50,
+                Currency = "USD"
+            });
+            Assert.NotNull(pr);
+            Assert.Equal(user.StoreId, pr.StoreId);
+
+            var fetchedPr = await client.GetPaymentRequest(null, pr.Id);
+            Assert.Equal(pr.Id, fetchedPr.Id);
+            Assert.Equal(user.StoreId, fetchedPr.StoreId);
+
+            var updatedPr = await client.UpdatePaymentRequest(null, pr.Id, new PaymentRequestBaseData
+            {
+                Title = "Updated PR",
+                Amount = 50,
+                Currency = "USD"
+            });
+            Assert.Equal("Updated PR", updatedPr.Title);
+
+            var payInvoice = await client.PayPaymentRequest(null, pr.Id, new PayPaymentRequestRequest());
+            Assert.NotNull(payInvoice);
+            Assert.Equal(user.StoreId, payInvoice.StoreId);
+
+            var pr2 = await client.CreatePaymentRequest(user.StoreId, new PaymentRequestBaseData
+            {
+                Title = "PR to archive",
+                Amount = 10,
+                Currency = "USD"
+            });
+            await client.ArchivePaymentRequest(null, pr2.Id);
+            await AssertEx.AssertApiError("payment-request-not-found", async () => await client.ArchivePaymentRequest(null, pr2.Id));
+            await AssertEx.AssertApiError("missing-permission", async () => await otherClient.GetPaymentRequest(null, pr.Id));
+
+            // Pull payments
+            var pp = await client.CreatePullPayment(user.StoreId, new CreatePullPaymentRequest
+            {
+                Name = "Test PP",
+                Amount = 100,
+                Currency = "BTC",
+                PayoutMethods = new[] { "BTC-CHAIN" }
+            });
+            Assert.NotNull(pp);
+
+            await client.ArchivePullPayment(null, pp.Id);
+            var archivedPp = await client.GetPullPayment(pp.Id);
+            Assert.True(archivedPp.Archived);
+
+            var pp2 = await client.CreatePullPayment(user.StoreId, new CreatePullPaymentRequest
+            {
+                Name = "Test PP2",
+                Amount = 100,
+                Currency = "BTC",
+                PayoutMethods = new[] { "BTC-CHAIN" }
+            });
+            await AssertEx.AssertApiError("missing-permission", async () => await otherClient.ArchivePullPayment(null, pp2.Id));
+        }
     }
 }

@@ -615,6 +615,466 @@
                 ]
             }
         },
+        "/api/v1/invoices/{invoiceId}": {
+            "get": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Get invoice",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/InvoiceId"
+                    }
+                ],
+                "description": "View information about the specified invoice. The store is resolved automatically from the invoice.",
+                "operationId": "Invoices_GetInvoiceWithoutStore",
+                "responses": {
+                    "200": {
+                        "description": "specified invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified invoice"
+                    },
+                    "404": {
+                        "description": "The key is not found for this invoice"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Archive invoice",
+                "description": "Archives the specified invoice. The store is resolved automatically from the invoice.",
+                "operationId": "Invoices_ArchiveInvoiceWithoutStore",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/InvoiceId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The invoice has been archived"
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when archiving the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to archive the specified invoice"
+                    },
+                    "404": {
+                        "description": "The key is not found for this invoice"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifyinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Update invoice",
+                "description": "Updates the specified invoice. The store is resolved automatically from the invoice.",
+                "operationId": "Invoices_UpdateInvoiceWithoutStore",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/InvoiceId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The invoice that has been updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update the specified invoice"
+                    },
+                    "404": {
+                        "description": "The key is not found for this invoice"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateInvoiceRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifyinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/invoices/{invoiceId}/payment-methods": {
+            "get": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Get invoice payment methods",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/InvoiceId"
+                    },
+                    {
+                        "name": "onlyAccountedPayments",
+                        "in": "query",
+                        "required": false,
+                        "description": "If default or true, only returns payments which are accounted (in Bitcoin, this mean not returning RBF'd or double spent payments)",
+                        "schema": {
+                            "type": "boolean",
+                            "default": true
+                        }
+                    },
+                    {
+                        "name": "includeSensitive",
+                        "in": "query",
+                        "required": false,
+                        "description": "If `true`, `additionalData` might include sensitive data (such as xpub). Requires the permission `btcpay.store.canmodifystoresettings`.",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                ],
+                "description": "View information about the specified invoice's payment methods. The store is resolved automatically from the invoice.",
+                "operationId": "Invoices_GetInvoicePaymentMethodsWithoutStore",
+                "responses": {
+                    "200": {
+                        "description": "specified invoice payment methods data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "nullable": false,
+                                    "items": {
+                                        "$ref": "#/components/schemas/InvoicePaymentMethodDataModel"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified invoice"
+                    },
+                    "404": {
+                        "description": "The key is not found for this invoice"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/invoices/{invoiceId}/status": {
+            "post": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Mark invoice status",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/InvoiceId"
+                    }
+                ],
+                "description": "Mark an invoice as invalid or settled. The store is resolved automatically from the invoice.",
+                "operationId": "Invoices_MarkInvoiceStatusWithoutStore",
+                "responses": {
+                    "200": {
+                        "description": "The updated invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update the invoice"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MarkInvoiceStatusRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifyinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/invoices/{invoiceId}/unarchive": {
+            "post": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Unarchive invoice",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/InvoiceId"
+                    }
+                ],
+                "description": "Unarchive an invoice. The store is resolved automatically from the invoice.",
+                "operationId": "Invoices_UnarchiveInvoiceWithoutStore",
+                "responses": {
+                    "200": {
+                        "description": "The unarchived invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update the invoice"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifyinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/invoices/{invoiceId}/payment-methods/{paymentMethodId}/activate": {
+            "post": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Activate Payment Method",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/InvoiceId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/PaymentMethodId"
+                    }
+                ],
+                "description": "Activate an invoice payment method (if lazy payments mode is enabled). The store is resolved automatically from the invoice.",
+                "operationId": "Invoices_ActivatePaymentMethodWithoutStore",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to activate the invoice payment method"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewinvoices"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/invoices/{invoiceId}/refund": {
+            "post": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Refund invoice",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/InvoiceId"
+                    }
+                ],
+                "description": "Refund invoice. The store is resolved automatically from the invoice.",
+                "operationId": "Invoices_RefundWithoutStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RefundInvoiceRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Pull payment for refunding the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PullPaymentData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when refunding the invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to refund the invoice"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.cancreatepullpayments"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/invoices/{invoiceId}/refund/{paymentMethodId}":
+ {
+            "get": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Get invoice refund trigger data",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/InvoiceId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/PaymentMethodId"
+                    }
+                ],
+                "description": "View calculated refund amounts for the specified invoice/payment-method. The store is resolved automatically from the invoice.",
+                "operationId": "Invoices_GetInvoiceRefundTriggerDataWithoutStore",
+                "responses": {
+                    "200": {
+                        "description": "specified invoice refund trigger data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceRefundTriggerData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified invoice"
+                    },
+                    "404": {
+                        "description": "The key is not found for this invoice"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.cancreatepullpayments"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/stores/{storeId}/invoices/{invoiceId}/refund": {
             "post": {
                 "tags": [
@@ -636,56 +1096,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "type": "object",
-                                "additionalProperties": false,
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "description": "Name of the pull payment (Default: 'Refund' followed by the invoice id)",
-                                        "nullable": true
-                                    },
-                                    "description": {
-                                        "type": "string",
-                                        "description": "Description of the pull payment"
-                                    },
-                                    "payoutMethodId": {
-                                        "$ref": "#/components/schemas/PayoutMethodId"
-                                    },
-                                    "refundVariant": {
-                                        "type": "string",
-                                        "description": "* `RateThen`: Refund the crypto currency price, at the rate the invoice got paid.\r\n* `CurrentRate`: Refund the crypto currency price, at the current rate.\r\n*`Fiat`: Refund the invoice currency, at the rate when the refund will be sent.\r\n*`OverpaidAmount`: Refund the crypto currency amount that was overpaid.\r\n*`Custom`: Specify the amount, currency, and rate of the refund. (see `customAmount` and `customCurrency`)",
-                                        "x-enumNames": [
-                                            "RateThen",
-                                            "CurrentRate",
-                                            "Fiat",
-                                            "Custom"
-                                        ],
-                                        "enum": [
-                                            "RateThen",
-                                            "CurrentRate",
-                                            "OverpaidAmount",
-                                            "Fiat",
-                                            "Custom"
-                                        ]
-                                    },
-                                    "subtractPercentage": {
-                                        "type": "string",
-                                        "format": "decimal",
-                                        "description": "Optional percentage by which to reduce the refund, e.g. as processing charge or to compensate for the mining fee.",
-                                        "example": "2.1"
-                                    },
-                                    "customAmount": {
-                                        "type": "string",
-                                        "format": "decimal",
-                                        "description": "The amount to refund if the `refundVariant` is `Custom`.",
-                                        "example": "5.00"
-                                    },
-                                    "customCurrency": {
-                                        "type": "string",
-                                        "description": "The currency to refund if the `refundVariant` is `Custom`",
-                                        "example": "USD"
-                                    }
-                                }
+                                "$ref": "#/components/schemas/RefundInvoiceRequest"
                             }
                         }
                     }
@@ -1487,6 +1898,58 @@
                     "Standard",
                     "TopUp"
                 ]
+            },
+            "RefundInvoiceRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the pull payment (Default: 'Refund' followed by the invoice id)",
+                        "nullable": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the pull payment"
+                    },
+                    "payoutMethodId": {
+                        "$ref": "#/components/schemas/PayoutMethodId"
+                    },
+                    "refundVariant": {
+                        "type": "string",
+                        "description": "* `RateThen`: Refund the crypto currency price, at the rate the invoice got paid.\r\n* `CurrentRate`: Refund the crypto currency price, at the current rate.\r\n*`Fiat`: Refund the invoice currency, at the rate when the refund will be sent.\r\n*`OverpaidAmount`: Refund the crypto currency amount that was overpaid.\r\n*`Custom`: Specify the amount, currency, and rate of the refund. (see `customAmount` and `customCurrency`)",
+                        "x-enumNames": [
+                            "RateThen",
+                            "CurrentRate",
+                            "Fiat",
+                            "Custom"
+                        ],
+                        "enum": [
+                            "RateThen",
+                            "CurrentRate",
+                            "OverpaidAmount",
+                            "Fiat",
+                            "Custom"
+                        ]
+                    },
+                    "subtractPercentage": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "Optional percentage by which to reduce the refund, e.g. as processing charge or to compensate for the mining fee.",
+                        "example": "2.1"
+                    },
+                    "customAmount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The amount to refund if the `refundVariant` is `Custom`.",
+                        "example": "5.00"
+                    },
+                    "customCurrency": {
+                        "type": "string",
+                        "description": "The currency to refund if the `refundVariant` is `Custom`",
+                        "example": "USD"
+                    }
+                }
             }
         }
     },

@@ -1902,6 +1902,9 @@
             "RefundInvoiceRequest": {
                 "type": "object",
                 "additionalProperties": false,
+                "required": [
+                    "refundVariant"
+                ],
                 "properties": {
                     "name": {
                         "type": "string",

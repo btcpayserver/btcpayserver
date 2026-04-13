@@ -9,6 +9,9 @@ namespace BTCPayServer.Models.ServerViewModels
         {
             public string Name { get; set; }
             public string Link { get; set; }
+            public string ControllerName { get; set; }
+            public string ActionName { get; set; }
+            public object RouteValues { get; set; }
         }
 
         public List<ExternalService> ExternalServices { get; set; } = new();

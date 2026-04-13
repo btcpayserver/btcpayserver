@@ -167,43 +167,43 @@ namespace BTCPayServer.Controllers.Greenfield
 			if (string.IsNullOrEmpty(request.Title))
 				ModelState.AddModelError(nameof(request.Title), "Title is required");
 
-			var storeData = HttpContext.GetStoreData();
-			PaymentRequestData pr;
-			if (paymentRequestId is not null)
+		PaymentRequestData pr;
+		if (paymentRequestId is not null)
+		{
+			pr = HttpContext.GetPaymentRequestDataOrNull();
+			if (pr is null)
+				return PaymentRequestNotFound();
+			if ((pr.Amount != request.Amount && request.Amount != 0.0m) ||
+				(pr.Currency != request.Currency && request.Currency != null))
 			{
-				pr = HttpContext.GetPaymentRequestDataOrNull();
-				if (pr is null)
-					return PaymentRequestNotFound();
-				if ((pr.Amount != request.Amount && request.Amount != 0.0m) ||
-					(pr.Currency != request.Currency && request.Currency != null))
+				var prWithInvoices = await this.PaymentRequestService.GetPaymentRequest(paymentRequestId, GetUserId());
+				if (prWithInvoices.Invoices.Any())
 				{
-					var prWithInvoices = await this.PaymentRequestService.GetPaymentRequest(paymentRequestId, GetUserId());
-					if (prWithInvoices.Invoices.Any())
-					{
-						ModelState.AddModelError(nameof(request.Amount), "Amount and currency are not editable once payment request has invoices");
-					}
-					else
-					{
-						if (request.Amount != 0.0m)
-							pr.Amount = request.Amount;
-						if (request.Currency != null)
-							pr.Currency = request.Currency;
-					}
+					ModelState.AddModelError(nameof(request.Amount), "Amount and currency are not editable once payment request has invoices");
 				}
-				pr.Expiry = request.ExpiryDate;
-			}
-			else
-			{
-				pr = new PaymentRequestData()
+				else
 				{
-					StoreDataId = storeId,
-					Status = PaymentRequestStatus.Pending,
-					Created = DateTimeOffset.UtcNow,
-					Amount = request.Amount,
-					Currency = request.Currency ?? storeData.GetStoreBlob().DefaultCurrency,
-					Expiry = request.ExpiryDate,
-				};
+					if (request.Amount != 0.0m)
+						pr.Amount = request.Amount;
+					if (request.Currency != null)
+						pr.Currency = request.Currency;
+				}
 			}
+			pr.Expiry = request.ExpiryDate;
+		}
+		else
+		{
+			var storeData = HttpContext.GetStoreData();
+			pr = new PaymentRequestData()
+			{
+				StoreDataId = storeId,
+				Status = PaymentRequestStatus.Pending,
+				Created = DateTimeOffset.UtcNow,
+				Amount = request.Amount,
+				Currency = request.Currency ?? storeData.GetStoreBlob().DefaultCurrency,
+				Expiry = request.ExpiryDate,
+			};
+		}
 
 			pr.ReferenceId = string.IsNullOrEmpty(request.ReferenceId) ? null : request.ReferenceId;
 

@@ -456,7 +456,7 @@
                                         "format": "decimal",
                                         "minimum": 0,
                                         "exclusiveMinimum": true,
-                                        "description": "The amount of the invoice. If `null` or `unspecified`, it will be set to the payment request's due amount.",
+                                        "description": "The amount of the invoice. If `null` or `unspecified`, it will be set to the payment request's due amount. Note that the payment's request `allowCustomPaymentAmounts` must be `true`, or a 422 error will be sent back.'",
                                         "nullable": true,
                                         "example": "0.1"
                                     },

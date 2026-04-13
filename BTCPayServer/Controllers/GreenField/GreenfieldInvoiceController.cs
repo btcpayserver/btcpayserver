@@ -326,10 +326,10 @@ namespace BTCPayServer.Controllers.Greenfield
         )
         {
             var invoice = HttpContext.GetInvoiceDataOrNull();
-            var store = HttpContext.GetStoreData();
-            storeId ??= store.Id;
             if (invoice is null)
                 return InvoiceNotFound();
+            var store = HttpContext.GetStoreData();
+            storeId ??= store.Id;
             if (!invoice.GetInvoiceState().CanRefund())
                 return this.CreateAPIError("non-refundable", "Cannot refund this invoice");
 

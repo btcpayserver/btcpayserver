@@ -316,7 +316,7 @@
                         "description": "The pull payment has been archived"
                     },
                     "404": {
-                        "description": "The pull payment has not been found"
+                        "description": "The pull payment has not been found. Well-known error code is: `pullpayment-not-found`"
                     }
                 },
                 "tags": [

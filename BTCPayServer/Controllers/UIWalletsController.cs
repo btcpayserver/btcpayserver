@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 using System.Net.Mime;
@@ -804,6 +805,25 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var labeledAddresses = await WalletRepository.GetReservedAddressesWithDetails(walletId);
+            if (labeledAddresses.Count != 0)
+            {
+                var connectionFactory = ServiceProvider.GetRequiredService<NBXplorerConnectionFactory>();
+                if (!connectionFactory.Available)
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Reserved Addresses requires access to the NBXplorer database."].Value;
+                    return RedirectToAction(nameof(WalletReceive), new { walletId });
+                }
+
+                try
+                {
+                    labeledAddresses = await FilterReservedAddressesToCurrentDerivation(connectionFactory, walletId, paymentMethod, labeledAddresses);
+                }
+                catch (DbException)
+                {
+                    TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Reserved Addresses is temporarily unavailable because the NBXplorer database cannot be reached."].Value;
+                    return RedirectToAction(nameof(WalletReceive), new { walletId });
+                }
+            }
 
             var vm = new ReservedAddressesViewModel
             {
@@ -813,6 +833,45 @@ namespace BTCPayServer.Controllers
             };
 
             return View(vm);
+        }
+
+        private async Task<List<ReservedAddress>> FilterReservedAddressesToCurrentDerivation(
+            NBXplorerConnectionFactory connectionFactory,
+            WalletId walletId,
+            DerivationSchemeSettings paymentMethod,
+            List<ReservedAddress> labeledAddresses)
+        {
+            if (labeledAddresses.Count == 0 || paymentMethod.AccountDerivation is null)
+                return labeledAddresses;
+
+            var addresses = labeledAddresses.Select(a => a.Address).ToArray();
+            var currentWalletId = NBXplorer.Client.DBUtils.nbxv1_get_wallet_id(
+                walletId.CryptoCode,
+                paymentMethod.AccountDerivation.ToString());
+
+            await using var conn = await connectionFactory.OpenConnection();
+            var activeAddresses = (await conn.QueryAsync<string>(
+                """
+                SELECT DISTINCT searched.addr
+                FROM unnest(@addresses) AS searched(addr)
+                JOIN scripts s
+                  ON s.code = @code
+                 AND s.addr = searched.addr
+                JOIN wallets_scripts ws
+                  ON ws.code = s.code
+                 AND ws.script = s.script
+                WHERE ws.wallet_id = @walletId
+                """,
+                new
+                {
+                    addresses,
+                    code = walletId.CryptoCode,
+                    walletId = currentWalletId
+                })).ToHashSet(StringComparer.Ordinal);
+
+            return labeledAddresses
+                .Where(address => activeAddresses.Contains(address.Address))
+                .ToList();
         }
 
         private async Task SendFreeMoney(Cheater cheater, WalletId walletId, DerivationSchemeSettings paymentMethod)

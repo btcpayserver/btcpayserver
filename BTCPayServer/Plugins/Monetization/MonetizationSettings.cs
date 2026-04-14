@@ -4,6 +4,7 @@ public class MonetizationSettings
 {
     public string OfferingId { get; set; }
     public string DefaultPlanId { get; set; }
+    public bool RequireSubscriptionForInvitedUsers { get; set; } = true;
 
     public bool IsSetup() => OfferingId is not null && DefaultPlanId is not null;
 }

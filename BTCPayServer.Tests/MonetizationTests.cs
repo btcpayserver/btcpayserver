@@ -223,7 +223,6 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await offeringPMO.GoToSubscribers();
         await offeringPMO.AssertHasNotSubscriber("normal-guest@gmail.com");
 
-
         await GoToMonetization(s);
         await ClickSetupOffering(s);
 
@@ -237,7 +236,11 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await ClickSetupOffering(s);
         await s.Page.ClickAsync("#RequireSubscriptionForInvitedUsers");
         await s.FindAlertMessage(partialText: "Server-invited users now require a subscription.");
-        await CreateUserAsAdmin(s, "enrolled-invited@gmail.com");
+        var evInvited = await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await CreateUserAsAdmin(s, "enrolled-invited@gmail.com");
+        });
+        Assert.Equal("enrolled-invited@gmail.com", evInvited.Subscriber.Customer.Email.Get());
         await AssertSubscribed(s, "enrolled-invited@gmail.com", true);
     }
 

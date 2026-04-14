@@ -258,6 +258,9 @@ namespace BTCPayServer.Plugins.Translations
             var db = ctx.Database.GetDbConnection();
             await db.ExecuteAsync("UPDATE lang_dictionaries SET metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{code}', to_jsonb(@code::text)) WHERE dict_id = @dict_id",
                 new { dict_id = dictionary, code = langCode });
+            InvalidateLangCache(dictionary);
+            // Also evict by the new code directly, in case it was cached before the association.
+            _langCache.TryRemove(langCode, out _);
         }
     }
 }

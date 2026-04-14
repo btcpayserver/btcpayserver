@@ -31,6 +31,8 @@ namespace BTCPayServer.Plugins.Translations
         public Translations Translations => _LoadedTranslations.Translations;
 
         readonly ConcurrentDictionary<string, Translations> _langCache = new(StringComparer.OrdinalIgnoreCase);
+        // Reverse map: dict name → lang code, populated when GetOrLoadForLanguageCode resolves via DB metadata.
+        readonly ConcurrentDictionary<string, string> _codeByDictName = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Returns translations for the given BCP-47 language code, loading and caching on first use.
@@ -53,6 +55,9 @@ namespace BTCPayServer.Plugins.Translations
                 dictName = await FindDictNameForCode(langCode);
                 var loaded = await GetTranslations(dictName);
                 _langCache[langCode] = loaded.Translations;
+                // Track the reverse mapping so InvalidateLangCache can evict by dict name.
+                if (!dictName.Equals(langCode, StringComparison.OrdinalIgnoreCase))
+                    _codeByDictName[dictName] = langCode;
                 return loaded.Translations;
             }
             catch (Exception ex)
@@ -132,22 +137,14 @@ namespace BTCPayServer.Plugins.Translations
 
         void InvalidateLangCache(string dictionaryName)
         {
-            // Remove any cached entry whose dict name matches (keyed by lang code).
-            foreach (var kv in _langCache)
-            {
-                // Direct match: custom dict named by code (e.g. "pt-PT")
-                if (kv.Key.Equals(dictionaryName, StringComparison.OrdinalIgnoreCase))
-                {
-                    _langCache.TryRemove(kv.Key, out _);
-                    continue;
-                }
-                // Static map match
-                if (LanguagePackUpdateService.DictNameToCode.TryGetValue(dictionaryName, out var code) &&
-                    code.Equals(kv.Key, StringComparison.OrdinalIgnoreCase))
-                {
-                    _langCache.TryRemove(kv.Key, out _);
-                }
-            }
+            // 1. Direct match: custom dict named by BCP-47 code (e.g. "pt-PT")
+            _langCache.TryRemove(dictionaryName, out _);
+            // 2. Static map: language packs installed before metadata support (e.g. "French" → "fr-FR")
+            if (LanguagePackUpdateService.DictNameToCode.TryGetValue(dictionaryName, out var staticCode))
+                _langCache.TryRemove(staticCode, out _);
+            // 3. DB-metadata reverse map: dicts mapped to a code at download time (e.g. "TestLang" → "pt-BR")
+            if (_codeByDictName.TryRemove(dictionaryName, out var mappedCode))
+                _langCache.TryRemove(mappedCode, out _);
         }
 
         public async Task Save(Dictionary dictionary, Translations translations)

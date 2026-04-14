@@ -47,9 +47,10 @@ namespace BTCPayServer.Plugins.Translations
             if (_langCache.TryGetValue(langCode, out var cached))
                 return cached;
 
-            var dictName = await FindDictNameForCode(langCode);
+            var dictName = langCode;
             try
             {
+                dictName = await FindDictNameForCode(langCode);
                 var loaded = await GetTranslations(dictName);
                 _langCache[langCode] = loaded.Translations;
                 return loaded.Translations;
@@ -129,6 +130,26 @@ namespace BTCPayServer.Plugins.Translations
             return new LoadedTranslations(translations, fallback, dictionaryName);
         }
 
+        void InvalidateLangCache(string dictionaryName)
+        {
+            // Remove any cached entry whose dict name matches (keyed by lang code).
+            foreach (var kv in _langCache)
+            {
+                // Direct match: custom dict named by code (e.g. "pt-PT")
+                if (kv.Key.Equals(dictionaryName, StringComparison.OrdinalIgnoreCase))
+                {
+                    _langCache.TryRemove(kv.Key, out _);
+                    continue;
+                }
+                // Static map match
+                if (LanguagePackUpdateService.DictNameToCode.TryGetValue(dictionaryName, out var code) &&
+                    code.Equals(kv.Key, StringComparison.OrdinalIgnoreCase))
+                {
+                    _langCache.TryRemove(kv.Key, out _);
+                }
+            }
+        }
+
         public async Task Save(Dictionary dictionary, Translations translations)
         {
             var loadedTranslations = await GetTranslations(dictionary.DictionaryName);
@@ -187,6 +208,8 @@ namespace BTCPayServer.Plugins.Translations
 
             if (_LoadedTranslations.LangName == loadedTranslations.LangName)
                 _LoadedTranslations = loadedTranslations with { Translations = translations };
+
+            InvalidateLangCache(dictionary.DictionaryName);
         }
 
         public record Dictionary(string DictionaryName, string? Fallback, string Source, JObject Metadata);
@@ -220,6 +243,7 @@ namespace BTCPayServer.Plugins.Translations
             await using var ctx = contextFactory.CreateContext();
             var db = ctx.Database.GetDbConnection();
             await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id=@dict_id AND source='Custom'", new { dict_id = dictionary });
+            InvalidateLangCache(dictionary);
         }
 
         public async Task UpdateVersion(string dictionary, string version)
@@ -228,6 +252,7 @@ namespace BTCPayServer.Plugins.Translations
             var db = ctx.Database.GetDbConnection();
             await db.ExecuteAsync("UPDATE lang_dictionaries SET metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{version}', to_jsonb(@version::text)) WHERE dict_id = @dict_id",
                 new { dict_id = dictionary, version });
+            InvalidateLangCache(dictionary);
         }
 
         public async Task UpdateCode(string dictionary, string langCode)

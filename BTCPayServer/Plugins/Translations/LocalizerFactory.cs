@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using BTCPayServer.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Localization;
@@ -38,19 +37,9 @@ namespace BTCPayServer.Plugins.Translations
                 _location = location;
             }
 
-            Translations Translations
-            {
-                get
-                {
-                    var dictName = _Factory._httpContextAccessor.HttpContext?.Items[LangCookieMiddleware.ItemsKey] as string;
-                    if (dictName is null)
-                        return _Factory._localizerService.Translations;
-
-                    // GetOrLoadForDictionary is async; use GetAwaiter to avoid deadlocks on hot path.
-                    // Results are cached after the first load so this is a fast dictionary lookup in practice.
-                    return _Factory._localizerService.GetOrLoadForLanguageCode(dictName).GetAwaiter().GetResult();
-                }
-            }
+            Translations Translations =>
+                _Factory._httpContextAccessor.HttpContext?.Items[LangCookieMiddleware.ItemsKey] as Translations
+                ?? _Factory._localizerService.Translations;
             public LocalizedString this[string name]
             {
                 get

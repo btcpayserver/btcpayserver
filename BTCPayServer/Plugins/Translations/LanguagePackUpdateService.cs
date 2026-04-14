@@ -41,17 +41,17 @@ namespace BTCPayServer.Plugins.Translations
         public static readonly IReadOnlyDictionary<string, string> DictNameToCode =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                { "Dutch",                "nl"    },
+                { "Dutch",                "nl-NL" },
                 { "French",               "fr-FR" },
                 { "German",               "de-DE" },
                 { "Hindi",                "hi"    },
                 { "Indonesian",           "id"    },
-                { "Italian",              "it"    },
-                { "Japanese",             "ja"    },
+                { "Italian",              "it-IT" },
+                { "Japanese",             "ja-JP" },
                 { "Norwegian",            "no"    },
                 { "Korean",               "ko"    },
                 { "Portuguese (Brazil)",  "pt-BR" },
-                { "Russian",              "ru"    },
+                { "Russian",              "ru-RU" },
                 { "Serbian",              "sr"    },
                 { "Spanish",              "es-ES" },
                 { "Thai",                 "th-TH" },

@@ -1,4 +1,3 @@
-using System;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using Microsoft.AspNetCore.Hosting;

@@ -65,7 +65,7 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         var pm = new InvoicePaymentMethodDataModel[invoices.Length];
         for (int i = 0; i < invoices.Length; i++)
         {
-            pm[i] = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, (await invoices[i]).Id));
+            pm[i] = Assert.Single(await client.GetInvoicePaymentMethods((await invoices[i]).Id));
             Assert.True(pm[i].AdditionalData.HasValues);
         }
 
@@ -85,7 +85,7 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
             Assert.NotNull(resp.Details.Preimage);
             await TestUtils.EventuallyAsync(async () =>
             {
-                pm[i] = Assert.Single(await client.GetInvoicePaymentMethods(user.StoreId, (await invoices[i]).Id));
+                pm[i] = Assert.Single(await client.GetInvoicePaymentMethods((await invoices[i]).Id));
                 Assert.True(pm[i].AdditionalData.HasValues);
                 Assert.Equal(resp.Details.PaymentHash.ToString(), ((JObject)pm[i].AdditionalData).GetValue("paymentHash"));
                 Assert.Equal(resp.Details.Preimage.ToString(), ((JObject)pm[i].AdditionalData).GetValue("preimage"));

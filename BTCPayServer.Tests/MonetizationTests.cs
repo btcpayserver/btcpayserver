@@ -222,6 +222,23 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await GoToOffering(s);
         await offeringPMO.GoToSubscribers();
         await offeringPMO.AssertHasNotSubscriber("normal-guest@gmail.com");
+
+
+        await GoToMonetization(s);
+        await ClickSetupOffering(s);
+
+        await s.Page.ClickAsync("#RequireSubscriptionForInvitedUsers");
+        await s.FindAlertMessage(partialText: "Server-invited users are now exempt from subscription requirements.");
+        await CreateUserAsAdmin(s, "exempt-invited@gmail.com");
+        await AssertSubscribed(s, "exempt-invited@gmail.com", false);
+        await CanLog(s, "exempt-invited@gmail.com");
+
+        await GoToMonetization(s);
+        await ClickSetupOffering(s);
+        await s.Page.ClickAsync("#RequireSubscriptionForInvitedUsers");
+        await s.FindAlertMessage(partialText: "Server-invited users now require a subscription.");
+        await CreateUserAsAdmin(s, "enrolled-invited@gmail.com");
+        await AssertSubscribed(s, "enrolled-invited@gmail.com", true);
     }
 
     private async Task<SubscriptionTests.OfferingPMO> GoToOffering(PlaywrightTester s)
@@ -279,6 +296,17 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
             Email = email,
             Password = tester.Password
         });
+    }
+    private async Task CreateUserAsAdmin(PlaywrightTester s, string email)
+    {
+        await s.GoToUrl("/server/users/new");
+        await s.Page.FillAsync("#Email", email);
+        await s.Page.FillAsync("#Password", s.Password);
+        await s.Page.FillAsync("#ConfirmPassword", s.Password);
+        var emailConfirmed = s.Page.Locator("#EmailConfirmed");
+        if (await emailConfirmed.IsVisibleAsync())
+            await emailConfirmed.CheckAsync();
+        await s.ClickPagePrimary();
     }
 
     private static async Task GoToMonetization(PlaywrightTester s)

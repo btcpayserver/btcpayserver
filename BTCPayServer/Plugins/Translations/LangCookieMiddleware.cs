@@ -12,7 +12,7 @@ public class LangCookieMiddleware(RequestDelegate next, LanguageService language
 {
     // Stores the resolved Translations object for the current request.
     public const string ItemsKey = "btcpay_lang_translations";
-    internal const string CookieName = "btcpay_lang";
+    public const string CookieName = "btcpay_lang";
 
     public async Task InvokeAsync(HttpContext ctx)
     {

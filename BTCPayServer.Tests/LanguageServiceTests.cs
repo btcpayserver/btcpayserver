@@ -184,6 +184,73 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task CanResolveLangCodeToDictionary()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var localizer = tester.PayTester.GetService<LocalizerService>();
+
+            // Create a custom dict and associate it with pt-BR via metadata
+            var dict = await localizer.CreateDictionary("TestLang", null, "Custom");
+            var translations = new Translations(new[] { KeyValuePair.Create("Password", (string?)"Senha") });
+            await localizer.Save(dict, translations);
+            await localizer.UpdateCode("TestLang", "pt-BR");
+
+            // Should resolve via DB metadata (code stored at download time)
+            var result = await localizer.GetOrLoadForLanguageCode("pt-BR");
+            Assert.Equal("Senha", result["Password"]);
+
+            // Second call should hit the cache
+            var cached = await localizer.GetOrLoadForLanguageCode("pt-BR");
+            Assert.Same(result, cached);
+
+            // Cache should be evicted after the dictionary is updated
+            dict = await localizer.GetDictionary("TestLang");
+            var updated = new Translations(new[] { KeyValuePair.Create("Password", (string?)"Nova Senha") });
+            await localizer.Save(dict!, updated);
+            var afterUpdate = await localizer.GetOrLoadForLanguageCode("pt-BR");
+            Assert.Equal("Nova Senha", afterUpdate["Password"]);
+
+            // Static map fallback: "French" dict resolves via DictNameToCode without metadata
+            var frDict = await localizer.CreateDictionary("French", null, "Custom");
+            var frTranslations = new Translations(new[] { KeyValuePair.Create("Password", (string?)"Mot de passe") });
+            await localizer.Save(frDict, frTranslations);
+            var french = await localizer.GetOrLoadForLanguageCode("fr-FR");
+            Assert.Equal("Mot de passe", french["Password"]);
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Playwright", "Playwright")]
+        public async Task CanSetPerUserLanguageViaQueryParam()
+        {
+            await using var tester = CreatePlaywrightTester(newDb: true);
+            ActivateLangs(tester.Server);
+            await tester.StartAsync();
+            await tester.Server.PayTester.RestartStartupTask<LoadTranslationsStartupTask>();
+
+            // Associate the Cypherpunk test dict with the pt-BR locale code
+            var localizer = tester.Server.PayTester.GetService<LocalizerService>();
+            await localizer.UpdateCode("Cypherpunk", "pt-BR");
+
+            // Server lang is English (default) — login page shows English labels
+            await tester.GoToUrl("/login");
+            await Expect(tester.Page.Locator("label[for=\"Password\"]")).ToContainTextAsync("Password");
+
+            // Visit root with ?lang=pt-BR — should set cookie and redirect to login with Cypherpunk strings
+            await tester.GoToUrl("/?lang=pt-BR");
+            var cookies = await tester.Page.Context.CookiesAsync();
+            var langCookie = cookies.FirstOrDefault(c => c.Name == LangCookieMiddleware.CookieName);
+            Assert.NotNull(langCookie);
+            Assert.Equal("pt-BR", langCookie.Value);
+            await Expect(tester.Page.Locator("label[for=\"Password\"]")).ToContainTextAsync("Cyphercode");
+
+            // Navigate to login again without ?lang= — cookie keeps the language active
+            await tester.GoToUrl("/login");
+            await Expect(tester.Page.Locator("label[for=\"Password\"]")).ToContainTextAsync("Cyphercode");
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task CanAutoDetectLanguage()
         {
             using var tester = CreateServerTester();

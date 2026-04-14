@@ -6,7 +6,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions;
 using BTCPayServer.Abstractions.Constants;
@@ -83,7 +82,6 @@ namespace BTCPayServer.Controllers
             SettingsRepository settingsRepository,
             PoliciesSettings policiesSettings,
             NBXplorerDashboard dashBoard,
-            IHttpClientFactory httpClientFactory,
             LightningConfigurationProvider lnConfigProvider,
             TorServices torServices,
             StoreRepository storeRepository,
@@ -113,7 +111,6 @@ namespace BTCPayServer.Controllers
             _userService = userService;
             _SettingsRepository = settingsRepository;
             _dashBoard = dashBoard;
-            HttpClientFactory = httpClientFactory;
             _StoreRepository = storeRepository;
             _LnConfigProvider = lnConfigProvider;
             _torServices = torServices;
@@ -331,7 +328,6 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        public IHttpClientFactory HttpClientFactory { get; }
         public IHostApplicationLifetime ApplicationLifetime { get; }
         public IHtmlHelper Html { get; }
         public BTCPayServerEnvironment Environment { get; }
@@ -441,7 +437,7 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("server/services")]
-        public IActionResult Services()
+        public IActionResult Services([FromServices] IEnumerable<ServicesViewModel.OtherExternalService> otherExternalServices)
         {
             var result = new ServicesViewModel { ExternalServices = _externalServiceOptions.Value.ExternalServices.ToList() };
 
@@ -462,11 +458,11 @@ namespace BTCPayServer.Controllers
                     Link = Url.Action(nameof(SSHService))
                 });
             }
-            result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
+
+            foreach (var otherExternalService in  otherExternalServices)
             {
-                Name = "Dynamic DNS",
-                Link = Url.Action(nameof(DynamicDnsServices))
-            });
+                result.OtherExternalServices.Add(otherExternalService);
+            }
             foreach (var torService in _torServices.Services)
             {
                 if (torService.VirtualPort == 80)
@@ -810,134 +806,6 @@ namespace BTCPayServer.Controllers
             var configKey = GetConfigKey("lnd", serviceName, cryptoCode, nonce);
             _LnConfigProvider.KeepConfig(configKey, confs);
             return RedirectToAction(nameof(Service), new { cryptoCode = cryptoCode, serviceName = serviceName, nonce = nonce });
-        }
-
-        [Route("server/services/dynamic-dns")]
-        public async Task<IActionResult> DynamicDnsServices()
-        {
-            var settings = (await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
-            return View(settings.Services.Select(s => new DynamicDnsViewModel()
-            {
-                Settings = s
-            }).ToArray());
-        }
-        [Route("server/services/dynamic-dns/{hostname}")]
-        public async Task<IActionResult> DynamicDnsServices(string hostname)
-        {
-            var settings = (await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
-            var service = settings.Services.FirstOrDefault(s => s.Hostname.Equals(hostname, StringComparison.OrdinalIgnoreCase));
-            if (service == null)
-                return NotFound();
-            var vm = new DynamicDnsViewModel();
-            vm.Modify = true;
-            vm.Settings = service;
-            return View(nameof(DynamicDnsService), vm);
-        }
-        [Route("server/services/dynamic-dns")]
-        [HttpPost]
-        public async Task<IActionResult> DynamicDnsService(DynamicDnsViewModel viewModel, string? command = null)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(viewModel);
-            }
-            if (command == "Save")
-            {
-                var settings = (await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
-                var i = settings.Services.FindIndex(d => d.Hostname.Equals(viewModel.Settings.Hostname, StringComparison.OrdinalIgnoreCase));
-                if (i != -1)
-                {
-                    ModelState.AddModelError(nameof(viewModel.Settings.Hostname), "This hostname already exists");
-                    return View(viewModel);
-                }
-                if (viewModel.Settings.Hostname != null)
-                    viewModel.Settings.Hostname = viewModel.Settings.Hostname.Trim().ToLowerInvariant();
-                string errorMessage = await viewModel.Settings.SendUpdateRequest(HttpClientFactory.CreateClient());
-                if (errorMessage == null)
-                {
-                    TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The Dynamic DNS has been successfully queried, your configuration is saved"].Value;
-                    viewModel.Settings.LastUpdated = DateTimeOffset.UtcNow;
-                    settings.Services.Add(viewModel.Settings);
-                    await _SettingsRepository.UpdateSetting(settings);
-                    return RedirectToAction(nameof(DynamicDnsServices));
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, errorMessage);
-                    return View(viewModel);
-                }
-            }
-            else
-            {
-                return View(new DynamicDnsViewModel() { Settings = new DynamicDnsService() });
-            }
-        }
-        [Route("server/services/dynamic-dns/{hostname}")]
-        [HttpPost]
-        public async Task<IActionResult> DynamicDnsService(DynamicDnsViewModel viewModel, string hostname, string? command = null)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(viewModel);
-            }
-            var settings = (await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
-
-            var i = settings.Services.FindIndex(d => d.Hostname.Equals(hostname, StringComparison.OrdinalIgnoreCase));
-            if (i == -1)
-                return NotFound();
-            if (viewModel.Settings.Password == null)
-                viewModel.Settings.Password = settings.Services[i].Password;
-            if (viewModel.Settings.Hostname != null)
-                viewModel.Settings.Hostname = viewModel.Settings.Hostname.Trim().ToLowerInvariant();
-            if (!viewModel.Settings.Enabled)
-            {
-                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The Dynamic DNS service has been disabled"].Value;
-                viewModel.Settings.LastUpdated = null;
-            }
-            else
-            {
-                string errorMessage = await viewModel.Settings.SendUpdateRequest(HttpClientFactory.CreateClient());
-                if (errorMessage == null)
-                {
-                    TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The Dynamic DNS has been successfully queried, your configuration is saved"].Value;
-                    viewModel.Settings.LastUpdated = DateTimeOffset.UtcNow;
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, errorMessage);
-                    return View(viewModel);
-                }
-            }
-            settings.Services[i] = viewModel.Settings;
-            await _SettingsRepository.UpdateSetting(settings);
-            this.RouteData.Values.Remove(nameof(hostname));
-            return RedirectToAction(nameof(DynamicDnsServices));
-        }
-
-        [HttpGet("server/services/dynamic-dns/{hostname}/delete")]
-        public async Task<IActionResult> DeleteDynamicDnsService(string hostname)
-        {
-            var settings = await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>() ?? new DynamicDnsSettings();
-            var i = settings.Services.FindIndex(d => d.Hostname.Equals(hostname, StringComparison.OrdinalIgnoreCase));
-            if (i == -1)
-                return NotFound();
-            return View("Confirm",
-                new ConfirmModel("Delete dynamic DNS service",
-                    $"Deleting the dynamic DNS service for <strong>{Html.Encode(hostname)}</strong> means your BTCPay Server will stop updating the associated DNS record periodically.", StringLocalizer["Delete"]));
-        }
-
-        [HttpPost("server/services/dynamic-dns/{hostname}/delete")]
-        public async Task<IActionResult> DeleteDynamicDnsServicePost(string hostname)
-        {
-            var settings = (await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
-            var i = settings.Services.FindIndex(d => d.Hostname.Equals(hostname, StringComparison.OrdinalIgnoreCase));
-            if (i == -1)
-                return NotFound();
-            settings.Services.RemoveAt(i);
-            await _SettingsRepository.UpdateSetting(settings);
-            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Dynamic DNS service successfully removed"].Value;
-            RouteData.Values.Remove(nameof(hostname));
-            return RedirectToAction(nameof(DynamicDnsServices));
         }
 
         [HttpGet("server/services/ssh")]

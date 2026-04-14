@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
@@ -30,7 +31,7 @@ namespace BTCPayServer.Services
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset? LastUpdated { get; set; }
 
-        public async Task<string> SendUpdateRequest(HttpClient httpClient)
+        public async Task<string> SendUpdateRequest(HttpClient httpClient, CancellationToken cancellationToken = default)
         {
             string errorMessage = null;
             try
@@ -43,7 +44,9 @@ namespace BTCPayServer.Services
                     {
                         errorMessage = await result.Content.ReadAsStringAsync();
                     }
-                    catch { }
+                    catch
+                    {
+                    }
                     errorMessage = $"Error: Invalid return code {result.StatusCode}, expected 200 ({errorMessage.Trim()}) for hostname '{Hostname}'";
                 }
             }
@@ -58,7 +61,7 @@ namespace BTCPayServer.Services
             HttpRequestMessage webRequest = new HttpRequestMessage();
             if (!Uri.TryCreate(ServiceUrl, UriKind.Absolute, out var uri) || uri.HostNameType == UriHostNameType.Unknown)
             {
-                throw new FormatException($"Invalid service url");
+                throw new FormatException("Invalid service url");
             }
 
             var builder = new UriBuilder(uri);

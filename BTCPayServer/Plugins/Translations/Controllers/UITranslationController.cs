@@ -192,6 +192,8 @@ public class UITranslationController(
 
         await localizer.Save(existingDictionary, translations);
         await localizer.UpdateVersion(language, version);
+        if (LanguagePackUpdateService.DictNameToCode.TryGetValue(language, out var langCode))
+            await localizer.UpdateCode(language, langCode);
         languagePackUpdateService.InvalidateCache(language);
         return RedirectToAction(nameof(ListDictionaries));
     }

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using BTCPayServer.Logging;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
@@ -12,6 +14,7 @@ namespace BTCPayServer.Plugins.Translations
     {
         internal readonly Logs _logs;
         private readonly LocalizerService _localizerService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         class StringLocalizer : IStringLocalizer, IHtmlLocalizer
         {
@@ -34,7 +37,20 @@ namespace BTCPayServer.Plugins.Translations
                 _baseName = baseName;
                 _location = location;
             }
-            Translations Translations => _Factory._localizerService.Translations;
+
+            Translations Translations
+            {
+                get
+                {
+                    var dictName = _Factory._httpContextAccessor.HttpContext?.Items[LangCookieMiddleware.ItemsKey] as string;
+                    if (dictName is null)
+                        return _Factory._localizerService.Translations;
+
+                    // GetOrLoadForDictionary is async; use GetAwaiter to avoid deadlocks on hot path.
+                    // Results are cached after the first load so this is a fast dictionary lookup in practice.
+                    return _Factory._localizerService.GetOrLoadForLanguageCode(dictName).GetAwaiter().GetResult();
+                }
+            }
             public LocalizedString this[string name]
             {
                 get
@@ -100,10 +116,11 @@ namespace BTCPayServer.Plugins.Translations
                 return this[name, arguments];
             }
         }
-        public LocalizerFactory(Logs logs, LocalizerService localizerService)
+        public LocalizerFactory(Logs logs, LocalizerService localizerService, IHttpContextAccessor httpContextAccessor)
         {
             _logs = logs;
             _localizerService = localizerService;
+            _httpContextAccessor = httpContextAccessor;
         }
         public IStringLocalizer Create(Type resourceSource)
         {

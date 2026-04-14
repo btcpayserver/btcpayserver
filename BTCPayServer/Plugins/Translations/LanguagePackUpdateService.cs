@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -33,6 +34,29 @@ namespace BTCPayServer.Plugins.Translations
                 "Turkish"
             };
         }
+
+        // Maps English dict names (as stored in the DB) to BCP-47 codes.
+        // Must be kept in sync with GetDownloadableLanguages().
+        // The BCP-47 codes match the checkout locale JSON files in wwwroot/locales/checkout/.
+        public static readonly IReadOnlyDictionary<string, string> DictNameToCode =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "Dutch",                "nl"    },
+                { "French",               "fr-FR" },
+                { "German",               "de-DE" },
+                { "Hindi",                "hi"    },
+                { "Indonesian",           "id"    },
+                { "Italian",              "it"    },
+                { "Japanese",             "ja"    },
+                { "Norwegian",            "no"    },
+                { "Korean",               "ko"    },
+                { "Portuguese (Brazil)",  "pt-BR" },
+                { "Russian",              "ru"    },
+                { "Serbian",              "sr"    },
+                { "Spanish",              "es-ES" },
+                { "Thai",                 "th-TH" },
+                { "Turkish",              "tr"    },
+            };
 
         public async Task<(string translationsJson, string version)> FetchLanguagePackFromRepository(string language)
         {

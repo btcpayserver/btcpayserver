@@ -1,5 +1,6 @@
 #nullable enable
 using Dapper;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,6 +29,60 @@ namespace BTCPayServer.Plugins.Translations
         public record LoadedTranslations(Translations Translations, Translations Fallback, string LangName);
         LoadedTranslations _LoadedTranslations = new(Translations.Default, Translations.Default, Translations.DefaultLanguage);
         public Translations Translations => _LoadedTranslations.Translations;
+
+        readonly ConcurrentDictionary<string, Translations> _langCache = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Returns translations for the given BCP-47 language code, loading and caching on first use.
+        /// Resolution order:
+        ///   1. DB metadata (code stored at download time) — works for any future language.
+        ///   2. Static fallback map from LanguagePackUpdateService — covers packs installed before
+        ///      this feature or renamed by the user.
+        ///   3. Code used directly as dict name — covers custom user-created dictionaries
+        ///      whose name is the BCP-47 code (e.g. "pt-PT").
+        /// Returns the default translations if no matching dictionary is found.
+        /// </summary>
+        public async Task<Translations> GetOrLoadForLanguageCode(string langCode)
+        {
+            if (_langCache.TryGetValue(langCode, out var cached))
+                return cached;
+
+            var dictName = await FindDictNameForCode(langCode);
+            try
+            {
+                var loaded = await GetTranslations(dictName);
+                _langCache[langCode] = loaded.Translations;
+                return loaded.Translations;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to load translations for language code '{LangCode}' (dict '{DictName}')", langCode, dictName);
+                return Translations;
+            }
+        }
+
+        async Task<string> FindDictNameForCode(string langCode)
+        {
+            // 1. Check DB metadata (populated at download time for new downloads)
+            await using var ctx = contextFactory.CreateContext();
+            var conn = ctx.Database.GetDbConnection();
+            var rows = await conn.QueryAsync<string>(
+                "SELECT dict_id FROM lang_dictionaries WHERE metadata->>'code' = @code", new { code = langCode });
+            var fromDb = rows.FirstOrDefault();
+            if (fromDb is not null)
+                return fromDb;
+
+            // 2. Static fallback map (handles packs installed before code metadata was added)
+            var reversedMap = LanguagePackUpdateService.DictNameToCode;
+            foreach (var kv in reversedMap)
+            {
+                if (kv.Value.Equals(langCode, StringComparison.OrdinalIgnoreCase))
+                    return kv.Key;
+            }
+
+            // 3. Use the code itself as the dict name (custom dicts named by BCP-47 code)
+            return langCode;
+        }
 
         /// <summary>
         /// Load the translation of the server into memory
@@ -173,6 +228,14 @@ namespace BTCPayServer.Plugins.Translations
             var db = ctx.Database.GetDbConnection();
             await db.ExecuteAsync("UPDATE lang_dictionaries SET metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{version}', to_jsonb(@version::text)) WHERE dict_id = @dict_id",
                 new { dict_id = dictionary, version });
+        }
+
+        public async Task UpdateCode(string dictionary, string langCode)
+        {
+            await using var ctx = contextFactory.CreateContext();
+            var db = ctx.Database.GetDbConnection();
+            await db.ExecuteAsync("UPDATE lang_dictionaries SET metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{code}', to_jsonb(@code::text)) WHERE dict_id = @dict_id",
+                new { dict_id = dictionary, code = langCode });
         }
     }
 }

@@ -1,5 +1,8 @@
+using System;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -23,5 +26,7 @@ public class TranslationsPlugin : BaseBTCPayServerPlugin
         services.TryAddSingleton<LanguagePackUpdateService>();
         services.AddStartupTask<LoadTranslationsStartupTask>();
         services.TryAddSingleton<IStringLocalizer>(o => o.GetRequiredService<IStringLocalizerFactory>().Create("", ""));
+        services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+        services.AddSingleton<IStartupFilter, LangCookieStartupFilter>();
     }
 }

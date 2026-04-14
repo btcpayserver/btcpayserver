@@ -145,7 +145,7 @@ public class UIServerMonetizationController(
     }
 
     [HttpPost]
-    public async Task<IActionResult> Monetization(MonetizationViewModel vm, string command)
+    public async Task<IActionResult> Monetization(MonetizationViewModel vm, string command, bool? requireSubscriptionForInvitedUsers = null)
     {
         if (command == "activate-monetization" && vm.ActivateModal is {} activateModal)
         {
@@ -265,11 +265,9 @@ public class UIServerMonetizationController(
         }
         else if (command == "change-offering")
         {
-            var settings = new MonetizationSettings()
-            {
-                OfferingId = vm.SelectExistingOfferingModal?.SelectedOfferingId,
-                DefaultPlanId = vm.SelectExistingOfferingModal?.SelectedPlanId
-            };
+            var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>() ?? new MonetizationSettings();
+            settings.OfferingId = vm.SelectExistingOfferingModal?.SelectedOfferingId;
+            settings.DefaultPlanId = vm.SelectExistingOfferingModal?.SelectedPlanId;
             if (await ctx.GetOfferingAndPlan(settings) is { } v)
             {
                 await settingsRepository.UpdateSetting(settings);
@@ -356,7 +354,10 @@ public class UIServerMonetizationController(
                 });
                 return RedirectToAction(nameof(Monetization));
             }
-            settings.RequireSubscriptionForInvitedUsers = !settings.RequireSubscriptionForInvitedUsers;
+            if (requireSubscriptionForInvitedUsers is null)
+                return RedirectToAction(nameof(Monetization));
+
+            settings.RequireSubscriptionForInvitedUsers = requireSubscriptionForInvitedUsers.Value;
             await settingsRepository.UpdateSetting(settings);
             TempData.SetStatusMessageModel(new()
             {

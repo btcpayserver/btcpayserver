@@ -96,6 +96,8 @@
 							<input type="hidden" name="command" value="toggle-invited-subscription" />
 							<div class="d-flex align-items-center">
 								<input type="checkbox"
+									   name="requireSubscriptionForInvitedUsers"
+									   value="true"
 									   checked="@Model.Settings.RequireSubscriptionForInvitedUsers"
 									   id="RequireSubscriptionForInvitedUsers"
 									   class="btcpay-toggle me-3"
@@ -104,6 +106,7 @@
 									Require subscription for server-invited users
 								</label>
 							</div>
+							<input type="hidden" name="requireSubscriptionForInvitedUsers" value="false" />
 						</form>
 
                         <div class="d-flex gap-3">

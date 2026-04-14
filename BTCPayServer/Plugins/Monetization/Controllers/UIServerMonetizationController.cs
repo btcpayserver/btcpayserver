@@ -344,6 +344,28 @@ public class UIServerMonetizationController(
                 await storeRepo.UpdateStoreBlob(store);
             }
         }
+        else if (command == "toggle-invited-subscription")
+        {
+            var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>() ?? new();
+            if (!settings.IsSetup())
+            {
+                TempData.SetStatusMessageModel(new()
+                {
+                    Message = StringLocalizer["Monetization is not set up."],
+                    Severity = StatusMessageModel.StatusSeverity.Error
+                });
+                return RedirectToAction(nameof(Monetization));
+            }
+            settings.RequireSubscriptionForInvitedUsers = !settings.RequireSubscriptionForInvitedUsers;
+            await settingsRepository.UpdateSetting(settings);
+            TempData.SetStatusMessageModel(new()
+            {
+                Message = settings.RequireSubscriptionForInvitedUsers
+                    ? StringLocalizer["Server-invited users now require a subscription."]
+                    : StringLocalizer["Server-invited users are now exempt from subscription requirements."],
+                Severity = StatusMessageModel.StatusSeverity.Success
+            });
+        }
 
         return RedirectToAction(nameof(Monetization));
     }

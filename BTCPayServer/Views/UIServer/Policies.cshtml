@@ -99,6 +99,12 @@
 
                 <div class="mb-5">
                     <h4 class="mb-3" text-translate="true">Users</h4>
+                    <div class="form-group">
+                        <label asp-for="NonAdminMaxStores" class="form-label"></label>
+                        <input asp-for="NonAdminMaxStores" type="number" min="0" class="form-control" placeholder="Unlimited" />
+                        <div class="form-text" text-translate="true">Leave empty for unlimited. Set to 0 to prevent non-admins from creating any stores. Per-user overrides can be set on the user's edit page.</div>
+                        <span asp-validation-for="NonAdminMaxStores" class="text-danger"></span>
+                    </div>
                     <div class="d-flex my-3">
                         <input asp-for="AllowLightningInternalNodeForAll" type="checkbox" class="btcpay-toggle me-3"/>
                         <div>

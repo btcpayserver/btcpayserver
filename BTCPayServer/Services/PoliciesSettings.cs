@@ -99,6 +99,10 @@ namespace BTCPayServer.Services
         [Display(Name = "Default store template")]
         public JObject DefaultStoreTemplate { get; set; }
 
+        [Range(0, int.MaxValue)]
+        [Display(Name = "Maximum number of stores non-admins can create")]
+        public int? NonAdminMaxStores { get; set; }
+
         [Display(Name = "Register page redirect URL")]
         public string RegisterPageRedirect { get; set; }
 

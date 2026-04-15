@@ -59,6 +59,11 @@ public partial class BTCPayServerClient
         return response.IsSuccessStatusCode;
     }
 
+    public virtual async Task<ApplicationUserData> UpdateUser(string idOrEmail, AdminUpdateApplicationUserRequest request, CancellationToken token = default)
+    {
+        return await SendHttpRequest<ApplicationUserData>($"api/v1/users/{idOrEmail}", request, HttpMethod.Put, token);
+    }
+
     public virtual async Task<ApplicationUserData[]> GetUsers(CancellationToken token = default)
     {
         return await SendHttpRequest<ApplicationUserData[]>("api/v1/users/", null, HttpMethod.Get, token);

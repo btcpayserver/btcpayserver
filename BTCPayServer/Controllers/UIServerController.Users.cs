@@ -99,7 +99,8 @@ namespace BTCPayServer.Controllers
                 ImageUrl = string.IsNullOrEmpty(blob?.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),
                 EmailConfirmed = user.RequiresEmailConfirmation ? user.EmailConfirmed : null,
                 Approved = user.RequiresApproval ? user.Approved : null,
-                IsAdmin = Roles.HasServerAdmin(roles)
+                IsAdmin = Roles.HasServerAdmin(roles),
+                StoreQuota = blob?.StoreQuota
             };
             return View(model);
         }
@@ -130,6 +131,12 @@ namespace BTCPayServer.Controllers
             if (blob.Name != viewModel.Name)
             {
                 blob.Name = viewModel.Name;
+                propertiesChanged = true;
+            }
+
+            if (blob.StoreQuota != viewModel.StoreQuota)
+            {
+                blob.StoreQuota = viewModel.StoreQuota;
                 propertiesChanged = true;
             }
 

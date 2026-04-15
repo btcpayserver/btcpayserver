@@ -415,6 +415,51 @@ namespace BTCPayServer.Controllers.Greenfield
             return CreatedAtAction(string.Empty, model);
         }
 
+        [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpPut("~/api/v1/users/{idOrEmail}")]
+        public async Task<IActionResult> UpdateUser(string idOrEmail, AdminUpdateApplicationUserRequest request)
+        {
+            var user = await _userManager.FindByIdOrEmail(idOrEmail);
+            if (user is null)
+                return this.UserNotFound();
+
+            var blob = user.GetBlob() ?? new UserBlob();
+            bool needUpdate = false;
+
+            if (request.Name is not null && request.Name != blob.Name)
+            {
+                blob.Name = request.Name;
+                needUpdate = true;
+            }
+
+            if (request.ImageUrl is not null && request.ImageUrl != blob.ImageUrl)
+            {
+                blob.ImageUrl = request.ImageUrl;
+                needUpdate = true;
+            }
+
+            if (request.StoreQuota != blob.StoreQuota)
+            {
+                blob.StoreQuota = request.StoreQuota;
+                needUpdate = true;
+            }
+
+            if (needUpdate)
+            {
+                user.SetBlob(blob);
+                var identityResult = await _userManager.UpdateAsync(user);
+                if (!identityResult.Succeeded)
+                {
+                    foreach (var error in identityResult.Errors)
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    return this.CreateValidationError(ModelState);
+                }
+                _eventAggregator.Publish(new UserEvent.Updated(user));
+            }
+
+            return Ok(await ForAPI(user));
+        }
+
         [HttpDelete("~/api/v1/users/{idOrEmail}")]
         [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> DeleteUser(string idOrEmail)

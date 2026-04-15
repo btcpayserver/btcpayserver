@@ -11,6 +11,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
+using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -37,6 +38,8 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly IFileService _fileService;
         private readonly UriResolver _uriResolver;
         private readonly JsonSerializerSettings _serializedSettings;
+        private readonly PoliciesSettings _policiesSettings;
+        private readonly IAuthorizationService _authorizationService;
 
         public GreenfieldStoresController(
             StoreRepository storeRepository,
@@ -44,7 +47,9 @@ namespace BTCPayServer.Controllers.Greenfield
             UserManager<ApplicationUser> userManager,
             IFileService fileService,
             IOptions<MvcNewtonsoftJsonOptions> jsonOptions,
-            UriResolver uriResolver)
+            UriResolver uriResolver,
+            PoliciesSettings policiesSettings,
+            IAuthorizationService authorizationService)
         {
             _storeRepository = storeRepository;
             _currencyNameTable = currencyNameTable;
@@ -52,6 +57,8 @@ namespace BTCPayServer.Controllers.Greenfield
             _fileService = fileService;
             _uriResolver = uriResolver;
             _serializedSettings = jsonOptions.Value.SerializerSettings;
+            _policiesSettings = policiesSettings;
+            _authorizationService = authorizationService;
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -84,6 +91,24 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettingsUnscoped, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreateStore(CreateStoreRequest request)
         {
+            var isAdmin = (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded;
+            if (!isAdmin)
+            {
+                var user = await _userManager.FindByIdAsync(User.GetId());
+                var limit = user?.GetBlob()?.StoreQuota ?? _policiesSettings.NonAdminMaxStores;
+                if (limit.HasValue)
+                {
+                    var count = await _storeRepository.CountStoresByUserId(User.GetId());
+                    if (count >= limit.Value)
+                    {
+                        return this.CreateAPIError(403, "store-limit-reached",
+                            limit.Value == 0
+                                ? "Store creation is not allowed on this server."
+                                : $"You have reached the maximum number of stores allowed ({limit.Value}).");
+                    }
+                }
+            }
+
             var store = await _storeRepository.GetDefaultStoreTemplate();
             request = await MergeStoreRequestWithTemplate(request, store);
             var validationResult = Validate(request);

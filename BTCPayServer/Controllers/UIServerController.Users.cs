@@ -136,6 +136,11 @@ namespace BTCPayServer.Controllers
 
             if (blob.StoreQuota != viewModel.StoreQuota)
             {
+                if (viewModel.StoreQuota is < 0)
+                {
+                    ModelState.AddModelError(nameof(viewModel.StoreQuota), StringLocalizer["Store quota must be 0 or greater."].Value);
+                    return View(viewModel);
+                }
                 blob.StoreQuota = viewModel.StoreQuota;
                 propertiesChanged = true;
             }

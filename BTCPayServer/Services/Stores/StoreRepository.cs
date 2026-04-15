@@ -279,11 +279,11 @@ namespace BTCPayServer.Services.Stores
 
         public async Task<int> CountStoresByUserId(string userId)
         {
-            if (userId == "")
+            if (string.IsNullOrEmpty(userId))
                 return 0;
             await using var ctx = _ContextFactory.CreateContext();
             return await ctx.UserStore
-                .CountAsync(u => u.ApplicationUserId == userId);
+                .CountAsync(u => u.ApplicationUserId == userId && u.StoreRoleId == StoreRoleId.Owner.Id);
         }
 
         public async Task<StoreData?> GetStoreByInvoiceId(string invoiceId)

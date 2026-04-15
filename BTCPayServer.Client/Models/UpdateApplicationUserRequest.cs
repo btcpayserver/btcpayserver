@@ -27,3 +27,4 @@ public class UpdateApplicationUserRequest
     /// </summary>
     public string NewPassword { get; set; }
 }
+

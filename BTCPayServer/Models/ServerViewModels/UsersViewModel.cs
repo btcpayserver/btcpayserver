@@ -44,6 +44,10 @@ namespace BTCPayServer.Models.ServerViewModels
             public bool BypassMonetization { get; set; }
             public bool MonetizationEnabled { get; set; }
 
+            [Display(Name = "Store Quota")]
+            [Range(0, int.MaxValue)]
+            public int? StoreQuota { get; set; }
+            
             public IEnumerable<string> Roles { get; set; }
             public IEnumerable<UserStore> Stores { get; set; }
         }

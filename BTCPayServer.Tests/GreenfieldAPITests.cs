@@ -28,8 +28,10 @@ using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Services.Stores;
 using Dapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NBitcoin;
 using NBitpayClient;
@@ -3274,6 +3276,81 @@ namespace BTCPayServer.Tests
                 await adminClient.ApproveUser(newUser.UserId, false, CancellationToken.None);
             });
             Assert.Equal("Unapproving user failed: No approval required", err.APIError.Message);
+        }
+
+        [Fact(Timeout = 60 * 2 * 1000)]
+        [Trait("Integration", "Integration")]
+        public async Task StoreQuotaTests()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+
+            var admin = tester.NewAccount();
+            await admin.GrantAccessAsync(true);
+            var adminClient = await admin.CreateClient(Policies.Unrestricted);
+
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            var userClient = await user.CreateClient(Policies.Unrestricted);
+
+            var settings = tester.PayTester.GetService<SettingsRepository>();
+
+            // no limit by default
+            var s1 = await userClient.CreateStore(new CreateStoreRequest { Name = "Store 1" });
+            Assert.NotNull(s1.Id);
+
+            // set global limit to 1, user already has 2
+            await settings.UpdateSetting(new PoliciesSettings { StoreQuota = 1 });
+            await AssertAPIError("store-limit-reached", () =>
+                userClient.CreateStore(new CreateStoreRequest { Name = "Store 2" }));
+
+            // admin is never blocked
+            var adminStore = await adminClient.CreateStore(new CreateStoreRequest { Name = "Admin store" });
+            Assert.NotNull(adminStore.Id);
+
+            // raise global limit to 3
+            await settings.UpdateSetting(new PoliciesSettings { StoreQuota = 3 });
+            var s2 = await userClient.CreateStore(new CreateStoreRequest { Name = "Store 2" });
+            Assert.NotNull(s2.Id);
+
+            // at the new limit again
+            await AssertAPIError("store-limit-reached", () =>
+                userClient.CreateStore(new CreateStoreRequest { Name = "Store 3" }));
+
+            // remove global limit
+            await settings.UpdateSetting(new PoliciesSettings { StoreQuota = null });
+            var s4 = await userClient.CreateStore(new CreateStoreRequest { Name = "Store 4" });
+            Assert.NotNull(s4.Id);
+
+            // global limit of 0 blocks all non-admins
+            await settings.UpdateSetting(new PoliciesSettings { StoreQuota = 0 });
+            await AssertAPIError("store-limit-reached", () =>
+                userClient.CreateStore(new CreateStoreRequest { Name = "Store 5" }));
+
+            // set per-user quota of 5 directly in DB
+            await settings.UpdateSetting(new PoliciesSettings { StoreQuota = null });
+            using var scope = tester.PayTester.ServiceProvider.CreateScope();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var appUser = await userManager.FindByIdAsync(user.UserId);
+            var blob = appUser.GetBlob() ?? new();
+            blob.StoreQuota = 5;
+            appUser.SetBlob(blob);
+            await userManager.UpdateAsync(appUser);
+
+            // user can create one more store to reach quota
+            var s5 = await userClient.CreateStore(new CreateStoreRequest { Name = "Store 5" });
+            Assert.NotNull(s5.Id);
+
+            // at personal quota, blocked even though global limit is null
+            await AssertAPIError("store-limit-reached", () =>
+                userClient.CreateStore(new CreateStoreRequest { Name = "Store 6" }));
+
+            // remove per-user quota, falls back to global limit
+            blob.StoreQuota = null;
+            appUser.SetBlob(blob);
+            await userManager.UpdateAsync(appUser);
+            var s6 = await userClient.CreateStore(new CreateStoreRequest { Name = "Store 6" });
+            Assert.NotNull(s6.Id);
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]

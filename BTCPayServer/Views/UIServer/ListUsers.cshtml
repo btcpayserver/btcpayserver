@@ -89,7 +89,7 @@
                 <td class="@(storesCount > 0 ? null : "text-muted")">@(storesCount == 1 ? StringLocalizer["{0} Store", storesCount] : StringLocalizer["{0} Stores", storesCount])</td>
                 <td>@user.Created?.ToBrowserDate()</td>
                 <td>
-                    <span class="user-status badge bg-@status.Item2" text-translate="true">@status.Item1</span>
+                    <span class="user-status badge bg-@status.Item2">@status.Item1</span>
                 </td>
                 <td class="actions-col">
                     <div class="d-inline-flex align-items-center gap-3">

@@ -31,13 +31,15 @@
 <main id="mainContent">
     @if (!_env.IsSecure(_context.HttpContext))
     {
-        <div id="insecureEnv" class="alert alert-danger alert-dismissible" style="position:absolute; top:75px;" role="alert">
+        <div id="insecureEnv" class="alert alert-danger alert-dismissible" role="alert">
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
                 <vc:icon symbol="close"/>
             </button>
             <span text-translate="true">Your access to BTCPay Server is over an unsecured network. If you are using the docker deployment method with NGINX and HTTPS is not available, you probably did not configure your DNS settings correctly. We disabled the register and login link so you don't leak your credentials.</span>
         </div>
     }
+    <vc:ui-extension-point location="layout-banner" />
+
     <section>
         @RenderBody()
     </section>

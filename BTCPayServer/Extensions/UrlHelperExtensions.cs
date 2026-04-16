@@ -32,13 +32,8 @@ namespace Microsoft.AspNetCore.Mvc
                 return url;
             return null;
         }
+
 #nullable restore
-
-        public static string LoginCodeLink(this LinkGenerator urlHelper, string loginCode, string returnUrl, string scheme, HostString host, string pathbase)
-        {
-            return urlHelper.GetUriByAction(nameof(UIAccountController.LoginUsingCode), "UIAccount", new { loginCode, returnUrl }, scheme, host, pathbase);
-        }
-
         public static string PaymentRequestLink(this LinkGenerator urlHelper, string paymentRequestId, RequestBaseUrl baseUrl)
         => PaymentRequestLink(urlHelper, paymentRequestId, baseUrl.Scheme, baseUrl.Host, baseUrl.PathBase);
         public static string PaymentRequestLink(this LinkGenerator urlHelper, string paymentRequestId, string scheme, HostString host, string pathbase)

@@ -21,11 +21,8 @@ namespace BTCPayServer.Components.MainNav
     public class MainNav(
         AppService appService,
         UIStoresController storesController,
-        UserManager<ApplicationUser> userManager,
         PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
-        SettingsRepository settingsRepository,
         IMemoryCache cache,
-        UriResolver uriResolver,
         PoliciesSettings policiesSettings)
         : ViewComponent
     {
@@ -34,12 +31,9 @@ namespace BTCPayServer.Components.MainNav
         public async Task<IViewComponentResult> InvokeAsync()
         {
             var navStore = HttpContext.GetNavStoreData();
-
-            var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
             var vm = new MainNavViewModel
             {
-                Store = navStore,
-                ContactUrl = serverSettings.ContactUrl
+                Store = navStore
             };
             if (navStore != null)
             {
@@ -97,17 +91,6 @@ namespace BTCPayServer.Components.MainNav
 
                 vm.ArchivedAppsCount = apps.Count(a => a.Archived);
             }
-
-            var user = await userManager.GetUserAsync(HttpContext.User);
-            if (user != null)
-            {
-                var blob = user.GetBlob();
-                vm.UserName = blob?.Name;
-                vm.UserImageUrl = string.IsNullOrEmpty(blob?.ImageUrl)
-                    ? null
-                    : await uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl));
-            }
-
             return View(vm);
         }
     }

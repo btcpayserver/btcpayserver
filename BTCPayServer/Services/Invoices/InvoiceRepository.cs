@@ -1037,6 +1037,20 @@ retry:
         public bool IncludeArchived { get; set; } = true;
         public bool IncludeRefunds { get; set; }
         public bool OrderByDesc { get; set; } = true;
+
+        public void FillFromSearchText(SearchString fs, int timezoneOffset)
+        {
+            TextSearch = fs.TextSearch;
+            Unusual = fs.GetFilterBool("unusual");
+            IncludeArchived = fs.GetFilterBool("includearchived") ?? false;
+            Status = fs.GetFilterArray("status");
+            ExceptionStatus = fs.GetFilterArray("exceptionstatus");
+            StoreId = fs.GetFilterArray("storeid");
+            ItemCode = fs.GetFilterArray("itemcode");
+            OrderId = fs.GetFilterArray("orderid");
+            StartDate = fs.GetFilterDate("startdate", timezoneOffset);
+            EndDate = fs.GetFilterDate("enddate", timezoneOffset);
+        }
     }
 
     public class InvoiceStatistics : Dictionary<string, InvoiceStatistics.Contribution>

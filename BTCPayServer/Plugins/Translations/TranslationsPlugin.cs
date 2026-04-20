@@ -1,5 +1,9 @@
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
+using BTCPayServer.Plugins.Bitpay.Controllers;
+using BTCPayServer.Plugins.GlobalSearch;
+using BTCPayServer.Plugins.Translations.Controllers;
 using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -23,5 +27,16 @@ public class TranslationsPlugin : BaseBTCPayServerPlugin
         services.TryAddSingleton<LanguagePackUpdateService>();
         services.AddStartupTask<LoadTranslationsStartupTask>();
         services.TryAddSingleton<IStringLocalizer>(o => o.GetRequiredService<IStringLocalizerFactory>().Create("", ""));
+
+        services.AddStaticSearch(new ActionResultItemViewModel()
+        {
+            RequiredPolicy = Policies.CanModifyServerSettings,
+            Title = "Localize the user interface",
+            Action = nameof(UITranslationController.ListDictionaries),
+            Controller = "UITranslation",
+            Values = _ => new { area = Area },
+            Category = "Server",
+            Keywords = ["Server", "Settings", "Translations", "Language", "Dictionary", "Localization"]
+        });
     }
 }

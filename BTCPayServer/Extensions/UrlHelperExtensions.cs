@@ -12,10 +12,12 @@ namespace Microsoft.AspNetCore.Mvc
     public static class UrlHelperExtensions
     {
 #nullable enable
-        public static string? WalletSend(this IUrlHelper helper, WalletId walletId) => helper.Action(nameof(UIWalletsController.WalletSend), new { walletId });
+        public static string? WalletSend(this IUrlHelper helper, WalletId walletId) => helper.Action(nameof(UIWalletsController.WalletSend), "UIWallets", new { walletId });
+        public static string? WalletReceive(this IUrlHelper helper, WalletId walletId) => helper.Action(nameof(UIWalletsController.WalletReceive), "UIWallets", new { walletId });
+        public static string? WalletSettings(this IUrlHelper helper, WalletId walletId) => helper.Action(nameof(UIStoresController.WalletSettings), "UIStores", new { storeId = walletId.StoreId, cryptoCode = walletId.CryptoCode });
         public static string? WalletTransactions(this IUrlHelper helper, string walletId) => WalletTransactions(helper, WalletId.Parse(walletId));
         public static string? WalletTransactions(this IUrlHelper helper, WalletId walletId)
-        => helper.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
+        => helper.Action(nameof(UIWalletsController.WalletTransactions), "UIWallets", new { walletId });
         public static Uri ActionAbsolute(this IUrlHelper helper, HttpRequest request, string? action, string? controller, object? values)
         => request.GetAbsoluteUriNoPathBase(new Uri(helper.Action(action, controller, values) ?? "", UriKind.Relative));
         public static Uri ActionAbsolute(this IUrlHelper helper, HttpRequest request, string? action, string? controller)

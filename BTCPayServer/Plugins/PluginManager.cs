@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Configuration;
 using BTCPayServer.Plugins.Dotnet;
 using BTCPayServer.Services;
@@ -190,7 +191,7 @@ namespace BTCPayServer.Plugins
             foreach (var directory in Directory.GetDirectories(pluginsFolder))
             {
                 var pluginIdentifier = Path.GetFileName(directory);
-                var pluginFilePath = Path.Combine(directory, pluginIdentifier + ".dll");
+                var pluginFilePath = Path.Join(directory, pluginIdentifier + ".dll");
                 if (!File.Exists(pluginFilePath))
                     continue;
                 if (disabledPluginIdentifiers.Contains(pluginIdentifier))
@@ -371,11 +372,11 @@ namespace BTCPayServer.Plugins
             var remainingCommands = (from command in pendingCommands where !ExecuteCommand(command, pluginsFolder) select $"{command.command}:{command.plugin}").ToList();
             if (remainingCommands.Any())
             {
-                File.WriteAllLines(Path.Combine(pluginsFolder, "commands"), remainingCommands);
+                File.WriteAllLines(Path.Join(pluginsFolder, "commands"), remainingCommands);
             }
             else
             {
-                File.Delete(Path.Combine(pluginsFolder, "commands"));
+                File.Delete(Path.Join(pluginsFolder, "commands"));
             }
 
             return remainingCommands.Count != pendingCommands.Length;
@@ -388,9 +389,9 @@ namespace BTCPayServer.Plugins
             foreach (var pluginDir in Directory.EnumerateDirectories(pluginsFolder))
             {
                 var plugin = Path.GetFileName(pluginDir);
-                var dirName = Path.Combine(pluginsFolder, plugin);
+                var dirName = Path.Join(pluginsFolder, plugin);
                 var isDisabled = disabled.Contains(plugin);
-                var manifestFileName = Path.Combine(dirName, plugin + ".json");
+                var manifestFileName = Path.Join(dirName, plugin + ".json");
                 if (File.Exists(manifestFileName))
                 {
                     var pluginManifest =  JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
@@ -409,7 +410,7 @@ namespace BTCPayServer.Plugins
 
         private static bool DependenciesMet(string pluginsFolder, string plugin, Dictionary<string, Version> installed)
         {
-            var dirName = Path.Combine(pluginsFolder, plugin);
+            var dirName = Path.Join(pluginsFolder, plugin);
             var manifestFileName = dirName + ".json";
             if (!File.Exists(manifestFileName)) return true;
             var pluginManifest =  JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
@@ -420,35 +421,34 @@ namespace BTCPayServer.Plugins
 
         private static bool ExecuteCommand((string command, string extension) command, string pluginsFolder)
         {
-            var dirName = Path.Combine(pluginsFolder, command.extension);
+            AssertSafeName(pluginsFolder, command.extension);
+            var dirName = Path.Join(pluginsFolder, command.extension);
             switch (command.command)
             {
                 case "delete":
                     ExecuteCommand(("enable", command.extension), pluginsFolder);
                     if (File.Exists(dirName))
-                    {
                         File.Delete(dirName);
-                    }
                     if (Directory.Exists(dirName))
-                    {
                         Directory.Delete(dirName, true);
-                    }
                     break;
 
                 case "install":
                     var fileName = dirName + BTCPayPluginSuffix;
                     var manifestFileName = dirName + ".json";
                     ExecuteCommand(("enable", command.extension), pluginsFolder);
-
                     if (File.Exists(fileName))
                     {
-                        if (File.Exists(dirName) || Directory.Exists(dirName))
-                            ExecuteCommand(("delete", dirName), pluginsFolder);
+                        if (File.Exists(dirName))
+                            File.Delete(dirName);
+                        if (Directory.Exists(dirName))
+                            Directory.Delete(dirName, true);
+
                         ZipFile.ExtractToDirectory(fileName, dirName, true);
                         File.Delete(fileName);
                         if (File.Exists(manifestFileName))
                         {
-                            File.Move(manifestFileName, Path.Combine(dirName, Path.GetFileName(manifestFileName)), true);
+                            File.Move(manifestFileName, Path.Join(dirName, Path.GetFileName(manifestFileName)), true);
                         }
                     }
                     break;
@@ -456,29 +456,29 @@ namespace BTCPayServer.Plugins
                 case "disable":
                     if (Directory.Exists(dirName))
                     {
-                        if (File.Exists(Path.Combine(pluginsFolder, "disabled")))
+                        if (File.Exists(Path.Join(pluginsFolder, "disabled")))
                         {
-                            var disabled = File.ReadAllLines(Path.Combine(pluginsFolder, "disabled"));
+                            var disabled = File.ReadAllLines(Path.Join(pluginsFolder, "disabled"));
                             if (!disabled.Contains(command.extension))
                             {
-                                File.AppendAllLines(Path.Combine(pluginsFolder, "disabled"), new[] { command.extension });
+                                File.AppendAllLines(Path.Join(pluginsFolder, "disabled"), new[] { command.extension });
                             }
                         }
                         else
                         {
-                            File.AppendAllLines(Path.Combine(pluginsFolder, "disabled"), new[] { command.extension });
+                            File.AppendAllLines(Path.Join(pluginsFolder, "disabled"), new[] { command.extension });
                         }
                     }
 
                     break;
 
                 case "enable":
-                    if (File.Exists(Path.Combine(pluginsFolder, "disabled")))
+                    if (File.Exists(Path.Join(pluginsFolder, "disabled")))
                     {
-                        var disabled = File.ReadAllLines(Path.Combine(pluginsFolder, "disabled"));
+                        var disabled = File.ReadAllLines(Path.Join(pluginsFolder, "disabled"));
                         if (disabled.Contains(command.extension))
                         {
-                            File.WriteAllLines(Path.Combine(pluginsFolder, "disabled"), disabled.Where(s => s != command.extension));
+                            File.WriteAllLines(Path.Join(pluginsFolder, "disabled"), disabled.Where(s => s != command.extension));
                         }
                     }
 
@@ -490,9 +490,9 @@ namespace BTCPayServer.Plugins
 
         public static (string command, string plugin)[] GetPendingCommands(string pluginsFolder)
         {
-            if (!File.Exists(Path.Combine(pluginsFolder, "commands")))
+            if (!File.Exists(Path.Join(pluginsFolder, "commands")))
                 return Array.Empty<(string command, string plugin)>();
-            var commands = File.ReadAllLines(Path.Combine(pluginsFolder, "commands"));
+            var commands = File.ReadAllLines(Path.Join(pluginsFolder, "commands"));
             return commands.Select(s =>
             {
                 var split = s.Split(':');
@@ -502,7 +502,7 @@ namespace BTCPayServer.Plugins
 
         public static void QueueCommands(string pluginsFolder, params (string action, string plugin)[] commands)
         {
-            File.AppendAllLines(Path.Combine(pluginsFolder, "commands"),
+            File.AppendAllLines(Path.Join(pluginsFolder, "commands"),
                 commands.Select((tuple) => $"{tuple.action}:{tuple.plugin}"));
         }
 
@@ -510,17 +510,25 @@ namespace BTCPayServer.Plugins
         {
             var cmds = GetPendingCommands(pluginDir).Where(tuple =>
                 !tuple.plugin.Equals(plugin, StringComparison.InvariantCultureIgnoreCase)).ToArray();
-
-            if (File.Exists(Path.Combine(pluginDir, plugin, BTCPayPluginSuffix)))
+            AssertSafeName(pluginDir, plugin);
+            if (File.Exists(Path.Join(pluginDir, plugin + BTCPayPluginSuffix)))
             {
-                File.Delete(Path.Combine(pluginDir, plugin, BTCPayPluginSuffix));
+                File.Delete(Path.Join(pluginDir, plugin + BTCPayPluginSuffix));
             }
-            if (File.Exists(Path.Combine(pluginDir, plugin, ".json")))
+            if (File.Exists(Path.Join(pluginDir, plugin + ".json")))
             {
-                File.Delete(Path.Combine(pluginDir, plugin, ".json"));
+                File.Delete(Path.Join(pluginDir, plugin + ".json"));
             }
-            File.Delete(Path.Combine(pluginDir, "commands"));
+            File.Delete(Path.Join(pluginDir, "commands"));
             QueueCommands(pluginDir, cmds);
+        }
+
+        private static void AssertSafeName(string pluginDir, string plugin)
+        {
+            var fullPluginDir = Path.GetFullPath(pluginDir).WithTrailingSlash();
+            var fullPath = Path.GetFullPath(Path.Combine(fullPluginDir, plugin));
+            if (!fullPath.StartsWith(fullPluginDir, StringComparison.Ordinal))
+                throw new InvalidOperationException("File traversal detected");
         }
 
         public static void DisablePlugins(string pluginDir)
@@ -546,7 +554,7 @@ namespace BTCPayServer.Plugins
         // Loads the list of disabled plugins from the file
         private static HashSet<string> GetDisabledPluginIdentifiers(string pluginsFolder)
         {
-            var disabledPath = Path.Combine(pluginsFolder, "disabled");
+            var disabledPath = Path.Join(pluginsFolder, "disabled");
             return File.Exists(disabledPath) ? File.ReadAllLines(disabledPath).ToHashSet() : [];
         }
 

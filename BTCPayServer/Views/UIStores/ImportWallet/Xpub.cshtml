@@ -55,10 +55,7 @@
             <td class="font-monospace">zpub…</td>
         </tr>
         <tr>
-            <td class="font-monospace">wpkh(xpub…/0/*)</td>
-        </tr>
-        <tr>
-            <td class="font-monospace">wpkh([…/84'/0'/0']xpub…/0/*)</td>
+            <td class="font-monospace">wpkh([…/84'/0'/0']xpub…/**)</td>
         </tr>
         <tr>
             <td rowspan="4">P2SH-P2WPKH</td>
@@ -68,10 +65,7 @@
             <td class="font-monospace">ypub…</td>
         </tr>
         <tr>
-            <td class="font-monospace">sh(wpkh(xpub…/0/*)</td>
-        </tr>
-        <tr>
-            <td class="font-monospace">sh(wpkh([…/49'/0'/0']xpub…/0/*)</td>
+            <td class="font-monospace">sh(wpkh([89abcdef/49'/0'/0']xpub…/**))</td>
         </tr>
     }
     <tr>
@@ -79,10 +73,7 @@
         <td class="font-monospace">xpub…-[legacy]</td>
     </tr>
     <tr>
-        <td class="font-monospace">pkh([…/44'/0'/0']xpub…/0/*)</td>
-    </tr>
-    <tr>
-        <td class="font-monospace">pkh(xpub…/0/*)</td>
+        <td class="font-monospace">pkh([89abcdef/44'/0'/0']xpub…/**)</td>
     </tr>
     @if (Model.SupportTaproot)
     {
@@ -98,21 +89,21 @@
         <td class="font-monospace">2-of-xpub1…-xpub2…</td>
     </tr>
     <tr>
-        <td class="font-monospace">wsh(multi(2,<br>[…/48'/0'/0'/2']xpub…/0/*,<br>[…/48'/0'/0'/2']xpub…/0/*))</td>
+        <td class="font-monospace">wsh(multi(2,<br>[89abcdef/48'/0'/0'/2']xpub…/**,<br>[89abcdef/48'/0'/0'/2']xpub…/**))</td>
     </tr>
     <tr>
         <td class="text-nowrap" rowspan="2">Multi-sig P2SH-P2WSH</td>
         <td class="font-monospace">2-of-xpub1…-xpub2…-[p2sh]</td>
     </tr>
     <tr>
-        <td class="font-monospace">sh(wsh(multi(2,<br>[…/48'/0'/0'/1']xpub…/0/*,<br>[…/48'/0'/0'/1']xpub…/0/*)))</td>
+        <td class="font-monospace">sh(wsh(multi(2,<br>[89abcdef/48'/0'/0'/1']xpub…/**,<br>[89abcdef/48'/0'/0'/1']xpub…/**)))</td>
     </tr>
     <tr>
         <td class="text-nowrap" rowspan="2">Multi-sig P2SH</td>
         <td class="font-monospace">2-of-xpub1…-xpub2…-[legacy]</td>
     </tr>
     <tr>
-        <td class="font-monospace">sh(multi(2,<br>[…/45'/0]xpub…/0/*,<br>[…/45'/0]xpub…/0/*))</td>
+        <td class="font-monospace">sh(multi(2,<br>[89abcdef/45'/0]xpub…/**,<br>[89abcdef/45'/0]xpub…/**))</td>
     </tr>
     </tbody>
 </table>

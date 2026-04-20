@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NBitcoin;
-using NBitcoin.Scripting;
 using NBitcoin.WalletPolicies;
 using NBXplorer.DerivationStrategy;
 using static NBitcoin.WalletPolicies.MiniscriptNode;
@@ -243,81 +242,17 @@ namespace BTCPayServer
         }
 
 
+        // Parse output descriptor with bitcoin core format (eg. p2sh(xpub/0/*))
         private (DerivationStrategyBase, RootedKeyPath[]) ParseLegacyOutputDescriptor(string str)
         {
-            (DerivationStrategyBase, RootedKeyPath[]) ExtractFromPkProvider(PubKeyProvider pubKeyProvider,
-                string suffix = "")
-            {
-                switch (pubKeyProvider)
-                {
-                    case PubKeyProvider.Const _:
-                        throw new FormatException("Only HD output descriptors are supported.");
-                    case PubKeyProvider.HD hd:
-                        if (hd.Path != null && hd.Path.ToString() != "0")
-                        {
-                            throw new FormatException("Custom change paths are not supported.");
-                        }
-                        return (Parse($"{hd.Extkey}{suffix}"), null);
-                    case PubKeyProvider.Origin origin:
-                        var innerResult = ExtractFromPkProvider(origin.Inner, suffix);
-                        return (innerResult.Item1, new[] { origin.KeyOriginInfo });
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
-
-            (DerivationStrategyBase, RootedKeyPath[]) ExtractFromMulti(OutputDescriptor.Multi multi)
-            {
-                var xpubs = multi.PkProviders.Select(provider => ExtractFromPkProvider(provider));
-                return (
-                    Parse(
-                        $"{multi.Threshold}-of-{(string.Join('-', xpubs.Select(tuple => tuple.Item1.ToString())))}{(multi.IsSorted ? "" : "-[keeporder]")}"),
-                    xpubs.SelectMany(tuple => tuple.Item2).ToArray());
-            }
-
-            ArgumentNullException.ThrowIfNull(str);
-            str = str.Trim();
-
-            //nbitcoin output descriptor does not support taproot, so let's check if it is a taproot descriptor and fake until it is supported
-            var outputDescriptor = OutputDescriptor.Parse(str, Network);
-            switch (outputDescriptor)
-            {
-                case OutputDescriptor.PK _:
-                case OutputDescriptor.Raw _:
-                case OutputDescriptor.Addr _:
-                    throw new FormatException("Only HD output descriptors are supported.");
-                case OutputDescriptor.Combo _:
-                    throw new FormatException("Only output descriptors of one format are supported.");
-                case OutputDescriptor.Multi multi:
-                    return ExtractFromMulti(multi);
-                case OutputDescriptor.PKH pkh:
-                    return ExtractFromPkProvider(pkh.PkProvider, "-[legacy]");
-                case OutputDescriptor.SH sh:
-                    var suffix = "-[p2sh]";
-                    if (sh.Inner is OutputDescriptor.Multi)
-                    {
-                        //non segwit
-                        suffix = "-[legacy]";
-                    }
-
-                    if (sh.Inner is OutputDescriptor.Multi || sh.Inner is OutputDescriptor.WPKH ||
-                        sh.Inner is OutputDescriptor.WSH)
-                    {
-                        var ds = ParseLegacyOutputDescriptor(sh.Inner.ToString());
-                        return (Parse(ds.Item1 + suffix), ds.Item2);
-                    };
-                    throw new FormatException("sh descriptors are only supported with multsig(legacy or p2wsh) and segwit(p2wpkh)");
-                case OutputDescriptor.Tr tr:
-                    return ExtractFromPkProvider(tr.InnerPubkey, "-[taproot]");
-                case OutputDescriptor.WPKH wpkh:
-                    return ExtractFromPkProvider(wpkh.PkProvider);
-                case OutputDescriptor.WSH { Inner: OutputDescriptor.Multi multi }:
-                    return ExtractFromMulti(multi);
-                case OutputDescriptor.WSH:
-                    throw new FormatException("wsh descriptors are only supported with multisig");
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(outputDescriptor));
-            }
+            if (!str.Contains("0/*"))
+                throw new FormatException("Invalid output descriptor");
+            str = str.Replace("0/*", "**");
+            // Strip everything after "#" character
+            var hashIndex = str.IndexOf('#');
+            if (hashIndex >= 0)
+                str = str.Substring(0, hashIndex);
+            return ParseMiniscript(str);
         }
 
         public DerivationStrategyBase Parse(string str)

@@ -1,0 +1,31 @@
+@using BTCPayServer.Plugins.Impersonation
+@model BTCPayServer.Plugins.Impersonation.Views.LogAsUserViewModel
+
+@{
+    Layout = "_LayoutWizard";
+    ViewData.SetTitle(StringLocalizer["Log as user"]);
+}
+
+@section Navbar {
+    <a href="@Url.EnsureLocal(Model.ReturnUrl, Context.Request)" class="back">
+        <vc:icon symbol="back" />
+    </a>
+}
+
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3">@StringLocalizer["Scan this login code to log in as {0}.", Model.Email]</p>
+</header>
+
+<div class="d-flex flex-column align-items-center mt-4">
+    <component type="typeof(UserLoginCode)"
+               render-mode="ServerPrerendered"
+               param-impersonated-user-id="@Model.Id" />
+
+    <a
+        asp-area="@ImpersonationPlugin.Area"
+        asp-action="LogAsUser"
+       asp-route-userId="@Model.Id"
+       asp-route-login="true"
+       class="btn btn-primary mt-4">@StringLocalizer["Log as user {0}", Model.Email]</a>
+</div>

@@ -119,6 +119,10 @@
                                 }
                             </a>
                         }
+                        @if (user.Id == currentUserId || !user.IsAdmin)
+                        {
+                            <a asp-area="@ImpersonationPlugin.Area" asp-action="LogAsUser" asp-controller="UIImpersonation" asp-route-userId="@user.Id" class="text-nowrap user-impersonate" text-translate="true">Log as user</a>
+                        }
                         <a asp-action="User" asp-route-userId="@user.Id" class="user-edit" text-translate="true">Edit</a>
                         <a asp-action="ResetUserPassword" asp-route-userId="@user.Id" class="reset-password text-nowrap" text-translate="true">Password Reset</a>
                         <a asp-action="DeleteUser" asp-route-userId="@user.Id" class="delete-user" text-translate="true">Remove</a>

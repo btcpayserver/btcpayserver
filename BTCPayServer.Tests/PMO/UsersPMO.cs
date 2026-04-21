@@ -12,4 +12,10 @@ public class UsersPMO(PlaywrightTester s)
     }
 
     private static string Row(string email) => $"tr[data-email=\"{email}\"]";
+
+    public async Task LogAs(string email)
+    {
+        await s.Page.ClickAsync($"{Row(email)} .user-impersonate");
+        await s.Page.ClickAsync(".btn-primary");
+    }
 }

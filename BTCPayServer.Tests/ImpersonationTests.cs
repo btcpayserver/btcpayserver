@@ -9,6 +9,34 @@ namespace BTCPayServer.Tests;
 
 public class ImpersonationTests(ITestOutputHelper helper) : UnitTestBase(helper)
 {
+
+    [Fact]
+    [Trait("Playwright", "Playwright")]
+    public async Task AdminCanImpersonate()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+
+        var user = await s.RegisterNewUser(isAdmin: false);
+        var userStore = await s.CreateNewStore();
+        await s.Logout();
+        await s.GoToRegister();
+        var admin = await s.RegisterNewUser(isAdmin: true);
+        var adminStore = await s.CreateNewStore();
+        await s.GoToServer(ServerNavPages.Users);
+        var users = new PMO.UsersPMO(s);
+        await users.LogAs(user);
+        await s.GoToStore(userStore.storeId);
+        await s.Page.WaitForSelectorAsync(".back-prev-login");
+        Assert.Contains(user, await s.Page.ContentAsync());
+
+        await s.Page.ClickAsync(".back-prev-login");
+        await s.GoToStore(adminStore.storeId);
+        Assert.Equal(0, await s.Page.Locator(".back-prev-login").CountAsync());
+        Assert.Contains(admin, await s.Page.ContentAsync());
+        await s.GoToServer(ServerNavPages.Users);
+    }
+
     [Fact]
     [Trait("Playwright", "Playwright")]
     public async Task CanSigninWithLoginCode()

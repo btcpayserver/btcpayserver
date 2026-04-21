@@ -95,7 +95,9 @@
     {
         var req = HttpContextAccessor.HttpContext?.Request;
         if (req == null) return "";
-        return LinkGenerator.LoginCodeLink(loginCode, RedirectUrl, req.GetRequestBaseUrl());
+        var currentUserId = HttpContextAccessor.HttpContext?.User.GetIdOrNull();
+        var impersonate = ImpersonatedUserId is not null && ImpersonatedUserId != currentUserId;
+        return LinkGenerator.LoginCodeLink(loginCode, RedirectUrl, impersonate, req.GetRequestBaseUrl());
     }
 
     private double Percent => Math.Round(_seconds / Seconds * 100);

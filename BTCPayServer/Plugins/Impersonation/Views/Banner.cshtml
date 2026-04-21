@@ -1,0 +1,31 @@
+@using BTCPayServer.Plugins.Impersonation
+@inject ImpersonationContext ImpersonationContext
+
+@if (ImpersonationContext.IsImpersonating)
+{
+    <style>
+        :root {
+            --info-bg: #cff4fc;
+        }
+        .alert-translucent {
+            border-radius: 6px;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .alert-translucent.alert-info {
+            background: var(--info-bg);
+            border: 1px solid var(--btcpay-info-border);
+        }
+    </style>
+
+    var impersonatedEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+    <div class="alert-translucent alert-info" role="alert">
+        <span>@ViewLocalizer["You are signed in as <b>{0}</b>.", impersonatedEmail ?? StringLocalizer["another account"].Value]</span>
+        <form asp-area="@ImpersonationPlugin.Area" asp-controller="UIImpersonation" asp-action="RevertImpersonation" method="post" class="m-0">
+            <button class="btn btn-info back-prev-login" type="submit">@StringLocalizer["Back to previous login"]</button>
+        </form>
+    </div>
+}

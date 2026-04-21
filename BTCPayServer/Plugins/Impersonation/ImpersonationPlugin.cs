@@ -16,8 +16,10 @@ public class ImpersonationPlugin : BaseBTCPayServerPlugin
 
     public override void Execute(IServiceCollection services)
     {
+        services.AddUIExtension("layout-banner", "/Plugins/Impersonation/Views/Banner.cshtml");
         services.AddUIExtension("user-nav", "/Plugins/Impersonation/Views/UserNav.cshtml");
         services.AddSingleton<UserLoginCodeService>();
+        services.AddScoped<ImpersonationContext>();
         services.AddPolicyDefinitions(new[]
         {
             new PolicyDefinition(

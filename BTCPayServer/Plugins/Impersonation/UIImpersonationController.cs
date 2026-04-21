@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -6,6 +7,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
+using BTCPayServer.Plugins.Impersonation.Views;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -21,15 +23,42 @@ namespace BTCPayServer.Plugins.Impersonation;
 [Area(ImpersonationPlugin.Area)]
 public class UIImpersonationController(
     UserLoginCodeService userLoginCodeService,
+    ImpersonationContext impersonationContext,
     IStringLocalizer stringLocalizer,
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
     ViewLocalizer viewLocalizer,
-    UserService userService) : Controller
+    UserService userService,
+    LinkGenerator linkGenerator) : Controller
 {
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
     private UserService.CanLoginContext CreateLoginContext(ApplicationUser user)
         => new(user, StringLocalizer, viewLocalizer, this.HttpContext.Request.GetRequestBaseUrl());
+
+
+    [HttpGet("server/users/{userId}/log-as-user")]
+    public async Task<IActionResult> LogAsUser([FromServices] IAuthorizationService authorizationService, string userId, bool login = false)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+            return NotFound();
+
+        if (!(await authorizationService.AuthorizeAsync(HttpContext.User, userId, ImpersonationPlugin.CanImpersonateUser)).Succeeded)
+            return Forbid();
+
+        if (login)
+        {
+            var loginCode = userLoginCodeService.Generate(user.Id);
+            return Redirect(linkGenerator.LoginCodeLink(loginCode, null, true, HttpContext.Request.GetRequestBaseUrl()));
+        }
+
+        return View(new LogAsUserViewModel
+        {
+            Id = user.Id,
+            Email = user.Email,
+            ReturnUrl = Url.Action(nameof(UIServerController.ListUsers), "UIServer")
+        });
+    }
 
     [HttpGet("/account/login-codes")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewProfile)]
@@ -42,21 +71,29 @@ public class UIImpersonationController(
     [HttpGet("/login/code")]
     [AllowAnonymous]
     [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
-    public async Task<IActionResult> LoginUsingCode(string loginCode, string returnUrl = null)
+    public async Task<IActionResult> LoginUsingCode(string loginCode, string returnUrl = null, bool? impersonate = null)
     {
-        return await LoginCodeResult(loginCode, returnUrl);
+        return await LoginCodeResult(loginCode, returnUrl, impersonate);
     }
 
     [HttpPost("/login/code")]
     [AllowAnonymous]
     [ValidateAntiForgeryToken]
     [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
-    public async Task<IActionResult> LoginWithCode(string loginCode, string returnUrl = null)
+    public async Task<IActionResult> LoginWithCode(string loginCode, string returnUrl = null, bool? impersonate = null)
     {
-        return await LoginCodeResult(loginCode, returnUrl);
+        return await LoginCodeResult(loginCode, returnUrl, impersonate);
     }
 
-    private async Task<IActionResult> LoginCodeResult(string loginCode, string returnUrl)
+    [HttpPost("/login/code/revert")]
+    [AllowAnonymous]
+    public IActionResult RevertImpersonation()
+    {
+        var impersonator = impersonationContext.Revert();
+        return Login(email: impersonator?.FindFirst(ClaimTypes.Email)?.Value);
+    }
+
+    private async Task<IActionResult> LoginCodeResult(string loginCode, string returnUrl, bool? impersonate)
     {
         if (!string.IsNullOrEmpty(loginCode))
         {
@@ -101,6 +138,11 @@ public class UIImpersonationController(
                 ExpiresUtc = now.AddDays(1)
             };
 
+            if (impersonate is true)
+            {
+                impersonationContext.StartImpersonation();
+            }
+
             await signInManager.SignInAsync(user, authProperties, AuthenticationSchemes.Cookie);
         }
 
@@ -110,6 +152,6 @@ public class UIImpersonationController(
     private IActionResult Login(string returnUrl = null, string email = null)
     {
         email ??= User.FindFirst(ClaimTypes.Email)?.Value;
-        return RedirectToAction(nameof(UIAccountController.Login), "UIAccount", new { area = "", email, returnUrl });
+        return RedirectToAction(nameof(UIAccountController.Login), "UIAccount", new { email, returnUrl });
     }
 }

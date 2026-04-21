@@ -40,8 +40,8 @@
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.6" />
     <PackageReference Include="BTCPayServer.Lightning.All" Version="1.6.15" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
-    <PackageReference Include="Fido2" Version="4.0.0" />
-    <PackageReference Include="Fido2.AspNet" Version="4.0.0" />
+    <PackageReference Include="Fido2" Version="4.0.1" />
+    <PackageReference Include="Fido2.AspNet" Version="4.0.1" />
     <PackageReference Include="LNURL" Version="0.0.36" />
     <PackageReference Include="MailKit" Version="4.16.0" />
     <PackageReference Include="QRCoder" Version="1.7.0" />
@@ -59,8 +59,8 @@
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.26.1" />
     <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.26.1" />
     <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.26.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.4" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="10.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="10.0.6" />
   </ItemGroup>
 
 	<ItemGroup>

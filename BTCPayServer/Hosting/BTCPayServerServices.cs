@@ -670,7 +670,7 @@ namespace BTCPayServer.Hosting
                 new PolicyDefinition(
                     Policies.CanViewPayouts,
                     new PermissionDisplay("View payouts", "Allows viewing payouts on all your stores."),
-                    new PermissionDisplay("View payouts in selected stores", "Allows viewing payouts on the selected stores.")),
+                    new PermissionDisplay("View payouts in selected stores", "Allows viewing payouts on the selected stores."))
             });
 
             return services;

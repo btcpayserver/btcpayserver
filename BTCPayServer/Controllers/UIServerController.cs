@@ -14,6 +14,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using BTCPayServer.Fido2;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.ServerViewModels;

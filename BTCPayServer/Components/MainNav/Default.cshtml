@@ -428,9 +428,6 @@
                 <li class="nav-item nav-item-sub">
                     <a layout-menu-item="@nameof(ManageNavPages.Notifications)" asp-controller="UIManage" asp-action="NotificationSettings" text-translate="true">Notifications</a>
                 </li>
-                <li class="nav-item nav-item-sub">
-                    <a layout-menu-item="@nameof(ManageNavPages.LoginCodes)" asp-controller="UIManage" asp-action="LoginCodes" text-translate="true">Login Codes</a>
-                </li>
                 <vc:ui-extension-point location="user-nav" model="@Model" />
             }
             @if (!string.IsNullOrWhiteSpace(Model.ContactUrl))

@@ -42,7 +42,6 @@ namespace BTCPayServer.Controllers
         BTCPayServerEnvironment btcPayServerEnvironment,
         EventAggregator eventAggregator,
         Fido2Service fido2Service,
-        UserLoginCodeService userLoginCodeService,
         LnurlAuthService lnurlAuthService,
         EmailSenderFactory emailSenderFactory,
         CallbackGenerator callbackGenerator,
@@ -105,59 +104,6 @@ namespace BTCPayServer.Controllers
 
             ViewData["ReturnUrl"] = returnUrl;
             return View(nameof(Login), new LoginViewModel { Email = email, AllowLimitedLogin = allowLimitedLogin });
-        }
-
-        // GET is for signin via the POS backend
-        [HttpGet("/login/code")]
-        [AllowAnonymous]
-        [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
-        public async Task<IActionResult> LoginUsingCode(string loginCode, string returnUrl = null)
-        {
-            return await LoginCodeResult(loginCode, returnUrl);
-        }
-
-        [HttpPost("/login/code")]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
-        public async Task<IActionResult> LoginWithCode(string loginCode, string returnUrl = null)
-        {
-            return await LoginCodeResult(loginCode, returnUrl);
-        }
-
-        private async Task<IActionResult> LoginCodeResult(string loginCode, string returnUrl)
-        {
-            if (!string.IsNullOrEmpty(loginCode))
-            {
-                var code = loginCode.Split(';').First();
-                var userId = userLoginCodeService.Verify(code);
-                if (userId is null)
-                {
-                    TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Login code was invalid"].Value;
-                    return await Login(returnUrl);
-                }
-
-                var user = await userManager.FindByIdAsync(userId);
-                var loginContext = CreateLoginContext(user);
-                if (!await userService.CanLogin(loginContext))
-                {
-                    TempData.SetStatusLoginResult(loginContext);
-                    return await Login(returnUrl);
-                }
-
-                _logger.LogInformation("User {Email} logged in with a login code", user!.Email);
-                var now = DateTimeOffset.UtcNow;
-                var authProperties = new AuthenticationProperties
-                {
-                    IssuedUtc = now,
-                    AllowRefresh = false,
-                    IsPersistent = true,
-                    ExpiresUtc = now.AddDays(1)
-                };
-                await signInManager.SignInAsync(user, authProperties, "LoginCode");
-                return RedirectToLocal(returnUrl);
-            }
-            return await Login(returnUrl);
         }
 
         private UserService.CanLoginContext CreateLoginContext(ApplicationUser user)

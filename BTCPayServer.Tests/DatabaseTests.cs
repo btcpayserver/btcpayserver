@@ -1,9 +1,12 @@
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
@@ -133,6 +136,50 @@ namespace BTCPayServer.Tests
                     Assert.DoesNotContain(invoices, i => i.Id == "LTCAndBTCLazy");
                 else
                     Assert.Contains(invoices, i => i.Id == "LTCAndBTCLazy");
+            }
+        }
+
+        [Fact]
+        public async Task CanOnlyMarkMatchingPendingTransactionAsBroadcast()
+        {
+            var tester = CreateDBTester();
+            await tester.MigrateUntil();
+            const string storeId = "TestStore";
+
+            await using (var ctx = tester.CreateContext())
+            {
+                await ctx.Database.GetDbConnection().ExecuteAsync("""
+                    INSERT INTO "Stores" ("Id", "SpeedPolicy") VALUES (@storeId, 0);
+                    INSERT INTO "PendingTransactions"
+                        ("Id", "TransactionId", "CryptoCode", "StoreId", "State", "OutpointsUsed", "Blob2")
+                    VALUES
+                        ('pending-a', 'tx-a', 'BTC', @storeId, 0, ARRAY[]::text[], '{}'::JSONB),
+                        ('pending-b', 'tx-b', 'BTC', @storeId, 0, ARRAY[]::text[], '{}'::JSONB);
+                    """, new { storeId });
+            }
+
+            var service = new PendingTransactionService(
+                CreateNetworkProvider(),
+                tester.CreateContextFactory(),
+                new EventAggregator(new BTCPayServer.Logging.Logs()),
+                NullLogger<PendingTransactionService>.Instance);
+
+            await service.Broadcasted(new PendingTransactionService.PendingTransactionFullId("BTC", storeId, "pending-a"), "tx-b");
+
+            await using (var ctx = tester.CreateContext())
+            {
+                var pendingA = await ctx.PendingTransactions.SingleAsync(p => p.Id == "pending-a");
+                Assert.Equal(PendingTransactionState.Pending, pendingA.State);
+            }
+
+            await service.Broadcasted(new PendingTransactionService.PendingTransactionFullId("BTC", storeId, "pending-a"), "tx-a");
+
+            await using (var ctx = tester.CreateContext())
+            {
+                var pendingA = await ctx.PendingTransactions.SingleAsync(p => p.Id == "pending-a");
+                var pendingB = await ctx.PendingTransactions.SingleAsync(p => p.Id == "pending-b");
+                Assert.Equal(PendingTransactionState.Broadcast, pendingA.State);
+                Assert.Equal(PendingTransactionState.Pending, pendingB.State);
             }
         }
 

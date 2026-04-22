@@ -256,11 +256,12 @@ public class PendingTransactionService(
         });
     }
 
-    public async Task Broadcasted(PendingTransactionFullId id)
+    public async Task Broadcasted(PendingTransactionFullId id, string transactionId)
     {
         await using var ctx = dbContextFactory.CreateContext();
         var pt = await ctx.PendingTransactions.FirstOrDefaultAsync(p =>
             p.CryptoCode == id.CryptoCode && p.StoreId == id.StoreId && p.Id == id.Id &&
+            p.TransactionId == transactionId &&
             (p.State == PendingTransactionState.Pending || p.State == PendingTransactionState.Signed));
         if (pt is null) return;
         pt.State = PendingTransactionState.Broadcast;

@@ -16,6 +16,7 @@
 
     var fetchUrl = isWalletScoped
         ? Url.Action("LabelsJson", "UIWallets", new {
+            area = "Wallets",
             walletId = Model.WalletObjectId.WalletId,
             excludeTypes = Safe.Json(Model.ExcludeTypes),
             linkedType = Model.LinkedType
@@ -29,7 +30,7 @@
     var updateUrl = !Model.AutoUpdate
         ? string.Empty
         : isWalletScoped
-            ? Url.Action("UpdateLabels", "UIWallets", new { walletId = Model.WalletObjectId.WalletId })
+            ? Url.Action("UpdateLabels", "UIWallets", new { area = "Wallets", walletId = Model.WalletObjectId.WalletId })
             : Url.Action("UpdateStoreLabels", "UIStores", new { storeId = Model.StoreId });
 }
 

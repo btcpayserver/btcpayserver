@@ -315,9 +315,10 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
             }
         }
         if (bip21.Any())
-            return new RedirectToActionResult("WalletSend", "UIWallets", new { walletId = new WalletId(storeId, Network.CryptoCode).ToString(), bip21 });
+            return new RedirectToActionResult("WalletSend", "UIWallets", new { area = "Wallets", walletId = new WalletId(storeId, Network.CryptoCode).ToString(), bip21 });
         return new RedirectToActionResult("Payouts", "UIWallets", new
         {
+            area = "Wallets",
             walletId = new WalletId(storeId, Network.CryptoCode).ToString(),
             pullPaymentId = pullPaymentIds.Length == 1 ? pullPaymentIds.First() : null
         });

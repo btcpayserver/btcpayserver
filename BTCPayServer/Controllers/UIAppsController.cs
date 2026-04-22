@@ -144,7 +144,7 @@ namespace BTCPayServer.Controllers
                 object text = _networkProvider.DefaultNetwork?.CryptoCode switch
                 {
                     null => StringLocalizer["To create a {0} app, you need to set up a wallet first", vm.AppType],
-                    {} cryptoCode => ViewLocalizer["To create a {0} app, you need to <a href='{1}' class='alert-link'>set up a wallet</a> first", vm.AppType, Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode, storeId })!]
+                    {} cryptoCode => ViewLocalizer["To create a {0} app, you need to <a href='{1}' class='alert-link'>set up a wallet</a> first", vm.AppType, Url.Action(nameof(UIStoreOnChainWalletsController.SetupWallet), "UIStoreOnChainWallets", new { area = "Wallets", cryptoCode, storeId })!]
                 };
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {

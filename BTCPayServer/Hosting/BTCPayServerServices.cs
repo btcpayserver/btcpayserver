@@ -546,6 +546,70 @@ namespace BTCPayServer.Hosting
                     new PermissionDisplay("Modify invoices", "Allows viewing and modifying invoices on the selected stores."),
                     new[] { Policies.CanViewInvoices, Policies.CanCreateInvoice, Policies.CanCreateLightningInvoiceInStore }),
                 new PolicyDefinition(
+                    Policies.CanManageWallets,
+                    new PermissionDisplay("Manage wallets", "Allows managing wallets on all your stores, including wallet settings and transactions."),
+                    new PermissionDisplay("Manage selected stores' wallets", "Allows managing wallets on the selected stores, including wallet settings and transactions."),
+                    new[]
+                    {
+                        Policies.CanManageWalletSettings,
+                        Policies.CanManageWalletTransactions
+                    }),
+                new PolicyDefinition(
+                    Policies.CanViewWallet,
+                    new PermissionDisplay("View wallets", "Allows viewing wallets, balances, and transactions."),
+                    new PermissionDisplay("View selected stores' wallets", "Allows viewing wallets, balances, and transactions on the selected stores.")),
+                new PolicyDefinition(
+                    Policies.CanManageWalletSettings,
+                    new PermissionDisplay("Manage wallet settings", "Allows managing wallet settings and metadata."),
+                    new PermissionDisplay("Manage selected stores' wallet settings", "Allows managing wallet settings and metadata on the selected stores."),
+                    new[]
+                    {
+                        Policies.CanViewWallet
+                    }),
+                new PolicyDefinition(
+                    Policies.CanManageWalletTransactions,
+                    new PermissionDisplay("Manage wallet transactions", "Allows managing wallet transactions on all your stores."),
+                    new PermissionDisplay("Manage selected stores' wallet transactions", "Allows managing wallet transactions on the selected stores."),
+                    new[]
+                    {
+                        Policies.CanCreateWalletTransactions,
+                        Policies.CanSignWalletTransactions,
+                        Policies.CanBroadcastWalletTransactions,
+                        Policies.CanCancelWalletTransactions
+                    }),
+                new PolicyDefinition(
+                    Policies.CanCreateWalletTransactions,
+                    new PermissionDisplay("Create wallet transactions", "Allows creating wallet transactions (PSBTs)."),
+                    new PermissionDisplay("Create wallet transactions", "Allows creating wallet transactions (PSBTs) on the selected stores."),
+                    new[]
+                    {
+                        Policies.CanViewWallet
+                    }),
+                new PolicyDefinition(
+                    Policies.CanSignWalletTransactions,
+                    new PermissionDisplay("Sign wallet transactions", "Allows signing wallet transactions (PSBTs)."),
+                    new PermissionDisplay("Sign wallet transactions", "Allows signing wallet transactions (PSBTs) on the selected stores."),
+                    new[]
+                    {
+                        Policies.CanViewWallet
+                    }),
+                new PolicyDefinition(
+                    Policies.CanBroadcastWalletTransactions,
+                    new PermissionDisplay("Broadcast wallet transactions", "Allows broadcasting wallet transactions."),
+                    new PermissionDisplay("Broadcast wallet transactions", "Allows broadcasting wallet transactions on the selected stores."),
+                    new[]
+                    {
+                        Policies.CanViewWallet
+                    }),
+                new PolicyDefinition(
+                    Policies.CanCancelWalletTransactions,
+                    new PermissionDisplay("Cancel wallet transactions", "Allows canceling wallet transactions."),
+                    new PermissionDisplay("Cancel wallet transactions", "Allows canceling wallet transactions on the selected stores."),
+                    new[]
+                    {
+                        Policies.CanViewWallet
+                    }),
+                new PolicyDefinition(
                     Policies.CanModifyWebhooks,
                     new PermissionDisplay("Modify stores webhooks", "Allows modifying the webhooks of all your stores."),
                     new PermissionDisplay("Modify selected stores' webhooks", "Allows modifying the webhooks of the selected stores.")),
@@ -565,6 +629,7 @@ namespace BTCPayServer.Hosting
                         Policies.CanModifyWebhooks,
                         Policies.CanModifyPaymentRequests,
                         Policies.CanManagePayouts,
+                        Policies.CanManageWallets,
                         Policies.CanUseLightningNodeInStore
                     }),
                 new PolicyDefinition(

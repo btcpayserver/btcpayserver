@@ -500,7 +500,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const $target = e.target
         if ($target.matches('td,time,span[data-sensitive]')) {
             const $row = $target.closest('.mass-action-row');
-            $row.querySelector('.mass-action-select').click();
+            $row.querySelector('.mass-action-select')?.click();
         }
     });
 });

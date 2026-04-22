@@ -75,7 +75,7 @@ namespace BTCPayServer.Services
         => LinkGenerator.GetUriByAction(
             action: nameof(UIWalletsController.WalletTransactions),
             controller: "UIWallets",
-            values: new { walletId = walletId.ToString() },
+            values: new { area = "Wallets", walletId = walletId.ToString() },
             GetRequestBaseUrl());
 
         public string PaymentRequestByIdLink(string payReqId)

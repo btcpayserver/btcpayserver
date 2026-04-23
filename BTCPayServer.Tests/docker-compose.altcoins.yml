@@ -85,6 +85,7 @@ services:
         connect=bitcoind:39388
         fallbackfee=0.0002
         rpcallowip=0.0.0.0/0
+        unsafesqlitesync=1
     depends_on:
       - nbxplorer
       - postgres
@@ -156,6 +157,7 @@ services:
         deprecatedrpc=signrawtransaction
         fallbackfee=0.0002
         minrelaytxfee=0.00001000
+        unsafesqlitesync=1
     ports:
       - "43782:43782"
       - "39388:39388"

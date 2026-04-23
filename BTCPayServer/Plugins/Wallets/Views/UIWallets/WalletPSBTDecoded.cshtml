@@ -5,6 +5,7 @@
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
     var walletCreatePermission = Policies.CanCreateWalletTransactions;
+    // Offline PSBT export stays create-only; sign-only roles are limited to BTCPay-controlled sign/collect flows.
     var walletExportPermission = walletCreatePermission;
     var walletSignPermission = Policies.CanSignWalletTransactions;
     var walletBroadcastPermission = Policies.CanBroadcastWalletTransactions;

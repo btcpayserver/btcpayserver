@@ -659,6 +659,7 @@ namespace BTCPayServer.Controllers
             return command switch
             {
                 "createpending" => AuthorizeWalletAsync(walletId, Policies.CanCreateWalletTransactions),
+                // Exporting or manipulating a PSBT stays create-only; sign-only roles remain in the controlled sign/collect flow.
                 "save-psbt" or "update" or "combine" => AuthorizeWalletAsync(walletId, Policies.CanCreateWalletTransactions),
                 "sign" or "collect" => AuthorizeWalletAsync(walletId, Policies.CanSignWalletTransactions),
                 "broadcast" => AuthorizeWalletAsync(walletId, Policies.CanBroadcastWalletTransactions),

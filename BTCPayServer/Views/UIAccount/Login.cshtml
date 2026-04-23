@@ -1,3 +1,4 @@
+@using BTCPayServer.Plugins.Impersonation
 @model LoginViewModel
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @inject BTCPayServer.Services.PoliciesSettings PoliciesSettings
@@ -44,7 +45,7 @@
         </div>
     </fieldset>
 </form>
-<form asp-action="LoginWithCode" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" id="logincode-form">
+<form asp-area="@ImpersonationPlugin.Area" asp-controller="UIImpersonation" asp-action="LoginWithCode" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" id="logincode-form">
     <input asp-for="LoginCode" type="hidden" class="form-control"/>
 </form>
 @if (!PoliciesSettings.LockSubscription)

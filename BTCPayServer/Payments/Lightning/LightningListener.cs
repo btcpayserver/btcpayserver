@@ -549,7 +549,7 @@ namespace BTCPayServer.Payments.Lightning
                         notification.GetPaymentHash(_network.NBitcoinNetwork) == GetPaymentHash(listenedInvoice)))
                     {
                         if (notification.Status == LightningInvoiceStatus.Paid &&
-                            notification.PaidAt.HasValue && notification.Amount != null)
+                            notification.PaidAt.HasValue && (notification.AmountReceived ?? notification.Amount) != null)
                         {
                             if (await AddPayment(notification, listenedInvoice.InvoiceId, listenedInvoice.PaymentMethod.PaymentMethodId))
                             {
@@ -622,6 +622,15 @@ namespace BTCPayServer.Payments.Lightning
             if (notification?.PaidAt is null || invoiceEntity is null)
                 return false;
 
+            var paidAmount = notification.AmountReceived ?? notification.Amount;
+            if (paidAmount is null)
+            {
+                Logs.PayServer.LogWarning(
+                    "{CryptoCode} (Lightning): Invoice {InvoiceId} is paid according to the node but no amount was returned; cannot record the payment yet.",
+                    _network.CryptoCode, invoiceId);
+                return false;
+            }
+
             var handler = _handlers[paymentMethodId];
             var paymentHash = notification.GetPaymentHash(_network.NBitcoinNetwork);
             var paymentData = new PaymentData()
@@ -631,7 +640,7 @@ namespace BTCPayServer.Payments.Lightning
                 Status = PaymentStatus.Settled,
                 Currency = _network.CryptoCode,
                 InvoiceDataId = invoiceId,
-                Amount = (notification.AmountReceived ?? notification.Amount).ToDecimal(LightMoneyUnit.BTC),
+                Amount = paidAmount.ToDecimal(LightMoneyUnit.BTC),
             }.Set(invoiceEntity, handler,
                 new LightningLikePaymentData()
                 {

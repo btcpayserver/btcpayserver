@@ -21,7 +21,7 @@ public class WalletHistogramService
         _connectionFactory = connectionFactory;
     }
 
-    public async Task<HistogramData> GetHistogram(StoreData store, WalletId walletId, HistogramType type)
+    public virtual async Task<HistogramData> GetHistogram(StoreData store, WalletId walletId, HistogramType type)
     {
         // https://github.com/dgarage/NBXplorer/blob/master/docs/Postgres-Schema.md
         if (_connectionFactory.Available)

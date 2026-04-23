@@ -342,7 +342,9 @@ retry:
                 }
             }
         }
-        public async Task UpdatePrompt(string invoiceId, PaymentPrompt prompt, IEnumerable<string> trackedDestinations = null)
+        public Task UpdatePrompt(string invoiceId, PaymentPrompt prompt)
+        => UpdatePrompt(invoiceId, prompt, null);
+        public async Task UpdatePrompt(string invoiceId, PaymentPrompt prompt, IEnumerable<string> trackedDestinations)
         {
 retry:
             using (var context = _applicationDbContextFactory.CreateContext())

@@ -1,5 +1,28 @@
 # Changelog
 
+## 2.3.8
+
+### New Features
+
+* API/Subscriptions: Add update offering route (#7296) @NicolasDorier
+* API/Subscriptions: Add update offering plan (#7297) @NicolasDorier
+* PoS: View-only store users can browse login links and invoices from the Update PoS page (#7305) @NicolasDorier
+* PoS: Store users can now generate a login QR code for any other store user (#7303) @NicolasDorier
+* Add LUD-21 (LNURL-pay Verify) support (#7250) @r0ckstardev
+* Add reporting for subscriptions (#7299) @TChukwuleta
+
+### Fixes
+
+* Fix: Reserved addresses page should not show addresses from old wallets (#7304) @thgO-O
+* Fix: QR code logins should not expire after only a few hours (#6801 #7293) @TChukwuleta
+* Fix: Avoid double translation of already localized view content (#7314 #7315) @Sanja22B
+* Fix: Phoenixd incorrectly marks payment as partial (#7325) @NicolasDorier
+* Fix: Top-Up invoices paid by BOLT11 should become settled (#7322 #7323) @notraiday
+
+### Miscellaneous
+
+* Remove support for importing keys to Bitcoin wallet via RPC (#7307) @NicolasDorier
+
 ## 2.3.7
 
 This release is the first release using .NET 10.

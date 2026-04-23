@@ -1644,7 +1644,8 @@ namespace BTCPayServer.Controllers
                 var pendingTransaction = await pendingTransactionService.CollectSignature(
                     GetPendingTxId(walletId, vm.SigningContext.PendingTransactionId),
                     psbt,
-                    CancellationToken.None);
+                    CancellationToken.None,
+                    GetUserId());
 
                 if (pendingTransaction != null)
                     return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });

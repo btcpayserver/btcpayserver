@@ -361,6 +361,8 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<StoreLabelRepository>();
             services.TryAddSingleton<PaymentRequestRepository>();
             services.TryAddSingleton<BTCPayWalletProvider>();
+            services.TryAddScoped<OnChainWalletSettingsAuthorization>();
+            services.TryAddSingleton<OnChainWalletSetupService>();
             services.AddSingleton<PendingTransactionService>();
             services.AddScheduledTask<PendingTransactionService>(TimeSpan.FromMinutes(10));
             // PendingTransactionWebhookProvider webhooks registered in WebhookExtensions

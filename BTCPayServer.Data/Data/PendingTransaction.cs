@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -21,6 +22,9 @@ public class PendingTransaction: IHasBlob<PendingTransactionBlob>
         public byte[] Blob { get; set; }
 
         public string Blob2 { get; set; }
+
+        [Timestamp]
+        public uint XMin { get; set; }
 
 
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)

@@ -1,0 +1,32 @@
+@model IReadOnlyList<BTCPayServer.Plugins.Multisig.Models.MultisigInProgressViewModel>
+
+@foreach (var multisig in Model)
+{
+    var setupState = multisig.ReadyToCreateWallet
+        ? "Ready to create wallet"
+        : multisig.CanSubmitSignerKey
+            ? "Awaiting your key"
+            : multisig.MissingSigners == 1
+                ? "Waiting for 1 signer"
+                : $"Waiting for {multisig.MissingSigners} signers";
+    var participationState = multisig.DidParticipate
+        ? (multisig.YourKeySubmitted ? "You participated" : "You are invited")
+        : "You are not a signer";
+    var actionText = multisig.CanSubmitSignerKey
+        ? "Submit key"
+        : multisig.ReadyToCreateWallet
+            ? "Create wallet"
+            : "View status";
+    var actionUrl = multisig.CanSubmitSignerKey ? multisig.InviteUrl : multisig.SetupUrl;
+    <a href="@actionUrl"
+       id="SetupGuide-Multisig-@multisig.RequestId"
+       class="list-group-item list-group-item-action d-flex align-items-center order-1">
+        <vc:icon symbol="wallet-new" />
+        <div class="content">
+            <h5 class="mb-0" text-translate="true">Multisig wallet setup</h5>
+            <div class="text-secondary small">@($"{multisig.RequiredSigners}-of-{multisig.TotalSigners} {multisig.CryptoCode} · {multisig.SubmittedSigners}/{multisig.TotalSigners} submitted · {setupState} · {participationState}")</div>
+        </div>
+        <span class="text-primary text-nowrap me-2">@actionText</span>
+        <vc:icon symbol="caret-right" />
+    </a>
+}

@@ -601,7 +601,7 @@ namespace BTCPayServer.Controllers
             return View(wallets);
         }
 
-        private sealed class WalletTransactionsFilter
+        internal sealed class WalletTransactionsFilter
         {
             public SearchString Search { get; init; } = new(string.Empty);
             public string SearchTerm { get; init; } = string.Empty;
@@ -617,7 +617,7 @@ namespace BTCPayServer.Controllers
             public bool HasFilters => !string.IsNullOrWhiteSpace(SearchText) || StartDate is not null || EndDate is not null || HasLabelFilter || Positive is not null;
         }
 
-        private WalletTransactionsFilter BuildWalletTransactionsFilter(string? searchTerm, string? searchText, string? labelFilter, int timezoneOffset)
+        internal static WalletTransactionsFilter BuildWalletTransactionsFilter(string? searchTerm, string? searchText, string? labelFilter, int timezoneOffset)
         {
             var combinedSearchTerm = string.IsNullOrEmpty(searchText) ? searchTerm : $"{searchText},{searchTerm}";
             var search = new SearchString(combinedSearchTerm, timezoneOffset);

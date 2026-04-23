@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security;
 using System.Text;
@@ -1515,46 +1514,56 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         [Fact]
         public void BuildWalletTransactionsFilterSeparatesTextAndStructuredTerms()
         {
-            var controller = (UIWalletsController)RuntimeHelpers.GetUninitializedObject(typeof(UIWalletsController));
-            var method = typeof(UIWalletsController).GetMethod("BuildWalletTransactionsFilter", BindingFlags.Instance | BindingFlags.NonPublic);
-            Assert.NotNull(method);
+            var result = UIWalletsController.BuildWalletTransactionsFilter(
+                "direction:out,label:primary-label,nolabel:true,startdate:2026-03-01T12:34:56",
+                "abc123tx",
+                "secondary-label",
+                120);
 
-            var result = method!.Invoke(controller, ["direction:out,label:primary-label,nolabel:true,startdate:2026-03-01T12:34:56", "abc123tx", "secondary-label", 120]);
-            Assert.NotNull(result);
+            Assert.Equal("abc123tx", result.SearchInputText);
+            Assert.Equal("abc123tx", result.SearchText);
+            Assert.Equal("abc123tx", result.TextSearch);
 
-            string GetString(string propertyName) => (string)result!.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public)!.GetValue(result)!;
-            bool GetBool(string propertyName) => (bool)result!.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public)!.GetValue(result)!;
-            bool? GetNullableBool(string propertyName) => (bool?)result!.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public)!.GetValue(result);
-            DateTimeOffset? GetDate(string propertyName) => (DateTimeOffset?)result!.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public)!.GetValue(result);
-            IReadOnlyList<string> GetStrings(string propertyName) => (IReadOnlyList<string>)result!.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public)!.GetValue(result)!;
-
-            Assert.Equal("abc123tx", GetString("SearchInputText"));
-            Assert.Equal("abc123tx", GetString("SearchText"));
-            Assert.Equal("abc123tx", GetString("TextSearch"));
-
-            var structuredSearchTerm = GetString("SearchTerm");
+            var structuredSearchTerm = result.SearchTerm;
             Assert.Contains("direction:out", structuredSearchTerm);
             Assert.Contains("label:primary-label", structuredSearchTerm);
             Assert.Contains("nolabel:true", structuredSearchTerm);
             Assert.Contains("startdate:2026-03-01T12:34:56", structuredSearchTerm);
             Assert.DoesNotContain("abc123tx", structuredSearchTerm);
 
-            Assert.Equal(["primary-label", "secondary-label"], GetStrings("LabelFilters"));
-            Assert.True(GetBool("IncludeNoLabel"));
-            Assert.False(GetNullableBool("Positive"));
-            Assert.NotNull(GetDate("StartDate"));
-            Assert.True(GetBool("HasLabelFilter"));
-            Assert.True(GetBool("HasFilters"));
+            Assert.Equal(["primary-label", "secondary-label"], result.LabelFilters);
+            Assert.True(result.IncludeNoLabel);
+            Assert.False(result.Positive);
+            Assert.NotNull(result.StartDate);
+            Assert.True(result.HasLabelFilter);
+            Assert.True(result.HasFilters);
 
-            result = method.Invoke(controller, ["foo:bar", null, null, 120]);
-            Assert.NotNull(result);
+            result = UIWalletsController.BuildWalletTransactionsFilter(null, "abc", null, 120);
 
-            Assert.Equal(string.Empty, GetString("SearchTerm"));
-            Assert.Equal(string.Empty, GetString("SearchText"));
-            Assert.Equal(string.Empty, GetString("SearchInputText"));
-            Assert.Equal(string.Empty, GetString("TextSearch"));
-            Assert.False(GetBool("HasLabelFilter"));
-            Assert.False(GetBool("HasFilters"));
+            Assert.Equal(string.Empty, result.SearchTerm);
+            Assert.Equal("abc", result.SearchText);
+            Assert.Equal("abc", result.SearchInputText);
+            Assert.Equal("abc", result.TextSearch);
+            Assert.False(result.HasLabelFilter);
+            Assert.True(result.HasFilters);
+
+            result = UIWalletsController.BuildWalletTransactionsFilter("foo:bar", null, null, 120);
+
+            Assert.Equal(string.Empty, result.SearchTerm);
+            Assert.Equal(string.Empty, result.SearchText);
+            Assert.Equal(string.Empty, result.SearchInputText);
+            Assert.Equal(string.Empty, result.TextSearch);
+            Assert.False(result.HasLabelFilter);
+            Assert.False(result.HasFilters);
+
+            result = UIWalletsController.BuildWalletTransactionsFilter(string.Empty, null, null, 120);
+
+            Assert.Equal(string.Empty, result.SearchTerm);
+            Assert.Equal(string.Empty, result.SearchText);
+            Assert.Equal(string.Empty, result.SearchInputText);
+            Assert.Equal(string.Empty, result.TextSearch);
+            Assert.False(result.HasLabelFilter);
+            Assert.False(result.HasFilters);
         }
 
         [Fact]

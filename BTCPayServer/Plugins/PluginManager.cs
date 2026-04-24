@@ -37,7 +37,7 @@ namespace BTCPayServer.Plugins
 
         public static bool IsExceptionByPlugin(Exception exception, [MaybeNullWhen(false)] out PreloadedPlugin preloadedPlugin)
         {
-            if (ExtractPluginsFromStackTrace(exception, out preloadedPlugin)) return true;
+            if (ExtractPluginFromStackTrace(exception, out preloadedPlugin)) return true;
 
             var fromAssembly = exception is TypeLoadException
                 ? Regex.Match(exception.Message, "from assembly '(.*?),").Groups[1].Value
@@ -72,9 +72,24 @@ namespace BTCPayServer.Plugins
             return false;
         }
 
-        private static bool ExtractPluginsFromStackTrace(Exception exception, [MaybeNullWhen(false)] out PreloadedPlugin preloadedPlugin)
+        private static bool ExtractPluginFromStackTrace(Exception exception, [MaybeNullWhen(false)] out PreloadedPlugin preloadedPlugin)
         {
-            var pluginsByName = _preloadedPlugins.Where(p => p.Loader is not null).ToDictionary(p => p.Assembly.FullName ?? "", p => p);
+            Dictionary<string, PreloadedPlugin> pluginsByName = new();
+
+            foreach (var preloaded in _preloadedPlugins.Where(p => p.Loader is not null && !string.IsNullOrEmpty(p.Assembly.FullName)))
+            {
+                pluginsByName.TryAdd(preloaded.Assembly.FullName!, preloaded);
+                foreach (var assembly in preloaded.Loader!.LoadContext.Assemblies)
+                {
+                    pluginsByName.TryAdd(assembly.FullName!, preloaded);
+                }
+            }
+            return ExtractPluginFromStackTrace(exception, out preloadedPlugin, pluginsByName);
+        }
+
+        private static bool ExtractPluginFromStackTrace(Exception exception, out PreloadedPlugin? preloadedPlugin,
+            Dictionary<string, PreloadedPlugin> pluginsByName)
+        {
             var trace = new StackTrace(exception, true);
             foreach (var frame in trace.GetFrames().Reverse())
             {
@@ -88,7 +103,20 @@ namespace BTCPayServer.Plugins
                 }
             }
             preloadedPlugin = null;
-            return false;
+            if (exception is AggregateException aggregateException)
+            {
+                foreach (var ex in aggregateException.InnerExceptions)
+                {
+                    if (ExtractPluginFromStackTrace(ex, out preloadedPlugin, pluginsByName))
+                        return true;
+                }
+
+                return false;
+            }
+            else if (exception.InnerException is not null)
+                return ExtractPluginFromStackTrace(exception.InnerException, out preloadedPlugin, pluginsByName);
+            else
+                return false;
         }
 
         public record PreloadedPlugin(IBTCPayServerPlugin Instance, PluginLoader? Loader, Assembly Assembly);
@@ -496,8 +524,12 @@ namespace BTCPayServer.Plugins
             return commands.Select(s =>
             {
                 var split = s.Split(':');
+                if (split.Length != 2)
+                    return (string.Empty, string.Empty);
                 return (split[0].ToLower(CultureInfo.InvariantCulture), split[1]);
-            }).ToArray();
+            })
+            .Where(s => s.Item1 != "")
+            .ToArray();
         }
 
         public static void QueueCommands(string pluginsFolder, params (string action, string plugin)[] commands)

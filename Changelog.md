@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.3.9
+
+### Fixes
+
+* Fix: Server not recovering after a plugin crash (#7335) @NicolasDorier
+* Fix: Xpub became unparseable in 2.3.8 (#7334) @NicolasDorier
+
 ## 2.3.8
 
 ### New Features

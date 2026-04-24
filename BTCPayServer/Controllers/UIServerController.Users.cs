@@ -237,6 +237,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> CreateUser(RegisterFromAdminViewModel model)
         {
             await PrepareCreateUserViewData();
+            ViewData["MonetizationEnabled"] = _monetizationSettings.Settings.IsSetup();
             if (!_Options.CheatMode)
                 model.IsAdmin = false;
             if (ModelState.IsValid)

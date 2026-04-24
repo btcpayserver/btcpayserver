@@ -575,7 +575,7 @@ retry:
             var cryptoCode = "BTC";
             var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
             var client = await CreateClient();
-            var methods = await client.GetInvoicePaymentMethods(StoreId, invoiceId);
+            var methods = await client.GetInvoicePaymentMethods(invoiceId);
             var method = methods.First(m => m.PaymentMethodId == pmi.ToString());
             var address = method.Destination;
             var tx = await client.CreateOnChainTransaction(StoreId, cryptoCode, new CreateOnChainTransactionRequest()
@@ -598,7 +598,7 @@ retry:
         {
             var cryptoCode = "BTC";
             var client = await CreateClient();
-            var methods = await client.GetInvoicePaymentMethods(StoreId, invoiceId);
+            var methods = await client.GetInvoicePaymentMethods(invoiceId);
             var method = methods.First(m => m.PaymentMethodId == $"{cryptoCode}-LN");
             var bolt11 = method.Destination;
             await parent.CustomerLightningD.Pay(bolt11);
@@ -610,7 +610,7 @@ retry:
             var cryptoCode = "BTC";
             var network = SupportedNetwork.NBitcoinNetwork;
             var client = await CreateClient();
-            var methods = await client.GetInvoicePaymentMethods(StoreId, invoiceId);
+            var methods = await client.GetInvoicePaymentMethods(invoiceId);
             var method = methods.First(m => m.PaymentMethodId == $"{cryptoCode}-LNURL");
             var lnurL = LNURL.LNURL.Parse(method.PaymentLink, out var tag);
             var http = new HttpClient();
@@ -626,7 +626,7 @@ retry:
             return TestUtils.EventuallyAsync(async () =>
             {
                 var client = await CreateClient();
-                var invoice = await client.GetInvoice(StoreId, invoiceId);
+                var invoice = await client.GetInvoice(invoiceId);
                 if (invoice.Status == InvoiceStatus.Settled)
                     return;
                 Assert.Equal(InvoiceStatus.Processing, invoice.Status);

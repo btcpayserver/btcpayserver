@@ -832,7 +832,7 @@ namespace BTCPayServer.Tests
         {
             var txId = Regex.Replace(Page.Url, ".*/(.*)$", "$1");
             var client = await this.AsTestAccount().CreateClient();
-            await client.MarkInvoiceStatus(StoreId, txId, new() { Status = InvoiceStatus.Settled });
+            await client.MarkInvoiceStatus(txId, new() { Status = InvoiceStatus.Settled });
         }
 
         public WalletTransactionsPMO InWalletTransactions() => new WalletTransactionsPMO(this);

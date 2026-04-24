@@ -857,7 +857,7 @@ namespace BTCPayServer.Tests
             });
             Assert.Equal(0m, invoice.Amount);
             Assert.Equal(InvoiceType.TopUp, invoice.Type);
-            var btcmethod = (await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id))[0];
+            var btcmethod = (await client.GetInvoicePaymentMethods(invoice.Id))[0];
             var paid = btcSent;
             var invoiceAddress = BitcoinAddress.Create(btcmethod.Destination, cashCow.Network);
             var btc = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
@@ -1061,7 +1061,7 @@ namespace BTCPayServer.Tests
             await tester.GenerateWallet();
             var invoiceId = await tester.CreateInvoice(currency: "JPY", amount: 700000m);
             var client = await tester.AsTestAccount().CreateClient();
-            var paymentMethods = await client.GetInvoicePaymentMethods(tester.StoreId, invoiceId);
+            var paymentMethods = await client.GetInvoicePaymentMethods(invoiceId);
             Assert.Equal(1.0m, paymentMethods[0].Amount);
 
             // The fallback doesn't support JPY anymore
@@ -1208,7 +1208,7 @@ namespace BTCPayServer.Tests
             var controller = user.GetController<UIInvoiceController>();
             await controller.CreateInvoice();
             (await controller.CreateInvoice(new CreateInvoiceModel(), default)).AssertType<RedirectToActionResult>();
-            invoice = await client.GetInvoice(user.StoreId, controller.CreatedInvoiceId);
+            invoice = await client.GetInvoice(controller.CreatedInvoiceId);
             Assert.Equal("EUR", invoice.Currency);
             Assert.Equal(InvoiceType.TopUp, invoice.Type);
 
@@ -1605,11 +1605,11 @@ namespace BTCPayServer.Tests
             Assert.Equal(InvoiceStatus.New, zeroInvoice.Status);
             await TestUtils.EventuallyAsync(async () =>
             {
-                zeroInvoice = await greenfield.GetInvoice(user.StoreId, zeroInvoice.Id);
+                zeroInvoice = await greenfield.GetInvoice(zeroInvoice.Id);
                 Assert.Equal(InvoiceStatus.Settled, zeroInvoice.Status);
             });
 
-            var zeroInvoicePM = await greenfield.GetInvoicePaymentMethods(user.StoreId, zeroInvoice.Id);
+            var zeroInvoicePM = await greenfield.GetInvoicePaymentMethods(zeroInvoice.Id);
             Assert.Empty(zeroInvoicePM);
 
             var invoice6 = await btcpayClient.CreateInvoice(user.StoreId,
@@ -2884,8 +2884,8 @@ namespace BTCPayServer.Tests
             {
                 var inv = await client.CreateInvoice(acc.StoreId, new CreateInvoiceRequest() { Amount = 10m, Currency = "USD" });
                 await acc.PayInvoice(inv.Id);
-                await client.MarkInvoiceStatus(acc.StoreId, inv.Id, new MarkInvoiceStatusRequest() { Status = InvoiceStatus.Settled });
-                var refund = await client.RefundInvoice(acc.StoreId, inv.Id, new RefundInvoiceRequest() { RefundVariant = RefundVariant.Fiat, PayoutMethodId = "BTC-CHAIN" });
+                await client.MarkInvoiceStatus(inv.Id, new MarkInvoiceStatusRequest() { Status = InvoiceStatus.Settled });
+                var refund = await client.RefundInvoice(inv.Id, new RefundInvoiceRequest() { RefundVariant = RefundVariant.Fiat, PayoutMethodId = "BTC-CHAIN" });
 
                 async Task AssertData(string currency, decimal awaiting, decimal limit, decimal completed, bool fullyPaid)
                 {

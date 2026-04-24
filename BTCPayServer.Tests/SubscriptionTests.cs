@@ -498,7 +498,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         await AssertEx.AssertApiError(400, "invoice-creation-error", () => client.ProceedPlanCheckout(planCheckout.Id));
         await user.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true);
         planCheckout = await client.ProceedPlanCheckout(planCheckout.Id);
-        var invoice = await client.GetInvoice(user.StoreId, planCheckout.InvoiceId);
+        var invoice = await client.GetInvoice(planCheckout.InvoiceId);
         Assert.NotNull(invoice);
         Assert.Equal("test@gmail.com", invoice.Metadata["buyerEmail"]?.ToString());
         Assert.Equal("invtest", invoice.Metadata["inv"]?.ToString());
@@ -509,7 +509,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         var oldInvoiceId = invoice.Id;
         planCheckout = await client.ProceedPlanCheckout(planCheckout.Id);
         Assert.Equal(oldInvoiceId, planCheckout.InvoiceId);
-        invoice = await client.GetInvoice(user.StoreId, planCheckout.InvoiceId);
+        invoice = await client.GetInvoice(planCheckout.InvoiceId);
         Assert.Null(planCheckout.Subscriber);
 
         await s.ExplorerNode.GenerateAsync(1);
@@ -786,7 +786,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         Assert.Equal("basic2@example.com", invoice.Metadata["buyerEmail"]?.ToString());
 
         var waiting = offering.WaitEvent<SubscriptionEvent.SubscriberDisabled>();
-        await api.MarkInvoiceStatus(storeId, invoiceId, new()
+        await api.MarkInvoiceStatus(invoiceId, new()
         {
             Status = InvoiceStatus.Invalid
         });

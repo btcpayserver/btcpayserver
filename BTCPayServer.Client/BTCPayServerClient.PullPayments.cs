@@ -30,9 +30,9 @@ public partial class BTCPayServerClient
         return await SendHttpRequest<PullPaymentData[]>($"api/v1/stores/{HttpUtility.UrlEncode(storeId)}/pull-payments", query, HttpMethod.Get, cancellationToken);
     }
 
-    public virtual async Task ArchivePullPayment(string storeId, string pullPaymentId, CancellationToken cancellationToken = default)
+    public virtual async Task ArchivePullPayment(string pullPaymentId, CancellationToken cancellationToken = default)
     {
-        await SendHttpRequest($"api/v1/stores/{HttpUtility.UrlEncode(storeId)}/pull-payments/{HttpUtility.UrlEncode(pullPaymentId)}", null, HttpMethod.Delete, cancellationToken);
+        await SendHttpRequest($"api/v1/pull-payments/{HttpUtility.UrlEncode(pullPaymentId)}", null, HttpMethod.Delete, cancellationToken);
     }
 
     public virtual async Task<PayoutData[]> GetPayouts(string pullPaymentId, bool includeCancelled = false, CancellationToken cancellationToken = default)

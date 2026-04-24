@@ -223,9 +223,12 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> CreateUser()
         {
             await PrepareCreateUserViewData();
+            var monetizationEnabled = _monetizationSettings.Settings.IsSetup();
+            ViewData["MonetizationEnabled"] = monetizationEnabled;
             var vm = new RegisterFromAdminViewModel
             {
-                SendInvitationEmail = ViewData["CanSendEmail"] is true
+                SendInvitationEmail = ViewData["CanSendEmail"] is true,
+                SkipMonetization = !monetizationEnabled
             };
             return View(vm);
         }
@@ -262,6 +265,7 @@ namespace BTCPayServer.Controllers
                     var sendEmail = model.SendInvitationEmail && ViewData["CanSendEmail"] is true;
 
                     var evt = (UserEvent.Invited)await UserEvent.Registered.Create(user, currentUser, _callbackGenerator, sendEmail);
+                    evt.SkipMonetization = model.SkipMonetization;
                     _eventAggregator.Publish(evt);
 
                     var info = sendEmail
@@ -467,5 +471,8 @@ namespace BTCPayServer.Controllers
 
         [Display(Name = "Send invitation email")]
         public bool SendInvitationEmail { get; set; } = true;
+
+        [Display(Name = "Skip subscription monetization for this user")]
+        public bool SkipMonetization { get; set; }
     }
 }

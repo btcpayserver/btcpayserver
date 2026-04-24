@@ -265,9 +265,11 @@ public class UIServerMonetizationController(
         }
         else if (command == "change-offering")
         {
-            var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>() ?? new MonetizationSettings();
-            settings.OfferingId = vm.SelectExistingOfferingModal?.SelectedOfferingId;
-            settings.DefaultPlanId = vm.SelectExistingOfferingModal?.SelectedPlanId;
+            var settings = new MonetizationSettings()
+            {
+                OfferingId = vm.SelectExistingOfferingModal?.SelectedOfferingId,
+                DefaultPlanId = vm.SelectExistingOfferingModal?.SelectedPlanId
+            };
             if (await ctx.GetOfferingAndPlan(settings) is { } v)
             {
                 await settingsRepository.UpdateSetting(settings);
@@ -341,31 +343,6 @@ public class UIServerMonetizationController(
                 store.SetStoreBlob(storeBlob);
                 await storeRepo.UpdateStoreBlob(store);
             }
-        }
-        else if (command == "toggle-invited-subscription")
-        {
-            var settings = await settingsRepository.GetSettingAsync<MonetizationSettings>() ?? new();
-            if (!settings.IsSetup())
-            {
-                TempData.SetStatusMessageModel(new()
-                {
-                    Message = StringLocalizer["Monetization is not set up."],
-                    Severity = StatusMessageModel.StatusSeverity.Error
-                });
-                return RedirectToAction(nameof(Monetization));
-            }
-            if (requireSubscriptionForInvitedUsers is null)
-                return RedirectToAction(nameof(Monetization));
-
-            settings.RequireSubscriptionForInvitedUsers = requireSubscriptionForInvitedUsers.Value;
-            await settingsRepository.UpdateSetting(settings);
-            TempData.SetStatusMessageModel(new()
-            {
-                Message = settings.RequireSubscriptionForInvitedUsers
-                    ? StringLocalizer["Server-invited users now require a subscription."]
-                    : StringLocalizer["Server-invited users are now exempt from subscription requirements."],
-                Severity = StatusMessageModel.StatusSeverity.Success
-            });
         }
 
         return RedirectToAction(nameof(Monetization));

@@ -18,10 +18,11 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Plugins.Emails.Services;
+using BTCPayServer.Plugins.Monetization;
+using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Plugins.Emails.Services;
-using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Services;
 using BTCPayServer.Storage.Services.Providers;
@@ -46,6 +47,7 @@ namespace BTCPayServer.Controllers
                AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public partial class UIServerController : Controller
     {
+        private readonly ISettingsAccessor<MonetizationSettings> _monetizationSettings;
         private readonly UserManager<ApplicationUser> _UserManager;
         private readonly UserService _userService;
         readonly SettingsRepository _SettingsRepository;
@@ -99,7 +101,8 @@ namespace BTCPayServer.Controllers
             IStringLocalizer stringLocalizer,
             ViewLocalizer viewLocalizer,
             BTCPayServerEnvironment environment,
-            LanguagePackUpdateService languagePackUpdateService
+            LanguagePackUpdateService languagePackUpdateService,
+            ISettingsAccessor<MonetizationSettings> monetizationSettings
         )
         {
             _policiesSettings = policiesSettings;
@@ -125,6 +128,7 @@ namespace BTCPayServer.Controllers
             ApplicationLifetime = applicationLifetime;
             Html = html;
             _transactionLinkProviders = transactionLinkProviders;
+            _monetizationSettings = monetizationSettings;
             _localizer = localizer;
             Environment = environment;
             StringLocalizer = stringLocalizer;

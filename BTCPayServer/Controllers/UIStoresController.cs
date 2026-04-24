@@ -7,10 +7,11 @@ using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Plugins.Emails.Services;
+using BTCPayServer.Plugins.Monetization;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -60,6 +61,7 @@ public partial class UIStoresController : Controller
         EventAggregator eventAggregator,
         LightningHistogramService lnHistogramService,
         LightningClientFactoryService lightningClientFactory,
+        ISettingsAccessor<MonetizationSettings> monetizationSettings,
         StoreLabelRepository storeLabelRepository)
     {
         _rateFactory = rateFactory;
@@ -91,9 +93,11 @@ public partial class UIStoresController : Controller
         _lnHistogramService = lnHistogramService;
         _lightningClientFactory = lightningClientFactory;
         StringLocalizer = stringLocalizer;
+        _monetizationSettings = monetizationSettings;
         _storeLabelRepository = storeLabelRepository;
     }
 
+    private readonly ISettingsAccessor<MonetizationSettings> _monetizationSettings;
     private readonly BTCPayServerOptions _btcpayServerOptions;
     private readonly BTCPayServerEnvironment _btcPayEnv;
     private readonly BTCPayNetworkProvider _networkProvider;

@@ -92,23 +92,6 @@
                                asp-route-offeringId="@Model.Offering.Id"
                                asp-route-section="Plans">here</a> to go to the offering page.</p>
 
-						<form method="post" id="toggle-invited-subscription-form" class="mb-3">
-							<input type="hidden" name="command" value="toggle-invited-subscription" />
-							<div class="d-flex align-items-center">
-								<input type="checkbox"
-									   name="requireSubscriptionForInvitedUsers"
-									   value="true"
-									   checked="@Model.Settings.RequireSubscriptionForInvitedUsers"
-									   id="RequireSubscriptionForInvitedUsers"
-									   class="btcpay-toggle me-3"
-									   onchange="document.getElementById('toggle-invited-subscription-form').submit()" />
-								<label class="form-check-label cursor-pointer" for="RequireSubscriptionForInvitedUsers" text-translate="true">
-									Require subscription for server-invited users
-								</label>
-							</div>
-							<input type="hidden" name="requireSubscriptionForInvitedUsers" value="false" />
-						</form>
-
                         <div class="d-flex gap-3">
                             <a id="demonetize-button"
                                class="btn btn-outline-danger" role="button"

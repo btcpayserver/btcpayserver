@@ -74,7 +74,9 @@ public partial class UIStoresController
                     (await _userManager.CreateAsync(user)) is { Succeeded: true })
                 {
                     var invitationEmail = await _emailSenderFactory.IsComplete();
+                    var monetizationEnabled = _monetizationSettings.Settings.IsSetup();
                     var evt = (UserEvent.Invited)await UserEvent.Registered.Create(user!, currentUser, _callbackGenerator, invitationEmail);
+                    evt.SkipMonetization = !monetizationEnabled;
                     _eventAggregator.Publish(evt);
                     inviteInfo = invitationEmail
                         ? StringLocalizer["An invitation email has been sent.<br/>You may alternatively share this link with them: <a class='alert-link' href='{0}'>{0}</a>", evt.InvitationLink]

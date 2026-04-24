@@ -103,7 +103,7 @@ public class MonetizationHostedService(
                 DefaultPlanId: { } defaultPlanId
             })
         {
-            if (reg is UserEvent.Invited && !monetizationSettingsAccessor.Settings.RequireSubscriptionForInvitedUsers)
+            if (reg is UserEvent.Invited { SkipMonetization: true })
                 return;
 
             if (await userService.IsAdminUser(reg.User))

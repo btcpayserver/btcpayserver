@@ -178,7 +178,7 @@ fruit tea:
             await invoiceRepo.UpdateInvoiceExpiry(expiredLatePaidInvoiceId, TimeSpan.Zero);
             TestLogs.LogInformation($"Expired late paid invoice ID: {expiredLatePaidInvoiceId}");
 
-            var address = (await client.GetInvoicePaymentMethods(s.StoreId, expiredLatePaidInvoiceId))[0].Destination;
+            var address = (await client.GetInvoicePaymentMethods(expiredLatePaidInvoiceId))[0].Destination;
             await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(address, Network.RegTest), Money.Coins(1.0m));
 
             // One 0 amount invoice
@@ -192,11 +192,11 @@ fruit tea:
             await s.PayInvoice(amount: 0.4m, mine: false);
             await s.PayInvoice(mine: true);
 
-            var expiredLatePaidInvoice = await client.GetInvoice(s.StoreId, expiredLatePaidInvoiceId);
+            var expiredLatePaidInvoice = await client.GetInvoice(expiredLatePaidInvoiceId);
             Assert.Equal(InvoiceStatus.Expired, expiredLatePaidInvoice.Status);
             Assert.Equal(InvoiceExceptionStatus.PaidLate, expiredLatePaidInvoice.AdditionalStatus);
 
-            var expiredInvoice = await client.GetInvoice(s.StoreId, expiredInvoiceId);
+            var expiredInvoice = await client.GetInvoice(expiredInvoiceId);
             Assert.Equal(InvoiceStatus.Expired, expiredInvoice.Status);
             Assert.Equal(InvoiceExceptionStatus.None, expiredInvoice.AdditionalStatus);
 
@@ -207,7 +207,7 @@ fruit tea:
             periodicTask.Now = DateTimeOffset.UtcNow.AddMonths(8);
             deleted = await periodicTask.RunScript("Invoice Cleanup");
             Assert.NotEqual(0, deleted);
-            await AssertEx.AssertApiError(404, "invoice-not-found", () => client.GetInvoice(s.StoreId, expiredInvoiceId));
+            await AssertEx.AssertApiError(404, "invoice-not-found", () => client.GetInvoice(expiredInvoiceId));
 
             await s.GoToStore(s.StoreId);
             await s.CreateApp("PointOfSale");
@@ -347,7 +347,7 @@ goodies:
             Assert.Equal("InvoiceReceipt", redirectToCheckout.ActionName);
             var invoiceId = redirectToCheckout.RouteValues!["invoiceId"]!.ToString();
             var client = await user.CreateClient();
-            var inv = await client.GetInvoice(user.StoreId, invoiceId);
+            var inv = await client.GetInvoice(invoiceId);
             Assert.Equal(0, inv.Amount);
             Assert.NotEqual(InvoiceType.TopUp, inv.Type);
 

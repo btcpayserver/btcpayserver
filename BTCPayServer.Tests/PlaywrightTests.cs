@@ -402,7 +402,7 @@ namespace BTCPayServer.Tests
             });
 
             var greenfield = await s.AsTestAccount().CreateClient();
-            var paymentMethods = await greenfield.GetInvoicePaymentMethods(s.StoreId, i);
+            var paymentMethods = await greenfield.GetInvoicePaymentMethods(i);
             var lnurlMethod = Assert.Single(paymentMethods, p => p.PaymentMethodId == "BTC-LNURL");
             Assert.Equal("lol2", lnurlMethod.AdditionalData["providedComment"]!.Value<string>());
             // Standard invoice test
@@ -456,7 +456,7 @@ namespace BTCPayServer.Tests
             i = await s.CreateInvoice(storeId, null, cryptoCode);
             await s.GoToInvoiceCheckout(i);
             await AssertBolt11();
-            paymentMethods = await greenfield.GetInvoicePaymentMethods(storeId, i);
+            paymentMethods = await greenfield.GetInvoicePaymentMethods(i);
             lnurlMethod = Assert.Single(paymentMethods, p => p.PaymentMethodId == "BTC-LNURL");
             var lnurl = lnurlMethod.PaymentLink.Replace("lightning:", "", StringComparison.OrdinalIgnoreCase);
             Assert.StartsWith("lnurlp", lnurl);
@@ -472,7 +472,7 @@ namespace BTCPayServer.Tests
             var invForPP = await s.CreateInvoice(null, cryptoCode);
             await s.GoToInvoiceCheckout(invForPP);
             await AssertBolt11();
-            paymentMethods = await greenfield.GetInvoicePaymentMethods(newStoreId, invForPP);
+            paymentMethods = await greenfield.GetInvoicePaymentMethods(invForPP);
             lnurlMethod = Assert.Single(paymentMethods, p => p.PaymentMethodId == "BTC-LNURL");
             lnurl = lnurlMethod.PaymentLink.Replace("lightning:", "", StringComparison.OrdinalIgnoreCase);
             Assert.NotNull(lnurl);

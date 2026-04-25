@@ -14,6 +14,7 @@ using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payouts;
+using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Notifications;
@@ -315,7 +316,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
             }
         }
         if (bip21.Any())
-            return new RedirectToActionResult("WalletSend", "UIWallets", new { area = "Wallets", walletId = new WalletId(storeId, Network.CryptoCode).ToString(), bip21 });
+            return new RedirectToActionResult("WalletSend", "UIWallets", new { area = WalletsPlugin.Area, walletId = new WalletId(storeId, Network.CryptoCode).ToString(), bip21 });
         return new RedirectToActionResult("Payouts", "UIStorePullPayments", new
         {
             area = "",

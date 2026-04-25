@@ -15,16 +15,11 @@ namespace BTCPayServer.Migrations
         {
             migrationBuilder.Sql("""
                 INSERT INTO "StoreRoles" ("Id", "Role", "Permissions")
-                SELECT 'Wallet Manager', 'Wallet Manager', ARRAY['btcpay.store.canmanagewallets']::TEXT[]
-                WHERE NOT EXISTS (SELECT 1 FROM "StoreRoles" WHERE "Id" = 'Wallet Manager');
-
-                INSERT INTO "StoreRoles" ("Id", "Role", "Permissions")
-                SELECT 'Multisigner', 'Multisigner', ARRAY['btcpay.store.canmanagewallettransactions']::TEXT[]
-                WHERE NOT EXISTS (SELECT 1 FROM "StoreRoles" WHERE "Id" = 'Multisigner');
-
-                INSERT INTO "StoreRoles" ("Id", "Role", "Permissions")
-                SELECT 'Multisigner Guest', 'Multisigner Guest', ARRAY['btcpay.store.cansigntransactions']::TEXT[]
-                WHERE NOT EXISTS (SELECT 1 FROM "StoreRoles" WHERE "Id" = 'Multisigner Guest');
+                VALUES
+                    ('Wallet Manager', 'Wallet Manager', ARRAY['btcpay.store.canmanagewallets']::TEXT[]),
+                    ('Multisigner', 'Multisigner', ARRAY['btcpay.store.canmanagewallettransactions']::TEXT[]),
+                    ('Multisigner Guest', 'Multisigner Guest', ARRAY['btcpay.store.cansigntransactions']::TEXT[])
+                ON CONFLICT ("Id") DO NOTHING;
                 """);
         }
 

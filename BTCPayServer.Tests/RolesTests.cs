@@ -475,7 +475,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
                 new { otherStoreId });
 
             var response = await responseTask;
-            Assert.Equal(400, response.Status);
+            Assert.Equal(302, response.Status);
 
             var otherWalletSettings = await GetStoreWalletSettings(otherStoreId);
             Assert.NotEqual("retargeted", otherWalletSettings.Label);

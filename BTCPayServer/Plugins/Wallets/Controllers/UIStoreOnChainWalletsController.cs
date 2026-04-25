@@ -106,7 +106,7 @@ public class UIStoreOnChainWalletsController : Controller
         vm.CanGenerateNewWallet = await CanAccessWalletSeedMaterial(vm.StoreId) &&
                                   (vm.CanUseHotWallet || vm.CanCreateNewColdWallet);
 
-        return View("SetupWallet", vm);
+        return View(nameof(SetupWallet), vm);
     }
     [HttpGet("{storeId}/onchain/{cryptoCode}/import")]
     [HttpGet("{storeId}/onchain/{cryptoCode}/import/{method:regex(^(hardware|file|xpub|scan|seed)$)}")]
@@ -153,11 +153,6 @@ public class UIStoreOnChainWalletsController : Controller
         [FromRoute] string storeId = null,
         [FromRoute] string cryptoCode = null)
     {
-        if (RouteValueMismatch(vm.StoreId, storeId, StringComparison.Ordinal) ||
-            RouteValueMismatch(vm.CryptoCode, cryptoCode, StringComparison.OrdinalIgnoreCase))
-        {
-            return BadRequest();
-        }
         vm.StoreId = storeId ?? vm.StoreId;
         vm.CryptoCode = cryptoCode ?? vm.CryptoCode;
 
@@ -549,11 +544,6 @@ public class UIStoreOnChainWalletsController : Controller
         [FromRoute] string storeId = null,
         [FromRoute] string cryptoCode = null)
     {
-        if (RouteValueMismatch(vm.StoreId, storeId, StringComparison.Ordinal) ||
-            RouteValueMismatch(vm.CryptoCode, cryptoCode, StringComparison.OrdinalIgnoreCase))
-        {
-            return BadRequest();
-        }
         vm.StoreId = storeId ?? vm.StoreId;
         vm.CryptoCode = cryptoCode ?? vm.CryptoCode;
 
@@ -811,13 +801,6 @@ public class UIStoreOnChainWalletsController : Controller
         vm.Confirmation = true;
         ModelState.Remove(nameof(vm.Config)); // Remove the cached value
         return View("ImportWallet/ConfirmAddresses", vm);
-    }
-
-    private static bool RouteValueMismatch(string modelValue, string routeValue, StringComparison comparison)
-    {
-        return !string.IsNullOrEmpty(modelValue) &&
-               !string.IsNullOrEmpty(routeValue) &&
-               !string.Equals(modelValue, routeValue, comparison);
     }
 
     private async Task EnsureStoreContext(string storeId)

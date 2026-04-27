@@ -1,8 +1,5 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0.202-noble AS builder
 
-RUN apt-get update && apt-get install -y --no-install-recommends chromium-driver \
-    && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /source
 COPY nuget.config nuget.config
 COPY Build/Common.csproj Build/Common.csproj

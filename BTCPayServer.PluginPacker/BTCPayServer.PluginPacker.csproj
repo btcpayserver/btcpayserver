@@ -16,6 +16,7 @@
       <RepositoryUrl>https://github.com/btcpayserver/btcpayserver</RepositoryUrl>
       <RepositoryType>git</RepositoryType>
       <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
+      <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

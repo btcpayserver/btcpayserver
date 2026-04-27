@@ -391,6 +391,7 @@ volumes:
     tor_datadir:
     torrcdir:
     tor_servicesdir:
+    nuget_datadir:
 
 networks:
   default:

@@ -14,6 +14,7 @@
         <RepositoryType>git</RepositoryType>
         <Configurations>Debug;Release</Configurations>
         <Platforms>AnyCPU</Platforms>
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     </PropertyGroup>
   <PropertyGroup>
     <Version Condition=" '$(Version)' == '' ">2.0.1</Version>

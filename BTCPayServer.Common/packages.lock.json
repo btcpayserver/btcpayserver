@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "NBXplorer.Client": {
+        "type": "Direct",
+        "requested": "[5.0.6, )",
+        "resolved": "5.0.6",
+        "contentHash": "5KxsEp3gg7NOVyniehXuiBdqOkn1blZxUJLJWUBNeoVDIFEQnmXmCeU0TBhX2tDZ6TV+S1RLfQBEizOy9a2B9A==",
+        "dependencies": {
+          "NBitcoin": "10.0.1",
+          "NBitcoin.Altcoins": "6.0.3"
+        }
+      },
+      "NicolasDorier.StandardConfiguration": {
+        "type": "Direct",
+        "requested": "[2.0.1, )",
+        "resolved": "2.0.1",
+        "contentHash": "G9RRKKhtzNiw6T/xlEPv/u7iNHNSIL5a+qCKejSPPSfEf1V2ljRu9UWs/+L12YFdIfiQb/go2EFVGBo6qW3OLg==",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.EnvironmentVariables": "6.0.0",
+          "Microsoft.Extensions.Configuration.Ini": "6.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "6.0.0",
+          "NicolasDorier.CommandLine.Configuration": "2.0.0"
+        }
+      },
+      "Microsoft.Extensions.Configuration": {
+        "type": "Transitive",
+        "resolved": "6.0.0",
+        "contentHash": "tq2wXyh3fL17EMF2bXgRhU7JrbO3on93MRKYxzz4JzzvuGSA1l0W3GI9/tl8EO89TH+KWEymP7bcFway6z9fXg==",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "6.0.0",
+          "Microsoft.Extensions.Primitives": "6.0.0"
+        }
+      },
+      "Microsoft.Extensions.Configuration.Abstractions": {
+        "type": "Transitive",
+        "resolved": "6.0.0",
+        "contentHash": "qWzV9o+ZRWq+pGm+1dF+R7qTgTYoXvbyowRoBxQJGfqTpqDun2eteerjRQhq5PQ/14S+lqto3Ft4gYaRyl4rdQ==",
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "6.0.0"
+        }
+      },
+      "Microsoft.Extensions.Configuration.EnvironmentVariables": {
+        "type": "Transitive",
+        "resolved": "6.0.0",
+        "contentHash": "DjYkzqvhiHCq38LW71PcIxXk6nhtV6VySP9yDcSO0goPl7YCU1VG1f2Wbgy58lkA10pWkjHCblZPUyboCB93ZA==",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "6.0.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "6.0.0"
+        }
+      },
+      "Microsoft.Extensions.Configuration.FileExtensions": {
+        "type": "Transitive",
+        "resolved": "6.0.0",
+        "contentHash": "V4Dth2cYMZpw3HhGw9XUDIijpI6gN+22LDt0AhufIgOppCUfpWX4483OmN+dFXRJkJLc8Tv0Q8QK+1ingT2+KQ==",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "6.0.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "6.0.0",
+          "Microsoft.Extensions.FileProviders.Abstractions": "6.0.0",
+          "Microsoft.Extensions.FileProviders.Physical": "6.0.0",
+          "Microsoft.Extensions.Primitives": "6.0.0"
+        }
+      },
+      "Microsoft.Extensions.Configuration.Ini": {
+        "type": "Transitive",
+        "resolved": "6.0.0",
+        "contentHash": "4p1kPxibT+RNlj91k9SfvtNIUALqru9xmh+XT7Pfw80WAufCmgj3F81hpXZ4YOcFFphBSw1a+n8NZQooWxCHWQ==",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "6.0.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "6.0.0",
+          "Microsoft.Extensions.Configuration.FileExtensions": "6.0.0",
+          "Microsoft.Extensions.FileProviders.Abstractions": "6.0.0"
+        }
+      },
+      "Microsoft.Extensions.FileProviders.Abstractions": {
+        "type": "Transitive",
+        "resolved": "6.0.0",
+        "contentHash": "0pd4/fho0gC12rQswaGQxbU34jOS1TPS8lZPpkFCH68ppQjHNHYle9iRuHeev1LhrJ94YPvzcRd8UmIuFk23Qw==",
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "6.0.0"
+        }
+      },
+      "Microsoft.Extensions.FileProviders.Physical": {
+        "type": "Transitive",
+        "resolved": "6.0.0",
+        "contentHash": "QvkL7l0nM8udt3gfyu0Vw8bbCXblxaKOl7c2oBfgGy4LCURRaL9XWZX1FWJrQc43oMokVneVxH38iz+bY1sbhg==",
+        "dependencies": {
+          "Microsoft.Extensions.FileProviders.Abstractions": "6.0.0",
+          "Microsoft.Extensions.FileSystemGlobbing": "6.0.0",
+          "Microsoft.Extensions.Primitives": "6.0.0"
+        }
+      },
+      "Microsoft.Extensions.FileSystemGlobbing": {
+        "type": "Transitive",
+        "resolved": "6.0.0",
+        "contentHash": "ip8jnL1aPiaPeKINCqaTEbvBFDmVx9dXQEBZ2HOBRXPD1eabGNqP/bKlsIcp7U2lGxiXd5xIhoFcmY8nM4Hdiw=="
+      },
+      "Microsoft.Extensions.Logging.Abstractions": {
+        "type": "Transitive",
+        "resolved": "6.0.0",
+        "contentHash": "/HggWBbTwy8TgebGSX5DBZ24ndhzi93sHUBDvP1IxbZD7FDokYzdAr6+vbWGjw2XAfR2EJ1sfKUotpjHnFWPxA=="
+      },
+      "Microsoft.Extensions.Primitives": {
+        "type": "Transitive",
+        "resolved": "6.0.0",
+        "contentHash": "9+PnzmQFfEFNR9J2aDTfJGGupShHjOuGw4VUv+JB044biSHrnmCIMD+mJHmb2H7YryrfBEXDurxQ47gJZdCKNQ=="
+      },
+      "NBitcoin": {
+        "type": "Transitive",
+        "resolved": "10.0.1",
+        "contentHash": "gvIzTNMQnPNoJ6b8yWbHBy5aYsQzG3T9azrL+Bm+w9u4gYYRZ51LJPyQVzuTh1mg/H4ZquivmBWb5bkLaVJFNA==",
+        "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "1.0.0",
+          "Newtonsoft.Json": "13.0.1"
+        }
+      },
+      "NBitcoin.Altcoins": {
+        "type": "Transitive",
+        "resolved": "6.0.3",
+        "contentHash": "Bo02A5To3dhscgyjVJiqE8lwlPyKvXsXvyZdXAwqQOgWTu4TMghW7WLSwg6CS2pxvZi4F3Zk1/Ey2/ujDBNrIQ==",
+        "dependencies": {
+          "NBitcoin": "10.0.1"
+        }
+      },
+      "Newtonsoft.Json": {
+        "type": "Transitive",
+        "resolved": "13.0.1",
+        "contentHash": "ppPFpBcvxdsfUonNcvITKqLl3bqxWbDCZIzDWHzjpdAHRFfZe0Dw9HmA0+za13IdyrgJwpkDTDA9fHaxOrt20A=="
+      },
+      "NicolasDorier.CommandLine": {
+        "type": "Transitive",
+        "resolved": "2.0.0",
+        "contentHash": "6gomT52lcmr851skTYf+pZHPCGDlPI3MiAQUZHPeqtkeyzY3DKv8kOsbRc0BWR13gO/1QPPRd0Qq7hT9V0hzKw=="
+      },
+      "NicolasDorier.CommandLine.Configuration": {
+        "type": "Transitive",
+        "resolved": "2.0.0",
+        "contentHash": "EravxSGO5WCDOsRXD4K0RCGEblV5mfgCHDF/W7jOzsV0w5Q0vBQN/UPcnKrhTl4Ri40+vu73BpztE4SAvDhWhg==",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "6.0.0",
+          "NicolasDorier.CommandLine": "2.0.0"
+        }
+      }
+    }
+  }
+}

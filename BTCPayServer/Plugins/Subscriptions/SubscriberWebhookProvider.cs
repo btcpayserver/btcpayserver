@@ -1,15 +1,18 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using BTCPayServer.Plugins.Webhooks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json.Linq;
 
 
 namespace BTCPayServer.Plugins.Subscriptions;
 
-public class SubscriberWebhookProvider : WebhookTriggerProvider<SubscriptionEvent.SubscriberEvent>
+public class SubscriberWebhookProvider(LinkGenerator linkGenerator) : WebhookTriggerProvider<SubscriptionEvent.SubscriberEvent>
 {
     protected override async Task<JObject> GetEmailModel(WebhookTriggerContext<SubscriptionEvent.SubscriberEvent> webhookTriggerContext)
     {
@@ -40,6 +43,18 @@ public class SubscriberWebhookProvider : WebhookTriggerProvider<SubscriptionEven
             ["Name"] = evt.Subscriber.Customer.Name,
             ["Metadata"] = JObject.Parse(evt.Subscriber.Customer.Metadata)
         };
+        if (evt is SubscriptionEvent.CreditRefunded refunded)
+        {
+            var pullPaymentUrl = linkGenerator.GetUriByAction(nameof(UIPullPaymentController.ViewPullPayment), "UIPullPayment",
+                new { pullPaymentId = refunded.PullPaymentId }, refunded.RequestBaseUrl.Scheme, new HostString(refunded.RequestBaseUrl.Host.Host));
+
+            model["Refund"] = new JObject()
+            {
+                ["Amount"] = refunded.Amount,
+                ["Currency"] = refunded.Currency,
+                ["ClaimUrl"] = pullPaymentUrl
+            };
+        }
         return model;
     }
 
@@ -114,6 +129,17 @@ public class SubscriberWebhookProvider : WebhookTriggerProvider<SubscriptionEven
                 return new WebhookSubscriptionEvent.NeedUpgradeEvent(storeId)
                 {
                     Subscriber = model
+                };
+            case SubscriptionEvent.CreditRefunded refunded:
+                var pullPaymentUrl = linkGenerator.GetUriByAction(nameof(UIPullPaymentController.ViewPullPayment), "UIPullPayment",
+                    new { pullPaymentId = refunded.PullPaymentId }, refunded.RequestBaseUrl.Scheme, new HostString(refunded.RequestBaseUrl.Host.Host));
+
+                return new WebhookSubscriptionEvent.CreditRefundedEvent(storeId)
+                {
+                    Subscriber = model,
+                    Amount = refunded.Amount,
+                    Currency = refunded.Currency,
+                    PullPaymentUrl = pullPaymentUrl
                 };
             default:
                 throw new ArgumentOutOfRangeException(nameof(evt), evt.GetType(), "Unsupported subscription event type");

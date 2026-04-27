@@ -6,14 +6,15 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Events;
+using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Plugins.Emails.Views;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Views.UIStoreMembership;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
@@ -110,7 +111,7 @@ public partial class UIOfferingController(
             return NotFound();
         var permission = command switch
         {
-            "credit" or "charge" => SubscriptionsPolicies.CanCreditSubscribers,
+            "credit" or "charge" or "refund" => SubscriptionsPolicies.CanCreditSubscribers,
             _ => SubscriptionsPolicies.CanManageSubscribers
         };
         if (!(await authorizationService.AuthorizeAsync(User, storeId, permission)).Succeeded)
@@ -157,6 +158,22 @@ public partial class UIOfferingController(
                     AllowOverdraft = true
                 });
             TempData.SetStatusSuccess(message);
+        }
+        else if (command is "refund" && amount is > 0)
+        {
+            var pullPaymentId = await SubsService.CreateCreditRefund(sub.Id, amount.Value, Request.GetRequestBaseUrl());
+            if (pullPaymentId is null)
+            {
+                TempData.SetStatusMessageModel(new()
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Html = StringLocalizer["Unable to create refund. Check the subscriber's credit balance."]
+                });
+                return GoToOffering(storeId, offeringId, SubscriptionSection.Subscribers);
+            }
+            var refundUrl = Url.Action(nameof(UIPullPaymentController.ViewPullPayment), "UIPullPayment", new { pullPaymentId }, Request.Scheme);
+            TempData.SetStatusSuccess(StringLocalizer["Refund pull payment created."]);
+            return Redirect(refundUrl!);
         }
         else if (command is "edit-dates")
         {

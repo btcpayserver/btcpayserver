@@ -7,11 +7,13 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Payouts;
 using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Plugins.Subscriptions;
 using BTCPayServer.Tests.PMO;
@@ -354,6 +356,50 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         await s.Page.ReloadAsync();
         await portal.AssertPlan("Pro Plan");
         await portal.AssertNoScheduledChange();
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanRefundCreditFromMerchant()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.RegisterNewUser();
+        await s.CreateNewStore();
+        await s.AddDerivationScheme();
+
+        var offering = await CreateNewSubscription(s);
+        await offering.NewSubscriber("Enterprise Plan", "enterprise@example.com", true);
+        await offering.GoToSubscribers();
+
+        await using (var portal = await offering.GoToPortal("enterprise@example.com"))
+        {
+            await portal.ClickCallToAction();
+            await s.Server.WaitForEvent<SubscriptionEvent.SubscriberCredited>(async () =>
+            {
+                await s.PayInvoice(mine: true);
+            });
+            await s.ClickCheckoutRedirect();
+            await portal.AssertNoCallToAction();
+
+            await portal.AddCredit("150");
+            await s.Server.WaitForEvent<SubscriptionEvent.SubscriberCredited>(async () =>
+            {
+                await s.PayInvoice(mine: true);
+            });
+            await s.ClickCheckoutRedirect();
+            await portal.AssertCredit(creditBalance: "$150.00");
+        }
+
+        await offering.GoToSubscribers();
+        var refundedEvt = await s.Server.WaitForEvent<SubscriptionEvent.CreditRefunded>(async () =>
+        {
+            await offering.Refund("enterprise@example.com", 100m);
+        });
+        Assert.Equal(100m, refundedEvt.Amount);
+        await s.FastReloadAsync();
+        var creditText = await s.Page.Locator($"tr[data-subscriber-email='enterprise@example.com'] .subscriber-credit-col").InnerTextAsync();
+        Assert.Contains("50.00", creditText);
     }
 
     private static decimal GetUnusedPeriodValue(int usedDays, decimal planPrice, int daysInPeriod)
@@ -1121,6 +1167,15 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         {
             await s.Page.ClickAsync(SubscriberRowSelector(subscriber) + " .subscriber-email-col .dropdown-toggle");
             await s.Page.ClickAsync(SubscriberRowSelector(subscriber) + " .subscriber-email-col button");
+        }
+        public async Task Refund(string subscriberEmail, decimal amount)
+        {
+            await s.Page.Locator($"{SubscriberRowSelector(subscriberEmail)} .subscriber-credit-col .dropdown-toggle").ClickAsync();
+            await s.Page.Locator($"{SubscriberRowSelector(subscriberEmail)} .subscriber-credit-col a[data-action='refund']").ClickAsync();
+            await s.Page.FillAsync("#updateCreditModal input[name='amount']", amount.ToString(CultureInfo.InvariantCulture));
+            await s.Page.Locator("#updateCreditModal button.refund-mode").ClickAsync();
+            await s.Page.WaitForURLAsync("**/pull-payments/**");
+            await s.Page.GoBackAsync();
         }
     }
 

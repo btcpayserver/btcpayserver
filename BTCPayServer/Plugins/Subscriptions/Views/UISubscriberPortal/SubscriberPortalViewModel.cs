@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Models;
@@ -88,7 +88,6 @@ public class SubscriberPortalViewModel
     [BindingBehavior(BindingBehavior.Never)]
     [ValidateNever]
     public PlanData Plan => Data.Subscriber.Plan;
-
     public string Anchor { get; set; }
     public string Url { get; set; }
     public string Logo => StoreBranding?.LogoUrl ?? BTCPayLogo;

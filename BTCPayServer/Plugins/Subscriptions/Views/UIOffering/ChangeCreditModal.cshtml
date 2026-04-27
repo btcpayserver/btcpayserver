@@ -1,10 +1,11 @@
-﻿
+
 <div class="modal fade" id="updateCreditModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title charge-mode" text-translate="true">Charge user</h4>
                 <h4 class="modal-title credit-mode" text-translate="true">Credit user</h4>
+				<h4 class="modal-title refund-mode" text-translate="true">Refund user</h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
                     <vc:icon symbol="close" />
                 </button>
@@ -13,6 +14,7 @@
                 <div class="modal-body">
                     <div html-translate="true" class="charge-mode">Would you like to charge <span class="subscriber-name fw-semibold"></span>?</div>
                     <div html-translate="true" class="credit-mode">Would you like to credit <span class="subscriber-name fw-semibold"></span>?</div>
+					<div html-translate="true" class="refund-mode">Would you like to refund <span class="subscriber-name fw-semibold"></span>?</div>
                 </div>
                 <div class="modal-body pt-0 pb-0">
                     <input name="customerId" type="hidden" />
@@ -24,6 +26,7 @@
                     <div class="d-flex justify-content-between align-items-center charge-applied">
                         <div class="text-muted charge-mode">Charge applied</div>
                         <div class="text-muted credit-mode">Credit applied</div>
+						<div class="text-muted refund-mode">Refund amount</div>
                         <div class="d-flex align-items-center justify-content-end">
                             <span class="charge-mode">-</span>
                             <span class="credit-mode">+</span>
@@ -38,13 +41,15 @@
                     <div class="d-flex justify-content-between fw-semibold credit-next-charge">
                         <div class="charge-mode">After charge</div>
                         <div class="credit-mode">After Credit</div>
+						<div class="refund-mode">After Refund</div>
                         <div class="after-change"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-danger charge-mode" text-translate="true" name="command" value="charge">Charge</button>
                     <button type="submit" class="btn btn-success credit-mode" text-translate="true" name="command" value="credit">Credit</button>
-                </div>
+					<button type="submit" class="btn btn-success refund-mode" text-translate="true" name="command" value="refund">Refund</button>
+				</div>
             </form>
         </div>
     </div>
@@ -116,16 +121,25 @@
                 modalChargeEl.querySelectorAll('.subscriber-name').forEach(el => el.innerText = tr.getAttribute('data-subscriber-email'));
 
                 creditMode = trigger.getAttribute('data-action') === 'credit';
+				const refundMode = trigger.getAttribute('data-action') === 'refund';
                 const chargeModeEls = modalChargeEl.querySelectorAll('.charge-mode');
                 const creditModeEls = modalChargeEl.querySelectorAll('.credit-mode');
+				const refundModeEls = modalChargeEl.querySelectorAll('.refund-mode');
                 if (creditMode) {
                     chargeModeEls.forEach(el => el.style.display = 'none');
                     creditModeEls.forEach(el => el.style.display = '');
+					refundModeEls.forEach(el => el.style.display = 'none');
                     modalChargeEl.querySelectorAll('button[name="command"]').forEach(el => el.value = 'credit');
-                } else {
+                } else if (refundMode) {
+					chargeModeEls.forEach(el => el.style.display = 'none');
+					creditModeEls.forEach(el => el.style.display = 'none');
+					refundModeEls.forEach(el => el.style.display = '');
+					modalChargeEl.querySelectorAll('button[name="command"]').forEach(el => el.value = 'refund');
+				} else {
                     chargeModeEls.forEach(el => el.style.display = '');
                     creditModeEls.forEach(el => el.style.display = 'none');
-                    modalChargeEl.querySelectorAll('button[name="command"]').forEach(el => el.value = 'charge');
+					refundModeEls.forEach(el => el.style.display = 'none');
+					modalChargeEl.querySelectorAll('button[name="command"]').forEach(el => el.value = 'charge');
                 }
 
                 currentCredit.innerText = '---';

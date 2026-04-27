@@ -29,6 +29,7 @@ namespace BTCPayServer.Plugins.Subscriptions;
 
 public class SubscriptionHostedService(
     EventAggregator eventAggregator,
+    PullPaymentHostedService pullPaymentService,
     ApplicationDbContextFactory applicationDbContextFactory,
     SettingsRepository settingsRepository,
     IServiceScopeFactory scopeFactory,
@@ -356,6 +357,37 @@ public class SubscriptionHostedService(
         {
             await UpdatePlanStats(ctx, plan);
         }
+    }
+
+    public async Task<string?> CreateCreditRefund(long subscriberId, decimal amount, RequestBaseUrl requestBaseUrl)
+    {
+        await using var subCtx = CreateContext(CancellationToken);
+        var ctx = subCtx.Context;
+        var sub = await ctx.Subscribers.GetById(subscriberId);
+        if (sub is null)
+            return null;
+
+        var credit = sub.GetCredit();
+        if (amount <= 0 || amount > credit)
+            return null;
+
+        var store = await ctx.Stores.FindAsync(sub.Plan.Offering.App.StoreDataId);
+        if (store is null)
+            return null;
+
+        var debitResult = await subCtx.TryCreditDebitSubscriber(sub, $"Credit refund (Subscriber Id: {subscriberId})", 0m, amount);
+        if (debitResult is null)
+            return null;
+
+        var pullPaymentId = await pullPaymentService.CreatePullPayment(store, new CreatePullPaymentRequest
+        {
+            Name = $"Credit refund for {sub.Customer.GetPrimaryIdentity()}",
+            Amount = amount,
+            Currency = sub.Plan.Currency,
+            AutoApproveClaims = true
+        });
+        subCtx.AddEvent(new SubscriptionEvent.CreditRefunded(sub, amount, sub.Plan.Currency, pullPaymentId, requestBaseUrl));
+        return pullPaymentId;
     }
 
     private static HashSet<string> GetActiveMemberChangedPlans(SubscriptionContext subCtx)

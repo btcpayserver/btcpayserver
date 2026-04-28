@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,13 +13,15 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260309131715_UpdateModelSnapshotForUserSettings")]
+    partial class UpdateModelSnapshotForUserSettings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.4")
+                .HasAnnotation("ProductVersion", "10.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -74,28 +77,6 @@ namespace BTCPayServer.Migrations
                     b.HasIndex("InvoiceDataId");
 
                     b.ToTable("AddressInvoices");
-                });
-
-            modelBuilder.Entity("BTCPayServer.Data.ApiKeyPermissionUsage", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ApiKey")
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("LastUsed")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Permission")
-                        .HasColumnType("text");
-
-                    b.Property<int>("UsageCount")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ApiKeyPermissionUsages");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.AppData", b =>
@@ -1211,13 +1192,6 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("PlanChangeId")
                         .HasColumnType("text")
                         .HasColumnName("plan_change_id");
-
-                    b.Property<string>("Timing")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("text")
-                        .HasDefaultValue("Immediate")
-                        .HasColumnName("timing");
 
                     b.Property<string>("Type")
                         .IsRequired()

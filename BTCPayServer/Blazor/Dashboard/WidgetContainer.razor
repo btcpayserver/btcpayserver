@@ -1,0 +1,153 @@
+@using BTCPayServer.Blazor.Dashboard.Models
+@using Newtonsoft.Json.Linq
+
+<div class="widget @(Descriptor.CssClass ?? "") @(_featureUnavailable ? "widget-feature-unavailable" : "")">
+    @if (EditMode)
+    {
+        <div class="widget-edit-header">
+            <div class="widget-drag-handle">
+                <span class="widget-grip-dots"></span>
+                <span class="small">@Descriptor.Name</span>
+            </div>
+            <div class="widget-controls">
+                <button class="widget-control-btn" title="Configure widget"
+                        @onclick="() => OnConfigure.InvokeAsync()">
+                    <svg role="img" class="icon icon-settings"><use href="/img/icon-sprite.svg#settings"></use></svg>
+                </button>
+                <button class="widget-control-btn widget-control-btn--danger" title="Remove widget"
+                        @onclick="OnRemove">
+                    <svg role="img" class="icon icon-cross"><use href="/img/icon-sprite.svg#cross"></use></svg>
+                </button>
+            </div>
+        </div>
+    }
+    @if (_featureUnavailable)
+    {
+        <div class="widget-unavailable-overlay">
+            <h6 class="mb-1">@Descriptor.Name</h6>
+            <p class="mb-0 small">@_featureMessage</p>
+        </div>
+    }
+    else
+    {
+        <ErrorBoundary @ref="_errorBoundary">
+            <ChildContent>
+                <DynamicComponent @key="Placement.Id"
+                                  Type="@Descriptor.ComponentType"
+                                  Parameters="@GetWidgetParameters()" />
+            </ChildContent>
+            <ErrorContent Context="ex">
+                <div class="text-danger small p-2">
+                    <strong>Widget error</strong>
+                    <p class="mb-0">@ex.Message</p>
+                    <button class="btn btn-link btn-sm p-0 mt-1" @onclick="RecoverFromError">Retry</button>
+                </div>
+            </ErrorContent>
+        </ErrorBoundary>
+    }
+</div>
+
+@if (EditMode)
+{
+    <div class="widget-debug-label">@Placement.Offset,@Placement.Order,@(Placement.ColumnSize)c,@(Placement.RowSpan)r</div>
+}
+
+@code {
+    [Parameter] public WidgetPlacement Placement { get; set; } = null!;
+    [Parameter] public WidgetDescriptor Descriptor { get; set; } = null!;
+    [Parameter] public string StoreId { get; set; } = string.Empty;
+    [Parameter] public string UserId { get; set; } = string.Empty;
+    [Parameter] public bool EditMode { get; set; }
+    [Parameter] public bool WidgetEditMode { get; set; }
+    /// <summary>Set of active store features (e.g. "wallet", "lightning") for the current store.</summary>
+    [Parameter] public HashSet<string> ActiveStoreFeatures { get; set; } = new();
+    [Parameter] public EventCallback<JObject> OnConfigChanged { get; set; }
+    [Parameter] public EventCallback<bool> OnEditModeChanged { get; set; }
+    [Parameter] public EventCallback OnRemove { get; set; }
+    [Parameter] public EventCallback<(int cols, int rows)> OnSizeChanged { get; set; }
+    [Parameter] public EventCallback OnConfigure { get; set; }
+    [Parameter] public DashboardScope DashboardScope { get; set; }
+
+    private ErrorBoundary? _errorBoundary;
+
+    private bool _featureUnavailable;
+    private string _featureMessage = string.Empty;
+
+    // Cached parameters to avoid rebuilding on every render
+    private Dictionary<string, object>? _cachedParameters;
+    private string _lastStoreId = string.Empty;
+    private string _lastUserId = string.Empty;
+    private bool _lastReadonly;
+    private int _lastSize;
+    private JObject? _lastConfig;
+    private DashboardScope _lastDashboardScope;
+
+    protected override void OnParametersSet()
+    {
+        _featureUnavailable = false;
+        _featureMessage = string.Empty;
+
+        if (Descriptor.RequiredStoreFeatures.Length > 0 && DashboardScope != DashboardScope.Server)
+        {
+            foreach (var feature in Descriptor.RequiredStoreFeatures)
+            {
+                if (!ActiveStoreFeatures.Contains(feature))
+                {
+                    _featureUnavailable = true;
+                    var featureLabel = feature switch
+                    {
+                        "wallet" => "an on-chain wallet",
+                        "lightning" => "a Lightning node",
+                        _ => feature
+                    };
+                    _featureMessage = $"Requires {featureLabel} to be configured.";
+                    break;
+                }
+            }
+        }
+
+        // Invalidate cached parameters when inputs change
+        var currentReadonly = Descriptor.AlwaysInteractive ? false : (!EditMode || WidgetEditMode);
+        if (_cachedParameters is null
+            || _lastStoreId != StoreId
+            || _lastUserId != UserId
+            || _lastReadonly != currentReadonly
+            || _lastSize != Placement.ColumnSize
+            || _lastDashboardScope != DashboardScope
+            || !ReferenceEquals(_lastConfig, Placement.Config))
+        {
+            _lastStoreId = StoreId;
+            _lastUserId = UserId;
+            _lastReadonly = currentReadonly;
+            _lastSize = Placement.ColumnSize;
+            _lastDashboardScope = DashboardScope;
+            _lastConfig = Placement.Config;
+            _cachedParameters = BuildWidgetParameters();
+        }
+    }
+
+    private Dictionary<string, object> GetWidgetParameters() => _cachedParameters ??= BuildWidgetParameters();
+
+    private Dictionary<string, object> BuildWidgetParameters()
+    {
+        return new Dictionary<string, object>
+        {
+            { "StoreId", StoreId },
+            { "UserId", UserId },
+            { "DashboardScope", DashboardScope },
+            { "Readonly", Descriptor.AlwaysInteractive ? false : (!EditMode || WidgetEditMode) },
+            { "Size", Placement.ColumnSize },
+            { "Config", Placement.Config! },
+            { "RequiredPermissions", Descriptor.RequiredPermissions },
+            { "ConfigChanged", EventCallback.Factory.Create<JObject>(this, config => OnConfigChanged.InvokeAsync(config)) },
+            { "EditModeChanged", EventCallback.Factory.Create<bool>(this, editing => OnEditModeChanged.InvokeAsync(editing)) },
+            { "OnRemove", EventCallback.Factory.Create(this, () => OnRemove.InvokeAsync()) },
+            { "RequestConfigure", EventCallback.Factory.Create(this, () => OnConfigure.InvokeAsync()) }
+        };
+    }
+
+    private void RecoverFromError()
+    {
+        _errorBoundary?.Recover();
+    }
+}

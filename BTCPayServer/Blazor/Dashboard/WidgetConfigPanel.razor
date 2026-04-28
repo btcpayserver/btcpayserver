@@ -1,0 +1,184 @@
+@using BTCPayServer.Blazor.Dashboard.Models
+@using Newtonsoft.Json.Linq
+
+@if (Visible)
+{
+    <div class="widget-config-backdrop" @onclick="Close"></div>
+    <div class="widget-config-panel">
+        <div class="widget-config-panel-header">
+            <h5 class="mb-0">Configure @Descriptor?.Name</h5>
+            <button type="button" class="btn-close btn-close-white" @onclick="Close"></button>
+        </div>
+        <div class="widget-config-panel-body">
+            @if (Descriptor?.Description is not null)
+            {
+                <p class="text-secondary small mb-3">@Descriptor.Description</p>
+            }
+            @if (_editConfig is not null)
+            {
+                @foreach (var prop in _editConfig.Properties())
+                {
+                    var propName = prop.Name;
+                    var schema = GetFieldSchema(propName);
+
+                    @if (schema?.FieldType == ConfigFieldType.Hidden)
+                    {
+                        continue;
+                    }
+
+                    var label = schema?.Label ?? FormatLabel(propName);
+                    <div class="mb-3">
+                        <label class="form-label">@label</label>
+                        @if (schema?.FieldType == ConfigFieldType.Select)
+                        {
+                            var strVal = (string?)prop.Value ?? "";
+                            <select class="form-select"
+                                    value="@strVal"
+                                    @onchange="@(e => UpdateProperty(propName, e.Value?.ToString() ?? ""))">
+                                @foreach (var opt in schema.Options)
+                                {
+                                    <option value="@opt.Value" selected="@(strVal == opt.Value)">@opt.Label</option>
+                                }
+                            </select>
+                        }
+                        else if (schema?.FieldType == ConfigFieldType.Textarea)
+                        {
+                            var strVal = (string?)prop.Value ?? "";
+                            <textarea class="form-control" rows="@(schema.Rows ?? 6)"
+                                      @onchange="@(e => UpdateProperty(propName, e.Value?.ToString() ?? ""))">@strVal</textarea>
+                        }
+                        else if (schema?.FieldType == ConfigFieldType.Number || prop.Value.Type == JTokenType.Integer)
+                        {
+                            var intVal = (int)prop.Value;
+                            <input type="number" class="form-control"
+                                   min="@(schema?.Min)" max="@(schema?.Max)"
+                                   value="@intVal"
+                                   @onchange="@(e => UpdateProperty(propName, int.TryParse(e.Value?.ToString(), out var v) ? v : 0))" />
+                        }
+                        else if (schema?.FieldType == ConfigFieldType.Checkbox || prop.Value.Type == JTokenType.Boolean)
+                        {
+                            var boolVal = (bool)prop.Value;
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input"
+                                       checked="@boolVal"
+                                       @onchange="@(e => UpdateProperty(propName, (bool)(e.Value ?? false)))" />
+                            </div>
+                        }
+                        else
+                        {
+                            var strVal = (string?)prop.Value ?? "";
+                            <input type="text" class="form-control"
+                                   value="@strVal"
+                                   @onchange="@(e => UpdateProperty(propName, e.Value?.ToString() ?? ""))" />
+                        }
+                    </div>
+                }
+            }
+        </div>
+        <div class="widget-config-panel-footer">
+            <button type="button" class="btn btn-secondary" @onclick="Close">Cancel</button>
+            <button type="button" class="btn btn-primary" @onclick="Save">Save</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public WidgetDescriptor? Descriptor { get; set; }
+    [Parameter] public WidgetPlacement? Placement { get; set; }
+    [Parameter] public EventCallback<JObject> OnSave { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private JObject? _editConfig;
+    private string? _lastPlacementId;
+
+    protected override void OnParametersSet()
+    {
+        if (Visible && Placement is not null && Placement.Id != _lastPlacementId)
+        {
+            _lastPlacementId = Placement.Id;
+            // Deep clone the config so edits don't affect the original until saved
+            _editConfig = Placement.Config is not null
+                ? (JObject)Placement.Config.DeepClone()
+                : new JObject();
+
+            // If the descriptor has a component type with a config class, ensure all default properties exist
+            EnsureDefaults();
+        }
+    }
+
+    private ConfigFieldSchema? GetFieldSchema(string propertyName)
+    {
+        if (Descriptor?.ConfigSchema is null) return null;
+        return Descriptor.ConfigSchema.TryGetValue(propertyName, out var schema) ? schema : null;
+    }
+
+    private void EnsureDefaults()
+    {
+        if (_editConfig is null || Descriptor?.ComponentType is null) return;
+
+        // Find the TConfig generic type argument from the base class
+        var baseType = Descriptor.ComponentType.BaseType;
+        while (baseType is not null)
+        {
+            if (baseType.IsGenericType && baseType.GetGenericTypeDefinition() == typeof(BaseWidgetComponent<>))
+            {
+                var configType = baseType.GetGenericArguments()[0];
+                var defaultInstance = Activator.CreateInstance(configType);
+                if (defaultInstance is not null)
+                {
+                    var defaultJson = JObject.FromObject(defaultInstance);
+                    foreach (var prop in defaultJson.Properties())
+                    {
+                        if (_editConfig[prop.Name] is null)
+                        {
+                            _editConfig[prop.Name] = prop.Value.DeepClone();
+                        }
+                    }
+                }
+                break;
+            }
+            baseType = baseType.BaseType;
+        }
+    }
+
+    private void UpdateProperty(string name, object value)
+    {
+        if (_editConfig is null) return;
+        _editConfig[name] = JToken.FromObject(value);
+    }
+
+    private async Task Save()
+    {
+        if (_editConfig is not null)
+        {
+            _lastPlacementId = null;
+            var config = _editConfig;
+            _editConfig = null;
+            await OnSave.InvokeAsync(config);
+        }
+    }
+
+    private async Task Close()
+    {
+        _lastPlacementId = null;
+        _editConfig = null;
+        await OnClose.InvokeAsync();
+    }
+
+    private static string FormatLabel(string propertyName)
+    {
+        // Convert PascalCase/camelCase to "Title Case"
+        var result = new System.Text.StringBuilder();
+        for (int i = 0; i < propertyName.Length; i++)
+        {
+            var c = propertyName[i];
+            if (i > 0 && char.IsUpper(c))
+            {
+                result.Append(' ');
+            }
+            result.Append(i == 0 ? char.ToUpper(c) : c);
+        }
+        return result.ToString();
+    }
+}

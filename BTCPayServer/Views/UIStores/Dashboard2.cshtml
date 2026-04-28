@@ -1,0 +1,36 @@
+@using BTCPayServer.Blazor.Dashboard
+@using BTCPayServer.Abstractions.Contracts
+@using Microsoft.AspNetCore.Identity
+@inject IScopeProvider ScopeProvider
+@inject UserManager<BTCPayServer.Data.ApplicationUser> UserManager
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData.SetActivePage(StoreNavPages.Dashboard);
+    this.ViewData.SetBlazorAllowed(true);
+}
+
+@section PageHeadContent {
+    <link rel="stylesheet" href="~/vendor/gridstack/gridstack.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/vendor/chartist/chartist.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/vendor/chartist/chartist-plugin-tooltip.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+}
+
+@(await Html.RenderComponentAsync<DashboardPage>(RenderMode.ServerPrerendered, new
+{
+    StoreId = ScopeProvider.GetCurrentStoreId(),
+    UserId = UserManager.GetUserId(User),
+    DashboardId = ViewData["DashboardId"] as string,
+    IsSetUp = ViewData["IsSetUp"] is true,
+    WalletEnabled = ViewData["WalletEnabled"] is true,
+    LightningEnabled = ViewData["LightningEnabled"] is true,
+    LightningSupported = ViewData["LightningSupported"] is true,
+    CryptoCode = ViewData["CryptoCode"] as string ?? "BTC"
+}))
+
+@section PageFootContent {
+    <script src="~/vendor/gridstack/gridstack-all.js" asp-append-version="true"></script>
+    <script src="~/vendor/chartist/chartist.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/chartist/chartist-plugin-tooltip.js" asp-append-version="true"></script>
+    <script src="~/js/dashboard-interop.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,38 @@
+@{
+    var isTruncated = !string.IsNullOrEmpty(Text) && Text.Length > 2 * Padding;
+    var start = isTruncated ? $"{Text[..Padding]}…" : Text;
+    var end = isTruncated ? Text[^Padding..] : "";
+    var classes = Classes ?? "";
+    if (Copy) classes += " truncate-center--copy";
+}
+<span class="truncate-center @classes" data-text="@Text">
+    <span class="truncate-center-truncated" @(isTruncated ? $"data-bs-toggle=tooltip title={Text}" : "")>
+        <span class="truncate-center-start">@start</span>
+        <span class="truncate-center-end">@end</span>
+    </span>
+    <span class="truncate-center-text">@Text</span>
+    @if (Copy)
+    {
+        <button type="button" class="btn btn-link p-0 clipboard-button" data-clipboard="@Text">
+            <svg role="img" class="icon icon-actions-copy">
+                <use href="/img/icon-sprite.svg#actions-copy"></use>
+            </svg>
+        </button>
+    }
+    @if (!string.IsNullOrEmpty(Link))
+    {
+        <a href="@Link" rel="noreferrer noopener" target="_blank">
+            <svg role="img" class="icon icon-info">
+                <use href="/img/icon-sprite.svg#info"></use>
+            </svg>
+        </a>
+    }
+</span>
+
+@code {
+    [Parameter] public string Text { get; set; } = "";
+    [Parameter] public string? Link { get; set; }
+    [Parameter] public string? Classes { get; set; }
+    [Parameter] public int Padding { get; set; } = 7;
+    [Parameter] public bool Copy { get; set; } = true;
+}

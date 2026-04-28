@@ -1,0 +1,387 @@
+@using BTCPayServer.Blazor.Dashboard
+@using BTCPayServer.Blazor.Dashboard.Models
+@using BTCPayServer.Client
+@using BTCPayServer.Configuration
+@using BTCPayServer.Data
+@using BTCPayServer.Lightning
+@using BTCPayServer.Payments
+@using BTCPayServer.Payments.Lightning
+@using BTCPayServer.Rating
+@using BTCPayServer.Services
+@using BTCPayServer.Services.Invoices
+@using BTCPayServer.Services.Rates
+@using BTCPayServer.Services.Stores
+@using Microsoft.Extensions.Options
+@inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<LightningBalanceWidget.LightningBalanceConfig>
+
+@inject StoreRepository StoreRepository
+@inject BTCPayNetworkProvider NetworkProvider
+@inject LightningClientFactoryService LightningClientFactory
+@inject IOptions<LightningNetworkOptions> LightningNetworkOptions
+@inject PaymentMethodHandlerDictionary Handlers
+@inject LightningHistogramService LnHistogramService
+@inject CurrencyNameTable CurrencyNameTable
+@inject RateFetcher RateFetcher
+@inject DefaultRulesCollection DefaultRules
+@inject DashboardJsInterop JsInterop
+
+@if (!HasAccess)
+{
+    <h6>Lightning Balance</h6>
+    <p class="text-secondary">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
+}
+else if (Loading)
+{
+    <div class="loading d-flex justify-content-center p-3">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (_error is not null)
+{
+    <header class="d-flex gap-3 align-items-center justify-content-between mb-2">
+        <h6>Lightning Balance</h6>
+    </header>
+    <p class="text-danger">@_error</p>
+}
+else if (_noLightning)
+{
+    <h6>Lightning Balance</h6>
+    <p class="text-secondary">No Lightning node configured.</p>
+}
+else if (_balance is not null)
+{
+    var config = TypedConfig ?? new LightningBalanceConfig();
+    var currencyLabel = _showDefaultCurrency && _rate.HasValue ? _defaultCurrency! : config.CryptoCode;
+    <header class="d-flex gap-3 align-items-center justify-content-between mb-2">
+        <h6>Lightning Balance</h6>
+        @if (_defaultCurrency is not null && config.CryptoCode != _defaultCurrency)
+        {
+            <div class="btn-group btn-group-sm gap-0 currency-toggle" role="group">
+                <input type="radio" class="btn-check" name="@($"LnBalance-currency-{StoreId}")"
+                       id="@($"LnBalance-currency_{config.CryptoCode}")"
+                       value="@config.CryptoCode" autocomplete="off" checked="@(!_showDefaultCurrency)"
+                       @onchange="@(() => SetCurrency(false))" />
+                <label class="btn btn-outline-secondary px-2 py-1"
+                       for="@($"LnBalance-currency_{config.CryptoCode}")">@config.CryptoCode</label>
+                <input type="radio" class="btn-check" name="@($"LnBalance-currency-{StoreId}")"
+                       id="@($"LnBalance-currency_{_defaultCurrency}")"
+                       value="@_defaultCurrency" autocomplete="off" checked="@_showDefaultCurrency"
+                       @onchange="@(() => SetCurrency(true))" />
+                <label class="btn btn-outline-secondary px-2 py-1"
+                       for="@($"LnBalance-currency_{_defaultCurrency}")">@_defaultCurrency</label>
+            </div>
+        }
+    </header>
+    <div class="balances d-flex flex-wrap">
+        @if (_balance.OffchainBalance != null)
+        {
+            <div class="balance">
+                <div class="d-flex align-items-baseline gap-1">
+                    <h3 class="d-inline-block me-1" data-sensitive>@FormatLightMoney(_totalOffchain)</h3>
+                    <span class="text-secondary fw-semibold text-nowrap">
+                        <span class="currency">@currencyLabel</span> in channels
+                    </span>
+                </div>
+                <div class="balance-details collapse" id="balanceDetailsOffchain">
+                    @if (_balance.OffchainBalance.Opening != null)
+                    {
+                        <div class="mt-2 d-flex align-items-baseline gap-1">
+                            <span class="fw-semibold" data-sensitive>@FormatLightMoney(_balance.OffchainBalance.Opening)</span>
+                            <span class="text-secondary text-nowrap">
+                                <span class="currency">@currencyLabel</span> opening channels
+                            </span>
+                        </div>
+                    }
+                    @if (_balance.OffchainBalance.Local != null)
+                    {
+                        <div class="mt-2 d-flex align-items-baseline gap-1">
+                            <span class="fw-semibold" data-sensitive>@FormatLightMoney(_balance.OffchainBalance.Local)</span>
+                            <span class="text-secondary text-nowrap">
+                                <span class="currency">@currencyLabel</span> local balance
+                            </span>
+                        </div>
+                    }
+                    @if (_balance.OffchainBalance.Remote != null)
+                    {
+                        <div class="mt-2 d-flex align-items-baseline gap-1">
+                            <span class="fw-semibold" data-sensitive>@FormatLightMoney(_balance.OffchainBalance.Remote)</span>
+                            <span class="text-secondary text-nowrap">
+                                <span class="currency">@currencyLabel</span> remote balance
+                            </span>
+                        </div>
+                    }
+                    @if (_balance.OffchainBalance.Closing != null)
+                    {
+                        <div class="mt-2 d-flex align-items-baseline gap-1">
+                            <span class="fw-semibold" data-sensitive>@FormatLightMoney(_balance.OffchainBalance.Closing)</span>
+                            <span class="text-secondary text-nowrap">
+                                <span class="currency">@currencyLabel</span> closing channels
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        @if (_balance.OnchainBalance != null)
+        {
+            <div class="balance">
+                <div class="d-flex align-items-baseline gap-1">
+                    <h3 class="d-inline-block me-1" data-sensitive>@FormatMoney(_totalOnchain)</h3>
+                    <span class="text-secondary fw-semibold text-nowrap">
+                        <span class="currency">@currencyLabel</span> on-chain
+                    </span>
+                </div>
+                <div class="balance-details collapse" id="balanceDetailsOnchain">
+                    @if (_balance.OnchainBalance.Confirmed != null)
+                    {
+                        <div class="mt-2 d-flex align-items-baseline gap-1">
+                            <span class="fw-semibold" data-sensitive>@FormatMoney(_balance.OnchainBalance.Confirmed)</span>
+                            <span class="text-secondary text-nowrap">
+                                <span class="currency">@currencyLabel</span> confirmed
+                            </span>
+                        </div>
+                    }
+                    @if (_balance.OnchainBalance.Unconfirmed != null)
+                    {
+                        <div class="mt-2 d-flex align-items-baseline gap-1">
+                            <span class="fw-semibold" data-sensitive>@FormatMoney(_balance.OnchainBalance.Unconfirmed)</span>
+                            <span class="text-secondary text-nowrap">
+                                <span class="currency">@currencyLabel</span> unconfirmed
+                            </span>
+                        </div>
+                    }
+                    @if (_balance.OnchainBalance.Reserved != null)
+                    {
+                        <div class="mt-2 d-flex align-items-baseline gap-1">
+                            <span class="fw-semibold" data-sensitive>@FormatMoney(_balance.OnchainBalance.Reserved)</span>
+                            <span class="text-secondary text-nowrap">
+                                <span class="currency">@currencyLabel</span> reserved
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 @(_hasHistogram ? "my-3" : "mt-3")">
+        @if (_balance.OffchainBalance != null && _balance.OnchainBalance != null)
+        {
+            <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0 ms-n1" type="button"
+                    data-bs-toggle="collapse" data-bs-target=".balance-details"
+                    aria-expanded="false" aria-controls="balanceDetailsOffchain balanceDetailsOnchain">
+                <span class="ms-1">Details</span>
+            </button>
+        }
+    </div>
+    @if (_hasHistogram)
+    {
+        <div id="@_chartId" class="ct-chart ct-major-tenth"></div>
+    }
+}
+
+@code {
+    public static readonly WidgetDescriptor Descriptor = new()
+    {
+        Type = "LightningBalance",
+        Name = "Lightning Balance",
+        Description = "Displays Lightning Network node balance and channel info",
+        Category = "Lightning",
+        ComponentType = typeof(LightningBalanceWidget),
+        Scope = WidgetScope.Store,
+        DefaultColumnSize = 8,
+        MinColumnSize = 6,
+        MaxColumnSize = 12,
+        MinRowSpan = 1,
+        MaxRowSpan = 3,
+        CssClass = "store-lightning-balance",
+        RequiredStoreFeatures = new[] { "lightning" },
+        ConfigSchema = new()
+        {
+            ["CryptoCode"] = new ConfigFieldSchema { Label = "Crypto", FieldType = ConfigFieldType.Text }
+        }
+    };
+
+    public class LightningBalanceConfig
+    {
+        public string CryptoCode { get; set; } = "BTC";
+    }
+
+    private string? _error;
+    private bool _noLightning;
+    private LightningNodeBalance? _balance;
+    private NBitcoin.Money? _totalOnchain;
+    private LightMoney? _totalOffchain;
+    private bool _hasHistogram;
+    private bool _chartRendered;
+    private List<decimal>? _series;
+    private List<DateTimeOffset>? _labels;
+    private string _chartId = $"ln-balance-chart-{Guid.NewGuid():N}";
+
+    // Currency toggle state
+    private string? _defaultCurrency;
+    private int _divisibility;
+    private bool _showDefaultCurrency;
+    private decimal? _rate;
+    private StoreData? _store;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!DataParametersChanged)
+            return;
+
+        if (string.IsNullOrEmpty(StoreId))
+            return;
+
+        Loading = true;
+        _chartRendered = false;
+        try
+        {
+            var config = TypedConfig ?? new LightningBalanceConfig();
+            _store = await StoreRepository.FindStore(StoreId);
+            if (_store is null)
+            {
+                _error = "Store not found.";
+                return;
+            }
+
+            _defaultCurrency = _store.GetStoreBlob().DefaultCurrency;
+            var currencyData = CurrencyNameTable.GetCurrencyData(_defaultCurrency, true);
+            _divisibility = currencyData.Divisibility;
+
+            var lightningClient = GetLightningClient(_store, config.CryptoCode);
+            if (lightningClient is null)
+            {
+                _noLightning = true;
+                return;
+            }
+
+            using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(10));
+            _balance = await lightningClient.GetBalance(cts.Token);
+
+            _totalOnchain = _balance.OnchainBalance != null
+                ? (_balance.OnchainBalance.Confirmed ?? NBitcoin.Money.Zero) +
+                  (_balance.OnchainBalance.Reserved ?? NBitcoin.Money.Zero) +
+                  (_balance.OnchainBalance.Unconfirmed ?? NBitcoin.Money.Zero)
+                : null;
+            _totalOffchain = _balance.OffchainBalance != null
+                ? (_balance.OffchainBalance.Opening ?? LightMoney.Zero) +
+                  (_balance.OffchainBalance.Local ?? LightMoney.Zero) +
+                  (_balance.OffchainBalance.Closing ?? LightMoney.Zero)
+                : null;
+
+            var data = await LnHistogramService.GetHistogram(lightningClient, Client.Models.HistogramType.Week, cts.Token);
+            if (data != null)
+            {
+                _series = data.Series;
+                _labels = data.Labels;
+                _hasHistogram = _series is { Count: > 0 };
+            }
+        }
+        catch (Exception ex) when (ex is NotImplementedException or NotSupportedException)
+        {
+            _error = "Your node does not support balance fetching.";
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+    private ILightningClient? GetLightningClient(StoreData store, string cryptoCode)
+    {
+        var network = NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+        if (network is null) return null;
+
+        // Server scope: always use the internal node directly
+        if (DashboardScope == DashboardScope.Server)
+        {
+            return LightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var serverNode)
+                ? serverNode
+                : null;
+        }
+
+        // Store/User scope: use the store's configured LN payment method
+        var id = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);
+        var existing = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(id, Handlers);
+        if (existing == null) return null;
+
+        if (existing.GetExternalLightningUrl() is { } connectionString)
+        {
+            return LightningClientFactory.Create(connectionString, network);
+        }
+        if (existing.IsInternalNode &&
+            LightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var internalNode))
+        {
+            return internalNode;
+        }
+        return null;
+    }
+
+    private async Task SetCurrency(bool showDefault)
+    {
+        _showDefaultCurrency = showDefault;
+        if (showDefault && !_rate.HasValue && _store is not null && _defaultCurrency is not null)
+        {
+            var config = TypedConfig ?? new LightningBalanceConfig();
+            var pair = new CurrencyPair(config.CryptoCode, _defaultCurrency);
+            var blob = _store.GetStoreBlob();
+            var rules = blob.GetRateRules(DefaultRules);
+            try
+            {
+                var result = await RateFetcher.FetchRate(pair, rules, new StoreIdRateContext(_store.Id), default);
+                _rate = result.BidAsk?.Bid;
+            }
+            catch
+            {
+                // Silently fail - just show crypto amount
+                _showDefaultCurrency = false;
+            }
+        }
+        StateHasChanged();
+    }
+
+    private string FormatLightMoney(LightMoney? value)
+    {
+        if (value is null) return "0";
+        if (_showDefaultCurrency && _rate.HasValue)
+        {
+            var btc = value.ToDecimal(LightMoneyUnit.BTC);
+            var fiat = btc * _rate.Value;
+            return fiat.ToString($"N{_divisibility}");
+        }
+        return value.ToString();
+    }
+
+    private string FormatMoney(NBitcoin.Money? value)
+    {
+        if (value is null) return "0";
+        if (_showDefaultCurrency && _rate.HasValue)
+        {
+            var btc = value.ToDecimal(NBitcoin.MoneyUnit.BTC);
+            var fiat = btc * _rate.Value;
+            return fiat.ToString($"N{_divisibility}");
+        }
+        return value.ToString();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (SizeChanged && _chartRendered)
+            _chartRendered = false;
+
+        if (!_chartRendered && !Loading && _hasHistogram && _series is not null && _labels is not null)
+        {
+            _chartRendered = true;
+            await JsInterop.DestroyChart(_chartId);
+            var labels = _labels.Select(l => l.ToString("o")).ToArray();
+            var series = _series.Select(s => (object)s).ToArray();
+            await JsInterop.RenderChart(_chartId, "line", labels, new[] { series });
+        }
+    }
+}

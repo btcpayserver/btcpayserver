@@ -68,6 +68,34 @@ public partial class UIStoresController
         return View(vm);
     }
 
+    [HttpGet("{storeId}/2")]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    public IActionResult Dashboard2(string? dashboardId = null)
+    {
+        var store = CurrentStore;
+        if (store is null)
+            return NotFound();
+
+        var storeBlob = store.GetStoreBlob();
+        AddPaymentMethods(store, storeBlob, out var derivationSchemes, out var lightningNodes);
+
+        var walletEnabled = derivationSchemes.Any(scheme => !string.IsNullOrEmpty(scheme.Value) && scheme.Enabled);
+        var lightningEnabled = lightningNodes.Any(ln => !string.IsNullOrEmpty(ln.Address) && ln.Enabled);
+        var cryptoCode = _networkProvider.DefaultCryptoCode;
+
+        // Any payment method at all (wallet, lightning, or plugin-provided like Monero, Liquid, etc.)
+        var isSetUp = walletEnabled || lightningEnabled
+                      || store.GetPaymentMethodConfigs(onlyEnabled: true).Count > 0;
+
+        ViewData["DashboardId"] = dashboardId;
+        ViewData["IsSetUp"] = isSetUp;
+        ViewData["WalletEnabled"] = walletEnabled;
+        ViewData["LightningEnabled"] = lightningEnabled;
+        ViewData["LightningSupported"] = _networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode)?.SupportLightning is true;
+        ViewData["CryptoCode"] = cryptoCode;
+        return View();
+    }
+
     [HttpGet("{storeId}/dashboard/{cryptoCode}/lightning/balance")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult LightningBalance(string storeId, string cryptoCode)

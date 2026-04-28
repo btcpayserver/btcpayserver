@@ -1,0 +1,133 @@
+@using BTCPayServer.Blazor.Dashboard
+@using BTCPayServer.Blazor.Dashboard.Models
+@using BTCPayServer.Client
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Data
+@using BTCPayServer.Services.Invoices
+@using Microsoft.EntityFrameworkCore
+@inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<StoreNumbersWidget.StoreNumbersConfig>
+
+@inject InvoiceRepository InvoiceRepository
+@inject ApplicationDbContextFactory DbContextFactory
+
+@if (!HasAccess)
+{
+    <h6>Store Numbers</h6>
+    <p class="text-secondary">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
+}
+else if (Loading)
+{
+    <div class="loading d-flex justify-content-center p-3">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (_error is not null)
+{
+    <h6>Store Numbers</h6>
+    <p class="text-danger">@_error</p>
+}
+else
+{
+    var config = TypedConfig ?? new StoreNumbersConfig();
+    <div class="store-number">
+        <header>
+            <h6>Paid invoices in the last @config.TimeframeDays days</h6>
+            @if (_paidInvoices > 0)
+            {
+                <a href="/invoices?storeId=@StoreId">View All</a>
+            }
+        </header>
+        <div class="h3">@_paidInvoices</div>
+    </div>
+    <div class="store-number">
+        <header>
+            <h6>Payouts Pending</h6>
+            <a href="/pull-payments/payouts?storeId=@StoreId">Manage</a>
+        </header>
+        <div class="h3">@_payoutsPending</div>
+    </div>
+    <div class="store-number">
+        <header>
+            <h6>Refunds Issued</h6>
+        </header>
+        <div class="h3">@_refundsIssued</div>
+    </div>
+}
+
+@code {
+    public static readonly WidgetDescriptor Descriptor = new()
+    {
+        Type = "StoreNumbers",
+        Name = "Store Numbers",
+        Description = "Shows key store metrics: paid invoices, pending payouts, and refunds",
+        Category = "Store",
+        ComponentType = typeof(StoreNumbersWidget),
+        Scope = WidgetScope.Store,
+        DefaultColumnSize = 4,
+        MinColumnSize = 3,
+        MaxColumnSize = 12,
+        MinRowSpan = 1,
+        MaxRowSpan = 1,
+        CssClass = "store-numbers",
+        ConfigSchema = new()
+        {
+            ["TimeframeDays"] = new ConfigFieldSchema { Label = "Time Range (days)", FieldType = ConfigFieldType.Number, Min = 1, Max = 365 }
+        }
+    };
+
+    public class StoreNumbersConfig
+    {
+        public int TimeframeDays { get; set; } = 7;
+    }
+
+    private string? _error;
+    private int _paidInvoices;
+    private int _payoutsPending;
+    private int _refundsIssued;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!DataParametersChanged)
+            return;
+
+        if (string.IsNullOrEmpty(StoreId))
+            return;
+
+        Loading = true;
+        try
+        {
+            var config = TypedConfig ?? new StoreNumbersConfig();
+            var offset = DateTimeOffset.UtcNow.AddDays(-config.TimeframeDays);
+
+            _paidInvoices = await InvoiceRepository.GetInvoiceCount(
+                new InvoiceQuery
+                {
+                    StoreId = new[] { StoreId },
+                    StartDate = offset,
+                    Status = new[] { "paid", "confirmed" }
+                });
+
+            await using var ctx = DbContextFactory.CreateContext();
+            _payoutsPending = await ctx.Payouts
+                .Where(p => p.PullPaymentData.StoreId == StoreId
+                         && !p.PullPaymentData.Archived
+                         && p.State == PayoutState.AwaitingApproval)
+                .CountAsync();
+
+            _refundsIssued = await ctx.Invoices
+                .Where(i => i.StoreData.Id == StoreId && !i.Archived && i.Created >= offset)
+                .SelectMany(i => i.Refunds)
+                .CountAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+}

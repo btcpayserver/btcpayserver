@@ -7,6 +7,7 @@ namespace BTCPayServer
         public ListQueryDataHolder UsersQuery { get; set; }
         public ListQueryDataHolder PayoutsQuery { get; set; }
         public ListQueryDataHolder PullPaymentsQuery { get; set; }
+        public ListQueryDataHolder WalletTransactionsQuery { get; set; }
         public string CurrentStoreId { get; set; }
     }
 

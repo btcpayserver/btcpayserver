@@ -137,11 +137,12 @@
 		{
 			<button type="submit" id="page-primary" name="command" value="createpending" class="btn btn-primary" text-translate="true">Create pending transaction</button>
 		}
-		else
-		{
-			<button type="submit" id="page-primary" name="command" value="sign" class="btn btn-primary" permission="@WalletPolicies.CanSignWalletTransactions" text-translate="true">Sign transaction</button>
-			<button type="submit" id="CreatePSBT" name="command" value="analyze-psbt" class="btn btn-primary" permission="@WalletPolicies.CanCreateWalletTransactions" not-permission="@WalletPolicies.CanSignWalletTransactions" text-translate="true">Create PSBT</button>
-		}
+			else
+			{
+				<button type="submit" id="page-primary" name="command" value="sign" class="btn btn-primary" permission="@($"{WalletPolicies.CanSignWalletTransactions},{WalletPolicies.CanBroadcastWalletTransactions}")" and-mode="true" text-translate="true">Sign transaction</button>
+				<button type="submit" id="CreatePendingTransaction" name="command" value="createpending" class="btn btn-primary" permission="@WalletPolicies.CanCreateWalletTransactions" not-permission="@WalletPolicies.CanBroadcastWalletTransactions" text-translate="true">Create pending transaction</button>
+				<button type="submit" id="CreatePSBT" name="command" value="analyze-psbt" class="btn btn-primary" permission="@WalletPolicies.CanBroadcastWalletTransactions" not-permission="@WalletPolicies.CanSignWalletTransactions" text-translate="true">Create PSBT</button>
+			}
 	</div>
 
 </form>

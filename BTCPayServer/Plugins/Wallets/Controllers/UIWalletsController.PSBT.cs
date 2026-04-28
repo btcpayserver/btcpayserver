@@ -165,13 +165,15 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             var requiredPolicy = command switch
             {
-                "createpending" or "save-psbt" or "update" or "combine" => WalletPolicies.CanCreateWalletTransactions,
+                "createpending" => WalletPolicies.CanCreateWalletTransactions,
                 "sign" or "collect" => WalletPolicies.CanSignWalletTransactions,
-                "broadcast" => WalletPolicies.CanBroadcastWalletTransactions,
+                "decode" or "save-psbt" or "update" or "combine" or "broadcast" => WalletPolicies.CanBroadcastWalletTransactions,
                 _ => WalletPolicies.CanViewWallet
             };
             if (await EnsureWalletStoreContextAsync(walletId) is null ||
-                !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, requiredPolicy)).Succeeded)
+                !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, requiredPolicy)).Succeeded || command == "sign" &&
+                vm.SigningContext?.PendingTransactionId is null &&
+                !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanBroadcastWalletTransactions)).Succeeded)
                 return Forbid();
             vm.CryptoCode = network.CryptoCode;
 
@@ -234,12 +236,13 @@ namespace BTCPayServer.Controllers
 
                 case "combine":
                     ModelState.Remove(nameof(vm.PSBT));
-                    return View(nameof(WalletPSBTCombine), new WalletPSBTCombineViewModel
+                    var combineVm = new WalletPSBTCombineViewModel
                     {
                         OtherPSBT = psbt.ToBase64(),
                         ReturnUrl = vm.ReturnUrl,
                         BackUrl = vm.BackUrl
-                    });
+                    };
+                    return View(nameof(WalletPSBTCombine), combineVm);
 
                 case "broadcast":
                     return await RedirectToWalletPSBTReady(walletId, new WalletPSBTReadyViewModel
@@ -466,11 +469,14 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             var requiredPolicy = command switch
             {
-                "broadcast" or "payjoin" => WalletPolicies.CanBroadcastWalletTransactions,
+                "decode" or "analyze-psbt" or "broadcast" or "payjoin" => WalletPolicies.CanBroadcastWalletTransactions,
                 _ => WalletPolicies.CanViewWallet
             };
             if (await EnsureWalletStoreContextAsync(walletId) is null ||
                 !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, requiredPolicy)).Succeeded)
+                return Forbid();
+            if (command == "payjoin" &&
+                !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanSignWalletTransactions)).Succeeded)
                 return Forbid();
             PSBT psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
             if (vm.InvalidPSBT || psbt is null)
@@ -633,8 +639,7 @@ namespace BTCPayServer.Controllers
                     await FetchTransactionDetails(walletId, derivationSchemeSettings, vm, network);
                     return View("WalletPSBTDecoded", vm);
                 default:
-                    vm.Errors.Add(StringLocalizer["Unknown command"]);
-                    return View(nameof(WalletPSBT), vm);
+                    return BadRequest();
             }
         }
 
@@ -651,7 +656,7 @@ namespace BTCPayServer.Controllers
             if (network is null)
                 return NotFound();
             if (await EnsureWalletStoreContextAsync(walletId) is null ||
-                !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanCreateWalletTransactions)).Succeeded)
+                !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanBroadcastWalletTransactions)).Succeeded)
                 return Forbid();
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
             if (psbt == null)
@@ -675,7 +680,7 @@ namespace BTCPayServer.Controllers
         private async Task<bool> CanAutoSignWithHotWallet(WalletId walletId, DerivationSchemeSettings derivationSchemeSettings)
         {
             return derivationSchemeSettings?.IsHotWallet is true &&
-                   (await _authorizationService.AuthorizeAsync(User, walletId.StoreId, Policies.CanModifyStoreSettings)).Succeeded &&
+                   (await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanSignWalletTransactions)).Succeeded &&
                    await CanUseHotWallet();
         }
     }

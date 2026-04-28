@@ -1455,7 +1455,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.Equal("hekki", search.TextSearch);
             Assert.Equal("orderid:MYORDERID,orderid:MYORDERID_2", search.TextFilters);
             Assert.Equal("orderid:MYORDERID,orderid:MYORDERID_2,hekki", search.TextCombined);
-            Assert.Equal("StartDate:2019-04-25 01:00 AM", search.WithoutSearchText());
+            Assert.Equal("startdate:2019-04-25 01:00 AM", search.WithoutSearchText());
             Assert.Equal(filter, search.ToString());
 
             // modify search
@@ -1499,6 +1499,9 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.Single(modified.GetFilterArray("enddate"), "-7d");
             modified = new SearchString(modified.Toggle("enddate", "-7d"));
             Assert.Null(modified.GetFilterArray("enddate"));
+
+            search = new SearchString("7,startdate:-7d");
+            Assert.Equal("startdate:-7d", search.WithoutSearchText());
         }
 
         [Fact]

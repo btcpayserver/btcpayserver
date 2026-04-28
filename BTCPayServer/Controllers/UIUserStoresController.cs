@@ -7,9 +7,11 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Localization;
@@ -23,18 +25,24 @@ namespace BTCPayServer.Controllers
         private readonly IStringLocalizer StringLocalizer;
         private readonly DefaultRulesCollection _defaultRules;
         private readonly RateFetcher _rateFactory;
+        private readonly PoliciesSettings _policiesSettings;
+        private readonly UserManager<ApplicationUser> _userManager;
         public string CreatedStoreId { get; set; }
 
         public UIUserStoresController(
 			DefaultRulesCollection defaultRules,
             StoreRepository storeRepository,
             IStringLocalizer stringLocalizer,
-            RateFetcher rateFactory)
+            RateFetcher rateFactory,
+            PoliciesSettings policiesSettings,
+            UserManager<ApplicationUser> userManager)
         {
             _repo = storeRepository;
             StringLocalizer = stringLocalizer;
             _defaultRules = defaultRules;
             _rateFactory = rateFactory;
+            _policiesSettings = policiesSettings;
+            _userManager = userManager;
         }
 
         [HttpGet]
@@ -62,7 +70,28 @@ namespace BTCPayServer.Controllers
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettingsUnscoped)]
         public async Task<IActionResult> CreateStore(bool skipWizard)
         {
-            var stores = await _repo.GetStoresByUserId(User.GetId());
+            var userId = User.GetId();
+            if (!User.IsInRole(Roles.ServerAdmin))
+            {
+                var limit = await GetEffectiveStoreLimitAsync();
+                if (limit.HasValue)
+                {
+                    var count = await _repo.CountStoresByUserId(userId);
+                    if (count >= limit.Value)
+                    {
+                        TempData.SetStatusMessageModel(new StatusMessageModel
+                        {
+                            Severity = StatusMessageModel.StatusSeverity.Error,
+                            Message = limit.Value == 0
+                                ? StringLocalizer["Store creation is not allowed on this server."].Value
+                                : StringLocalizer["You have reached the maximum number of stores allowed ({0}).", limit.Value].Value
+                        });
+                        return RedirectToAction(nameof(ListStores));
+                    }
+                }
+            }
+
+            var stores = await _repo.GetStoresByUserId(userId);
             var defaultTemplate = await _repo.GetDefaultStoreTemplate();
             var blob = defaultTemplate.GetStoreBlob();
             var vm = new CreateStoreViewModel
@@ -82,9 +111,25 @@ namespace BTCPayServer.Controllers
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettingsUnscoped)]
         public async Task<IActionResult> CreateStore(CreateStoreViewModel vm)
         {
+            var userId = User.GetId();
+            if (!User.IsInRole(Roles.ServerAdmin))
+            {
+                var limit = await GetEffectiveStoreLimitAsync();
+                if (limit.HasValue)
+                {
+                    var count = await _repo.CountStoresByUserId(userId);
+                    if (count >= limit.Value)
+                    {
+                        ModelState.AddModelError(string.Empty, limit.Value == 0
+                            ? StringLocalizer["Store creation is not allowed on this server."].Value
+                            : StringLocalizer["You have reached the maximum number of stores allowed ({0}).", limit.Value].Value);
+                    }
+                }
+            }
+
             if (!ModelState.IsValid)
             {
-                var stores = await _repo.GetStoresByUserId(User.GetId());
+                var stores = await _repo.GetStoresByUserId(userId);
                 vm.IsFirstStore = !stores.Any();
                 var template = await _repo.GetDefaultStoreTemplate();
                 var defaultCurrency = template.GetStoreBlob().DefaultCurrency ?? StoreBlob.StandardDefaultCurrency;
@@ -103,13 +148,20 @@ namespace BTCPayServer.Controllers
                 rate.RateScripting = false;
             }
             store.SetStoreBlob(blob);
-            await _repo.CreateStore(User.GetId(), store);
+            await _repo.CreateStore(userId, store);
             CreatedStoreId = store.Id;
             TempData.SetStatusSuccess(StringLocalizer["Store successfully created"]);
             return RedirectToAction(nameof(UIStoresController.Index), "UIStores", new
             {
                 storeId = store.Id
             });
+        }
+
+        private async Task<int?> GetEffectiveStoreLimitAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var blob = user?.GetBlob();
+            return blob?.StoreQuota ?? _policiesSettings.NonAdminMaxStores;
         }
 
         [HttpGet("{storeId}/me/delete")]

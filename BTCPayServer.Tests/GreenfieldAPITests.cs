@@ -3213,6 +3213,76 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
+        public async Task StoreQuotaTests()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+
+            var admin = tester.NewAccount();
+            await admin.GrantAccessAsync(true);
+            var adminClient = await admin.CreateClient(Policies.Unrestricted);
+
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            var userClient = await user.CreateClient(Policies.Unrestricted);
+
+            var settings = tester.PayTester.GetService<SettingsRepository>();
+
+            // By default there is no limit — user can create stores freely
+            var s1 = await userClient.CreateStore(new CreateStoreRequest { Name = "Store 1" });
+            Assert.NotNull(s1.Id);
+
+            // Set global limit to 1 — user already has 1, so next creation must fail
+            await settings.UpdateSetting(new PoliciesSettings { NonAdminMaxStores = 1 });
+            await AssertAPIError("store-limit-reached", () =>
+                userClient.CreateStore(new CreateStoreRequest { Name = "Store 2" }));
+
+            // Admin is never blocked by the quota
+            var adminStore = await adminClient.CreateStore(new CreateStoreRequest { Name = "Admin store" });
+            Assert.NotNull(adminStore.Id);
+
+            // Raise global limit to 2 — user can now create one more
+            await settings.UpdateSetting(new PoliciesSettings { NonAdminMaxStores = 2 });
+            var s2 = await userClient.CreateStore(new CreateStoreRequest { Name = "Store 2" });
+            Assert.NotNull(s2.Id);
+
+            // Now at the new limit again
+            await AssertAPIError("store-limit-reached", () =>
+                userClient.CreateStore(new CreateStoreRequest { Name = "Store 3" }));
+
+            // Per-user override of 3 lets the user create one more despite the global limit of 2
+            var updated = await adminClient.UpdateUser(user.UserId, new AdminUpdateApplicationUserRequest { StoreQuota = 3 });
+            Assert.Equal(3, updated.StoreQuota);
+            var s3 = await userClient.CreateStore(new CreateStoreRequest { Name = "Store 3" });
+            Assert.NotNull(s3.Id);
+
+            // Now blocked by per-user quota (3) even though global is 2
+            await AssertAPIError("store-limit-reached", () =>
+                userClient.CreateStore(new CreateStoreRequest { Name = "Store 4" }));
+
+            // Reset per-user quota (null) — falls back to global limit of 2, so blocked again
+            updated = await adminClient.UpdateUser(user.UserId, new AdminUpdateApplicationUserRequest { StoreQuota = null });
+            Assert.Null(updated.StoreQuota);
+            await AssertAPIError("store-limit-reached", () =>
+                userClient.CreateStore(new CreateStoreRequest { Name = "Store 4" }));
+
+            // Non-admin cannot call UpdateUser
+            await AssertHttpError(403, () =>
+                userClient.UpdateUser(user.UserId, new AdminUpdateApplicationUserRequest { StoreQuota = 10 }));
+
+            // Remove the global limit — user is unblocked
+            await settings.UpdateSetting(new PoliciesSettings { NonAdminMaxStores = null });
+            var s4 = await userClient.CreateStore(new CreateStoreRequest { Name = "Store 4" });
+            Assert.NotNull(s4.Id);
+
+            // Global limit of 0 blocks all store creation for non-admins
+            await settings.UpdateSetting(new PoliciesSettings { NonAdminMaxStores = 0 });
+            await AssertAPIError("store-limit-reached", () =>
+                userClient.CreateStore(new CreateStoreRequest { Name = "Store 5" }));
+        }
+
+        [Fact(Timeout = 60 * 2 * 1000)]
+        [Trait("Integration", "Integration")]
         [Trait("Lightning", "Lightning")]
         public async Task CanUseLNPayoutProcessor()
         {

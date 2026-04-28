@@ -85,6 +85,7 @@ namespace BTCPayServer.Services
                 Name = blob.Name,
                 Roles = roles,
                 Disabled = data.IsDisabled,
+                StoreQuota = blob.StoreQuota,
                 ImageUrl = string.IsNullOrEmpty(blob.ImageUrl)
                     ? null
                     : await uriResolver.Resolve(request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),

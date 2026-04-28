@@ -277,6 +277,15 @@ namespace BTCPayServer.Services.Stores
                 .ToArrayAsync());
         }
 
+        public async Task<int> CountStoresByUserId(string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+                return 0;
+            await using var ctx = _ContextFactory.CreateContext();
+            return await ctx.UserStore
+                .CountAsync(u => u.ApplicationUserId == userId && u.StoreRoleId == StoreRoleId.Owner.Id);
+        }
+
         public async Task<StoreData?> GetStoreByInvoiceId(string invoiceId)
         {
             await using var context = _ContextFactory.CreateContext();

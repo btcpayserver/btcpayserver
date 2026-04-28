@@ -42,6 +42,10 @@ namespace BTCPayServer.Models.ServerViewModels
             [Display(Name = "Created")]
             public DateTimeOffset? Created { get; set; }
 
+            [Display(Name = "Store Quota")]
+            [Range(0, int.MaxValue)]
+            public int? StoreQuota { get; set; }
+            
             public IEnumerable<string> Roles { get; set; }
             public IEnumerable<UserStore> Stores { get; set; }
         }

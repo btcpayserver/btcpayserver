@@ -86,6 +86,8 @@ namespace BTCPayServer.Services.Apps
         public bool EnableShoppingCart { get; set; }
         [JsonConverter(typeof(JsonConverters.NumericStringJsonConverter))]
         public decimal DefaultTaxRate { get; set; }
+        [JsonConverter(typeof(JsonConverters.NumericStringJsonConverter))]
+        public decimal TipTaxRate { get; set; }
         public PosViewType DefaultView { get; set; }
         public bool ShowItems { get; set; }
         public bool ShowCustomAmount { get; set; }

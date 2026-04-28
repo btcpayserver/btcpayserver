@@ -641,18 +641,6 @@ namespace BTCPayServer.HostedServices
                     return;
                 }
 
-                if (req.ClaimRequest.Destination.Id != null)
-                {
-                    if (await ctx.Payouts.AnyAsync(data =>
-                            data.DedupId.Equals(req.ClaimRequest.Destination.Id) &&
-                            data.State != PayoutState.Completed && data.State != PayoutState.Cancelled
-                        ))
-                    {
-                        req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.Duplicate));
-                        return;
-                    }
-                }
-
                 var payoutsRaw = withoutPullPayment
                     ? null
                     : await ctx.Payouts.Where(p => p.PullPaymentDataId == pp.Id)

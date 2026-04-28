@@ -1458,6 +1458,16 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.Equal("StartDate:2019-04-25 01:00 AM", search.WithoutSearchText());
             Assert.Equal(filter, search.ToString());
 
+            filter = "label:test,nolabel:true,direction:in, hekki";
+            search = new SearchString(filter);
+            Assert.Equal("hekki", search.TextSearch);
+            Assert.Null(search.TextFilters);
+            Assert.Equal("hekki", search.TextCombined);
+            Assert.Equal("label:test,nolabel:true,direction:in", search.WithoutSearchText());
+            Assert.Single(search.Filters["label"], "test");
+            Assert.Single(search.Filters["direction"], "in");
+            Assert.True(search.GetFilterBool("nolabel"));
+
             // modify search
             filter = $"status:settled,exceptionstatus:paidLate,unusual:true, fulltext searchterm, storeid:{storeId},startdate:2019-04-25 01:00:00";
             search = new SearchString(filter);
@@ -1499,6 +1509,61 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.Single(modified.GetFilterArray("enddate"), "-7d");
             modified = new SearchString(modified.Toggle("enddate", "-7d"));
             Assert.Null(modified.GetFilterArray("enddate"));
+        }
+
+        [Fact]
+        public void BuildWalletTransactionsFilterSeparatesTextAndStructuredTerms()
+        {
+            var result = UIWalletsController.BuildWalletTransactionsFilter(
+                "direction:out,label:primary-label,nolabel:true,startdate:2026-03-01T12:34:56",
+                "abc123tx",
+                "secondary-label",
+                120);
+
+            Assert.Equal("abc123tx", result.SearchInputText);
+            Assert.Equal("abc123tx", result.SearchText);
+            Assert.Equal("abc123tx", result.TextSearch);
+
+            var structuredSearchTerm = result.SearchTerm;
+            Assert.Contains("direction:out", structuredSearchTerm);
+            Assert.Contains("label:primary-label", structuredSearchTerm);
+            Assert.Contains("nolabel:true", structuredSearchTerm);
+            Assert.Contains("startdate:2026-03-01T12:34:56", structuredSearchTerm);
+            Assert.DoesNotContain("abc123tx", structuredSearchTerm);
+
+            Assert.Equal(["primary-label", "secondary-label"], result.LabelFilters);
+            Assert.True(result.IncludeNoLabel);
+            Assert.False(result.Positive);
+            Assert.NotNull(result.StartDate);
+            Assert.True(result.HasLabelFilter);
+            Assert.True(result.HasFilters);
+
+            result = UIWalletsController.BuildWalletTransactionsFilter(null, "abc", null, 120);
+
+            Assert.Equal(string.Empty, result.SearchTerm);
+            Assert.Equal("abc", result.SearchText);
+            Assert.Equal("abc", result.SearchInputText);
+            Assert.Equal("abc", result.TextSearch);
+            Assert.False(result.HasLabelFilter);
+            Assert.True(result.HasFilters);
+
+            result = UIWalletsController.BuildWalletTransactionsFilter("foo:bar", null, null, 120);
+
+            Assert.Equal(string.Empty, result.SearchTerm);
+            Assert.Equal(string.Empty, result.SearchText);
+            Assert.Equal(string.Empty, result.SearchInputText);
+            Assert.Equal(string.Empty, result.TextSearch);
+            Assert.False(result.HasLabelFilter);
+            Assert.False(result.HasFilters);
+
+            result = UIWalletsController.BuildWalletTransactionsFilter(string.Empty, null, null, 120);
+
+            Assert.Equal(string.Empty, result.SearchTerm);
+            Assert.Equal(string.Empty, result.SearchText);
+            Assert.Equal(string.Empty, result.SearchInputText);
+            Assert.Equal(string.Empty, result.TextSearch);
+            Assert.False(result.HasLabelFilter);
+            Assert.False(result.HasFilters);
         }
 
         [Fact]

@@ -824,7 +824,7 @@ namespace BTCPayServer
         // Give times for extensions to switch to MainNavViewModel.Store
         // or HttpContext.GetStoreDataOrNull
             => GetStoreDataOrNull(ctx) ??
-               (ctx.Items["BTCPAY.NAVRENDERING"]  is true ? null
+               (ctx.Items["BTCPAY.NAVRENDERING"]  is true ? null!
                : throw new InvalidOperationException("StoreData is not set"));
         public static void SetStoreData(this HttpContext ctx, StoreData? storeData)
             => ctx.Items["BTCPAY.STOREDATA"] = storeData;

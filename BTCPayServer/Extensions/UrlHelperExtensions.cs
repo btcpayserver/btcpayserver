@@ -4,6 +4,7 @@ using BTCPayServer.Abstractions;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
+using BTCPayServer.Plugins.Wallets;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
@@ -12,10 +13,10 @@ namespace Microsoft.AspNetCore.Mvc
     public static class UrlHelperExtensions
     {
 #nullable enable
-        public static string? WalletSend(this IUrlHelper helper, WalletId walletId) => helper.Action(nameof(UIWalletsController.WalletSend), new { area = "Wallets", walletId });
+        public static string? WalletSend(this IUrlHelper helper, WalletId walletId) => helper.Action(nameof(UIWalletsController.WalletSend), new { area = WalletsPlugin.Area, walletId });
         public static string? WalletTransactions(this IUrlHelper helper, string walletId) => WalletTransactions(helper, WalletId.Parse(walletId));
         public static string? WalletTransactions(this IUrlHelper helper, WalletId walletId)
-        => helper.Action(nameof(UIWalletsController.WalletTransactions), new { area = "Wallets", walletId });
+        => helper.Action(nameof(UIWalletsController.WalletTransactions), new { area = WalletsPlugin.Area, walletId });
         public static Uri ActionAbsolute(this IUrlHelper helper, HttpRequest request, string? action, string? controller, object? values)
         => request.GetAbsoluteUriNoPathBase(new Uri(helper.Action(action, controller, values) ?? "", UriKind.Relative));
         public static Uri ActionAbsolute(this IUrlHelper helper, HttpRequest request, string? action, string? controller)
@@ -50,7 +51,7 @@ namespace Microsoft.AspNetCore.Mvc
             return urlHelper.GetUriByAction(
                 action: nameof(UIWalletsController.WalletTransactions),
                 controller: "UIWallets",
-                values: new { area = "Wallets", walletId = walletId.ToString() },
+                values: new { area = WalletsPlugin.Area, walletId = walletId.ToString() },
                 baseUrl
             );
         }

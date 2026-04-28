@@ -3,7 +3,6 @@
 @model WalletPSBTViewModel
 @{
 	var walletId = Context.GetRouteValue("walletId").ToString();
-	var walletSignPermission = Policies.CanSignWalletTransactions;
 	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
 	Layout = "_LayoutWizard";
 	ViewData.SetTitle(StringLocalizer["Decode PSBT"]);
@@ -95,7 +94,7 @@
         <div class="d-flex">
             @if (this.Model.SigningContext.PendingTransactionId is not null)
             {
-                <button type="submit" name="command" value="collect" class="btn btn-primary mt-2" id="Collect" permission="@walletSignPermission" and-mode="true" text-translate="true">Collect signatures</button>
+                <button type="submit" name="command" value="collect" class="btn btn-primary mt-2" id="Collect" permission="@WalletPolicies.CanSignWalletTransactions" text-translate="true">Collect signatures</button>
             }
             else
             {

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Mvc;
 using BTCPayServer.Controllers;
+using BTCPayServer.Plugins.Wallets;
 using NBitcoin.DataEncoders;
 using BTCPayServer.Abstractions;
 
@@ -75,7 +76,7 @@ namespace BTCPayServer.Services
         => LinkGenerator.GetUriByAction(
             action: nameof(UIWalletsController.WalletTransactions),
             controller: "UIWallets",
-            values: new { area = "Wallets", walletId = walletId.ToString() },
+            values: new { area = WalletsPlugin.Area, walletId = walletId.ToString() },
             GetRequestBaseUrl());
 
         public string PaymentRequestByIdLink(string payReqId)

@@ -3,8 +3,6 @@
 @model WalletBumpFeeViewModel
 @{
 	var walletId = Context.GetRouteValue("walletId").ToString();
-	var walletCreateTxPermission = Policies.CanCreateWalletTransactions;
-	var walletSignTxPermission = Policies.CanSignWalletTransactions;
 	var cancelUrl = this.Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
 	Layout = "_LayoutWizard";
 	ViewData.SetTitle(StringLocalizer["Bump fee"]);
@@ -141,8 +139,8 @@
 		}
 		else
 		{
-			<button type="submit" id="page-primary" name="command" value="sign" class="btn btn-primary" permission="@walletSignTxPermission" and-mode="true" text-translate="true">Sign transaction</button>
-			<button type="submit" id="CreatePSBT" name="command" value="analyze-psbt" class="btn btn-primary" permission="@walletCreateTxPermission" not-permission="@walletSignTxPermission" and-mode="true" text-translate="true">Create PSBT</button>
+			<button type="submit" id="page-primary" name="command" value="sign" class="btn btn-primary" permission="@WalletPolicies.CanSignWalletTransactions" text-translate="true">Sign transaction</button>
+			<button type="submit" id="CreatePSBT" name="command" value="analyze-psbt" class="btn btn-primary" permission="@WalletPolicies.CanCreateWalletTransactions" not-permission="@WalletPolicies.CanSignWalletTransactions" text-translate="true">Create PSBT</button>
 		}
 	</div>
 

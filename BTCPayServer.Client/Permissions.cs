@@ -21,14 +21,6 @@ namespace BTCPayServer.Client
         public const string CanViewInvoices = "btcpay.store.canviewinvoices";
         public const string CanCreateInvoice = "btcpay.store.cancreateinvoice";
         public const string CanModifyInvoices = "btcpay.store.canmodifyinvoices";
-        public const string CanManageWallets = "btcpay.store.canmanagewallets";
-        public const string CanViewWallet = "btcpay.store.canviewwallet";
-        public const string CanManageWalletSettings = "btcpay.store.canmanagewalletsettings";
-        public const string CanManageWalletTransactions = "btcpay.store.canmanagewallettransactions";
-        public const string CanCreateWalletTransactions = "btcpay.store.cancreatetransactions";
-        public const string CanSignWalletTransactions = "btcpay.store.cansigntransactions";
-        public const string CanBroadcastWalletTransactions = "btcpay.store.canbroadcasttransactions";
-        public const string CanCancelWalletTransactions = "btcpay.store.cancanceltransactions";
         public const string CanViewPaymentRequests = "btcpay.store.canviewpaymentrequests";
         public const string CanModifyPaymentRequests = "btcpay.store.canmodifypaymentrequests";
         public const string CanModifyProfile = "btcpay.user.canmodifyprofile";

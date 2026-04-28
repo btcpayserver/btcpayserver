@@ -9,7 +9,6 @@
     var storeId = Context.GetRouteValue("storeId")?.ToString();
     var cryptoCode = Context.GetRouteValue("cryptoCode")?.ToString();
     var wallet = walletId != null ? WalletId.Parse(walletId) : new WalletId(storeId, cryptoCode);
-    var walletManageTxPermission = Policies.CanManageWalletTransactions;
 }
 
 @{
@@ -41,7 +40,7 @@
                 <tr v-show='filteredItemsSet.has(@Safe.Json(address.Address))'>
                     <td>@address.Address</td>
                     <td>
-                        <span permission="@walletManageTxPermission" and-mode="true">
+                        <span permission="@WalletPolicies.CanManageWalletTransactions">
                             <vc:label-manager
                                 wallet-object-id="new WalletObjectId(wallet, WalletObjectData.Types.Address, address.Address)"
                                 selected-labels="address.Labels.Select(l => l.Text).ToArray()"
@@ -51,7 +50,7 @@
                         </span>
                         @if (address.Labels.Any())
                         {
-                            <span class="d-flex flex-wrap gap-2 align-items-center" not-permission="@walletManageTxPermission" and-mode="true">
+                            <span class="d-flex flex-wrap gap-2 align-items-center" not-permission="@WalletPolicies.CanManageWalletTransactions">
                                 @foreach (var label in address.Labels)
                                 {
                                     <span class="transaction-label" style="--label-bg:@label.Color;--label-fg:@label.TextColor">

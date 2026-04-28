@@ -45,6 +45,7 @@ public class UserEvent(ApplicationUser user)
 	}
     public class Invited(ApplicationUser user, ApplicationUser invitedBy, RequestBaseUrl requestBaseUrl, string invitationLink, string approvalLink, string confirmationEmail) : Registered(user, requestBaseUrl, approvalLink, confirmationEmail)
     {
+        public bool SkipMonetization { get; set; }
         public bool SendInvitationEmail { get; set; }
         public ApplicationUser InvitedByUser { get; } = invitedBy;
         public string InvitationLink { get; } = invitationLink;

@@ -217,12 +217,34 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.GoToServer(ServerNavPages.Users);
         var users = new PMO.UsersPMO(s);
         await users.DeleteUser("normal-guest@gmail.com");
-
-        await GoToMonetization(s);
-        await GoToOffering(s);
-        await offeringPMO.GoToSubscribers();
-        await offeringPMO.AssertHasNotSubscriber("normal-guest@gmail.com");
     }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanSkipMonetizationOnInvite()
+    {
+        await using var s = CreatePlaywrightTester(newDb: true);
+        await s.StartAsync();
+        await s.RegisterNewUser(true);
+        await s.CreateNewStore();
+        await GoToMonetization(s);
+        await s.ClickPagePrimary();
+        await s.ConfirmModal();
+        await s.FindAlertMessage(partialText: "Monetization activated");
+
+        await CreateUserAsAdmin(s, "skip-monetization@gmail.com", skipMonetization: true);
+        await AssertSubscribed(s, "skip-monetization@gmail.com", false);
+        await CanLog(s, "skip-monetization@gmail.com");
+
+        var ev = await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await CreateUserAsAdmin(s, "enrolled-invited@gmail.com", skipMonetization: false);
+        });
+        Assert.Equal("enrolled-invited@gmail.com", ev.Subscriber.Customer.Email.Get());
+        await AssertSubscribed(s, "enrolled-invited@gmail.com", true);
+        await CanLog(s, "enrolled-invited@gmail.com");
+    }
+
 
     private async Task<SubscriptionTests.OfferingPMO> GoToOffering(PlaywrightTester s)
     {
@@ -279,6 +301,20 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
             Email = email,
             Password = tester.Password
         });
+    }
+    private async Task CreateUserAsAdmin(PlaywrightTester s, string email, bool skipMonetization = true)
+    {
+        await s.GoToUrl("/server/users/new");
+        await s.Page.FillAsync("#Email", email);
+        await s.Page.FillAsync("#Password", s.Password);
+        await s.Page.FillAsync("#ConfirmPassword", s.Password);
+        var emailConfirmed = s.Page.Locator("#EmailConfirmed");
+        if (await emailConfirmed.IsVisibleAsync())
+            await emailConfirmed.CheckAsync();
+        var skipMonetizationCheckbox = s.Page.Locator("#SkipMonetization");
+        if (await skipMonetizationCheckbox.IsVisibleAsync())
+            await skipMonetizationCheckbox.SetCheckedAsync(skipMonetization);
+        await s.ClickPagePrimary();
     }
 
     private static async Task GoToMonetization(PlaywrightTester s)

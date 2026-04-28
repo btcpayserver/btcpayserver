@@ -103,6 +103,9 @@ public class MonetizationHostedService(
                 DefaultPlanId: { } defaultPlanId
             })
         {
+            if (reg is UserEvent.Invited { SkipMonetization: true })
+                return;
+
             if (await userService.IsAdminUser(reg.User))
                 return;
             await using var ctx = dbContextFactory.CreateContext();

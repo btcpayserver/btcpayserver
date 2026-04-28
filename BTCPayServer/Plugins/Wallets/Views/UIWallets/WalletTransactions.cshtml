@@ -334,17 +334,14 @@
                             <a permission="@WalletPolicies.CanBroadcastWalletTransactions"
                                asp-action="ViewPendingTransaction" asp-route-walletId="@walletId"
                                asp-route-pendingTransactionId="@pendingTransaction.Id">@StringLocalizer["Broadcast"]</a>
-                            <a permission="@WalletPolicies.CanViewWallet" not-permission="@WalletPolicies.CanBroadcastWalletTransactions"
-                               asp-action="ViewPendingTransaction" asp-route-walletId="@walletId"
-                               asp-route-pendingTransactionId="@pendingTransaction.Id">@StringLocalizer["View"]</a>
-                            <span not-permission="@WalletPolicies.CanViewWallet">-</span>
+                            <span not-permission="@WalletPolicies.CanBroadcastWalletTransactions" text-translate="true">No action needed</span>
                         }
                         else
                         {
-                            <a permission="@WalletPolicies.CanViewWallet"
+                            <a permission="@WalletPolicies.CanSignWalletTransactions"
                                asp-action="ViewPendingTransaction" asp-route-walletId="@walletId"
                                asp-route-pendingTransactionId="@pendingTransaction.Id">@StringLocalizer["View"]</a>
-                            <span not-permission="@WalletPolicies.CanViewWallet">-</span>
+                            <span not-permission="@WalletPolicies.CanSignWalletTransactions" text-translate="true">No action needed</span>
                         }
                         <span permission="@WalletPolicies.CanCancelWalletTransactions">
                             -

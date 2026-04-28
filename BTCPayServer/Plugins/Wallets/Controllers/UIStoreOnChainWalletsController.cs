@@ -102,9 +102,10 @@ public class UIStoreOnChainWalletsController : Controller
         vm.DerivationScheme = derivation?.AccountDerivation.ToString();
 
         var perm = await CanUseHotWallet();
+        var canAccessSeedMaterial =
+            (await _authorizationService.AuthorizeAsync(User, vm.StoreId, Policies.CanModifyStoreSettings)).Succeeded;
         vm.SetPermission(perm);
-        vm.CanGenerateNewWallet = await CanAccessWalletSeedMaterial(vm.StoreId) &&
-                                  (vm.CanUseHotWallet || vm.CanCreateNewColdWallet);
+        vm.CanGenerateNewWallet = canAccessSeedMaterial && (vm.CanUseHotWallet || vm.CanCreateNewColdWallet);
 
         return View(nameof(SetupWallet), vm);
     }
@@ -302,7 +303,7 @@ public class UIStoreOnChainWalletsController : Controller
         var isHotWallet = vm.Method == WalletSetupMethod.HotWallet;
         var isColdWallet = vm.Method == WalletSetupMethod.WatchOnly;
         var perm = await CanUseHotWallet();
-        if (!await CanAccessWalletSeedMaterial(vm.StoreId))
+        if (!(await _authorizationService.AuthorizeAsync(User, vm.StoreId, Policies.CanModifyStoreSettings)).Succeeded)
             return Forbid();
         if (isHotWallet && !perm.CanCreateHotWallet || isColdWallet && !perm.CanCreateColdWallet)
             return NotFound();
@@ -353,7 +354,8 @@ public class UIStoreOnChainWalletsController : Controller
         }
         var client = _explorerProvider.GetExplorerClient(cryptoCode);
         var isImport = method == WalletSetupMethod.Seed;
-        var canAccessGeneratedSeed = isImport || await CanAccessWalletSeedMaterial(storeId);
+        var canAccessGeneratedSeed = isImport ||
+                                     (await _authorizationService.AuthorizeAsync(User, storeId, Policies.CanModifyStoreSettings)).Succeeded;
         if (!canAccessGeneratedSeed)
             return Forbid();
         var vm = new WalletSetupViewModel
@@ -491,7 +493,8 @@ public class UIStoreOnChainWalletsController : Controller
         var storeBlob = store.GetStoreBlob();
         var excludeFilters = storeBlob.GetExcludedPaymentMethods();
         var perm = await CanUseHotWallet();
-        var canAccessSeedMaterial = await CanAccessWalletSeedMaterial(storeId);
+        var canAccessSeedMaterial =
+            (await _authorizationService.AuthorizeAsync(User, storeId, Policies.CanModifyStoreSettings)).Succeeded;
         var client = _explorerProvider.GetExplorerClient(network);
 
         var handler = _handlers.GetBitcoinHandler(cryptoCode);
@@ -660,7 +663,7 @@ public class UIStoreOnChainWalletsController : Controller
         [FromRoute] string cryptoCode,
         CancellationToken cancellationToken = default)
     {
-        if (!await CanAccessWalletSeedMaterial(storeId))
+        if (!(await _authorizationService.AuthorizeAsync(User, storeId, Policies.CanModifyStoreSettings)).Succeeded)
             return Forbid();
         await EnsureStoreContext(storeId);
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
@@ -836,11 +839,6 @@ public class UIStoreOnChainWalletsController : Controller
     private async Task<WalletCreationPermissions> CanUseHotWallet()
     {
         return await _authorizationService.CanUseHotWallet(_policiesSettings, User);
-    }
-
-    private async Task<bool> CanAccessWalletSeedMaterial(string storeId)
-    {
-        return (await _authorizationService.AuthorizeAsync(User, storeId, Policies.CanModifyStoreSettings)).Succeeded;
     }
 
     private async Task<string> ReadAllText(IFormFile file)

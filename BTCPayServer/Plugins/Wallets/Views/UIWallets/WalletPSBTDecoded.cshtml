@@ -99,7 +99,14 @@
 
         <partial name="SigningContext" for="SigningContext" />
         <div class="d-flex flex-column flex-sm-row flex-wrap justify-content-center align-items-sm-center gap-2">
-            <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" permission="@WalletPolicies.CanSignWalletTransactions" text-translate="true">Sign transaction</button>
+            @if (Model.SigningContext.PendingTransactionId is null)
+            {
+                <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" permission="@($"{WalletPolicies.CanSignWalletTransactions},{WalletPolicies.CanBroadcastWalletTransactions}")" and-mode="true" text-translate="true">Sign transaction</button>
+            }
+            else
+            {
+                <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" permission="@WalletPolicies.CanSignWalletTransactions" text-translate="true">Sign transaction</button>
+            }
             @if (Model.SigningContext.PendingTransactionId is null && !Model.NBXSeedAvailable)
             {
                 <button type="submit" id="CreatePendingTransaction" name="command" value="createpending"
@@ -145,59 +152,59 @@ else
 }
 
 <div class="accordion" id="PSBTOptions">
-    @* Offline PSBT export stays create-only; sign-only roles are limited to BTCPay-controlled sign/collect flows. *@
-    <div class="accordion-item" permission="@WalletPolicies.CanCreateWalletTransactions">
-        <h2 class="accordion-header" id="PSBTOptionsExportHeader">
-            <button type="button" class="accordion-button @(needsExport ? "" : "collapsed")" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsExportContent" aria-controls="PSBTOptionsExportContent" aria-expanded="@(needsExport ? "true" : "false")">
-                <span class="h5">Export PSBT @(isReady ? "" : "for signing")</span>
-                <vc:icon symbol="caret-down" />
-            </button>
-        </h2>
-        <div id="PSBTOptionsExportContent" class="accordion-collapse collapse @(needsExport ? "show" : "")" aria-labelledby="PSBTOptionsExportHeader" data-bs-parent="#PSBTOptions">
-            <div class="accordion-body">
-                <form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" class="mb-2">
-                    <input type="hidden" asp-for="CryptoCode" />
-                    <input type="hidden" asp-for="PSBT" />
-                    <input type="hidden" asp-for="ReturnUrl" />
-                    <input type="hidden" asp-for="BackUrl" />
-                    <div class="d-flex flex-column flex-sm-row flex-wrap align-items-sm-center">
-                        <button name="command" type="submit" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" value="save-psbt" text-translate="true">Download PSBT file</button>
-                        <button name="command" type="button" class="btn btn-primary mb-3 mb-sm-0 me-sm-2 only-for-js" data-bs-toggle="modal" data-bs-target="#scan-qr-modal" text-translate="true">Show QR for wallet camera</button>
-                        <a id="ShowRawVersion" href="#ExportOptions" data-bs-toggle="collapse" class="btn btn-link text-secondary" text-translate="true">Show raw versions</a>
-                    </div>
-                </form>
-                <div id="ExportOptions" class="collapse">
-                    <div class="pt-4">
-                        <ul class="nav mb-3" id="export-tab" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="btcpay-pill active" id="export-base64-tab" data-bs-toggle="pill" data-bs-target="#export-base64" type="button" role="tab" aria-controls="export-base64" aria-selected="true">Base64</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="btcpay-pill" id="export-hex-tab" data-bs-toggle="pill" data-bs-target="#export-hex" type="button" role="tab" aria-controls="export-hex" aria-selected="false">HEX</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="btcpay-pill" id="export-json-tab" data-bs-toggle="pill" data-bs-target="#export-json" type="button" role="tab" aria-controls="export-json" aria-selected="false">JSON</button>
-                            </li>
-                        </ul>
-                        <div class="tab-content" id="export-tabContent">
-                            <div class="tab-pane fade show active" id="export-base64" role="tabpanel" aria-labelledby="export-base64-tab">
-                                <pre class="mb-4 text-wrap"><code class="text" id="psbt-base64">@Model.PSBT</code></pre>
-                            </div>
-                            <div class="tab-pane fade" id="export-hex" role="tabpanel" aria-labelledby="export-hex-tab">
-                                <pre class="mb-4 text-wrap"><code class="text">@Model.PSBTHex</code></pre>
-                            </div>
-                            <div class="tab-pane fade" id="export-json" role="tabpanel" aria-labelledby="export-json-tab">
-                                <pre class="mb-0"><code class="json">@Model.Decoded</code></pre>
+    @* Exporting PSBT file/QR/raw lets the user sign and broadcast outside BTCPay, so it requires broadcast permission. *@
+    <div class="accordion-item" permission="@WalletPolicies.CanBroadcastWalletTransactions">
+            <h2 class="accordion-header" id="PSBTOptionsExportHeader">
+                <button type="button" class="accordion-button @(needsExport ? "" : "collapsed")" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsExportContent" aria-controls="PSBTOptionsExportContent" aria-expanded="@(needsExport ? "true" : "false")">
+                    <span class="h5">Export PSBT @(isReady ? "" : "for signing")</span>
+                    <vc:icon symbol="caret-down" />
+                </button>
+            </h2>
+            <div id="PSBTOptionsExportContent" class="accordion-collapse collapse @(needsExport ? "show" : "")" aria-labelledby="PSBTOptionsExportHeader" data-bs-parent="#PSBTOptions">
+                <div class="accordion-body">
+                    <form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" class="mb-2">
+                        <input type="hidden" asp-for="CryptoCode" />
+                        <input type="hidden" asp-for="PSBT" />
+                        <input type="hidden" asp-for="ReturnUrl" />
+                        <input type="hidden" asp-for="BackUrl" />
+                        <div class="d-flex flex-column flex-sm-row flex-wrap align-items-sm-center">
+                            <button name="command" type="submit" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" value="save-psbt" text-translate="true">Download PSBT file</button>
+                            <button name="command" type="button" class="btn btn-primary mb-3 mb-sm-0 me-sm-2 only-for-js" data-bs-toggle="modal" data-bs-target="#scan-qr-modal" text-translate="true">Show QR for wallet camera</button>
+                            <a id="ShowRawVersion" href="#ExportOptions" data-bs-toggle="collapse" class="btn btn-link text-secondary" text-translate="true">Show raw versions</a>
+                        </div>
+                    </form>
+                    <div id="ExportOptions" class="collapse">
+                        <div class="pt-4">
+                            <ul class="nav mb-3" id="export-tab" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="btcpay-pill active" id="export-base64-tab" data-bs-toggle="pill" data-bs-target="#export-base64" type="button" role="tab" aria-controls="export-base64" aria-selected="true">Base64</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="btcpay-pill" id="export-hex-tab" data-bs-toggle="pill" data-bs-target="#export-hex" type="button" role="tab" aria-controls="export-hex" aria-selected="false">HEX</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="btcpay-pill" id="export-json-tab" data-bs-toggle="pill" data-bs-target="#export-json" type="button" role="tab" aria-controls="export-json" aria-selected="false">JSON</button>
+                                </li>
+                            </ul>
+                            <div class="tab-content" id="export-tabContent">
+                                <div class="tab-pane fade show active" id="export-base64" role="tabpanel" aria-labelledby="export-base64-tab">
+                                    <pre class="mb-4 text-wrap"><code class="text" id="psbt-base64">@Model.PSBT</code></pre>
+                                </div>
+                                <div class="tab-pane fade" id="export-hex" role="tabpanel" aria-labelledby="export-hex-tab">
+                                    <pre class="mb-4 text-wrap"><code class="text">@Model.PSBTHex</code></pre>
+                                </div>
+                                <div class="tab-pane fade" id="export-json" role="tabpanel" aria-labelledby="export-json-tab">
+                                    <pre class="mb-0"><code class="json">@Model.Decoded</code></pre>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
     </div>
     @if (!isReady)
     {
-        <div class="accordion-item">
+        <div class="accordion-item" permission="@(Model.SigningContext.PendingTransactionId is null ? WalletPolicies.CanBroadcastWalletTransactions : WalletPolicies.CanSignWalletTransactions)">
             <h2 class="accordion-header" id="PSBTOptionsImportHeader">
                 <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsImportContent" aria-controls="PSBTOptionsImportContent" aria-expanded="false">
                     <span class="h5" text-translate="true">Provide updated PSBT</span>
@@ -234,7 +241,7 @@ else
             </div>
         </div>
     }
-    <div class="accordion-item" permission="@WalletPolicies.CanCreateWalletTransactions">
+    <div class="accordion-item" permission="@WalletPolicies.CanBroadcastWalletTransactions">
         <h2 class="accordion-header" id="PSBTOptionsAdvancedHeader">
             <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsAdvancedContent" aria-controls="PSBTOptionsAdvancedContent" aria-expanded="false">
                 <span class="h5">Add metadata to PSBT (advanced)</span>

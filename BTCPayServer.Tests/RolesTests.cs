@@ -580,6 +580,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.AssertPageAccess(false, StorePath(storeId, "pull-payments"));
         await s.AssertPageAccess(false, StorePath(storeId, "payouts"));
         await AssertWalletSendScheduleDenied();
+        await AssertSigningOptionsPsbtVisibility(true);
         await s.GoToUrl(StoreIndex(storeId));
         await s.Logout();
 
@@ -590,10 +591,11 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.AssertPageAccess(true, WalletSend(walletIdString));
         await s.GoToUrl(WalletSend(walletIdString));
         await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
-        Assert.Equal(1, await s.Page.Locator("#CreatePSBT").CountAsync());
+        Assert.Equal(1, await s.Page.Locator("#CreatePendingTransaction").CountAsync());
         Assert.Equal(0, await s.Page.Locator("#SignTransaction").CountAsync());
         Assert.Equal(0, await s.Page.Locator("#Comment").CountAsync());
         await AssertWalletPostForbidden(WalletSend(walletIdString), "sign");
+        await AssertWalletPostForbidden(WalletPsbt(walletIdString), "save-psbt");
         await s.GoToUrl(StoreIndex(storeId));
         await s.Logout();
 
@@ -602,7 +604,9 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.AssertPageAccess(true, WalletsIndex());
         await s.AssertPageAccess(true, WalletTx(walletIdString));
         await s.AssertPageAccess(true, WalletSend(walletIdString));
-        await AssertSigningOptionsPsbtVisibility(true);
+        await AssertSigningOptionsPsbtVisibility(false);
+        await AssertWalletPostForbidden(WalletPsbt(walletIdString), "save-psbt");
+        await AssertWalletPostForbidden(WalletPsbtReady(walletIdString), "broadcast");
         await s.GoToUrl(StoreIndex(storeId));
         await s.Logout();
 
@@ -622,7 +626,9 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await AssertSigningOptionsPsbtVisibility(false);
         await AssertWalletPostForbidden(WalletPsbt(walletIdString), "update");
         await AssertWalletPostForbidden(WalletPsbt(walletIdString), "combine");
+        await AssertWalletPostForbidden(WalletPsbt(walletIdString), "save-psbt");
         await AssertWalletPostForbidden($"{WalletPsbt(walletIdString)}/combine", "combine");
+        await AssertWalletPostForbidden(WalletPsbtReady(walletIdString), "broadcast");
         await s.GoToUrl(StoreIndex(storeId));
         await s.Logout();
 
@@ -636,6 +642,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await AssertWalletPostForbidden(WalletPsbt(walletIdString), "createpending");
         await AssertWalletPostForbidden(WalletPsbt(walletIdString), "update");
         await AssertWalletPostForbidden(WalletPsbt(walletIdString), "combine");
+        await AssertWalletPostForbidden(WalletPsbt(walletIdString), "save-psbt");
         await AssertWalletPostForbidden($"{WalletPsbt(walletIdString)}/combine", "combine");
         await AssertWalletPostForbidden(WalletSign(walletIdString), "seed");
         await AssertWalletPostForbidden(WalletPsbtReady(walletIdString), "broadcast");

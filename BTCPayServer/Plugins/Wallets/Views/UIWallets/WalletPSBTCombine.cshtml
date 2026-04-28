@@ -17,7 +17,7 @@
 <form class="form-group" method="post" asp-action="WalletPSBTCombine" asp-route-walletId="@Context.GetRouteValue("walletId")" enctype="multipart/form-data">
     <input type="hidden" asp-for="OtherPSBT"/>
     <input type="hidden" asp-for="ReturnUrl" />
-        <input type="hidden" asp-for="BackUrl" />
+    <input type="hidden" asp-for="BackUrl" />
     <div class="form-group">
         <label asp-for="PSBT" class="form-label"></label>
         <textarea class="form-control" rows="5" asp-for="PSBT"></textarea>

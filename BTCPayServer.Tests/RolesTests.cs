@@ -5,6 +5,7 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
+using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
@@ -346,9 +347,9 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         var walletCreatorRole = new StoreRoleId(storeId, "Wallet Creator");
         var walletSignerRole = new StoreRoleId(storeId, "Wallet Signer");
         var walletViewerRole = new StoreRoleId(storeId, "Wallet Viewer");
-        await storeRepo.AddOrUpdateStoreRole(walletCreatorRole, new[] { Policies.CanCreateWalletTransactions });
-        await storeRepo.AddOrUpdateStoreRole(walletSignerRole, new[] { Policies.CanCreateWalletTransactions, Policies.CanSignWalletTransactions });
-        await storeRepo.AddOrUpdateStoreRole(walletViewerRole, new[] { Policies.CanViewWallet });
+        await storeRepo.AddOrUpdateStoreRole(walletCreatorRole, new[] { WalletPolicies.CanCreateWalletTransactions });
+        await storeRepo.AddOrUpdateStoreRole(walletSignerRole, new[] { WalletPolicies.CanCreateWalletTransactions, WalletPolicies.CanSignWalletTransactions });
+        await storeRepo.AddOrUpdateStoreRole(walletViewerRole, new[] { WalletPolicies.CanViewWallet });
         await storeRepo.AddOrUpdateStoreUser(storeId, walletManagerUser.Id, new StoreRoleId("Wallet Manager"));
         await storeRepo.AddOrUpdateStoreUser(storeId, multisignerUser.Id, new StoreRoleId("Multisigner"));
         await storeRepo.AddOrUpdateStoreUser(storeId, multisignerGuestUser.Id, new StoreRoleId("Multisigner Guest"));
@@ -367,32 +368,32 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         Assert.NotNull(walletCreatorStore);
         Assert.NotNull(walletSignerStore);
         Assert.NotNull(walletViewerStore);
-        Assert.True(walletManagerStore.HasPolicy(walletManagerUser.Id, Policies.CanManageWallets, permissionService));
-        Assert.True(walletManagerStore.HasPolicy(walletManagerUser.Id, Policies.CanManageWalletSettings, permissionService));
-        Assert.True(walletManagerStore.HasPolicy(walletManagerUser.Id, Policies.CanViewWallet, permissionService));
-        Assert.Contains(permissionService.PermissionNodesByPolicy[Policies.CanManageWalletSettings].EnumerateDescendants(),
-            n => n.Definition.Policy == Policies.CanViewWallet);
-        Assert.Contains(permissionService.PermissionNodesByPolicy[Policies.CanManageWalletTransactions].EnumerateDescendants(),
-            n => n.Definition.Policy == Policies.CanViewWallet);
-        Assert.Contains(permissionService.PermissionNodesByPolicy[Policies.CanSignWalletTransactions].EnumerateDescendants(),
-            n => n.Definition.Policy == Policies.CanViewWallet);
-        Assert.Contains(permissionService.PermissionNodesByPolicy[Policies.CanCreateWalletTransactions].EnumerateDescendants(),
-            n => n.Definition.Policy == Policies.CanViewWallet);
-        Assert.Contains(permissionService.PermissionNodesByPolicy[Policies.CanBroadcastWalletTransactions].EnumerateDescendants(),
-            n => n.Definition.Policy == Policies.CanViewWallet);
-        Assert.Contains(permissionService.PermissionNodesByPolicy[Policies.CanCancelWalletTransactions].EnumerateDescendants(),
-            n => n.Definition.Policy == Policies.CanViewWallet);
-        Assert.True(multisignerStore.HasPolicy(multisignerUser.Id, Policies.CanViewWallet, permissionService));
-        Assert.True(multisignerGuestStore.HasPolicy(multisignerGuestUser.Id, Policies.CanViewWallet, permissionService));
-        Assert.True(walletCreatorStore.HasPolicy(walletCreatorUser.Id, Policies.CanCreateWalletTransactions, permissionService));
-        Assert.False(walletCreatorStore.HasPolicy(walletCreatorUser.Id, Policies.CanSignWalletTransactions, permissionService));
-        Assert.False(walletCreatorStore.HasPolicy(walletCreatorUser.Id, Policies.CanManageWalletTransactions, permissionService));
-        Assert.True(walletSignerStore.HasPolicy(walletSignerUser.Id, Policies.CanCreateWalletTransactions, permissionService));
-        Assert.True(walletSignerStore.HasPolicy(walletSignerUser.Id, Policies.CanSignWalletTransactions, permissionService));
-        Assert.True(walletViewerStore.HasPolicy(walletViewerUser.Id, Policies.CanViewWallet, permissionService));
-        Assert.False(walletViewerStore.HasPolicy(walletViewerUser.Id, Policies.CanCreateWalletTransactions, permissionService));
-        Assert.False(walletViewerStore.HasPolicy(walletViewerUser.Id, Policies.CanSignWalletTransactions, permissionService));
-        Assert.False(walletViewerStore.HasPolicy(walletViewerUser.Id, Policies.CanBroadcastWalletTransactions, permissionService));
+        Assert.True(walletManagerStore.HasPolicy(walletManagerUser.Id, WalletPolicies.CanManageWallets, permissionService));
+        Assert.True(walletManagerStore.HasPolicy(walletManagerUser.Id, WalletPolicies.CanManageWalletSettings, permissionService));
+        Assert.True(walletManagerStore.HasPolicy(walletManagerUser.Id, WalletPolicies.CanViewWallet, permissionService));
+        Assert.Contains(permissionService.PermissionNodesByPolicy[WalletPolicies.CanManageWalletSettings].EnumerateDescendants(),
+            n => n.Definition.Policy == WalletPolicies.CanViewWallet);
+        Assert.Contains(permissionService.PermissionNodesByPolicy[WalletPolicies.CanManageWalletTransactions].EnumerateDescendants(),
+            n => n.Definition.Policy == WalletPolicies.CanViewWallet);
+        Assert.Contains(permissionService.PermissionNodesByPolicy[WalletPolicies.CanSignWalletTransactions].EnumerateDescendants(),
+            n => n.Definition.Policy == WalletPolicies.CanViewWallet);
+        Assert.Contains(permissionService.PermissionNodesByPolicy[WalletPolicies.CanCreateWalletTransactions].EnumerateDescendants(),
+            n => n.Definition.Policy == WalletPolicies.CanViewWallet);
+        Assert.Contains(permissionService.PermissionNodesByPolicy[WalletPolicies.CanBroadcastWalletTransactions].EnumerateDescendants(),
+            n => n.Definition.Policy == WalletPolicies.CanViewWallet);
+        Assert.Contains(permissionService.PermissionNodesByPolicy[WalletPolicies.CanCancelWalletTransactions].EnumerateDescendants(),
+            n => n.Definition.Policy == WalletPolicies.CanViewWallet);
+        Assert.True(multisignerStore.HasPolicy(multisignerUser.Id, WalletPolicies.CanViewWallet, permissionService));
+        Assert.True(multisignerGuestStore.HasPolicy(multisignerGuestUser.Id, WalletPolicies.CanViewWallet, permissionService));
+        Assert.True(walletCreatorStore.HasPolicy(walletCreatorUser.Id, WalletPolicies.CanCreateWalletTransactions, permissionService));
+        Assert.False(walletCreatorStore.HasPolicy(walletCreatorUser.Id, WalletPolicies.CanSignWalletTransactions, permissionService));
+        Assert.False(walletCreatorStore.HasPolicy(walletCreatorUser.Id, WalletPolicies.CanManageWalletTransactions, permissionService));
+        Assert.True(walletSignerStore.HasPolicy(walletSignerUser.Id, WalletPolicies.CanCreateWalletTransactions, permissionService));
+        Assert.True(walletSignerStore.HasPolicy(walletSignerUser.Id, WalletPolicies.CanSignWalletTransactions, permissionService));
+        Assert.True(walletViewerStore.HasPolicy(walletViewerUser.Id, WalletPolicies.CanViewWallet, permissionService));
+        Assert.False(walletViewerStore.HasPolicy(walletViewerUser.Id, WalletPolicies.CanCreateWalletTransactions, permissionService));
+        Assert.False(walletViewerStore.HasPolicy(walletViewerUser.Id, WalletPolicies.CanSignWalletTransactions, permissionService));
+        Assert.False(walletViewerStore.HasPolicy(walletViewerUser.Id, WalletPolicies.CanBroadcastWalletTransactions, permissionService));
 
         string StoreIndex(string id) => $"/stores/{id}/index";
         string StorePath(string id, string subPath) => $"/stores/{id}/{subPath}";

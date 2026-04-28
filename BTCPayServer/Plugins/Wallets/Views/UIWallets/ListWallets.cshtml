@@ -43,7 +43,6 @@
                     <tbody>
                     @foreach (var wallet in Model.Wallets)
                     {
-                        const string walletPermission = Policies.CanViewWallet;
                         <tr>
 
                         <td>
@@ -58,7 +57,7 @@
                         </td>
 
                         <td>@wallet.CryptoCode</td>
-                        <td><span permission="@walletPermission" permission-resource="@wallet.StoreId" and-mode="true">@wallet.Balance</span></td>
+                        <td><span permission="@WalletPolicies.CanViewWallet" permission-resource="@wallet.StoreId">@wallet.Balance</span></td>
                         <td class="text-end">
                             <a asp-action="WalletTransactions" asp-route-walletId="@wallet.Id" text-translate="true">Manage</a>
                         </td>

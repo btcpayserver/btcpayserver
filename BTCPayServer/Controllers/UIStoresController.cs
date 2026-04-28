@@ -7,6 +7,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -35,7 +36,6 @@ public partial class UIStoresController : Controller
         BTCPayServerEnvironment btcpayEnv,
         StoreRepository storeRepo,
         UserManager<ApplicationUser> userManager,
-        PermissionService permissionService,
         BTCPayWalletProvider walletProvider,
         BTCPayNetworkProvider networkProvider,
         RateFetcher rateFactory,
@@ -66,7 +66,6 @@ public partial class UIStoresController : Controller
         _rateFactory = rateFactory;
         _storeRepo = storeRepo;
         _userManager = userManager;
-        _permissionService = permissionService;
         _langService = langService;
         _walletProvider = walletProvider;
         _handlers = paymentMethodHandlerDictionary;
@@ -102,7 +101,6 @@ public partial class UIStoresController : Controller
     private readonly BTCPayWalletProvider _walletProvider;
     private readonly StoreRepository _storeRepo;
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly PermissionService _permissionService;
     private readonly RateFetcher _rateFactory;
     private readonly CurrencyNameTable _currencyNameTable;
     private readonly ExplorerClientProvider _explorerProvider;
@@ -139,22 +137,26 @@ public partial class UIStoresController : Controller
         var store = await _storeRepo.FindStore(storeId, userId);
         if (store is null)
             return NotFound();
-        // Keep selected store in context/cookie even for limited roles that will be redirected away from dashboard to wallets.
+        IActionResult? redirect = null;
+        if ((await _authorizationService.AuthorizeAsync(User, storeId, Policies.CanModifyStoreSettings)).Succeeded)
+        {
+            redirect = RedirectToAction(nameof(Dashboard), new { storeId });
+        }
+        else if ((await _authorizationService.AuthorizeAsync(User, storeId, Policies.CanViewInvoices)).Succeeded)
+        {
+            redirect = RedirectToAction(nameof(UIInvoiceController.ListInvoices), "UIInvoice", new { storeId });
+        }
+        else if ((await _authorizationService.AuthorizeAsync(User, storeId, WalletPolicies.CanViewWallet)).Succeeded)
+        {
+            redirect = RedirectToAction(nameof(UIWalletsController.ListWallets), "UIWallets", new { area = WalletsPlugin.Area });
+        }
+
+        if (redirect is null)
+            return Forbid();
+
         HttpContext.SetStoreData(store);
         HttpContext.SetPreferredStoreId(storeId);
-        if ((await _authorizationService.AuthorizeAsync(User, Policies.CanModifyStoreSettings)).Succeeded)
-        {
-            return RedirectToAction("Dashboard", new { storeId });
-        }
-        if ((await _authorizationService.AuthorizeAsync(User, Policies.CanViewInvoices)).Succeeded)
-        {
-            return RedirectToAction("ListInvoices", "UIInvoice", new { storeId });
-        }
-        if (store.HasPolicy(userId, Policies.CanViewWallet, _permissionService))
-        {
-            return RedirectToAction("ListWallets", "UIWallets", new { area = "Wallets" });
-        }
-        return Forbid();
+        return redirect;
     }
 
     public StoreData CurrentStore => HttpContext.GetStoreData();

@@ -5,9 +5,6 @@
 @model WalletSendModel
 @{
 	var walletId = Context.GetRouteValue("walletId").ToString();
-	var walletCreateTxPermission = Policies.CanCreateWalletTransactions;
-	var walletSignTxPermission = Policies.CanSignWalletTransactions;
-	var walletManageTxPermission = Policies.CanManageWalletTransactions;
 	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
 	Layout = "_LayoutWizard";
     ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Send)}-{Model.CryptoCode}", StringLocalizer["Send {0}", Model.CryptoCode])
@@ -105,7 +102,7 @@
                     </div>
                     <span asp-validation-for="Outputs[index].DestinationAddress" class="text-danger"></span>
                 </div>
-                <div class="form-group" permission="@walletManageTxPermission" and-mode="true">
+                <div class="form-group" permission="@WalletPolicies.CanManageWalletTransactions">
                     <label class="form-label" text-translate="true">Labels</label>
                     <select asp-for="Outputs[index].Labels" class="d-none">
                         @foreach (var t in Model.Outputs[index].Labels)
@@ -192,7 +189,7 @@
         }
     </div>
 
-    <div class="form-group" permission="@walletManageTxPermission" and-mode="true">
+    <div class="form-group" permission="@WalletPolicies.CanManageWalletTransactions">
         <label asp-for="Comment" class="form-label"></label>
         <textarea asp-for="Comment" class="form-control" rows="2" maxlength="200" placeholder="@StringLocalizer["Optional note about this transaction"]"></textarea>
         <span asp-validation-for="Comment" class="text-danger"></span>
@@ -235,8 +232,8 @@
         }
         else
         {
-            <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" permission="@walletSignTxPermission" and-mode="true" text-translate="true">Sign transaction</button>
-            <button type="submit" id="CreatePSBT" name="command" value="analyze-psbt" class="btn btn-primary" permission="@walletCreateTxPermission" not-permission="@walletSignTxPermission" and-mode="true" text-translate="true">Create PSBT</button>
+            <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" permission="@WalletPolicies.CanSignWalletTransactions" text-translate="true">Sign transaction</button>
+            <button type="submit" id="CreatePSBT" name="command" value="analyze-psbt" class="btn btn-primary" permission="@WalletPolicies.CanCreateWalletTransactions" not-permission="@WalletPolicies.CanSignWalletTransactions" text-translate="true">Create PSBT</button>
             <button type="submit" id="ScheduleTransaction" name="command" value="schedule" class="btn btn-secondary" permission="@Policies.CanManagePayouts" text-translate="true">Schedule transaction</button>
         }
     </div>

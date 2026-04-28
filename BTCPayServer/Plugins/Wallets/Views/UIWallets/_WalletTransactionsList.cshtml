@@ -4,20 +4,18 @@
 @model ListTransactionsViewModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
-    var walletCreateTxPermission = Policies.CanCreateWalletTransactions;
-    var walletManageTxPermission = Policies.CanManageWalletTransactions;
 }
 @foreach (var transaction in Model.Transactions)
 {
     <tr class="mass-action-row transaction-row" data-value="@transaction.Id">
-        <td class="align-middle only-for-js mass-action-select-col" permission="@walletCreateTxPermission" and-mode="true">
+        <td class="align-middle only-for-js mass-action-select-col" permission="@WalletPolicies.CanCreateWalletTransactions">
             <input name="selectedTransactions" type="checkbox" class="form-check-input mass-action-select" form="WalletActions" value="@transaction.Id" />
         </td>
         <td class="align-middle date-col">
             @transaction.Timestamp.ToBrowserDate()
         </td>
         <td class="align-middle text-start">
-            <span permission="@walletManageTxPermission" and-mode="true">
+            <span permission="@WalletPolicies.CanManageWalletTransactions">
                 <vc:label-manager
                     wallet-object-id="new WalletObjectId(WalletId.Parse(walletId), WalletObjectData.Types.Tx, transaction.Id)"
                     selected-labels="transaction.Tags.Select(t => t.Text).ToArray()"
@@ -25,7 +23,7 @@
                     exclude-types="false"
                     display-inline="true"/>
             </span>
-            <span not-permission="@walletManageTxPermission" and-mode="true">
+            <span not-permission="@WalletPolicies.CanManageWalletTransactions">
                 @if (transaction.Tags.Any())
                 {
                     <span class="d-flex flex-wrap gap-2 align-items-center">
@@ -72,12 +70,12 @@
             <div class="d-inline-flex gap-3 align-items-center">
 				@if (transaction.CanBumpFee)
 				{
-					<a asp-action="WalletBumpFee" asp-route-walletId="@Context.GetRouteValue("walletId")" asp-route-transactionId="@transaction.Id" class="btn btn-link p-0 bumpFee-btn" permission="@walletCreateTxPermission" and-mode="true">
+					<a asp-action="WalletBumpFee" asp-route-walletId="@Context.GetRouteValue("walletId")" asp-route-transactionId="@transaction.Id" class="btn btn-link p-0 bumpFee-btn" permission="@WalletPolicies.CanCreateWalletTransactions">
 						<vc:icon symbol="actions-send" />
 						<span text-translate="true">Bump fee</span>
 					</a>
 				}
-                <span permission="@walletManageTxPermission" and-mode="true">
+                <span permission="@WalletPolicies.CanManageWalletTransactions">
                     <button class="btn btn-link p-0 @(!string.IsNullOrEmpty(transaction.Comment) ? "text-primary" : "text-secondary")" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <vc:icon symbol="actions-comment" />
                     </button>
@@ -95,7 +93,7 @@
                 </span>
                 @if (!string.IsNullOrEmpty(transaction.Comment))
                 {
-                    <span not-permission="@walletManageTxPermission" and-mode="true">
+                    <span not-permission="@WalletPolicies.CanManageWalletTransactions">
                         <button class="btn btn-link p-0 text-primary" type="button" data-bs-toggle="tooltip" title="@transaction.Comment">
                             <vc:icon symbol="actions-comment" />
                         </button>

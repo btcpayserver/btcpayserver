@@ -17,13 +17,6 @@
     var sortedLabels = Model.Labels.OrderBy(l => l.Text, StringComparer.OrdinalIgnoreCase).ToList();
     var popularLabels = Model.PopularLabels.OrderBy(l => l.Text, StringComparer.OrdinalIgnoreCase).ToList();
     var initialLabels = popularLabels.Any() ? popularLabels : sortedLabels.Take(maxVisibleLabels).ToList();
-    var walletViewPermission = Policies.CanViewWallet;
-    var walletCreateTxPermission = Policies.CanCreateWalletTransactions;
-    var walletSettingsPermission = Policies.CanManageWalletSettings;
-    var walletBroadcastTxPermission = Policies.CanBroadcastWalletTransactions;
-    var walletCancelTxPermission = Policies.CanCancelWalletTransactions;
-    var walletAnyTxPermission = $"{Policies.CanCreateWalletTransactions},{Policies.CanSignWalletTransactions},{Policies.CanBroadcastWalletTransactions},{Policies.CanCancelWalletTransactions}";
-
     ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Transactions)}-{Model.CryptoCode}", StringLocalizer["{0} Transactions", Model.CryptoCode])
         .SetCategory(WellKnownCategories.ForWallet(Model.CryptoCode)));
 }
@@ -282,7 +275,7 @@
         </div>
     }
 
-    <div class="dropdown d-inline-flex align-items-center gap-3 ms-auto" id="Export" permission="@walletViewPermission" and-mode="true">
+    <div class="dropdown d-inline-flex align-items-center gap-3 ms-auto" id="Export" permission="@WalletPolicies.CanViewWallet">
         <a
             id="view-report"
             permission="@Policies.CanViewReports"
@@ -338,22 +331,22 @@
                     <td>
                         @if (pendingTransaction.State == PendingTransactionState.Signed)
                         {
-                            <a permission="@walletBroadcastTxPermission" and-mode="true"
+                            <a permission="@WalletPolicies.CanBroadcastWalletTransactions"
                                asp-action="ViewPendingTransaction" asp-route-walletId="@walletId"
                                asp-route-pendingTransactionId="@pendingTransaction.Id">@StringLocalizer["Broadcast"]</a>
-                            <a permission="@walletAnyTxPermission" not-permission="@walletBroadcastTxPermission"
+                            <a permission="@WalletPolicies.CanViewWallet" not-permission="@WalletPolicies.CanBroadcastWalletTransactions"
                                asp-action="ViewPendingTransaction" asp-route-walletId="@walletId"
                                asp-route-pendingTransactionId="@pendingTransaction.Id">@StringLocalizer["View"]</a>
-                            <span not-permission="@walletAnyTxPermission">-</span>
+                            <span not-permission="@WalletPolicies.CanViewWallet">-</span>
                         }
                         else
                         {
-                            <a permission="@walletAnyTxPermission"
+                            <a permission="@WalletPolicies.CanViewWallet"
                                asp-action="ViewPendingTransaction" asp-route-walletId="@walletId"
                                asp-route-pendingTransactionId="@pendingTransaction.Id">@StringLocalizer["View"]</a>
-                            <span not-permission="@walletAnyTxPermission">-</span>
+                            <span not-permission="@WalletPolicies.CanViewWallet">-</span>
                         }
-                        <span permission="@walletCancelTxPermission" and-mode="true">
+                        <span permission="@WalletPolicies.CanCancelWalletTransactions">
                             -
                             <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId"
                                asp-route-pendingTransactionId="@pendingTransaction.Id">@StringLocalizer["Abort"]</a>
@@ -370,7 +363,7 @@
     <table class="table table-hover mass-action">
         <thead class="mass-action-head">
         <tr>
-            <th class="only-for-js mass-action-select-col" permission="@walletCreateTxPermission" and-mode="true">
+            <th class="only-for-js mass-action-select-col" permission="@WalletPolicies.CanCreateWalletTransactions">
                 <input type="checkbox" class="form-check-input mass-action-select-all" />
             </th>
             <th class="date-col">
@@ -392,7 +385,7 @@
             <th></th>
         </tr>
         </thead>
-        <thead class="mass-action-actions" permission="@walletCreateTxPermission" and-mode="true">
+        <thead class="mass-action-actions" permission="@WalletPolicies.CanCreateWalletTransactions">
         <tr>
             <th class="only-for-js mass-action-select-col">
                 <input type="checkbox" class="form-check-input mass-action-select-all" />
@@ -403,7 +396,7 @@
                         <strong class="mass-action-selected-count">0</strong>
                             <span text-translate="true">selected</span>
                     </div>
-                    <form id="WalletActions" method="post" asp-action="WalletActions" asp-route-walletId="@walletId" permission="@walletCreateTxPermission" and-mode="true" class="d-inline-flex align-items-center gap-3">
+                    <form id="WalletActions" method="post" asp-action="WalletActions" asp-route-walletId="@walletId" permission="@WalletPolicies.CanCreateWalletTransactions" class="d-inline-flex align-items-center gap-3">
                         <button id="BumpFee" name="command" type="submit" value="cpfp" class="btn btn-link">
                             <vc:icon symbol="actions-send" />
                             <span text-translate="true">Bump fee</span>
@@ -432,12 +425,12 @@
 </div>
 
 <p class="mt-4 mb-0">
-    <span permission="@walletSettingsPermission" and-mode="true">
+    <span permission="@WalletPolicies.CanManageWalletSettings">
         @ViewLocalizer["If BTCPay Server shows you an invalid balance, {0}.<br />If some transactions appear in BTCPay Server, but are missing in another wallet, {1}.",
             Html.ActionLink(StringLocalizer["rescan your wallet"], "WalletRescan", "UIWallets", new { walletId = Context.GetRouteValue("walletId") }),
             new HtmlString($"<a href=\"https://docs.btcpayserver.org/FAQ/Wallet/#missing-payments-in-my-software-or-hardware-wallet\" target=\"_blank\" rel=\"noreferrer noopener\">{StringLocalizer["follow these instructions"]}</a>")]
     </span>
-    <span not-permission="@walletSettingsPermission" and-mode="true">
+    <span not-permission="@WalletPolicies.CanManageWalletSettings">
         @ViewLocalizer["If some transactions appear in BTCPay Server, but are missing in another wallet, {0}.",
             new HtmlString($"<a href=\"https://docs.btcpayserver.org/FAQ/Wallet/#missing-payments-in-my-software-or-hardware-wallet\" target=\"_blank\" rel=\"noreferrer noopener\">{StringLocalizer["follow these instructions"]}</a>")]
     </span>

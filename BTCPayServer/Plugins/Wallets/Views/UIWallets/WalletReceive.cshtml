@@ -6,7 +6,6 @@
 @{
     var walletId = Context.GetRouteValue("walletId")!.ToString();
     var returnUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
-    var walletManageTxPermission = Policies.CanManageWalletTransactions;
     var selectedLabels = (Model.SelectedLabels ?? Array.Empty<string>())
         .Where(label => !string.IsNullOrWhiteSpace(label))
         .ToArray();
@@ -91,7 +90,7 @@
             </div>
         </div>
         <div class="payment-box">
-            <div class="my-3" permission="@walletManageTxPermission" and-mode="true">
+            <div class="my-3" permission="@WalletPolicies.CanManageWalletTransactions">
                 <div class="input-group">
                     <div class="form-floating">
                         <vc:label-manager selected-labels="Model.SelectedLabels" wallet-object-id="new WalletObjectId(WalletId.Parse(walletId), WalletObjectData.Types.Address, Model.Address)" />
@@ -101,7 +100,7 @@
             </div>
             @if (selectedLabels.Any())
             {
-                <div class="my-3" not-permission="@walletManageTxPermission" and-mode="true">
+                <div class="my-3" not-permission="@WalletPolicies.CanManageWalletTransactions">
                     <div class="d-flex flex-wrap gap-2 align-items-center">
                         @foreach (var label in selectedLabels)
                         {

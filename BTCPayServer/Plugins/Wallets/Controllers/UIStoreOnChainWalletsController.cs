@@ -36,7 +36,7 @@ namespace BTCPayServer.Controllers;
 [Route("stores")]
 [Area(WalletsPlugin.Area)]
 [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-[Authorize(Policy = Policies.CanManageWalletSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+[Authorize(Policy = WalletPolicies.CanManageWalletSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [AutoValidateAntiforgeryToken]
 public class UIStoreOnChainWalletsController : Controller
 {
@@ -108,6 +108,7 @@ public class UIStoreOnChainWalletsController : Controller
 
         return View(nameof(SetupWallet), vm);
     }
+
     [HttpGet("{storeId}/onchain/{cryptoCode}/import")]
     [HttpGet("{storeId}/onchain/{cryptoCode}/import/{method:regex(^(hardware|file|xpub|scan|seed)$)}")]
     public async Task<IActionResult> ImportWallet(
@@ -149,7 +150,6 @@ public class UIStoreOnChainWalletsController : Controller
     [HttpPost("{storeId}/onchain/{cryptoCode}/import/{method:regex(^(hardware|file|xpub|scan|seed)$)}")]
     public async Task<IActionResult> UpdateWallet(
         WalletSetupViewModel vm,
-        string command = null,
         [FromRoute] string storeId = null,
         [FromRoute] string cryptoCode = null)
     {
@@ -536,7 +536,7 @@ public class UIStoreOnChainWalletsController : Controller
         ViewData["ReplaceDescription"] = WalletReplaceWarning(derivation.IsHotWallet);
         ViewData["RemoveDescription"] = WalletRemoveWarning(derivation.IsHotWallet, network.CryptoCode);
 
-        return View("WalletSettings", vm);
+        return View(nameof(WalletSettings), vm);
     }
     [HttpPost("{storeId}/onchain/{cryptoCode}/settings/wallet")]
     public async Task<IActionResult> UpdateWalletSettings(
@@ -702,8 +702,9 @@ public class UIStoreOnChainWalletsController : Controller
 
         return RedirectToAction(nameof(WalletSettings));
     }
-        [HttpGet("{storeId}/onchain/{cryptoCode}/replace")]
-        public async Task<ActionResult> ReplaceWallet([FromRoute] string storeId, [FromRoute] string cryptoCode)
+
+    [HttpGet("{storeId}/onchain/{cryptoCode}/replace")]
+    public async Task<ActionResult> ReplaceWallet([FromRoute] string storeId, [FromRoute] string cryptoCode)
     {
         await EnsureStoreContext(storeId);
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
@@ -721,8 +722,9 @@ public class UIStoreOnChainWalletsController : Controller
             Action = StringLocalizer["Setup new wallet"]
         });
     }
-        [HttpPost("{storeId}/onchain/{cryptoCode}/replace")]
-        public async Task<IActionResult> ConfirmReplaceWallet([FromRoute] string storeId, [FromRoute] string cryptoCode)
+
+    [HttpPost("{storeId}/onchain/{cryptoCode}/replace")]
+    public async Task<IActionResult> ConfirmReplaceWallet([FromRoute] string storeId, [FromRoute] string cryptoCode)
     {
         await EnsureStoreContext(storeId);
         var checkResult = IsAvailable(cryptoCode, out var store, out _);
@@ -739,8 +741,9 @@ public class UIStoreOnChainWalletsController : Controller
 
         return RedirectToAction(nameof(SetupWallet), new { storeId, cryptoCode });
     }
-        [HttpGet("{storeId}/onchain/{cryptoCode}/delete")]
-        public async Task<ActionResult> DeleteWallet([FromRoute] string storeId, [FromRoute] string cryptoCode)
+
+    [HttpGet("{storeId}/onchain/{cryptoCode}/delete")]
+    public async Task<ActionResult> DeleteWallet([FromRoute] string storeId, [FromRoute] string cryptoCode)
     {
         await EnsureStoreContext(storeId);
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
@@ -758,8 +761,9 @@ public class UIStoreOnChainWalletsController : Controller
             Action = StringLocalizer["Delete"]
         });
     }
-        [HttpPost("{storeId}/onchain/{cryptoCode}/delete")]
-        public async Task<IActionResult> ConfirmDeleteWallet([FromRoute] string storeId, [FromRoute] string cryptoCode)
+
+    [HttpPost("{storeId}/onchain/{cryptoCode}/delete")]
+    public async Task<IActionResult> ConfirmDeleteWallet([FromRoute] string storeId, [FromRoute] string cryptoCode)
     {
         await EnsureStoreContext(storeId);
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);

@@ -12,6 +12,7 @@ using BTCPayServer.Data;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments.PayJoin.Sender;
+using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -78,7 +79,8 @@ namespace BTCPayServer.Controllers
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network is null)
                 return NotFound();
-            if (!await AuthorizeWalletAsync(walletId, Policies.CanSignWalletTransactions))
+            if (await EnsureWalletStoreContextAsync(walletId) is null ||
+                !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanSignWalletTransactions)).Succeeded)
                 return Forbid();
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
 
@@ -134,7 +136,8 @@ namespace BTCPayServer.Controllers
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network is null)
                 return NotFound();
-            if (!await AuthorizeWalletAsync(walletId))
+            if (await EnsureWalletStoreContextAsync(walletId) is null ||
+                !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanViewWallet)).Succeeded)
                 return Forbid();
             var referer = HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath;
             var vm = new WalletPSBTViewModel
@@ -160,7 +163,15 @@ namespace BTCPayServer.Controllers
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network is null)
                 return NotFound();
-            if (!await AuthorizeWalletPsbtCommandAsync(walletId, command))
+            var requiredPolicy = command switch
+            {
+                "createpending" or "save-psbt" or "update" or "combine" => WalletPolicies.CanCreateWalletTransactions,
+                "sign" or "collect" => WalletPolicies.CanSignWalletTransactions,
+                "broadcast" => WalletPolicies.CanBroadcastWalletTransactions,
+                _ => WalletPolicies.CanViewWallet
+            };
+            if (await EnsureWalletStoreContextAsync(walletId) is null ||
+                !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, requiredPolicy)).Succeeded)
                 return Forbid();
             vm.CryptoCode = network.CryptoCode;
 
@@ -453,7 +464,13 @@ namespace BTCPayServer.Controllers
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network is null)
                 return NotFound();
-            if (!await AuthorizeWalletPsbtCommandAsync(walletId, command))
+            var requiredPolicy = command switch
+            {
+                "broadcast" or "payjoin" => WalletPolicies.CanBroadcastWalletTransactions,
+                _ => WalletPolicies.CanViewWallet
+            };
+            if (await EnsureWalletStoreContextAsync(walletId) is null ||
+                !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, requiredPolicy)).Succeeded)
                 return Forbid();
             PSBT psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
             if (vm.InvalidPSBT || psbt is null)
@@ -585,7 +602,7 @@ namespace BTCPayServer.Controllers
                         }
 
                         if (!string.IsNullOrEmpty(vm.SigningContext?.Comment) &&
-                            await AuthorizeWalletAsync(walletId, Policies.CanManageWalletTransactions))
+                            (await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanManageWalletTransactions)).Succeeded)
                         {
                             var txObjId = new WalletObjectId(walletId, WalletObjectData.Types.Tx, transaction.GetHash().ToString());
                             await WalletRepository.SetWalletObjectComment(txObjId, vm.SigningContext.Comment);
@@ -633,7 +650,8 @@ namespace BTCPayServer.Controllers
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network is null)
                 return NotFound();
-            if (!await AuthorizeWalletAsync(walletId, Policies.CanCreateWalletTransactions))
+            if (await EnsureWalletStoreContextAsync(walletId) is null ||
+                !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanCreateWalletTransactions)).Succeeded)
                 return Forbid();
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
             if (psbt == null)
@@ -654,24 +672,10 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        private Task<bool> AuthorizeWalletPsbtCommandAsync(WalletId walletId, string command)
-        {
-            return command switch
-            {
-                "createpending" => AuthorizeWalletAsync(walletId, Policies.CanCreateWalletTransactions),
-                // Exporting or manipulating a PSBT stays create-only; sign-only roles remain in the controlled sign/collect flow.
-                "save-psbt" or "update" or "combine" => AuthorizeWalletAsync(walletId, Policies.CanCreateWalletTransactions),
-                "sign" or "collect" => AuthorizeWalletAsync(walletId, Policies.CanSignWalletTransactions),
-                "broadcast" => AuthorizeWalletAsync(walletId, Policies.CanBroadcastWalletTransactions),
-                "payjoin" => AuthorizeWalletAsync(walletId, Policies.CanBroadcastWalletTransactions, Policies.CanSignWalletTransactions),
-                _ => AuthorizeWalletAsync(walletId)
-            };
-        }
-
         private async Task<bool> CanAutoSignWithHotWallet(WalletId walletId, DerivationSchemeSettings derivationSchemeSettings)
         {
             return derivationSchemeSettings?.IsHotWallet is true &&
-                   await AuthorizeWalletAsync(walletId, Policies.CanModifyStoreSettings) &&
+                   (await _authorizationService.AuthorizeAsync(User, walletId.StoreId, Policies.CanModifyStoreSettings)).Succeeded &&
                    await CanUseHotWallet();
         }
     }

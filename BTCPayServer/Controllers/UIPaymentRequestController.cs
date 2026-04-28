@@ -17,6 +17,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.PaymentRequest;
+using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Labels;
@@ -679,7 +680,7 @@ namespace BTCPayServer.Controllers
             object text = _networkProvider.DefaultNetwork?.CryptoCode switch
             {
                 null => StringLocalizer["To create a payment request, you need to set up a wallet first"],
-                {} cryptoCode => ViewLocalizer["To create a payment request, you need to <a href='{0}'>setup a wallet</a> first", Url.Action(nameof(UIStoreOnChainWalletsController.SetupWallet), "UIStoreOnChainWallets", new { area = "Wallets", cryptoCode, storeId })!]
+                {} cryptoCode => ViewLocalizer["To create a payment request, you need to <a href='{0}'>setup a wallet</a> first", Url.Action(nameof(UIStoreOnChainWalletsController.SetupWallet), "UIStoreOnChainWallets", new { area = WalletsPlugin.Area, cryptoCode, storeId })!]
             };
             TempData.SetStatusMessageModel(new StatusMessageModel
             {

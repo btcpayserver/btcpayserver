@@ -4,13 +4,6 @@
 @model WalletPSBTViewModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
-    var walletCreatePermission = Policies.CanCreateWalletTransactions;
-    // Offline PSBT export stays create-only; sign-only roles are limited to BTCPay-controlled sign/collect flows.
-    var walletExportPermission = walletCreatePermission;
-    var walletSignPermission = Policies.CanSignWalletTransactions;
-    var walletBroadcastPermission = Policies.CanBroadcastWalletTransactions;
-    var walletPayjoinPermission = $"{Policies.CanBroadcastWalletTransactions},{Policies.CanSignWalletTransactions}";
-    var walletCancelPermission = Policies.CanCancelWalletTransactions;
 	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
 	var isReady = !Model.HasErrors;
     var isSignable = !isReady;
@@ -106,24 +99,24 @@
 
         <partial name="SigningContext" for="SigningContext" />
         <div class="d-flex flex-column flex-sm-row flex-wrap justify-content-center align-items-sm-center gap-2">
-            <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" permission="@walletSignPermission" and-mode="true" text-translate="true">Sign transaction</button>
+            <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" permission="@WalletPolicies.CanSignWalletTransactions" text-translate="true">Sign transaction</button>
             @if (Model.SigningContext.PendingTransactionId is null && !Model.NBXSeedAvailable)
             {
                 <button type="submit" id="CreatePendingTransaction" name="command" value="createpending"
-                        class="btn btn-primary" permission="@walletCreatePermission" and-mode="true">Create pending transaction</button>
+                        class="btn btn-primary" permission="@WalletPolicies.CanCreateWalletTransactions">Create pending transaction</button>
             }
             else if (Model.SigningContext.PendingTransactionId is not null)
             {
                 <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId"
                    asp-route-pendingTransactionId="@Model.SigningContext.PendingTransactionId" class="btn btn-danger"
-                   permission="@walletCancelPermission" and-mode="true">Cancel</a>
+                   permission="@WalletPolicies.CanCancelWalletTransactions">Cancel</a>
             }
         </div>
     </form>
 }
 else if (isReady)
 {
-    <form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@walletId" class="my-5" permission="@walletBroadcastPermission" and-mode="true">
+    <form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@walletId" class="my-5" permission="@WalletPolicies.CanBroadcastWalletTransactions">
         <input type="hidden" asp-for="SigningKey" />
         <input type="hidden" asp-for="SigningKeyPath" />
         <partial name="SigningContext" for="SigningContext" />
@@ -132,7 +125,7 @@ else if (isReady)
         <div class="d-flex flex-column flex-sm-row flex-wrap justify-content-center align-items-sm-center">
             @if (!string.IsNullOrEmpty(Model.SigningContext?.PayJoinBIP21))
             {
-                <span permission="@walletPayjoinPermission" and-mode="true">
+                <span permission="@($"{WalletPolicies.CanBroadcastWalletTransactions},{WalletPolicies.CanSignWalletTransactions}")" and-mode="true">
                     <button type="submit" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" name="command" value="payjoin" text-translate="true">Broadcast (Payjoin)</button>
                     <span class="mx-2">or</span>
                 </span>
@@ -144,7 +137,7 @@ else if (isReady)
             }
         </div>
     </form>
-    <p class="lead text-secondary mt-5" not-permission="@walletBroadcastPermission" and-mode="true" text-translate="true">Transaction is fully signed, but broadcasting is restricted for your role.</p>
+    <p class="lead text-secondary mt-5" not-permission="@WalletPolicies.CanBroadcastWalletTransactions" text-translate="true">Transaction is fully signed, but broadcasting is restricted for your role.</p>
 }
 else
 {
@@ -152,7 +145,8 @@ else
 }
 
 <div class="accordion" id="PSBTOptions">
-    <div class="accordion-item" permission="@walletExportPermission" and-mode="true">
+    @* Offline PSBT export stays create-only; sign-only roles are limited to BTCPay-controlled sign/collect flows. *@
+    <div class="accordion-item" permission="@WalletPolicies.CanCreateWalletTransactions">
         <h2 class="accordion-header" id="PSBTOptionsExportHeader">
             <button type="button" class="accordion-button @(needsExport ? "" : "collapsed")" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsExportContent" aria-controls="PSBTOptionsExportContent" aria-expanded="@(needsExport ? "true" : "false")">
                 <span class="h5">Export PSBT @(isReady ? "" : "for signing")</span>
@@ -227,7 +221,7 @@ else
                         <div class="d-flex flex-column flex-sm-row flex-wrap align-items-sm-center">
                             @if (this.Model.SigningContext.PendingTransactionId is not null)
                             {
-                                <button type="submit" name="command" value="collect" class="btn btn-primary mb-3 mb-sm-0 me-sm-2 camera-submit" id="Collect" permission="@walletSignPermission" and-mode="true" text-translate="true">Collect signatures</button>
+                                <button type="submit" name="command" value="collect" class="btn btn-primary mb-3 mb-sm-0 me-sm-2 camera-submit" id="Collect" permission="@WalletPolicies.CanSignWalletTransactions" text-translate="true">Collect signatures</button>
                             }
                             else
                             {
@@ -240,7 +234,7 @@ else
             </div>
         </div>
     }
-    <div class="accordion-item" permission="@walletExportPermission" and-mode="true">
+    <div class="accordion-item" permission="@WalletPolicies.CanCreateWalletTransactions">
         <h2 class="accordion-header" id="PSBTOptionsAdvancedHeader">
             <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsAdvancedContent" aria-controls="PSBTOptionsAdvancedContent" aria-expanded="false">
                 <span class="h5">Add metadata to PSBT (advanced)</span>

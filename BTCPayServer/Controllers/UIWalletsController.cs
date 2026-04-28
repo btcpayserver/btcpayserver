@@ -603,12 +603,12 @@ namespace BTCPayServer.Controllers
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId,
             string? labelFilter = null,
-            int skip = 0,
-            int count = 50,
             bool loadTransactions = false,
+            ListTransactionsViewModel? model = null,
             CancellationToken cancellationToken = default
         )
         {
+            model = this.ParseListQuery(model ?? new ListTransactionsViewModel());
             var paymentMethod = GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
                 return NotFound();
@@ -617,7 +617,6 @@ namespace BTCPayServer.Controllers
 
             // We can't filter at the database level if we need to apply label filter
             var preFiltering = string.IsNullOrEmpty(labelFilter);
-            var model = new ListTransactionsViewModel { Skip = skip, Count = count };
             const int maxVisibleLabels = 20;
 
             model.PendingTransactions = await _pendingTransactionService.GetPendingTransactions(walletId.CryptoCode, walletId.StoreId);
@@ -638,7 +637,7 @@ namespace BTCPayServer.Controllers
             Dictionary<string, WalletTransactionInfo>? walletTransactionsInfo = null;
             if (loadTransactions)
             {
-                transactions = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, preFiltering ? skip : null, preFiltering ? count : null, cancellationToken: cancellationToken);
+                transactions = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, preFiltering ? model.Skip : null, preFiltering ? model.Count : null, cancellationToken: cancellationToken);
                 walletTransactionsInfo = await WalletRepository.GetWalletTransactionsInfo(walletId, transactions.Select(t => t.TransactionId.ToString()).ToArray());
             }
             if (labelFilter != null)
@@ -707,7 +706,7 @@ namespace BTCPayServer.Controllers
                 // if we couldn't filter at the db level, we need to apply skip and count
                 if (!preFiltering)
                 {
-                    model.Transactions = model.Transactions.Skip(skip).Take(count).ToList();
+                    model.Transactions = model.Transactions.Skip(model.Skip).Take(model.Count).ToList();
                 }
             }
 

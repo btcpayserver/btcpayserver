@@ -7,7 +7,7 @@
         <h3 text-translate="true">Recent Transactions</h3>
         @if (Model.Transactions.Any())
         {
-            <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId" text-translate="true">View All</a>
+            <a asp-area="Wallets" asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId" text-translate="true">View All</a>
         }
     </header>
     @if (Model.InitialRendering)

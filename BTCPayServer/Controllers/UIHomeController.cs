@@ -98,6 +98,7 @@ namespace BTCPayServer.Controllers
                 var m = new PermissionMetadata { PermissionName = def.Policy };
                 m.SubPermissions = permissionService.PermissionNodesByPolicy[m.PermissionName]
                     .EnumerateDescendants(false).Select(e => e.Definition.Policy)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
                     .OrderBy(e => e, StringComparer.OrdinalIgnoreCase)
                     .ToList();
                 nodes.Add(def.Policy, m);

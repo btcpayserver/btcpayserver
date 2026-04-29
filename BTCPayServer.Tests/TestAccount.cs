@@ -144,11 +144,11 @@ namespace BTCPayServer.Tests
 
         public async Task ModifyOnchainPaymentSettings(Action<WalletSettingsViewModel> modify)
         {
-            var storeController = GetController<UIStoresController>();
-            var response = await storeController.WalletSettings(StoreId, "BTC");
+            var walletController = GetController<UIStoreOnChainWalletsController>();
+            var response = await walletController.WalletSettings(StoreId, "BTC");
             WalletSettingsViewModel walletSettings = (WalletSettingsViewModel)((ViewResult)response).Model;
             modify(walletSettings);
-            storeController.UpdateWalletSettings(walletSettings).GetAwaiter().GetResult();
+            walletController.UpdateWalletSettings(walletSettings).GetAwaiter().GetResult();
         }
 
         public T GetController<T>(bool setImplicitStore = true) where T : ControllerBase
@@ -182,7 +182,7 @@ namespace BTCPayServer.Tests
             if (StoreId is null)
                 await CreateStoreAsync();
             SupportedNetwork = parent.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            var store = parent.PayTester.GetController<UIStoresController>(UserId, StoreId, true);
+            var walletController = parent.PayTester.GetController<UIStoreOnChainWalletsController>(UserId, StoreId, true);
 
             var generateRequest = new WalletSetupRequest
             {
@@ -190,9 +190,9 @@ namespace BTCPayServer.Tests
                 SavePrivateKeys = importKeysToNBX,
             };
 
-            await store.GenerateWallet(StoreId, cryptoCode, WalletSetupMethod.HotWallet, generateRequest);
-            Assert.NotNull(store.GenerateWalletResponse);
-            GenerateWalletResponseV = store.GenerateWalletResponse;
+            await walletController.GenerateWallet(StoreId, cryptoCode, WalletSetupMethod.HotWallet, generateRequest);
+            Assert.NotNull(walletController.GenerateWalletResponse);
+            GenerateWalletResponseV = walletController.GenerateWalletResponse;
             return new WalletId(StoreId, cryptoCode);
         }
 

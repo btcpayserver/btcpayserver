@@ -7,6 +7,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -130,17 +131,32 @@ public partial class UIStoresController : Controller
     [HttpGet("{storeId}/index")]
     public async Task<IActionResult> Index(string storeId)
     {
-        if ((await _authorizationService.AuthorizeAsync(User, Policies.CanModifyStoreSettings)).Succeeded)
+        var userId = GetUserId();
+        if (userId is null)
+            return Forbid();
+        var store = await _storeRepo.FindStore(storeId, userId);
+        if (store is null)
+            return NotFound();
+        IActionResult? redirect = null;
+        if ((await _authorizationService.AuthorizeAsync(User, storeId, Policies.CanModifyStoreSettings)).Succeeded)
         {
-            HttpContext.SetPreferredStoreId(storeId);
-            return RedirectToAction("Dashboard", new { storeId });
+            redirect = RedirectToAction(nameof(Dashboard), new { storeId });
         }
-        if ((await _authorizationService.AuthorizeAsync(User, Policies.CanViewInvoices)).Succeeded)
+        else if ((await _authorizationService.AuthorizeAsync(User, storeId, Policies.CanViewInvoices)).Succeeded)
         {
-            HttpContext.SetPreferredStoreId(storeId);
-            return RedirectToAction("ListInvoices", "UIInvoice", new { storeId });
+            redirect = RedirectToAction(nameof(UIInvoiceController.ListInvoices), "UIInvoice", new { storeId });
         }
-        return Forbid();
+        else if ((await _authorizationService.AuthorizeAsync(User, storeId, WalletPolicies.CanViewWallet)).Succeeded)
+        {
+            redirect = RedirectToAction(nameof(UIWalletsController.ListWallets), "UIWallets", new { area = WalletsPlugin.Area });
+        }
+
+        if (redirect is null)
+            return Forbid();
+
+        HttpContext.SetStoreData(store);
+        HttpContext.SetPreferredStoreId(storeId);
+        return redirect;
     }
 
     public StoreData CurrentStore => HttpContext.GetStoreData();

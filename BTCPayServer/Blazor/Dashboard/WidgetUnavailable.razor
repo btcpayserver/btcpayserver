@@ -1,0 +1,18 @@
+@using BTCPayServer.Blazor.Dashboard.Models
+
+<div class="widget p-3">
+    <h6 class="text-muted">Widget Unavailable</h6>
+    <p class="text-secondary small">
+        The widget type "@Placement.WidgetType" is no longer available. It may have been provided by a plugin that is no longer installed.
+    </p>
+    @if (EditMode)
+    {
+        <button class="btn btn-outline-danger btn-sm" @onclick="OnRemove">Remove</button>
+    }
+</div>
+
+@code {
+    [Parameter] public WidgetPlacement Placement { get; set; } = null!;
+    [Parameter] public bool EditMode { get; set; }
+    [Parameter] public EventCallback OnRemove { get; set; }
+}

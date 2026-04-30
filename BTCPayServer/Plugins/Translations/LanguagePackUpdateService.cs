@@ -42,7 +42,7 @@ namespace BTCPayServer.Plugins.Translations
             }
 
             var fileName = Uri.EscapeDataString(language.ToLowerInvariant());
-            var url = $"https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/translations/{fileName}.json";
+            var url = $"https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/Translator/translations/{fileName}.json";
 
             var httpClient = httpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(30);

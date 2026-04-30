@@ -15,6 +15,7 @@ namespace BTCPayServer.Client
         public const string CanModifyServerSettings = "btcpay.server.canmodifyserversettings";
         public const string CanModifyStoreSettings = "btcpay.store.canmodifystoresettings";
         public const string CanModifyWebhooks = "btcpay.store.webhooks.canmodifywebhooks";
+        public const string CanSendStoreEmail = "btcpay.store.cansendstoreemails";
         public const string CanModifyStoreSettingsUnscoped = "btcpay.store.canmodifystoresettings:";
         public const string CanViewStoreSettings = "btcpay.store.canviewstoresettings";
         public const string CanViewReports = "btcpay.store.canviewreports";

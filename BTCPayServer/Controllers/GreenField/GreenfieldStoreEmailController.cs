@@ -27,7 +27,7 @@ namespace BTCPayServer.Controllers.GreenField
             _storeRepository = storeRepository;
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanSendStoreEmail, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/email/send")]
         public async Task<IActionResult> SendEmailFromStore(string storeId,
             [FromBody] SendEmailRequest request)

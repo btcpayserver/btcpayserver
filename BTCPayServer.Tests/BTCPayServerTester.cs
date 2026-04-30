@@ -121,11 +121,11 @@ namespace BTCPayServer.Tests
             }
             config.AppendLine($"port={Port}");
             config.AppendLine($"chains={string.Join(',', Chains)}");
-            if (Chains.Contains("BTC", StringComparer.OrdinalIgnoreCase))
-            {
-                config.AppendLine($"btc.explorer.url={NBXplorerUri.AbsoluteUri}");
-                config.AppendLine($"btc.explorer.cookiefile=0");
-            }
+            // if (Chains.Contains("BTC", StringComparer.OrdinalIgnoreCase))
+            // {
+            //     config.AppendLine($"btc.explorer.url={NBXplorerUri.AbsoluteUri}");
+            //     config.AppendLine($"btc.explorer.cookiefile=0");
+            // }
 
             var btcpayserverTestDataDir = Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName,"BTCPayServer.Tests", "TestData");
             if (UseLightning)

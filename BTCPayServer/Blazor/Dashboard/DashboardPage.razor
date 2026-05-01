@@ -330,6 +330,10 @@ else
             var resolvedUserId = string.IsNullOrEmpty(UserId) ? null : UserId;
             var resolvedStoreId = string.IsNullOrEmpty(StoreId) ? null : StoreId;
             _activeDashboard = await DashboardService.ResolveActiveDashboard(resolvedUserId, resolvedStoreId, context, _isAdmin);
+            // ResolveActiveDashboard may have removed a stale auto-materialized dashboard
+            // from storage. Reload _allDashboards so the switcher doesn't show a deleted
+            // entry that, if selected, could resurrect the stale dashboard on the next save.
+            await LoadAllDashboards();
             // If the resolved dashboard isn't in any saved collection, it's a code-generated default.
             // This means it was freshly generated from templates + plugin contributors and will
             // always reflect the latest plugin additions on each page load.
@@ -649,6 +653,7 @@ else
                 w.ColumnSize,
                 w.RowSpan,
                 w.Offset,
+                w.Row,
                 w.Order,
                 w.Config
             })

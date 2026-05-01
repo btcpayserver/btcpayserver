@@ -86,8 +86,17 @@ public class DashboardService
         {
             var userCollection = await GetUserDashboards(userId);
             var active = FindActive(userCollection, storeId);
-            if (active is not null && !IsStaleAutoMaterialized(active, userDefault))
-                return active;
+            if (active is not null)
+            {
+                if (!IsStaleAutoMaterialized(active, userDefault))
+                    return active;
+
+                // The user has an active personal dashboard but it was auto-materialized
+                // from an older template. Replace it with the fresh user default rather
+                // than silently falling through to the store dashboard, which would
+                // demote a user's personal dashboard.
+                return userDefault;
+            }
         }
 
         if (storeId is not null)

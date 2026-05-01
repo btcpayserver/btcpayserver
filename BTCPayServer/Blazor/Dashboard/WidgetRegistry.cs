@@ -13,7 +13,18 @@ public class WidgetRegistry
 
     public WidgetRegistry(IEnumerable<WidgetDescriptor> descriptors)
     {
-        Descriptors = descriptors.ToImmutableArray();
+        var descriptorArray = descriptors.ToImmutableArray();
+        var duplicates = descriptorArray
+            .GroupBy(d => d.Type, StringComparer.Ordinal)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToArray();
+
+        if (duplicates.Length > 0)
+            throw new InvalidOperationException(
+                $"Duplicate dashboard widget type(s): {string.Join(", ", duplicates)}");
+
+        Descriptors = descriptorArray;
     }
 
     public WidgetDescriptor? GetDescriptor(string type)
@@ -30,7 +41,7 @@ public class WidgetRegistry
             {
                 WidgetScope.Universal => true,
                 WidgetScope.Store => true,
-                WidgetScope.Server => isAdmin,
+                WidgetScope.Server => isAdmin && dashboardScope == DashboardScope.Server,
                 WidgetScope.User => true,
                 _ => false
             };

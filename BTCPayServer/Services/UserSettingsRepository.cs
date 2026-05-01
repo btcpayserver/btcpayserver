@@ -64,13 +64,12 @@ public class UserSettingsRepository
         {
             await ctx.SaveChangesAsync();
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException) when (settings is not null)
         {
-            if (settings is not null)
-            {
-                ctx.Entry(settings).State = EntityState.Added;
-                await ctx.SaveChangesAsync();
-            }
+            // Upsert race: another process inserted concurrently. Retry as Added.
+            // Delete-path failures (settings is null) bubble up so callers see them.
+            ctx.Entry(settings).State = EntityState.Added;
+            await ctx.SaveChangesAsync();
         }
     }
 

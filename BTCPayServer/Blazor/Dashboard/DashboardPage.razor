@@ -280,7 +280,7 @@ else
     private bool _isCodeDefault; // true when active dashboard is a freshly generated code default (not persisted)
     private HashSet<string> _activeStoreFeatures = new(); // e.g. "wallet", "lightning"
     private List<BTCPayServer.Data.AppData> _apps = new(); // store apps for template context
-    private DotNetObjectReference<DashboardPage>? _dotNetRef;
+    private DotNetObjectReference<object>? _dotNetRef;
     private ElementReference _gridContainer;
     private ElementReference _importFileInput;
     private bool _gridInitialized;
@@ -320,7 +320,7 @@ else
         // Otherwise resolve active: user > store > server > code default
         if (_activeDashboard is null)
         {
-            _activeDashboard = await DashboardService.ResolveActiveDashboard(UserId, StoreId, context);
+            _activeDashboard = await DashboardService.ResolveActiveDashboard(UserId, StoreId, context, _isAdmin);
             // If the resolved dashboard isn't in any saved collection, it's a code-generated default.
             // This means it was freshly generated from templates + plugin contributors and will
             // always reflect the latest plugin additions on each page load.
@@ -354,7 +354,11 @@ else
         if (store is null) return;
 
         var storeBlob = store.GetStoreBlob();
-        CryptoCode = NetworkProvider.DefaultCryptoCode;
+        // Preserve the incoming/store-specific CryptoCode; only fall back to the server
+        // default when nothing was passed. Hardcoding the server default would point the
+        // setup guide and template context at the wrong payment method on non-default stores.
+        if (string.IsNullOrEmpty(CryptoCode))
+            CryptoCode = NetworkProvider.DefaultCryptoCode;
 
         // Detect wallet (on-chain) configuration
         var derivationByCryptoCode = store
@@ -481,12 +485,17 @@ else
     {
         _allDashboards = new List<DashboardDefinition>();
 
-        // Server dashboards
-        var serverCollection = await DashboardService.GetServerDashboards();
-        foreach (var d in serverCollection.Dashboards)
+        // Server dashboards — admin-only. Server-scope content (e.g. operational notes)
+        // is intended for server administrators and must not surface to non-admin users
+        // through the switcher or fallback resolution path.
+        if (_isAdmin)
         {
-            d.Scope = DashboardScope.Server;
-            _allDashboards.Add(d);
+            var serverCollection = await DashboardService.GetServerDashboards();
+            foreach (var d in serverCollection.Dashboards)
+            {
+                d.Scope = DashboardScope.Server;
+                _allDashboards.Add(d);
+            }
         }
 
         // Store dashboards
@@ -700,8 +709,11 @@ else
         if (!_gridInitialized && IsSetUp && _activeDashboard is not null)
         {
             _gridInitialized = true;
-            _dotNetRef ??= DotNetObjectReference.Create(this);
-            await JsInterop.InitGrid(_gridContainer, DotNetObjectReference.Create<object>(this), EditMode);
+            // Reuse the cached _dotNetRef rather than creating a new (and never disposed)
+            // DotNetObjectReference per ResetGrid call. JS-side callbacks don't care about
+            // the generic type; matching InitGrid's <object> signature lets us cache one ref.
+            _dotNetRef ??= DotNetObjectReference.Create<object>(this);
+            await JsInterop.InitGrid(_gridContainer, _dotNetRef, EditMode);
         }
     }
 
@@ -815,6 +827,8 @@ else
         {
             var placement = _activeDashboard.Widgets.FirstOrDefault(w => w.Id == change.Id);
             if (placement is null) continue;
+            // Persist the explicit column even when it's 0; nullable Offset
+            // distinguishes "unset (auto-flow)" from "deliberately at column 0".
             placement.Offset = change.X;
             placement.Order = change.Y;
             placement.ColumnSize = change.W;
@@ -851,12 +865,20 @@ else
         var row = 0;
         var rowHeight = 0; // track tallest widget in current row
 
-        foreach (var p in _activeDashboard.Widgets.OrderBy(w => w.Order))
+        // Sort by row (Order) then by column (Offset). Within the same row, two widgets
+        // that swap places must come back in the same column order after reload, which
+        // means OrderBy must consider Offset as a secondary key. Null Offsets sort last
+        // so explicitly-placed widgets win column zero.
+        var ordered = _activeDashboard.Widgets
+            .OrderBy(w => w.Order)
+            .ThenBy(w => w.Offset ?? int.MaxValue);
+
+        foreach (var p in ordered)
         {
             var w = p.ColumnSize;
 
-            // If the widget has an explicit offset and it fits, use it
-            var x = p.Offset > 0 ? p.Offset : colCursor;
+            // Use the explicit offset when present (including 0 — auto-flow is signalled by null)
+            var x = p.Offset ?? colCursor;
 
             // Wrap to next row if it doesn't fit
             if (x + w > 12)
@@ -1042,20 +1064,21 @@ else
 
     /// <summary>
     /// If the active dashboard is a code-generated default, materializes it into a real
-    /// persisted dashboard in the Store scope. After this call, _isCodeDefault is false
+    /// persisted dashboard in its current scope. After this call, _isCodeDefault is false
     /// and subsequent saves go to storage normally.
     /// </summary>
     private async Task MaterializeCodeDefault()
     {
         if (!_isCodeDefault || _activeDashboard is null) return;
 
-        // The code default gets persisted as a Store-scoped dashboard
-        _activeDashboard.Scope = DashboardScope.Store;
+        // Persist into the dashboard's existing scope (Server/Store/User). Forcing Store
+        // here would change the ownership and default-resolution semantics of an edited
+        // personal or server default.
+        var scope = _activeDashboard.Scope;
         _activeDashboard.AutoMaterialized = true;
-        _activeScope = DashboardScope.Store;
         _isCodeDefault = false;
 
-        await SaveDashboardToScope(_activeDashboard, _activeScope);
+        await SaveDashboardToScope(_activeDashboard, scope);
     }
 
     private async Task SaveDashboard()

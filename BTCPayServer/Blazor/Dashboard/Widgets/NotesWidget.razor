@@ -24,7 +24,11 @@ else if (string.IsNullOrWhiteSpace(TypedConfig?.Content))
 {
     @if (!Readonly)
     {
-        <p class="text-muted small mb-0" role="button" @onclick="StartEditing" style="cursor: pointer;">Click to add notes...</p>
+        <button type="button"
+                class="btn btn-link text-muted small p-0 mb-0 text-start"
+                @onclick="StartEditing">
+            Click to add notes...
+        </button>
     }
     else
     {
@@ -59,10 +63,14 @@ else
 
     private async Task SaveContent()
     {
-        var config = TypedConfig ?? new NotesConfig();
-        config.Content = _editContent;
-        _editing = false;
+        var config = new NotesConfig
+        {
+            Title = TypedConfig?.Title ?? "Notes",
+            Content = _editContent
+        };
+
         await ConfigChanged.InvokeAsync(JObject.FromObject(config));
+        _editing = false;
     }
 
     public static readonly WidgetDescriptor Descriptor = new()

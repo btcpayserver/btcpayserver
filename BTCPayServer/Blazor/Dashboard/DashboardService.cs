@@ -72,16 +72,21 @@ public class DashboardService
 
     // --- Resolution ---
     public async Task<DashboardDefinition> ResolveActiveDashboard(
-        string? userId, string? storeId, DashboardTemplateContext context)
+        string? userId, string? storeId, DashboardTemplateContext context, bool isAdmin = false)
     {
-        var codeDefault = GetDefaultTemplate(DashboardScope.Store, context);
+        // Each scope has its own template; comparing user/store/server dashboards against
+        // a single default would incorrectly mark them stale and return the wrong-scope
+        // fallback.
+        var userDefault = GetDefaultTemplate(DashboardScope.User, context);
+        var storeDefault = GetDefaultTemplate(DashboardScope.Store, context);
+        var serverDefault = GetDefaultTemplate(DashboardScope.Server, context);
 
         // Priority: user > store > server > code default
         if (userId is not null)
         {
             var userCollection = await GetUserDashboards(userId);
             var active = FindActive(userCollection, storeId);
-            if (active is not null && !IsStaleAutoMaterialized(active, codeDefault))
+            if (active is not null && !IsStaleAutoMaterialized(active, userDefault))
                 return active;
         }
 
@@ -89,27 +94,44 @@ public class DashboardService
         {
             var storeCollection = await GetStoreDashboards(storeId);
             var active = FindActive(storeCollection);
-            if (active is not null && !IsStaleAutoMaterialized(active, codeDefault))
+            if (active is not null && !IsStaleAutoMaterialized(active, storeDefault))
                 return active;
 
             // If the saved dashboard is a stale auto-materialized copy, remove it
-            // so the fresh code default is used instead.
-            if (active is not null && IsStaleAutoMaterialized(active, codeDefault))
+            // so the fresh code default is used instead. Re-fetch right before the
+            // destructive write to narrow the read-modify-write race window — a
+            // concurrent edit between the initial read and this point will not be
+            // overwritten by the cleanup.
+            if (active is not null && IsStaleAutoMaterialized(active, storeDefault))
             {
-                storeCollection.Dashboards.Remove(active);
-                if (storeCollection.ActiveDashboardId == active.Id)
-                    storeCollection.ActiveDashboardId = null;
-                await SaveStoreDashboards(storeId, storeCollection);
+                var fresh = await GetStoreDashboards(storeId);
+                var freshStale = fresh.Dashboards.FirstOrDefault(d => d.Id == active.Id);
+                if (freshStale is not null && IsStaleAutoMaterialized(freshStale, storeDefault))
+                {
+                    fresh.Dashboards.Remove(freshStale);
+                    if (fresh.ActiveDashboardId == freshStale.Id)
+                        fresh.ActiveDashboardId = null;
+                    await SaveStoreDashboards(storeId, fresh);
+                }
             }
         }
 
-        var serverCollection = await GetServerDashboards();
-        var serverActive = FindActive(serverCollection);
-        if (serverActive is not null && !IsStaleAutoMaterialized(serverActive, codeDefault))
-            return serverActive;
+        // Server dashboards are admin-only — non-admin callers must not fall through to
+        // server-scope content (e.g. operational notes) via the resolution chain.
+        if (isAdmin)
+        {
+            var serverCollection = await GetServerDashboards();
+            var serverActive = FindActive(serverCollection);
+            if (serverActive is not null && !IsStaleAutoMaterialized(serverActive, serverDefault))
+                return serverActive;
+        }
 
-        // Fall back to code-defined default
-        return codeDefault;
+        // Fall back to the code-defined default for the most-specific scope available.
+        // Non-admins never see the server default; they get a (possibly empty) store default
+        // with their existing permissions.
+        if (storeId is not null)
+            return storeDefault;
+        return isAdmin ? serverDefault : userDefault;
     }
 
     /// <summary>

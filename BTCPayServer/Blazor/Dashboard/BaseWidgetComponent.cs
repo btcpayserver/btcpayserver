@@ -179,8 +179,12 @@ public abstract class BaseWidgetComponent<TConfig> : ComponentBase where TConfig
         }
         catch
         {
-            // If authorization check fails (e.g. during prerender), allow access
-            HasAccess = true;
+            // Fail closed: any unexpected auth failure denies access. During prerender
+            // the auth state provider may throw before the Blazor circuit is established;
+            // the second render (after circuit start) re-runs CheckAccess with proper
+            // auth state and can grant access if the user really is authorized.
+            HasAccess = false;
+            AccessDeniedMessage = "Authorization check failed.";
         }
     }
 

@@ -11,6 +11,11 @@ public class WidgetPlacement
     public int Order { get; set; }
     public int ColumnSize { get; set; } = 6;
     public int RowSpan { get; set; } = 2;
-    public int Offset { get; set; }
+    /// <summary>
+    /// Explicit gridstack column offset, or null if not yet placed (auto-flow).
+    /// Nullable so that an explicit column 0 placement round-trips correctly through
+    /// drag-save-reload (the previous int default treated 0 as "unset").
+    /// </summary>
+    public int? Offset { get; set; }
     public JObject? Config { get; set; }
 }

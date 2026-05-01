@@ -135,10 +135,9 @@ public abstract class BaseWidgetComponent<TConfig> : ComponentBase where TConfig
 
         SizeChanged = oldSize != newSize;
 
-        if (DataParametersChanged)
-            _hasLoadedOnce = true;
-
-        // Now let Blazor apply parameters and run OnParametersSetAsync
+        // Note: _hasLoadedOnce is intentionally NOT flipped here. IsFirstLoad must
+        // remain true during the first OnParametersSetAsync call (per the contract
+        // documented above). The flag is set at the end of OnParametersSetAsync.
         return base.SetParametersAsync(parameters);
     }
 
@@ -159,10 +158,20 @@ public abstract class BaseWidgetComponent<TConfig> : ComponentBase where TConfig
         {
             await CheckAccess();
         }
+
+        // Mark the initial lifecycle pass complete only after the first
+        // OnParametersSetAsync. Subclasses observing IsFirstLoad inside their own
+        // OnParametersSetAsync now see true on the first call.
+        _hasLoadedOnce = true;
     }
 
     private async Task CheckAccess()
     {
+        // Re-evaluate from scratch each time so a previous denial doesn't carry over
+        // when the widget context changes (e.g. switching stores) and now permits access.
+        HasAccess = true;
+        AccessDeniedMessage = null;
+
         try
         {
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();

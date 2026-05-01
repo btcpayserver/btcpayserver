@@ -281,6 +281,7 @@ else
     private HashSet<string> _activeStoreFeatures = new(); // e.g. "wallet", "lightning"
     private List<BTCPayServer.Data.AppData> _apps = new(); // store apps for template context
     private DotNetObjectReference<object>? _dotNetRef;
+    private readonly System.Threading.CancellationTokenSource _disposeCts = new();
     private ElementReference _gridContainer;
     private ElementReference _importFileInput;
     private bool _gridInitialized;
@@ -617,12 +618,15 @@ else
         _linkCopied = true;
         StateHasChanged();
 
-        // Reset "Copied!" text after 2 seconds
-        _ = Task.Delay(2000).ContinueWith(_ =>
+        // Reset "Copied!" text after 2 seconds. Tied to component lifetime via
+        // _disposeCts so the continuation doesn't fire (and try to render) after dispose.
+        var token = _disposeCts.Token;
+        _ = Task.Delay(2000, token).ContinueWith(t =>
         {
+            if (t.IsCanceled) return;
             _linkCopied = false;
             InvokeAsync(StateHasChanged);
-        });
+        }, System.Threading.Tasks.TaskScheduler.Default);
     }
 
     private async Task ExportDashboard()
@@ -1140,6 +1144,8 @@ else
 
     public async ValueTask DisposeAsync()
     {
+        _disposeCts.Cancel();
+        _disposeCts.Dispose();
         _dotNetRef?.Dispose();
         await JsInterop.DestroyGrid();
     }

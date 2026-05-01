@@ -2,11 +2,11 @@ using System.Collections.Generic;
 
 namespace BTCPayServer.Plugins.Translations.Views;
 
-public class ListDictionariesViewModel
+public class ListTranslationsViewModel
 {
-    public class DictionaryViewModel
+    public class TranslationViewModel
     {
-        public string DictionaryName { get; set; }
+        public string TranslationName { get; set; }
         public string Fallback { get; set; }
         public string Source { get; set; }
         public bool Editable { get; set; }
@@ -15,5 +15,5 @@ public class ListDictionariesViewModel
         public bool UpdateAvailable { get; set; }
     }
 
-    public List<DictionaryViewModel> Dictionaries = [];
+    public List<TranslationViewModel> Translations = [];
 }

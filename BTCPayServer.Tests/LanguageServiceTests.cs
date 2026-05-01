@@ -84,7 +84,7 @@ namespace BTCPayServer.Tests
             await tester.Page.Locator("#ConfirmContinue").ClickAsync();
 
             var alertMessage = await tester.FindAlertMessage();
-            Assert.Contains("Dictionary English (Custom) deleted", await alertMessage.TextContentAsync());
+            Assert.Contains("Translation English (Custom) deleted", await alertMessage.TextContentAsync());
             var pageContent = await tester.Page.ContentAsync();
             Assert.DoesNotContain("Select-English (Custom)", pageContent);
         }
@@ -102,15 +102,15 @@ namespace BTCPayServer.Tests
             TestLogs.LogInformation("French fallback to english");
             await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('French', 'English', NULL)");
 
-            async Task SetDictionary(string dictId, (string Sentence, string Translation)[] translations)
+            async Task SetTranslation(string translationId, (string Sentence, string Translation)[] translations)
             {
-                var dict = await localizer.GetDictionary(dictId);
+                var translation = await localizer.GetTranslation(translationId);
                 var t = new Translations(translations.Select(t => KeyValuePair.Create(t.Sentence, t.Translation)));
-                await localizer.Save(dict, t);
+                await localizer.Save(translation, t);
             }
-            async Task AssertTranslations(string dictionary, (string Sentence, string Expected)[] expectations)
+            async Task AssertTranslations(string translationId, (string Sentence, string Expected)[] expectations)
             {
-                var all = await db.QueryAsync<(string sentence, string translation)>($"SELECT sentence, translation from translations WHERE dict_id='{dictionary}'");
+                var all = await db.QueryAsync<(string sentence, string translation)>($"SELECT sentence, translation from translations WHERE dict_id='{translationId}'");
                 foreach (var expectation in expectations)
                 {
                     if (expectation.Expected is not null)
@@ -120,13 +120,13 @@ namespace BTCPayServer.Tests
                 }
             }
 
-            await SetDictionary("English",
+            await SetTranslation("English",
                 [
                     ("Hello", "Hello"),
                     ("Goodbye", "Goodbye"),
                     ("Good afternoon", "Good afternoon")
                 ]);
-            await SetDictionary("French",
+            await SetTranslation("French",
                 [
                     ("Hello", "Salut"),
                     ("Good afternoon", "Bonne aprem")
@@ -145,7 +145,7 @@ namespace BTCPayServer.Tests
                 ("lol", null)]);
 
             TestLogs.LogInformation("Can use fallback by setting null to a sentence");
-            await SetDictionary("French",
+            await SetTranslation("French",
                 [
                     ("Good afternoon", "Bonne aprem"),
                     ("Goodbye", "Goodbye"),
@@ -158,7 +158,7 @@ namespace BTCPayServer.Tests
                 ("lol", null)]);
 
             TestLogs.LogInformation("Can use fallback by setting same as fallback to a sentence");
-            await SetDictionary("French",
+            await SetTranslation("French",
                 [
                     ("Good afternoon", "Good afternoon")
                 ]);
@@ -168,7 +168,7 @@ namespace BTCPayServer.Tests
                 ("Goodbye", "Goodbye"),
                 ("lol", null)]);
 
-            await SetDictionary("English",
+            await SetTranslation("English",
                 [
                     ("Hello", null as string),
                     ("Good afternoon", "Good afternoon"),

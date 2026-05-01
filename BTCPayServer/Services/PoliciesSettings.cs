@@ -29,7 +29,7 @@ namespace BTCPayServer.Services
         [DefaultValue("English")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [Display(Name = "Backend's language")]
-        public string LangDictionary { get; set; } = "English";
+        public string LangTranslation { get; set; } = "English";
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [Display(Name = "Admin must approve new users")]

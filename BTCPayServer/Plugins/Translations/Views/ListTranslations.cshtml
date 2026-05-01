@@ -1,7 +1,7 @@
 @using BTCPayServer.Views.Server
-@model ListDictionariesViewModel
+@model ListTranslationsViewModel
 @{
-    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Translations), StringLocalizer["Dictionaries"])
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Translations), StringLocalizer["Translations"])
         .SetCategory(WellKnownCategories.Server));
 }
 
@@ -11,7 +11,7 @@
 		<button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#downloadLanguagePackModal" text-translate="true">
 			Download language pack
 		</button>
-		<a id="page-primary" asp-action="CreateDictionary" class="btn btn-primary" role="button" text-translate="true">
+		<a id="page-primary" asp-action="CreateTranslation" class="btn btn-primary" role="button" text-translate="true">
 			Create
 		</a>
 	</div>
@@ -19,31 +19,31 @@
 <partial name="_StatusMessage" />
 
 <p class="mb-0" text-translate="true">
-	Dictionaries enable you to translate the BTCPay Server backend into different languages.
+	Translations enable you to translate the BTCPay Server backend into different languages.
 </p>
 
 <div class="table-responsive">
 	<table class="table table-hover">
 		<thead>
 			<tr>
-				<th text-translate="true">Dictionary</th>
+				<th text-translate="true">Translation</th>
 				<th text-translate="true">Fallback</th>
 				<th class="actions-col"></th>
 			</tr>
 		</thead>
 		<tbody>
-			@foreach (var v in Model.Dictionaries)
+			@foreach (var v in Model.Translations)
 			{
 				<tr>
                     <td>
                         <div class="d-flex flex-wrap align-items-center gap-2">
                             @if (!v.Editable)
                             {
-                                <span >@v.DictionaryName</span>
+                                <span >@v.TranslationName</span>
                             }
                             else
                             {
-                                <a asp-action="EditDictionary" asp-route-dictionary="@v.DictionaryName">@v.DictionaryName</a>
+                                <a asp-action="EditTranslation" asp-route-translation="@v.TranslationName">@v.TranslationName</a>
                             }
                             @if (v.IsSelected)
                             {
@@ -58,21 +58,21 @@
 						<div class="d-inline-flex align-items-center gap-3">
 							@if (v.IsDownloadedLanguagePack && v.UpdateAvailable)
 							{
-								<form method="post" asp-action="DownloadLanguagePack" asp-route-language="@v.DictionaryName" class="d-inline">
+								<form method="post" asp-action="DownloadLanguagePack" asp-route-language="@v.TranslationName" class="d-inline">
 									<button type="submit" class="btn btn-link p-0">Update</button>
 								</form>
 							}
-							<a asp-action="CreateDictionary" asp-route-fallback="@v.DictionaryName" text-translate="true">Clone</a>
+							<a asp-action="CreateTranslation" asp-route-fallback="@v.TranslationName" text-translate="true">Clone</a>
 							@if (!v.IsSelected)
 							{
-                                <form method="post" asp-action="SelectDictionary" asp-route-dictionary="@v.DictionaryName" class="d-inline">
-                                    <button id="Select-@v.DictionaryName" type="submit" class="btn btn-link p-0" text-translate="true">Select
+                                <form method="post" asp-action="SelectTranslation" asp-route-translation="@v.TranslationName" class="d-inline">
+                                    <button id="Select-@v.TranslationName" type="submit" class="btn btn-link p-0" text-translate="true">Select
                                     </button>
                                 </form>
 							}
 							@if (v.Editable && !v.IsSelected)
 							{
-								<a id="Delete-@v.DictionaryName" asp-action="DeleteDictionary" asp-route-dictionary="@v.DictionaryName" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The dictionary <b>@Html.Encode(v.DictionaryName)</b> will be removed from this server." data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Remove</a>
+								<a id="Delete-@v.TranslationName" asp-action="DeleteTranslation" asp-route-translation="@v.TranslationName" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The translation <b>@Html.Encode(v.TranslationName)</b> will be removed from this server." data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Remove</a>
 							}
 						</div>
 					</td>
@@ -80,7 +80,7 @@
 			}
 		</tbody>
 	</table>
-	<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete dictionary"], StringLocalizer["This dictionary will be removed from this server."], StringLocalizer["Delete"]))" />
+	<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete translation"], StringLocalizer["This translation will be removed from this server."], StringLocalizer["Delete"]))" />
 </div>
 
 @* Download Language Pack Modal *@

@@ -344,7 +344,7 @@
                     <a layout-menu-item="@nameof(ServerNavPages.Branding)" asp-controller="UIServer" asp-action="Branding" text-translate="true">Branding</a>
                 </li>
                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
-                    <a layout-menu-item="@nameof(ServerNavPages.Translations)" asp-area="@TranslationsPlugin.Area" asp-controller="UITranslation" asp-action="ListDictionaries" text-translate="true">Translations</a>
+                    <a layout-menu-item="@nameof(ServerNavPages.Translations)" asp-area="@TranslationsPlugin.Area" asp-controller="UITranslation" asp-action="ListTranslations" text-translate="true">Translations</a>
                 </li>
                 @if (BtcPayServerOptions.DockerDeployment)
                 {

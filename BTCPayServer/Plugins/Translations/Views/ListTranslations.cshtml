@@ -104,7 +104,7 @@
 						<label for="language" class="form-label" text-translate="true">Select Language</label>
 						<select id="language" name="language" class="form-select" required>
 							<option value="" text-translate="true">Choose a language...</option>
-							@foreach (var lang in LanguagePackUpdateService.GetDownloadableLanguages())
+							@foreach (var lang in Model.AvailableLanguages)
 							{
 								<option value="@lang">@lang</option>
 							}

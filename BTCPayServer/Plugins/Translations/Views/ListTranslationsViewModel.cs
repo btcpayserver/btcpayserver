@@ -15,5 +15,6 @@ public class ListTranslationsViewModel
         public bool UpdateAvailable { get; set; }
     }
 
-    public List<TranslationViewModel> Translations = [];
+    public List<TranslationViewModel> Translations { get; set; } = [];
+    public string[] AvailableLanguages { get; set; } = [];
 }

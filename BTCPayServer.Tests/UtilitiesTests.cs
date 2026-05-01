@@ -185,33 +185,24 @@ namespace BTCPayServer.Tests
         }
 
         /// <summary>
-        /// Pre-release check to ensure language packs list in ListDictionaries.cshtml is up to date
+        /// Pre-release check to ensure the manifest is accessible and well-formed
         /// </summary>
         [Trait("PreReleaseCheck", "PreReleaseCheck")]
         [Fact]
-        public async Task CheckLanguagePacksListUpToDate()
+        public async Task CheckLanguagePackManifest()
         {
             using var httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(30) };
-            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("BTCPayServer-Tests");
-            var response = await httpClient.GetAsync("https://api.github.com/repos/btcpayserver/btcpayserver-translator/contents/translations");
-            response.EnsureSuccessStatusCode();
-            var files = JArray.Parse(await response.Content.ReadAsStringAsync());
-
-            var availableLanguages = files
-                .Where(f => f["name"].Value<string>().EndsWith(".json"))
-                .Select(f => System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase(f["name"].Value<string>().Replace(".json", "")))
-                .OrderBy(l => l)
-                .ToList();
-
-            var hardcodedLanguages = LanguagePackUpdateService.GetDownloadableLanguages();
-            var missingLanguages = availableLanguages.Except(hardcodedLanguages).ToList();
-            var extraLanguages = hardcodedLanguages.Except(availableLanguages).ToList();
-
-            Assert.True(!missingLanguages.Any() && !extraLanguages.Any(),
-                $"Language packs list is out of date.\n" +
-                (missingLanguages.Any() ? $"Missing: {string.Join(", ", missingLanguages)}\n" : "") +
-                (extraLanguages.Any() ? $"Extra: {string.Join(", ", extraLanguages)}\n" : "") +
-                "Update BTCPayServer/Services/LanguagePackUpdateService.cs");
+            var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
+            var json = await httpClient.GetStringAsync(manifestUrl);
+            var manifest = JArray.Parse(json);
+            Assert.NotEmpty(manifest);
+            foreach (var token in manifest)
+            {
+                var entry = Assert.IsType<JObject>(token);
+                Assert.False(string.IsNullOrEmpty(entry["name"]?.ToString()), "Manifest entry missing 'name'");
+                Assert.False(string.IsNullOrEmpty(entry["file"]?.ToString()), "Manifest entry missing 'file'");
+                Assert.False(string.IsNullOrEmpty(entry["sha"]?.ToString()), "Manifest entry missing 'sha'");
+            }
         }
 
         /// <summary>

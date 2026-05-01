@@ -29,20 +29,20 @@ public class UITranslationController(
     public async Task<IActionResult> ListTranslations()
     {
         var translations = await localizer.GetTranslations();
-        var vm = new ListTranslationsViewModel();
-        var downloadableLanguages = LanguagePackUpdateService.GetDownloadableLanguages();
+        var vm = new ListTranslationsViewModel
+        {
+            AvailableLanguages = await languagePackUpdateService.GetAvailableLanguages()
+        };
 
         foreach (var translation in translations)
         {
             var isSelected = policiesSettings.LangTranslation == translation.TranslationName ||
                              (policiesSettings.LangTranslation is null && translation.Source == "Default");
-            var isDownloadedPack = downloadableLanguages.Contains(translation.TranslationName);
+            var isDownloadedPack = translation.Source == "Custom";
             var updateAvailable = false;
 
-            if (isDownloadedPack && translation.Source == "Custom")
-            {
+            if (isDownloadedPack)
                 updateAvailable = await languagePackUpdateService.CheckForLanguagePackUpdateCached(translation.TranslationName, translation.Metadata);
-            }
 
             var translationVm = new ListTranslationsViewModel.TranslationViewModel
             {
@@ -51,7 +51,7 @@ public class UITranslationController(
                 TranslationName = translation.TranslationName,
                 Fallback = translation.Fallback,
                 IsSelected = isSelected,
-                IsDownloadedLanguagePack = isDownloadedPack && translation.Source == "Custom",
+                IsDownloadedLanguagePack = isDownloadedPack,
                 UpdateAvailable = updateAvailable
             };
             if (isSelected)

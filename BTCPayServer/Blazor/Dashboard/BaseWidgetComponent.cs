@@ -123,9 +123,11 @@ public abstract class BaseWidgetComponent<TConfig> : ComponentBase where TConfig
         var newUserId = parameters.TryGetValue<string>("UserId", out var u) ? u : oldUserId;
         var newSize = parameters.TryGetValue<int>("Size", out var sz) ? sz : oldSize;
         var newDashboardScope = parameters.TryGetValue<DashboardScope>("DashboardScope", out var ds) ? ds : oldDashboardScope;
-        // For Config (JObject), any new instance means potential change
+        // For Config, compare by content. The TypedConfig setter rebuilds _cachedConfig
+        // (JObject.FromObject), so reference equality would mark every parameter pass as
+        // a config change and force unnecessary reload + auth checks.
         var configChanged = parameters.TryGetValue<JObject>("Config", out var newConfig)
-            && !ReferenceEquals(newConfig, oldConfig);
+            && !JToken.DeepEquals(newConfig, oldConfig);
 
         DataParametersChanged = !_hasLoadedOnce
             || oldStoreId != newStoreId

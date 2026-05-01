@@ -173,6 +173,7 @@ public class DashboardService
                 ColumnSize = w.ColumnSize,
                 RowSpan = w.RowSpan,
                 Offset = w.Offset,
+                Row = w.Row,
                 Config = w.Config?.DeepClone() as JObject
             }).ToList()
         };

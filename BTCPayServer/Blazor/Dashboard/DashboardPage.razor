@@ -325,7 +325,11 @@ else
         // Otherwise resolve active: user > store > server > code default
         if (_activeDashboard is null)
         {
-            _activeDashboard = await DashboardService.ResolveActiveDashboard(UserId, StoreId, context, _isAdmin);
+            // Normalize empty ids to null — the service treats null as "no scope" but would
+            // happily key dashboards on an empty string and pick the wrong fallback.
+            var resolvedUserId = string.IsNullOrEmpty(UserId) ? null : UserId;
+            var resolvedStoreId = string.IsNullOrEmpty(StoreId) ? null : StoreId;
+            _activeDashboard = await DashboardService.ResolveActiveDashboard(resolvedUserId, resolvedStoreId, context, _isAdmin);
             // If the resolved dashboard isn't in any saved collection, it's a code-generated default.
             // This means it was freshly generated from templates + plugin contributors and will
             // always reflect the latest plugin additions on each page load.
@@ -690,6 +694,7 @@ else
                         // Preserve null (auto-flow). Coercing missing offsets to 0 would pin
                         // every imported widget to column 0 under the new nullable semantics.
                         Offset = w["Offset"]?.Value<int?>(),
+                        Row = w["Row"]?.Value<int?>(),
                         Order = order++,
                         Config = w["Config"] as JObject
                     });
@@ -698,6 +703,9 @@ else
 
             await SaveDashboardToScope(dashboard, _activeScope);
             _activeDashboard = dashboard;
+            // Imported dashboard is now persisted; clear the auto-default flag so the
+            // "Auto" badge disappears and SaveDashboard() stops short-circuiting.
+            _isCodeDefault = false;
             _allDashboards.Add(dashboard);
             await ResetGrid();
         }
@@ -812,7 +820,9 @@ else
         await ResetGrid();
 
         // Switch to another dashboard or fall back to default template
-        _activeDashboard = await DashboardService.ResolveActiveDashboard(UserId, StoreId, BuildTemplateContext(), _isAdmin);
+        var deleteResolveUserId = string.IsNullOrEmpty(UserId) ? null : UserId;
+        var deleteResolveStoreId = string.IsNullOrEmpty(StoreId) ? null : StoreId;
+        _activeDashboard = await DashboardService.ResolveActiveDashboard(deleteResolveUserId, deleteResolveStoreId, BuildTemplateContext(), _isAdmin);
         _activeScope = DetermineActiveScope(_activeDashboard);
 
         // Check if we fell back to a code-generated default
@@ -840,6 +850,9 @@ else
             // Persist the explicit column even when it's 0; nullable Offset
             // distinguishes "unset (auto-flow)" from "deliberately at column 0".
             placement.Offset = change.X;
+            // Row is the authoritative gridstack y. Order is kept in sync for
+            // backwards compatibility with pre-Row JSON and template ordering.
+            placement.Row = change.Y;
             placement.Order = change.Y;
             placement.ColumnSize = change.W;
             placement.RowSpan = change.H;
@@ -861,36 +874,50 @@ else
     private record struct WidgetPosition(WidgetPlacement Placement, int X, int Y, int W);
 
     /// <summary>
-    /// Computes gridstack x/y positions by packing widgets into rows.
-    /// Widgets with an explicit Offset are placed at that column; otherwise
-    /// they auto-flow from the current cursor position within the row.
-    /// When a widget doesn't fit on the current row, a new row starts.
+    /// Computes gridstack x/y positions for each widget. Widgets with explicit
+    /// Row + Offset (the result of a prior drag-save cycle) are placed at exactly
+    /// those coordinates so real GridStack arrangements with gaps or stacked
+    /// widgets beside taller neighbours survive a save-reload cycle. Widgets
+    /// without explicit positions (template-fresh) auto-flow via a packer that
+    /// runs after the explicits, starting one row below the lowest explicit row.
     /// </summary>
     private List<WidgetPosition> ComputeGridPositions()
     {
         var result = new List<WidgetPosition>();
         if (_activeDashboard is null) return result;
 
-        var colCursor = 0;
-        var row = 0;
-        var rowHeight = 0; // track tallest widget in current row
+        // Explicit (Row + Offset both set) — render at the persisted coordinates.
+        var explicitlyPlaced = _activeDashboard.Widgets
+            .Where(w => w.Row.HasValue && w.Offset.HasValue)
+            .OrderBy(w => w.Row!.Value)
+            .ThenBy(w => w.Offset!.Value)
+            .ToList();
 
-        // Sort by row (Order) then by column (Offset). Within the same row, two widgets
-        // that swap places must come back in the same column order after reload, which
-        // means OrderBy must consider Offset as a secondary key. Null Offsets sort last
-        // so explicitly-placed widgets win column zero.
-        var ordered = _activeDashboard.Widgets
+        foreach (var p in explicitlyPlaced)
+        {
+            result.Add(new WidgetPosition(p, p.Offset!.Value, p.Row!.Value, p.ColumnSize));
+        }
+
+        // Auto-flow — pack the rest after the lowest occupied row, in template Order.
+        var autoFlow = _activeDashboard.Widgets
+            .Where(w => !w.Row.HasValue || !w.Offset.HasValue)
             .OrderBy(w => w.Order)
-            .ThenBy(w => w.Offset ?? int.MaxValue);
+            .ThenBy(w => w.Offset ?? int.MaxValue)
+            .ToList();
 
-        foreach (var p in ordered)
+        if (autoFlow.Count == 0) return result;
+
+        var colCursor = 0;
+        var row = explicitlyPlaced.Count > 0
+            ? explicitlyPlaced.Max(p => p.Row!.Value + Math.Max(p.RowSpan, 1))
+            : 0;
+        var rowHeight = 0;
+
+        foreach (var p in autoFlow)
         {
             var w = p.ColumnSize;
-
-            // Use the explicit offset when present (including 0 — auto-flow is signalled by null)
             var x = p.Offset ?? colCursor;
 
-            // Wrap to next row if it doesn't fit
             if (x + w > 12)
             {
                 row += Math.Max(rowHeight, 1);
@@ -1068,6 +1095,8 @@ else
 
         _activeDashboard = newDashboard;
         _activeScope = scope;
+        // Newly created dashboard is persisted, not a code default.
+        _isCodeDefault = false;
         _allDashboards.Add(newDashboard);
         await ResetGrid();
     }

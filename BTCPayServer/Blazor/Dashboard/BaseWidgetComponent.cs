@@ -150,6 +150,17 @@ public abstract class BaseWidgetComponent<TConfig> : ComponentBase where TConfig
         }
     }
 
+    protected override async Task OnParametersSetAsync()
+    {
+        // Re-check whenever the data-relevant parameters change. The same widget
+        // instance can be reused across navigation (e.g. switching stores), so a
+        // cached HasAccess from the previous context would otherwise leak through.
+        if (RequiredPermissions.Length > 0 && DataParametersChanged)
+        {
+            await CheckAccess();
+        }
+    }
+
     private async Task CheckAccess()
     {
         try
@@ -210,9 +221,13 @@ public abstract class BaseWidgetComponent<TConfig> : ComponentBase where TConfig
         if (EditConfig is null)
             return;
 
+        // Persist first; only update local state and exit edit mode after the
+        // callback succeeds. Otherwise a save failure leaves the UI looking saved
+        // while the dashboard config never made it to storage.
+        var newConfig = JObject.FromObject(EditConfig);
+        await ConfigChanged.InvokeAsync(newConfig);
         TypedConfig = EditConfig;
         await CancelEdit();
-        await ConfigChanged.InvokeAsync(Config);
     }
 
     public virtual async Task Remove()

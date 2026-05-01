@@ -171,6 +171,7 @@ public class DashboardService
                 WidgetType = w.WidgetType,
                 Order = w.Order,
                 ColumnSize = w.ColumnSize,
+                RowSpan = w.RowSpan,
                 Offset = w.Offset,
                 Config = w.Config?.DeepClone() as JObject
             }).ToList()

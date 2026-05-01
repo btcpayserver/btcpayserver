@@ -311,11 +311,15 @@ else
 
         _isCodeDefault = false;
 
-        // If a specific dashboard was requested via query parameter, use it
-        if (!string.IsNullOrEmpty(DashboardId))
-        {
-            _activeDashboard = _allDashboards.FirstOrDefault(d => d.Id == DashboardId);
-        }
+        // Re-bind the active dashboard against the freshly loaded collections.
+        // On same-component navigation (e.g. switching stores), _activeDashboard
+        // would otherwise survive and be re-injected into _allDashboards below,
+        // surfacing the previous store's dashboard in the new context — and
+        // potentially saving it back into the wrong scope.
+        var requestedDashboardId = DashboardId ?? _activeDashboard?.Id;
+        _activeDashboard = !string.IsNullOrEmpty(requestedDashboardId)
+            ? _allDashboards.FirstOrDefault(d => d.Id == requestedDashboardId)
+            : null;
 
         // Otherwise resolve active: user > store > server > code default
         if (_activeDashboard is null)
@@ -679,7 +683,9 @@ else
                         WidgetType = w["WidgetType"]?.Value<string>() ?? "",
                         ColumnSize = w["ColumnSize"]?.Value<int>() ?? 6,
                         RowSpan = w["RowSpan"]?.Value<int>() ?? 1,
-                        Offset = w["Offset"]?.Value<int>() ?? 0,
+                        // Preserve null (auto-flow). Coercing missing offsets to 0 would pin
+                        // every imported widget to column 0 under the new nullable semantics.
+                        Offset = w["Offset"]?.Value<int?>(),
                         Order = order++,
                         Config = w["Config"] as JObject
                     });
@@ -802,7 +808,7 @@ else
         await ResetGrid();
 
         // Switch to another dashboard or fall back to default template
-        _activeDashboard = await DashboardService.ResolveActiveDashboard(UserId, StoreId, BuildTemplateContext());
+        _activeDashboard = await DashboardService.ResolveActiveDashboard(UserId, StoreId, BuildTemplateContext(), _isAdmin);
         _activeScope = DetermineActiveScope(_activeDashboard);
 
         // Check if we fell back to a code-generated default

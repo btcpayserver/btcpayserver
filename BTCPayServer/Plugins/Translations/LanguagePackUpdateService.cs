@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -11,6 +12,15 @@ namespace BTCPayServer.Plugins.Translations
 {
     public class LanguagePackUpdateService(IHttpClientFactory httpClientFactory)
     {
+        public record LanguageManifestEntry(
+            string Name,
+            string? Native,
+            string? MaintainerHandle,
+            string? MaintainerUrl,
+            DateTimeOffset? Updated,
+            string File,
+            string Sha);
+
         private readonly ConcurrentDictionary<string, (bool UpdateAvailable, DateTime CheckedAt)> _updateCheckCache = new();
         private readonly TimeSpan _cacheExpiration = TimeSpan.FromHours(1);
         private (JArray Languages, DateTime FetchedAt)? _manifestCache;
@@ -55,18 +65,51 @@ namespace BTCPayServer.Plugins.Translations
             return null;
         }
 
-        public async Task<string[]> GetAvailableLanguages()
+        private static LanguageManifestEntry ToManifestEntry(JObject entry)
+        {
+            var maintainer = entry["Maintainer"]?.ToString();
+            string? maintainerHandle = null;
+            string? maintainerUrl = null;
+            if (!string.IsNullOrEmpty(maintainer))
+            {
+                var split = maintainer.Split('|', 2);
+                maintainerHandle = split[0];
+                if (split.Length > 1)
+                    maintainerUrl = split[1];
+            }
+
+            DateTimeOffset? updated = null;
+            var updatedRaw = entry["Updated"]?.ToString();
+            if (DateTimeOffset.TryParse(updatedRaw, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var parsedUpdated))
+                updated = parsedUpdated;
+
+            return new LanguageManifestEntry(
+                entry["Name"]?.ToString() ?? string.Empty,
+                entry["Native"]?.ToString(),
+                maintainerHandle,
+                maintainerUrl,
+                updated,
+                entry["File"]?.ToString() ?? string.Empty,
+                entry["Sha"]?.ToString() ?? string.Empty);
+        }
+
+        public async Task<(LanguageManifestEntry[] Languages, bool Degraded)> GetManifestLanguages()
         {
             try
             {
                 var languages = await FetchManifest();
-                return languages
-                    .OfType<JObject>()
-                    .Select(e => e["Name"]?.ToString())
-                    .Where(n => !string.IsNullOrEmpty(n))
-                    .ToArray()!;
+                return (languages.OfType<JObject>().Select(ToManifestEntry).Where(e => !string.IsNullOrEmpty(e.Name)).ToArray(), false);
             }
-            catch (Exception) { return []; }
+            catch (Exception)
+            {
+                return ([], true);
+            }
+        }
+
+        public async Task<string[]> GetAvailableLanguages()
+        {
+            var (languages, _) = await GetManifestLanguages();
+            return languages.Select(l => l.Name).ToArray();
         }
 
         public async Task<(string translationsJson, string version)> FetchLanguagePackFromRepository(string language)

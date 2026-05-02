@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
@@ -29,9 +30,12 @@ public class UITranslationController(
     public async Task<IActionResult> ListTranslations()
     {
         var translations = await localizer.GetTranslations();
+        var (manifestLanguages, degradedMode) = await languagePackUpdateService.GetManifestLanguages();
+        var manifestByName = manifestLanguages.ToDictionary(l => l.Name, StringComparer.OrdinalIgnoreCase);
+        var installedNames = new HashSet<string>(translations.Select(t => t.TranslationName), StringComparer.OrdinalIgnoreCase);
         var vm = new ListTranslationsViewModel
         {
-            AvailableLanguages = await languagePackUpdateService.GetAvailableLanguages()
+            ManifestFetchFailed = degradedMode
         };
 
         foreach (var translation in translations)
@@ -40,24 +44,45 @@ public class UITranslationController(
                              (policiesSettings.LangTranslation is null && translation.Source == "Default");
             var isDownloadedPack = translation.Source == "Custom";
             var updateAvailable = false;
+            manifestByName.TryGetValue(translation.TranslationName, out var manifestEntry);
 
-            if (isDownloadedPack)
+            if (!degradedMode && isDownloadedPack)
                 updateAvailable = await languagePackUpdateService.CheckForLanguagePackUpdateCached(translation.TranslationName, translation.Metadata);
 
             var translationVm = new ListTranslationsViewModel.TranslationViewModel
             {
+                Installed = true,
                 Editable = translation.Source == "Custom",
                 Source = translation.Source,
                 TranslationName = translation.TranslationName,
+                NativeName = manifestEntry?.Native ?? translation.TranslationName,
+                MaintainerHandle = manifestEntry?.MaintainerHandle,
+                MaintainerUrl = manifestEntry?.MaintainerUrl,
+                LastUpdated = manifestEntry?.Updated,
                 Fallback = translation.Fallback,
                 IsSelected = isSelected,
                 IsDownloadedLanguagePack = isDownloadedPack,
                 UpdateAvailable = updateAvailable
             };
             if (isSelected)
-                vm.Translations.Insert(0, translationVm);
+                vm.InstalledLanguages.Insert(0, translationVm);
             else
-                vm.Translations.Add(translationVm);
+                vm.InstalledLanguages.Add(translationVm);
+        }
+
+        if (!degradedMode)
+        {
+            foreach (var manifestEntry in manifestLanguages.Where(m => !installedNames.Contains(m.Name)).OrderBy(m => m.Name))
+            {
+                vm.AvailableToInstall.Add(new ListTranslationsViewModel.TranslationViewModel
+                {
+                    TranslationName = manifestEntry.Name,
+                    NativeName = manifestEntry.Native ?? manifestEntry.Name,
+                    MaintainerHandle = manifestEntry.MaintainerHandle,
+                    MaintainerUrl = manifestEntry.MaintainerUrl,
+                    LastUpdated = manifestEntry.Updated
+                });
+            }
         }
 
         return View(vm);
@@ -193,6 +218,14 @@ public class UITranslationController(
         await localizer.Save(existingTranslation, translations);
         await localizer.UpdateVersion(language, version);
         languagePackUpdateService.InvalidateCache(language);
+        return RedirectToAction(nameof(ListTranslations));
+    }
+
+    [HttpPost("server/translations/{translation}/uninstall")]
+    public async Task<IActionResult> UninstallLanguagePack(string translation)
+    {
+        await localizer.DeleteTranslation(translation);
+        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Translation {0} deleted", translation].Value;
         return RedirectToAction(nameof(ListTranslations));
     }
 

@@ -1347,7 +1347,7 @@ namespace BTCPayServer.Plugins.Translations
   "Remove store template": "",
   "Remove store user": "",
   "Remove subscriber": "",
-  "Remove the translation from this translation.": "",
+  "Remove the entry from this translation.": "",
   "Remove wallet": "",
   "Removing this user would result in the store having no owner.": "",
   "Renewable": "",

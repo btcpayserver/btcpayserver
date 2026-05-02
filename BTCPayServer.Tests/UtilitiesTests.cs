@@ -191,17 +191,19 @@ namespace BTCPayServer.Tests
         [Fact]
         public async Task CheckLanguagePackManifest()
         {
-            using var httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(30) };
-            var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
+            using var httpClient = new HttpClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(30);
+            const string manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
             var json = await httpClient.GetStringAsync(manifestUrl);
-            var manifest = JArray.Parse(json);
+            var manifest = JObject.Parse(json)["Languages"] as JArray;
+            Assert.NotNull(manifest);
             Assert.NotEmpty(manifest);
             foreach (var token in manifest)
             {
                 var entry = Assert.IsType<JObject>(token);
-                Assert.False(string.IsNullOrEmpty(entry["name"]?.ToString()), "Manifest entry missing 'name'");
-                Assert.False(string.IsNullOrEmpty(entry["file"]?.ToString()), "Manifest entry missing 'file'");
-                Assert.False(string.IsNullOrEmpty(entry["sha"]?.ToString()), "Manifest entry missing 'sha'");
+                Assert.False(string.IsNullOrEmpty(entry["Name"]?.ToString()), "Manifest entry missing 'Name'");
+                Assert.False(string.IsNullOrEmpty(entry["File"]?.ToString()), "Manifest entry missing 'File'");
+                Assert.False(string.IsNullOrEmpty(entry["Sha"]?.ToString()), "Manifest entry missing 'Sha'");
             }
         }
 

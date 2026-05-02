@@ -191,11 +191,17 @@ public class UITranslationController(
             return RedirectToAction(nameof(ListTranslations));
         }
 
-        string translationsJson;
+        Translations translations;
         string version;
         try
         {
-            (translationsJson, version) = await languagePackUpdateService.FetchLanguagePackFromRepository(language);
+            var result = await languagePackUpdateService.FetchLanguagePackFromRepository(language);
+            version = result.Item2;
+            if (!Translations.TryCreateFromJson(result.Item1, out translations))
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Downloaded language pack is invalid"].Value;
+                return RedirectToAction(nameof(ListTranslations));
+            }
         }
         catch (Exception ex)
         {
@@ -203,7 +209,6 @@ public class UITranslationController(
             return RedirectToAction(nameof(ListTranslations));
         }
 
-        var translations = Translations.CreateFromJson(translationsJson);
         var existingTranslation = await localizer.GetTranslation(language);
         if (existingTranslation is null)
         {
@@ -233,6 +238,6 @@ public class UITranslationController(
     public IActionResult RedirectToTranslation()
     {
         // Redirect to the new translation endpoint for backward compatibility.
-        return RedirectPermanent(nameof(ListTranslations));
+        return RedirectToActionPermanent(nameof(ListTranslations));
     }
 }

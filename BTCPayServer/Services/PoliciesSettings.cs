@@ -27,7 +27,7 @@ namespace BTCPayServer.Services
         }
 
         [DefaultValue("English")]
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonProperty("LangDictionary", DefaultValueHandling = DefaultValueHandling.Populate)]
         [Display(Name = "Backend's language")]
         public string LangTranslation { get; set; } = "English";
 

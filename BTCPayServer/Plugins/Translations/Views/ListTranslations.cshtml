@@ -100,7 +100,7 @@
 							@if (!v.IsSelected)
 							{
 								<form method="post" asp-action="SelectTranslation" asp-route-translation="@v.TranslationName" class="d-inline">
-									<button type="submit" class="btn btn-link p-0" text-translate="true">Select</button>
+									<button id="Select-@v.TranslationName" type="submit" class="btn btn-link p-0" text-translate="true">Select</button>
 								</form>
 							}
 							@if (v.IsDownloadedLanguagePack && v.UpdateAvailable)
@@ -109,10 +109,10 @@
 									<button type="submit" class="btn btn-link p-0" text-translate="true">Update</button>
 								</form>
 							}
-							@if (!v.IsSelected)
+							@if (!v.IsSelected && v.Editable)
 							{
 								<form method="post" asp-action="UninstallLanguagePack" asp-route-translation="@v.TranslationName" class="d-inline">
-									<button type="submit" class="btn btn-link p-0 text-danger" text-translate="true">Uninstall</button>
+									<button id="Delete-@v.TranslationName" type="submit" class="btn btn-link p-0 text-danger" text-translate="true">Uninstall</button>
 								</form>
 							}
 						</div>

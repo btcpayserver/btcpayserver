@@ -136,6 +136,48 @@ namespace BTCPayServer.Tests
         [Trait("Unit", "Unit")]
         public async Task LanguagePackUpdateService_FetchesLanguagePackFromManifest()
         {
+            const string body = "{\"Hello\":\"Bonjour\"}";
+            var expectedSha = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(body)));
+
+            var handler = new StubHttpMessageHandler();
+            var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
+            var translationUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/Translator/translations/french.json";
+
+            handler.Register(manifestUrl, () => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    $$"""
+                    {
+                      "Languages": [
+                        {
+                          "Name": "French",
+                          "File": "translations/french.json",
+                          "Sha": "{{expectedSha}}"
+                        }
+                      ]
+                    }
+                    """,
+                    Encoding.UTF8,
+                    "application/json")
+            });
+            handler.Register(translationUrl, () => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(body, Encoding.UTF8, "application/json")
+            });
+
+            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler));
+            var (translationsJson, version) = await service.FetchLanguagePackFromRepository("French");
+
+            Assert.Equal(expectedSha, version, ignoreCase: true);
+            Assert.Equal("Bonjour", JObject.Parse(translationsJson)["Hello"]?.ToString());
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Unit", "Unit")]
+        public async Task LanguagePackUpdateService_RejectsLanguagePackOnShaMismatch()
+        {
+            const string body = "{\"Hello\":\"Bonjour\"}";
+
             var handler = new StubHttpMessageHandler();
             var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
             var translationUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/Translator/translations/french.json";
@@ -149,7 +191,7 @@ namespace BTCPayServer.Tests
                         {
                           "Name": "French",
                           "File": "translations/french.json",
-                          "Sha": "sha-fr"
+                          "Sha": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
                         }
                       ]
                     }
@@ -159,14 +201,13 @@ namespace BTCPayServer.Tests
             });
             handler.Register(translationUrl, () => new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = new StringContent("{\"Hello\":\"Bonjour\"}", Encoding.UTF8, "application/json")
+                Content = new StringContent(body, Encoding.UTF8, "application/json")
             });
 
             var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler));
-            var (translationsJson, version) = await service.FetchLanguagePackFromRepository("French");
-
-            Assert.Equal("sha-fr", version);
-            Assert.Equal("Bonjour", JObject.Parse(translationsJson)["Hello"]?.ToString());
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => service.FetchLanguagePackFromRepository("French"));
+            Assert.Contains("SHA-256 mismatch", ex.Message);
         }
 
         [Fact(Timeout = TestTimeout)]

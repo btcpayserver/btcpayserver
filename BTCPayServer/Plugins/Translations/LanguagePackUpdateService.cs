@@ -4,6 +4,8 @@ using System.Collections.Concurrent;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -120,14 +122,20 @@ namespace BTCPayServer.Plugins.Translations
 
             var filePath = entry["File"]?.ToString()
                 ?? throw new InvalidOperationException("Manifest entry is missing the 'File' field.");
-            var sha = entry["Sha"]?.ToString()
+            var expectedSha = entry["Sha"]?.ToString()
                 ?? throw new InvalidOperationException("Manifest entry is missing the 'Sha' field.");
 
             var httpClient = httpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(30);
-            var translationsJson = await httpClient.GetStringAsync(RawBaseUrl + filePath);
+            var translationsBytes = await httpClient.GetByteArrayAsync(RawBaseUrl + filePath);
 
-            return (translationsJson, sha);
+            var actualSha = Convert.ToHexString(SHA256.HashData(translationsBytes));
+            if (!string.Equals(actualSha, expectedSha, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException(
+                    $"Downloaded language pack '{language}' SHA-256 mismatch: expected {expectedSha}, got {actualSha}. The download may be corrupt or tampered with.");
+
+            var translationsJson = Encoding.UTF8.GetString(translationsBytes);
+            return (translationsJson, expectedSha);
         }
 
         public async Task<bool> CheckForLanguagePackUpdateCached(string language, JObject metadata)

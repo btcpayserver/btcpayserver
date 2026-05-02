@@ -188,7 +188,7 @@ namespace BTCPayServer.Plugins.Translations
                 if (string.IsNullOrEmpty(localVersion))
                     return true;
 
-                return remoteSha != localVersion;
+                return !string.Equals(remoteSha, localVersion, StringComparison.OrdinalIgnoreCase);
             }
             catch (Exception ex) when (
                 ex is HttpRequestException

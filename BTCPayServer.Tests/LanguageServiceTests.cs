@@ -387,6 +387,7 @@ namespace BTCPayServer.Tests
             async Task SetTranslation(string translationId, (string Sentence, string Translation)[] translations)
             {
                 var translation = await localizer.GetTranslation(translationId);
+                Assert.NotNull(translation);
                 var t = new Translations(translations.Select(t => KeyValuePair.Create(t.Sentence, t.Translation)));
                 await localizer.Save(translation, t);
             }

@@ -31,7 +31,9 @@ public class UITranslationController(
     {
         var translations = await localizer.GetTranslations();
         var (manifestLanguages, degradedMode) = await languagePackUpdateService.GetManifestLanguages();
-        var manifestByName = manifestLanguages.ToDictionary(l => l.Name, StringComparer.OrdinalIgnoreCase);
+        var manifestByName = new Dictionary<string, LanguagePackUpdateService.LanguageManifestEntry>(StringComparer.OrdinalIgnoreCase);
+        foreach (var entry in manifestLanguages)
+            manifestByName.TryAdd(entry.Name, entry);
         var installedNames = new HashSet<string>(translations.Select(t => t.TranslationName), StringComparer.OrdinalIgnoreCase);
         var vm = new ListTranslationsViewModel
         {
@@ -221,6 +223,19 @@ public class UITranslationController(
     [HttpPost("server/translations/{translation}/uninstall")]
     public async Task<IActionResult> UninstallLanguagePack(string translation)
     {
+        var existing = await localizer.GetTranslation(translation);
+        if (existing is null)
+            return NotFound();
+        if (existing.Source != "Custom")
+        {
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Translation {0} is not user-installed and cannot be uninstalled", translation].Value;
+            return RedirectToAction(nameof(ListTranslations));
+        }
+        if (policiesSettings.LangTranslation == translation)
+        {
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Translation {0} is the currently selected one and cannot be uninstalled", translation].Value;
+            return RedirectToAction(nameof(ListTranslations));
+        }
         await localizer.DeleteTranslation(translation);
         TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Translation {0} deleted", translation].Value;
         return RedirectToAction(nameof(ListTranslations));

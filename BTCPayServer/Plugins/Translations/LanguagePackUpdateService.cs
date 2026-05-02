@@ -25,7 +25,9 @@ namespace BTCPayServer.Plugins.Translations
 
         private readonly ConcurrentDictionary<string, (bool UpdateAvailable, DateTime CheckedAt)> _updateCheckCache = new();
         private readonly TimeSpan _cacheExpiration = TimeSpan.FromHours(1);
+        private readonly TimeSpan _manifestFailureBackoff = TimeSpan.FromSeconds(60);
         private (JArray Languages, DateTime FetchedAt)? _manifestCache;
+        private DateTime _manifestNextFetchAllowedAt = DateTime.MinValue;
         private readonly SemaphoreSlim _manifestLock = new(1, 1);
 
         private const string ManifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
@@ -35,20 +37,32 @@ namespace BTCPayServer.Plugins.Translations
         {
             if (_manifestCache is { } cached && DateTime.UtcNow - cached.FetchedAt < _cacheExpiration)
                 return cached.Languages;
+            if (DateTime.UtcNow < _manifestNextFetchAllowedAt)
+                throw new InvalidOperationException("Manifest fetch is in back-off after a recent failure.");
 
             await _manifestLock.WaitAsync();
             try
             {
                 if (_manifestCache is { } lockedCached && DateTime.UtcNow - lockedCached.FetchedAt < _cacheExpiration)
                     return lockedCached.Languages;
+                if (DateTime.UtcNow < _manifestNextFetchAllowedAt)
+                    throw new InvalidOperationException("Manifest fetch is in back-off after a recent failure.");
 
-                using var httpClient = httpClientFactory.CreateClient();
-                httpClient.Timeout = TimeSpan.FromSeconds(30);
-                var json = await httpClient.GetStringAsync(ManifestUrl);
-                var languages = JObject.Parse(json)["Languages"] as JArray
-                    ?? throw new InvalidOperationException("Manifest is missing the 'Languages' array.");
-                _manifestCache = (languages, DateTime.UtcNow);
-                return languages;
+                try
+                {
+                    using var httpClient = httpClientFactory.CreateClient();
+                    httpClient.Timeout = TimeSpan.FromSeconds(30);
+                    var json = await httpClient.GetStringAsync(ManifestUrl);
+                    var languages = JObject.Parse(json)["Languages"] as JArray
+                        ?? throw new InvalidOperationException("Manifest is missing the 'Languages' array.");
+                    _manifestCache = (languages, DateTime.UtcNow);
+                    return languages;
+                }
+                catch
+                {
+                    _manifestNextFetchAllowedAt = DateTime.UtcNow + _manifestFailureBackoff;
+                    throw;
+                }
             }
             finally
             {
@@ -176,7 +190,11 @@ namespace BTCPayServer.Plugins.Translations
 
                 return remoteSha != localVersion;
             }
-            catch (Exception)
+            catch (Exception ex) when (
+                ex is HttpRequestException
+                || ex is TaskCanceledException
+                || ex is InvalidOperationException
+                || ex is Newtonsoft.Json.JsonException)
             {
                 return false;
             }

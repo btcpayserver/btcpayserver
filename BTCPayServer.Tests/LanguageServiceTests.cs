@@ -116,6 +116,60 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Unit", "Unit")]
+        public async Task LanguagePackUpdateService_ReturnsDegradedModeOnMalformedManifest()
+        {
+            var handler = new StubHttpMessageHandler();
+            var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
+            handler.Register(manifestUrl, () => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{ this is not: valid json", Encoding.UTF8, "application/json")
+            });
+
+            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler));
+            var (languages, degraded) = await service.GetManifestLanguages();
+
+            Assert.True(degraded);
+            Assert.Empty(languages);
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Unit", "Unit")]
+        public async Task LanguagePackUpdateService_ReturnsDegradedModeOnMissingLanguagesKey()
+        {
+            var handler = new StubHttpMessageHandler();
+            var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
+            handler.Register(manifestUrl, () => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{ \"OtherField\": [] }", Encoding.UTF8, "application/json")
+            });
+
+            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler));
+            var (languages, degraded) = await service.GetManifestLanguages();
+
+            Assert.True(degraded);
+            Assert.Empty(languages);
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Unit", "Unit")]
+        public async Task LanguagePackUpdateService_ThrowsArgumentExceptionForUnknownLanguage()
+        {
+            var handler = new StubHttpMessageHandler();
+            var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
+            handler.Register(manifestUrl, () => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    """{ "Languages": [ { "Name": "French", "File": "translations/french.json", "Sha": "deadbeef" } ] }""",
+                    Encoding.UTF8, "application/json")
+            });
+
+            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler));
+            await Assert.ThrowsAsync<ArgumentException>(
+                () => service.FetchLanguagePackFromRepository("Klingon"));
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Unit", "Unit")]
         public async Task LanguagePackUpdateService_ReturnsDegradedModeWhenManifestFails()
         {
             var handler = new StubHttpMessageHandler();

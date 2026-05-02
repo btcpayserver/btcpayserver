@@ -174,14 +174,6 @@ public class UITranslationController(
         return RedirectToAction(nameof(ListTranslations));
     }
 
-    [HttpPost("server/translations/{translation}/delete")]
-    public async Task<IActionResult> DeleteTranslation(string translation)
-    {
-        await localizer.DeleteTranslation(translation);
-        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Translation {0} deleted", translation].Value;
-        return RedirectToAction(nameof(ListTranslations));
-    }
-
     [HttpPost("server/translations/download")]
     public async Task<IActionResult> DownloadLanguagePack(string language)
     {
@@ -237,7 +229,13 @@ public class UITranslationController(
     [HttpGet("server/dictionaries")]
     public IActionResult RedirectToTranslation()
     {
-        // Redirect to the new translation endpoint for backward compatibility.
         return RedirectToActionPermanent(nameof(ListTranslations));
+    }
+
+    [Route("server/dictionaries/{**catchall}")]
+    public IActionResult RedirectDictionariesSubpath(string catchall)
+    {
+        var newPath = "/server/translations" + (string.IsNullOrEmpty(catchall) ? "" : $"/{catchall}");
+        return RedirectPermanentPreserveMethod(newPath + Request.QueryString);
     }
 }

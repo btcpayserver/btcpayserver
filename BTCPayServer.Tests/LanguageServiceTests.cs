@@ -308,6 +308,8 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain("Delete-English (Custom)", text);
             await tester.Page.Locator("#Select-Cypherpunk").ClickAsync();
             await tester.Page.Locator("#Delete-English\\ \\(Custom\\)").ClickAsync();
+            await tester.Page.Locator("#ConfirmInput").FillAsync("Delete");
+            await tester.Page.Locator("#ConfirmContinue").ClickAsync();
 
             var alertMessage = await tester.FindAlertMessage();
             Assert.Contains("Translation English (Custom) deleted", await alertMessage.TextContentAsync());

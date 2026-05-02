@@ -111,9 +111,15 @@
 							}
 							@if (!v.IsSelected && v.Editable)
 							{
-								<form method="post" asp-action="UninstallLanguagePack" asp-route-translation="@v.TranslationName" class="d-inline">
-									<button id="Delete-@v.TranslationName" type="submit" class="btn btn-link p-0 text-danger" text-translate="true">Uninstall</button>
-								</form>
+								<a id="Delete-@v.TranslationName"
+								   asp-action="UninstallLanguagePack"
+								   asp-route-translation="@v.TranslationName"
+								   data-bs-toggle="modal"
+								   data-bs-target="#ConfirmModal"
+								   data-description="The translation <b>@Html.Encode(v.TranslationName)</b> will be removed from this server."
+								   data-confirm-input="@StringLocalizer["Delete"]"
+								   class="btn btn-link p-0 text-danger"
+								   text-translate="true">Uninstall</a>
 							}
 						</div>
 					</td>
@@ -198,3 +204,5 @@
 		</tbody>
 	</table>
 </div>
+
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Uninstall translation"], StringLocalizer["This translation will be removed from this server."], StringLocalizer["Delete"]))" />

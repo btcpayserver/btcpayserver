@@ -404,6 +404,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         string WalletPsbt(string id) => $"/wallets/{id}/psbt";
         string WalletPsbtReady(string id) => $"/wallets/{id}/psbt/ready";
         string WalletImport(string id, string code) => $"/stores/{id}/onchain/{code}/import";
+        string WalletImportSeed(string id, string code) => $"/stores/{id}/onchain/{code}/import/seed";
         string WalletSettings(string id, string code) => $"/stores/{id}/onchain/{code}/settings";
         string WalletSeed(string id, string code) => $"/stores/{id}/onchain/{code}/seed";
         string WalletDelete(string id, string code) => $"/stores/{id}/onchain/{code}/delete";
@@ -555,6 +556,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.AssertPageAccess(false, StorePath(storeId, "pull-payments"));
         await s.AssertPageAccess(false, StorePath(storeId, "payouts"));
         await s.AssertPageAccess(true, WalletImport(storeId, cryptoCode));
+        await s.AssertPageAccess(false, WalletImportSeed(storeId, cryptoCode));
         await AssertWalletSettingsCannotTargetAnotherStore();
         await s.GoToUrl(StoreIndex(storeId));
         await s.GoToUrl(WalletImport(storeId, cryptoCode));

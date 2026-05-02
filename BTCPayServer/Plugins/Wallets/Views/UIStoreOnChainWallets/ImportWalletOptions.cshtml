@@ -111,7 +111,7 @@
     </noscript>
 </div>
 
-<div class="list-group mt-4">
+<div class="list-group mt-4" permission="@Policies.CanModifyStoreSettings" permission-resource="@Model.StoreId">
     <a asp-controller="UIStoreOnChainWallets" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="seed" id="ImportSeedLink" class="list-group-item list-group-item-action">
         <div class="image">
             <vc:icon symbol="wallet-seed"/>

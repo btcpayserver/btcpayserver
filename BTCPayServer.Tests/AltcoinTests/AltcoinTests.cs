@@ -70,7 +70,6 @@ namespace BTCPayServer.Tests
 
                 // Setup Lightning
                 var controller = user.GetController<UIStoresController>();
-                var walletController = user.GetController<UIStoreOnChainWalletsController>();
                 var lightningVm = (LightningNodeViewModel)Assert.IsType<ViewResult>(controller.SetupLightningNode(user.StoreId, cryptoCode)).Model;
                 Assert.True(lightningVm.Enabled);
 
@@ -85,6 +84,7 @@ namespace BTCPayServer.Tests
                 response = controller.LightningSettings(user.StoreId, cryptoCode);
                 lnSettingsModel = (LightningSettingsViewModel)Assert.IsType<ViewResult>(response).Model;
                 Assert.False(lnSettingsModel.Enabled);
+                var walletController = user.GetController<UIStoreOnChainWalletsController>();
 
                 // Setup wallet
                 WalletSetupViewModel setupVm;

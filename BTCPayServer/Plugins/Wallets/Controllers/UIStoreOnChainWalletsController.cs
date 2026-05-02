@@ -35,7 +35,6 @@ namespace BTCPayServer.Controllers;
 
 [Route("stores")]
 [Area(WalletsPlugin.Area)]
-[Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [Authorize(Policy = WalletPolicies.CanManageWalletSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [AutoValidateAntiforgeryToken]
 public class UIStoreOnChainWalletsController : Controller
@@ -91,7 +90,6 @@ public class UIStoreOnChainWalletsController : Controller
         vm.StoreId = storeId ?? vm.StoreId;
         vm.CryptoCode = cryptoCode ?? vm.CryptoCode;
 
-        await EnsureStoreContext(vm.StoreId);
         var checkResult = IsAvailable(vm.CryptoCode, out var store, out _);
         if (checkResult != null)
         {
@@ -122,12 +120,14 @@ public class UIStoreOnChainWalletsController : Controller
         vm.CryptoCode = cryptoCode ?? vm.CryptoCode;
         vm.Method = method ?? vm.Method;
 
-        await EnsureStoreContext(vm.StoreId);
         var checkResult = IsAvailable(vm.CryptoCode, out _, out var network);
         if (checkResult != null)
         {
             return checkResult;
         }
+        if (vm.Method == WalletSetupMethod.Seed &&
+            !(await _authorizationService.AuthorizeAsync(User, vm.StoreId, Policies.CanModifyStoreSettings)).Succeeded)
+            return Forbid();
 
         var perm = await CanUseHotWallet();
         vm.Network = network;
@@ -162,7 +162,6 @@ public class UIStoreOnChainWalletsController : Controller
 
     private async Task<IActionResult> UpdateWalletCore(WalletSetupViewModel vm)
     {
-        await EnsureStoreContext(vm.StoreId);
         var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
         if (checkResult != null)
         {
@@ -293,7 +292,6 @@ public class UIStoreOnChainWalletsController : Controller
         vm.CryptoCode = cryptoCode ?? vm.CryptoCode;
         vm.Method = method ?? vm.Method;
 
-        await EnsureStoreContext(vm.StoreId);
         var checkResult = IsAvailable(vm.CryptoCode, out _, out var network);
         if (checkResult != null)
         {
@@ -339,7 +337,6 @@ public class UIStoreOnChainWalletsController : Controller
         [FromRoute] WalletSetupMethod method,
         WalletSetupRequest request)
     {
-        await EnsureStoreContext(storeId);
         var checkResult = IsAvailable(cryptoCode, out _, out var network);
         if (checkResult != null)
         {
@@ -354,9 +351,9 @@ public class UIStoreOnChainWalletsController : Controller
         }
         var client = _explorerProvider.GetExplorerClient(cryptoCode);
         var isImport = method == WalletSetupMethod.Seed;
-        var canAccessGeneratedSeed = isImport ||
-                                     (await _authorizationService.AuthorizeAsync(User, storeId, Policies.CanModifyStoreSettings)).Succeeded;
-        if (!canAccessGeneratedSeed)
+        var canAccessSeedMaterial =
+            (await _authorizationService.AuthorizeAsync(User, storeId, Policies.CanModifyStoreSettings)).Succeeded;
+        if (!canAccessSeedMaterial)
             return Forbid();
         var vm = new WalletSetupViewModel
         {
@@ -372,7 +369,7 @@ public class UIStoreOnChainWalletsController : Controller
             SupportSegwit = network.NBitcoinNetwork.Consensus.SupportSegwit
         };
         vm.SetPermission(perm);
-        vm.CanGenerateNewWallet = canAccessGeneratedSeed && !isImport;
+        vm.CanGenerateNewWallet = !isImport;
         if (isImport && string.IsNullOrEmpty(request.ExistingMnemonic))
         {
             ModelState.AddModelError(nameof(request.ExistingMnemonic), StringLocalizer["Please provide your existing seed"]);
@@ -462,7 +459,6 @@ public class UIStoreOnChainWalletsController : Controller
     [HttpGet("{storeId}/onchain/{cryptoCode}/generate/confirm")]
     public async Task<ActionResult> GenerateWalletConfirm([FromRoute] string storeId, [FromRoute] string cryptoCode)
     {
-        await EnsureStoreContext(storeId);
         var checkResult = IsAvailable(cryptoCode, out _, out var network);
         if (checkResult != null)
         {
@@ -477,7 +473,6 @@ public class UIStoreOnChainWalletsController : Controller
     [HttpGet("{storeId}/onchain/{cryptoCode}/settings")]
     public async Task<IActionResult> WalletSettings([FromRoute] string storeId, [FromRoute] string cryptoCode)
     {
-        await EnsureStoreContext(storeId);
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
         if (checkResult != null)
         {
@@ -550,7 +545,6 @@ public class UIStoreOnChainWalletsController : Controller
         vm.StoreId = storeId ?? vm.StoreId;
         vm.CryptoCode = cryptoCode ?? vm.CryptoCode;
 
-        await EnsureStoreContext(vm.StoreId);
         var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
         if (checkResult != null)
         {
@@ -665,7 +659,6 @@ public class UIStoreOnChainWalletsController : Controller
     {
         if (!(await _authorizationService.AuthorizeAsync(User, storeId, Policies.CanModifyStoreSettings)).Succeeded)
             return Forbid();
-        await EnsureStoreContext(storeId);
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
         if (checkResult != null)
         {
@@ -709,7 +702,6 @@ public class UIStoreOnChainWalletsController : Controller
     [HttpGet("{storeId}/onchain/{cryptoCode}/replace")]
     public async Task<ActionResult> ReplaceWallet([FromRoute] string storeId, [FromRoute] string cryptoCode)
     {
-        await EnsureStoreContext(storeId);
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
         if (checkResult != null)
         {
@@ -729,7 +721,6 @@ public class UIStoreOnChainWalletsController : Controller
     [HttpPost("{storeId}/onchain/{cryptoCode}/replace")]
     public async Task<IActionResult> ConfirmReplaceWallet([FromRoute] string storeId, [FromRoute] string cryptoCode)
     {
-        await EnsureStoreContext(storeId);
         var checkResult = IsAvailable(cryptoCode, out var store, out _);
         if (checkResult != null)
         {
@@ -748,7 +739,6 @@ public class UIStoreOnChainWalletsController : Controller
     [HttpGet("{storeId}/onchain/{cryptoCode}/delete")]
     public async Task<ActionResult> DeleteWallet([FromRoute] string storeId, [FromRoute] string cryptoCode)
     {
-        await EnsureStoreContext(storeId);
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
         if (checkResult != null)
         {
@@ -768,7 +758,6 @@ public class UIStoreOnChainWalletsController : Controller
     [HttpPost("{storeId}/onchain/{cryptoCode}/delete")]
     public async Task<IActionResult> ConfirmDeleteWallet([FromRoute] string storeId, [FromRoute] string cryptoCode)
     {
-        await EnsureStoreContext(storeId);
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
         if (checkResult != null)
         {
@@ -808,13 +797,6 @@ public class UIStoreOnChainWalletsController : Controller
         vm.Confirmation = true;
         ModelState.Remove(nameof(vm.Config)); // Remove the cached value
         return View("ImportWallet/ConfirmAddresses", vm);
-    }
-
-    private async Task EnsureStoreContext(string storeId)
-    {
-        var store = await _storeRepo.FindStore(storeId, User, true);
-        if (store is not null)
-            HttpContext.SetStoreData(store);
     }
 
     private ActionResult IsAvailable(string cryptoCode, out StoreData store, out BTCPayNetwork network)

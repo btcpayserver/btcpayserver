@@ -6,7 +6,7 @@
 <html lang="en">
 <head>
 	<partial name="LayoutHead" />
-	<title>Post Redirect</title>
+	<title>@StringLocalizer["Post Redirect"]</title>
 </head>
 <body>
 	@if (Model.FormUrl is null)
@@ -25,11 +25,9 @@
 					<div class="modal-content">
 						<div class="modal-body text-center my-3">
 							<p>
-								This redirection page is supposed to be submitted automatically.
-								<br>
-								Since you have not enabled JavaScript, please submit manually.
+								@ViewLocalizer["This redirection page is supposed to be submitted automatically.<br>Since you have not enabled JavaScript, please submit manually."]
 							</p>
-							<button class="btn btn-primary" type="submit">Submit</button>
+							<button class="btn btn-primary" type="submit" text-translate="true">Submit</button>
 						</div>
 					</div>
 				</div>
@@ -53,11 +51,9 @@
 					<div class="modal-content">
 						<div class="modal-body text-center my-3">
 							<p>
-								This redirection page is supposed to be submitted automatically.
-								<br>
-								Since you have not enabled JavaScript, please submit manually.
+								@ViewLocalizer["This redirection page is supposed to be submitted automatically.<br>Since you have not enabled JavaScript, please submit manually."]
 							</p>
-							<button class="btn btn-primary" type="submit">Submit</button>
+							<button class="btn btn-primary" type="submit" text-translate="true">Submit</button>
 						</div>
 					</div>
 				</div>

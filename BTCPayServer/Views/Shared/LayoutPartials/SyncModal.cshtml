@@ -6,21 +6,25 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <a class="modal-header btn-link border-0 text-decoration-none cursor-pointer align-items-center" data-bs-toggle="collapse" data-bs-target="#syncModalContent">
-                    <h4 class="modal-title h5 fw-semibold">Your nodes are syncing …</h4>
+                    <h4 class="modal-title h5 fw-semibold" text-translate="true">Your nodes are syncing …</h4>
                     <vc:icon symbol="caret-down"/>
                 </a>
                 <div id="syncModalContent" class="collapse show">
                     <div class="modal-body pt-0">
-                        <p>Your node is syncing the entire blockchain and validating the consensus rules.</p>
+                        <p text-translate="true">Your node is syncing the entire blockchain and validating the consensus rules.</p>
                         @foreach (var provider in SyncSummaryProviders)
                         {
                             <partial name="@provider.Partial"/>
                         }
+                        @{
+                            var watchVideoLink = ViewLocalizer["<a href=\"{0}\" target=\"_blank\" rel=\"noreferrer noopener\">Watch this video</a>",
+                                "https://www.youtube.com/watch?v=OrYDehC-8TU"];
+                            var fastSyncLink = ViewLocalizer["<a href=\"{0}\" target=\"_blank\" rel=\"noreferrer noopener\">FastSync</a>",
+                                "https://docs.btcpayserver.org/Docker/fastsync/"];
+                        }
                         <p class="mb-0">
-                            <a href="https://www.youtube.com/watch?v=OrYDehC-8TU" target="_blank" rel="noreferrer noopener">Watch this video</a>
-                            to understand the importance of blockchain synchronization.
-                            If you really don't want to sync and you are familiar with the command line, check
-                            <a href="https://docs.btcpayserver.org/Docker/fastsync/" target="_blank" rel="noreferrer noopener">FastSync</a>.
+                            @ViewLocalizer["{0} to understand the importance of blockchain synchronization. If you really don't want to sync and you are familiar with the command line, check {1}.",
+                                watchVideoLink, fastSyncLink]
                         </p>
                     </div>
                 </div>

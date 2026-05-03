@@ -45,15 +45,15 @@
 @if (payments.Any())
 {
     <section>
-        <h5>Off-Chain Payments</h5>
+        <h5 text-translate="true">Off-Chain Payments</h5>
         <div class="invoice-payments table-responsive mt-0">
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
-						<th class="w-175px">Type</th>
-                        <th class="w-175px">Destination</th>
-                        <th class="text-nowrap">Payment Proof</th>
-                        <th class="w-150px text-end">Paid</th>
+						<th class="w-175px" text-translate="true">Type</th>
+                        <th class="w-175px" text-translate="true">Destination</th>
+                        <th class="text-nowrap" text-translate="true">Payment Proof</th>
+                        <th class="w-150px text-end" text-translate="true">Paid</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -77,13 +77,13 @@
 			@if (!string.IsNullOrEmpty(providedComment))
 			{
 				<div class="p-2">
-					<b>LNURL Comment</b>: @providedComment
+					<b text-translate="true">LNURL Comment</b>: @providedComment
 				</div>
 			}
 			@if (!string.IsNullOrEmpty(consumedLightningAddress))
 			{
 				<div class="p-2">
-					<b>Lightning address used</b>: @consumedLightningAddress
+					<b text-translate="true">Lightning address used</b>: @consumedLightningAddress
 				</div>
 			}
 

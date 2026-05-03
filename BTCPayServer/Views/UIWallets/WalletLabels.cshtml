@@ -36,7 +36,7 @@
             <li class="breadcrumb-item">
                 <a asp-action="WalletTransactions" asp-controller="UIWallets" asp-route-walletId="@walletId" text-translate="true">Transactions</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">Labels</li>
+            <li class="breadcrumb-item active" aria-current="page" text-translate="true">Labels</li>
         </ol>
         <h2>@ViewData["Title"]</h2>
     </nav>
@@ -92,7 +92,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="EditLabelModalLabel" text-translate="true">Edit Label</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]"></button>
                     </div>
                     <div class="modal-body">
                         <input type="hidden" id="OldLabel" name="id" />

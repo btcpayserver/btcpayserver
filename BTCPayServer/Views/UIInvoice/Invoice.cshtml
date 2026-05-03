@@ -33,6 +33,9 @@
 
 @section PageFootContent {
     <script>
+        const refundOptionsLoadFailed = @Safe.Json(StringLocalizer["Failed to load refund options."].Value)
+        const refundAmountTemplate = @Safe.Json(StringLocalizer["= {0} {1} refund", "{0}", "{1}"].Value)
+
         const handleRefundResponse = async response => {
             const modalBody = document.querySelector('#RefundModal .modal-body')
             if (response.ok && response.redirected) {
@@ -40,7 +43,7 @@
             } else if (response.ok) {
                 modalBody.innerHTML = await response.text()
             } else {
-                modalBody.innerHTML = '<div class="alert alert-danger" role="alert">Failed to load refund options.</div>'
+                modalBody.innerHTML = `<div class="alert alert-danger" role="alert">${refundOptionsLoadFailed}</div>`
             }
         }
 
@@ -137,7 +140,7 @@
             console.log({ refundOption, isInvalid, amount, currency })
             const reduceByAmount = (amount * (percentage / 100));
             const refundAmount = (amount - reduceByAmount).toFixed(divisibility);
-            $result.innerText = `= ${refundAmount} ${currency} refund`;
+            $result.innerText = refundAmountTemplate.replace('{0}', refundAmount).replace('{1}', currency);
             $result.hidden = false;
         }
         delegate('change', '[name="SelectedRefundOption"]', updateSubtractPercentageResult);
@@ -153,7 +156,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="RefundTitle">Issue Refund</h4>
+                    <h4 class="modal-title" id="RefundTitle" text-translate="true">Issue Refund</h4>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
                         <vc:icon symbol="close" />
                     </button>
@@ -172,38 +175,38 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId">Invoices</a>
+                <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" text-translate="true">Invoices</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">Invoice</li>
+            <li class="breadcrumb-item active" aria-current="page" text-translate="true">Invoice</li>
         </ol>
         <h2>@ViewData["Title"]</h2>
     </nav>
     <div>
         @if (Model.ShowCheckout)
         {
-            <a asp-action="Checkout" class="invoice-checkout-link btn btn-primary text-nowrap" asp-route-invoiceId="@Model.Id">Checkout</a>
+            <a asp-action="Checkout" class="invoice-checkout-link btn btn-primary text-nowrap" asp-route-invoiceId="@Model.Id" text-translate="true">Checkout</a>
         }
         @if (Model.ShowReceipt)
         {
-            <a asp-action="InvoiceReceipt" asp-route-invoiceId="@Model.Id" id="Receipt" class="btn btn-secondary" target="InvoiceReceipt-@Model.Id">Receipt</a>
+            <a asp-action="InvoiceReceipt" asp-route-invoiceId="@Model.Id" id="Receipt" class="btn btn-secondary" target="InvoiceReceipt-@Model.Id" text-translate="true">Receipt</a>
         }
         @if (Model.CanRefund)
         {
-            <a asp-action="Refund" asp-route-invoiceId="@Model.Id" id="IssueRefund" class="btn btn-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#RefundModal" permission="@Policies.CanCreateNonApprovedPullPayments">Issue Refund</a>
+            <a asp-action="Refund" asp-route-invoiceId="@Model.Id" id="IssueRefund" class="btn btn-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#RefundModal" permission="@Policies.CanCreateNonApprovedPullPayments" text-translate="true">Issue Refund</a>
         }
         else
         {
-            <button class="btn btn-secondary text-nowrap" data-bs-toggle="tooltip" title="@StringLocalizer["You can only refund an invoice that has been settled. Please wait for the transaction to confirm on the blockchain before attempting to refund it."]" disabled>Issue refund</button>
+            <button class="btn btn-secondary text-nowrap" data-bs-toggle="tooltip" title="@StringLocalizer["You can only refund an invoice that has been settled. Please wait for the transaction to confirm on the blockchain before attempting to refund it."]" disabled text-translate="true">Issue refund</button>
         }
         <form asp-action="ToggleArchive" asp-route-invoiceId="@Model.Id" method="post">
             <button type="submit" class="btn btn-secondary" id="btn-archive-toggle">
                 @if (Model.Archived)
                 {
-                    <span class="text-nowrap" data-bs-toggle="tooltip" title="@StringLocalizer["Unarchive this invoice"]">Unarchive</span>
+                    <span class="text-nowrap" data-bs-toggle="tooltip" title="@StringLocalizer["Unarchive this invoice"]" text-translate="true">Unarchive</span>
                 }
                 else
                 {
-                    <span class="text-nowrap" data-bs-toggle="tooltip" title="@StringLocalizer["Archive this invoice so that it does not appear in the invoice list by default"]">Archive</span>
+                    <span class="text-nowrap" data-bs-toggle="tooltip" title="@StringLocalizer["Archive this invoice so that it does not appear in the invoice list by default"]" text-translate="true">Archive</span>
                 }
             </button>
         </form>
@@ -215,29 +218,29 @@
 <div class="invoice-details">
     <div class="invoice-information mb-5">
         <div>
-            <h3 class="mb-3">General Information</h3>
+            <h3 class="mb-3" text-translate="true">General Information</h3>
             <table class="table mb-0">
                 <tr>
-                    <th>Store</th>
+                    <th text-translate="true">Store</th>
                     <td>
                         <a href="@Model.StoreLink" rel="noreferrer noopener">@Model.StoreName</a>
                     </td>
                 </tr>
                 <tr>
-                    <th>Invoice Id</th>
+                    <th text-translate="true">Invoice Id</th>
                     <td>@Model.Id</td>
                 </tr>
                 @if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
                 {
                     <tr>
-                        <th>Order Id</th>
+                        <th text-translate="true">Order Id</th>
                         <td>
                             @if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderUrl))
                             {
                                 <a href="@Model.TypedMetadata.OrderUrl" rel="noreferrer noopener" target="_blank">
                                     @if (string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
                                     {
-                                        <span>View Order</span>
+                                        <span text-translate="true">View Order</span>
                                     }
                                     else
                                     {
@@ -255,50 +258,50 @@
                 @if (Model.TypedMetadata.PaymentRequestId is not null)
                 {
                     <tr>
-                        <th>Payment Request Id</th>
+                        <th text-translate="true">Payment Request Id</th>
                         <td>
                             <a href="@Model.PaymentRequestLink" rel="noreferrer noopener">@Model.TypedMetadata.PaymentRequestId</a>
                         </td>
                     </tr>
                 }
                 <tr>
-                    <th>State</th>
+                    <th text-translate="true">State</th>
                     <td>
                         <vc:invoice-status invoice-id="@Model.Id" state="Model.State" payments="Model.Payments"
                                            is-archived="Model.Archived" has-refund="Model.HasRefund" />
                     </td>
                 </tr>
                 <tr>
-                    <th>Created Date</th>
+                    <th text-translate="true">Created Date</th>
                     <td>@Model.CreatedDate.ToBrowserDate()</td>
                 </tr>
                 <tr>
-                    <th>Expiration Date</th>
+                    <th text-translate="true">Expiration Date</th>
                     <td>@Model.ExpirationDate.ToBrowserDate()</td>
                 </tr>
                 <tr>
-                    <th>Monitoring Date</th>
+                    <th text-translate="true">Monitoring Date</th>
                     <td>@Model.MonitoringDate.ToBrowserDate()</td>
                 </tr>
                 <tr>
-                    <th>Transaction Speed</th>
+                    <th text-translate="true">Transaction Speed</th>
                     <td>@Model.TransactionSpeed</td>
                 </tr>
                 <tr>
-                    <th>Total Amount Due</th>
+                    <th text-translate="true">Total Amount Due</th>
                     <td><span data-sensitive>@Model.Fiat</span></td>
                 </tr>
                 @if (!string.IsNullOrEmpty(Model.NotificationUrl))
                 {
                     <tr>
-                        <th>Notification Url</th>
+                        <th text-translate="true">Notification Url</th>
                         <td>@Model.NotificationUrl</td>
                     </tr>
                 }
                 @if (!string.IsNullOrEmpty(Model.RedirectUrl))
                 {
                     <tr>
-                        <th>Redirect Url</th>
+                        <th text-translate="true">Redirect Url</th>
                         <td>
                             <a href="@Model.RedirectUrl" rel="noreferrer noopener">@Model.RedirectUrl</a>
                         </td>
@@ -313,7 +316,7 @@
             {
                 <div>
                     <h3 class="mb-3">
-                        <span>Product Information</span>
+                        <span text-translate="true">Product Information</span>
                         <a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
                             <vc:icon symbol="info" />
                         </a>
@@ -322,21 +325,21 @@
                         @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
                         {
                             <tr>
-                                <th>Item code</th>
+                                <th text-translate="true">Item code</th>
                                 <td>@Model.TypedMetadata.ItemCode</td>
                             </tr>
                         }
                         @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc))
                         {
                             <tr>
-                                <th>Item Description</th>
+                                <th text-translate="true">Item Description</th>
                                 <td>@Model.TypedMetadata.ItemDesc</td>
                             </tr>
                         }
                         @if (Model.TaxIncluded is not null)
                         {
                             <tr>
-                                <th>Tax Included</th>
+                                <th text-translate="true">Tax Included</th>
                                 <td>@Model.TaxIncluded</td>
                             </tr>
                         }
@@ -355,7 +358,7 @@
             {
                 <div>
                     <h3 class="mb-3">
-                        <span>Buyer Information</span>
+                        <span text-translate="true">Buyer Information</span>
                         <a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
                             <vc:icon symbol="info" />
                         </a>
@@ -364,14 +367,14 @@
                         @if (Model.TypedMetadata.BuyerName is not null)
                         {
                             <tr>
-                                <th>Name</th>
+                                <th text-translate="true">Name</th>
                                 <td>@Model.TypedMetadata.BuyerName</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerEmail is not null)
                         {
                             <tr>
-                                <th>Email</th>
+                                <th text-translate="true">Email</th>
                                 <td>
                                     <a href="mailto:@Model.TypedMetadata.BuyerEmail">@Model.TypedMetadata.BuyerEmail</a>
                                 </td>
@@ -380,49 +383,49 @@
                         @if (Model.TypedMetadata.BuyerPhone is not null)
                         {
                             <tr>
-                                <th>Phone</th>
+                                <th text-translate="true">Phone</th>
                                 <td>@Model.TypedMetadata.BuyerPhone</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerAddress1 is not null)
                         {
                             <tr>
-                                <th>Address 1</th>
+                                <th text-translate="true">Address 1</th>
                                 <td>@Model.TypedMetadata.BuyerAddress1</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerAddress2 is not null)
                         {
                             <tr>
-                                <th>Address 2</th>
+                                <th text-translate="true">Address 2</th>
                                 <td>@Model.TypedMetadata.BuyerAddress2</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerCity is not null)
                         {
                             <tr>
-                                <th>City</th>
+                                <th text-translate="true">City</th>
                                 <td>@Model.TypedMetadata.BuyerCity</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerState is not null)
                         {
                             <tr>
-                                <th>State</th>
+                                <th text-translate="true">State</th>
                                 <td>@Model.TypedMetadata.BuyerState</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerCountry is not null)
                         {
                             <tr>
-                                <th>Country</th>
+                                <th text-translate="true">Country</th>
                                 <td>@Model.TypedMetadata.BuyerCountry</td>
                             </tr>
                         }
                         @if (Model.TypedMetadata.BuyerZip is not null)
                         {
                             <tr>
-                                <th>Zip</th>
+                                <th text-translate="true">Zip</th>
                                 <td>@Model.TypedMetadata.BuyerZip</td>
                             </tr>
                         }
@@ -433,7 +436,7 @@
             {
                 <div>
                     <h3 class="mb-3">
-                        <span>Receipt Information</span>
+                        <span text-translate="true">Receipt Information</span>
                         <a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
                             <vc:icon symbol="info" />
                         </a>
@@ -445,7 +448,7 @@
             {
                 <div>
                     <h3 class="mb-3">
-                        <span>Additional Information</span>
+                        <span text-translate="true">Additional Information</span>
                         <a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
                             <vc:icon symbol="info" />
                         </a>
@@ -457,23 +460,23 @@
     </div>
     <div class="row">
         <div class="col-xxl-constrain">
-            <h3 class="mb-3">Invoice Summary</h3>
+            <h3 class="mb-3" text-translate="true">Invoice Summary</h3>
             <partial name="ListInvoicesPaymentsPartial" model="(Model, true)" />
 
             @if (Model.Deliveries.Any())
             {
                 <section class="mt-4 d-print-none">
-                    <h3 class="mb-3">Webhooks</h3>
+                    <h3 class="mb-3" text-translate="true">Webhooks</h3>
                     <div class="table-responsive-xl">
                         <table class="table table-hover mb-5">
                             <thead>
                                 <tr>
-                                    <th>Status</th>
-                                    <th>ID</th>
-                                    <th>Type</th>
-                                    <th>Url</th>
-                                    <th>Date</th>
-                                    <th class="text-end">Action</th>
+                                    <th text-translate="true">Status</th>
+                                    <th text-translate="true">ID</th>
+                                    <th text-translate="true">Type</th>
+                                    <th text-translate="true">Url</th>
+                                    <th text-translate="true">Date</th>
+                                    <th class="text-end" text-translate="true">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -557,7 +560,7 @@
                                                 <button id="#redeliver-@delivery.Id"
                                                         type="submit"
                                                         class="btn btn-link p-0 redeliver">
-                                                    Redeliver
+                                                    <span text-translate="true">Redeliver</span>
                                                 </button>
                                                 }
                                         </td>
@@ -573,14 +576,14 @@
             @if ((Model.Refunds?.Count ?? 0) > 0)
             {
                 <section class="mt-4">
-                    <h3 class="mb-3">Refunds</h3>
+                    <h3 class="mb-3" text-translate="true">Refunds</h3>
                     <div class="table-responsive-xl">
                         <table class="table table-hover mb-5">
                             <thead>
                                 <tr>
-                                    <th>Pull Payment</th>
-                                    <th>Amount</th>
-                                    <th>Date</th>
+                                    <th text-translate="true">Pull Payment</th>
+                                    <th text-translate="true">Amount</th>
+                                    <th text-translate="true">Date</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -615,12 +618,12 @@
             @if (Model.Events is { Length: > 0 })
             {
                 <section class="mt-5 d-print-none">
-                    <h3 class="mb-0">Events</h3>
+                    <h3 class="mb-0" text-translate="true">Events</h3>
                     <table class="table table-hover mt-3 mb-4">
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Message</th>
+                                <th text-translate="true">Date</th>
+                                <th text-translate="true">Message</th>
                             </tr>
                         </thead>
                         <tbody>

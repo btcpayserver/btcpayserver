@@ -46,21 +46,21 @@
                 {{qrData}}
             </div>
             <div v-else-if="decoder">
-                <div class="my-3">BC UR: {{decoder.expectedPartCount()}} parts, {{decoder.getProgress() * 100}}% completed</div>
+                <div class="my-3">@StringLocalizer["BC UR: {0} parts, {1}% completed", "{{decoder.expectedPartCount()}}", "{{decoder.getProgress() * 100}}"]</div>
                 <div class="progress">
                     <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" :style="{width: `${decoder.getProgress() * 100}%`}" id="progressbar"></div>
                 </div>
             </div>
             <div v-else-if="bbqrDecoder">
-                <div class="my-3">BBQR: {{bbqrDecoder.total}} parts, {{bbqrDecoder.progress * 100}}% completed</div>
+                <div class="my-3">@StringLocalizer["BBQR: {0} parts, {1}% completed", "{{bbqrDecoder.total}}", "{{bbqrDecoder.progress * 100}}"]</div>
                 <div class="progress">
                     <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" :style="{width: `${bbqrDecoder.progress * 100}%`}" id="progressbar"></div>
                 </div>
             </div>
             <div class="mt-3 text-center">
-                <button type="button" class="btn btn-primary me-1" v-if="qrData" v-on:click="submitData">Submit</button>
-                <button type="button" class="btn btn-secondary me-1" v-if="qrData" v-on:click="retry">Retry</button>
-                <button type="button" class="btn btn-secondary" v-if="requestInput && cameras.length > 2" v-on:click="nextCamera">Switch camera</button>
+                <button type="button" class="btn btn-primary me-1" v-if="qrData" v-on:click="submitData" text-translate="true">Submit</button>
+                <button type="button" class="btn btn-secondary me-1" v-if="qrData" v-on:click="retry" text-translate="true">Retry</button>
+                <button type="button" class="btn btn-secondary" v-if="requestInput && cameras.length > 2" v-on:click="nextCamera" text-translate="true">Switch camera</button>
             </div>
         </div>
     </scanner-wrap>
@@ -69,6 +69,8 @@
 <script>
 function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = false) {
 	const isModal = !!modalId;
+    const bbqrDecodedMessage = @Safe.Json(StringLocalizer["BBQr {0} decoded", "{0}"].Value);
+    const urDecodedMessage = @Safe.Json(StringLocalizer["UR {0} decoded", "{0}"].Value);
 
 	Vue.component('scanner-wrap', {
 		props: ["modalId", "title", "decoder"],
@@ -191,7 +193,7 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
                                 }
                                 const result = buf2hex(joinResult.raw);
                                 this.setQrData(result);
-                                this.successMessage = `BBQr ${type} decoded`;
+                                this.successMessage = bbqrDecodedMessage.replace('{0}', type);
                             }catch (error){
                                 this.errorMessage = error.message;
                             }
@@ -206,7 +208,7 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
                                 if (this.decoder.isSuccess()) {
                                     const ur = this.decoder.resultUR();
                                     this.setQrData(ur);
-                                    this.successMessage = `UR ${ur.type} decoded`;
+                                    this.successMessage = urDecodedMessage.replace('{0}', ur.type);
                                 } else if (this.decoder.isError()) {
                                     this.errorMessage = this.decoder.resultError();
                                 }
@@ -255,17 +257,17 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
 				}).catch(error => {
 					if (error.name === 'StreamApiNotSupportedError') {
 						this.noStreamApiSupport = true;
-					} else if (error.name === 'NotAllowedError') {
-						this.errorMessage = @Safe.Json(StringLocalizer["A permission to the camera is needed to scan the QR code. Please grant the browser access and then retry."])
-					} else if (error.name === 'NotFoundError') {
-						this.errorMessage = @Safe.Json(StringLocalizer["A camera was not detected on your device."])
-					} else if (error.name === 'NotSupportedError') {
-						this.errorMessage = @Safe.Json(StringLocalizer["This page is served in non-secure context (HTTPS, localhost or file://)"])
-					} else if (error.name === 'NotReadableError') {
-						this.errorMessage = @Safe.Json(StringLocalizer["Could not access your camera. Is it already in use?"])
-					} else if (error.name === 'OverconstrainedError') {
-						this.errorMessage = @Safe.Json(StringLocalizer["Constraints do not match any installed camera."])
-					} else {
+						} else if (error.name === 'NotAllowedError') {
+							this.errorMessage = @Safe.Json(StringLocalizer["A permission to the camera is needed to scan the QR code. Please grant the browser access and then retry."].Value)
+						} else if (error.name === 'NotFoundError') {
+							this.errorMessage = @Safe.Json(StringLocalizer["A camera was not detected on your device."].Value)
+						} else if (error.name === 'NotSupportedError') {
+							this.errorMessage = @Safe.Json(StringLocalizer["This page is served in non-secure context (HTTPS, localhost or file://)"].Value)
+						} else if (error.name === 'NotReadableError') {
+							this.errorMessage = @Safe.Json(StringLocalizer["Could not access your camera. Is it already in use?"].Value)
+						} else if (error.name === 'OverconstrainedError') {
+							this.errorMessage = @Safe.Json(StringLocalizer["Constraints do not match any installed camera."].Value)
+						} else {
 						this.errorMessage = 'UNKNOWN ERROR: ' + error.message
 					}
 				})

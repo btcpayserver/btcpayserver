@@ -40,6 +40,16 @@
         }
         return false;
     }
+
+    string LocalizePendingCommand(string command) =>
+        command switch
+        {
+            "install" => StringLocalizer["install"].Value,
+            "update" => StringLocalizer["update"].Value,
+            "delete" => StringLocalizer["delete"].Value,
+            "enable" => StringLocalizer["enable"].Value,
+            _ => command
+        };
 }
 
 <style>
@@ -59,11 +69,11 @@
         <a href="#warning-details" data-bs-toggle="collapse" class="alert-link" text-translate="true">Read more</a>
     </p>
     <div class="collapse" id="warning-details">
-        <p class="my-3"><strong>Use at Your Own Risk:</strong> Plugins in this store are developed by independent third parties. These plugins have not undergone review by the BTCPay Server team.</p>
-        <p class="mb-3"><strong>Disclaimer of Responsibility:</strong> BTCPay Server contributors or Foundation are not liable for any harm, loss, or damage resulting from the installation or use of the plugins. Users assume full responsibility for their installation, use, familiarity with licensing and terms of service and maintenance.</p>
-        <p class="mb-3"><strong>No Official Endorsement:</strong> Inclusion in the list of BTCPay Server plugins does not constitute an endorsement or guarantee of quality, safety, or compatibility.</p>
-        <p class="mb-3"><strong>Due Diligence Advised:</strong> We recommend users exercise caution and conduct their own research or consult the community before installing any plugin.</p>
-        <p class="mb-0"><strong>Feedback and Reporting:</strong> Should you experience issues with a plugin, please provide feedback or report concerns directly to the respective plugin developers.</p>
+        <p class="my-3">@ViewLocalizer["<strong>Use at Your Own Risk:</strong> Plugins in this store are developed by independent third parties. These plugins have not undergone review by the BTCPay Server team."]</p>
+        <p class="mb-3">@ViewLocalizer["<strong>Disclaimer of Responsibility:</strong> BTCPay Server contributors or Foundation are not liable for any harm, loss, or damage resulting from the installation or use of the plugins. Users assume full responsibility for their installation, use, familiarity with licensing and terms of service and maintenance."]</p>
+        <p class="mb-3">@ViewLocalizer["<strong>No Official Endorsement:</strong> Inclusion in the list of BTCPay Server plugins does not constitute an endorsement or guarantee of quality, safety, or compatibility."]</p>
+        <p class="mb-3">@ViewLocalizer["<strong>Due Diligence Advised:</strong> We recommend users exercise caution and conduct their own research or consult the community before installing any plugin."]</p>
+        <p class="mb-0">@ViewLocalizer["<strong>Feedback and Reporting:</strong> Should you experience issues with a plugin, please provide feedback or report concerns directly to the respective plugin developers."]</p>
     </div>
 </div>
 
@@ -121,7 +131,7 @@
                                     }
                                     else
                                     {
-                                        <button title="Schedule upgrade for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-sm btn-primary" text-translate="true">Schedule update</button>
+                                        <button title="@StringLocalizer["Schedule upgrade for when the dependencies have been met to ensure a smooth update"]" data-bs-toggle="tooltip" type="submit" class="btn btn-sm btn-primary" text-translate="true">Schedule update</button>
                                     }
                                 </form>
                             }
@@ -173,7 +183,7 @@
                             @if (!string.IsNullOrEmpty(downloadInfo?.Author))
                             {
                                 <span class="text-muted text-nowrap">
-                                    by
+                                    <span text-translate="true">by</span>
                                     <a href="@downloadInfo.AuthorLink" rel="noreferrer noopener" target="_blank">
                                         @downloadInfo.Author
                                     </a>
@@ -212,7 +222,7 @@
                                                 @dependency
                                                 @if (!PluginManager.DependencyMet(dependency, installed))
                                                 {
-                                                    <span title="Dependency not met." data-bs-toggle="tooltip" class="text-danger">
+                                                    <span title="@StringLocalizer["Dependency not met."]" data-bs-toggle="tooltip" class="text-danger">
                                                         <vc:icon symbol="warning" />
                                                     </span>
                                                 }
@@ -236,7 +246,7 @@
                                                     @dependency
                                                     @if (!PluginManager.DependencyMet(dependency, installed))
                                                     {
-                                                        <span title="Dependency not met." data-bs-toggle="tooltip" class="text-danger">
+                                                        <span title="@StringLocalizer["Dependency not met."]" data-bs-toggle="tooltip" class="text-danger">
                                                             <vc:icon symbol="warning" />
                                                         </span>
                                                     }
@@ -300,7 +310,14 @@
                         @if (pendingAction is not null)
                         {
                             <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
-                                <button type="submit" class="btn btn-outline-secondary">Cancel pending @pendingAction @(versionOfPendingInstall is null? "": $"of {versionOfPendingInstall}")</button>
+                                @if (versionOfPendingInstall is null)
+                                {
+                                    <button type="submit" class="btn btn-outline-secondary">@StringLocalizer["Cancel pending {0}", LocalizePendingCommand(pendingAction)]</button>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="btn btn-outline-secondary">@StringLocalizer["Cancel pending {0} of {1}", LocalizePendingCommand(pendingAction), versionOfPendingInstall]</button>
+                                }
                             </form>
                         }
                         @if (pendingAction is null  || !exclusivePendingAction)
@@ -316,7 +333,7 @@
                                 else
                                 {
                                     <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" class="me-3">
-                                        <button title="Schedule upgrade for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-secondary" text-translate="true">Schedule update</button>
+                                        <button title="@StringLocalizer["Schedule upgrade for when the dependencies have been met to ensure a smooth update"]" data-bs-toggle="tooltip" type="submit" class="btn btn-secondary" text-translate="true">Schedule update</button>
                                     </form>
                                 }
                             }
@@ -324,7 +341,7 @@
                             
                             @if (DependentOn(plugin.Identifier))
                             {
-                                <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-3" data-bs-toggle="tooltip" title="This plugin cannot be uninstalled as it is depended on by other plugins.">
+                                <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-3" data-bs-toggle="tooltip" title="@StringLocalizer["This plugin cannot be uninstalled as it is depended on by other plugins."]">
                                     <span text-translate="true">Uninstall</span>
                                     <vc:icon symbol="warning"/>
                                 </button>
@@ -398,7 +415,7 @@ else
                             @if (!string.IsNullOrEmpty(plugin.Author))
                             {
                                 <span class="text-muted text-nowrap">
-                                    by
+                                    <span text-translate="true">by</span>
                                     <a href="@plugin.AuthorLink" rel="noreferrer noopener" target="_blank">
                                         @plugin.Author
                                     </a>
@@ -417,7 +434,7 @@ else
                             }
                             else if (recommended)
                             {
-                                <div class="badge bg-light text-nowrap" data-bs-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method.">
+                                <div class="badge bg-light text-nowrap" data-bs-toggle="tooltip" title="@StringLocalizer["This plugin has been recommended to be installed by your deployment method."]">
                                     <span text-translate="true">Recommended</span>
                                     <vc:icon symbol="info" />
                                 </div>
@@ -434,7 +451,7 @@ else
                                         @dependency
                                         @if (!PluginManager.DependencyMet(dependency, installed))
                                         {
-                                            <span title="Dependency not met." data-bs-toggle="tooltip" class="text-danger">
+                                            <span title="@StringLocalizer["Dependency not met."]" data-bs-toggle="tooltip" class="text-danger">
                                                 <vc:icon symbol="warning" />
                                             </span>
                                         }
@@ -493,7 +510,14 @@ else
                         @if (pendingAction is not null)
                         {
                             <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
-                                <button type="submit" class="btn btn-outline-secondary">Cancel pending @pendingAction @(versionOfPendingInstall is null? "": $"of {versionOfPendingInstall}")</button>
+                                @if (versionOfPendingInstall is null)
+                                {
+                                    <button type="submit" class="btn btn-outline-secondary">@StringLocalizer["Cancel pending {0}", LocalizePendingCommand(pendingAction)]</button>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="btn btn-outline-secondary">@StringLocalizer["Cancel pending {0} of {1}", LocalizePendingCommand(pendingAction), versionOfPendingInstall]</button>
+                                }
                             </form>
                         }
                         @if (pendingAction is null|| !exclusivePendingAction)
@@ -516,7 +540,7 @@ else
                             else
                             {
                                 <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version">
-                                    <button title="Schedule install for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-primary" text-translate="true">Schedule install</button>
+                                    <button title="@StringLocalizer["Schedule install for when the dependencies have been met to ensure a smooth update"]" data-bs-toggle="tooltip" type="submit" class="btn btn-primary" text-translate="true">Schedule install</button>
                                 </form>
                             }
                         }
@@ -576,7 +600,7 @@ else
                                     <div class="d-flex flex-wrap align-items-center justify-content-between">
                                         <span class="my-2 me-3">@extComm.Key</span>
                                         <form asp-action="CancelPluginCommands" asp-route-plugin="@extComm.Key">
-                                            <button type="submit" class="btn btn-outline-secondary">Cancel pending @extComm.Last().command</button>
+                                            <button type="submit" class="btn btn-outline-secondary">@StringLocalizer["Cancel pending {0}", LocalizePendingCommand(extComm.Last().command)]</button>
                                         </form>
                                     </div>
                                 </li>

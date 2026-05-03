@@ -36,9 +36,15 @@
 @if (Context.Request.PathBase.ToString() != string.Empty)
 {
     <div class="alert alert-warning" role="alert">
-        Your BTCPay Server installation is using the root path <span class="fw-bold">@Context.Request.PathBase</span>.<br /><br />
-        This is incompatible with wallets attempting to resolve <span class="fw-bold">@Context.Request.GetAbsoluteUriNoPathBase(new Uri("/.well-known/lnurlp/{username}", UriKind.Relative))</span> rather than <span class="fw-bold">@Context.Request.GetAbsoluteUri("/.well-known/lnurlp/{username}")</span>.<br /><br />
-        If the LN Address doesn't work, ask your integrator to redirect queries from <span class="fw-bold">@Context.Request.GetAbsoluteUriNoPathBase(new Uri("/.well-known/lnurlp/{username}", UriKind.Relative))</span> to <span class="fw-bold">@Context.Request.GetAbsoluteUri("/.well-known/lnurlp/{username}")</span>.
+        @ViewLocalizer["Your BTCPay Server installation is using the root path <span class=\"fw-bold\">{0}</span>.", Context.Request.PathBase]
+        <br /><br />
+        @ViewLocalizer["This is incompatible with wallets attempting to resolve <span class=\"fw-bold\">{0}</span> rather than <span class=\"fw-bold\">{1}</span>.",
+            Context.Request.GetAbsoluteUriNoPathBase(new Uri("/.well-known/lnurlp/{username}", UriKind.Relative)),
+            Context.Request.GetAbsoluteUri("/.well-known/lnurlp/{username}")]
+        <br /><br />
+        @ViewLocalizer["If the LN Address doesn't work, ask your integrator to redirect queries from <span class=\"fw-bold\">{0}</span> to <span class=\"fw-bold\">{1}</span>.",
+            Context.Request.GetAbsoluteUriNoPathBase(new Uri("/.well-known/lnurlp/{username}", UriKind.Relative)),
+            Context.Request.GetAbsoluteUri("/.well-known/lnurlp/{username}")]
     </div>
 }
 
@@ -85,7 +91,7 @@
                     </div>
                 </div>
                 <div class="col-12 col-sm-auto">
-                    <div class="form-group" title="Metadata (in JSON) to add to the invoice when created through this lightning address.">
+                    <div class="form-group" title="@StringLocalizer["Metadata (in JSON) to add to the invoice when created through this lightning address."]">
                         <label asp-for="Add.InvoiceMetadata" class="form-label"></label>
 						<a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
 							<vc:icon symbol="info" />
@@ -98,7 +104,7 @@
         </div>
 
         <div class="form-group">
-            <button type="submit" name="command" value="add" class="btn btn-primary">Save</button>
+            <button type="submit" name="command" value="add" class="btn btn-primary" text-translate="true">Save</button>
         </div>
     </div>
 
@@ -134,23 +140,23 @@
                     <td class="settings-holder align-middle">
                         @if (Model.Items[index].Min.HasValue)
                         {
-                            <span>@Model.Items[index].Min min sats</span>
+                            <span>@StringLocalizer["{0} min sats", Model.Items[index].Min]</span>
                         }
                         @if (Model.Items[index].Max.HasValue)
                         {
-                            <span>@Model.Items[index].Max max sats</span>
+                            <span>@StringLocalizer["{0} max sats", Model.Items[index].Max]</span>
                         }
                         @if (!string.IsNullOrEmpty(Model.Items[index].CurrencyCode))
                         {
-                            <span>tracked in @Model.Items[index].CurrencyCode</span>
+                            <span>@StringLocalizer["tracked in {0}", Model.Items[index].CurrencyCode]</span>
                         }
                         @if (!string.IsNullOrEmpty(Model.Items[index].InvoiceMetadata))
                         {
-                            <span>with invoice metadata @Model.Items[index].InvoiceMetadata</span>
+                            <span>@StringLocalizer["with invoice metadata {0}", Model.Items[index].InvoiceMetadata]</span>
                         }
                     </td>
                     <td class="text-end">
-                        <button type="submit" title="Remove" name="command" value="@($"remove:{Model.Items[index].Username}")" class="btn btn-link px-0 remove" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The Lightning Address <strong>@Html.Encode(address)</strong> will be removed." data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">
+                        <button type="submit" title="@StringLocalizer["Remove"]" name="command" value="@($"remove:{Model.Items[index].Username}")" class="btn btn-link px-0 remove" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@ViewLocalizer["The Lightning Address <strong>{0}</strong> will be removed.", Html.Encode(address)]" data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">
                             Remove
                         </button>
                     </td>

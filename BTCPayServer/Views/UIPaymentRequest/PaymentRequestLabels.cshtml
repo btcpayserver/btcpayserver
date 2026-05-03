@@ -33,7 +33,7 @@
             <li class="breadcrumb-item">
                 <a asp-action="GetPaymentRequests" asp-controller="UIPaymentRequest" asp-route-storeId="@Model.StoreId" text-translate="true">Payment Requests</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">Labels</li>
+            <li class="breadcrumb-item active" aria-current="page" text-translate="true">Labels</li>
         </ol>
         <h2>@ViewData["Title"]</h2>
     </nav>
@@ -64,7 +64,8 @@
                     <td class="text-end">
                         <a class="btn btn-link p-0 me-3"
                            href="@Url.Action("GetPaymentRequests", "UIPaymentRequest", new { storeId = Model.StoreId, labelFilter = label.Label })"
-                           title="View Payment Requests with this label">
+                           title="@StringLocalizer["View Payment Requests with this label"]"
+                           text-translate="true">
                             Payment Requests
                         </a>
                         <button class="btn btn-link btn-edit p-0 me-3" type="button"
@@ -93,7 +94,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="EditLabelModalLabel" text-translate="true">Edit Label</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]"></button>
                     </div>
                     <div class="modal-body">
                         <input type="hidden" id="OldLabel" name="id" />

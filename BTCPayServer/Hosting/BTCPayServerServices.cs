@@ -550,6 +550,10 @@ namespace BTCPayServer.Hosting
                     new PermissionDisplay("Modify stores webhooks", "Allows modifying the webhooks of all your stores."),
                     new PermissionDisplay("Modify selected stores' webhooks", "Allows modifying the webhooks of the selected stores.")),
                 new PolicyDefinition(
+                    Policies.CanSendStoreEmail,
+                    new PermissionDisplay("Send store emails", "Allows sending emails on behalf of all your stores."),
+                    new PermissionDisplay("Send selected stores' emails", "Allows sending emails on behalf of the selected stores.")),
+                new PolicyDefinition(
                     Policies.CanModifyServerSettings,
                     new PermissionDisplay("Manage your server", "Grants total control on the server settings of your server."),
                     includedPermissions: new[] { Policies.CanUseInternalLightningNode, Policies.CanManageUsers }),
@@ -565,7 +569,8 @@ namespace BTCPayServer.Hosting
                         Policies.CanModifyWebhooks,
                         Policies.CanModifyPaymentRequests,
                         Policies.CanManagePayouts,
-                        Policies.CanUseLightningNodeInStore
+                        Policies.CanUseLightningNodeInStore,
+                        Policies.CanSendStoreEmail
                     }),
                 new PolicyDefinition(
                     Policies.CanViewStoreSettings,

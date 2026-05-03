@@ -250,6 +250,13 @@ namespace BTCPayServer.Controllers
                     return error;
                 TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The old docker images will be cleaned soon..."].Value;
             }
+            else if (command == "backup")
+            {
+                var error = await RunSSH(vm, $"backup.sh");
+                if (error != null)
+                    return error;
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["A backup is being created. It will be saved to {0} on the host.", "/var/lib/docker/volumes/backup_datadir/_data"].Value;
+            }
             else if (command == "restart")
             {
                 var error = await RunSSH(vm, $"btcpay-restart.sh");

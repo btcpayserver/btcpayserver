@@ -67,10 +67,12 @@
             <div class="d-flex flex-column justify-content-center gap-4">
                 <partial name="_StoreHeader" model="(Model.Title, Model.StoreBranding)" />
                 <div class="text-center mt-n3">
-                    @if (!string.IsNullOrEmpty(Model.StoreWebsite))
+                    @if (!string.IsNullOrEmpty(Model.StoreWebsite) &&
+                         Uri.TryCreate(Model.StoreWebsite, UriKind.Absolute, out var storeUri) &&
+                         (storeUri.Scheme == Uri.UriSchemeHttp || storeUri.Scheme == Uri.UriSchemeHttps))
                     {
                         @ViewLocalizer["Invoice from {0}",
-                            new HtmlString($"<a href=\"{HtmlEncoder.Default.Encode(Model.StoreWebsite)}\" target=\"_blank\" rel=\"noreferrer noopener\">{HtmlEncoder.Default.Encode(Model.StoreName)}</a>")]
+                            new HtmlString($"<a href=\"{HtmlEncoder.Default.Encode(storeUri.AbsoluteUri)}\" target=\"_blank\" rel=\"noreferrer noopener\">{HtmlEncoder.Default.Encode(Model.StoreName)}</a>")]
                     }
                     else
                     {

@@ -62,7 +62,8 @@
                 {
                     <div class="modal-body pt-0" id="@Html.Id("ConfirmText")" hidden>
                         <label for="@Html.Id("ConfirmInput")" class="form-label">
-                            @ViewLocalizer["Confirm the action by typing <strong id='{0}'></strong>:", Html.Id("ConfirmInputText")]
+                            @StringLocalizer["Confirm the action by typing"]
+                            <strong id="@Html.Id("ConfirmInputText")"></strong>:
                         </label>
                         <input id="@Html.Id("ConfirmInput")" class="form-control"/>
                     </div>

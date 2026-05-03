@@ -69,7 +69,7 @@
 <script>
 function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = false) {
 	const isModal = !!modalId;
-    const bbqrDecodedMessage = @Safe.Json(StringLocalizer["BBQr {0} decoded", "{0}"].Value);
+    const bbqrDecodedMessage = @Safe.Json(StringLocalizer["BBQR {0} decoded", "{0}"].Value);
     const urDecodedMessage = @Safe.Json(StringLocalizer["UR {0} decoded", "{0}"].Value);
 
 	Vue.component('scanner-wrap', {

@@ -262,7 +262,7 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
 						} else if (error.name === 'NotFoundError') {
 							this.errorMessage = @Safe.Json(StringLocalizer["A camera was not detected on your device."].Value)
 						} else if (error.name === 'NotSupportedError') {
-							this.errorMessage = @Safe.Json(StringLocalizer["This page is served in non-secure context (HTTPS, localhost or file://)"].Value)
+							this.errorMessage = @Safe.Json(StringLocalizer["This page must be served in a secure context (HTTPS, localhost or file://)."].Value)
 						} else if (error.name === 'NotReadableError') {
 							this.errorMessage = @Safe.Json(StringLocalizer["Could not access your camera. Is it already in use?"].Value)
 						} else if (error.name === 'OverconstrainedError') {

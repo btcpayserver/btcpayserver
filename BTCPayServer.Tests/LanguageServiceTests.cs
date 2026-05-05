@@ -383,7 +383,7 @@ namespace BTCPayServer.Tests
             }
             async Task AssertTranslations(string translationId, (string Sentence, string Expected)[] expectations)
             {
-                var all = await db.QueryAsync<(string sentence, string translation)>($"SELECT sentence, translation from translations WHERE dict_id='{translationId}'");
+                var all = await db.QueryAsync<(string sentence, string translation)>("SELECT sentence, translation from translations WHERE dict_id=@dictId", new { dictId = translationId });
                 foreach (var expectation in expectations)
                 {
                     if (expectation.Expected is not null)

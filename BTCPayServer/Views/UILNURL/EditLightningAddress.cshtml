@@ -36,13 +36,8 @@
 @if (Context.Request.PathBase.ToString() != string.Empty)
 {
     <div class="alert alert-warning" role="alert">
-        @ViewLocalizer["Your BTCPay Server installation is using the root path <span class=\"fw-bold\">{0}</span>.", Context.Request.PathBase]
-        <br /><br />
-        @ViewLocalizer["This is incompatible with wallets attempting to resolve <span class=\"fw-bold\">{0}</span> rather than <span class=\"fw-bold\">{1}</span>.",
-            Context.Request.GetAbsoluteUriNoPathBase(new Uri("/.well-known/lnurlp/{username}", UriKind.Relative)),
-            Context.Request.GetAbsoluteUri("/.well-known/lnurlp/{username}")]
-        <br /><br />
-        @ViewLocalizer["If the LN Address doesn't work, ask your integrator to redirect queries from <span class=\"fw-bold\">{0}</span> to <span class=\"fw-bold\">{1}</span>.",
+        @ViewLocalizer["Your BTCPay Server installation is using the root path <span class=\"fw-bold\">{0}</span>.<br /><br />This is incompatible with wallets attempting to resolve <span class=\"fw-bold\">{1}</span> rather than <span class=\"fw-bold\">{2}</span>.<br /><br />If the LN Address doesn't work, ask your integrator to redirect queries from <span class=\"fw-bold\">{1}</span> to <span class=\"fw-bold\">{2}</span>.",
+            Context.Request.PathBase,
             Context.Request.GetAbsoluteUriNoPathBase(new Uri("/.well-known/lnurlp/{username}", UriKind.Relative)),
             Context.Request.GetAbsoluteUri("/.well-known/lnurlp/{username}")]
     </div>

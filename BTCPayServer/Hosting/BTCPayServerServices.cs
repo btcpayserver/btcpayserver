@@ -29,7 +29,6 @@ using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.Plugins;
-using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Rating;
 using BTCPayServer.Rating.Providers;
 using BTCPayServer.Security;
@@ -570,7 +569,6 @@ namespace BTCPayServer.Hosting
                         Policies.CanModifyWebhooks,
                         Policies.CanModifyPaymentRequests,
                         Policies.CanManagePayouts,
-                        WalletPolicies.CanManageWallets,
                         Policies.CanUseLightningNodeInStore,
                         Policies.CanSendStoreEmail
                     }),

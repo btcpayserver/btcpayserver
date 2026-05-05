@@ -1,6 +1,7 @@
 using BTCPayServer;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,7 +26,8 @@ public class WalletsPlugin : BaseBTCPayServerPlugin
                 {
                     WalletPolicies.CanManageWalletSettings,
                     WalletPolicies.CanManageWalletTransactions
-                }),
+                },
+                includedByPermissions: [Policies.CanModifyStoreSettings]),
             new PolicyDefinition(
                 WalletPolicies.CanViewWallet,
                 new PermissionDisplay("View wallets", "Allows viewing wallets, balances, and transactions."),

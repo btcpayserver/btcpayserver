@@ -27,11 +27,12 @@ namespace BTCPayServer.Plugins.Translations
         private readonly TimeSpan _cacheExpiration = TimeSpan.FromHours(1);
         private readonly TimeSpan _manifestFailureBackoff = TimeSpan.FromSeconds(60);
         private (JArray Languages, DateTime FetchedAt)? _manifestCache;
+        private (LanguageManifestEntry[] Entries, DateTime FetchedAt)? _entriesCache;
         private DateTime _manifestNextFetchAllowedAt = DateTime.MinValue;
         private readonly SemaphoreSlim _manifestLock = new(1, 1);
 
         private const string ManifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
-        private const string RawBaseUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/Translator/";
+        private const string RawBaseUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/";
 
         private async Task<JArray> FetchManifest()
         {
@@ -109,23 +110,18 @@ namespace BTCPayServer.Plugins.Translations
                 entry["Sha"]?.ToString() ?? string.Empty);
         }
 
-        public async Task<(LanguageManifestEntry[] Languages, bool Degraded)> GetManifestLanguages()
+        public async Task<LanguageManifestEntry[]> GetManifestLanguages()
         {
-            try
-            {
-                var languages = await FetchManifest();
-                return (languages.OfType<JObject>().Select(ToManifestEntry).Where(e => !string.IsNullOrEmpty(e.Name)).ToArray(), false);
-            }
-            catch (Exception)
-            {
-                return ([], true);
-            }
-        }
+            if (_entriesCache is { } cached && DateTime.UtcNow - cached.FetchedAt < _cacheExpiration)
+                return cached.Entries;
 
-        public async Task<string[]> GetAvailableLanguages()
-        {
-            var (languages, _) = await GetManifestLanguages();
-            return languages.Select(l => l.Name).ToArray();
+            var languages = await FetchManifest();
+            var entries = languages.OfType<JObject>()
+                .Select(ToManifestEntry)
+                .Where(e => !string.IsNullOrEmpty(e.Name))
+                .ToArray();
+            _entriesCache = (entries, DateTime.UtcNow);
+            return entries;
         }
 
         public async Task<(string translationsJson, string version)> FetchLanguagePackFromRepository(string language)

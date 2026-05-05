@@ -30,7 +30,17 @@ public class UITranslationController(
     public async Task<IActionResult> ListTranslations()
     {
         var translations = await localizer.GetTranslations();
-        var (manifestLanguages, degradedMode) = await languagePackUpdateService.GetManifestLanguages();
+        LanguagePackUpdateService.LanguageManifestEntry[] manifestLanguages;
+        var degradedMode = false;
+        try
+        {
+            manifestLanguages = await languagePackUpdateService.GetManifestLanguages();
+        }
+        catch (Exception)
+        {
+            manifestLanguages = [];
+            degradedMode = true;
+        }
         var manifestByName = new Dictionary<string, LanguagePackUpdateService.LanguageManifestEntry>(StringComparer.OrdinalIgnoreCase);
         foreach (var entry in manifestLanguages)
             manifestByName.TryAdd(entry.Name, entry);

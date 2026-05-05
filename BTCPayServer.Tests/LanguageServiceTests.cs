@@ -94,9 +94,8 @@ namespace BTCPayServer.Tests
             });
 
             var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler));
-            var (languages, degraded) = await service.GetManifestLanguages();
+            var languages = await service.GetManifestLanguages();
 
-            Assert.False(degraded);
             Assert.Equal(2, languages.Length);
 
             var french = languages.Single(l => l.Name == "French");
@@ -116,7 +115,7 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Unit", "Unit")]
-        public async Task LanguagePackUpdateService_ReturnsDegradedModeOnMalformedManifest()
+        public async Task LanguagePackUpdateService_PropagatesExceptionOnMalformedManifest()
         {
             var handler = new StubHttpMessageHandler();
             var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
@@ -126,15 +125,12 @@ namespace BTCPayServer.Tests
             });
 
             var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler));
-            var (languages, degraded) = await service.GetManifestLanguages();
-
-            Assert.True(degraded);
-            Assert.Empty(languages);
+            await Assert.ThrowsAnyAsync<Exception>(() => service.GetManifestLanguages());
         }
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Unit", "Unit")]
-        public async Task LanguagePackUpdateService_ReturnsDegradedModeOnMissingLanguagesKey()
+        public async Task LanguagePackUpdateService_ThrowsOnMissingLanguagesKey()
         {
             var handler = new StubHttpMessageHandler();
             var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
@@ -144,10 +140,7 @@ namespace BTCPayServer.Tests
             });
 
             var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler));
-            var (languages, degraded) = await service.GetManifestLanguages();
-
-            Assert.True(degraded);
-            Assert.Empty(languages);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetManifestLanguages());
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -170,7 +163,7 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Unit", "Unit")]
-        public async Task LanguagePackUpdateService_ReturnsDegradedModeWhenManifestFails()
+        public async Task LanguagePackUpdateService_ThrowsWhenManifestFails()
         {
             var handler = new StubHttpMessageHandler();
             var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
@@ -180,10 +173,7 @@ namespace BTCPayServer.Tests
             });
 
             var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler));
-            var (languages, degraded) = await service.GetManifestLanguages();
-
-            Assert.True(degraded);
-            Assert.Empty(languages);
+            await Assert.ThrowsAnyAsync<HttpRequestException>(() => service.GetManifestLanguages());
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -195,7 +185,7 @@ namespace BTCPayServer.Tests
 
             var handler = new StubHttpMessageHandler();
             var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
-            var translationUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/Translator/translations/french.json";
+            var translationUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/translations/french.json";
 
             handler.Register(manifestUrl, () => new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -234,7 +224,7 @@ namespace BTCPayServer.Tests
 
             var handler = new StubHttpMessageHandler();
             var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
-            var translationUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/Translator/translations/french.json";
+            var translationUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/translations/french.json";
 
             handler.Register(manifestUrl, () => new HttpResponseMessage(HttpStatusCode.OK)
             {

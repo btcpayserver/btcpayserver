@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
@@ -7,6 +8,7 @@ using BTCPayServer.Services;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using NBitcoin;
 using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
@@ -150,37 +152,55 @@ namespace BTCPayServer.Tests
             {
                 await ctx.Database.GetDbConnection().ExecuteAsync("""
                     INSERT INTO "Stores" ("Id", "SpeedPolicy") VALUES (@storeId, 0);
-                    INSERT INTO "PendingTransactions"
-                        ("Id", "TransactionId", "CryptoCode", "StoreId", "State", "OutpointsUsed", "Blob2")
-                    VALUES
-                        ('pending-a', 'tx-a', 'BTC', @storeId, 0, ARRAY[]::text[], '{}'::JSONB),
-                        ('pending-b', 'tx-b', 'BTC', @storeId, 0, ARRAY[]::text[], '{}'::JSONB);
                     """, new { storeId });
             }
 
+            var networkProvider = CreateNetworkProvider();
+            var network = networkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork;
             var service = new PendingTransactionService(
-                CreateNetworkProvider(),
+                networkProvider,
                 tester.CreateContextFactory(),
                 new EventAggregator(new BTCPayServer.Logging.Logs()),
                 NullLogger<PendingTransactionService>.Instance);
+            var requestBaseUrl = RequestBaseUrl.FromUrl("https://example.com");
+            var psbtA = CreatePendingTransactionPSBT(network, 1, Money.Satoshis(10_000));
+            var psbtB = CreatePendingTransactionPSBT(network, 2, Money.Satoshis(20_000));
+            var pendingA = await service.CreatePendingTransaction(storeId, "BTC", psbtA, requestBaseUrl);
+            var pendingB = await service.CreatePendingTransaction(storeId, "BTC", psbtB, requestBaseUrl);
 
-            await service.Broadcasted(new PendingTransactionService.PendingTransactionFullId("BTC", storeId, "pending-a"), "tx-b");
-
-            await using (var ctx = tester.CreateContext())
-            {
-                var pendingA = await ctx.PendingTransactions.SingleAsync(p => p.Id == "pending-a");
-                Assert.Equal(PendingTransactionState.Pending, pendingA.State);
-            }
-
-            await service.Broadcasted(new PendingTransactionService.PendingTransactionFullId("BTC", storeId, "pending-a"), "tx-a");
+            await service.Broadcasted(new PendingTransactionService.PendingTransactionFullId("BTC", storeId, pendingA.Id), psbtB.GetGlobalTransaction());
 
             await using (var ctx = tester.CreateContext())
             {
-                var pendingA = await ctx.PendingTransactions.SingleAsync(p => p.Id == "pending-a");
-                var pendingB = await ctx.PendingTransactions.SingleAsync(p => p.Id == "pending-b");
-                Assert.Equal(PendingTransactionState.Broadcast, pendingA.State);
-                Assert.Equal(PendingTransactionState.Pending, pendingB.State);
+                var reloadedPendingA = await ctx.PendingTransactions.SingleAsync(p => p.Id == pendingA.Id);
+                Assert.Equal(PendingTransactionState.Pending, reloadedPendingA.State);
             }
+
+            var malleatedTransaction = psbtA.GetGlobalTransaction().Clone();
+            malleatedTransaction.Inputs[0].ScriptSig = new Script(Op.GetPushOp(new byte[] { 1, 2, 3 }));
+            Assert.NotEqual(psbtA.GetGlobalTransaction().GetHash(), malleatedTransaction.GetHash());
+            await service.Broadcasted(new PendingTransactionService.PendingTransactionFullId("BTC", storeId, pendingA.Id), malleatedTransaction);
+
+            await using (var ctx = tester.CreateContext())
+            {
+                var reloadedPendingA = await ctx.PendingTransactions.SingleAsync(p => p.Id == pendingA.Id);
+                var reloadedPendingB = await ctx.PendingTransactions.SingleAsync(p => p.Id == pendingB.Id);
+                Assert.Equal(PendingTransactionState.Broadcast, reloadedPendingA.State);
+                Assert.Equal(PendingTransactionState.Pending, reloadedPendingB.State);
+            }
+        }
+
+        private static PSBT CreatePendingTransactionPSBT(Network network, uint prevTxNonce, Money amount)
+        {
+            var tx = Transaction.Create(network);
+            tx.Version = 2;
+            tx.LockTime = LockTime.Zero;
+            tx.Inputs.Add(new TxIn(new OutPoint(uint256.Parse($"{prevTxNonce:x64}"), 0))
+            {
+                Sequence = Sequence.Final
+            });
+            tx.Outputs.Add(amount, new Key().GetScriptPubKey(ScriptPubKeyType.Legacy));
+            return PSBT.FromTransaction(tx, network);
         }
 
         [Fact]

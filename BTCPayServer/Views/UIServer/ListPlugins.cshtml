@@ -183,10 +183,7 @@
                             @if (!string.IsNullOrEmpty(downloadInfo?.Author))
                             {
                                 <span class="text-muted text-nowrap">
-                                    <span text-translate="true">by</span>
-                                    <a href="@downloadInfo.AuthorLink" rel="noreferrer noopener" target="_blank">
-                                        @downloadInfo.Author
-                                    </a>
+                                    @ViewLocalizer["by <a href=\"{0}\" rel=\"noreferrer noopener\" target=\"_blank\">{1}</a>", downloadInfo.AuthorLink, downloadInfo.Author]
                                 </span>
                             }
                         </div>
@@ -415,10 +412,7 @@ else
                             @if (!string.IsNullOrEmpty(plugin.Author))
                             {
                                 <span class="text-muted text-nowrap">
-                                    <span text-translate="true">by</span>
-                                    <a href="@plugin.AuthorLink" rel="noreferrer noopener" target="_blank">
-                                        @plugin.Author
-                                    </a>
+                                    @ViewLocalizer["by <a href=\"{0}\" rel=\"noreferrer noopener\" target=\"_blank\">{1}</a>", plugin.AuthorLink, plugin.Author]
                                 </span>
                             }
                         </div>

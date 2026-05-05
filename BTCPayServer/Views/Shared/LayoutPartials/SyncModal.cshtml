@@ -16,15 +16,10 @@
                         {
                             <partial name="@provider.Partial"/>
                         }
-                        @{
-                            var watchVideoLink = ViewLocalizer["<a href=\"{0}\" target=\"_blank\" rel=\"noreferrer noopener\">Watch this video</a>",
-                                "https://www.youtube.com/watch?v=OrYDehC-8TU"];
-                            var fastSyncLink = ViewLocalizer["<a href=\"{0}\" target=\"_blank\" rel=\"noreferrer noopener\">FastSync</a>",
-                                "https://docs.btcpayserver.org/Docker/fastsync/"];
-                        }
                         <p class="mb-0">
-                            @ViewLocalizer["{0} to understand the importance of blockchain synchronization. If you really don't want to sync and you are familiar with the command line, check {1}.",
-                                watchVideoLink, fastSyncLink]
+                            @ViewLocalizer["<a href=\"{0}\" target=\"_blank\" rel=\"noreferrer noopener\">Watch this video</a> to understand the importance of blockchain synchronization. If you really don't want to sync and you are familiar with the command line, check <a href=\"{1}\" target=\"_blank\" rel=\"noreferrer noopener\">FastSync</a>.",
+                                "https://www.youtube.com/watch?v=OrYDehC-8TU",
+                                "https://docs.btcpayserver.org/Docker/fastsync/"]
                         </p>
                     </div>
                 </div>

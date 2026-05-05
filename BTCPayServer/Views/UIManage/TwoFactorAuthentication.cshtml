@@ -23,7 +23,7 @@
                         <span text-translate="true">You have no recovery codes left.</span>
                     </h4>
                     <p class="mb-0">
-                        @ViewLocalizer["You must {0} before you can log in with a recovery code.", Html.ActionLink(StringLocalizer["generate a new set of recovery codes"], "GenerateRecoveryCodes", null, new { @class = "alert-link" })]
+                        @ViewLocalizer["You must <a href=\"{0}\" class=\"alert-link\">generate a new set of recovery codes</a> before you can log in with a recovery code.", Url.Action("GenerateRecoveryCodes")]
                     </p>
                 </div>
             }
@@ -35,7 +35,7 @@
                         <span text-translate="true">You only have 1 recovery code left.</span>
                     </h4>
                     <p class="mb-0">
-                        @ViewLocalizer["You can {0}.", Html.ActionLink(StringLocalizer["generate a new set of recovery codes"], "GenerateRecoveryCodes", null, new { @class = "alert-link" })]
+                        @ViewLocalizer["You can <a href=\"{0}\" class=\"alert-link\">generate a new set of recovery codes</a>.", Url.Action("GenerateRecoveryCodes")]
                     </p>
                 </div>
             }
@@ -47,7 +47,7 @@
                         @StringLocalizer["You only have {0} recovery codes left.", Model.RecoveryCodesLeft]
                     </h4>
                     <p class="mb-0">
-                        @ViewLocalizer["You should {0}.", Html.ActionLink(StringLocalizer["generate a new set of recovery codes"], "GenerateRecoveryCodes", null, new { @class = "alert-link" })]
+                        @ViewLocalizer["You should <a href=\"{0}\" class=\"alert-link\">generate a new set of recovery codes</a>.", Url.Action("GenerateRecoveryCodes")]
                     </p>
                 </div>
             }

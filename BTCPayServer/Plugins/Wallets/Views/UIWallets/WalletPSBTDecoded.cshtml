@@ -99,14 +99,7 @@
 
         <partial name="SigningContext" for="SigningContext" />
         <div class="d-flex flex-column flex-sm-row flex-wrap justify-content-center align-items-sm-center gap-2">
-            @if (Model.SigningContext.PendingTransactionId is null)
-            {
-                <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" permission="@($"{WalletPolicies.CanSignWalletTransactions},{WalletPolicies.CanBroadcastWalletTransactions}")" and-mode="true" text-translate="true">Sign transaction</button>
-            }
-            else
-            {
-                <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" permission="@WalletPolicies.CanSignWalletTransactions" text-translate="true">Sign transaction</button>
-            }
+            <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" permission="@WalletPolicies.CanSignWalletTransactions" text-translate="true">Sign transaction</button>
             @if (Model.SigningContext.PendingTransactionId is null && !Model.NBXSeedAvailable)
             {
                 <button type="submit" id="CreatePendingTransaction" name="command" value="createpending"
@@ -148,12 +141,12 @@ else if (isReady)
 }
 else
 {
-    <p class="lead text-secondary mt-5" text-translate="true">Export the PSBT for your wallet. Sign it with your wallet and import the signed PSBT version here for finalization and broadcasting.</p>
+    <p class="lead text-secondary mt-5" text-translate="true">Export the PSBT for your wallet, sign it, then import the signed PSBT here. Broadcasting through BTCPay requires separate permission.</p>
 }
 
 <div class="accordion" id="PSBTOptions">
-    @* Exporting PSBT file/QR/raw lets the user sign and broadcast outside BTCPay, so it requires broadcast permission. *@
-    <div class="accordion-item" permission="@WalletPolicies.CanBroadcastWalletTransactions">
+    @* PSBT file/QR/raw is signing material; broadcasting through BTCPay is checked separately. *@
+    <div class="accordion-item" permission="@WalletPolicies.CanSignWalletTransactions">
             <h2 class="accordion-header" id="PSBTOptionsExportHeader">
                 <button type="button" class="accordion-button @(needsExport ? "" : "collapsed")" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsExportContent" aria-controls="PSBTOptionsExportContent" aria-expanded="@(needsExport ? "true" : "false")">
                     <span class="h5">Export PSBT @(isReady ? "" : "for signing")</span>
@@ -204,7 +197,7 @@ else
     </div>
     @if (!isReady)
     {
-        <div class="accordion-item" permission="@(Model.SigningContext.PendingTransactionId is null ? WalletPolicies.CanBroadcastWalletTransactions : WalletPolicies.CanSignWalletTransactions)">
+        <div class="accordion-item" permission="@WalletPolicies.CanSignWalletTransactions">
             <h2 class="accordion-header" id="PSBTOptionsImportHeader">
                 <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsImportContent" aria-controls="PSBTOptionsImportContent" aria-expanded="false">
                     <span class="h5" text-translate="true">Provide updated PSBT</span>
@@ -241,7 +234,7 @@ else
             </div>
         </div>
     }
-    <div class="accordion-item" permission="@WalletPolicies.CanBroadcastWalletTransactions">
+    <div class="accordion-item" permission="@WalletPolicies.CanSignWalletTransactions">
         <h2 class="accordion-header" id="PSBTOptionsAdvancedHeader">
             <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsAdvancedContent" aria-controls="PSBTOptionsAdvancedContent" aria-expanded="false">
                 <span class="h5">Add metadata to PSBT (advanced)</span>

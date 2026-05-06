@@ -668,7 +668,7 @@ namespace BTCPayServer.Plugins.Translations
   "expired with partial payments": "",
   "Expires in": "",
   "Export": "",
-  "Export the PSBT for your wallet. Sign it with your wallet and import the signed PSBT version here for finalization and broadcasting.": "",
+  "Export the PSBT for your wallet, sign it, then import the signed PSBT here. Broadcasting through BTCPay requires separate permission.": "",
   "Extended public key": "",
   "Extends the BTCPay Server Dark theme": "",
   "Extends the BTCPay Server Light theme": "",

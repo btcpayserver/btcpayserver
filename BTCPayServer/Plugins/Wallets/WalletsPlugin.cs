@@ -69,8 +69,8 @@ public class WalletsPlugin : BaseBTCPayServerPlugin
                 }),
             new PolicyDefinition(
                 WalletPolicies.CanBroadcastWalletTransactions,
-                new PermissionDisplay("Broadcast wallet transactions", "Allows broadcasting wallet transactions."),
-                new PermissionDisplay("Broadcast wallet transactions", "Allows broadcasting wallet transactions on the selected stores."),
+                new PermissionDisplay("Broadcast wallet transactions", "Allows broadcasting wallet transactions from BTCPay Server."),
+                new PermissionDisplay("Broadcast wallet transactions", "Allows broadcasting wallet transactions from BTCPay Server on the selected stores."),
                 new[]
                 {
                     WalletPolicies.CanViewWallet

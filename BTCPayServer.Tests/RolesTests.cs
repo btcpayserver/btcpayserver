@@ -327,6 +327,10 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.SkipWizard();
         await s.Logout();
         await s.GoToRegister();
+        var walletBroadcaster = await s.RegisterNewUser();
+        await s.SkipWizard();
+        await s.Logout();
+        await s.GoToRegister();
         var walletViewer = await s.RegisterNewUser();
         await s.SkipWizard();
         await s.Logout();
@@ -336,37 +340,44 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         var multisignerGuestUser = await userManager.FindByEmailAsync(multisignerGuest);
         var walletCreatorUser = await userManager.FindByEmailAsync(walletCreator);
         var walletSignerUser = await userManager.FindByEmailAsync(walletSigner);
+        var walletBroadcasterUser = await userManager.FindByEmailAsync(walletBroadcaster);
         var walletViewerUser = await userManager.FindByEmailAsync(walletViewer);
         Assert.NotNull(walletManagerUser);
         Assert.NotNull(multisignerUser);
         Assert.NotNull(multisignerGuestUser);
         Assert.NotNull(walletCreatorUser);
         Assert.NotNull(walletSignerUser);
+        Assert.NotNull(walletBroadcasterUser);
         Assert.NotNull(walletViewerUser);
         var permissionService = s.Server.PayTester.GetService<PermissionService>();
         var walletCreatorRole = new StoreRoleId(storeId, "Wallet Creator");
         var walletSignerRole = new StoreRoleId(storeId, "Wallet Signer");
+        var walletBroadcasterRole = new StoreRoleId(storeId, "Wallet Broadcaster");
         var walletViewerRole = new StoreRoleId(storeId, "Wallet Viewer");
         await storeRepo.AddOrUpdateStoreRole(walletCreatorRole, new[] { WalletPolicies.CanCreateWalletTransactions });
         await storeRepo.AddOrUpdateStoreRole(walletSignerRole, new[] { WalletPolicies.CanCreateWalletTransactions, WalletPolicies.CanSignWalletTransactions });
+        await storeRepo.AddOrUpdateStoreRole(walletBroadcasterRole, new[] { WalletPolicies.CanBroadcastWalletTransactions });
         await storeRepo.AddOrUpdateStoreRole(walletViewerRole, new[] { WalletPolicies.CanViewWallet });
         await storeRepo.AddOrUpdateStoreUser(storeId, walletManagerUser.Id, new StoreRoleId("Wallet Manager"));
         await storeRepo.AddOrUpdateStoreUser(storeId, multisignerUser.Id, new StoreRoleId("Multisigner"));
         await storeRepo.AddOrUpdateStoreUser(storeId, multisignerGuestUser.Id, new StoreRoleId("Multisigner Guest"));
         await storeRepo.AddOrUpdateStoreUser(storeId, walletCreatorUser.Id, walletCreatorRole);
         await storeRepo.AddOrUpdateStoreUser(storeId, walletSignerUser.Id, walletSignerRole);
+        await storeRepo.AddOrUpdateStoreUser(storeId, walletBroadcasterUser.Id, walletBroadcasterRole);
         await storeRepo.AddOrUpdateStoreUser(storeId, walletViewerUser.Id, walletViewerRole);
         var walletManagerStore = await storeRepo.FindStore(storeId, walletManagerUser.Id);
         var multisignerStore = await storeRepo.FindStore(storeId, multisignerUser.Id);
         var multisignerGuestStore = await storeRepo.FindStore(storeId, multisignerGuestUser.Id);
         var walletCreatorStore = await storeRepo.FindStore(storeId, walletCreatorUser.Id);
         var walletSignerStore = await storeRepo.FindStore(storeId, walletSignerUser.Id);
+        var walletBroadcasterStore = await storeRepo.FindStore(storeId, walletBroadcasterUser.Id);
         var walletViewerStore = await storeRepo.FindStore(storeId, walletViewerUser.Id);
         Assert.NotNull(walletManagerStore);
         Assert.NotNull(multisignerStore);
         Assert.NotNull(multisignerGuestStore);
         Assert.NotNull(walletCreatorStore);
         Assert.NotNull(walletSignerStore);
+        Assert.NotNull(walletBroadcasterStore);
         Assert.NotNull(walletViewerStore);
         Assert.True(walletManagerStore.HasPolicy(walletManagerUser.Id, WalletPolicies.CanManageWallets, permissionService));
         Assert.True(walletManagerStore.HasPolicy(walletManagerUser.Id, WalletPolicies.CanManageWalletSettings, permissionService));
@@ -390,6 +401,9 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         Assert.False(walletCreatorStore.HasPolicy(walletCreatorUser.Id, WalletPolicies.CanManageWalletTransactions, permissionService));
         Assert.True(walletSignerStore.HasPolicy(walletSignerUser.Id, WalletPolicies.CanCreateWalletTransactions, permissionService));
         Assert.True(walletSignerStore.HasPolicy(walletSignerUser.Id, WalletPolicies.CanSignWalletTransactions, permissionService));
+        Assert.True(walletBroadcasterStore.HasPolicy(walletBroadcasterUser.Id, WalletPolicies.CanBroadcastWalletTransactions, permissionService));
+        Assert.False(walletBroadcasterStore.HasPolicy(walletBroadcasterUser.Id, WalletPolicies.CanCreateWalletTransactions, permissionService));
+        Assert.False(walletBroadcasterStore.HasPolicy(walletBroadcasterUser.Id, WalletPolicies.CanSignWalletTransactions, permissionService));
         Assert.True(walletViewerStore.HasPolicy(walletViewerUser.Id, WalletPolicies.CanViewWallet, permissionService));
         Assert.False(walletViewerStore.HasPolicy(walletViewerUser.Id, WalletPolicies.CanCreateWalletTransactions, permissionService));
         Assert.False(walletViewerStore.HasPolicy(walletViewerUser.Id, WalletPolicies.CanSignWalletTransactions, permissionService));
@@ -446,6 +460,42 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
                 new { action, command });
             await s.Page.WaitForURLAsync("**/errors/403**");
             Assert.Contains("/errors/403", s.Page.Url, StringComparison.OrdinalIgnoreCase);
+        }
+
+        async Task AssertWalletPostNotForbidden(string action, string command)
+        {
+            await s.GoToUrl(WalletPsbt(walletIdString));
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+            var responseTask = s.Page.WaitForResponseAsync(response =>
+                response.Request.Method == "POST" &&
+                response.Url.Contains(action, StringComparison.OrdinalIgnoreCase));
+            await s.Page.EvaluateAsync(
+                @"({ action, command }) => {
+                    const tokenElement = document.querySelector('input[name=""__RequestVerificationToken""]');
+                    if (!tokenElement) throw new Error('Missing antiforgery token');
+                    const form = document.createElement('form');
+                    form.method = 'post';
+                    form.action = action;
+                    for (const [name, value] of [
+                        ['__RequestVerificationToken', tokenElement.value],
+                        ['PSBT', 'not-a-psbt'],
+                        ['command', command]
+                    ]) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = name;
+                        input.value = value;
+                        form.appendChild(input);
+                    }
+                    document.body.appendChild(form);
+                    form.submit();
+                }",
+                new { action, command });
+            var response = await responseTask;
+            await response.FinishedAsync();
+            Assert.NotEqual(403, response.Status);
+            Assert.True(response.Status < 500, $"Unexpected status code {response.Status} for {command} {action}");
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
         }
 
         async Task AssertWalletSettingsCannotTargetAnotherStore()
@@ -595,6 +645,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
         Assert.Equal(1, await s.Page.Locator("#CreatePendingTransaction").CountAsync());
         Assert.Equal(0, await s.Page.Locator("#SignTransaction").CountAsync());
+        Assert.Equal(0, await s.Page.Locator("#CreatePSBT").CountAsync());
         Assert.Equal(0, await s.Page.Locator("#Comment").CountAsync());
         await AssertWalletPostForbidden(WalletSend(walletIdString), "sign");
         await AssertWalletPostForbidden(WalletPsbt(walletIdString), "save-psbt");
@@ -606,9 +657,29 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.AssertPageAccess(true, WalletsIndex());
         await s.AssertPageAccess(true, WalletTx(walletIdString));
         await s.AssertPageAccess(true, WalletSend(walletIdString));
-        await AssertSigningOptionsPsbtVisibility(false);
-        await AssertWalletPostForbidden(WalletPsbt(walletIdString), "save-psbt");
+        await s.GoToUrl(WalletSend(walletIdString));
+        await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+        Assert.Equal(1, await s.Page.Locator("#SignTransaction").CountAsync());
+        Assert.Equal(0, await s.Page.Locator("#CreatePendingTransaction").CountAsync());
+        Assert.Equal(1, await s.Page.Locator("#CreatePSBT").CountAsync());
+        await AssertSigningOptionsPsbtVisibility(true);
+        await AssertWalletPostNotForbidden(WalletPsbt(walletIdString), "save-psbt");
         await AssertWalletPostForbidden(WalletPsbtReady(walletIdString), "broadcast");
+        await s.GoToUrl(StoreIndex(storeId));
+        await s.Logout();
+
+        await s.LogIn(walletBroadcaster);
+        await s.AssertPageAccess(true, StoreIndex(storeId));
+        await s.AssertPageAccess(true, WalletsIndex());
+        await s.AssertPageAccess(true, WalletTx(walletIdString));
+        await s.AssertPageAccess(false, WalletSend(walletIdString));
+        await s.AssertPageAccess(true, WalletPsbt(walletIdString));
+        await s.GoToUrl(WalletPsbt(walletIdString));
+        await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+        Assert.Equal(0, await s.Page.Locator("#Decode").CountAsync());
+        await AssertWalletPostForbidden(WalletPsbt(walletIdString), "save-psbt");
+        await AssertWalletPostForbidden(WalletPsbt(walletIdString), "createpending");
+        await AssertWalletPostNotForbidden(WalletPsbtReady(walletIdString), "broadcast");
         await s.GoToUrl(StoreIndex(storeId));
         await s.Logout();
 
@@ -625,11 +696,11 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.AssertPageAccess(false, StorePath(storeId, "payment-requests"));
         await s.AssertPageAccess(false, StorePath(storeId, "pull-payments"));
         await s.AssertPageAccess(false, StorePath(storeId, "payouts"));
-        await AssertSigningOptionsPsbtVisibility(false);
-        await AssertWalletPostForbidden(WalletPsbt(walletIdString), "update");
-        await AssertWalletPostForbidden(WalletPsbt(walletIdString), "combine");
-        await AssertWalletPostForbidden(WalletPsbt(walletIdString), "save-psbt");
-        await AssertWalletPostForbidden($"{WalletPsbt(walletIdString)}/combine", "combine");
+        await AssertSigningOptionsPsbtVisibility(true);
+        await AssertWalletPostNotForbidden(WalletPsbt(walletIdString), "update");
+        await AssertWalletPostNotForbidden(WalletPsbt(walletIdString), "combine");
+        await AssertWalletPostNotForbidden(WalletPsbt(walletIdString), "save-psbt");
+        await AssertWalletPostNotForbidden($"{WalletPsbt(walletIdString)}/combine", "combine");
         await AssertWalletPostForbidden(WalletPsbtReady(walletIdString), "broadcast");
         await s.GoToUrl(StoreIndex(storeId));
         await s.Logout();

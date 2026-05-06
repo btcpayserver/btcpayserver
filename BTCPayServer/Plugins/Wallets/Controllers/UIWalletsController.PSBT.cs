@@ -164,13 +164,11 @@ namespace BTCPayServer.Controllers
             var requiredPolicy = command switch
             {
                 "createpending" => WalletPolicies.CanCreateWalletTransactions,
-                "sign" or "collect" => WalletPolicies.CanSignWalletTransactions,
-                "decode" or "save-psbt" or "update" or "combine" or "broadcast" => WalletPolicies.CanBroadcastWalletTransactions,
+                "sign" or "collect" or "decode" or "save-psbt" or "update" or "combine" => WalletPolicies.CanSignWalletTransactions,
+                "broadcast" => WalletPolicies.CanBroadcastWalletTransactions,
                 _ => WalletPolicies.CanViewWallet
             };
-            if (!(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, requiredPolicy)).Succeeded || command == "sign" &&
-                vm.SigningContext?.PendingTransactionId is null &&
-                !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanBroadcastWalletTransactions)).Succeeded)
+            if (!(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, requiredPolicy)).Succeeded)
                 return Forbid();
             vm.CryptoCode = network.CryptoCode;
 
@@ -466,7 +464,8 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             var requiredPolicy = command switch
             {
-                "decode" or "analyze-psbt" or "broadcast" or "payjoin" => WalletPolicies.CanBroadcastWalletTransactions,
+                "decode" or "analyze-psbt" => WalletPolicies.CanSignWalletTransactions,
+                "broadcast" or "payjoin" => WalletPolicies.CanBroadcastWalletTransactions,
                 _ => WalletPolicies.CanViewWallet
             };
             if (!(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, requiredPolicy)).Succeeded)
@@ -651,7 +650,7 @@ namespace BTCPayServer.Controllers
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network is null)
                 return NotFound();
-            if (!(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanBroadcastWalletTransactions)).Succeeded)
+            if (!(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanSignWalletTransactions)).Succeeded)
                 return Forbid();
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
             if (psbt == null)

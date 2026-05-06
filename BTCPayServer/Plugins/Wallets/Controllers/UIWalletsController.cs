@@ -177,14 +177,16 @@ namespace BTCPayServer.Controllers
             [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
             string pendingTransactionId)
         {
-            if (!(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanSignWalletTransactions)).Succeeded &&
-                !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanBroadcastWalletTransactions)).Succeeded)
-                return Forbid();
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             var pendingTransaction =
                 await _pendingTransactionService.GetPendingTransaction(GetPendingTxId(walletId, pendingTransactionId));
             if (pendingTransaction is null || network is null)
                 return NotFound();
+            var canSign = (await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanSignWalletTransactions)).Succeeded;
+            var canBroadcastSigned = pendingTransaction.State == PendingTransactionState.Signed &&
+                                     (await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanBroadcastWalletTransactions)).Succeeded;
+            if (!canSign && !canBroadcastSigned)
+                return Forbid();
             var blob = pendingTransaction.GetBlob();
             if (blob?.PSBT is null)
                 return NotFound();
@@ -457,8 +459,7 @@ namespace BTCPayServer.Controllers
                         await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl());
                         return RedirectToWalletList(walletId);
                     case "sign":
-                        if (!(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanSignWalletTransactions)).Succeeded ||
-                            !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanBroadcastWalletTransactions)).Succeeded)
+                        if (!(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanSignWalletTransactions)).Succeeded)
                             return Forbid();
                         return await WalletSign(walletId, new WalletPSBTViewModel()
                         {
@@ -467,7 +468,7 @@ namespace BTCPayServer.Controllers
                             ReturnUrl = model.ReturnUrl
                         });
                     case "analyze-psbt":
-                        if (!(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanBroadcastWalletTransactions)).Succeeded)
+                        if (!(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanSignWalletTransactions)).Succeeded)
                             return Forbid();
                         return RedirectToWalletPSBT(new WalletPSBTViewModel
                         {
@@ -1109,9 +1110,8 @@ namespace BTCPayServer.Controllers
             string? bip21 = "")
         {
             if (!(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanCreateWalletTransactions)).Succeeded ||
-                command == "sign" && (!(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanSignWalletTransactions)).Succeeded ||
-                                      !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanBroadcastWalletTransactions)).Succeeded) ||
-                command == "analyze-psbt" && !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanBroadcastWalletTransactions)).Succeeded ||
+                command == "sign" && !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanSignWalletTransactions)).Succeeded ||
+                command == "analyze-psbt" && !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanSignWalletTransactions)).Succeeded ||
                 command == "schedule" && !(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, Policies.CanManagePayouts)).Succeeded)
                 return Forbid();
             var store = await Repository.FindStore(walletId.StoreId);
@@ -1546,7 +1546,7 @@ namespace BTCPayServer.Controllers
                 if (pendingTransaction != null)
                     return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
             }
-            else if (!(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanBroadcastWalletTransactions)).Succeeded)
+            else if (!(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanSignWalletTransactions)).Succeeded)
             {
                 return Forbid();
             }

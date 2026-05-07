@@ -302,32 +302,45 @@
 
 @if (Model.PendingTransactions?.Any() == true)
 {
+    var showMultisigColumns = Model.PendingTransactions.Any(p =>
+    {
+        var blob = p.GetBlob();
+        return (blob?.SignaturesNeeded ?? 0) > 0 && (blob?.SignaturesTotal ?? 0) > 1;
+    });
     <div class="table-responsive-md">
         <table class="table table-hover ">
             <thead>
                 <th text-translate="true">Id</th>
                 <th text-translate="true">State</th>
-                <th text-translate="true">Signatures</th>
-                <th text-translate="true">Scheme</th>
+                @if (showMultisigColumns)
+                {
+                    <th text-translate="true">Signatures</th>
+                    <th text-translate="true">Scheme</th>
+                }
                 <th text-translate="true">Actions</th>
             </thead>
             @for (var index = 0; index < Model.PendingTransactions.Length; index++)
             {
                 var pendingTransaction = Model.PendingTransactions[index];
                 var ptblob = @pendingTransaction.GetBlob();
-                var collectedSignatures = ptblob?.SignaturesCollected?.ToString() ?? "-";
-                var missingSignatures = ptblob is null
-                    ? "-"
-                    : Math.Max(0, (ptblob.SignaturesNeeded ?? 0) - (ptblob.SignaturesCollected ?? 0)).ToString();
+                var isMultisigPending = (ptblob?.SignaturesNeeded ?? 0) > 0 && (ptblob?.SignaturesTotal ?? 0) > 1;
                 <tr>
                     <td>@pendingTransaction.TransactionId</td>
                     <td>@pendingTransaction.State</td>
-                    <td>
-                        <span id="Sigs_@(index)__Collected">@collectedSignatures</span> @StringLocalizer["collected"]
-                        ·
-                        <span id="Sigs_@(index)__Missing">@missingSignatures</span> @StringLocalizer["missing"]
-                    </td>
-                    <td><span id="Sigs_@(index)__Scheme">@ptblob?.SignaturesNeeded/@ptblob?.SignaturesTotal</span></td>
+                    @if (showMultisigColumns)
+                    {
+                        var collectedSignatures = isMultisigPending ? ptblob?.SignaturesCollected?.ToString() ?? "-" : "-";
+                        var missingSignatures = isMultisigPending && ptblob is not null
+                            ? Math.Max(0, (ptblob.SignaturesNeeded ?? 0) - (ptblob.SignaturesCollected ?? 0)).ToString()
+                            : "-";
+                        var signatureScheme = isMultisigPending ? $"{ptblob?.SignaturesNeeded}/{ptblob?.SignaturesTotal}" : "-";
+                        <td>
+                            <span id="Sigs_@(index)__Collected">@collectedSignatures</span> @StringLocalizer["collected"]
+                            ·
+                            <span id="Sigs_@(index)__Missing">@missingSignatures</span> @StringLocalizer["missing"]
+                        </td>
+                        <td><span id="Sigs_@(index)__Scheme">@signatureScheme</span></td>
+                    }
                     <td>
                         @if (pendingTransaction.State == PendingTransactionState.Signed)
                         {

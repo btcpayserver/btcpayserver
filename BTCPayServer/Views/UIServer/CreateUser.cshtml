@@ -56,7 +56,7 @@
                     <span asp-validation-for="EmailConfirmed" class="text-danger"></span>
                 </div>
 			}
-			@if (ViewData["MonetizationEnabled"] is true)
+			@if (Model.MonetizationEnabled)
 			{
 				<div class="d-flex my-3">
 					<input asp-for="SkipMonetization" type="checkbox" class="btcpay-toggle me-3" />

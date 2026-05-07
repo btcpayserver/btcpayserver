@@ -62,7 +62,6 @@ public partial class UIStoresController : Controller
         EventAggregator eventAggregator,
         LightningHistogramService lnHistogramService,
         LightningClientFactoryService lightningClientFactory,
-        ISettingsAccessor<MonetizationSettings> monetizationSettings,
         StoreLabelRepository storeLabelRepository)
     {
         _rateFactory = rateFactory;
@@ -94,11 +93,9 @@ public partial class UIStoresController : Controller
         _lnHistogramService = lnHistogramService;
         _lightningClientFactory = lightningClientFactory;
         StringLocalizer = stringLocalizer;
-        _monetizationSettings = monetizationSettings;
         _storeLabelRepository = storeLabelRepository;
     }
 
-    private readonly ISettingsAccessor<MonetizationSettings> _monetizationSettings;
     private readonly BTCPayServerOptions _btcpayServerOptions;
     private readonly BTCPayServerEnvironment _btcPayEnv;
     private readonly BTCPayNetworkProvider _networkProvider;

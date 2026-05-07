@@ -224,11 +224,11 @@ namespace BTCPayServer.Controllers
         {
             await PrepareCreateUserViewData();
             var monetizationEnabled = _monetizationSettings.Settings.IsSetup();
-            ViewData["MonetizationEnabled"] = monetizationEnabled;
             var vm = new RegisterFromAdminViewModel
             {
                 SendInvitationEmail = ViewData["CanSendEmail"] is true,
-                SkipMonetization = !monetizationEnabled
+                SkipMonetization = !monetizationEnabled,
+                MonetizationEnabled = monetizationEnabled
             };
             return View(vm);
         }
@@ -475,5 +475,6 @@ namespace BTCPayServer.Controllers
 
         [Display(Name = "Bypass monetization for this user")]
         public bool SkipMonetization { get; set; }
+        public bool MonetizationEnabled { get; set; }
     }
 }

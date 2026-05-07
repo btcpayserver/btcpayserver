@@ -8,6 +8,7 @@ using BTCPayServer.Data;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
@@ -44,7 +45,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return new JsonHttpException(this.CreateAPIError(404, "paymentmethod-not-configured", "The payment method is not configured"));
         }
 
-        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = WalletPolicies.CanViewWallet, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/preview")]
         public IActionResult GetOnChainPaymentMethodPreview(
             string storeId,
@@ -61,7 +62,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
 
-        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = WalletPolicies.CanManageWalletSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/preview")]
         public async Task<IActionResult> GetProposedOnChainPaymentMethodPreview(
             string storeId,

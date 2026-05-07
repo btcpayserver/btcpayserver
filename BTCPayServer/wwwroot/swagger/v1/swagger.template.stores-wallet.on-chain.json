@@ -37,7 +37,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.canviewwallet"
                         ],
                         "Basic": []
                     }
@@ -81,7 +81,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.canviewwallet"
                         ],
                         "Basic": []
                     }
@@ -135,7 +135,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canviewstoresettings"
+                            "btcpay.store.canviewwallet"
                         ],
                         "Basic": []
                     }
@@ -189,7 +189,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.canviewwallet"
                         ],
                         "Basic": []
                     }
@@ -224,7 +224,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.canmanagewallettransactions"
                         ],
                         "Basic": []
                     }
@@ -314,7 +314,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.canviewwallet"
                         ],
                         "Basic": []
                     }
@@ -343,7 +343,7 @@
                         }
                     }
                 },
-                "description": "Create store on-chain wallet transaction",
+                "description": "Create store on-chain wallet transaction. Requires `btcpay.store.cancreatetransactions` and `btcpay.store.cansigntransactions`. Also requires `btcpay.store.canbroadcasttransactions` when `proceedWithBroadcast` is true, including Payjoin.",
                 "operationId": "StoreOnChainWallets_CreateOnChainTransaction",
                 "responses": {
                     "200": {
@@ -378,7 +378,8 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.cancreatetransactions",
+                            "btcpay.store.cansigntransactions"
                         ],
                         "Basic": []
                     }
@@ -438,7 +439,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.canbroadcasttransactions"
                         ],
                         "Basic": []
                     }
@@ -491,7 +492,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.canviewwallet"
                         ],
                         "Basic": []
                     }
@@ -561,7 +562,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.canmanagewallettransactions"
                         ],
                         "Basic": []
                     }
@@ -608,7 +609,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.canviewwallet"
                         ],
                         "Basic": []
                     }
@@ -758,7 +759,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canviewstoresettings"
+                            "btcpay.store.canviewwallet"
                         ],
                         "Basic": []
                     }
@@ -837,7 +838,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canviewstoresettings"
+                            "btcpay.store.canmanagewalletsettings"
                         ],
                         "Basic": []
                     }

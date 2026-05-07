@@ -145,7 +145,7 @@ public class UIServerMonetizationController(
     }
 
     [HttpPost]
-    public async Task<IActionResult> Monetization(MonetizationViewModel vm, string command, bool? requireSubscriptionForInvitedUsers = null)
+    public async Task<IActionResult> Monetization(MonetizationViewModel vm, string command)
     {
         if (command == "activate-monetization" && vm.ActivateModal is {} activateModal)
         {

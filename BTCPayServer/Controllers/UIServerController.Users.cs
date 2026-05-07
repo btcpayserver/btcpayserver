@@ -473,7 +473,7 @@ namespace BTCPayServer.Controllers
         [Display(Name = "Send invitation email")]
         public bool SendInvitationEmail { get; set; } = true;
 
-        [Display(Name = "Skip subscription monetization for this user")]
+        [Display(Name = "Bypass monetization for this user")]
         public bool SkipMonetization { get; set; }
     }
 }

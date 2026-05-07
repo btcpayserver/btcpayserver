@@ -586,6 +586,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     "Impossible to sign the transaction. Probable cause: Incorrect account key path in wallet settings, PSBT already signed.");
             }
 
+            var signedPSBT = psbt.PSBT.Clone();
             psbt.PSBT.Finalize();
             var transaction = psbt.PSBT.ExtractTransaction();
             var transactionHash = transaction.GetHash();
@@ -601,10 +602,10 @@ namespace BTCPayServer.Controllers.Greenfield
                     var payjoinPSBT = await payjoinClient.RequestPayjoin(
                         new BitcoinUrlBuilder(signingContext.PayJoinBIP21, network.NBitcoinNetwork),
                         new PayjoinWallet(derivationScheme),
-                        psbt.PSBT, CancellationToken.None);
-                    psbt.PSBT.Settings.SigningOptions =
+                        signedPSBT, CancellationToken.None);
+                    payjoinPSBT.Settings.SigningOptions =
                         new SigningOptions() { EnforceLowR = !(signingContext?.EnforceLowR is false) };
-                    payjoinPSBT = psbt.PSBT.SignAll(derivationScheme.AccountDerivation, accountKey, rootedKeyPath);
+                    payjoinPSBT = payjoinPSBT.SignAll(derivationScheme.AccountDerivation, accountKey, rootedKeyPath);
                     payjoinPSBT.Finalize();
                     var payjoinTransaction = payjoinPSBT.ExtractTransaction();
                     var hash = payjoinTransaction.GetHash();

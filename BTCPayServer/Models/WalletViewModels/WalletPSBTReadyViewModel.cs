@@ -8,6 +8,7 @@ namespace BTCPayServer.Models.WalletViewModels
     {
         public SigningContextModel SigningContext { get; set; } = new SigningContextModel();
         public string SigningKey { get; set; }
+        public bool UseHotWallet { get; set; }
         public string SigningKeyPath { get; set; }
 
         public class DestinationViewModel

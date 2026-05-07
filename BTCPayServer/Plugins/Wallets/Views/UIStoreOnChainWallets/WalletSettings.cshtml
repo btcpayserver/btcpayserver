@@ -45,7 +45,7 @@
                     <button type="button" class="dropdown-item" id="RegisterWallet" data-store="@Model.StoreName" data-scheme="@Model.UriScheme" data-url="@Url.Action("WalletSend", "UIWallets", new {walletId = Model.WalletId, bip21 = "%s"})" hidden text-translate="true">Register wallet for payment links</button>
                 }
                 <div class="dropdown-divider"></div>
-                @if (Model.NBXSeedAvailable)
+                @if (Model.CanSeeSeed)
                 {
                     <a asp-action="WalletSeed" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="dropdown-item" id="ViewSeed" text-translate="true">View seed</a>
                 }

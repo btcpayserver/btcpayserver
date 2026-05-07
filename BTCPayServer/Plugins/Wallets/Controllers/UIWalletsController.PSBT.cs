@@ -102,22 +102,16 @@ namespace BTCPayServer.Controllers
                     return await WalletPSBT(walletId, vm, "decode");
             }
 
-            var derivationScheme = GetDerivationSchemeSettings(walletId);
-            if (await CanAutoSignWithHotWallet(walletId, derivationScheme))
+            var hw = await hotwalletSafe.TryUnlock(User, walletId);
+            if (hw?.CanSign is true)
             {
-                var extKey = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
-                    .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
-                        WellknownMetadataKeys.MasterHDKey);
-                if (extKey != null)
+                return await SignWithSeed(walletId, new SignWithSeedViewModel
                 {
-                    return await SignWithSeed(walletId, new SignWithSeedViewModel
-                    {
-                        SeedOrKey = extKey,
-                        SigningContext = vm.SigningContext,
-                        ReturnUrl = vm.ReturnUrl,
-                        BackUrl = vm.BackUrl
-                    });
-                }
+                    UseHotWallet = true,
+                    SigningContext = vm.SigningContext,
+                    ReturnUrl = vm.ReturnUrl,
+                    BackUrl = vm.BackUrl
+                });
             }
             return View("WalletSigningOptions", new WalletSigningOptionsModel
             {
@@ -141,11 +135,7 @@ namespace BTCPayServer.Controllers
                 ReturnUrl = returnUrl ?? referer,
                 CryptoCode = network.CryptoCode
             };
-
-            var derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
-            if (derivationSchemeSettings == null)
-                return NotFound();
-            vm.NBXSeedAvailable = await CanAutoSignWithHotWallet(walletId, derivationSchemeSettings);
+            vm.NBXSeedAvailable = await CanAutoSignWithHotWallet(walletId);
             return View(vm);
         }
 
@@ -173,7 +163,7 @@ namespace BTCPayServer.Controllers
             if (derivationSchemeSettings == null)
                 return NotFound();
 
-            vm.NBXSeedAvailable = await CanAutoSignWithHotWallet(walletId, derivationSchemeSettings);
+            vm.NBXSeedAvailable = await CanAutoSignWithHotWallet(walletId);
             vm.BackUrl ??= HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath;
 
             vm.SigningContext.PSBT = vm.PSBT;
@@ -268,6 +258,7 @@ namespace BTCPayServer.Controllers
                 psbtObject = await ExplorerClientProvider.UpdatePSBT(derivationSchemeSettings, psbtObject) ?? psbtObject;
             IHDKey signingKey = null;
             RootedKeyPath signingKeyPath = null;
+
             try
             {
                 signingKey = new BitcoinExtPubKey(vm.SigningKey, network.NBitcoinNetwork);
@@ -275,7 +266,7 @@ namespace BTCPayServer.Controllers
             catch { }
             try
             {
-                signingKey ??= new BitcoinExtKey(vm.SigningKey, network.NBitcoinNetwork);
+                signingKey ??= await GetSigningExtKey(walletId, vm, network);
             }
             catch { }
 
@@ -498,7 +489,9 @@ namespace BTCPayServer.Controllers
                             {
                                 EnforceLowR = vm.SigningContext.EnforceLowR is not false
                             };
-                            var extKey = ExtKey.Parse(vm.SigningKey, network.NBitcoinNetwork);
+                            var extKey = await GetSigningExtKey(walletId, vm, network);
+                            if (extKey is null)
+                                throw new Exception("Invalid signing key");
                             proposedPayjoin = proposedPayjoin.SignAll(derivationSchemeSettings.AccountDerivation,
                                 extKey,
                                 RootedKeyPath.Parse(vm.SigningKeyPath));
@@ -635,6 +628,8 @@ namespace BTCPayServer.Controllers
             }
         }
 
+
+
         private IActionResult FilePSBT(PSBT psbt, string fileName)
         {
             return File(psbt.ToBytes(), "application/octet-stream", fileName);
@@ -665,13 +660,6 @@ namespace BTCPayServer.Controllers
                 PSBT = sourcePSBT.ToBase64(),
                 ReturnUrl = vm.ReturnUrl
             });
-        }
-
-        private async Task<bool> CanAutoSignWithHotWallet(WalletId walletId, DerivationSchemeSettings derivationSchemeSettings)
-        {
-            return derivationSchemeSettings?.IsHotWallet is true &&
-                   (await authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanSignWalletTransactions)).Succeeded &&
-                   await CanUseHotWallet();
         }
     }
 }

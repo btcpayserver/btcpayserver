@@ -17,6 +17,7 @@ public class WalletsPlugin : BaseBTCPayServerPlugin
 
     public override void Execute(IServiceCollection services)
     {
+        services.AddTransient<HotwalletSafe>();
         services.AddPolicyDefinitions(
             new PolicyDefinition(
                 WalletPolicies.CanManageWallets,

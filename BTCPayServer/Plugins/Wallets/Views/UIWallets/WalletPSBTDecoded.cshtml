@@ -118,6 +118,7 @@ else if (isReady)
 {
     <form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@walletId" class="my-5" permission="@WalletPolicies.CanBroadcastWalletTransactions">
         <input type="hidden" asp-for="SigningKey" />
+        <input type="hidden" asp-for="UseHotWallet" />
         <input type="hidden" asp-for="SigningKeyPath" />
         <partial name="SigningContext" for="SigningContext" />
         <input type="hidden" asp-for="ReturnUrl" />

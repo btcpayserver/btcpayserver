@@ -4,7 +4,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using NBitcoin;
 
-namespace BTCPayServer.Models.WalletViewModels
+namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
 {
     public class WalletBumpFeeViewModel
     {

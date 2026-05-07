@@ -1,8 +1,9 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using BTCPayServer.Models;
 using NBitcoin;
 
-namespace BTCPayServer.Models.WalletViewModels
+namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
 {
     public class SignWithSeedViewModel : IHasBackAndReturnUrl
     {

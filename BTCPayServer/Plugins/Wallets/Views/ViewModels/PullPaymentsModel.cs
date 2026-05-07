@@ -4,9 +4,10 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace BTCPayServer.Models.WalletViewModels
+namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
 {
     public class PullPaymentsModel : BasePagingViewModel
     {

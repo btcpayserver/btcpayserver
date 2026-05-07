@@ -1,11 +1,12 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using BTCPayServer.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBitcoin;
 
-namespace BTCPayServer.Models.WalletViewModels
+namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
 {
     public class WalletPSBTCombineViewModel : IHasBackAndReturnUrl
     {

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using NBitcoin;
 
-namespace BTCPayServer.Models.WalletViewModels
+namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
 {
     public class ListWalletsViewModel
     {

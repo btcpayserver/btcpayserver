@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
+using BTCPayServer.Models;
 using NBitcoin;
 
-namespace BTCPayServer.Models.WalletViewModels
+namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
 {
     public class WalletPSBTReadyViewModel : IHasBackAndReturnUrl
     {

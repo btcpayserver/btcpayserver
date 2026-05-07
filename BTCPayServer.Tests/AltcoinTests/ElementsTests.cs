@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
-using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Plugins.Altcoins;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Mvc;
@@ -48,12 +48,12 @@ namespace BTCPayServer.Tests
             {
                 tester.ActivateLBTC();
                 await tester.StartAsync();
-                
+
                 //https://github.com/ElementsProject/elements/issues/956
                 await tester.LBTCExplorerNode.SendCommandAsync("rescanblockchain");
                 var user = tester.NewAccount();
                 await user.GrantAccessAsync();
-               
+
                 await tester.LBTCExplorerNode.GenerateAsync(4);
                 //no tether on our regtest, lets create it and set it
                 var tether = tester.NetworkProvider.GetNetwork<ElementsBTCPayNetwork>("USDT");
@@ -69,7 +69,7 @@ namespace BTCPayServer.Tests
 
                 user.RegisterDerivationScheme("LBTC");
                 user.RegisterDerivationScheme("USDT");
-                
+
                 //test: register 2 assets on the same elements network and make sure paying an invoice on one does not affect the other in any way
                 var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.1m, "BTC"));
                 Assert.Equal(3, invoice.SupportedTransactionCurrencies.Count);
@@ -98,7 +98,7 @@ namespace BTCPayServer.Tests
                     Assert.Equal("paid", localInvoice.Status);
                     Assert.Single(localInvoice.CryptoInfo.Single(info => info.CryptoCode.Equals("USDT", StringComparison.InvariantCultureIgnoreCase)).Payments);
                 });
-                
+
 
                 var lbtcBip21 = new BitcoinUrlBuilder(invoice.CryptoInfo.Single(info => info.CryptoCode == "LBTC").PaymentUrls.BIP21, lbtc.NBitcoinNetwork);
                 //precision = 8, 0.1 = 0.1

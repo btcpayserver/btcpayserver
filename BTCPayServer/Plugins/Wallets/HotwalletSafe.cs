@@ -15,7 +15,6 @@ namespace BTCPayServer.Plugins.Wallets;
 public class HotwalletSafe(
     StoreRepository storeRepository,
     IAuthorizationService authorizationService,
-    ISettingsAccessor<PoliciesSettings> policies,
     ExplorerClientProvider explorerClientProvider,
     PaymentMethodHandlerDictionary handlers)
 {

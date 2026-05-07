@@ -1,6 +1,6 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Views.Stores
-@model BTCPayServer.Models.WalletViewModels.NewPullPaymentModel
+@model BTCPayServer.Plugins.Wallets.Views.ViewModels.NewPullPaymentModel
 @{
     var storeId = Context.GetStoreData().Id;
     ViewData.SetLayoutModel(new(nameof(StoreNavPages.PullPayments), StringLocalizer["Create Pull Payment"]));

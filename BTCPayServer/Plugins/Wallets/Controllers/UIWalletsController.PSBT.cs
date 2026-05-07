@@ -9,7 +9,7 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Data;
 using BTCPayServer.ModelBinders;
-using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Services;

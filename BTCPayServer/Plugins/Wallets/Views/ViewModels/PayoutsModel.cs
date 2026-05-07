@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Models;
 using BTCPayServer.Payouts;
 
-namespace BTCPayServer.Models.WalletViewModels
+namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
 {
     public class PayoutsModel : BasePagingViewModel
     {

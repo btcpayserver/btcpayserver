@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using BTCPayServer.Data;
+using BTCPayServer.Models;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
 
-namespace BTCPayServer.Models.WalletViewModels
+namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
 {
     public class ListTransactionsViewModel : BasePagingViewModel
     {

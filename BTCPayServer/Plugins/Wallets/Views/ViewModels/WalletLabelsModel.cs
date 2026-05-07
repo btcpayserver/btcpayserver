@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace BTCPayServer.Models.WalletViewModels;
+namespace BTCPayServer.Plugins.Wallets.Views.ViewModels;
 
 public class WalletLabelsModel
 {

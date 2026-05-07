@@ -36,7 +36,6 @@ namespace BTCPayServer.Controllers;
 [Route("stores")]
 [Area(WalletsPlugin.Area)]
 [Authorize(Policy = WalletPolicies.CanManageWalletSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-[AutoValidateAntiforgeryToken]
 public class UIStoreOnChainWalletsController : Controller
 {
     public UIStoreOnChainWalletsController(
@@ -281,7 +280,9 @@ public class UIStoreOnChainWalletsController : Controller
         }
         return ConfirmAddresses(vm, strategy, network);
     }
+
     [HttpGet("{storeId}/onchain/{cryptoCode}/generate/{method?}")]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> GenerateWallet(
         WalletSetupViewModel vm,
         [FromRoute] string storeId = null,
@@ -301,8 +302,6 @@ public class UIStoreOnChainWalletsController : Controller
         var isHotWallet = vm.Method == WalletSetupMethod.HotWallet;
         var isColdWallet = vm.Method == WalletSetupMethod.WatchOnly;
         var perm = await CanUseHotWallet();
-        if (!(await _authorizationService.AuthorizeAsync(User, vm.StoreId, Policies.CanModifyStoreSettings)).Succeeded)
-            return Forbid();
         if (isHotWallet && !perm.CanCreateHotWallet || isColdWallet && !perm.CanCreateColdWallet)
             return NotFound();
         vm.SetPermission(perm);
@@ -330,7 +329,9 @@ public class UIStoreOnChainWalletsController : Controller
     }
 
     public GenerateWalletResponse GenerateWalletResponse { get; private set; }
+
     [HttpPost("{storeId}/onchain/{cryptoCode}/generate/{method}")]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> GenerateWallet(
         [FromRoute] string storeId,
         [FromRoute] string cryptoCode,
@@ -351,10 +352,6 @@ public class UIStoreOnChainWalletsController : Controller
         }
         var client = _explorerProvider.GetExplorerClient(cryptoCode);
         var isImport = method == WalletSetupMethod.Seed;
-        var canAccessSeedMaterial =
-            (await _authorizationService.AuthorizeAsync(User, storeId, Policies.CanModifyStoreSettings)).Succeeded;
-        if (!canAccessSeedMaterial)
-            return Forbid();
         var vm = new WalletSetupViewModel
         {
             StoreId = storeId,
@@ -470,6 +467,7 @@ public class UIStoreOnChainWalletsController : Controller
         var walletId = new WalletId(storeId, cryptoCode);
         return RedirectToAction(nameof(UIWalletsController.WalletTransactions), "UIWallets", new { walletId });
     }
+
     [HttpGet("{storeId}/onchain/{cryptoCode}/settings")]
     public async Task<IActionResult> WalletSettings([FromRoute] string storeId, [FromRoute] string cryptoCode)
     {
@@ -651,14 +649,14 @@ public class UIStoreOnChainWalletsController : Controller
 
         return RedirectToAction(nameof(WalletSettings), new { vm.StoreId, vm.CryptoCode });
     }
+
     [HttpGet("{storeId}/onchain/{cryptoCode}/seed")]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> WalletSeed(
         [FromRoute] string storeId,
         [FromRoute] string cryptoCode,
         CancellationToken cancellationToken = default)
     {
-        if (!(await _authorizationService.AuthorizeAsync(User, storeId, Policies.CanModifyStoreSettings)).Succeeded)
-            return Forbid();
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);
         if (checkResult != null)
         {

@@ -7,13 +7,13 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.BIP78.Sender;
-using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
@@ -73,14 +73,13 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{walletId}/sign")]
+        [Authorize(Policy = WalletPolicies.CanSignWalletTransactions, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> WalletSign([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletPSBTViewModel vm, string command = null)
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network is null)
                 return NotFound();
-            if (!(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanSignWalletTransactions)).Succeeded)
-                return Forbid();
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
 
             if (psbt is null || vm.InvalidPSBT)
@@ -135,8 +134,6 @@ namespace BTCPayServer.Controllers
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network is null)
                 return NotFound();
-            if (!(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanViewWallet)).Succeeded)
-                return Forbid();
             var referer = HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath;
             var vm = new WalletPSBTViewModel
             {
@@ -644,14 +641,13 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{walletId}/psbt/combine")]
+        [Authorize(Policy = WalletPolicies.CanSignWalletTransactions, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> WalletPSBTCombine([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletPSBTCombineViewModel vm)
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network is null)
                 return NotFound();
-            if (!(await _authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanSignWalletTransactions)).Succeeded)
-                return Forbid();
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
             if (psbt == null)
             {

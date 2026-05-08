@@ -45,7 +45,6 @@ public class UserEvent(ApplicationUser user)
 	}
     public class Invited(ApplicationUser user, ApplicationUser invitedBy, RequestBaseUrl requestBaseUrl, string invitationLink, string approvalLink, string confirmationEmail) : Registered(user, requestBaseUrl, approvalLink, confirmationEmail)
     {
-        public bool SkipMonetization { get; set; }
         public bool SendInvitationEmail { get; set; }
         public ApplicationUser InvitedByUser { get; } = invitedBy;
         public string InvitationLink { get; } = invitationLink;
@@ -56,6 +55,11 @@ public class UserEvent(ApplicationUser user)
         {
             return $"{base.ToString()} has been updated";
         }
+    }
+    public class BypassMonetizationChanged(ApplicationUser user, bool bypass, RequestBaseUrl requestBaseUrl) : UserEvent(user)
+    {
+        public bool Bypass { get; } = bypass;
+        public RequestBaseUrl RequestBaseUrl { get; } = requestBaseUrl;
     }
     public class Approved(ApplicationUser user, string loginLink) : UserEvent(user)
     {

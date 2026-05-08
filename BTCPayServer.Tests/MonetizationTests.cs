@@ -218,6 +218,11 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.GoToServer(ServerNavPages.Users);
         var users = new PMO.UsersPMO(s);
         await users.DeleteUser("normal-guest@gmail.com");
+
+        await GoToMonetization(s);
+        await GoToOffering(s);
+        await offeringPMO.GoToSubscribers();
+        await offeringPMO.AssertHasNotSubscriber("normal-guest@gmail.com");
     }
 
     [Fact]

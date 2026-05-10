@@ -97,16 +97,16 @@
 					</td>
 					<td class="actions-col">
 						<div class="d-inline-flex align-items-center gap-3">
-							@if (!v.IsSelected)
+                            @if (v.IsDownloadedLanguagePack && v.UpdateAvailable)
+                            {
+                                <form method="post" asp-action="DownloadLanguagePack" asp-route-language="@v.TranslationName" class="d-inline">
+                                    <button type="submit" class="btn btn-link p-0" text-translate="true">Update</button>
+                                </form>
+                            }
+                            @if (!v.IsSelected)
 							{
 								<form method="post" asp-action="SelectTranslation" asp-route-translation="@v.TranslationName" class="d-inline">
 									<button id="Select-@v.TranslationName" type="submit" class="btn btn-link p-0" text-translate="true">Select</button>
-								</form>
-							}
-							@if (v.IsDownloadedLanguagePack && v.UpdateAvailable)
-							{
-								<form method="post" asp-action="DownloadLanguagePack" asp-route-language="@v.TranslationName" class="d-inline">
-									<button type="submit" class="btn btn-link p-0" text-translate="true">Update</button>
 								</form>
 							}
 							@if (!v.IsSelected && v.Editable)

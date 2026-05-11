@@ -73,7 +73,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.canviewwallet"
                         ],
                         "Basic": []
                     }
@@ -125,7 +125,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.canmanagewallettransactions"
                         ],
                         "Basic": []
                     }
@@ -199,7 +199,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.canviewwallet"
                         ],
                         "Basic": []
                     }
@@ -254,7 +254,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.canmanagewallettransactions"
                         ],
                         "Basic": []
                     }
@@ -321,7 +321,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.canmanagewallettransactions"
                         ],
                         "Basic": []
                     }
@@ -398,7 +398,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.canmanagewallettransactions"
                         ],
                         "Basic": []
                     }

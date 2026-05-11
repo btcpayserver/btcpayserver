@@ -63,7 +63,7 @@
                             <h5 class="mb-0 text-success" text-translate="true">Set up a Lightning node</h5>
                         </div>
                     </div>
-                    <a asp-controller="UIStores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode"
+                    <a asp-area="Wallets" asp-controller="UIStoreOnChainWallets" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode"
                        id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center">
                         <vc:icon symbol="wallet-new" />
                         <div class="content">
@@ -85,7 +85,7 @@
         {
             <vc:store-recent-transactions store="store" crypto-code="@Model.CryptoCode" initial-rendering="true" />
         }
-        <vc:store-recent-invoices store="store" crypto-code="@Model.CryptoCode" initial-rendering="true" />
+        <vc:store-recent-invoices store="store" initial-rendering="true" />
         @foreach (var app in Model.Apps)
         {
             <vc:app-sales app-id="@app.Id" app-type="@app.AppType" />
@@ -108,9 +108,9 @@ else
         {
             @if (!Model.WalletEnabled)
             {
-                <a asp-controller="UIStores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode"
-                   id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center order-1">
-                    <vc:icon symbol="wallet-new" />
+            <a asp-area="Wallets" asp-controller="UIStoreOnChainWallets" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode"
+               id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center order-1">
+                <vc:icon symbol="wallet-new" />
                     <div class="content">
                         <h5 class="mb-0" text-translate="true">Set up a wallet</h5>
                     </div>
@@ -153,4 +153,3 @@ else
         <vc:ui-extension-point location="dashboard-setup-guide-payment" model="@Model" />
     </div>
 }
-

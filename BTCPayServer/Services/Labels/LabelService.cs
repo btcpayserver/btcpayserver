@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;

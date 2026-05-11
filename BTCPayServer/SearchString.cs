@@ -69,13 +69,13 @@ namespace BTCPayServer
                 var newValue = string.IsNullOrEmpty(value) || current == value ? string.Empty : keyValue;
                 return Finalize(_originalString.Replace(oldValue, newValue));
             }
-            
+
             var arrayFilter = GetFilterArray(key);
             if (arrayFilter != null)
             {
                 if (string.IsNullOrEmpty(value))
                 {
-                    return Finalize(arrayFilter.Aggregate(ToString(), (current, filter) => 
+                    return Finalize(arrayFilter.Aggregate(ToString(), (current, filter) =>
                         current.Replace($"{key}{ValueSeparator}{filter}", string.Empty)));
                 }
                 return Finalize(arrayFilter.Contains(value)
@@ -89,10 +89,15 @@ namespace BTCPayServer
 
         public string WithoutSearchText()
         {
-            var txt = ToString();
-            if (!string.IsNullOrEmpty(TextSearch)) txt = Finalize(txt.Replace(TextSearch, string.Empty));
-            if (!string.IsNullOrEmpty(TextFilters)) txt = Finalize(txt.Replace(TextFilters, string.Empty));
-            return Finalize(txt).Trim();
+            List<string> parts = new();
+            foreach (var kv in Filters.Where(f => StripFilters.Contains(f.Key)))
+            {
+                foreach (var value in kv.Value)
+                {
+                    parts.Add($"{kv.Key}{ValueSeparator}{value}");
+                }
+            }
+            return string.Join(FilterSeparator, parts);
         }
 
         public string[] GetFilterArray(string key)
@@ -149,7 +154,7 @@ namespace BTCPayServer
         {
             return key.ToLowerInvariant().Trim();
         }
-        
+
         private static string Finalize(string str)
         {
             var value = str.Trim().TrimStart(FilterSeparator).TrimEnd(FilterSeparator);

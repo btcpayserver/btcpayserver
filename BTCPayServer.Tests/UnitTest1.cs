@@ -31,7 +31,7 @@ using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Models.ManageViewModels;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.PayJoin.Sender;
@@ -613,8 +613,14 @@ namespace BTCPayServer.Tests
 
         private void AssertSearchWalletTransaction(UIWalletsController walletController, WalletId walletId, bool expected, string transactionId, string searchTerm, string searchText)
         {
+            var model = new ListTransactionsViewModel
+            {
+                SearchTerm = searchTerm,
+                SearchText = searchText,
+                Count = 50
+            };
             var result = (ListTransactionsViewModel)((ViewResult)walletController
-                .WalletTransactions(walletId, searchTerm: searchTerm, searchText: searchText, loadTransactions: true, count: 50).Result).Model;
+                .WalletTransactions(walletId, loadTransactions: true, model: model).Result).Model;
             Assert.Equal(expected, result.Transactions.Any(tx => tx.Id == transactionId));
         }
 

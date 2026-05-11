@@ -2,7 +2,7 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Client.Models
 @using ExchangeSharp
-@model BTCPayServer.Models.WalletViewModels.PullPaymentsModel
+@model BTCPayServer.Plugins.Wallets.Views.ViewModels.PullPaymentsModel
 @{
     var storeId = Context.GetStoreData().Id;
     var nextStartDateSortOrder = (string)ViewData["NextStartSortOrder"];

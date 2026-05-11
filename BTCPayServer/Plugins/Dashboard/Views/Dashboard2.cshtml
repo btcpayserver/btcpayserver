@@ -1,3 +1,4 @@
+@model BTCPayServer.Plugins.Dashboard.Models.Dashboard2ViewModel
 @using BTCPayServer.Plugins.Dashboard
 @using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Views.Stores
@@ -21,12 +22,12 @@
 {
     StoreId = ScopeProvider.GetCurrentStoreId(),
     UserId = UserManager.GetUserId(User),
-    DashboardId = ViewData["DashboardId"] as string,
-    IsSetUp = ViewData["IsSetUp"] is true,
-    WalletEnabled = ViewData["WalletEnabled"] is true,
-    LightningEnabled = ViewData["LightningEnabled"] is true,
-    LightningSupported = ViewData["LightningSupported"] is true,
-    CryptoCode = ViewData["CryptoCode"] as string ?? "BTC"
+    DashboardId = Model.DashboardId,
+    IsSetUp = Model.IsSetUp,
+    WalletEnabled = Model.WalletEnabled,
+    LightningEnabled = Model.LightningEnabled,
+    LightningSupported = Model.LightningSupported,
+    CryptoCode = Model.CryptoCode
 }))
 
 @section PageFootContent {

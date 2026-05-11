@@ -3,6 +3,7 @@ using System.Linq;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Plugins.Dashboard.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,19 +29,20 @@ public partial class UIStoresController
         var lightningEnabled = lightningNodes.Any(ln => !string.IsNullOrEmpty(ln.Address) && ln.Enabled);
         var cryptoCode = _networkProvider.DefaultCryptoCode;
 
-        // Any payment method at all (wallet, lightning, or plugin-provided like Monero, Liquid, etc.)
-        var isSetUp = walletEnabled || lightningEnabled
-                      || store.GetPaymentMethodConfigs(onlyEnabled: true).Count > 0;
-
-        ViewData["DashboardId"] = dashboardId;
-        ViewData["IsSetUp"] = isSetUp;
-        ViewData["WalletEnabled"] = walletEnabled;
-        ViewData["LightningEnabled"] = lightningEnabled;
-        ViewData["LightningSupported"] = _networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode)?.SupportLightning is true;
-        ViewData["CryptoCode"] = cryptoCode;
+        var vm = new Dashboard2ViewModel
+        {
+            DashboardId = dashboardId,
+            // Any payment method at all (wallet, lightning, or plugin-provided like Monero, Liquid, etc.)
+            IsSetUp = walletEnabled || lightningEnabled
+                      || store.GetPaymentMethodConfigs(onlyEnabled: true).Count > 0,
+            WalletEnabled = walletEnabled,
+            LightningEnabled = lightningEnabled,
+            LightningSupported = _networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode)?.SupportLightning is true,
+            CryptoCode = cryptoCode
+        };
 
         // The view lives under the plugin folder; the convention-based view location expander
         // looks in /Views/UIStores/, which is not where this plugin's view lives.
-        return View(Dashboard2ViewPath);
+        return View(Dashboard2ViewPath, vm);
     }
 }

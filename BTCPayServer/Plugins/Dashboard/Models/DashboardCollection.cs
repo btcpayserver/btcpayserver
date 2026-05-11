@@ -1,7 +1,7 @@
 #nullable enable
 using System.Collections.Generic;
 
-namespace BTCPayServer.Blazor.Dashboard.Models;
+namespace BTCPayServer.Plugins.Dashboard.Models;
 
 public class DashboardCollection
 {

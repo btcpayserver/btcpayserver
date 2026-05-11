@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using BTCPayServer.Blazor.Dashboard.Models;
+using BTCPayServer.Plugins.Dashboard.Models;
 
-namespace BTCPayServer.Blazor.Dashboard;
+namespace BTCPayServer.Plugins.Dashboard;
 
 public class WidgetRegistry
 {

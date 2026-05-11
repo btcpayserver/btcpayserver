@@ -1,7 +1,7 @@
 #nullable enable
 using System;
 using System.Threading.Tasks;
-using BTCPayServer.Blazor.Dashboard.Models;
+using BTCPayServer.Plugins.Dashboard.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Blazor.Dashboard;
+namespace BTCPayServer.Plugins.Dashboard;
 
 public abstract class BaseWidgetComponent<TConfig> : ComponentBase where TConfig : class, new()
 {

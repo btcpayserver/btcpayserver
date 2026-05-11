@@ -3,12 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Blazor.Dashboard.Models;
+using BTCPayServer.Plugins.Dashboard.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Blazor.Dashboard;
+namespace BTCPayServer.Plugins.Dashboard;
 
 public class DashboardService
 {

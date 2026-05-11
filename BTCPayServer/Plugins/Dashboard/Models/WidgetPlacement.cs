@@ -2,7 +2,7 @@
 using System;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Blazor.Dashboard.Models;
+namespace BTCPayServer.Plugins.Dashboard.Models;
 
 public class WidgetPlacement
 {

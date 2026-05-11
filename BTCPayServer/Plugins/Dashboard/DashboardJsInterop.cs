@@ -1,10 +1,11 @@
 #nullable enable
 using System;
 using System.Threading.Tasks;
+using BTCPayServer.Blazor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
-namespace BTCPayServer.Blazor.Dashboard;
+namespace BTCPayServer.Plugins.Dashboard;
 
 public class DashboardJsInterop : IAsyncDisposable
 {

@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
@@ -9,6 +10,7 @@ using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using NBitcoin;
+using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
@@ -156,10 +158,11 @@ namespace BTCPayServer.Tests
 
             var networkProvider = CreateNetworkProvider();
             var network = networkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork;
+            var eventAggregator = new EventAggregator(new BTCPayServer.Logging.Logs());
             var service = new PendingTransactionService(
                 networkProvider,
                 tester.CreateContextFactory(),
-                new EventAggregator(new BTCPayServer.Logging.Logs()),
+                eventAggregator,
                 NullLogger<PendingTransactionService>.Instance);
             var requestBaseUrl = RequestBaseUrl.FromUrl("https://example.com");
             var psbtA = CreatePendingTransactionPSBT(network, 1, Money.Satoshis(10_000));
@@ -186,6 +189,36 @@ namespace BTCPayServer.Tests
                 var reloadedPendingB = await ctx.PendingTransactions.SingleAsync(p => p.Id == pendingB.Id);
                 Assert.Equal(PendingTransactionState.Broadcast, reloadedPendingA.State);
                 Assert.Equal(PendingTransactionState.Pending, reloadedPendingB.State);
+            }
+
+            await service.StartAsync(default);
+            try
+            {
+                eventAggregator.Publish(new NewOnChainTransactionEvent
+                {
+                    PaymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId("BTC"),
+                    NewTransactionEvent = new NewTransactionEvent
+                    {
+                        CryptoCode = "BTC",
+                        TransactionData = new TransactionResult
+                        {
+                            Transaction = malleatedTransaction,
+                            TransactionHash = malleatedTransaction.GetHash()
+                        }
+                    }
+                });
+                await TestUtils.EventuallyAsync(async () =>
+                {
+                    await using var ctx = tester.CreateContext();
+                    var reloadedPendingA = await ctx.PendingTransactions.SingleAsync(p => p.Id == pendingA.Id);
+                    var reloadedPendingB = await ctx.PendingTransactions.SingleAsync(p => p.Id == pendingB.Id);
+                    Assert.Equal(PendingTransactionState.Broadcast, reloadedPendingA.State);
+                    Assert.Equal(PendingTransactionState.Pending, reloadedPendingB.State);
+                });
+            }
+            finally
+            {
+                await service.StopAsync(default);
             }
         }
 

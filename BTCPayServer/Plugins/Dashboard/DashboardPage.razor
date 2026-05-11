@@ -7,6 +7,9 @@
 @using BTCPayServer.Services.Invoices
 @using BTCPayServer.Services.Stores
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Routing
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Logging
 @using Microsoft.Extensions.Options
 @using Newtonsoft.Json
 @using Newtonsoft.Json.Linq
@@ -21,6 +24,9 @@
 @inject AppService AppService
 @inject IEnumerable<BTCPayServer.Abstractions.Contracts.IStoreSetupStepProvider> SetupStepProviders
 @inject IOptions<BTCPayServer.Configuration.LightningNetworkOptions> LightningNetworkOptions
+@inject LinkGenerator LinkGenerator
+@inject IStringLocalizer StringLocalizer
+@inject ILogger<DashboardPage> Logger
 @implements IAsyncDisposable
 
 @if (!IsSetUp)
@@ -438,8 +444,11 @@ else
         _setupSteps.Clear();
         _setupSteps.Add(new BTCPayServer.Abstractions.Contracts.StoreSetupStep
         {
-            Title = "Set up a wallet",
-            SetupUrl = $"/stores/{StoreId}/onchain/{CryptoCode}",
+            Title = StringLocalizer["Set up a wallet"],
+            SetupUrl = LinkGenerator.GetPathByAction(
+                action: "SetupWallet",
+                controller: "UIStores",
+                values: new { storeId = StoreId, cryptoCode = CryptoCode }),
             IsComplete = WalletEnabled,
             Order = 10,
             IconSymbol = "wallet-new"
@@ -448,8 +457,11 @@ else
         {
             _setupSteps.Add(new BTCPayServer.Abstractions.Contracts.StoreSetupStep
             {
-                Title = "Set up a Lightning node",
-                SetupUrl = $"/stores/{StoreId}/lightning/{CryptoCode}/setup",
+                Title = StringLocalizer["Set up a Lightning node"],
+                SetupUrl = LinkGenerator.GetPathByAction(
+                    action: "SetupLightningNode",
+                    controller: "UIStores",
+                    values: new { storeId = StoreId, cryptoCode = CryptoCode }),
                 IsComplete = LightningEnabled,
                 Order = 20,
                 IconSymbol = "wallet-new"
@@ -468,9 +480,10 @@ else
                 var pluginSteps = await provider.GetStepsAsync(setupContext);
                 _setupSteps.AddRange(pluginSteps);
             }
-            catch
+            catch (Exception ex)
             {
-                // Don't let a faulty plugin break the setup guide
+                // Don't let a faulty plugin break the setup guide for everyone else.
+                Logger.LogError(ex, "Setup step provider {Provider} threw while contributing dashboard setup steps", provider.GetType().FullName);
             }
         }
     }

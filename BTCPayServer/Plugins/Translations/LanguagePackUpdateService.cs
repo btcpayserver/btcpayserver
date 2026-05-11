@@ -1,18 +1,18 @@
 #nullable enable
 using System;
-using System.Collections.Concurrent;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins.Translations
 {
-    public class LanguagePackUpdateService(IHttpClientFactory httpClientFactory)
+    public class LanguagePackUpdateService(IHttpClientFactory httpClientFactory, IMemoryCache memoryCache)
     {
         public record LanguageManifestEntry(
             string Name,
@@ -21,176 +21,134 @@ namespace BTCPayServer.Plugins.Translations
             string? MaintainerUrl,
             DateTimeOffset? Updated,
             string File,
-            string Sha);
+            string Sha)
+        {
+            internal static LanguageManifestEntry FromDto(ManifestLanguageDto dto)
+            {
+                var (handle, url) = SplitMaintainer(dto.Maintainer);
+                DateTimeOffset? updated = null;
+                if (DateTimeOffset.TryParse(dto.Updated, CultureInfo.InvariantCulture,
+                        DateTimeStyles.AssumeUniversal, out var parsed))
+                    updated = parsed;
+                return new LanguageManifestEntry(
+                    dto.Name ?? string.Empty,
+                    dto.Native,
+                    handle,
+                    url,
+                    updated,
+                    dto.File ?? string.Empty,
+                    dto.Sha ?? string.Empty);
+            }
 
-        private readonly ConcurrentDictionary<string, (bool UpdateAvailable, DateTime CheckedAt)> _updateCheckCache = new();
-        private readonly TimeSpan _cacheExpiration = TimeSpan.FromHours(1);
-        private readonly TimeSpan _manifestFailureBackoff = TimeSpan.FromSeconds(60);
-        private (JArray Languages, DateTime FetchedAt)? _manifestCache;
-        private (LanguageManifestEntry[] Entries, DateTime FetchedAt)? _entriesCache;
-        private DateTime _manifestNextFetchAllowedAt = DateTime.MinValue;
-        private readonly SemaphoreSlim _manifestLock = new(1, 1);
+            private static (string? Handle, string? Url) SplitMaintainer(string? raw)
+            {
+                if (string.IsNullOrEmpty(raw)) return (null, null);
+                var split = raw.Split('|', 2);
+                return (split[0], split.Length > 1 ? split[1] : null);
+            }
+        }
 
+        internal record ManifestLanguageDto(
+            string? Name,
+            string? Native,
+            string? Maintainer,
+            string? Updated,
+            string? File,
+            string? Sha);
+
+        internal record ManifestRootDto(ManifestLanguageDto[]? Languages);
+
+        private const string ManifestCacheKey = "translations.manifest";
         private const string ManifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
         private const string RawBaseUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/";
+        private static readonly TimeSpan CacheLifetime = TimeSpan.FromHours(1);
 
-        private async Task<JArray> FetchManifest()
+        private async Task<LanguageManifestEntry[]> GetEntries()
         {
-            if (_manifestCache is { } cached && DateTime.UtcNow - cached.FetchedAt < _cacheExpiration)
-                return cached.Languages;
-            if (DateTime.UtcNow < _manifestNextFetchAllowedAt)
-                throw new InvalidOperationException("Manifest fetch is in back-off after a recent failure.");
+            if (memoryCache.TryGetValue(ManifestCacheKey, out LanguageManifestEntry[]? cached) && cached is not null)
+                return cached;
 
-            await _manifestLock.WaitAsync();
-            try
-            {
-                if (_manifestCache is { } lockedCached && DateTime.UtcNow - lockedCached.FetchedAt < _cacheExpiration)
-                    return lockedCached.Languages;
-                if (DateTime.UtcNow < _manifestNextFetchAllowedAt)
-                    throw new InvalidOperationException("Manifest fetch is in back-off after a recent failure.");
+            using var httpClient = httpClientFactory.CreateClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(30);
+            var json = await httpClient.GetStringAsync(ManifestUrl);
 
-                try
-                {
-                    using var httpClient = httpClientFactory.CreateClient();
-                    httpClient.Timeout = TimeSpan.FromSeconds(30);
-                    var json = await httpClient.GetStringAsync(ManifestUrl);
-                    var languages = JObject.Parse(json)["Languages"] as JArray
-                        ?? throw new InvalidOperationException("Manifest is missing the 'Languages' array.");
-                    _manifestCache = (languages, DateTime.UtcNow);
-                    return languages;
-                }
-                catch
-                {
-                    _manifestNextFetchAllowedAt = DateTime.UtcNow + _manifestFailureBackoff;
-                    throw;
-                }
-            }
-            finally
-            {
-                _manifestLock.Release();
-            }
-        }
+            var root = JsonConvert.DeserializeObject<ManifestRootDto>(json);
+            if (root?.Languages is null)
+                throw new InvalidOperationException("Manifest is missing the 'Languages' array.");
 
-        private static JObject? FindEntry(JArray languages, string language)
-        {
-            foreach (var token in languages)
-            {
-                if (token is JObject entry &&
-                    string.Equals(entry["Name"]?.ToString(), language, StringComparison.OrdinalIgnoreCase))
-                    return entry;
-            }
-            return null;
-        }
-
-        private static LanguageManifestEntry ToManifestEntry(JObject entry)
-        {
-            var maintainer = entry["Maintainer"]?.ToString();
-            string? maintainerHandle = null;
-            string? maintainerUrl = null;
-            if (!string.IsNullOrEmpty(maintainer))
-            {
-                var split = maintainer.Split('|', 2);
-                maintainerHandle = split[0];
-                if (split.Length > 1)
-                    maintainerUrl = split[1];
-            }
-
-            DateTimeOffset? updated = null;
-            var updatedRaw = entry["Updated"]?.ToString();
-            if (DateTimeOffset.TryParse(updatedRaw, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var parsedUpdated))
-                updated = parsedUpdated;
-
-            return new LanguageManifestEntry(
-                entry["Name"]?.ToString() ?? string.Empty,
-                entry["Native"]?.ToString(),
-                maintainerHandle,
-                maintainerUrl,
-                updated,
-                entry["File"]?.ToString() ?? string.Empty,
-                entry["Sha"]?.ToString() ?? string.Empty);
-        }
-
-        public async Task<LanguageManifestEntry[]> GetManifestLanguages()
-        {
-            if (_entriesCache is { } cached && DateTime.UtcNow - cached.FetchedAt < _cacheExpiration)
-                return cached.Entries;
-
-            var languages = await FetchManifest();
-            var entries = languages.OfType<JObject>()
-                .Select(ToManifestEntry)
+            var entries = root.Languages
+                .Select(LanguageManifestEntry.FromDto)
                 .Where(e => !string.IsNullOrEmpty(e.Name))
                 .ToArray();
-            _entriesCache = (entries, DateTime.UtcNow);
+
+            memoryCache.Set(ManifestCacheKey, entries, CacheLifetime);
             return entries;
         }
 
+        public Task<LanguageManifestEntry[]> GetManifestLanguages() => GetEntries();
+
         public async Task<(string translationsJson, string version)> FetchLanguagePackFromRepository(string language)
         {
-            var languages = await FetchManifest();
-            var entry = FindEntry(languages, language)
+            var entries = await GetEntries();
+            var entry = entries.FirstOrDefault(e =>
+                string.Equals(e.Name, language, StringComparison.OrdinalIgnoreCase))
                 ?? throw new ArgumentException($"Language '{language}' was not found in the manifest.", nameof(language));
 
-            var filePath = entry["File"]?.ToString()
-                ?? throw new InvalidOperationException("Manifest entry is missing the 'File' field.");
-            var expectedSha = entry["Sha"]?.ToString()
-                ?? throw new InvalidOperationException("Manifest entry is missing the 'Sha' field.");
+            if (string.IsNullOrEmpty(entry.File))
+                throw new InvalidOperationException("Manifest entry is missing the 'File' field.");
+            if (string.IsNullOrEmpty(entry.Sha))
+                throw new InvalidOperationException("Manifest entry is missing the 'Sha' field.");
 
-            var httpClient = httpClientFactory.CreateClient();
+            using var httpClient = httpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(30);
-            var translationsBytes = await httpClient.GetByteArrayAsync(RawBaseUrl + filePath);
+            var translationsBytes = await httpClient.GetByteArrayAsync(RawBaseUrl + entry.File);
 
             var actualSha = Convert.ToHexString(SHA256.HashData(translationsBytes));
-            if (!string.Equals(actualSha, expectedSha, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(actualSha, entry.Sha, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException(
-                    $"Downloaded language pack '{language}' SHA-256 mismatch: expected {expectedSha}, got {actualSha}. The download may be corrupt or tampered with.");
+                    $"Downloaded language pack '{language}' SHA-256 mismatch: expected {entry.Sha}, got {actualSha}. The download may be corrupt or tampered with.");
 
-            var translationsJson = Encoding.UTF8.GetString(translationsBytes);
-            return (translationsJson, expectedSha);
+            return (Encoding.UTF8.GetString(translationsBytes), entry.Sha);
         }
+
+        private static string UpdateCacheKey(string language) => $"translations.update.{language}";
 
         public async Task<bool> CheckForLanguagePackUpdateCached(string language, JObject metadata)
         {
-            if (_updateCheckCache.TryGetValue(language, out var cached) &&
-                DateTime.UtcNow - cached.CheckedAt < _cacheExpiration)
-                return cached.UpdateAvailable;
+            if (memoryCache.TryGetValue<bool>(UpdateCacheKey(language), out var cached))
+                return cached;
 
             var updateAvailable = await CheckForLanguagePackUpdate(language, metadata);
-            _updateCheckCache[language] = (updateAvailable, DateTime.UtcNow);
+            memoryCache.Set(UpdateCacheKey(language), updateAvailable, CacheLifetime);
             return updateAvailable;
         }
 
         public void InvalidateCache(string language)
         {
-            _updateCheckCache.TryRemove(language, out _);
+            memoryCache.Remove(UpdateCacheKey(language));
         }
 
         private async Task<bool> CheckForLanguagePackUpdate(string language, JObject metadata)
         {
             try
             {
-                var languages = await FetchManifest();
-                var entry = FindEntry(languages, language);
-                if (entry is null)
+                var entries = await GetEntries();
+                var entry = entries.FirstOrDefault(e =>
+                    string.Equals(e.Name, language, StringComparison.OrdinalIgnoreCase));
+                if (entry is null || string.IsNullOrEmpty(entry.Sha))
                     return false;
-
-                var remoteSha = entry["Sha"]?.ToString();
-                if (string.IsNullOrEmpty(remoteSha))
-                {
-                    return false;
-                }
 
                 var localVersion = metadata["version"]?.ToString();
-
                 if (string.IsNullOrEmpty(localVersion))
                     return true;
 
-                return !string.Equals(remoteSha, localVersion, StringComparison.OrdinalIgnoreCase);
+                return !string.Equals(entry.Sha, localVersion, StringComparison.OrdinalIgnoreCase);
             }
             catch (Exception ex) when (
                 ex is HttpRequestException
                 || ex is TaskCanceledException
                 || ex is InvalidOperationException
-                || ex is Newtonsoft.Json.JsonException)
+                || ex is JsonException)
             {
                 return false;
             }

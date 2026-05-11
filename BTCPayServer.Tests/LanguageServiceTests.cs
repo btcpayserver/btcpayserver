@@ -93,7 +93,7 @@ namespace BTCPayServer.Tests
                     "application/json")
             });
 
-            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler));
+            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
             var languages = await service.GetManifestLanguages();
 
             Assert.Equal(2, languages.Length);
@@ -124,7 +124,7 @@ namespace BTCPayServer.Tests
                 Content = new StringContent("{ this is not: valid json", Encoding.UTF8, "application/json")
             });
 
-            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler));
+            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
             await Assert.ThrowsAnyAsync<Exception>(() => service.GetManifestLanguages());
         }
 
@@ -139,7 +139,7 @@ namespace BTCPayServer.Tests
                 Content = new StringContent("{ \"OtherField\": [] }", Encoding.UTF8, "application/json")
             });
 
-            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler));
+            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
             await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetManifestLanguages());
         }
 
@@ -156,7 +156,7 @@ namespace BTCPayServer.Tests
                     Encoding.UTF8, "application/json")
             });
 
-            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler));
+            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
             await Assert.ThrowsAsync<ArgumentException>(
                 () => service.FetchLanguagePackFromRepository("Klingon"));
         }
@@ -172,7 +172,7 @@ namespace BTCPayServer.Tests
                 Content = new StringContent("error", Encoding.UTF8, "text/plain")
             });
 
-            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler));
+            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
             await Assert.ThrowsAnyAsync<HttpRequestException>(() => service.GetManifestLanguages());
         }
 
@@ -209,7 +209,7 @@ namespace BTCPayServer.Tests
                 Content = new StringContent(body, Encoding.UTF8, "application/json")
             });
 
-            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler));
+            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
             var (translationsJson, version) = await service.FetchLanguagePackFromRepository("French");
 
             Assert.Equal(expectedSha, version, ignoreCase: true);
@@ -248,7 +248,7 @@ namespace BTCPayServer.Tests
                 Content = new StringContent(body, Encoding.UTF8, "application/json")
             });
 
-            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler));
+            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
             var ex = await Assert.ThrowsAsync<InvalidOperationException>(
                 () => service.FetchLanguagePackFromRepository("French"));
             Assert.Contains("SHA-256 mismatch", ex.Message);
@@ -279,7 +279,7 @@ namespace BTCPayServer.Tests
                     "application/json")
             });
 
-            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler));
+            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
             var outdatedMetadata = JObject.Parse("{ \"version\": \"sha-0\" }");
             var upToDateMetadata = JObject.Parse("{ \"version\": \"sha-1\" }");
 

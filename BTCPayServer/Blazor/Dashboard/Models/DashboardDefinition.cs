@@ -7,8 +7,7 @@ namespace BTCPayServer.Blazor.Dashboard.Models;
 public enum DashboardScope
 {
     Server,
-    Store,
-    User
+    Store
 }
 
 public class DashboardDefinition

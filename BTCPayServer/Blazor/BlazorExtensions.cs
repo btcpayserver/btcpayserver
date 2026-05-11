@@ -22,7 +22,6 @@ namespace BTCPayServer.Blazor
             services.AddScoped<DashboardJsInterop>();
 
             services.AddSingleton<IDashboardTemplateProvider, DefaultStoreDashboardTemplate>();
-            services.AddSingleton<IDashboardTemplateProvider, DefaultUserDashboardTemplate>();
             services.AddSingleton<IDashboardTemplateProvider, DefaultServerDashboardTemplate>();
 
             // Single demonstration widget for the skeleton PR.

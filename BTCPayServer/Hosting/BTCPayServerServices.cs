@@ -176,7 +176,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<PaymentService>();
             services.AddSingleton<BTCPayServerEnvironment>();
             services.TryAddSingleton<WalletRepository>();
-            services.TryAddSingleton<UserSettingsRepository>();
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<UserService>();

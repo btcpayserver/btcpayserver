@@ -1765,22 +1765,6 @@ namespace BTCPayServer.Migrations
                     b.ToTable("U2FDevices");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.UserSettingData", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Value")
-                        .HasColumnType("JSONB");
-
-                    b.HasKey("UserId", "Name");
-
-                    b.ToTable("UserSettings");
-                });
-
             modelBuilder.Entity("BTCPayServer.Data.UserStore", b =>
                 {
                     b.Property<string>("ApplicationUserId")
@@ -2572,17 +2556,6 @@ namespace BTCPayServer.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("ApplicationUser");
-                });
-
-            modelBuilder.Entity("BTCPayServer.Data.UserSettingData", b =>
-                {
-                    b.HasOne("BTCPayServer.Data.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.UserStore", b =>

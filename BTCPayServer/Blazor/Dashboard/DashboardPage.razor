@@ -115,9 +115,6 @@ else
                 <button class="dropdown-item" @onclick="() => CreateNewDashboard(DashboardScope.Store, false)">
                     + Store Dashboard
                 </button>
-                <button class="dropdown-item" @onclick="() => CreateNewDashboard(DashboardScope.User, false)">
-                    + Personal Dashboard
-                </button>
                 @if (_isAdmin)
                 {
                     <button class="dropdown-item" @onclick="() => CreateNewDashboard(DashboardScope.Server, false)">
@@ -130,9 +127,6 @@ else
                     <div class="dropdown-header small text-uppercase">Copy Current Layout To</div>
                     <button class="dropdown-item" @onclick="() => CreateNewDashboard(DashboardScope.Store, true)">
                         + Store Dashboard
-                    </button>
-                    <button class="dropdown-item" @onclick="() => CreateNewDashboard(DashboardScope.User, true)">
-                        + Personal Dashboard
                     </button>
                     @if (_isAdmin)
                     {
@@ -325,11 +319,10 @@ else
         // Otherwise resolve active: user > store > server > code default
         if (_activeDashboard is null)
         {
-            // Normalize empty ids to null — the service treats null as "no scope" but would
-            // happily key dashboards on an empty string and pick the wrong fallback.
-            var resolvedUserId = string.IsNullOrEmpty(UserId) ? null : UserId;
+            // Normalize empty StoreId to null — the service treats null as "no scope" but
+            // would happily key dashboards on an empty string and pick the wrong fallback.
             var resolvedStoreId = string.IsNullOrEmpty(StoreId) ? null : StoreId;
-            _activeDashboard = await DashboardService.ResolveActiveDashboard(resolvedUserId, resolvedStoreId, context, _isAdmin);
+            _activeDashboard = await DashboardService.ResolveActiveDashboard(resolvedStoreId, context, _isAdmin);
             // ResolveActiveDashboard may have removed a stale auto-materialized dashboard
             // from storage. Reload _allDashboards so the switcher doesn't show a deleted
             // entry that, if selected, could resurrect the stale dashboard on the next save.
@@ -521,17 +514,6 @@ else
                 _allDashboards.Add(d);
             }
         }
-
-        // User dashboards
-        if (!string.IsNullOrEmpty(UserId))
-        {
-            var userCollection = await DashboardService.GetUserDashboards(UserId);
-            foreach (var d in userCollection.Dashboards)
-            {
-                d.Scope = DashboardScope.User;
-                _allDashboards.Add(d);
-            }
-        }
     }
 
     private DashboardScope DetermineActiveScope(DashboardDefinition? dashboard)
@@ -547,7 +529,6 @@ else
         {
             DashboardScope.Server => _isAdmin,
             DashboardScope.Store => true,  // store access already implied by being on the page
-            DashboardScope.User => true,
             _ => false
         };
     }
@@ -572,16 +553,6 @@ else
                 if (target is not null) target.IsDefault = true;
                 collection.ActiveDashboardId = _activeDashboard.Id;
                 await DashboardService.SaveStoreDashboards(StoreId, collection);
-                break;
-            }
-            case DashboardScope.User when !string.IsNullOrEmpty(UserId):
-            {
-                var collection = await DashboardService.GetUserDashboards(UserId);
-                foreach (var d in collection.Dashboards) d.IsDefault = false;
-                var target = collection.Dashboards.FirstOrDefault(d => d.Id == _activeDashboard.Id);
-                if (target is not null) target.IsDefault = true;
-                collection.ActiveDashboardId = _activeDashboard.Id;
-                await DashboardService.SaveUserDashboards(UserId, collection);
                 break;
             }
             case DashboardScope.Server:
@@ -795,15 +766,6 @@ else
                 await DashboardService.SaveStoreDashboards(StoreId, collection);
                 break;
             }
-            case DashboardScope.User when !string.IsNullOrEmpty(UserId):
-            {
-                var collection = await DashboardService.GetUserDashboards(UserId);
-                collection.Dashboards.RemoveAll(d => d.Id == dashboardId);
-                if (collection.ActiveDashboardId == dashboardId)
-                    collection.ActiveDashboardId = null;
-                await DashboardService.SaveUserDashboards(UserId, collection);
-                break;
-            }
             case DashboardScope.Server:
             {
                 var collection = await DashboardService.GetServerDashboards();
@@ -825,9 +787,8 @@ else
         await ResetGrid();
 
         // Switch to another dashboard or fall back to default template
-        var deleteResolveUserId = string.IsNullOrEmpty(UserId) ? null : UserId;
         var deleteResolveStoreId = string.IsNullOrEmpty(StoreId) ? null : StoreId;
-        _activeDashboard = await DashboardService.ResolveActiveDashboard(deleteResolveUserId, deleteResolveStoreId, BuildTemplateContext(), _isAdmin);
+        _activeDashboard = await DashboardService.ResolveActiveDashboard(deleteResolveStoreId, BuildTemplateContext(), _isAdmin);
         _activeScope = DetermineActiveScope(_activeDashboard);
 
         // Check if we fell back to a code-generated default
@@ -1048,11 +1009,6 @@ else
                 storeCol.ActiveDashboardId = dashboard.Id;
                 await DashboardService.SaveStoreDashboards(StoreId, storeCol);
                 break;
-            case DashboardScope.User when !string.IsNullOrEmpty(UserId):
-                var userCol = await DashboardService.GetUserDashboards(UserId);
-                userCol.ActiveDashboardId = dashboard.Id;
-                await DashboardService.SaveUserDashboards(UserId, userCol);
-                break;
             case DashboardScope.Server:
                 var serverCol = await DashboardService.GetServerDashboards();
                 serverCol.ActiveDashboardId = dashboard.Id;
@@ -1077,7 +1033,6 @@ else
         var scopeLabel = scope switch
         {
             DashboardScope.Server => "Server",
-            DashboardScope.User => "Personal",
             _ => "Store"
         };
 
@@ -1148,13 +1103,6 @@ else
                 var collection = await DashboardService.GetStoreDashboards(StoreId);
                 UpsertDashboard(collection, dashboard);
                 await DashboardService.SaveStoreDashboards(StoreId, collection);
-                break;
-            }
-            case DashboardScope.User when !string.IsNullOrEmpty(UserId):
-            {
-                var collection = await DashboardService.GetUserDashboards(UserId);
-                UpsertDashboard(collection, dashboard);
-                await DashboardService.SaveUserDashboards(UserId, collection);
                 break;
             }
             case DashboardScope.Server:

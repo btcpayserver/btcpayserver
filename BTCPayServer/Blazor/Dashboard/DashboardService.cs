@@ -14,7 +14,6 @@ public class DashboardService
 {
     private readonly StoreRepository _storeRepository;
     private readonly SettingsRepository _settingsRepository;
-    private readonly UserSettingsRepository _userSettingsRepository;
     private readonly IEnumerable<IDashboardTemplateProvider> _templateProviders;
     private readonly IEnumerable<IDashboardWidgetContributor> _widgetContributors;
 
@@ -23,13 +22,11 @@ public class DashboardService
     public DashboardService(
         StoreRepository storeRepository,
         SettingsRepository settingsRepository,
-        UserSettingsRepository userSettingsRepository,
         IEnumerable<IDashboardTemplateProvider> templateProviders,
         IEnumerable<IDashboardWidgetContributor> widgetContributors)
     {
         _storeRepository = storeRepository;
         _settingsRepository = settingsRepository;
-        _userSettingsRepository = userSettingsRepository;
         _templateProviders = templateProviders;
         _widgetContributors = widgetContributors;
     }
@@ -58,47 +55,17 @@ public class DashboardService
         await _storeRepository.UpdateSetting(storeId, SettingName, collection);
     }
 
-    // --- User-level ---
-    public async Task<DashboardCollection> GetUserDashboards(string userId)
-    {
-        return await _userSettingsRepository.GetSettingAsync<DashboardCollection>(userId, SettingName)
-               ?? new DashboardCollection();
-    }
-
-    public async Task SaveUserDashboards(string userId, DashboardCollection collection)
-    {
-        await _userSettingsRepository.UpdateSetting(userId, SettingName, collection);
-    }
-
     // --- Resolution ---
     public async Task<DashboardDefinition> ResolveActiveDashboard(
-        string? userId, string? storeId, DashboardTemplateContext context, bool isAdmin = false)
+        string? storeId, DashboardTemplateContext context, bool isAdmin = false)
     {
-        // Each scope has its own template; comparing user/store/server dashboards against
+        // Each scope has its own template; comparing store/server dashboards against
         // a single default would incorrectly mark them stale and return the wrong-scope
         // fallback.
-        var userDefault = GetDefaultTemplate(DashboardScope.User, context);
         var storeDefault = GetDefaultTemplate(DashboardScope.Store, context);
         var serverDefault = GetDefaultTemplate(DashboardScope.Server, context);
 
-        // Priority: user > store > server > code default
-        if (userId is not null)
-        {
-            var userCollection = await GetUserDashboards(userId);
-            var active = FindActive(userCollection, storeId);
-            if (active is not null)
-            {
-                if (!IsStaleAutoMaterialized(active, userDefault))
-                    return active;
-
-                // The user has an active personal dashboard but it was auto-materialized
-                // from an older template. Replace it with the fresh user default rather
-                // than silently falling through to the store dashboard, which would
-                // demote a user's personal dashboard.
-                return userDefault;
-            }
-        }
-
+        // Priority: store > server > code default
         if (storeId is not null)
         {
             var storeCollection = await GetStoreDashboards(storeId);
@@ -136,11 +103,7 @@ public class DashboardService
         }
 
         // Fall back to the code-defined default for the most-specific scope available.
-        // Non-admins never see the server default; they get a (possibly empty) store default
-        // with their existing permissions.
-        if (storeId is not null)
-            return storeDefault;
-        return isAdmin ? serverDefault : userDefault;
+        return storeId is not null ? storeDefault : serverDefault;
     }
 
     /// <summary>

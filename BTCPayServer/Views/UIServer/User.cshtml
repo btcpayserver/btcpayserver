@@ -73,6 +73,16 @@
         <input asp-for="IsAdmin" type="checkbox" class="form-check-input" />
         <label asp-for="IsAdmin" class="form-check-label" text-translate="true">User is admin</label>
     </div>
+	@if (Model.MonetizationEnabled)
+	{
+		<div class="form-group">
+			<div class="form-check">
+				<input asp-for="BypassMonetization" class="form-check-input" />
+				<label asp-for="BypassMonetization" class="form-check-label">Bypass monetization requirement</label>
+			</div>
+			<small class="text-muted">When enabled, this user will not be required to have an active subscription.</small>
+		</div>
+	}
     @if (Model.Approved.HasValue)
     {
         <div class="form-check my-3">

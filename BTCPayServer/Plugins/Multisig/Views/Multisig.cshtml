@@ -78,7 +78,7 @@
                 </select>
             </div>
         </div>
-        <div id="SignerList" class="d-flex flex-column gap-2" style="max-height: 360px; overflow: auto;">
+        <div id="SignerList" class="d-flex flex-column gap-2 overflow-auto" style="max-height: 360px;">
             @foreach (var user in Model.MultisigStoreUsers)
             {
                 var displayName = !string.IsNullOrWhiteSpace(user.Name) ? user.Name : user.Email;
@@ -89,7 +89,7 @@
                        data-email="@user.Email.ToLowerInvariant()"
                        data-invited="@(isInvited ? "true" : "false")"
                        data-submitted="@(isSubmitted ? "true" : "false")">
-                    <input class="form-check-input m-0 multisig-signer-checkbox" type="checkbox" name="MultisigParticipantUserIds" value="@user.UserId" @(user.Selected ? "checked" : "") style="transform: scale(1.2);" />
+                    <input class="form-check-input m-0 fs-5 flex-shrink-0 multisig-signer-checkbox" type="checkbox" name="MultisigParticipantUserIds" value="@user.UserId" @(user.Selected ? "checked" : "") />
                     <span class="d-flex flex-column flex-grow-1">
                         <span class="fw-semibold">@displayName</span>
                         <span class="text-secondary small">@user.Email</span>

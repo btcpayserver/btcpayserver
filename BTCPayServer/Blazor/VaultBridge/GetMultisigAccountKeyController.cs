@@ -1,4 +1,3 @@
-using System;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,7 +20,7 @@ public class GetMultisigAccountKeyController : HWIController
 
         var keyPath = selection.UseCustomPath
             ? selection.CustomParsedKeyPath
-            : BuildDefaultPath(network.CoinType, selection.ScriptType, selection.AccountNumber);
+            : MultisigKeyPathHelper.BuildDefaultPath(network.CoinType, selection.ScriptType, selection.AccountNumber);
 
         var xpub = await device.GetXPubAsync(keyPath, cancellationToken);
 
@@ -34,15 +33,4 @@ public class GetMultisigAccountKeyController : HWIController
         });
     }
 
-    private static KeyPath BuildDefaultPath(KeyPath coinType, string scriptType, int accountNumber)
-    {
-        accountNumber = Math.Max(0, accountNumber);
-        var normalized = scriptType?.ToLowerInvariant();
-        return normalized switch
-        {
-            "p2sh-p2wsh" => new KeyPath("48'").Derive(coinType).Derive(accountNumber, true).Derive(1, true),
-            "p2sh" => new KeyPath("45'").Derive(coinType).Derive(accountNumber, true),
-            _ => new KeyPath("48'").Derive(coinType).Derive(accountNumber, true).Derive(2, true)
-        };
-    }
 }

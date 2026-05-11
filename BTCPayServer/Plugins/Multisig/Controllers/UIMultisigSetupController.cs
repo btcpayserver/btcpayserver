@@ -6,7 +6,6 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Multisig.Models;
 using BTCPayServer.Plugins.Multisig.Services;
@@ -21,14 +20,11 @@ using Microsoft.Extensions.Logging;
 namespace BTCPayServer.Plugins.Multisig.Controllers;
 
 [Route("stores")]
-[Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-[Authorize(Policy = Policies.CanManageWalletSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-[AutoValidateAntiforgeryToken]
+[Authorize(Policy = WalletPolicies.CanManageWalletSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [Area(MultisigPlugin.Area)]
 public class UIMultisigSetupController(
     StoreRepository storeRepository,
     ExplorerClientProvider explorerProvider,
-    OnChainWalletSettingsAuthorization walletSettingsAuthorization,
     OnChainWalletSetupService onChainWalletSetupService,
     MultisigService multisigService,
     MultisigNotificationService multisigNotificationService,
@@ -46,8 +42,6 @@ public class UIMultisigSetupController(
 
         if (!IsSupportedCryptoCode(vm.CryptoCode))
             return NotFound();
-        if (!await walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, vm.StoreId, vm.CryptoCode))
-            return Forbid();
 
         var checkResult = GetContext(vm.CryptoCode, out _, out _);
         if (checkResult is not null)
@@ -65,8 +59,6 @@ public class UIMultisigSetupController(
 
         if (!IsSupportedCryptoCode(vm.CryptoCode))
             return NotFound();
-        if (!await walletSettingsAuthorization.AuthorizeOnChainWalletSettings(HttpContext, User, vm.StoreId, vm.CryptoCode))
-            return Forbid();
 
         var checkResult = GetContext(vm.CryptoCode, out var store, out var network);
         if (checkResult is not null)

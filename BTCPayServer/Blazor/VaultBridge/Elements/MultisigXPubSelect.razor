@@ -65,9 +65,11 @@
         this.coinType = coinType;
         ScriptType = scriptType?.ToLowerInvariant() switch
         {
+            null or "" => "p2wsh",
+            "p2wsh" => "p2wsh",
             "p2sh-p2wsh" => "p2sh-p2wsh",
             "p2sh" => "p2sh",
-            _ => "p2wsh"
+            _ => throw new ArgumentOutOfRangeException(nameof(scriptType), scriptType, "Unsupported multisig script type.")
         };
     }
 
@@ -100,7 +102,7 @@
     public string DisplayedKeyPath =>
         UseCustomPath
             ? CustomKeyPath
-            : $"m/{BuildDefaultPath(coinType, ScriptType, AccountNumber)}";
+            : $"m/{MultisigKeyPathHelper.BuildDefaultPath(coinType, ScriptType, AccountNumber)}";
 
     public string ScriptTypeLabel => ScriptType switch
     {
@@ -199,17 +201,6 @@
             AccountInput = AccountNumber.ToString();
             AccountInputRenderVersion++;
         }
-    }
-
-    private static KeyPath BuildDefaultPath(KeyPath coinType, string scriptType, int accountNumber)
-    {
-        accountNumber = Math.Max(0, accountNumber);
-        return scriptType switch
-        {
-            "p2sh-p2wsh" => new KeyPath("48'").Derive(coinType).Derive(accountNumber, true).Derive(1, true),
-            "p2sh" => new KeyPath("45'").Derive(coinType).Derive(accountNumber, true),
-            _ => new KeyPath("48'").Derive(coinType).Derive(accountNumber, true).Derive(2, true)
-        };
     }
 
     private bool TryGetCustomPath(out KeyPath parsedPath, out string error)

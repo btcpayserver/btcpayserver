@@ -11,6 +11,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Plugins.Multisig.Models;
+using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Http;
@@ -68,7 +69,7 @@ public class MultisigNotificationService(
                 cryptoCode,
                 allPolicies: new[]
                 {
-                    Policies.CanManageWalletSettings
+                    WalletPolicies.CanManageWalletSettings
                 },
                 requireWalletTypePolicy: true);
             foreach (var email in managerEmails)
@@ -115,9 +116,9 @@ public class MultisigNotificationService(
             cryptoCode,
             anyPolicies: new[]
             {
-                Policies.CanCreateWalletTransactions,
-                Policies.CanManageWalletTransactions,
-                Policies.CanViewWallet
+                WalletPolicies.CanCreateWalletTransactions,
+                WalletPolicies.CanManageWalletTransactions,
+                WalletPolicies.CanViewWallet
             },
             includeUserIds: participantIds);
 
@@ -142,8 +143,8 @@ public class MultisigNotificationService(
         var recipients = await GetWalletScopedRecipients(
             walletId.StoreId,
             walletId.CryptoCode,
-            allPolicies: new[] { Policies.CanViewWallet },
-            anyPolicies: new[] { Policies.CanSignWalletTransactions, Policies.CanManageWalletTransactions });
+            allPolicies: new[] { WalletPolicies.CanViewWallet },
+            anyPolicies: new[] { WalletPolicies.CanSignWalletTransactions, WalletPolicies.CanManageWalletTransactions });
         if (recipients.Length == 0)
             return;
 
@@ -170,8 +171,13 @@ public class MultisigNotificationService(
         var recipients = await GetWalletScopedRecipients(
             walletId.StoreId,
             walletId.CryptoCode,
-            allPolicies: new[] { Policies.CanViewWallet },
-            anyPolicies: new[] { Policies.CanCreateWalletTransactions, Policies.CanManageWalletTransactions },
+            allPolicies: new[] { WalletPolicies.CanViewWallet },
+            anyPolicies: new[]
+            {
+                WalletPolicies.CanSignWalletTransactions,
+                WalletPolicies.CanCreateWalletTransactions,
+                WalletPolicies.CanManageWalletTransactions
+            },
             excludeUserId: signerUserId);
         if (recipients.Length == 0)
             return;
@@ -248,7 +254,7 @@ public class MultisigNotificationService(
             .Where(u =>
             {
                 var permissionSet = u.StoreRole?.ToPermissionSet(storeId) ?? new PermissionSet();
-                if (requireWalletTypePolicy && !HasPolicy(permissionSet, Policies.CanViewWallet))
+                if (requireWalletTypePolicy && !HasPolicy(permissionSet, WalletPolicies.CanViewWallet))
                     return false;
                 if (requiredAll.Any(policy => !HasPolicy(permissionSet, policy)))
                     return false;

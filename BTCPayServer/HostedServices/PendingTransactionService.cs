@@ -53,6 +53,7 @@ public class PendingTransactionService(
         {
             await using var ctx = dbContextFactory.CreateContext();
             var cryptoCode = newTransactionEvent.NewTransactionEvent.CryptoCode;
+            var transaction = newTransactionEvent.NewTransactionEvent.TransactionData.Transaction;
             var txInputs = newTransactionEvent.NewTransactionEvent.TransactionData.Transaction.Inputs
                 .Select(i => i.PrevOut.ToString()).ToArray();
             var txHash = newTransactionEvent.NewTransactionEvent.TransactionData.TransactionHash.ToString();
@@ -66,7 +67,11 @@ public class PendingTransactionService(
 
             foreach (var pendingTransaction in pendingTransactions)
             {
-                if (pendingTransaction.TransactionId == txHash)
+                if (pendingTransaction.State == PendingTransactionState.Broadcast)
+                    continue;
+
+                if (pendingTransaction.TransactionId == txHash ||
+                    IsSameTransactionIntent(pendingTransaction, transaction))
                 {
                     pendingTransaction.State = PendingTransactionState.Broadcast;
                     continue;
@@ -136,18 +141,21 @@ public class PendingTransactionService(
             await using var ctx = dbContextFactory.CreateContext();
             try
             {
-                var pendingTransaction = await TryCollectSignatureOnce(ctx, id, psbt, newPsbtBase64, cancellationToken);
-                if (pendingTransaction is null)
+                var result = await TryCollectSignatureOnce(ctx, id, psbt, newPsbtBase64, cancellationToken);
+                if (result.PendingTransaction is null)
                     return null;
+
+                if (!result.Changed)
+                    return result.PendingTransaction;
 
                 await ctx.SaveChangesAsync(cancellationToken);
                 EventAggregator.Publish(new PendingTransactionEvent
                 {
-                    Data = pendingTransaction,
+                    Data = result.PendingTransaction,
                     SignerUserId = signerUserId,
                     Type = PendingTransactionEvent.SignatureCollected
                 });
-                return pendingTransaction;
+                return result.PendingTransaction;
             }
             catch (DbUpdateConcurrencyException) when (attempt < maxAttempts - 1)
             {
@@ -158,7 +166,7 @@ public class PendingTransactionService(
         throw new DbUpdateConcurrencyException("Failed to collect pending transaction signatures due to concurrent updates.");
     }
 
-    private async Task<PendingTransaction?> TryCollectSignatureOnce(
+    private async Task<(PendingTransaction? PendingTransaction, bool Changed)> TryCollectSignatureOnce(
         ApplicationDbContext ctx,
         PendingTransactionFullId id,
         PSBT psbt,
@@ -169,23 +177,23 @@ public class PendingTransactionService(
             p.CryptoCode == id.CryptoCode && p.StoreId == id.StoreId && p.Id == id.Id, cancellationToken);
 
         if (pendingTransaction?.State is not PendingTransactionState.Pending)
-            return null;
+            return (null, false);
 
         var blob = pendingTransaction.GetBlob();
         if (blob?.PSBT is null)
-            return null;
+            return (null, false);
 
         var network = networkProvider.GetNetwork<BTCPayNetwork>(pendingTransaction.CryptoCode)?.NBitcoinNetwork ?? psbt.Network;
 
         if (blob.CollectedSignatures.Any(s => s.ReceivedPSBT == newPsbtBase64))
-            return pendingTransaction;
+            return (pendingTransaction, false);
 
         var beforeProgress = GetSignatureProgress(BuildEffectivePsbt(blob, network));
         var mergedPsbt = BuildEffectivePsbt(blob, network, psbt);
         var afterProgress = GetSignatureProgress(mergedPsbt);
 
         if (!HasMeaningfulDelta(beforeProgress, afterProgress))
-            return pendingTransaction;
+            return (pendingTransaction, false);
 
         blob.CollectedSignatures.Add(new CollectedSignature
         {
@@ -201,7 +209,7 @@ public class PendingTransactionService(
             pendingTransaction.State = PendingTransactionState.Signed;
         }
         pendingTransaction.SetBlob(blob);
-        return pendingTransaction;
+        return (pendingTransaction, true);
     }
 
 
@@ -283,6 +291,12 @@ public class PendingTransactionService(
             logger.LogWarning(ex, "Failed to parse pending transaction PSBT {PendingTransactionId}", pendingTransaction.Id);
             return null;
         }
+    }
+
+    private bool IsSameTransactionIntent(PendingTransaction pendingTransaction, Transaction transaction)
+    {
+        var pendingPsbt = TryParsePendingPSBT(pendingTransaction);
+        return pendingPsbt is not null && HasSameTransactionIntent(pendingPsbt.GetGlobalTransaction(), transaction);
     }
 
     private static bool HasSameTransactionIntent(Transaction pendingTransaction, Transaction broadcastTransaction)

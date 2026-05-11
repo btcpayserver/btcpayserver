@@ -9,10 +9,12 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Multisig.Models;
+using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
@@ -26,7 +28,7 @@ public class MultisigService(
     StoreRepository storeRepository,
     PaymentMethodHandlerDictionary handlers,
     IDataProtectionProvider dataProtectionProvider,
-    OnChainWalletSettingsAuthorization walletSettingsAuthorization)
+    IAuthorizationService authorizationService)
 {
     private const string PendingMultisigSettingPrefix = "PendingMultisigSetup";
     private readonly IDataProtector _inviteProtector = dataProtectionProvider.CreateProtector("MultisigInviteLink");
@@ -239,7 +241,7 @@ public class MultisigService(
                 if (participant is null)
                     continue;
 
-                var setupUrl = await walletSettingsAuthorization.CanManageOnChainWalletSettings(user, storeId, requestedCryptoCode)
+                var setupUrl = (await authorizationService.AuthorizeAsync(user, storeId, WalletPolicies.CanManageWalletSettings)).Succeeded
                     ? CreateSetupLink(httpContext, storeId, requestedCryptoCode, pending.RequestId)
                     : null;
 

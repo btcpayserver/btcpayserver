@@ -18,6 +18,7 @@
     <input asp-for="Config" type="hidden"/>
     <input asp-for="Confirmation" type="hidden"/>
     <input asp-for="MultisigRequestId" type="hidden" />
+    <div asp-validation-summary="All"></div>
 
     <div class="table-responsive-sm">
         <table class="table table-hover w-auto mx-auto">
@@ -28,7 +29,7 @@
             </tr>
             </thead>
             <tbody>
-            @foreach (var sample in Model.AddressSamples)
+            @foreach (var sample in Model.AddressSamples ?? [])
             {
                 <tr>
                     <td>@sample.KeyPath</td>

@@ -19,7 +19,6 @@ namespace BTCPayServer.Plugins.Multisig.Controllers;
 
 [Route("stores")]
 [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-[AutoValidateAntiforgeryToken]
 [Area(MultisigPlugin.Area)]
 public class UIMultisigInviteController(
     StoreRepository storeRepository,

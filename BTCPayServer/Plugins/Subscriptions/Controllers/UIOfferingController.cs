@@ -254,9 +254,6 @@ public partial class UIOfferingController(
             return NotFound();
 
         var activeSubscribers = await ctx.Subscribers.Where(s => s.PlanId == planId && s.IsActive).ToListAsync();
-        plan.Status = PlanData.PlanStatus.Retired;
-        await ctx.SaveChangesAsync();
-        eventAggregator.Publish(new SubscriptionEvent.PlanUpdated(plan));
         if (activeSubscribers.Any())
         {
             switch (retireAction)
@@ -273,17 +270,29 @@ public partial class UIOfferingController(
                     break;
 
                 case "migrate":
-                    if (migrateToPlanId is not null)
+                    if (migrateToPlanId is null)
                     {
-                        var targetPlan = await ctx.Plans.GetPlanFromId(migrateToPlanId, offeringId, storeId);
-                        if (targetPlan is not null && targetPlan.Status == PlanData.PlanStatus.Active)
+                        TempData.SetStatusMessageModel(new()
                         {
-                            var immediate = migrateTiming == "immediate";
-                            await SubsService.BulkMigratePlan(planId, migrateToPlanId, offeringId, immediate);
-                            await SubscriptionHostedService.UpdatePlanStats(ctx, planId);
-                            await SubscriptionHostedService.UpdatePlanStats(ctx, migrateToPlanId);
-                        }
+                            Severity = StatusMessageModel.StatusSeverity.Error,
+                            Html = StringLocalizer["Please select a plan to migrate subscribers to."]
+                        });
+                        return GoToOffering(storeId, offeringId);
                     }
+                    var targetPlan = await ctx.Plans.GetPlanFromId(migrateToPlanId, offeringId, storeId);
+                    if (targetPlan is null || targetPlan.Status != PlanData.PlanStatus.Active)
+                    {
+                        TempData.SetStatusMessageModel(new()
+                        {
+                            Severity = StatusMessageModel.StatusSeverity.Error,
+                            Html = StringLocalizer["The selected migration plan is unavailable."]
+                        });
+                        return GoToOffering(storeId, offeringId);
+                    }
+                    var immediate = migrateTiming == "immediate";
+                    await SubsService.BulkMigratePlan(planId, migrateToPlanId, offeringId, immediate);
+                    await SubscriptionHostedService.UpdatePlanStats(ctx, planId);
+                    await SubscriptionHostedService.UpdatePlanStats(ctx, migrateToPlanId);
                     break;
 
                 case "nothing":
@@ -291,6 +300,9 @@ public partial class UIOfferingController(
                     break;
             }
         }
+        plan.Status = PlanData.PlanStatus.Retired;
+        await ctx.SaveChangesAsync();
+        eventAggregator.Publish(new SubscriptionEvent.PlanUpdated(plan));
         TempData.SetStatusSuccess(StringLocalizer["Plan '{0}' has been retired.", plan.Name]);
         return GoToOffering(storeId, offeringId);
     }

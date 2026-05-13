@@ -196,10 +196,11 @@ public class SubscriptionHostedService(
                 var charged = await subCtx.TryChargeSubscriber(sub, $"Migration to plan '{targetPlan.Name}'", targetPlan.Price);
                 if (charged)
                 {
+                    var prevPlan = sub.Plan;
                     using var scope = sub.NewPlanScope(targetPlan);
                     sub.StartNextPlan(now);
                     scope.Commit();
-                    subCtx.AddEvent(new SubscriptionEvent.PlanStarted(sub, sub.Plan));
+                    subCtx.AddEvent(new SubscriptionEvent.PlanStarted(sub, prevPlan));
                 }
             }
             else

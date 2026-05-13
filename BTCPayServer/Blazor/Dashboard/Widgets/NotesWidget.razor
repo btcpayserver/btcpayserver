@@ -1,0 +1,85 @@
+@using BTCPayServer.Blazor.Dashboard.Models
+@using Newtonsoft.Json.Linq
+@inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<NotesWidget.NotesConfig>
+
+<header class="mb-2 d-flex justify-content-between align-items-center">
+    <h6 class="mb-0">@(TypedConfig?.Title ?? "Notes")</h6>
+    @if (!Readonly && !_editing)
+    {
+        <button class="btn btn-link btn-sm p-0 text-muted" @onclick="StartEditing" title="Edit notes">
+            <svg role="img" class="icon icon-actions" style="width:16px;height:16px;"><use href="/img/icon-sprite.svg#actions"></use></svg>
+        </button>
+    }
+</header>
+@if (_editing)
+{
+    <textarea class="form-control form-control-sm small" rows="6"
+              @bind="_editContent" @bind:event="oninput"></textarea>
+    <div class="mt-2 d-flex gap-1 justify-content-end">
+        <button class="btn btn-outline-secondary btn-sm" @onclick="CancelEditing">Cancel</button>
+        <button class="btn btn-primary btn-sm" @onclick="SaveContent">Save</button>
+    </div>
+}
+else if (string.IsNullOrWhiteSpace(TypedConfig?.Content))
+{
+    @if (!Readonly)
+    {
+        <p class="text-muted small mb-0" role="button" @onclick="StartEditing" style="cursor: pointer;">Click to add notes...</p>
+    }
+    else
+    {
+        <p class="text-muted small mb-0">No notes yet.</p>
+    }
+}
+else
+{
+    <div class="small" style="white-space: pre-wrap;">@TypedConfig.Content</div>
+}
+
+@code {
+    private bool _editing;
+    private string _editContent = "";
+
+    public class NotesConfig
+    {
+        public string Title { get; set; } = "Notes";
+        public string Content { get; set; } = "";
+    }
+
+    private void StartEditing()
+    {
+        _editContent = TypedConfig?.Content ?? "";
+        _editing = true;
+    }
+
+    private void CancelEditing()
+    {
+        _editing = false;
+    }
+
+    private async Task SaveContent()
+    {
+        var config = TypedConfig ?? new NotesConfig();
+        config.Content = _editContent;
+        _editing = false;
+        await ConfigChanged.InvokeAsync(JObject.FromObject(config));
+    }
+
+    public static readonly WidgetDescriptor Descriptor = new()
+    {
+        Type = "Notes",
+        Name = "Notes",
+        Description = "A simple text note",
+        Category = "Utility",
+        Scope = WidgetScope.Universal,
+        AlwaysInteractive = true,
+        MinColumnSize = 2,
+        MaxColumnSize = 12,
+        DefaultColumnSize = 4,
+        ConfigSchema = new()
+        {
+            ["Title"] = new ConfigFieldSchema { Label = "Title", FieldType = ConfigFieldType.Text },
+            ["Content"] = new ConfigFieldSchema { Label = "Content", FieldType = ConfigFieldType.Textarea, Rows = 8 }
+        }
+    };
+}

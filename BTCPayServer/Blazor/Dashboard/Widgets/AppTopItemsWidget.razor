@@ -1,0 +1,155 @@
+@using BTCPayServer.Blazor.Dashboard
+@using BTCPayServer.Blazor.Dashboard.Models
+@using BTCPayServer.Client
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Services.Apps
+@inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<AppTopItemsWidget.AppTopItemsConfig>
+
+@inject AppService AppService
+
+@if (!HasAccess)
+{
+    <header><h3>Top Items</h3></header>
+    <p class="text-secondary">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
+}
+else if (Loading)
+{
+    <div class="loading d-flex justify-content-center p-3">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (_error is not null)
+{
+    <header><h3>Top Items</h3></header>
+    <p class="text-warning">@_error</p>
+    @if (!Readonly)
+    {
+        <button class="btn btn-sm btn-outline-secondary" @onclick="() => RequestConfigure.InvokeAsync()">Configure</button>
+    }
+    else
+    {
+        <p class="text-secondary small">Enter edit mode to configure this widget.</p>
+    }
+}
+else
+{
+    var config = TypedConfig ?? new AppTopItemsConfig();
+    @if (string.IsNullOrEmpty(config.AppId))
+    {
+        <header><h3>Top Items</h3></header>
+        <p class="text-secondary">No app configured.</p>
+        @if (!Readonly)
+        {
+            <button class="btn btn-sm btn-primary" @onclick="() => RequestConfigure.InvokeAsync()">Select App</button>
+        }
+        else
+        {
+            <p class="text-secondary small">Enter edit mode to configure this widget.</p>
+        }
+    }
+    else
+    {
+        <header class="mb-3">
+            <h3>@(_appName ?? "Top Items")</h3>
+        </header>
+        @if (_entries is null || _entries.Count == 0)
+        {
+            <p class="text-secondary mt-3">No sales have been made yet.</p>
+        }
+        else
+        {
+            <div class="app-items">
+                @for (var i = 0; i < _entries.Count; i++)
+                {
+                    var entry = _entries[i];
+                    <div class="app-item ct-series-@i">
+                        <span class="app-item-name">
+                            <span class="app-item-point ct-point"></span>
+                            @entry.Title
+                        </span>
+                        <span class="app-item-value" data-sensitive>
+                            <span class="text-muted">
+                                @entry.SalesCount
+                                @(entry.SalesCount == 1 ? "sale" : "sales"),
+                            </span>
+                            @entry.TotalFormatted
+                        </span>
+                    </div>
+                }
+            </div>
+        }
+    }
+}
+
+@code {
+    public static readonly WidgetDescriptor Descriptor = new()
+    {
+        Type = "AppTopItems",
+        Name = "App Top Items",
+        Description = "Displays the top selling items for a specific app",
+        Category = "Apps",
+        ComponentType = typeof(AppTopItemsWidget),
+        Scope = WidgetScope.Store,
+        DefaultColumnSize = 4,
+        MinColumnSize = 3,
+        MaxColumnSize = 12,
+        MinRowSpan = 1,
+        MaxRowSpan = 3,
+        CssClass = "app-top-items",
+        RequiresConfiguration = true,
+        ConfigSchema = new()
+        {
+            ["AppId"] = new ConfigFieldSchema { Label = "App ID", FieldType = ConfigFieldType.Text }
+        }
+    };
+
+    public class AppTopItemsConfig
+    {
+        public string AppId { get; set; } = "";
+    }
+
+    private string? _error;
+    private string? _appName;
+    private List<AppItemStats>? _entries;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!DataParametersChanged)
+            return;
+
+        if (string.IsNullOrEmpty(StoreId))
+            return;
+
+        var config = TypedConfig ?? new AppTopItemsConfig();
+        if (string.IsNullOrEmpty(config.AppId))
+        {
+            Loading = false;
+            return;
+        }
+
+        Loading = true;
+        try
+        {
+            var app = await AppService.GetApp(config.AppId, null, includeStore: true);
+            if (app is null)
+            {
+                _error = "App not found.";
+                return;
+            }
+
+            _appName = $"Top Items";
+            var entries = await AppService.GetItemStats(app);
+            _entries = entries.Take(5).ToList();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+}

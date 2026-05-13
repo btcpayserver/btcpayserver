@@ -1,0 +1,194 @@
+@using BTCPayServer.Blazor.Dashboard
+@using BTCPayServer.Blazor.Dashboard.Models
+@using BTCPayServer.Client
+@using BTCPayServer.Configuration
+@using BTCPayServer.Data
+@using BTCPayServer.Payments
+@using BTCPayServer.Payments.Lightning
+@using BTCPayServer.Services.Invoices
+@using BTCPayServer.Services.Stores
+@using Microsoft.Extensions.Options
+@inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<LightningServicesWidget.LightningServicesConfig>
+
+@inject StoreRepository StoreRepository
+@inject PaymentMethodHandlerDictionary Handlers
+@inject IOptions<LightningNetworkOptions> LightningNetworkOptions
+@inject IOptions<ExternalServicesOptions> ExternalServiceOptions
+
+@if (!HasAccess)
+{
+    <h6>Lightning Services</h6>
+    <p class="text-secondary">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
+}
+else if (Loading)
+{
+    <div class="loading d-flex justify-content-center p-3">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (_error is not null)
+{
+    <h6>Lightning Services</h6>
+    <p class="text-danger">@_error</p>
+}
+else if (!_isInternalNode)
+{
+    <h6>Lightning Services</h6>
+    <p class="text-secondary">Lightning services are only available when using the internal Lightning node.</p>
+}
+else
+{
+    <header class="mb-4">
+        <h6>Lightning Services</h6>
+        <a href="/BTC/lightning/@StoreId/public" target="_blank">Node Info</a>
+    </header>
+    @if (_services is null || _services.Count == 0)
+    {
+        <p class="text-secondary">No Lightning services available.</p>
+    }
+    else
+    {
+        <div id="Services" class="services-list">
+            @foreach (var service in _services)
+            {
+                @if (!string.IsNullOrEmpty(service.Error))
+                {
+                    <div class="service" id="Service-@service.ServiceName">
+                        <img src="/img/@(service.Type.ToLowerInvariant()).png" alt="@service.DisplayName" />
+                        <small class="d-block mt-3 lh-sm fw-semibold text-danger">@service.Error</small>
+                    </div>
+                }
+                else if (!string.IsNullOrEmpty(service.Link))
+                {
+                    <a title="@service.DisplayName" href="@service.Link" target="_blank" rel="noreferrer noopener"
+                       class="service" id="Service-@service.ServiceName">
+                        <img src="/img/@(service.Type.ToLowerInvariant()).png" alt="@service.DisplayName" />
+                    </a>
+                }
+                else
+                {
+                    <div class="service" id="Service-@service.ServiceName">
+                        <img src="/img/@(service.Type.ToLowerInvariant()).png" alt="@service.DisplayName" />
+                    </div>
+                }
+            }
+        </div>
+    }
+}
+
+@code {
+    public static readonly WidgetDescriptor Descriptor = new()
+    {
+        Type = "LightningServices",
+        Name = "Lightning Services",
+        Description = "Displays available Lightning Network services and management links",
+        Category = "Lightning",
+        ComponentType = typeof(LightningServicesWidget),
+        Scope = WidgetScope.Store,
+        DefaultColumnSize = 4,
+        MinColumnSize = 4,
+        MaxColumnSize = 12,
+        MinRowSpan = 1,
+        MaxRowSpan = 2,
+        CssClass = "store-lightning-services",
+        RequiredStoreFeatures = new[] { "lightning" },
+        ConfigSchema = new()
+        {
+            ["CryptoCode"] = new ConfigFieldSchema { Label = "Crypto", FieldType = ConfigFieldType.Text }
+        }
+    };
+
+    public class LightningServicesConfig
+    {
+        public string CryptoCode { get; set; } = "BTC";
+    }
+
+    private class ServiceViewModel
+    {
+        public string DisplayName { get; set; } = "";
+        public string ServiceName { get; set; } = "";
+        public string Type { get; set; } = "";
+        public string? Link { get; set; }
+        public string? Error { get; set; }
+    }
+
+    private string? _error;
+    private bool _isInternalNode;
+    private List<ServiceViewModel>? _services;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!DataParametersChanged)
+            return;
+
+        if (string.IsNullOrEmpty(StoreId))
+            return;
+
+        Loading = true;
+        try
+        {
+            var config = TypedConfig ?? new LightningServicesConfig();
+            var store = await StoreRepository.FindStore(StoreId);
+            if (store is null)
+            {
+                _error = "Store not found.";
+                return;
+            }
+
+            if (DashboardScope == DashboardScope.Server)
+            {
+                // Server scope: check if internal node exists at server level
+                _isInternalNode = LightningNetworkOptions.Value.InternalLightningByCryptoCode.ContainsKey(config.CryptoCode);
+            }
+            else
+            {
+                // Store/User scope: check store's LN configuration
+                var id = PaymentTypes.LN.GetPaymentMethodId(config.CryptoCode);
+                var existing = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(id, Handlers);
+                _isInternalNode = existing?.IsInternalNode is true &&
+                    LightningNetworkOptions.Value.InternalLightningByCryptoCode.ContainsKey(config.CryptoCode);
+            }
+
+            if (!_isInternalNode)
+                return;
+
+            // List Lightning-related external services
+            var services = new List<ServiceViewModel>();
+            foreach (var service in ExternalServiceOptions.Value.ExternalServices.ToList()
+                .Where(s => ExternalServices.LightningServiceTypes.Contains(s.Type)))
+            {
+                services.Add(new ServiceViewModel
+                {
+                    DisplayName = service.DisplayName,
+                    ServiceName = service.ServiceName,
+                    Type = service.Type.ToString()
+                });
+            }
+
+            foreach (var (key, _) in ExternalServiceOptions.Value.OtherExternalServices)
+            {
+                if (ExternalServices.LightningServiceNames.Contains(key))
+                {
+                    services.Add(new ServiceViewModel
+                    {
+                        DisplayName = key,
+                        ServiceName = key,
+                        Type = key.Replace(" ", "")
+                    });
+                }
+            }
+
+            _services = services;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+}

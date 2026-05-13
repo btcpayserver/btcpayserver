@@ -1,0 +1,156 @@
+@using BTCPayServer
+@using BTCPayServer.Blazor.Dashboard
+@using BTCPayServer.Blazor.Dashboard.Models
+@using BTCPayServer.Client
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Services
+@using BTCPayServer.Services.Invoices
+@inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<RecentInvoicesWidget.RecentInvoicesConfig>
+
+@inject InvoiceRepository InvoiceRepository
+@inject DisplayFormatter DisplayFormatter
+
+@if (!HasAccess)
+{
+    <header><h3>Recent Invoices</h3></header>
+    <p class="text-secondary">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
+}
+else if (Loading)
+{
+    <div class="loading d-flex justify-content-center p-3">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (_error is not null)
+{
+    <header><h3>Recent Invoices</h3></header>
+    <p class="text-danger">@_error</p>
+}
+else
+{
+    var config = TypedConfig ?? new RecentInvoicesConfig();
+    <header>
+        <h3>Recent Invoices</h3>
+        @if (_invoices is not null && _invoices.Length > 0)
+        {
+            <a href="/invoices?storeId=@StoreId">View All</a>
+        }
+    </header>
+    @if (_invoices is null || _invoices.Length == 0)
+    {
+        <p class="text-secondary my-3">There are no recent invoices.</p>
+        <a href="/invoices/create?storeId=@StoreId" class="fw-semibold">Create Invoice</a>
+    }
+    else
+    {
+        <div class="table-responsive mt-3 mb-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="w-125px">Date</th>
+                        <th class="text-nowrap">Invoice Id</th>
+                        <th>Status</th>
+                        <th class="text-end">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var invoice in _invoices)
+                    {
+                        <tr>
+                            <td class="text-nowrap">@invoice.InvoiceTime.ToTimeAgo()</td>
+                            <td>
+                                <a href="/invoices/@invoice.Id" class="text-break">@invoice.Id</a>
+                            </td>
+                            <td>
+                                <span class="badge @GetStatusBadgeClass(invoice.Status)">
+                                    @invoice.Status
+                                </span>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <span data-sensitive>@DisplayFormatter.Currency(invoice.Price, invoice.Currency)</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@code {
+    public static readonly WidgetDescriptor Descriptor = new()
+    {
+        Type = "RecentInvoices",
+        Name = "Recent Invoices",
+        Description = "Displays a list of recent invoices with status and amount",
+        Category = "Store",
+        ComponentType = typeof(RecentInvoicesWidget),
+        Scope = WidgetScope.Store,
+        DefaultColumnSize = 12,
+        MinColumnSize = 4,
+        MaxColumnSize = 12,
+        MinRowSpan = 1,
+        MaxRowSpan = 3,
+        CssClass = "store-recent-invoices",
+        ConfigSchema = new()
+        {
+            ["Limit"] = new ConfigFieldSchema { Label = "Max Items", FieldType = ConfigFieldType.Number, Min = 1, Max = 50 },
+            ["LastDays"] = new ConfigFieldSchema { Label = "Time Range (days)", FieldType = ConfigFieldType.Number, Min = 1, Max = 365 }
+        }
+    };
+
+    public class RecentInvoicesConfig
+    {
+        public int Limit { get; set; } = 5;
+        public int LastDays { get; set; } = 30;
+    }
+
+    private string? _error;
+    private InvoiceEntity[]? _invoices;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!DataParametersChanged)
+            return;
+
+        if (string.IsNullOrEmpty(StoreId))
+            return;
+
+        Loading = true;
+        try
+        {
+            var config = TypedConfig ?? new RecentInvoicesConfig();
+            var query = new InvoiceQuery
+            {
+                StoreId = new[] { StoreId },
+                StartDate = DateTimeOffset.UtcNow.AddDays(-config.LastDays),
+                Take = config.Limit,
+                IncludeArchived = false
+            };
+            _invoices = await InvoiceRepository.GetInvoices(query);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+    private static string GetStatusBadgeClass(InvoiceStatus status)
+    {
+        return status switch
+        {
+            InvoiceStatus.New => "bg-info",
+            InvoiceStatus.Processing => "bg-warning text-dark",
+            InvoiceStatus.Settled => "bg-success",
+            InvoiceStatus.Expired => "bg-secondary",
+            InvoiceStatus.Invalid => "bg-danger",
+            _ => "bg-light text-dark"
+        };
+    }
+}

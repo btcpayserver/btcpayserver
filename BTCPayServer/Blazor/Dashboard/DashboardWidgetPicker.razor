@@ -1,0 +1,40 @@
+@using BTCPayServer.Blazor.Dashboard.Models
+
+<div class="dropdown">
+    <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button"
+            data-bs-toggle="dropdown" aria-expanded="false">
+        Add Widget
+    </button>
+    <div class="dropdown-menu dropdown-menu-end" style="min-width: 260px; max-height: 400px; overflow-y: auto;">
+        @foreach (var group in Registry.GetAvailableFor(DashboardScope, IsAdmin).GroupBy(d => d.Category).OrderBy(g => g.Key))
+        {
+            <div class="widget-picker-category">@group.Key</div>
+            @foreach (var descriptor in group.OrderBy(d => d.Name))
+            {
+                <button class="dropdown-item small" @onclick="() => AddWidget(descriptor)">
+                    @if (descriptor.IconCssClass is not null)
+                    {
+                        <span class="@descriptor.IconCssClass me-1"></span>
+                    }
+                    @descriptor.Name
+                    @if (!string.IsNullOrEmpty(descriptor.Description))
+                    {
+                        <span class="d-block text-muted" style="font-size: 0.7rem;">@descriptor.Description</span>
+                    }
+                </button>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public WidgetRegistry Registry { get; set; } = null!;
+    [Parameter] public DashboardScope DashboardScope { get; set; }
+    [Parameter] public bool IsAdmin { get; set; }
+    [Parameter] public EventCallback<WidgetDescriptor> OnWidgetAdded { get; set; }
+
+    private async Task AddWidget(WidgetDescriptor descriptor)
+    {
+        await OnWidgetAdded.InvokeAsync(descriptor);
+    }
+}

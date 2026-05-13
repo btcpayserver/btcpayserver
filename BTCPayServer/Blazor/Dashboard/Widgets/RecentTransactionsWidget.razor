@@ -1,0 +1,227 @@
+@using BTCPayServer.Blazor.Dashboard
+@using BTCPayServer.Blazor.Dashboard.Models
+@using BTCPayServer.Client
+@using BTCPayServer.Payments
+@using BTCPayServer.Payments.Bitcoin
+@using BTCPayServer.Services
+@using BTCPayServer.Services.Invoices
+@using BTCPayServer.Services.Labels
+@using BTCPayServer.Services.Stores
+@using BTCPayServer.Services.Wallets
+@inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<RecentTransactionsWidget.RecentTransactionsConfig>
+
+@inject StoreRepository StoreRepository
+@inject BTCPayWalletProvider WalletProvider
+@inject WalletRepository WalletRepository
+@inject PaymentMethodHandlerDictionary Handlers
+@inject TransactionLinkProviders TransactionLinkProviders
+
+@if (!HasAccess)
+{
+    <header><h3>Recent Transactions</h3></header>
+    <p class="text-secondary">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
+}
+else if (Loading)
+{
+    <div class="loading d-flex justify-content-center p-3">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (_error is not null)
+{
+    <header><h3>Recent Transactions</h3></header>
+    <p class="text-danger">@_error</p>
+}
+else if (_noWallet)
+{
+    <header><h3>Recent Transactions</h3></header>
+    <p class="text-secondary">No wallet configured for @(TypedConfig?.CryptoCode ?? "BTC").</p>
+}
+else
+{
+    var config = TypedConfig ?? new RecentTransactionsConfig();
+    <header>
+        <h3>Recent Transactions</h3>
+        @if (_transactions is not null && _transactions.Count > 0)
+        {
+            <a href="/wallets/@(StoreId)-@(TypedConfig?.CryptoCode ?? "BTC")">View All</a>
+        }
+    </header>
+    @if (_transactions is null || _transactions.Count == 0)
+    {
+        <p class="text-secondary mt-3 mb-0">There are no recent transactions.</p>
+    }
+    else
+    {
+        <div class="table-responsive mt-3 mb-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="w-125px">Date</th>
+                        <th>Transaction</th>
+                        <th style="min-width:125px">Labels</th>
+                        <th class="text-end">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tx in _transactions)
+                    {
+                        <tr>
+                            <td class="align-middle">@tx.Timestamp.ToTimeAgo()</td>
+                            <td class="align-middle">
+                                <BTCPayServer.Blazor.Dashboard.TruncateCenter Text="@tx.Id" Link="@tx.Link" Classes="truncate-center-id" Padding="7" Copy="true" />
+                            </td>
+                            <td class="align-middle">
+                                @if (tx.Labels.Any())
+                                {
+                                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                                        @foreach (var label in tx.Labels)
+                                        {
+                                            <div class="transaction-label" style="--label-bg:@label.Color;--label-fg:@label.TextColor">
+                                                <span>@label.Text</span>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </td>
+                            <td class="align-middle text-end">
+                                @{ var amountClass = $"text-{(tx.Positive ? "success" : "danger")}{(!tx.IsConfirmed ? " opacity-50" : "")}"; }
+                                <span data-sensitive class="@amountClass">@tx.Balance @tx.Currency</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@code {
+    public static readonly WidgetDescriptor Descriptor = new()
+    {
+        Type = "RecentTransactions",
+        Name = "Recent Transactions",
+        Description = "Displays recent on-chain transactions",
+        Category = "Store",
+        ComponentType = typeof(RecentTransactionsWidget),
+        Scope = WidgetScope.Store,
+        DefaultColumnSize = 8,
+        MinColumnSize = 4,
+        MaxColumnSize = 12,
+        MinRowSpan = 1,
+        MaxRowSpan = 3,
+        CssClass = "store-recent-transactions",
+        RequiredStoreFeatures = new[] { "wallet" },
+        ConfigSchema = new()
+        {
+            ["CryptoCode"] = new ConfigFieldSchema { Label = "Crypto", FieldType = ConfigFieldType.Text },
+            ["Limit"] = new ConfigFieldSchema { Label = "Max Items", FieldType = ConfigFieldType.Number, Min = 1, Max = 50 }
+        }
+    };
+
+    public class RecentTransactionsConfig
+    {
+        public string CryptoCode { get; set; } = "BTC";
+        public int Limit { get; set; } = 5;
+    }
+
+    private class TxViewModel
+    {
+        public string Id { get; set; } = "";
+        public bool Positive { get; set; }
+        public string Balance { get; set; } = "";
+        public string Currency { get; set; } = "";
+        public bool IsConfirmed { get; set; }
+        public string? Link { get; set; }
+        public DateTimeOffset Timestamp { get; set; }
+        public List<LabelViewModel> Labels { get; set; } = new();
+    }
+
+    private class LabelViewModel
+    {
+        public string Text { get; set; } = "";
+        public string Color { get; set; } = "#000";
+        public string TextColor { get; set; } = "#fff";
+    }
+
+    private string? _error;
+    private bool _noWallet;
+    private List<TxViewModel>? _transactions;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!DataParametersChanged)
+            return;
+
+        if (string.IsNullOrEmpty(StoreId))
+            return;
+
+        Loading = true;
+        try
+        {
+            var config = TypedConfig ?? new RecentTransactionsConfig();
+            var store = await StoreRepository.FindStore(StoreId);
+            if (store is null)
+            {
+                _error = "Store not found.";
+                return;
+            }
+
+            var derivationSettings = store.GetDerivationSchemeSettings(Handlers, config.CryptoCode);
+            if (derivationSettings?.AccountDerivation is null)
+            {
+                _noWallet = true;
+                return;
+            }
+
+            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(config.CryptoCode);
+            var network = ((IHasNetwork)Handlers[pmi]).Network;
+            var wallet = WalletProvider.GetWallet(network);
+            var allTransactions = await wallet.FetchTransactionHistory(
+                derivationSettings.AccountDerivation, 0, config.Limit,
+                TimeSpan.FromDays(31.0));
+            var walletId = new WalletId(store.Id, config.CryptoCode);
+            var walletTransactionsInfo = await WalletRepository.GetWalletTransactionsInfo(
+                walletId, allTransactions.Select(t => t.TransactionId.ToString()).ToArray());
+
+            _transactions = allTransactions.Select(tx =>
+            {
+                walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var txInfo);
+                var labels = new List<LabelViewModel>();
+                if (txInfo?.LabelColors != null)
+                {
+                    foreach (var (text, color) in txInfo.LabelColors)
+                    {
+                        labels.Add(new LabelViewModel
+                        {
+                            Text = text,
+                            Color = color,
+                            TextColor = ColorPalette.Default.TextColor(color)
+                        });
+                    }
+                }
+                return new TxViewModel
+                {
+                    Id = tx.TransactionId.ToString(),
+                    Positive = tx.BalanceChange.GetValue(network) >= 0,
+                    Balance = tx.BalanceChange.ShowMoney(network),
+                    Currency = config.CryptoCode,
+                    IsConfirmed = tx.Confirmations != 0,
+                    Link = TransactionLinkProviders.GetTransactionLink(pmi, tx.TransactionId.ToString()),
+                    Timestamp = tx.SeenAt,
+                    Labels = labels
+                };
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+}

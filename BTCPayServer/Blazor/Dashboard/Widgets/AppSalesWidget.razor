@@ -1,0 +1,168 @@
+@using BTCPayServer.Blazor.Dashboard
+@using BTCPayServer.Blazor.Dashboard.Models
+@using BTCPayServer.Client
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Services.Apps
+@inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<AppSalesWidget.AppSalesConfig>
+
+@inject AppService AppService
+@inject DashboardJsInterop JsInterop
+
+@if (!HasAccess)
+{
+    <header><h3>App Sales</h3></header>
+    <p class="text-secondary">@(AccessDeniedMessage ?? "You do not have permission to view this widget.")</p>
+}
+else if (Loading)
+{
+    <div class="loading d-flex justify-content-center p-3">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (_error is not null)
+{
+    <header><h3>App Sales</h3></header>
+    <p class="text-warning">@_error</p>
+    @if (!Readonly)
+    {
+        <button class="btn btn-sm btn-outline-secondary" @onclick="() => RequestConfigure.InvokeAsync()">Configure</button>
+    }
+    else
+    {
+        <p class="text-secondary small">Enter edit mode to configure this widget.</p>
+    }
+}
+else
+{
+    var config = TypedConfig ?? new AppSalesConfig();
+    @if (string.IsNullOrEmpty(config.AppId))
+    {
+        <header><h3>App Sales</h3></header>
+        <p class="text-secondary">No app configured.</p>
+        @if (!Readonly)
+        {
+            <button class="btn btn-sm btn-primary" @onclick="() => RequestConfigure.InvokeAsync()">Select App</button>
+        }
+        else
+        {
+            <p class="text-secondary small">Enter edit mode to configure this widget.</p>
+        }
+    }
+    else
+    {
+        <header class="mb-3">
+            <h3>@(_appName ?? "App") Sales</h3>
+        </header>
+        <header class="mb-3">
+            <span><span class="sales-count">@_salesCount</span> Total Sales</span>
+        </header>
+        @if (_hasSeries)
+        {
+            <div id="@_chartId" class="ct-chart ct-major-tenth"></div>
+        }
+    }
+}
+
+@code {
+    public static readonly WidgetDescriptor Descriptor = new()
+    {
+        Type = "AppSales",
+        Name = "App Sales",
+        Description = "Displays sales data for a specific app",
+        Category = "Apps",
+        ComponentType = typeof(AppSalesWidget),
+        Scope = WidgetScope.Store,
+        DefaultColumnSize = 8,
+        MinColumnSize = 4,
+        MaxColumnSize = 12,
+        MinRowSpan = 1,
+        MaxRowSpan = 2,
+        CssClass = "app-sales",
+        RequiresConfiguration = true,
+        ConfigSchema = new()
+        {
+            ["AppId"] = new ConfigFieldSchema { Label = "App ID", FieldType = ConfigFieldType.Text },
+            ["NumberOfDays"] = new ConfigFieldSchema
+            {
+                Label = "Number of Days",
+                FieldType = ConfigFieldType.Number,
+                Min = 1,
+                Max = 365
+            }
+        }
+    };
+
+    public class AppSalesConfig
+    {
+        public string AppId { get; set; } = "";
+        public int NumberOfDays { get; set; } = 7;
+    }
+
+    private string? _error;
+    private string? _appName;
+    private int _salesCount;
+    private bool _hasSeries;
+    private bool _chartRendered;
+    private IEnumerable<AppSalesStatsItem>? _series;
+    private string _chartId = $"app-sales-chart-{Guid.NewGuid():N}";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!DataParametersChanged)
+            return;
+
+        if (string.IsNullOrEmpty(StoreId))
+            return;
+
+        var config = TypedConfig ?? new AppSalesConfig();
+        if (string.IsNullOrEmpty(config.AppId))
+        {
+            Loading = false;
+            return;
+        }
+
+        Loading = true;
+        _chartRendered = false;
+        try
+        {
+            var app = await AppService.GetApp(config.AppId, null, includeStore: true);
+            if (app is null)
+            {
+                _error = "App not found.";
+                return;
+            }
+
+            _appName = app.Name;
+            var stats = await AppService.GetSalesStats(app, config.NumberOfDays);
+            _salesCount = stats.SalesCount;
+            _series = stats.Series;
+            _hasSeries = _series?.Any() == true;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (SizeChanged && _chartRendered)
+            _chartRendered = false;
+
+        if (!_chartRendered && !Loading && _hasSeries && _series is not null)
+        {
+            _chartRendered = true;
+            await JsInterop.DestroyChart(_chartId);
+            var items = _series.ToArray();
+            var labels = items.Select(s => s.Label ?? s.Date.ToString("MMM dd")).ToArray();
+            var series = items.Select(s => (object)s.SalesCount).ToArray();
+            await JsInterop.RenderChart(_chartId, "bar", labels, new[] { series });
+        }
+    }
+}

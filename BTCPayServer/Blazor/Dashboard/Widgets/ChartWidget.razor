@@ -1,0 +1,137 @@
+@using BTCPayServer.Blazor.Dashboard.Models
+@using BTCPayServer.Client
+@using BTCPayServer.Services.Invoices
+@inherits BTCPayServer.Blazor.Dashboard.BaseWidgetComponent<ChartWidget.ChartConfig>
+
+@inject InvoiceRepository InvoiceRepository
+@inject DashboardJsInterop JsInterop
+
+@if (!HasAccess)
+{
+    <p class="text-muted small">No access.</p>
+}
+else if (Loading)
+{
+    <div class="d-flex align-items-center gap-2">
+        <div class="spinner-border spinner-border-sm" role="status"></div>
+        <span class="small text-muted">Loading chart...</span>
+    </div>
+}
+else
+{
+    <header class="mb-2">
+        <h6 class="mb-0">@(TypedConfig?.Title ?? "Chart")</h6>
+    </header>
+    <div id="@_chartId" class="ct-chart ct-major-tenth" style="min-height: 200px;"></div>
+}
+
+@code {
+    private string _chartId = $"chart-{System.Guid.NewGuid():N}";
+    private string[] _labels = System.Array.Empty<string>();
+    private decimal[] _series = System.Array.Empty<decimal>();
+
+    public class ChartConfig
+    {
+        public string Title { get; set; } = "Invoice Volume";
+        public string ChartType { get; set; } = "bar";
+        public int TimeRangeDays { get; set; } = 30;
+    }
+
+    protected override async System.Threading.Tasks.Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Fetch();
+            await RenderChart();
+        }
+    }
+
+    protected override System.Threading.Tasks.Task TypedConfigChanged()
+    {
+        _ = FetchAndRender();
+        return base.TypedConfigChanged();
+    }
+
+    private async System.Threading.Tasks.Task FetchAndRender()
+    {
+        await Fetch();
+        await InvokeAsync(StateHasChanged);
+        await RenderChart();
+    }
+
+    private async System.Threading.Tasks.Task Fetch()
+    {
+        if (TypedConfig is null || string.IsNullOrEmpty(StoreId)) return;
+        Loading = true;
+        try
+        {
+            var days = TypedConfig.TimeRangeDays;
+            var startDate = System.DateTimeOffset.UtcNow.AddDays(-days);
+            var invoices = await InvoiceRepository.GetInvoices(new InvoiceQuery
+            {
+                StoreId = new[] { StoreId },
+                StartDate = startDate,
+                IncludeArchived = false
+            });
+
+            // Group by day
+            var grouped = invoices
+                .GroupBy(i => i.InvoiceTime.Date)
+                .OrderBy(g => g.Key)
+                .ToArray();
+
+            _labels = grouped.Select(g => g.Key.ToString("MMM dd")).ToArray();
+            _series = grouped.Select(g => (decimal)g.Count()).ToArray();
+        }
+        catch { }
+        finally { Loading = false; }
+    }
+
+    private async System.Threading.Tasks.Task RenderChart()
+    {
+        if (_labels.Length == 0) return;
+        try
+        {
+            await JsInterop.RenderChart(
+                _chartId,
+                TypedConfig?.ChartType ?? "bar",
+                _labels,
+                _series);
+        }
+        catch { }
+    }
+
+    public static readonly WidgetDescriptor Descriptor = new()
+    {
+        Type = "Chart",
+        Name = "Chart",
+        Description = "Invoice volume chart",
+        Category = "Data",
+        Scope = WidgetScope.Store,
+        MinColumnSize = 4,
+        MaxColumnSize = 12,
+        DefaultColumnSize = 6,
+        RequiredPermissions = new[] { Policies.CanViewInvoices },
+        ConfigSchema = new()
+        {
+            ["Title"] = new ConfigFieldSchema { Label = "Title", FieldType = ConfigFieldType.Text },
+            ["ChartType"] = new ConfigFieldSchema
+            {
+                Label = "Chart Type",
+                FieldType = ConfigFieldType.Select,
+                Options = new()
+                {
+                    ("bar", "Bar"),
+                    ("line", "Line")
+                }
+            },
+            ["TimeRangeDays"] = new ConfigFieldSchema
+            {
+                Label = "Time Range (days)",
+                FieldType = ConfigFieldType.Number,
+                Min = 7,
+                Max = 365
+            }
+        }
+    };
+}

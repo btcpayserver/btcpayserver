@@ -923,6 +923,257 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         await offering.AssertHasNotSubscriber("enterprise@example.com");
     }
 
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanRetirePlanWithNoSubscribers()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.RegisterNewUser();
+        await s.CreateNewStore();
+        var offering = await CreateNewSubscription(s);
+        await offering.GoToPlans();
+        await s.Page.Locator("tr[data-plan-name='Pro Plan'] a:has-text('Retire')").ClickAsync();
+        await s.Page.WaitForSelectorAsync("#ConfirmModal");
+        await s.Page.ClickAsync("#ConfirmContinue");
+        await s.FindAlertMessage(partialText: "has been retired");
+        var status = await s.Page.Locator("tr[data-plan-name='Pro Plan'] .subscriber-status").InnerTextAsync();
+        Assert.Contains("Retired", status);
+        await s.Page.Locator("tr[data-plan-name='Pro Plan'] a:has-text('Restore')").ClickAsync();
+        await s.Page.WaitForSelectorAsync("#ConfirmModal");
+        await s.Page.ClickAsync("#ConfirmContinue");
+        await s.FindAlertMessage(partialText: "restored to active");
+        status = await s.Page.Locator("tr[data-plan-name='Pro Plan'] .subscriber-status").InnerTextAsync();
+        Assert.Contains("Active", status);
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanRetirePlanWithDoNothing()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.RegisterNewUser();
+        await s.CreateNewStore();
+        await s.AddDerivationScheme();
+        var offering = await CreateNewSubscription(s);
+        await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await offering.NewSubscriber("Basic Plan", "basic@example.com", false, mine: true);
+        });
+        await offering.GoToPlans();
+        await s.Page.Locator("tr[data-plan-name='Basic Plan'] a:has-text('Retire')").ClickAsync();
+        await s.Page.WaitForSelectorAsync("#retirePlanModal");
+        await s.Page.CheckAsync("#retireAction-nothing");
+        await s.Page.ClickAsync("#retirePlanForm button[type='submit']");
+        await s.FindAlertMessage(partialText: "has been retired");
+        var status = await s.Page.Locator("tr[data-plan-name='Basic Plan'] .subscriber-status").InnerTextAsync();
+        Assert.Contains("Retiring", status);
+        await offering.GoToSubscribers();
+        await offering.AssertHasSubscriber("basic@example.com", new()
+        {
+            Active = OfferingPMO.ActiveState.Active
+        });
+        await offering.GoToPlans();
+        var dropdownToggle = s.Page.Locator("tr[data-plan-name='Basic Plan'] .plan-name-col span.dropdown-toggle");
+        Assert.Equal(0, await dropdownToggle.CountAsync());
+    }
+
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanRetirePlanWithDisableAutoRenew()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.RegisterNewUser();
+        await s.CreateNewStore();
+        await s.AddDerivationScheme();
+        var offering = await CreateNewSubscription(s);
+        await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await offering.NewSubscriber("Enterprise Plan", "enterprise@example.com", true);
+        });
+        await offering.GoToPlans();
+        await s.Page.WaitForSelectorAsync("tr[data-plan-name='Enterprise Plan'] td:has-text('1 Members')");
+        await s.Page.Locator("tr[data-plan-name='Enterprise Plan'] a:has-text('Retire')").ClickAsync();
+        await s.Page.WaitForSelectorAsync("#retirePlanModal.show");
+        await s.Page.CheckAsync("#retireAction-autorenew");
+        await s.Page.ClickAsync("#retirePlanForm button[type='submit']");
+        await s.FindAlertMessage(partialText: "has been retired");
+        await offering.GoToSubscribers();
+        await offering.AssertHasSubscriber("enterprise@example.com", new()
+        {
+            Active = OfferingPMO.ActiveState.Active
+        });
+        await using var portal = await offering.GoToPortal("enterprise@example.com");
+        var autoRenew = await s.Page.Locator("#autoRenewal").IsCheckedAsync();
+        Assert.False(autoRenew);
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanRetirePlanWithSuspendAll()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.RegisterNewUser();
+        await s.CreateNewStore();
+        await s.AddDerivationScheme();
+        var offering = await CreateNewSubscription(s);
+        await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await offering.NewSubscriber("Enterprise Plan", "enterprise@example.com", true);
+        });
+        await offering.GoToPlans();
+        await s.Page.WaitForSelectorAsync("tr[data-plan-name='Enterprise Plan'] td:has-text('1 Members')");
+        await s.Page.Locator("tr[data-plan-name='Enterprise Plan'] a:has-text('Retire')").ClickAsync();
+        await s.Page.WaitForSelectorAsync("#retirePlanModal.show");
+        await s.Page.CheckAsync("#retireAction-suspend");
+        await s.Page.ClickAsync("#retirePlanForm button[type='submit']");
+        await s.FindAlertMessage(partialText: "has been retired");
+        await offering.GoToSubscribers();
+        await offering.AssertHasSubscriber("enterprise@example.com", new()
+        {
+            Active = OfferingPMO.ActiveState.Suspended
+        });
+        await offering.GoToPlans();
+        var status = await s.Page.Locator("tr[data-plan-name='Enterprise Plan'] .subscriber-status").InnerTextAsync();
+        Assert.Contains("Retired", status);
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanRetirePlanWithMigrateAtPeriodEnd()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.RegisterNewUser();
+        await s.CreateNewStore();
+        await s.AddDerivationScheme();
+        var offering = await CreateNewSubscription(s);
+        await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await offering.NewSubscriber("Enterprise Plan", "enterprise@example.com", true);
+        });
+        await offering.GoToPlans();
+        await s.Page.WaitForSelectorAsync("tr[data-plan-name='Enterprise Plan'] td:has-text('1 Members')");
+        await s.Page.Locator("tr[data-plan-name='Enterprise Plan'] a:has-text('Retire')").ClickAsync();
+        await s.Page.WaitForSelectorAsync("#retirePlanModal.show");
+        await s.Page.CheckAsync("#retireAction-migrate");
+        await s.Page.SelectOptionAsync("#retireMigratePlanId", new SelectOptionValue { Label = "Basic Plan" });
+        await s.Page.SelectOptionAsync("#retireMigrateTiming", new SelectOptionValue { Value = "period-end" });
+        await s.Page.ClickAsync("#retirePlanForm button[type='submit']");
+        await s.FindAlertMessage(partialText: "has been retired");
+        await offering.GoToSubscribers();
+        await offering.AssertHasSubscriber("enterprise@example.com", new()
+        {
+            Active = OfferingPMO.ActiveState.Active
+        });
+        await using var portal = await offering.GoToPortal("enterprise@example.com");
+        await portal.AssertScheduledChange("Basic Plan");
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanRetirePlanWithMigrateImmediatelyEnoughCredit()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.RegisterNewUser();
+        await s.CreateNewStore();
+        await s.AddDerivationScheme();
+        var offering = await CreateNewSubscription(s);
+        await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await offering.NewSubscriber("Enterprise Plan", "enterprise@example.com", true);
+        });
+        await offering.GoToSubscribers();
+        await offering.Credit("enterprise@example.com", 50m);
+        await offering.GoToPlans();
+        await s.Page.WaitForSelectorAsync("tr[data-plan-name='Enterprise Plan'] td:has-text('1 Members')");
+        await s.Page.Locator("tr[data-plan-name='Enterprise Plan'] a:has-text('Retire')").ClickAsync();
+        await s.Page.WaitForSelectorAsync("#retirePlanModal.show");
+        await s.Page.CheckAsync("#retireAction-migrate");
+        await s.Page.SelectOptionAsync("#retireMigratePlanId", new SelectOptionValue { Label = "Basic Plan" });
+        await s.Page.SelectOptionAsync("#retireMigrateTiming", new SelectOptionValue { Value = "immediate" });
+        await s.Page.ClickAsync("#retirePlanForm button[type='submit']");
+        await s.FindAlertMessage(partialText: "has been retired");
+        await offering.GoToSubscribers();
+        await offering.AssertHasSubscriber("enterprise@example.com", new()
+        {
+            Active = OfferingPMO.ActiveState.Active
+        });
+        await using var portal = await offering.GoToPortal("enterprise@example.com");
+        await portal.AssertPlan("Basic Plan");
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanRetirePlanWithMigrateImmediatelyInsufficientCredit()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.RegisterNewUser();
+        await s.CreateNewStore();
+        await s.AddDerivationScheme();
+        var offering = await CreateNewSubscription(s);
+        await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await offering.NewSubscriber("Basic Plan", "basic@example.com", false, mine: true);
+        });
+        await offering.GoToPlans();
+        await s.Page.WaitForSelectorAsync("tr[data-plan-name='Basic Plan'] td:has-text('1 Members')");
+        await s.Page.Locator("tr[data-plan-name='Basic Plan'] a:has-text('Retire')").ClickAsync();
+        await s.Page.WaitForSelectorAsync("#retirePlanModal");
+        await s.Page.CheckAsync("#retireAction-migrate");
+        await s.Page.SelectOptionAsync("#retireMigratePlanId", new SelectOptionValue { Label = "Enterprise Plan" });
+        await s.Page.SelectOptionAsync("#retireMigrateTiming", new SelectOptionValue { Value = "immediate" });
+        await s.Page.ClickAsync("#retirePlanForm button[type='submit']");
+        await s.FindAlertMessage(partialText: "has been retired");
+        await offering.GoToSubscribers();
+        await offering.AssertHasSubscriber("basic@example.com", new()
+        {
+            Active = OfferingPMO.ActiveState.Inactive
+        });
+        await using var portal = await offering.GoToPortal("basic@example.com");
+        await portal.AssertScheduledChange("Enterprise Plan");
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task RetiredPlanBlocksNewSubscriberAndCheckout()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.RegisterNewUser();
+        await s.CreateNewStore();
+        await s.AddDerivationScheme();
+        var offering = await CreateNewSubscription(s);
+        await offering.GoToPlans();
+        await s.Page.Locator("tr[data-plan-name='Pro Plan'] a:has-text('Retire')").ClickAsync();
+        await s.Page.WaitForSelectorAsync("#ConfirmModal");
+        await s.Page.ClickAsync("#ConfirmContinue");
+        await s.FindAlertMessage(partialText: "has been retired");
+        await offering.GoToSubscribers();
+        await s.Page.ClickAsync(".new-subscriber");
+        await s.Page.WaitForSelectorAsync("#newSubscriberModal");
+        var planOptions = await s.Page.Locator("#newSubscriber-plan option").AllInnerTextsAsync();
+        Assert.DoesNotContain("Pro Plan", planOptions);
+        await s.Page.ClickAsync("#newSubscriberModal .btn-close");
+        await offering.GoToPlans();
+
+        await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await offering.NewSubscriber("Basic Plan", "basic@example.com", false, mine: true);
+        });
+        await offering.GoToSubscribers();
+        await using var portal = await offering.GoToPortal("basic@example.com");
+        var planContainers = await s.Page.Locator(".changeplan-container").AllInnerTextsAsync();
+        Assert.DoesNotContain("Pro Plan", string.Join(" ", planContainers));
+    }
+
     public class OfferingPMO(PlaywrightTester s)
     {
         public Task Configure()

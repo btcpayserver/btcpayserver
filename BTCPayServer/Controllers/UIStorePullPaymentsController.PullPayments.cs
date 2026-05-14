@@ -270,6 +270,10 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ArchivePullPaymentPost(string storeId,
             string pullPaymentId)
         {
+            await using var ctx = _dbContextFactory.CreateContext();
+            var pp = await ctx.PullPayments.FindAsync(pullPaymentId);
+            if (pp?.StoreId != storeId)
+                return NotFound();
             await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(pullPaymentId));
             TempData.SetStatusMessageModel(new StatusMessageModel
             {

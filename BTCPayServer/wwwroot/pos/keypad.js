@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded",function () {
                 if (this.summary.tax)
                 {
                     if (this.taxIncludedInPrice) {
-                        const rateLabel = this.posOrder.getTaxRate() ? ` @ ${this.posOrder.getTaxRate()}%` : ''
+                        const rateLabel = this.posOrder.getTaxRate() ? ` ${this.posOrder.getTaxRate()}%` : ''
                         calc += ` (incl. ${this.formatCurrency(this.summary.tax, true)} tax${rateLabel})`
                     } else {
                         calc += ` + ${this.formatCurrency(this.summary.tax, true)}`

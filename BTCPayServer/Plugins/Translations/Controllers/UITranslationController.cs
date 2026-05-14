@@ -54,7 +54,7 @@ public class UITranslationController(
         {
             var isSelected = policiesSettings.LangTranslation == translation.TranslationName ||
                              (policiesSettings.LangTranslation is null && translation.Source == "Default");
-            var isDownloadedPack = translation.Source == "Custom";
+            var isDownloadedPack = translation.Source == "LanguagePack";
             var updateAvailable = false;
             manifestByName.TryGetValue(translation.TranslationName, out var manifestEntry);
 
@@ -216,7 +216,7 @@ public class UITranslationController(
         var existingTranslation = await localizer.GetTranslation(language);
         if (existingTranslation is null)
         {
-            existingTranslation = await localizer.CreateTranslation(language, Translations.DefaultLanguage, "Custom");
+            existingTranslation = await localizer.CreateTranslation(language, Translations.DefaultLanguage, "LanguagePack");
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' downloaded successfully", language].Value;
         }
         else
@@ -236,7 +236,7 @@ public class UITranslationController(
         var existing = await localizer.GetTranslation(translation);
         if (existing is null)
             return NotFound();
-        if (existing.Source != "Custom")
+        if (existing.Source != "LanguagePack" && existing.Source != "Custom")
         {
             TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Translation {0} is not user-installed and cannot be uninstalled", translation].Value;
             return RedirectToAction(nameof(ListTranslations));

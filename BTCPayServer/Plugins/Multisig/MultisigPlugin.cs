@@ -1,5 +1,6 @@
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Plugins.GlobalSearch;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BTCPayServer.Plugins.Multisig;
@@ -16,6 +17,7 @@ public class MultisigPlugin : BaseBTCPayServerPlugin
         services.AddScoped<Services.MultisigService>();
         services.AddScoped<Services.MultisigNotificationService>();
         services.AddHostedService<HostedServices.MultisigPendingTransactionHostedService>();
+        services.AddSearchResultItemProvider<MultisigSearchResultProvider>();
 
         services.AddUIExtension("store-onchain-wallet-setup", "/Plugins/Multisig/Views/SetupWalletCard.cshtml");
         services.AddUIExtension("dashboard-setup-guide-wallet", "/Plugins/Multisig/Views/DashboardSetupGuideExtension.cshtml");

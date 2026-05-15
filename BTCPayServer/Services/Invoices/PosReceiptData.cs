@@ -48,7 +48,10 @@ public class PosReceiptData
             }
             if (summary.TaxOnTip > 0)
             {
-                TaxOnTip = displayFormatter.Currency(summary.TaxOnTip, currency, DisplayFormatter.CurrencyFormat.Symbol);
+                var taxOnTipFormatted = displayFormatter.Currency(summary.TaxOnTip, currency, DisplayFormatter.CurrencyFormat.Symbol);
+                if (order.GetTipTaxRate() is { } tipRate)
+                    taxOnTipFormatted = $"{taxOnTipFormatted} ({tipRate:0.######}%)";
+                TaxOnTip = taxOnTipFormatted;
             }
         }
 

@@ -87,6 +87,10 @@ public class PoSOrder
     {
         _tipTaxRate = tipTaxRate;
     }
+    public decimal? GetTipTaxRate()
+    {
+        return _tipTaxRate;
+    }
 
     /// <summary>
     /// Returns the tax rate of the items in the cart.

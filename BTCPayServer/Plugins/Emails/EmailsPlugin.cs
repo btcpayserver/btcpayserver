@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Plugins.Emails.Controllers;
 using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Plugins.Emails.Views;
+using BTCPayServer.Plugins.GlobalSearch;
 using BTCPayServer.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -45,8 +48,55 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
         services.AddDefaultTranslations(StoreTransformer.TranslatedStrings);
 
 
+        ConfigureEmailSearch(services);
+
         RegisterServerEmailTriggers(services);
     }
+
+    private static void ConfigureEmailSearch(IServiceCollection services)
+    {
+        services.AddStaticSearch(new ActionResultItemViewModel()
+        {
+            RequiredPolicy = Policies.CanViewStoreSettings,
+            Title = "View store's email rules",
+            Action = nameof(UIStoreEmailRulesController.StoreEmailRulesList),
+            Controller = "UIStoreEmailRules",
+            Values = ctx => new { area = Area, storeId = ctx.Store!.Id },
+            Category = "Store",
+            Keywords = ["Email", "Rules"]
+        });
+        services.AddStaticSearch(new ActionResultItemViewModel()
+        {
+            RequiredPolicy = Policies.CanModifyServerSettings,
+            Title = "View server's email rules",
+            Action = nameof(UIServerEmailRulesController.ServerEmailRulesList),
+            Controller = "UIServerEmailRules",
+            Values = ctx => new { area = Area },
+            Category = "Server",
+            Keywords = ["Email", "Rules"]
+        });
+        services.AddStaticSearch(new ActionResultItemViewModel()
+        {
+            RequiredPolicy = Policies.CanViewStoreSettings,
+            Title = "Configure store's email settings",
+            Action = nameof(UIStoresEmailController.StoreEmailSettings),
+            Controller = "UIStoresEmail",
+            Values = ctx => new { area = Area, storeId = ctx.Store!.Id },
+            Category = "Store",
+            Keywords = ["Email", "Settings"]
+        });
+        services.AddStaticSearch(new ActionResultItemViewModel()
+        {
+            RequiredPolicy = Policies.CanModifyServerSettings,
+            Title = "Configure server's email settings",
+            Action = nameof(UIServerEmailController.ServerEmailSettings),
+            Controller = "UIServerEmail",
+            Values = ctx => new { area = Area },
+            Category = "Server",
+            Keywords = ["Email", "Settings"]
+        });
+    }
+
     private static string BODY_STYLE = "font-family: Open Sans, Helvetica Neue,Arial,sans-serif; font-color: #292929;";
     private static string HEADER_HTML = "<h1 style='font-size:1.2rem'>{Server.Name}</h1><br/>";
     private static string BUTTON_HTML = "<a href='{button_link}' type='submit' style='min-width: 2em;min-height: 20px;text-decoration-line: none;cursor: pointer;display: inline-block;font-weight: 400;color: #fff;text-align: center;vertical-align: middle;user-select: none;background-color: #51b13e;border-color: #51b13e;border: 1px solid transparent;padding: 0.375rem 0.75rem;font-size: 1rem;line-height: 1.5;border-radius: 0.25rem;transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;'>{button_description}</a>";

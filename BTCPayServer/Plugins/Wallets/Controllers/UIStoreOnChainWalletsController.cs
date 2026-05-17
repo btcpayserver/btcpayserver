@@ -27,7 +27,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Localization;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using NBXplorer;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 
@@ -48,7 +47,8 @@ public class UIStoreOnChainWalletsController(
     WalletFileParsers onChainWalletParsers,
     EventAggregator eventAggregator,
     IHtmlHelper html,
-    IStringLocalizer stringLocalizer)
+    IStringLocalizer stringLocalizer,
+    HotwalletSafe hotwalletSafe)
     : Controller
 {
     private readonly IDataProtector _dataProtector = dataProtector.CreateProtector("ConfigProtector");
@@ -70,15 +70,9 @@ public class UIStoreOnChainWalletsController(
             return checkResult;
         }
 
-        var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
-        vm.DerivationScheme = derivation?.AccountDerivation.ToString();
-
         var perm = await CanUseHotWallet();
-        var canAccessSeedMaterial =
-            (await authorizationService.AuthorizeAsync(User, vm.StoreId, Policies.CanModifyStoreSettings)).Succeeded;
         vm.SetPermission(perm);
-        vm.CanGenerateNewWallet = canAccessSeedMaterial && (vm.CanUseHotWallet || vm.CanCreateNewColdWallet);
-
+        vm.CanGenerateNewWallet = perm.CanCreateHotWallet;
         return View(nameof(SetupWallet), vm);
     }
 
@@ -461,12 +455,10 @@ public class UIStoreOnChainWalletsController(
         var storeBlob = store.GetStoreBlob();
         var excludeFilters = storeBlob.GetExcludedPaymentMethods();
         var perm = await CanUseHotWallet();
-        var canAccessSeedMaterial =
-            (await authorizationService.AuthorizeAsync(User, storeId, Policies.CanModifyStoreSettings)).Succeeded;
-        var client = explorerProvider.GetExplorerClient(network);
 
         var handler = paymentMethodHandlerDictionary.GetBitcoinHandler(cryptoCode);
 
+        var hw = await hotwalletSafe.TryUnlock(User, new WalletId(storeId, cryptoCode));
         var vm = new WalletSettingsViewModel
         {
             StoreId = storeId,
@@ -482,11 +474,7 @@ public class UIStoreOnChainWalletsController(
             KeyPath = derivation.GetFirstAccountKeySettings().AccountKeyPath?.ToString(),
             UriScheme = network.NBitcoinNetwork.UriScheme,
             Label = derivation.Label,
-            NBXSeedAvailable = canAccessSeedMaterial &&
-                               derivation.IsHotWallet &&
-                               perm.CanCreateHotWallet &&
-                               !string.IsNullOrEmpty(await client.GetMetadataAsync<string>(derivation.AccountDerivation,
-                                   WellknownMetadataKeys.MasterHDKey)),
+            CanSeeSeed = hw?.CanSee is true,
             AccountKeys = (derivation.AccountKeySettings ?? [])
                 .Select(e => new WalletSettingsAccountKeyViewModel
                 {
@@ -638,24 +626,13 @@ public class UIStoreOnChainWalletsController(
             return checkResult;
         }
 
-        var derivation = GetExistingDerivationStrategy(cryptoCode, store);
-        if (derivation == null)
+        var hw = await hotwalletSafe.TryUnlock(User, new WalletId(storeId, cryptoCode));
+        if (hw is { CanSee: true, Mnemonic: not null })
         {
-            return NotFound();
-        }
-
-        if (!(await CanUseHotWallet()).CanCreateHotWallet)
-            return NotFound();
-
-        var client = explorerProvider.GetExplorerClient(network);
-        if (await GetSeed(client, derivation) != null)
-        {
-            var mnemonic = await client.GetMetadataAsync<string>(derivation.AccountDerivation,
-                WellknownMetadataKeys.Mnemonic, cancellationToken);
             var recoveryVm = new RecoverySeedBackupViewModel
             {
                 CryptoCode = cryptoCode,
-                Mnemonic = mnemonic,
+                Mnemonic = hw.Mnemonic,
                 IsStored = true,
                 RequireConfirm = false,
                 ReturnUrl = Url.Action(nameof(WalletSettings), new { storeId, cryptoCode })
@@ -782,13 +759,6 @@ public class UIStoreOnChainWalletsController(
     private DerivationSchemeSettings GetExistingDerivationStrategy(string cryptoCode, StoreData store)
     {
         return store.GetPaymentMethodConfig<DerivationSchemeSettings>(PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode), paymentMethodHandlerDictionary);
-    }
-
-    private async Task<string> GetSeed(ExplorerClient client, DerivationSchemeSettings derivation)
-    {
-        return derivation.IsHotWallet &&
-               await client.GetMetadataAsync<string>(derivation.AccountDerivation, WellknownMetadataKeys.MasterHDKey) is { } seed &&
-               !string.IsNullOrEmpty(seed) ? seed : null;
     }
 
     private async Task<WalletCreationPermissions> CanUseHotWallet()

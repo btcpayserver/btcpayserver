@@ -15,7 +15,7 @@ using BTCPayServer.Forms;
 using BTCPayServer.Forms.Models;
 using BTCPayServer.Models;
 using BTCPayServer.Models.PaymentRequestViewModels;
-using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Services;

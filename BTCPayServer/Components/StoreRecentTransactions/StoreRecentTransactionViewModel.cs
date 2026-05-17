@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 
 namespace BTCPayServer.Components.StoreRecentTransactions;
 

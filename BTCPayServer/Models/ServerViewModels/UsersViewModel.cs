@@ -41,6 +41,8 @@ namespace BTCPayServer.Models.ServerViewModels
 
             [Display(Name = "Created")]
             public DateTimeOffset? Created { get; set; }
+            public bool BypassMonetization { get; set; }
+            public bool MonetizationEnabled { get; set; }
 
             public IEnumerable<string> Roles { get; set; }
             public IEnumerable<UserStore> Stores { get; set; }

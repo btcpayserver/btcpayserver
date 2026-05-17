@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
@@ -17,6 +19,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.Lightning;
+using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -2399,6 +2402,8 @@ namespace BTCPayServer.Tests
             var client = await user.CreateClient(Policies.CanModifyStoreSettings);
             var client2 = await user2.CreateClient(Policies.CanModifyStoreSettings);
             var viewOnlyClient = await user.CreateClient(Policies.CanViewStoreSettings);
+            var walletViewerClient = await user.CreateClient(WalletPolicies.CanViewWallet);
+            var walletSettingsClient = await user.CreateClient(WalletPolicies.CanManageWalletSettings);
 
             var store = await client.CreateStore(new CreateStoreRequest() { Name = "test store" });
 
@@ -2417,9 +2422,13 @@ namespace BTCPayServer.Tests
                 await client.PreviewStoreOnChainPaymentMethodAddresses(store.Id, "BTC");
             });
 
-            Assert.Equal(firstAddress, (await viewOnlyClient.PreviewProposedStoreOnChainPaymentMethodAddresses(store.Id, "BTC", xpub)).Addresses.First().Address);
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnlyClient.PreviewProposedStoreOnChainPaymentMethodAddresses(store.Id, "BTC", xpub);
+            });
+            Assert.Equal(firstAddress, (await walletSettingsClient.PreviewProposedStoreOnChainPaymentMethodAddresses(store.Id, "BTC", xpub)).Addresses.First().Address);
             // Testing if the rewrite rule to old API path is working
-            await viewOnlyClient.SendHttpRequest($"api/v1/stores/{store.Id}/payment-methods/onchain/BTC/preview", new JObject() { ["config"] = xpub }, HttpMethod.Post);
+            await walletSettingsClient.SendHttpRequest($"api/v1/stores/{store.Id}/payment-methods/onchain/BTC/preview", new JObject() { ["config"] = xpub }, HttpMethod.Post);
 
             var method = await client.UpdateStorePaymentMethod(store.Id, "BTC-CHAIN", new UpdatePaymentMethodRequest() { Enabled = true, Config = JValue.CreateString(xpub)});
             var method2 = await client.UpdateStorePaymentMethod(store.Id, "BTC-CHAIN", new UpdatePaymentMethodRequest() { Enabled = true, Config = new JObject() { ["derivationScheme"] = xpub, ["label"] = "test", ["accountKeyPath"] = "aaaaaaaa/84'/0'/0'" } });
@@ -2429,7 +2438,7 @@ namespace BTCPayServer.Tests
 
             Assert.Equal(method.ToJson(), method3.ToJson());
 
-            Assert.Equal(firstAddress, (await viewOnlyClient.PreviewStoreOnChainPaymentMethodAddresses(store.Id, "BTC")).Addresses.First().Address);
+            Assert.Equal(firstAddress, (await walletViewerClient.PreviewStoreOnChainPaymentMethodAddresses(store.Id, "BTC")).Addresses.First().Address);
             await AssertHttpError(403, async () =>
             {
                 await viewOnlyClient.RemoveStorePaymentMethod(store.Id, "BTC-CHAIN");
@@ -2503,8 +2512,14 @@ namespace BTCPayServer.Tests
             var user = tester.NewAccount();
             await user.GrantAccessAsync(true);
 
-            var client = await user.CreateClient(Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings);
+            var client = await user.CreateClient(WalletPolicies.CanManageWallets, Policies.CanModifyStoreSettings,
+                Policies.CanModifyServerSettings);
+            var noBroadcastClient = await user.CreateClient(WalletPolicies.CanCreateWalletTransactions,
+                WalletPolicies.CanSignWalletTransactions, Policies.CanModifyServerSettings);
+            var createOnlyClient = await user.CreateClient(WalletPolicies.CanCreateWalletTransactions,
+                Policies.CanModifyServerSettings);
             var viewOnlyClient = await user.CreateClient(Policies.CanViewStoreSettings);
+            var walletViewerClient = await user.CreateClient(WalletPolicies.CanViewWallet);
             var walletId = await user.RegisterDerivationSchemeAsync("BTC", ScriptPubKeyType.Segwit, true);
 
             //view only clients can't do jack shit with this API
@@ -2514,6 +2529,7 @@ namespace BTCPayServer.Tests
             });
             var overview = await client.ShowOnChainWalletOverview(walletId.StoreId, walletId.CryptoCode);
             Assert.Equal(0m, overview.Balance);
+            Assert.Equal(0m, (await walletViewerClient.ShowOnChainWalletOverview(walletId.StoreId, walletId.CryptoCode)).Balance);
 
             var fee = await client.GetOnChainFeeRate(walletId.StoreId, walletId.CryptoCode);
             Assert.NotNull(fee.FeeRate);
@@ -2522,6 +2538,7 @@ namespace BTCPayServer.Tests
             {
                 await viewOnlyClient.GetOnChainWalletReceiveAddress(walletId.StoreId, walletId.CryptoCode);
             });
+            Assert.NotNull((await walletViewerClient.GetOnChainWalletReceiveAddress(walletId.StoreId, walletId.CryptoCode)).Address);
 
             // Testing if the rewrite rule to old API path is working
             await AssertHttpError(403, async () =>
@@ -2537,6 +2554,7 @@ namespace BTCPayServer.Tests
             {
                 await viewOnlyClient.GetOnChainWalletUTXOs(walletId.StoreId, walletId.CryptoCode);
             });
+            Assert.Empty(await walletViewerClient.GetOnChainWalletUTXOs(walletId.StoreId, walletId.CryptoCode));
             Assert.Empty(await client.GetOnChainWalletUTXOs(walletId.StoreId, walletId.CryptoCode));
             uint256 txhash = null;
             await tester.WaitForEvent<NewOnChainTransactionEvent>(async () =>
@@ -2550,6 +2568,10 @@ namespace BTCPayServer.Tests
             var address4 = await client.GetOnChainWalletReceiveAddress(walletId.StoreId, walletId.CryptoCode, false);
             Assert.NotEqual(address3.Address, address4.Address);
             await client.UnReserveOnChainWalletReceiveAddress(walletId.StoreId, walletId.CryptoCode);
+            await AssertHttpError(403, async () =>
+            {
+                await walletViewerClient.UnReserveOnChainWalletReceiveAddress(walletId.StoreId, walletId.CryptoCode);
+            });
             var address5 = await client.GetOnChainWalletReceiveAddress(walletId.StoreId, walletId.CryptoCode, true);
             Assert.Equal(address5.Address, address4.Address);
 
@@ -2565,6 +2587,7 @@ namespace BTCPayServer.Tests
             {
                 await viewOnlyClient.GetOnChainWalletHistogram(walletId.StoreId, walletId.CryptoCode);
             });
+            Assert.NotNull(await walletViewerClient.GetOnChainWalletHistogram(walletId.StoreId, walletId.CryptoCode));
             var histogram = await client.GetOnChainWalletHistogram(walletId.StoreId, walletId.CryptoCode);
             Assert.Equal(histogram.Balance, histogram.Series.Last());
             Assert.Equal(0.01m, histogram.Balance);
@@ -2589,6 +2612,17 @@ namespace BTCPayServer.Tests
             {
                 await viewOnlyClient.CreateOnChainTransaction(walletId.StoreId, walletId.CryptoCode, createTxRequest);
             });
+            await AssertHttpError(403, async () =>
+            {
+                await walletViewerClient.CreateOnChainTransaction(walletId.StoreId, walletId.CryptoCode, createTxRequest);
+            });
+            var forbidden = await Assert.ThrowsAsync<HttpRequestException>(async () =>
+                await createOnlyClient.CreateOnChainTransaction(walletId.StoreId, walletId.CryptoCode, createTxRequest));
+            Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
+            createTxRequest.ProceedWithBroadcast = true;
+            forbidden = await Assert.ThrowsAsync<HttpRequestException>(async () =>
+                await noBroadcastClient.CreateOnChainTransaction(walletId.StoreId, walletId.CryptoCode, createTxRequest));
+            Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
             await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
             {
                 await client.CreateOnChainTransactionButDoNotBroadcast(walletId.StoreId, walletId.CryptoCode,
@@ -2609,6 +2643,34 @@ namespace BTCPayServer.Tests
             Assert.NotNull(tx);
             Assert.Contains(tx.Outputs, txout => txout.IsTo(nodeAddress) && txout.Value.ToDecimal(MoneyUnit.BTC) == 0.001m);
             Assert.True((await tester.ExplorerNode.TestMempoolAcceptAsync(tx)).IsAllowed);
+
+            var payjoinDestination = await client.GetOnChainWalletReceiveAddress(walletId.StoreId,
+                walletId.CryptoCode, true);
+            var payjoinEndpoint = Uri.EscapeDataString("https://example.com/payjoin");
+            var payjoinBip21 =
+                $"bitcoin:{payjoinDestination.Address}?amount=0.0002&{PayjoinClient.BIP21EndpointKey}={payjoinEndpoint}";
+            var payjoinNoBroadcastTx = await noBroadcastClient.CreateOnChainTransactionButDoNotBroadcast(
+                walletId.StoreId,
+                walletId.CryptoCode,
+                new CreateOnChainTransactionRequest
+                {
+                    Destinations =
+                        new List<CreateOnChainTransactionRequest.CreateOnChainTransactionRequestDestination>
+                        {
+                            new()
+                            {
+                                Destination = payjoinBip21
+                            }
+                        },
+                    FeeRate = new FeeRate(5m),
+                    ProceedWithBroadcast = false
+                },
+                tester.ExplorerClient.Network.NBitcoinNetwork);
+            Assert.Contains(payjoinNoBroadcastTx.Outputs,
+                txout => txout.IsTo(BitcoinAddress.Create(payjoinDestination.Address,
+                    tester.ExplorerClient.Network.NBitcoinNetwork)) &&
+                         txout.Value.ToDecimal(MoneyUnit.BTC) == 0.0002m);
+            Assert.Null(await tester.ExplorerClient.GetTransactionAsync(payjoinNoBroadcastTx.GetHash()));
 
             // no change test
             createTxRequest.NoChange = true;
@@ -2715,6 +2777,7 @@ namespace BTCPayServer.Tests
             {
                 await viewOnlyClient.GetOnChainWalletTransaction(walletId.StoreId, walletId.CryptoCode, txdata.TransactionHash.ToString());
             });
+            Assert.NotNull(await walletViewerClient.GetOnChainWalletTransaction(walletId.StoreId, walletId.CryptoCode, txdata.TransactionHash.ToString()));
             var transaction = await client.GetOnChainWalletTransaction(walletId.StoreId, walletId.CryptoCode, txdata.TransactionHash.ToString());
 
             // Check skip doesn't crash
@@ -2749,6 +2812,8 @@ namespace BTCPayServer.Tests
             {
                 await viewOnlyClient.ShowOnChainWalletTransactions(walletId.StoreId, walletId.CryptoCode);
             });
+            Assert.Contains(
+                await walletViewerClient.ShowOnChainWalletTransactions(walletId.StoreId, walletId.CryptoCode), data => data.TransactionHash == txdata.TransactionHash);
             Assert.True(Assert.Single(
                 await client.ShowOnChainWalletTransactions(walletId.StoreId, walletId.CryptoCode,
                     new[] { TransactionStatus.Confirmed })).TransactionHash == utxo.Outpoint.Hash);

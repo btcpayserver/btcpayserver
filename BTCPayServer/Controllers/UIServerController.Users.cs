@@ -8,10 +8,12 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Models.ServerViewModels;
+using BTCPayServer.Plugins.Monetization;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace BTCPayServer.Controllers
 {
@@ -95,6 +97,8 @@ namespace BTCPayServer.Controllers
                 Id = user.Id,
                 Email = user.Email,
                 Name = blob?.Name,
+                BypassMonetization = user.BypassMonetization,
+                MonetizationEnabled = _monetizationSettings.Settings.IsSetup(),
                 InvitationUrl = string.IsNullOrEmpty(blob?.InvitationToken) ? null : _callbackGenerator.ForInvitation(user.Id, blob.InvitationToken),
                 ImageUrl = string.IsNullOrEmpty(blob?.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),
                 EmailConfirmed = user.RequiresEmailConfirmation ? user.EmailConfirmed : null,
@@ -173,9 +177,18 @@ namespace BTCPayServer.Controllers
                 adminStatusChanged = await _userService.SetAdminUser(user.Id, viewModel.IsAdmin);
             }
 
+            var bypassMonetizationChanged = user.BypassMonetization != viewModel.BypassMonetization;
+            if (bypassMonetizationChanged)
+            {
+                user.BypassMonetization = viewModel.BypassMonetization;
+                propertiesChanged = true;
+            }
+
             if (propertiesChanged is true)
             {
                 propertiesChanged = await _UserManager.UpdateAsync(user) is { Succeeded: true };
+                if (propertiesChanged is true && bypassMonetizationChanged)
+                    _eventAggregator.Publish(new UserEvent.BypassMonetizationChanged(user, viewModel.BypassMonetization, Request.GetRequestBaseUrl()));
             }
 
             if (propertiesChanged.HasValue || adminStatusChanged.HasValue || approvalStatusChanged.HasValue)
@@ -223,9 +236,12 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> CreateUser()
         {
             await PrepareCreateUserViewData();
+            var monetizationEnabled = _monetizationSettings.Settings.IsSetup();
             var vm = new RegisterFromAdminViewModel
             {
-                SendInvitationEmail = ViewData["CanSendEmail"] is true
+                SendInvitationEmail = ViewData["CanSendEmail"] is true,
+                BypassMonetization = !monetizationEnabled,
+                MonetizationEnabled = monetizationEnabled
             };
             return View(vm);
         }
@@ -234,12 +250,14 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> CreateUser(RegisterFromAdminViewModel model)
         {
             await PrepareCreateUserViewData();
+            model.MonetizationEnabled = _monetizationSettings.Settings.IsSetup();
             if (!_Options.CheatMode)
                 model.IsAdmin = false;
             if (ModelState.IsValid)
             {
                 var user = new ApplicationUser
                 {
+                    BypassMonetization = model.BypassMonetization,
                     UserName = model.Email,
                     Email = model.Email,
                     EmailConfirmed = model.EmailConfirmed,
@@ -467,5 +485,9 @@ namespace BTCPayServer.Controllers
 
         [Display(Name = "Send invitation email")]
         public bool SendInvitationEmail { get; set; } = true;
+
+        [Display(Name = "Bypass monetization for this user")]
+        public bool BypassMonetization { get; set; }
+        public bool MonetizationEnabled { get; set; }
     }
 }

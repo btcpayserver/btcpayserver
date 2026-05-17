@@ -83,7 +83,7 @@ namespace BTCPayServer.Payments.Bitcoin
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _RunningTask = new TaskCompletionSource<bool>();
-            _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            _Cts = new CancellationTokenSource();
             leases.Add(_Aggregator.Subscribe<Events.NBXplorerStateChangedEvent>(nbxplorerEvent =>
             {
                 if (nbxplorerEvent.NewState == NBXplorerState.Ready)
@@ -459,9 +459,12 @@ namespace BTCPayServer.Payments.Bitcoin
             if (_Cts != null)
             {
                 leases.Dispose();
+                if (_SessionsByCryptoCode.IsEmpty)
+                    _RunningTask.TrySetResult(true);
                 _Cts.Cancel();
                 await Task.WhenAny(_RunningTask.Task, Task.Delay(-1, cancellationToken));
                 Logs.PayServer.LogInformation($"{this.GetType().Name} successfully exited...");
+                _Cts = null;
             }
         }
     }

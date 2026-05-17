@@ -24,7 +24,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public bool IsMultiSig => AccountKeys.Count > 1;
 
         public List<WalletSettingsAccountKeyViewModel> AccountKeys { get; set; } = new();
-        public bool NBXSeedAvailable { get; set; }
+        public bool CanSeeSeed { get; set; }
         public string StoreName { get; set; }
         public string UriScheme { get; set; }
 

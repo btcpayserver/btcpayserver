@@ -10,7 +10,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
-using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Payouts;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;

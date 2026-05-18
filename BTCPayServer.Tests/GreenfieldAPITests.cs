@@ -2125,7 +2125,7 @@ namespace BTCPayServer.Tests
                             Assert.Equal(inv.Id, o.InvoiceId);
                             Assert.True(o.ManuallyMarked);
                         });
-                    Assert.NotNull(await client.GetWebhookDelivery(evt.StoreId, evt.WebhookId, evt.DeliveryId));
+                    Assert.NotNull(await client.GetWebhookDelivery(evt.WebhookId, evt.DeliveryId));
                 }
             }
 

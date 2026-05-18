@@ -68,6 +68,7 @@ public class UIStoreWebhooksController(
         });
     }
 
+    [HttpPost("~/webhooks/{webhookId}/remove")]
     [HttpPost("{storeId}/webhooks/{webhookId}/remove")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> DeleteWebhook(string webhookId)
@@ -93,6 +94,7 @@ public class UIStoreWebhooksController(
         return RedirectToAction(nameof(Webhooks), new { storeId });
     }
 
+    [HttpGet("~/webhooks/{webhookId}")]
     [HttpGet("{storeId}/webhooks/{webhookId}")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> ModifyWebhook(string webhookId)
@@ -109,6 +111,7 @@ public class UIStoreWebhooksController(
         });
     }
 
+    [HttpPost("~/webhooks/{webhookId}")]
     [HttpPost("{storeId}/webhooks/{webhookId}")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> ModifyWebhook(string webhookId, EditWebhookViewModel viewModel)
@@ -124,6 +127,7 @@ public class UIStoreWebhooksController(
         return RedirectToAction(nameof(Webhooks), new { storeId = CurrentStore.Id });
     }
 
+    [HttpPost("~/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver")]
     [HttpPost("{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> RedeliverWebhook(string webhookId, string deliveryId)
@@ -140,11 +144,11 @@ public class UIStoreWebhooksController(
         return RedirectToAction(nameof(ModifyWebhook),
             new
             {
-                storeId = CurrentStore.Id,
                 webhookId
             });
     }
 
+    [HttpGet("~/webhooks/{webhookId}/deliveries/{deliveryId}/request")]
     [HttpGet("{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/request")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> WebhookDelivery(string webhookId, string deliveryId)

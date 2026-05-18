@@ -12,20 +12,20 @@ public partial class BTCPayServerClient
         return await SendHttpRequest<StoreWebhookData>($"api/v1/stores/{storeId}/webhooks", create, HttpMethod.Post, token);
     }
 
-    public virtual async Task<StoreWebhookData> GetWebhook(string storeId, string webhookId, CancellationToken token = default)
+    public virtual async Task<StoreWebhookData> GetWebhook(string webhookId, CancellationToken token = default)
     {
-        var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/webhooks/{webhookId}"), token);
+        var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/webhooks/{webhookId}"), token);
         return response.StatusCode == System.Net.HttpStatusCode.NotFound ? null : await HandleResponse<StoreWebhookData>(response);
     }
 
-    public virtual async Task<StoreWebhookData> UpdateWebhook(string storeId, string webhookId, UpdateStoreWebhookRequest update, CancellationToken token = default)
+    public virtual async Task<StoreWebhookData> UpdateWebhook(string webhookId, UpdateStoreWebhookRequest update, CancellationToken token = default)
     {
-        return await SendHttpRequest<StoreWebhookData>($"api/v1/stores/{storeId}/webhooks/{webhookId}", update, HttpMethod.Put, token);
+        return await SendHttpRequest<StoreWebhookData>($"api/v1/webhooks/{webhookId}", update, HttpMethod.Put, token);
     }
 
-    public virtual async Task<bool> DeleteWebhook(string storeId, string webhookId, CancellationToken token = default)
+    public virtual async Task<bool> DeleteWebhook(string webhookId, CancellationToken token = default)
     {
-        var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/webhooks/{webhookId}", method: HttpMethod.Delete), token);
+        var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/webhooks/{webhookId}", method: HttpMethod.Delete), token);
         return response.IsSuccessStatusCode;
     }
 
@@ -34,25 +34,25 @@ public partial class BTCPayServerClient
         return await SendHttpRequest<StoreWebhookData[]>($"api/v1/stores/{storeId}/webhooks", null, HttpMethod.Get, token);
     }
 
-    public virtual async Task<WebhookDeliveryData[]> GetWebhookDeliveries(string storeId, string webhookId, CancellationToken token = default)
+    public virtual async Task<WebhookDeliveryData[]> GetWebhookDeliveries(string webhookId, CancellationToken token = default)
     {
-        return await SendHttpRequest<WebhookDeliveryData[]>($"api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries", null, HttpMethod.Get, token);
+        return await SendHttpRequest<WebhookDeliveryData[]>($"api/v1/webhooks/{webhookId}/deliveries", null, HttpMethod.Get, token);
     }
 
-    public virtual async Task<WebhookDeliveryData> GetWebhookDelivery(string storeId, string webhookId, string deliveryId, CancellationToken token = default)
+    public virtual async Task<WebhookDeliveryData> GetWebhookDelivery(string webhookId, string deliveryId, CancellationToken token = default)
     {
-        var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}"), token);
+        var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/webhooks/{webhookId}/deliveries/{deliveryId}"), token);
         return response.StatusCode == System.Net.HttpStatusCode.NotFound ? null : await HandleResponse<WebhookDeliveryData>(response);
     }
 
-    public virtual async Task<string> RedeliverWebhook(string storeId, string webhookId, string deliveryId, CancellationToken token = default)
+    public virtual async Task<string> RedeliverWebhook(string webhookId, string deliveryId, CancellationToken token = default)
     {
-        return await SendHttpRequest<string>($"api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver", null, HttpMethod.Post, token);
+        return await SendHttpRequest<string>($"api/v1/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver", null, HttpMethod.Post, token);
     }
 
-    public virtual async Task<WebhookEvent> GetWebhookDeliveryRequest(string storeId, string webhookId, string deliveryId, CancellationToken token = default)
+    public virtual async Task<WebhookEvent> GetWebhookDeliveryRequest(string webhookId, string deliveryId, CancellationToken token = default)
     {
-        var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/request"), token);
+        var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/webhooks/{webhookId}/deliveries/{deliveryId}/request"), token);
         return response.StatusCode == System.Net.HttpStatusCode.NotFound ? null : await HandleResponse<WebhookEvent>(response);
     }
 }

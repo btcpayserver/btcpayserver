@@ -406,8 +406,8 @@ namespace BTCPayServer.Tests
             Assert.False(app.ShowCategories);
             Assert.False(app.ShowDiscount);
 
-            // Make sure we return a 404 if we try to get an app that doesn't exist
-            await AssertHttpError(404, async () =>
+            // Make sure we return a 403 if we try to get an app that doesn't exist
+            await AssertHttpError(403, async () =>
             {
                 await client.GetApp("some random ID lol");
             });
@@ -446,8 +446,8 @@ namespace BTCPayServer.Tests
             Assert.Equal("new app name", retrievedPosApp.AppName);
             Assert.Equal("new app title", retrievedPosApp.Title);
 
-            // Make sure we return a 404 if we try to delete an app that doesn't exist
-            await AssertHttpError(404, async () =>
+            // Make sure we return a 403 if we try to delete an app that doesn't exist
+            await AssertHttpError(403, async () =>
             {
                 await client.DeleteApp("some random ID lol");
             });
@@ -612,7 +612,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("test app name", app.Title);
 
             // Make sure we return a 404 if we try to get an app that doesn't exist
-            await AssertHttpError(404, async () =>
+            await AssertHttpError(403, async () =>
             {
                 await client.GetApp("some random ID lol");
             });
@@ -695,8 +695,8 @@ namespace BTCPayServer.Tests
             Assert.Equal(stateBeforeFailedPut.Title, stateAfterFailedPut.Title);
             Assert.Equal(stateBeforeFailedPut.Description, stateAfterFailedPut.Description);
 
-            // Make sure we return a 404 if we try to delete an app that doesn't exist
-            await AssertHttpError(404, async () =>
+            // Make sure we return a 403 if we try to delete an app that doesn't exist
+            await AssertHttpError(403, async () =>
             {
                 await client.DeleteApp("some random ID lol");
             });
@@ -1677,7 +1677,7 @@ namespace BTCPayServer.Tests
             });
 
             // test validation that the invoice exists
-            await AssertHttpError(404, async () =>
+            await AssertHttpError(403, async () =>
             {
                 await client.RefundInvoice("lol fake invoice id", new RefundInvoiceRequest()
                 {

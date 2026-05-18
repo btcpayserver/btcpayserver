@@ -250,7 +250,7 @@ namespace BTCPayServer.Tests
             Assert.False(await s.Page.IsEnabledAsync("#Currency"));
 
             // archive (from details page)
-            var payReqId = s.Page.Url.Split('/').Last();
+            var payReqId = s.Page.Url.Split('/')[^2];
             await s.Page.ClickAsync("#ArchivePaymentRequest");
             await s.FindAlertMessage(partialText: "The payment request has been archived");
             Assert.DoesNotContain("Pay123", await s.Page.ContentAsync());
@@ -285,12 +285,15 @@ namespace BTCPayServer.Tests
 
 
             // Mine
-            await checkoutFrame.Locator("#mine-block button").ClickAsync();
-            await checkoutFrame.Locator("#CheatSuccessMessage").WaitForAsync();
-            Assert.Contains("Mined 1 block", await checkoutFrame.Locator("#CheatSuccessMessage").InnerTextAsync());
+            await s.Server.WaitForEvent<BTCPayServer.Services.PaymentRequests.PaymentRequestEvent>(async () =>
+            {
+                await checkoutFrame.Locator("#mine-block button").ClickAsync();
+                await checkoutFrame.Locator("#CheatSuccessMessage").WaitForAsync();
+                Assert.Contains("Mined 1 block", await checkoutFrame.Locator("#CheatSuccessMessage").InnerTextAsync());
 
-            await checkoutFrame.Locator("#close").ClickAsync();
-            await s.Page.Locator("iframe[name='btcpay']").WaitForAsync(new() { State = WaitForSelectorState.Detached });
+                await checkoutFrame.Locator("#close").ClickAsync();
+                await s.Page.Locator("iframe[name='btcpay']").WaitForAsync(new() { State = WaitForSelectorState.Detached });
+            }, ev => ev.Data.Status == PaymentRequestStatus.Completed);
 
             // One last refresh to ensure UI reflects final state
             await s.Page.ReloadAsync();
@@ -2199,7 +2202,7 @@ namespace BTCPayServer.Tests
             await s.AssertPageAccess(true, GetStorePath("invoices"));
             await s.AssertPageAccess(false, GetStorePath("invoices/create"));
             await s.AssertPageAccess(true, GetStorePath("payment-requests"));
-            await s.AssertPageAccess(false, GetStorePath("payment-requests/edit"));
+            await s.AssertPageAccess(false, GetStorePath("payment-requests/new"));
             await s.AssertPageAccess(true, GetStorePath("pull-payments"));
             await s.AssertPageAccess(true, GetStorePath("payouts"));
             await s.AssertPageAccess(false, GetStorePath("onchain/BTC"));

@@ -22,7 +22,6 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json.Linq;
@@ -50,7 +49,6 @@ namespace BTCPayServer.Controllers
         private readonly PullPaymentHostedService _paymentHostedService;
         private readonly LanguageService _languageService;
         private readonly ExplorerClientProvider _ExplorerClients;
-        private readonly UIWalletsController _walletsController;
         private readonly InvoiceActivator _invoiceActivator;
         private readonly LinkGenerator _linkGenerator;
         private readonly IAuthorizationService _authorizationService;
@@ -81,7 +79,6 @@ namespace BTCPayServer.Controllers
             WebhookSender webhookNotificationManager,
             LanguageService languageService,
             ExplorerClientProvider explorerClients,
-            UIWalletsController walletsController,
             InvoiceActivator invoiceActivator,
             LinkGenerator linkGenerator,
             AppService appService,
@@ -110,7 +107,6 @@ namespace BTCPayServer.Controllers
             WebhookNotificationManager = webhookNotificationManager;
             _languageService = languageService;
             this._ExplorerClients = explorerClients;
-            _walletsController = walletsController;
             _invoiceActivator = invoiceActivator;
             _linkGenerator = linkGenerator;
             _authorizationService = authorizationService;

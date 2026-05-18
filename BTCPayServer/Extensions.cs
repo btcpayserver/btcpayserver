@@ -849,6 +849,8 @@ namespace BTCPayServer
 
         public static PaymentRequestData? GetPaymentRequestDataOrNull(this HttpContext ctx)
         => ctx.Items.TryGet("BTCPAY.PAYMENTREQUESTDATA") as PaymentRequestData;
+        public static PaymentRequestData? GetPaymentRequestData(this HttpContext ctx)
+            => GetPaymentRequestDataOrNull(ctx) ?? throw new InvalidOperationException("BTCPAY.PAYMENTREQUESTDATA is not set");
 
         public static void SetPaymentRequestData(this HttpContext ctx, PaymentRequestData? paymentRequestData)
         {

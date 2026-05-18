@@ -51,7 +51,7 @@ namespace BTCPayServer.Controllers
                 AppSalesPeriod.Month => 30,
                 _ => throw new ArgumentException($"AppSalesPeriod {period} does not exist.")
             };
-            var stats = await _appService.GetSalesStats(app, days);
+            var stats = await appService.GetSalesStats(app, days);
             return Json(stats);
         }
     }

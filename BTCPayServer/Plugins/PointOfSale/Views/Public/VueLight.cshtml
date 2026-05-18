@@ -25,7 +25,7 @@
     <div ref="display" class="d-flex flex-column align-items-center px-4 mb-auto">
         <div class="fw-semibold text-muted" id="Currency">{{currencyCode}}</div>
         <div class="fw-bold lh-sm" ref="amount" v-bind:style="{ fontSize: `${fontSize}px` }" id="Amount">{{ formatCurrency(lastAmount, false) }}</div>
-        <div class="fw-bold lh-sm" ref="total" v-if="totalNumeric !== parseFloat(lastAmount)" v-bind:style="{ fontSize: `${fontSize/3}px` }" id="Total">Total:
+        <div class="fw-bold lh-sm" ref="total" v-if="totalNumeric !== parseFloat(lastAmount)" v-bind:style="{ fontSize: `${fontSize/3}px` }" id="Total"><span text-translate="true">Total</span>:
             {{ formatCurrency(totalNumeric, true) }}
         </div>
         <div class="text-muted text-center mt-2" id="Calculation">{{ calculation }}</div>
@@ -34,7 +34,7 @@
         <div id="Mode-Discount" class="tab-pane fade px-2" :class="{ show: mode === 'discount', active: mode === 'discount' }" role="tabpanel"
              aria-labelledby="ModeTablist-Discount" v-if="showDiscount">
             <div class="h4 fw-semibold text-muted text-center" id="Discount">
-                <span class="h3 text-body me-1">{{discountPercent || 0}}%</span> discount
+                <span class="h3 text-body me-1">{{discountPercent || 0}}%</span> <span text-translate="true">discount</span>
             </div>
         </div>
         <div id="Mode-Tip" class="tab-pane fade px-2" :class="{ show: mode === 'tip', active: mode === 'tip' }" role="tabpanel"
@@ -48,7 +48,7 @@
                         :class="{ active: !tipPercent }"
                         v-on:click.prevent="tipPercent = null">
                         <template v-if="tip && tip > 0">{{formatCurrency(tip, true)}}</template>
-                        <template v-else>Custom</template>
+                        <template v-else><span text-translate="true">Custom</span></template>
                     </button>
                     <button
                         v-for="percentage in customTipPercentages"
@@ -61,7 +61,7 @@
                     </button>
                 </template>
                 <div v-else class="h5 fw-semibold text-muted text-center">
-                    Amount
+                    <span text-translate="true">Amount</span>
                     <template v-if="tip">: {{formatCurrency(tip, true)}}</template>
                 </div>
             </div>
@@ -107,9 +107,9 @@
     </button>
     <div class="offcanvas offcanvas-end" data-bs-backdrop="static" tabindex="-1" id="ItemsListOffcanvas" aria-labelledby="ItemsListToggle" v-if="showItems">
         <div class="offcanvas-header justify-content-between flex-wrap p-3">
-            <h5 class="offcanvas-title" id="offcanvasExampleLabel">Products</h5>
+            <h5 class="offcanvas-title" id="offcanvasExampleLabel" text-translate="true">Products</h5>
             <button type="button" class="btn btn-sm rounded-pill" :class="{ 'btn-primary': cart.length > 0, 'btn-outline-secondary': cart.length === 0}"
-                    data-bs-dismiss="offcanvas" v-text="cart.length > 0 ? 'Apply' : 'Close'"></button>
+                    data-bs-dismiss="offcanvas" v-text="cart.length > 0 ? labels.apply : labels.close"></button>
             @if (Model.ShowSearch)
             {
                 <div class="w-100 mt-3">

@@ -551,13 +551,18 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var invoices = await AppService.GetInvoicesForApp(_invoiceRepository, app, from);
             var recent = invoices
                 .Take(10)
-                .Select(i => new JObject
+                .Select(i =>
                 {
-                    ["id"] = i.Id,
-                    ["date"] = i.InvoiceTime,
-                    ["price"] = _displayFormatter.Currency(i.Price, i.Currency, DisplayFormatter.CurrencyFormat.Symbol),
-                    ["status"] = i.GetInvoiceState().ToString(),
-                    ["url"] = Url.Action(nameof(UIInvoiceController.Invoice), "UIInvoice", new { invoiceId = i.Id })
+                    var state = i.GetInvoiceState();
+                    return new JObject
+                    {
+                        ["id"] = i.Id,
+                        ["date"] = i.InvoiceTime,
+                        ["price"] = _displayFormatter.Currency(i.Price, i.Currency, DisplayFormatter.CurrencyFormat.Symbol),
+                        ["status"] = state.ToLocalizedString(StringLocalizer),
+                        ["statusClass"] = state.ToCssClass(),
+                        ["url"] = Url.Action(nameof(UIInvoiceController.Invoice), "UIInvoice", new { invoiceId = i.Id })
+                    };
                 });
             return Json(recent);
         }

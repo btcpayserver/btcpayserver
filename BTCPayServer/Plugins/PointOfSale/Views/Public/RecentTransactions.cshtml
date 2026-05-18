@@ -5,8 +5,8 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Recent Transactions</h5>
-                <button type="button" class="btn btn-link px-3 py-0" aria-label="Refresh" v-on:click="loadRecentTransactions" :disabled="recentTransactionsLoading" id="RecentTransactionsRefresh">
+                <h5 class="modal-title" text-translate="true">Recent Transactions</h5>
+                <button type="button" class="btn btn-link px-3 py-0" aria-label="@StringLocalizer["Refresh"]" v-on:click="loadRecentTransactions" :disabled="recentTransactionsLoading" id="RecentTransactionsRefresh">
                     <vc:icon symbol="actions-refresh"/>
                     <span v-if="recentTransactionsLoading" class="visually-hidden" text-translate="true">Loading...</span>
                 </button>
@@ -21,16 +21,15 @@
                             <span class="flex-grow-1">{{displayDate(t.date)}}</span>
                             <span class="flex-grow-1 text-end">{{t.price}}</span>
                             <div class="badge-container">
-                                <span class="badge" :class="`badge-${t.status.toLowerCase()}`">{{t.status}}</span>
+                                <span class="badge" :class="`badge-${t.statusClass}`">{{t.status}}</span>
                             </div>
                         </div>
                         <vc:icon symbol="caret-right" />
                     </a>
                 </div>
-                <p v-else-if="recentTransactionsLoading" class="text-muted my-0">Loading...</p>
-                <p v-else class="text-muted my-0">No transactions, yet.</p>
+                <p v-else-if="recentTransactionsLoading" class="text-muted my-0" text-translate="true">Loading...</p>
+                <p v-else class="text-muted my-0" text-translate="true">No transactions, yet.</p>
             </div>
         </div>
     </div>
 </div>
-

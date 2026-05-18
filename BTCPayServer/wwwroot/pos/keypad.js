@@ -15,9 +15,10 @@ document.addEventListener("DOMContentLoaded",function () {
         },
         computed: {
             modes () {
-                const modes = [{ title: 'Amount', type: 'amounts' }]
-                if (this.showDiscount) modes.push({ title: 'Discount', type: 'discount' })
-                if (this.enableTips) modes.push({ title: 'Tip', type: 'tip'})
+                const labels = this.labels || {}
+                const modes = [{ title: labels.amount || 'Amount', type: 'amounts' }]
+                if (this.showDiscount) modes.push({ title: labels.discount || 'Discount', type: 'discount' })
+                if (this.enableTips) modes.push({ title: labels.tip || 'Tip', type: 'tip'})
                 return modes
             },
             keypadTarget () {
@@ -145,4 +146,3 @@ document.addEventListener("DOMContentLoaded",function () {
         }
     });
 });
-

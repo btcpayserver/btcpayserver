@@ -8,7 +8,16 @@
     <link href="~/pos/keypad.css" asp-append-version="true" rel="stylesheet" />
 }
 @section PageFootContent {
-    <script>var srvModel = @Safe.Json(Model);</script>
+    <script>
+        var srvModel = @Safe.Json(Model);
+        srvModel.labels = {
+            amount: @Safe.Json(StringLocalizer["Amount"].Value),
+            discount: @Safe.Json(StringLocalizer["Discount"].Value),
+            tip: @Safe.Json(StringLocalizer["Tip"].Value),
+            apply: @Safe.Json(StringLocalizer["Apply"].Value),
+            close: @Safe.Json(StringLocalizer["Close"].Value)
+        };
+    </script>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/pos/common.js" asp-append-version="true"></script>
     <script src="~/pos/keypad.js" asp-append-version="true"></script>

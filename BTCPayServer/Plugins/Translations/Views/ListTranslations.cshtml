@@ -1,0 +1,208 @@
+@using BTCPayServer.Views.Server
+@model ListTranslationsViewModel
+@{
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Translations), StringLocalizer["Translations"])
+        .SetCategory(WellKnownCategories.Server));
+}
+
+<div class="sticky-header">
+	<h2>@ViewData["Title"]</h2>
+	<div class="d-flex gap-2">
+		<a id="page-primary" asp-action="CreateTranslation" class="btn btn-primary" role="button" text-translate="true">
+			Create
+		</a>
+	</div>
+</div>
+<partial name="_StatusMessage" />
+
+<p class="mb-0" text-translate="true">
+	Translations enable you to translate the BTCPay Server into different languages.
+</p>
+
+@if (Model.ManifestFetchFailed)
+{
+	<div class="alert alert-warning mt-3" role="alert">
+		<span text-translate="true">Could not fetch the community language manifest. Showing installed languages only (degraded mode).</span>
+	</div>
+}
+
+<h4 class="mt-4 mb-3" text-translate="true">Installed languages</h4>
+<p class="text-muted" text-translate="true">Currently enabled on this server.</p>
+<div class="table-responsive">
+	<table class="table table-hover align-middle">
+		<colgroup>
+			<col style="width: 40%;" />
+			<col style="width: 24%;" />
+			<col style="width: 20%;" />
+			<col style="width: 16%;" />
+		</colgroup>
+		<thead>
+			<tr>
+				<th text-translate="true">Language</th>
+				<th text-translate="true">Maintainer</th>
+				<th text-translate="true">Last updated</th>
+				<th class="actions-col" text-translate="true">Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var v in Model.InstalledLanguages)
+			{
+				<tr>
+					<td>
+						<div class="d-flex flex-wrap align-items-center gap-2">
+							@if (v.Editable)
+							{
+								<a asp-action="EditTranslation" asp-route-translation="@v.TranslationName">@v.TranslationName</a>
+							}
+							else
+							{
+								<span>@v.TranslationName</span>
+							}
+							@if (!string.IsNullOrEmpty(v.NativeName) && v.NativeName != v.TranslationName)
+							{
+								<span class="text-muted">(@v.NativeName)</span>
+							}
+							@if (v.IsSelected)
+							{
+								<span class="badge bg-info" text-translate="true">In use</span>
+							}
+						</div>
+					</td>
+					<td>
+						@if (!string.IsNullOrEmpty(v.MaintainerHandle))
+						{
+							@if (!string.IsNullOrEmpty(v.MaintainerUrl))
+							{
+								<a href="@v.MaintainerUrl" target="_blank" rel="noopener noreferrer">@v.MaintainerHandle</a>
+							}
+							else
+							{
+								<span>@v.MaintainerHandle</span>
+							}
+						}
+						else
+						{
+							<span>-</span>
+						}
+					</td>
+					<td>
+						@if (v.LastUpdated is not null)
+						{
+							<span>@v.LastUpdated.Value.ToBrowserDate()</span>
+						}
+						else
+						{
+							<span>-</span>
+						}
+					</td>
+					<td class="actions-col">
+						<div class="d-inline-flex align-items-center gap-3">
+                            @if (v.IsDownloadedLanguagePack && v.UpdateAvailable)
+                            {
+                                <form method="post" asp-action="DownloadLanguagePack" asp-route-language="@v.TranslationName" class="d-inline">
+                                    <button type="submit" class="btn btn-link p-0" text-translate="true">Update</button>
+                                </form>
+                            }
+                            @if (!v.IsSelected)
+							{
+								<form method="post" asp-action="SelectTranslation" asp-route-translation="@v.TranslationName" class="d-inline">
+									<button id="Select-@v.TranslationName" type="submit" class="btn btn-link p-0" text-translate="true">Select</button>
+								</form>
+							}
+							@if (!v.IsSelected && v.Editable)
+							{
+								<a id="Delete-@v.TranslationName"
+								   asp-action="UninstallLanguagePack"
+								   asp-route-translation="@v.TranslationName"
+								   data-bs-toggle="modal"
+								   data-bs-target="#ConfirmModal"
+								   data-description="The translation <b>@Html.Encode(v.TranslationName)</b> will be removed from this server."
+								   data-confirm-input="@StringLocalizer["Delete"]"
+								   class="btn btn-link p-0 text-danger"
+								   text-translate="true">Uninstall</a>
+							}
+						</div>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+</div>
+
+<h4 class="mt-4 mb-3" text-translate="true">Available to install</h4>
+<p class="text-muted" text-translate="true">Present in the upstream translation repository but not yet on this server.</p>
+<div class="table-responsive">
+	<table class="table table-hover align-middle">
+		<colgroup>
+			<col style="width: 40%;" />
+			<col style="width: 24%;" />
+			<col style="width: 20%;" />
+			<col style="width: 16%;" />
+		</colgroup>
+		<thead>
+			<tr>
+				<th text-translate="true">Language</th>
+				<th text-translate="true">Maintainer</th>
+				<th text-translate="true">Last updated</th>
+				<th class="actions-col" text-translate="true">Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			@if (Model.AvailableToInstall.Count == 0)
+			{
+				<tr>
+					<td colspan="4" class="text-muted" text-translate="true">No languages available to install.</td>
+				</tr>
+			}
+			else
+			{
+				@foreach (var v in Model.AvailableToInstall)
+				{
+					<tr>
+						<td>
+							<span>@v.TranslationName</span>
+							@if (!string.IsNullOrEmpty(v.NativeName) && v.NativeName != v.TranslationName)
+							{
+								<span class="text-muted">(@v.NativeName)</span>
+							}
+						</td>
+						<td>
+							@if (!string.IsNullOrEmpty(v.MaintainerHandle))
+							{
+								@if (!string.IsNullOrEmpty(v.MaintainerUrl))
+								{
+									<a href="@v.MaintainerUrl" target="_blank" rel="noopener noreferrer">@v.MaintainerHandle</a>
+								}
+								else
+								{
+									<span>@v.MaintainerHandle</span>
+								}
+							}
+							else
+							{
+								<span>-</span>
+							}
+						</td>
+						<td>
+							@if (v.LastUpdated is not null)
+							{
+								<span>@v.LastUpdated.Value.ToBrowserDate()</span>
+							}
+							else
+							{
+								<span>-</span>
+							}
+						</td>
+						<td class="actions-col">
+							<form method="post" asp-action="DownloadLanguagePack" asp-route-language="@v.TranslationName" class="d-inline">
+								<button type="submit" class="btn btn-link p-0" text-translate="true">Install</button>
+							</form>
+						</td>
+					</tr>
+				}
+			}
+		</tbody>
+	</table>
+</div>
+
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Uninstall translation"], StringLocalizer["This translation will be removed from this server."], StringLocalizer["Delete"]))" />

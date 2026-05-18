@@ -32,7 +32,7 @@ public class TranslationsPlugin : BaseBTCPayServerPlugin
         {
             RequiredPolicy = Policies.CanModifyServerSettings,
             Title = "Localize the user interface",
-            Action = nameof(UITranslationController.ListDictionaries),
+            Action = nameof(UITranslationController.ListTranslations),
             Controller = "UITranslation",
             Values = _ => new { area = Area },
             Category = "Server",

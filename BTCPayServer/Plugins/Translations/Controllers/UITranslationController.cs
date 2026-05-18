@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,63 +26,99 @@ public class UITranslationController(
 {
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
 
-    [HttpGet("server/dictionaries")]
-    public async Task<IActionResult> ListDictionaries()
+    [HttpGet("server/translations")]
+    public async Task<IActionResult> ListTranslations()
     {
-        var dictionaries = await localizer.GetDictionaries();
-        var vm = new ListDictionariesViewModel();
-        var downloadableLanguages = LanguagePackUpdateService.GetDownloadableLanguages();
-
-        foreach (var dictionary in dictionaries)
+        var translations = await localizer.GetTranslations();
+        LanguagePackUpdateService.LanguageManifestEntry[] manifestLanguages;
+        var degradedMode = false;
+        try
         {
-            var isSelected = policiesSettings.LangDictionary == dictionary.DictionaryName ||
-                             (policiesSettings.LangDictionary is null && dictionary.Source == "Default");
-            var isDownloadedPack = downloadableLanguages.Contains(dictionary.DictionaryName);
+            manifestLanguages = await languagePackUpdateService.GetManifestLanguages();
+        }
+        catch (Exception)
+        {
+            manifestLanguages = [];
+            degradedMode = true;
+        }
+        var manifestByName = new Dictionary<string, LanguagePackUpdateService.LanguageManifestEntry>(StringComparer.OrdinalIgnoreCase);
+        foreach (var entry in manifestLanguages)
+            manifestByName.TryAdd(entry.Name, entry);
+        var installedNames = new HashSet<string>(translations.Select(t => t.TranslationName), StringComparer.OrdinalIgnoreCase);
+        var vm = new ListTranslationsViewModel
+        {
+            ManifestFetchFailed = degradedMode
+        };
+
+        foreach (var translation in translations)
+        {
+            var isSelected = policiesSettings.LangTranslation == translation.TranslationName ||
+                             (policiesSettings.LangTranslation is null && translation.Source == "Default");
+            var isDownloadedPack = translation.Source == "LanguagePack";
             var updateAvailable = false;
+            manifestByName.TryGetValue(translation.TranslationName, out var manifestEntry);
 
-            if (isDownloadedPack && dictionary.Source == "Custom")
-            {
-                updateAvailable = await languagePackUpdateService.CheckForLanguagePackUpdateCached(dictionary.DictionaryName, dictionary.Metadata);
-            }
+            if (!degradedMode && isDownloadedPack)
+                updateAvailable = await languagePackUpdateService.CheckForLanguagePackUpdateCached(translation.TranslationName, translation.Metadata);
 
-            var dict = new ListDictionariesViewModel.DictionaryViewModel
+            var translationVm = new ListTranslationsViewModel.TranslationViewModel
             {
-                Editable = dictionary.Source == "Custom",
-                Source = dictionary.Source,
-                DictionaryName = dictionary.DictionaryName,
-                Fallback = dictionary.Fallback,
+                Installed = true,
+                Editable = translation.Source == "Custom",
+                Source = translation.Source,
+                TranslationName = translation.TranslationName,
+                NativeName = manifestEntry?.Native ?? translation.TranslationName,
+                MaintainerHandle = manifestEntry?.MaintainerHandle,
+                MaintainerUrl = manifestEntry?.MaintainerUrl,
+                LastUpdated = manifestEntry?.Updated,
+                Fallback = translation.Fallback,
                 IsSelected = isSelected,
-                IsDownloadedLanguagePack = isDownloadedPack && dictionary.Source == "Custom",
+                IsDownloadedLanguagePack = isDownloadedPack,
                 UpdateAvailable = updateAvailable
             };
             if (isSelected)
-                vm.Dictionaries.Insert(0, dict);
+                vm.InstalledLanguages.Insert(0, translationVm);
             else
-                vm.Dictionaries.Add(dict);
+                vm.InstalledLanguages.Add(translationVm);
+        }
+
+        if (!degradedMode)
+        {
+            foreach (var manifestEntry in manifestLanguages.Where(m => !installedNames.Contains(m.Name)).OrderBy(m => m.Name))
+            {
+                vm.AvailableToInstall.Add(new ListTranslationsViewModel.TranslationViewModel
+                {
+                    TranslationName = manifestEntry.Name,
+                    NativeName = manifestEntry.Native ?? manifestEntry.Name,
+                    MaintainerHandle = manifestEntry.MaintainerHandle,
+                    MaintainerUrl = manifestEntry.MaintainerUrl,
+                    LastUpdated = manifestEntry.Updated
+                });
+            }
         }
 
         return View(vm);
     }
 
-    [HttpGet("server/dictionaries/create")]
-    public async Task<IActionResult> CreateDictionary(string fallback = null)
+    [HttpGet("server/translations/create")]
+    public async Task<IActionResult> CreateTranslation(string fallback = null)
     {
-        var dictionaries = await localizer.GetDictionaries();
-        return View(new CreateDictionaryViewModel
+        var translations = await localizer.GetTranslations();
+        return View(new CreateTranslationViewModel
         {
             Name = fallback is not null ? $"Clone of {fallback}" : "",
             Fallback = fallback ?? Translations.DefaultLanguage,
-        }.SetDictionaries(dictionaries));
+        }.SetTranslations(translations));
     }
 
-    [HttpPost("server/dictionaries/create")]
-    public async Task<IActionResult> CreateDictionary(CreateDictionaryViewModel viewModel)
+    [HttpPost("server/translations/create")]
+    public async Task<IActionResult> CreateTranslation(CreateTranslationViewModel viewModel)
     {
         if (ModelState.IsValid)
         {
             try
             {
-                await localizer.CreateDictionary(viewModel.Name, viewModel.Fallback, "Custom");
+                await localizer.CreateTranslation(viewModel.Name, viewModel.Fallback, "Custom");
             }
             catch (DbException)
             {
@@ -90,29 +127,29 @@ public class UITranslationController(
         }
 
         if (!ModelState.IsValid)
-            return View(viewModel.SetDictionaries(await localizer.GetDictionaries()));
-        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Dictionary created"].Value;
-        return RedirectToAction(nameof(EditDictionary), new { dictionary = viewModel.Name });
+            return View(viewModel.SetTranslations(await localizer.GetTranslations()));
+        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Translation created"].Value;
+        return RedirectToAction(nameof(EditTranslation), new { translation = viewModel.Name });
     }
 
-    [HttpGet("server/dictionaries/{dictionary}")]
-    public async Task<IActionResult> EditDictionary(string dictionary)
+    [HttpGet("server/translations/{translation}")]
+    public async Task<IActionResult> EditTranslation(string translation)
     {
-        if ((await localizer.GetDictionary(dictionary)) is null)
+        if ((await localizer.GetTranslation(translation)) is null)
             return NotFound();
-        var translations = await localizer.GetTranslations(dictionary);
-        return View(new EditDictionaryViewModel().SetTranslations(translations.Translations));
+        var translations = await localizer.GetTranslations(translation);
+        return View(new EditTranslationViewModel().SetTranslations(translations.Translations));
     }
 
-    [HttpPost("server/dictionaries/{dictionary}")]
-    public async Task<IActionResult> EditDictionary(string dictionary, EditDictionaryViewModel viewModel)
+    [HttpPost("server/translations/{translation}")]
+    public async Task<IActionResult> EditTranslation(string translation, EditTranslationViewModel viewModel)
     {
-        var d = await localizer.GetDictionary(dictionary);
+        var d = await localizer.GetTranslation(translation);
         if (d is null)
             return NotFound();
         if (environment.CheatMode && viewModel.Command == "Fake")
         {
-            var t = await localizer.GetTranslations(dictionary);
+            var t = await localizer.GetTranslations(translation);
             var jobj = JObject.Parse(t.Translations.ToJsonFormat());
             foreach (var prop in jobj.Properties())
             {
@@ -132,57 +169,54 @@ public class UITranslationController(
         }
 
         await localizer.Save(d, translations);
-        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Dictionary updated"].Value;
-        return RedirectToAction(nameof(ListDictionaries));
+        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Translation updated"].Value;
+        return RedirectToAction(nameof(ListTranslations));
     }
 
-    [HttpPost("server/dictionaries/{dictionary}/select")]
-    public async Task<IActionResult> SelectDictionary(string dictionary)
+    [HttpPost("server/translations/{translation}/select")]
+    public async Task<IActionResult> SelectTranslation(string translation)
     {
-        if ((await localizer.GetDictionary(dictionary)) is null)
+        if ((await localizer.GetTranslation(translation)) is null)
             return NotFound();
         var settings = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new();
-        settings.LangDictionary = dictionary;
+        settings.LangTranslation = translation;
         await settingsRepository.UpdateSetting(settings);
         await localizer.Load();
-        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Default dictionary changed to {0}", dictionary].Value;
-        return RedirectToAction(nameof(ListDictionaries));
+        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Default translation changed to {0}", translation].Value;
+        return RedirectToAction(nameof(ListTranslations));
     }
 
-    [HttpPost("server/dictionaries/{dictionary}/delete")]
-    public async Task<IActionResult> DeleteDictionary(string dictionary)
-    {
-        await localizer.DeleteDictionary(dictionary);
-        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Dictionary {0} deleted", dictionary].Value;
-        return RedirectToAction(nameof(ListDictionaries));
-    }
-
-    [HttpPost("server/dictionaries/download")]
+    [HttpPost("server/translations/download")]
     public async Task<IActionResult> DownloadLanguagePack(string language)
     {
         if (string.IsNullOrEmpty(language))
         {
             TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Please select a language"].Value;
-            return RedirectToAction(nameof(ListDictionaries));
+            return RedirectToAction(nameof(ListTranslations));
         }
 
-        string translationsJson;
+        Translations translations;
         string version;
         try
         {
-            (translationsJson, version) = await languagePackUpdateService.FetchLanguagePackFromRepository(language);
+            var result = await languagePackUpdateService.FetchLanguagePackFromRepository(language);
+            version = result.Item2;
+            if (!Translations.TryCreateFromJson(result.Item1, out translations))
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Downloaded language pack is invalid"].Value;
+                return RedirectToAction(nameof(ListTranslations));
+            }
         }
         catch (Exception ex)
         {
             TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Failed to download language pack: {0}", ex.Message].Value;
-            return RedirectToAction(nameof(ListDictionaries));
+            return RedirectToAction(nameof(ListTranslations));
         }
 
-        var translations = Translations.CreateFromJson(translationsJson);
-        var existingDictionary = await localizer.GetDictionary(language);
-        if (existingDictionary is null)
+        var existingTranslation = await localizer.GetTranslation(language);
+        if (existingTranslation is null)
         {
-            existingDictionary = await localizer.CreateDictionary(language, Translations.DefaultLanguage, "Custom");
+            existingTranslation = await localizer.CreateTranslation(language, Translations.DefaultLanguage, "LanguagePack");
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' downloaded successfully", language].Value;
         }
         else
@@ -190,9 +224,43 @@ public class UITranslationController(
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' updated successfully", language].Value;
         }
 
-        await localizer.Save(existingDictionary, translations);
+        await localizer.Save(existingTranslation, translations);
         await localizer.UpdateVersion(language, version);
         languagePackUpdateService.InvalidateCache(language);
-        return RedirectToAction(nameof(ListDictionaries));
+        return RedirectToAction(nameof(ListTranslations));
+    }
+
+    [HttpPost("server/translations/{translation}/uninstall")]
+    public async Task<IActionResult> UninstallLanguagePack(string translation)
+    {
+        var existing = await localizer.GetTranslation(translation);
+        if (existing is null)
+            return NotFound();
+        if (existing.Source != "LanguagePack" && existing.Source != "Custom")
+        {
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Translation {0} is not user-installed and cannot be uninstalled", translation].Value;
+            return RedirectToAction(nameof(ListTranslations));
+        }
+        if (policiesSettings.LangTranslation == translation)
+        {
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Translation {0} is the currently selected one and cannot be uninstalled", translation].Value;
+            return RedirectToAction(nameof(ListTranslations));
+        }
+        await localizer.DeleteTranslation(translation);
+        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Translation {0} deleted", translation].Value;
+        return RedirectToAction(nameof(ListTranslations));
+    }
+
+    [HttpGet("server/dictionaries")]
+    public IActionResult RedirectToTranslation()
+    {
+        return RedirectToActionPermanent(nameof(ListTranslations));
+    }
+
+    [Route("server/dictionaries/{**catchall}")]
+    public IActionResult RedirectDictionariesSubpath(string catchall)
+    {
+        var newPath = "/server/translations" + (string.IsNullOrEmpty(catchall) ? "" : $"/{catchall}");
+        return RedirectPermanentPreserveMethod(newPath + Request.QueryString);
     }
 }

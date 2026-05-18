@@ -24,7 +24,7 @@ namespace BTCPayServer.Plugins.Translations
         public ILogger<LoadTranslationsStartupTask> Logger { get; } = logger;
         public LocalizerService LocalizerService { get; } = localizerService;
 
-        class DictionaryFileMetadata
+        class TranslationFileMetadata
         {
             [JsonConverter(typeof(NBitcoin.JsonConverters.UInt256JsonConverter))]
             [JsonProperty("hash")]
@@ -42,29 +42,29 @@ namespace BTCPayServer.Plugins.Translations
                 if (files.Length > 0)
                 {
                     Logger.LogInformation("Loading language files...");
-                    var dictionaries = await LocalizerService.GetDictionaries();
+                    var availableTranslations = await LocalizerService.GetTranslations();
                     foreach (var file in files)
                     {
                         var langName = Path.GetFileName(file);
-                        var dictionary = dictionaries.FirstOrDefault(d => d.DictionaryName == langName);
-                        if (dictionary is null)
-                            dictionary = await LocalizerService.CreateDictionary(langName, null, "File");
-                        if (dictionary.Source != "File")
+                        var translation = availableTranslations.FirstOrDefault(t => t.TranslationName == langName);
+                        if (translation is null)
+                            translation = await LocalizerService.CreateTranslation(langName, null, "File");
+                        if (translation.Source != "File")
                         {
                             Logger.LogWarning($"Impossible to load language '{langName}', as it is already existing in the database, not initially imported by a File");
                             continue;
                         }
-                        var savedHash = dictionary.Metadata.ToObject<DictionaryFileMetadata>().Hash;
+                        var savedHash = translation.Metadata.ToObject<TranslationFileMetadata>().Hash;
                         var translations = Translations.CreateFromJson(await File.ReadAllTextAsync(file, cancellationToken));
                         var currentHash = new uint256(SHA256.HashData(Encoding.UTF8.GetBytes(translations.ToJsonFormat())));
 
                         if (savedHash != currentHash)
                         {
-                            var newMetadata = (JObject)dictionary.Metadata.DeepClone();
+                            var newMetadata = (JObject)translation.Metadata.DeepClone();
                             newMetadata["hash"] = currentHash.ToString();
-                            dictionary = dictionary with { Metadata = newMetadata };
-                            Logger.LogInformation($"Updating dictionary '{langName}'");
-                            await LocalizerService.Save(dictionary, translations);
+                            translation = translation with { Metadata = newMetadata };
+                            Logger.LogInformation($"Updating translation '{langName}'");
+                            await LocalizerService.Save(translation, translations);
                         }
                     }
                 }

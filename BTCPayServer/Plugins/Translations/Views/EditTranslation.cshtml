@@ -1,7 +1,7 @@
 @using BTCPayServer.Views.Server
-@model EditDictionaryViewModel
+@model EditTranslationViewModel
 @{
-	ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Translations), Context.GetRouteValue("dictionary") as string)
+	ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Translations), Context.GetRouteValue("translation") as string)
         .SetCategory(WellKnownCategories.Server));
 }
 
@@ -10,7 +10,7 @@
 		<nav aria-label="breadcrumb">
 			<ol class="breadcrumb">
 				<li class="breadcrumb-item">
-					<a asp-action="ListDictionaries" text-translate="true">Dictionaries</a>
+					<a asp-action="ListTranslations" text-translate="true">Translations</a>
 				</li>
 				<li class="breadcrumb-item active" aria-current="page" text-translate="true">@ViewData["Title"]</li>
 			</ol>
@@ -27,10 +27,10 @@
 		<div class="flex-fill">
 			<p>@ViewLocalizer["Translations are formatted as JSON; for example, <b>{0}</b> translates <b>{1}</b> to <b>{2}</b>.", "{ \"Welcome\": \"Bienvenue\" }", "Welcome", "Bienvenue"]</p>
 			<p class="mb-0" text-translate="true">
-				To use the translation from this dictionary's fallback, you can:
+				To use this translation's fallback, you can:
 			</p>
             <ul>
-                <li text-translate="true">Remove the translation from this dictionary.</li>
+                <li text-translate="true">Remove the entry from this translation.</li>
                 <li text-translate="true">Set the translation to match the string in the fallback.</li>
             </ul>
 			<p class="mb-0" text-translate="true">Please note that not all text is translatable, and future updates may modify existing translations or introduce new translatable phrases.</p>

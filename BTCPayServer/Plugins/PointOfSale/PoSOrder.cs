@@ -1,4 +1,4 @@
-﻿#nullable  enable
+#nullable  enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +17,7 @@ public class PoSOrder
         _decimals = decimals;
     }
 
-    public record ItemLine(string ItemId, int Count, decimal UnitPrice, decimal TaxRate);
+    public record ItemLine(string ItemId, int Count, decimal UnitPrice, decimal TaxRate, bool TaxIncluded = false);
     public void AddLine(ItemLine line)
     {
         ItemLines.Add(line);
@@ -44,10 +44,21 @@ public class PoSOrder
             discount = Round(discount);
             ctx.Discount += discount;
             linePrice -= discount;
-            var tax = linePrice * item.TaxRate / 100.0m;
-            tax =  Round(tax);
+
+            decimal tax;
+            decimal lineExcluded;
+            if (item.TaxIncluded && item.TaxRate > 0)
+            {
+                tax = Round(linePrice * item.TaxRate / (100.0m + item.TaxRate));
+                lineExcluded = linePrice - tax;
+            }
+            else
+            {
+                tax = Round(linePrice * item.TaxRate / 100.0m);
+                lineExcluded = linePrice;
+            }
             ctx.Tax += tax;
-            ctx.PriceTaxExcluded += linePrice;
+            ctx.PriceTaxExcluded += lineExcluded;
         }
         ctx.PriceTaxExcluded = Round(ctx.PriceTaxExcluded);
         ctx.PriceTaxIncluded = ctx.PriceTaxExcluded + ctx.Tax;

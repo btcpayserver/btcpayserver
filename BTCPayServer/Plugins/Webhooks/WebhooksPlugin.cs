@@ -12,6 +12,7 @@ using BTCPayServer.Plugins.Translations.Controllers;
 using BTCPayServer.Plugins.Webhooks.Controllers;
 using BTCPayServer.Plugins.Webhooks.HostedServices;
 using BTCPayServer.Plugins.Webhooks.TriggerProviders;
+using BTCPayServer.Security;
 using BTCPayServer.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -32,6 +33,9 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
         services.AddSingleton<IHostedService, WebhookSender>(o => o.GetRequiredService<WebhookSender>());
         services.AddScheduledTask<CleanupWebhookDeliveriesTask>(TimeSpan.FromHours(6.0));
         services.AddScheduledTask<DbPeriodicTask>(TimeSpan.FromHours(1.0));
+        services.AddSingleton(new BuiltInPermissionScopeProvider.RouteValueToStoreIdQuery(
+            "webhookId", "SELECT \"StoreId\" FROM \"StoreWebhooks\" WHERE \"WebhookId\"=@id"
+        ));
 
         services.AddHttpClient(WebhookSender.OnionNamedClient)
             .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();

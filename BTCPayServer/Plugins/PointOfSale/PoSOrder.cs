@@ -85,6 +85,9 @@ public class PoSOrder
 
     public void SetTipTaxRate(decimal? tipTaxRate)
     {
+        if (tipTaxRate is < 0m)
+            throw new ArgumentOutOfRangeException(nameof(tipTaxRate), "Tip tax rate cannot be negative.");
+
         _tipTaxRate = tipTaxRate;
     }
     public decimal? GetTipTaxRate()

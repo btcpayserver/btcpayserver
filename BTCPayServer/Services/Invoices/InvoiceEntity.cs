@@ -140,6 +140,12 @@ namespace BTCPayServer.Services.Invoices
             get => this.GetAdditionalData<decimal?>("taxIncluded");
             set => this.SetAdditionalData("taxIncluded", value);
         }
+        [JsonIgnore]
+        public decimal? TaxOnTip
+        {
+            get => this.GetAdditionalData<decimal?>("taxOnTip");
+            set => this.SetAdditionalData("taxOnTip", value);
+        }
 
         /// <summary>
         /// posData is a field that may be treated differently for presentation and in some legacy API

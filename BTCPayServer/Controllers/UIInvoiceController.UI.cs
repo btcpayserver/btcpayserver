@@ -72,12 +72,12 @@ namespace BTCPayServer.Controllers
 
         [HttpPost("invoices/{invoiceId}/deliveries/{deliveryId}/redeliver")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        public async Task<IActionResult> RedeliverWebhook(string storeId, string invoiceId, string deliveryId)
+        public async Task<IActionResult> RedeliverWebhook(string invoiceId, string deliveryId)
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery
             {
                 InvoiceId = [invoiceId],
-                StoreId = [storeId],
+                StoreId = [this.HttpContext.GetStoreData().Id],
                 UserId = GetUserIdForInvoiceQuery()
             })).FirstOrDefault();
             if (invoice is null)

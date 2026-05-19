@@ -98,8 +98,8 @@
                 "tags": [
                     "Webhooks"
                 ],
-                "summary": "Get a webhook of a store",
-                "description": "View webhook of a store",
+                "summary": "Get a webhook",
+                "description": "View webhook",
                 "operationId": "Webhooks_GetWebhook",
                 "responses": {
                     "200": {

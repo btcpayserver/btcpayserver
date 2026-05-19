@@ -196,7 +196,7 @@ namespace BTCPayServer.Controllers.Greenfield
 			var storeData = HttpContext.GetStoreData();
 			pr = new PaymentRequestData()
 			{
-				StoreDataId = storeId,
+                StoreDataId = storeData.Id,
 				Status = PaymentRequestStatus.Pending,
 				Created = DateTimeOffset.UtcNow,
 				Amount = request.Amount,
@@ -236,7 +236,7 @@ namespace BTCPayServer.Controllers.Greenfield
 			{
 				CreatedTime = data.Created,
 				Id = data.Id,
-				StoreId = data.StoreDataId,
+                StoreId = data.StoreDataId,
 				Status = data.Status,
 				Archived = data.Archived,
 				Amount = data.Amount,

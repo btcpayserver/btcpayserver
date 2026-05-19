@@ -880,7 +880,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.AssertPageAccess(true, GetStorePath("invoices"));
         await s.AssertPageAccess(true, GetStorePath("invoices/create"));
         await s.AssertPageAccess(true, GetStorePath("payment-requests"));
-        await s.AssertPageAccess(true, GetStorePath("payment-requests/edit"));
+        await s.AssertPageAccess(true, GetStorePath("payment-requests/new"));
         await s.AssertPageAccess(true, GetStorePath("pull-payments"));
         await s.AssertPageAccess(true, GetStorePath("payouts"));
         await s.AssertPageAccess(true, GetStorePath("onchain/BTC"));
@@ -915,7 +915,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.AssertPageAccess(true, GetStorePath("invoices"));
         await s.AssertPageAccess(true, GetStorePath("invoices/create"));
         await s.AssertPageAccess(true, GetStorePath("payment-requests"));
-        await s.AssertPageAccess(true, GetStorePath("payment-requests/edit"));
+        await s.AssertPageAccess(true, GetStorePath("payment-requests/new"));
         await s.AssertPageAccess(true, GetStorePath("pull-payments"));
         await s.AssertPageAccess(true, GetStorePath("payouts"));
         await s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
@@ -942,7 +942,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.AssertPageAccess(true, GetStorePath("invoices"));
         await s.AssertPageAccess(true, GetStorePath("invoices/create"));
         await s.AssertPageAccess(true, GetStorePath("payment-requests"));
-        await s.AssertPageAccess(true, GetStorePath("payment-requests/edit"));
+        await s.AssertPageAccess(true, GetStorePath("payment-requests/new"));
         await s.AssertPageAccess(true, GetStorePath("pull-payments"));
         await s.AssertPageAccess(true, GetStorePath("payouts"));
         await s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
@@ -969,7 +969,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.AssertPageAccess(true, GetStorePath("invoices"));
         await s.AssertPageAccess(true, GetStorePath("invoices/create"));
         await s.AssertPageAccess(true, GetStorePath("payment-requests"));
-        await s.AssertPageAccess(false, GetStorePath("payment-requests/edit"));
+        await s.AssertPageAccess(false, GetStorePath("payment-requests/new"));
         await s.AssertPageAccess(true, GetStorePath("pull-payments"));
         await s.AssertPageAccess(true, GetStorePath("payouts"));
         await s.AssertPageAccess(false, GetStorePath("onchain/BTC"));

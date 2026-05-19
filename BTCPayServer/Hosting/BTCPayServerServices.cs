@@ -752,6 +752,7 @@ namespace BTCPayServer.Hosting
             services.AddRateProvider<BudaRateProvider>();
             services.AddRateProvider<BitbankRateProvider>();
             services.AddRateProvider<BitnobRateProvider>();
+            services.AddRateProvider<BitcoinKenyaRateProvider>();
             services.AddRateProvider<BitpayRateProvider>();
             services.AddRateProvider<RipioExchangeProvider>();
             services.AddRateProvider<CryptoMarketExchangeRateProvider>();

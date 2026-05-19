@@ -1,0 +1,13 @@
+@using System.Text.Json.Nodes
+@inherits BlazorDashboardKit.Components.WidgetConfigComponent<BTCPayServer.Plugins.Dashboard.Widgets.NotesWidget.NotesConfig>
+
+<div class="mb-3">
+    <label class="form-label">Title</label>
+    <input class="form-control" value="@Model.Title"
+           @oninput="async e => { Model.Title = e.Value?.ToString() ?? string.Empty; await NotifyChangedAsync(); }" />
+</div>
+<div class="mb-3">
+    <label class="form-label">Content</label>
+    <textarea class="form-control" rows="5"
+              @oninput="async e => { Model.Content = e.Value?.ToString() ?? string.Empty; await NotifyChangedAsync(); }">@Model.Content</textarea>
+</div>

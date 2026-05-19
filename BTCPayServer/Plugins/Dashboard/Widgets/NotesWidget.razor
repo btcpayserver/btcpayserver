@@ -1,13 +1,13 @@
-@using BTCPayServer.Plugins.Dashboard.Models
-@using Newtonsoft.Json.Linq
-@inherits BTCPayServer.Plugins.Dashboard.BaseWidgetComponent<NotesWidget.NotesConfig>
+@using System.Text.Json.Nodes
+@using BlazorDashboardKit.Models
+@inherits BlazorDashboardKit.Components.BaseWidgetComponent<NotesWidget.NotesConfig>
 
 <header class="mb-2 d-flex justify-content-between align-items-center">
     <h6 class="mb-0">@(TypedConfig?.Title ?? "Notes")</h6>
-    @if (!Readonly && !_editing)
+    @if (!Readonly && !_editing && !string.IsNullOrWhiteSpace(TypedConfig?.Content))
     {
         <button class="btn btn-link btn-sm p-0 text-muted" @onclick="StartEditing" title="Edit notes">
-            <svg role="img" class="icon icon-actions" style="width:16px;height:16px;"><use href="/img/icon-sprite.svg#actions"></use></svg>
+            Edit
         </button>
     }
 </header>
@@ -27,7 +27,7 @@ else if (string.IsNullOrWhiteSpace(TypedConfig?.Content))
         <button type="button"
                 class="btn btn-link text-muted small p-0 mb-0 text-start"
                 @onclick="StartEditing">
-            Click to add notes...
+            Click to add notes…
         </button>
     }
     else
@@ -69,7 +69,10 @@ else
             Content = _editContent
         };
 
-        await ConfigChanged.InvokeAsync(JObject.FromObject(config));
+        // Persist via the callback first; only flip out of edit mode after it
+        // completes so a save failure doesn't leave the UI looking saved.
+        await ConfigChanged.InvokeAsync(
+            System.Text.Json.JsonSerializer.SerializeToNode(config)!.AsObject());
         _editing = false;
     }
 
@@ -79,15 +82,10 @@ else
         Name = "Notes",
         Description = "A simple text note",
         Category = "Utility",
-        Scope = WidgetScope.Universal,
         AlwaysInteractive = true,
         MinColumnSize = 2,
         MaxColumnSize = 12,
         DefaultColumnSize = 4,
-        ConfigSchema = new()
-        {
-            ["Title"] = new ConfigFieldSchema { Label = "Title", FieldType = ConfigFieldType.Text },
-            ["Content"] = new ConfigFieldSchema { Label = "Content", FieldType = ConfigFieldType.Textarea, Rows = 8 }
-        }
+        ConfigComponentType = typeof(NotesConfigComponent)
     };
 }

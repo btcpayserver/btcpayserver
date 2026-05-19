@@ -15,7 +15,7 @@ public partial class UIStoresController
 
     [HttpGet("{storeId}/2")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public IActionResult Dashboard2(string? dashboardId = null)
+    public IActionResult Dashboard2()
     {
         var store = CurrentStore;
         if (store is null)
@@ -31,7 +31,7 @@ public partial class UIStoresController
 
         var vm = new Dashboard2ViewModel
         {
-            DashboardId = dashboardId,
+            OwnerKey = "store:" + store.Id,
             // Any payment method at all (wallet, lightning, or plugin-provided like Monero, Liquid, etc.)
             IsSetUp = walletEnabled || lightningEnabled
                       || store.GetPaymentMethodConfigs(onlyEnabled: true).Count > 0,

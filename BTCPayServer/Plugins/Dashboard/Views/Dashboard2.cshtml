@@ -1,38 +1,37 @@
 @model BTCPayServer.Plugins.Dashboard.Models.Dashboard2ViewModel
+@using System
 @using BTCPayServer.Plugins.Dashboard
-@using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Views.Stores
-@using Microsoft.AspNetCore.Identity
-@inject IScopeProvider ScopeProvider
-@inject UserManager<BTCPayServer.Data.ApplicationUser> UserManager
 @{
     ViewData["Title"] = "Dashboard";
     ViewData.SetActivePage(StoreNavPages.Dashboard);
     this.ViewData.SetBlazorAllowed(true);
 }
 
+@*
+    BlazorDashboardKit ships a Blazor JS initializer that auto-injects these
+    assets in a pure Blazor Web App. BTCPay hosts the component via MVC
+    RenderComponentAsync, where that initializer path is not guaranteed, so we
+    include them explicitly here. The kit's initializer is idempotent and will
+    no-op when it sees these already present.
+*@
 @section PageHeadContent {
-    <link rel="stylesheet" href="~/vendor/gridstack/gridstack.min.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/vendor/chartist/chartist.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/vendor/chartist/chartist-plugin-tooltip.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/_content/BlazorDashboardKit/gridstack/gridstack.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/_content/BlazorDashboardKit/dashboard.css" asp-append-version="true" />
 }
 
-@(await Html.RenderComponentAsync<DashboardPage>(RenderMode.ServerPrerendered, new
+@(await Html.RenderComponentAsync<BtcpayDashboard>(RenderMode.ServerPrerendered, new
 {
-    StoreId = ScopeProvider.GetCurrentStoreId(),
-    UserId = UserManager.GetUserId(User),
-    DashboardId = Model.DashboardId,
+    OwnerKey = Model.OwnerKey,
     IsSetUp = Model.IsSetUp,
+    StoreId = Model.OwnerKey.StartsWith("store:", StringComparison.Ordinal)
+        ? Model.OwnerKey.Substring("store:".Length) : string.Empty,
+    CryptoCode = Model.CryptoCode,
     WalletEnabled = Model.WalletEnabled,
     LightningEnabled = Model.LightningEnabled,
-    LightningSupported = Model.LightningSupported,
-    CryptoCode = Model.CryptoCode
+    LightningSupported = Model.LightningSupported
 }))
 
 @section PageFootContent {
-    <script src="~/vendor/gridstack/gridstack-all.js" asp-append-version="true"></script>
-    <script src="~/vendor/chartist/chartist.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/chartist/chartist-plugin-tooltip.js" asp-append-version="true"></script>
-    <script src="~/js/dashboard-interop.js" asp-append-version="true"></script>
+    <script src="~/_content/BlazorDashboardKit/gridstack/gridstack-all.js" asp-append-version="true"></script>
 }

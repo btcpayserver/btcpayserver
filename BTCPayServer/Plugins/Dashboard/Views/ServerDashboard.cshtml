@@ -11,11 +11,13 @@
 }
 
 @*
-    BlazorDashboardKit ships a Blazor JS initializer that auto-injects these
-    assets in a pure Blazor Web App. BTCPay hosts the component via MVC
-    RenderComponentAsync, where that initializer path is not guaranteed, so we
-    include them explicitly here. The kit's initializer is idempotent and will
-    no-op when it sees these already present.
+    BlazorDashboardKit injects its CSS + GridStack script lazily — only the
+    first time a dashboard becomes interactive. BTCPay renders this dashboard
+    via MVC RenderComponentAsync(ServerPrerendered), so its markup is in the
+    initial HTML; we include the stylesheets in <head> (and the GridStack
+    script) explicitly so the prerendered dashboard is styled on first paint
+    and GridStack is ready before interactivity. The kit's injection is
+    idempotent and skips assets the host already references.
 *@
 @section PageHeadContent {
     <link rel="stylesheet" href="~/_content/BlazorDashboardKit/gridstack/gridstack.min.css" asp-append-version="true" />

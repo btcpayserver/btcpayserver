@@ -9,6 +9,7 @@ using BTCPayServer.Views.Server;
 using Microsoft.Playwright;
 using Xunit;
 using Xunit.Abstractions;
+using static BTCPayServer.Tests.SubscriptionTests;
 using static Microsoft.Playwright.Assertions;
 
 namespace BTCPayServer.Tests;
@@ -224,6 +225,79 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await offeringPMO.AssertHasNotSubscriber("normal-guest@gmail.com");
     }
 
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanBypassMonetizationForUsers()
+    {
+        await using var s = CreatePlaywrightTester(newDb: true);
+        await s.StartAsync();
+        await s.RegisterNewUser(true);
+        await s.CreateNewStore();
+        await GoToMonetization(s);
+        await s.ClickPagePrimary();
+        await s.ConfirmModal();
+        await s.FindAlertMessage(partialText: "Monetization activated");
+
+        // Case 1: Create user with bypass — should not be enrolled and can log in freely
+        await CreateUserAsAdmin(s, "skip-monetization@gmail.com", byPassMonetization: true);
+        await AssertSubscribed(s, "skip-monetization@gmail.com", false);
+        await CanLog(s, "skip-monetization@gmail.com");
+
+        // Case 2: Create user without bypass — should be enrolled
+        var ev = await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await CreateUserAsAdmin(s, "enrolled-invited@gmail.com", byPassMonetization: false);
+        });
+        Assert.Equal("enrolled-invited@gmail.com", ev.Subscriber.Customer.Email.Get());
+        await AssertSubscribed(s, "enrolled-invited@gmail.com", true);
+        await CanLog(s, "enrolled-invited@gmail.com");
+
+        // Case 3: Edit user — add bypass to already enrolled user
+        await SetBypassMonetization(s, "enrolled-invited@gmail.com", true);
+        await CanLog(s, "enrolled-invited@gmail.com");
+
+        // Case 4: Edit user — remove bypass from user with no subscriber
+        var ev2 = await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await SetBypassMonetization(s, "skip-monetization@gmail.com", false);
+        });
+        Assert.Equal("skip-monetization@gmail.com", ev2.Subscriber.Customer.Email.Get());
+        await AssertSubscribed(s, "skip-monetization@gmail.com", true);
+
+        // Case 5: Edit user — remove bypass from user who has a subscriber record
+        await GoToMonetization(s);
+        var offeringPMO = await GoToOffering(s);
+        await offeringPMO.GoToSubscribers();
+        await offeringPMO.ToggleTestSubscriber("enrolled-invited@gmail.com");
+        await s.FindAlertMessage(partialText: "is now test");
+        await using (var portal = await offeringPMO.GoToPortal("enrolled-invited@gmail.com"))
+        {
+            await portal.GoToNextPhase();
+        }
+        await s.Server.WaitForEvent<MonetizationHostedService.MonetizationLockoutUpdated>(async () =>
+        {
+            await SetBypassMonetization(s, "enrolled-invited@gmail.com", false);
+        });
+        await using (await s.SwitchPage())
+        {
+            await s.GoToUrl("/");
+            await s.LogIn("enrolled-invited@gmail.com");
+            Assert.Contains("subscriber-portal", s.Page.Url);
+        }
+    }
+
+    private async Task SetBypassMonetization(PlaywrightTester s, string email, bool bypass)
+    {
+        await s.GoToServer(ServerNavPages.Users);
+        var users = new PMO.UsersPMO(s);
+        await users.EditUser(email);
+        var bypassCheckbox = s.Page.Locator("#BypassMonetization");
+        await bypassCheckbox.SetCheckedAsync(bypass);
+        await s.ClickPagePrimary();
+        await s.FindAlertMessage(partialText: "User successfully updated");
+    }
+
+
     private async Task<SubscriptionTests.OfferingPMO> GoToOffering(PlaywrightTester s)
     {
         await s.Page.ClickAsync("#go-to-offering");
@@ -279,6 +353,20 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
             Email = email,
             Password = tester.Password
         });
+    }
+    private async Task CreateUserAsAdmin(PlaywrightTester s, string email, bool byPassMonetization = true)
+    {
+        await s.GoToUrl("/server/users/new");
+        await s.Page.FillAsync("#Email", email);
+        await s.Page.FillAsync("#Password", s.Password);
+        await s.Page.FillAsync("#ConfirmPassword", s.Password);
+        var emailConfirmed = s.Page.Locator("#EmailConfirmed");
+        if (await emailConfirmed.IsVisibleAsync())
+            await emailConfirmed.CheckAsync();
+        var byPassMonetizationCheckbox = s.Page.Locator("#BypassMonetization");
+        if (await byPassMonetizationCheckbox.IsVisibleAsync())
+            await byPassMonetizationCheckbox.SetCheckedAsync(byPassMonetization);
+        await s.ClickPagePrimary();
     }
 
     private static async Task GoToMonetization(PlaywrightTester s)

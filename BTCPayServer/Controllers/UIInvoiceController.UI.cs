@@ -19,6 +19,7 @@ using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payouts;
+using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Plugins.Webhooks.Views;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
@@ -71,12 +72,12 @@ namespace BTCPayServer.Controllers
 
         [HttpPost("invoices/{invoiceId}/deliveries/{deliveryId}/redeliver")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        public async Task<IActionResult> RedeliverWebhook(string storeId, string invoiceId, string deliveryId)
+        public async Task<IActionResult> RedeliverWebhook(string invoiceId, string deliveryId)
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery
             {
                 InvoiceId = [invoiceId],
-                StoreId = [storeId],
+                StoreId = [this.HttpContext.GetStoreData().Id],
                 UserId = GetUserIdForInvoiceQuery()
             })).FirstOrDefault();
             if (invoice is null)
@@ -674,6 +675,7 @@ namespace BTCPayServer.Controllers
                         AspController = "UIWallets",
                         AspAction = nameof(UIWalletsController.WalletBumpFee),
                         RouteParameters = {
+                            { "area", WalletsPlugin.Area },
                             { "walletId", new WalletId(storeId, network.CryptoCode).ToString() },
                             { "returnUrl", Url.Action(nameof(ListInvoices), new { storeId }) }
                         },
@@ -1071,7 +1073,7 @@ namespace BTCPayServer.Controllers
             model.Search = fs;
             model.SearchText = fs.TextCombined;
 
-            var apps = await _appService.GetAllApps(User.GetIdOrNull(), false, storeId);
+            var apps =  await _appService.GetAllApps(User.GetIdOrNull(), false, storeId);
             InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, apps, timezoneOffset);
             invoiceQuery.StoreId = storeIds.ToArray();
             invoiceQuery.Take = model.Count;
@@ -1112,7 +1114,11 @@ namespace BTCPayServer.Controllers
 
         private InvoiceQuery GetInvoiceQuery(SearchString fs, ListAppsViewModel.ListAppViewModel[] apps, int timezoneOffset = 0)
         {
-            var textSearch = fs.TextSearch;
+            var query = new InvoiceQuery()
+            {
+                UserId = GetUserIdForInvoiceQuery()
+            };
+            query.FillFromSearchText(fs, timezoneOffset);
             if (fs.GetFilterArray("appid") is { } appIds)
             {
                 var appsById = apps.ToDictionary(a => a.Id);
@@ -1120,22 +1126,10 @@ namespace BTCPayServer.Controllers
                     .Select(a => AppService.GetAppSearchTerm(a!.AppType, a.Id))
                     .ToList();
                 searchTexts.Add(fs.TextSearch);
-                textSearch = string.Join(' ', searchTexts.Where(t => !string.IsNullOrEmpty(t)).ToList());
+                var textSearch = string.Join(' ', searchTexts.Where(t => !string.IsNullOrEmpty(t)).ToList());
+                query.TextSearch = textSearch;
             }
-            return new InvoiceQuery
-            {
-                TextSearch = textSearch,
-                UserId = GetUserIdForInvoiceQuery(),
-                Unusual = fs.GetFilterBool("unusual"),
-                IncludeArchived = fs.GetFilterBool("includearchived") ?? false,
-                Status = fs.GetFilterArray("status"),
-                ExceptionStatus = fs.GetFilterArray("exceptionstatus"),
-                StoreId = fs.GetFilterArray("storeid"),
-                ItemCode = fs.GetFilterArray("itemcode"),
-                OrderId = fs.GetFilterArray("orderid"),
-                StartDate = fs.GetFilterDate("startdate", timezoneOffset),
-                EndDate = fs.GetFilterDate("enddate", timezoneOffset)
-            };
+            return query;
         }
 
         [HttpGet("/stores/{storeId}/invoices/create")]
@@ -1308,7 +1302,7 @@ namespace BTCPayServer.Controllers
             object text = _NetworkProvider.DefaultNetwork?.CryptoCode switch
             {
                 null => StringLocalizer["To create an invoice, you need to setup a wallet first"],
-                {} cryptoCode => ViewLocalizer["To create an invoice, you need to <a href='{0}'>setup a wallet</a> first", Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode, storeId })!]
+                {} cryptoCode => ViewLocalizer["To create an invoice, you need to <a href='{0}'>setup a wallet</a> first", Url.Action(nameof(UIStoreOnChainWalletsController.SetupWallet), "UIStoreOnChainWallets", new { area = WalletsPlugin.Area, cryptoCode, storeId })!]
             };
             TempData.SetStatusMessageModel(new StatusMessageModel
             {

@@ -11,7 +11,7 @@ using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
-using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payouts;
 using BTCPayServer.Services;
@@ -113,6 +113,7 @@ namespace BTCPayServer.Controllers
             return registerUrl;
         }
 
+        [HttpGet("pull-payments/edit/{pullPaymentId}")]
         [HttpGet("stores/{storeId}/pull-payments/edit/{pullPaymentId}")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> EditPullPayment(string storeId, string pullPaymentId)
@@ -127,6 +128,7 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
+        [HttpPost("pull-payments/edit/{pullPaymentId}")]
         [HttpPost("stores/{storeId}/pull-payments/edit/{pullPaymentId}")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> EditPullPayment(string storeId, string pullPaymentId, UpdatePullPaymentModel viewModel)
@@ -161,7 +163,7 @@ namespace BTCPayServer.Controllers
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
 
-            return RedirectToAction(nameof(UIStorePullPaymentsController.PullPayments), "UIStorePullPayments", new { storeId, pullPaymentId });
+            return RedirectToAction(nameof(UIStorePullPaymentsController.PullPayments), "UIStorePullPayments", new { storeId = pp.StoreId, pullPaymentId });
         }
 
         [AllowAnonymous]

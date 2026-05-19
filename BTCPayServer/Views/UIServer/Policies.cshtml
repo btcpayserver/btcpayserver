@@ -139,14 +139,14 @@
                 <div class="mb-5">
                     <h4 class="mb-3" text-translate="true">Server</h4>
 					<div class="form-group">
-						<label asp-for="LangDictionary" class="form-label"></label>
-						<select asp-for="LangDictionary"
-								asp-items="@(new SelectList(ViewBag.LangDictionaries, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.LangDictionary))"
+						<label asp-for="LangTranslation" class="form-label"></label>
+						<select asp-for="LangTranslation"
+								asp-items="@(new SelectList(ViewBag.LangTranslations, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.LangTranslation))"
 								class="form-select">
 						</select>
-						<span asp-validation-for="LangDictionary" class="text-danger"></span>
+						<span asp-validation-for="LangTranslation" class="text-danger"></span>
                         <div class="form-text">
-                            <span text-translate="true">Add or customize translations</span> <a asp-area="@TranslationsPlugin.Area" asp-controller="UITranslation" asp-action="ListDictionaries" text-translate="true">here</a>.
+                            <span text-translate="true">Add or customize translations</span> <a asp-area="@TranslationsPlugin.Area" asp-controller="UITranslation" asp-action="ListTranslations" text-translate="true">here</a>.
                         </div>
 					</div>
                     <div class="form-group d-flex">

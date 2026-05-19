@@ -14,7 +14,7 @@ namespace BTCPayServer.Services.Rates
             _httpClient = httpClient ?? new HttpClient();
         }
 
-        public RateSourceInfo RateSourceInfo => new RateSourceInfo("bylls", "Bylls", "https://bylls.com/api/price?from_currency=BTC&to_currency=CAD");
+        public RateSourceInfo RateSourceInfo => new RateSourceInfo("bylls", "Bull Bitcoin", "https://bylls.com/api/price?from_currency=BTC&to_currency=CAD");
 
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {

@@ -15,6 +15,9 @@ public class MonetizationLoginExtension(
 {
     public override async Task Check(UserService.CanLoginContext context)
     {
+        if (context.User.BypassMonetization)
+            return;
+
         if (settings.Settings is { OfferingId: { } offeringId })
         {
             await using var ctx = dbContextFactory.CreateContext();

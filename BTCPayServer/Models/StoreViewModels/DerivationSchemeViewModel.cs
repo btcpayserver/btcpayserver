@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
-using NBitcoin;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
@@ -36,15 +35,5 @@ namespace BTCPayServer.Models.StoreViewModels
         public bool CanCreateNewColdWallet { get; set; }
         public bool SupportSegwit { get; set; }
         public bool SupportTaproot { get; set; }
-        public RootedKeyPath GetAccountKeypath()
-        {
-            if (KeyPath != null && RootFingerprint != null &&
-                NBitcoin.KeyPath.TryParse(KeyPath, out var p) &&
-                HDFingerprint.TryParse(RootFingerprint, out var fp))
-            {
-                return new RootedKeyPath(fp, p);
-            }
-            return null;
-        }
     }
 }

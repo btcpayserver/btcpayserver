@@ -11,5 +11,10 @@ public class UsersPMO(PlaywrightTester s)
         await s.FindAlertMessage();
     }
 
+    public async Task EditUser(string email)
+    {
+        await s.Page.ClickAsync($"{Row(email)} .user-edit");
+    }
+
     private static string Row(string email) => $"tr[data-email=\"{email}\"]";
 }

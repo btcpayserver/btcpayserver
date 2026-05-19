@@ -1,106 +1,154 @@
+#nullable enable
 using System;
-using System.Collections.Concurrent;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins.Translations
 {
-    public class LanguagePackUpdateService(IHttpClientFactory httpClientFactory)
+    public class LanguagePackUpdateService(IHttpClientFactory httpClientFactory, IMemoryCache memoryCache)
     {
-        private readonly ConcurrentDictionary<string, (bool UpdateAvailable, DateTime CheckedAt)> _updateCheckCache = new();
-        private readonly TimeSpan _cacheExpiration = TimeSpan.FromHours(1);
-
-        public static string[] GetDownloadableLanguages()
+        public record LanguageManifestEntry(
+            string Name,
+            string? Native,
+            string? MaintainerHandle,
+            string? MaintainerUrl,
+            DateTimeOffset? Updated,
+            string File,
+            string Sha)
         {
-            return new[]
+            internal static LanguageManifestEntry FromDto(ManifestLanguageDto dto)
             {
-                "Dutch",
-                "French",
-                "German",
-                "Hindi",
-                "Indonesian",
-                "Italian",
-                "Japanese",
-                "Norwegian",
-                "Korean",
-                "Portuguese (Brazil)",
-                "Russian",
-                "Serbian",
-                "Spanish",
-                "Thai",
-                "Turkish"
-            };
+                var (handle, url) = SplitMaintainer(dto.Maintainer);
+                DateTimeOffset? updated = null;
+                if (DateTimeOffset.TryParse(dto.Updated, CultureInfo.InvariantCulture,
+                        DateTimeStyles.AssumeUniversal, out var parsed))
+                    updated = parsed;
+                return new LanguageManifestEntry(
+                    dto.Name ?? string.Empty,
+                    dto.Native,
+                    handle,
+                    url,
+                    updated,
+                    dto.File ?? string.Empty,
+                    dto.Sha ?? string.Empty);
+            }
+
+            private static (string? Handle, string? Url) SplitMaintainer(string? raw)
+            {
+                if (string.IsNullOrEmpty(raw)) return (null, null);
+                var split = raw.Split('|', 2);
+                return (split[0], split.Length > 1 ? split[1] : null);
+            }
         }
+
+        internal record ManifestLanguageDto(
+            string? Name,
+            string? Native,
+            string? Maintainer,
+            string? Updated,
+            string? File,
+            string? Sha);
+
+        internal record ManifestRootDto(ManifestLanguageDto[]? Languages);
+
+        private const string ManifestCacheKey = "translations.manifest";
+        private const string ManifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
+        private const string RawBaseUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/";
+        private static readonly TimeSpan CacheLifetime = TimeSpan.FromHours(1);
+
+        private async Task<LanguageManifestEntry[]> GetEntries()
+        {
+            if (memoryCache.TryGetValue(ManifestCacheKey, out LanguageManifestEntry[]? cached) && cached is not null)
+                return cached;
+
+            using var httpClient = httpClientFactory.CreateClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(30);
+            var json = await httpClient.GetStringAsync(ManifestUrl);
+
+            var root = JsonConvert.DeserializeObject<ManifestRootDto>(json);
+            if (root?.Languages is null)
+                throw new InvalidOperationException("Manifest is missing the 'Languages' array.");
+
+            var entries = root.Languages
+                .Select(LanguageManifestEntry.FromDto)
+                .Where(e => !string.IsNullOrEmpty(e.Name))
+                .ToArray();
+
+            memoryCache.Set(ManifestCacheKey, entries, CacheLifetime);
+            return entries;
+        }
+
+        public Task<LanguageManifestEntry[]> GetManifestLanguages() => GetEntries();
 
         public async Task<(string translationsJson, string version)> FetchLanguagePackFromRepository(string language)
         {
-            if (!GetDownloadableLanguages().Contains(language))
-            {
-                throw new ArgumentException($"Language '{language}' is not a valid downloadable language pack.", nameof(language));
-            }
+            var entries = await GetEntries();
+            var entry = entries.FirstOrDefault(e =>
+                string.Equals(e.Name, language, StringComparison.OrdinalIgnoreCase))
+                ?? throw new ArgumentException($"Language '{language}' was not found in the manifest.", nameof(language));
 
-            var fileName = Uri.EscapeDataString(language.ToLowerInvariant());
-            var url = $"https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/translations/{fileName}.json";
+            if (string.IsNullOrEmpty(entry.File))
+                throw new InvalidOperationException("Manifest entry is missing the 'File' field.");
+            if (string.IsNullOrEmpty(entry.Sha))
+                throw new InvalidOperationException("Manifest entry is missing the 'Sha' field.");
 
-            var httpClient = httpClientFactory.CreateClient();
+            using var httpClient = httpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(30);
+            var translationsBytes = await httpClient.GetByteArrayAsync(RawBaseUrl + entry.File);
 
-            var translationsJson = await httpClient.GetStringAsync(url);
+            var actualSha = Convert.ToHexString(SHA256.HashData(translationsBytes));
+            if (!string.Equals(actualSha, entry.Sha, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException(
+                    $"Downloaded language pack '{language}' SHA-256 mismatch: expected {entry.Sha}, got {actualSha}. The download may be corrupt or tampered with.");
 
-            var hash = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(translationsJson));
-            var version = Convert.ToHexString(hash);
-
-            return (translationsJson, version);
+            return (Encoding.UTF8.GetString(translationsBytes), entry.Sha);
         }
+
+        private static string UpdateCacheKey(string language) => $"translations.update.{language}";
 
         public async Task<bool> CheckForLanguagePackUpdateCached(string language, JObject metadata)
         {
-            var cacheKey = language;
-
-            if (_updateCheckCache.TryGetValue(cacheKey, out var cached))
-            {
-                if (DateTime.UtcNow - cached.CheckedAt < _cacheExpiration)
-                {
-                    return cached.UpdateAvailable;
-                }
-            }
+            if (memoryCache.TryGetValue<bool>(UpdateCacheKey(language), out var cached))
+                return cached;
 
             var updateAvailable = await CheckForLanguagePackUpdate(language, metadata);
-            _updateCheckCache[cacheKey] = (updateAvailable, DateTime.UtcNow);
-
+            memoryCache.Set(UpdateCacheKey(language), updateAvailable, CacheLifetime);
             return updateAvailable;
         }
 
         public void InvalidateCache(string language)
         {
-            _updateCheckCache.TryRemove(language, out _);
+            memoryCache.Remove(UpdateCacheKey(language));
         }
 
         private async Task<bool> CheckForLanguagePackUpdate(string language, JObject metadata)
         {
             try
             {
-                if (!GetDownloadableLanguages().Contains(language))
-                {
+                var entries = await GetEntries();
+                var entry = entries.FirstOrDefault(e =>
+                    string.Equals(e.Name, language, StringComparison.OrdinalIgnoreCase));
+                if (entry is null || string.IsNullOrEmpty(entry.Sha))
                     return false;
-                }
 
-
-                var (_, remoteVersion) = await FetchLanguagePackFromRepository(language);
                 var localVersion = metadata["version"]?.ToString();
-
                 if (string.IsNullOrEmpty(localVersion))
                     return true;
 
-                return remoteVersion != localVersion;
+                return !string.Equals(entry.Sha, localVersion, StringComparison.OrdinalIgnoreCase);
             }
-            catch (HttpRequestException)
-            {
-                return false;
-            }
-            catch (TaskCanceledException)
+            catch (Exception ex) when (
+                ex is HttpRequestException
+                || ex is TaskCanceledException
+                || ex is InvalidOperationException
+                || ex is JsonException)
             {
                 return false;
             }

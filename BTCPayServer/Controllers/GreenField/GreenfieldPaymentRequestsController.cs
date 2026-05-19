@@ -59,7 +59,7 @@ namespace BTCPayServer.Controllers.Greenfield
 		[Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
 		[HttpGet("~/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}")]
 		[HttpGet("~/api/v1/payment-requests/{paymentRequestId}")]
-		public async Task<IActionResult> GetPaymentRequest(string? storeId, string paymentRequestId)
+		public async Task<IActionResult> GetPaymentRequest(string storeId, string paymentRequestId)
 		{
 			var pr = HttpContext.GetPaymentRequestDataOrNull();
 
@@ -72,7 +72,7 @@ namespace BTCPayServer.Controllers.Greenfield
 		[Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
 		[HttpPost("~/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}/pay")]
 		[HttpPost("~/api/v1/payment-requests/{paymentRequestId}/pay")]
-		public async Task<IActionResult> PayPaymentRequest(string? storeId, string paymentRequestId, [FromBody] PayPaymentRequestRequest pay, CancellationToken cancellationToken)
+		public async Task<IActionResult> PayPaymentRequest(string storeId, string paymentRequestId, [FromBody] PayPaymentRequestRequest pay, CancellationToken cancellationToken)
 		{
 			var p = HttpContext.GetPaymentRequestDataOrNull();
 			if (p is null)
@@ -132,7 +132,7 @@ namespace BTCPayServer.Controllers.Greenfield
 			AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
 		[HttpDelete("~/api/v1/stores/{storeId}/payment-requests/{paymentRequestId}")]
 		[HttpDelete("~/api/v1/payment-requests/{paymentRequestId}")]
-		public async Task<IActionResult> ArchivePaymentRequest(string? storeId, string paymentRequestId)
+		public async Task<IActionResult> ArchivePaymentRequest(string storeId, string paymentRequestId)
 		{
 			var pr = HttpContext.GetPaymentRequestDataOrNull();
 			if (pr is null || pr.Archived)
@@ -148,9 +148,9 @@ namespace BTCPayServer.Controllers.Greenfield
 		[Authorize(Policy = Policies.CanModifyPaymentRequests,
 			AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
 		public async Task<IActionResult> CreateOrUpdatePaymentRequest(
-			[FromRoute] string? storeId,
+			[FromRoute] string storeId,
 			PaymentRequestBaseData request,
-			[FromRoute] string? paymentRequestId = null)
+			[FromRoute] string paymentRequestId = null)
 		{
 			if (request is null)
 				return BadRequest();
@@ -196,7 +196,7 @@ namespace BTCPayServer.Controllers.Greenfield
 			var storeData = HttpContext.GetStoreData();
 			pr = new PaymentRequestData()
 			{
-				StoreDataId = storeId,
+                StoreDataId = storeData.Id,
 				Status = PaymentRequestStatus.Pending,
 				Created = DateTimeOffset.UtcNow,
 				Amount = request.Amount,
@@ -236,7 +236,7 @@ namespace BTCPayServer.Controllers.Greenfield
 			{
 				CreatedTime = data.Created,
 				Id = data.Id,
-				StoreId = data.StoreDataId,
+                StoreId = data.StoreDataId,
 				Status = data.Status,
 				Archived = data.Archived,
 				Amount = data.Amount,

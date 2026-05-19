@@ -2,7 +2,7 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Client.Models
 @using ExchangeSharp
-@model BTCPayServer.Models.WalletViewModels.PullPaymentsModel
+@model BTCPayServer.Plugins.Wallets.Views.ViewModels.PullPaymentsModel
 @{
     var storeId = Context.GetStoreData().Id;
     var nextStartDateSortOrder = (string)ViewData["NextStartSortOrder"];
@@ -116,7 +116,6 @@
                             permission="@Policies.CanManagePullPayments"
                             asp-action="EditPullPayment"
                             asp-controller="UIPullPayment"
-                            asp-route-storeId="@storeId"
                             asp-route-pullPaymentId="@pp.Id">
                             @pp.Name
                         </a>
@@ -152,17 +151,15 @@
                             <a class="pp-payout"
                                permission="@Policies.CanViewPayouts"
                                asp-action="Payouts"
-                               asp-route-storeId="@storeId"
                                asp-route-pullPaymentId="@pp.Id"
                                text-translate="true">
                                 Payouts
                             </a>
                             @if (!pp.Archived)
                             {
-                                <a asp-action="ArchivePullPayment"
-                                   permission="@Policies.CanArchivePullPayments"
-                                   asp-route-storeId="@storeId"
-                                   asp-route-pullPaymentId="@pp.Id"
+                                 <a asp-action="ArchivePullPayment"
+                                    permission="@Policies.CanArchivePullPayments"
+                                    asp-route-pullPaymentId="@pp.Id"
                                    data-bs-toggle="modal"
                                    data-bs-target="#ConfirmModal"
                                    data-description="Do you really want to archive the pull payment <strong>@Html.Encode(pp.Name)</strong>?"

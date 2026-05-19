@@ -30,6 +30,7 @@ namespace BTCPayServer.Plugins.Webhooks.Controllers
         public WebhookSender WebhookSender { get; }
 
         [HttpGet("~/api/v1/stores/{storeId}/webhooks/{webhookId?}")]
+        [HttpGet("~/api/v1/webhooks/{webhookId}")]
         public async Task<IActionResult> ListWebhooks(string storeId, string webhookId)
         {
             if (webhookId is null)
@@ -69,6 +70,7 @@ namespace BTCPayServer.Plugins.Webhooks.Controllers
         }
 
         [HttpPut("~/api/v1/stores/{storeId}/webhooks/{webhookId}")]
+        [HttpPut("~/api/v1/webhooks/{webhookId}")]
         public async Task<IActionResult> UpdateWebhook(string storeId, string webhookId, Client.Models.UpdateStoreWebhookRequest update)
         {
             ValidateWebhookRequest(update);
@@ -77,10 +79,11 @@ namespace BTCPayServer.Plugins.Webhooks.Controllers
             var w = await StoreRepository.GetWebhook(CurrentStoreId, webhookId);
             if (w is null)
                 return WebhookNotFound();
-            await StoreRepository.UpdateWebhook(storeId, webhookId, ToModel(update));
-            return await ListWebhooks(storeId, webhookId);
+            await StoreRepository.UpdateWebhook(CurrentStoreId, webhookId, ToModel(update));
+            return await ListWebhooks(CurrentStoreId, webhookId);
         }
         [HttpDelete("~/api/v1/stores/{storeId}/webhooks/{webhookId}")]
+        [HttpDelete("~/api/v1/webhooks/{webhookId}")]
         public async Task<IActionResult> DeleteWebhook(string storeId, string webhookId)
         {
             var w = await StoreRepository.GetWebhook(CurrentStoreId, webhookId);
@@ -118,6 +121,7 @@ namespace BTCPayServer.Plugins.Webhooks.Controllers
 
 
         [HttpGet("~/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId?}")]
+        [HttpGet("~/api/v1/webhooks/{webhookId}/deliveries/{deliveryId?}")]
         public async Task<IActionResult> ListDeliveries(string storeId, string webhookId, string deliveryId, int? count = null)
         {
             if (deliveryId is null)
@@ -135,6 +139,7 @@ namespace BTCPayServer.Plugins.Webhooks.Controllers
             }
         }
         [HttpPost("~/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver")]
+        [HttpPost("~/api/v1/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver")]
         public async Task<IActionResult> RedeliverWebhook(string storeId, string webhookId, string deliveryId)
         {
             var delivery = await StoreRepository.GetWebhookDelivery(CurrentStoreId, webhookId, deliveryId);
@@ -151,6 +156,7 @@ namespace BTCPayServer.Plugins.Webhooks.Controllers
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/request")]
+        [HttpGet("~/api/v1/webhooks/{webhookId}/deliveries/{deliveryId}/request")]
         public async Task<IActionResult> GetDeliveryRequest(string storeId, string webhookId, string deliveryId)
         {
             var delivery = await StoreRepository.GetWebhookDelivery(CurrentStoreId, webhookId, deliveryId);

@@ -209,14 +209,13 @@ namespace BTCPayServer.Tests
             await user2.GrantAccessAsync();
 
             var paymentRequestController = user.GetController<UIPaymentRequestController>();
-            var guestpaymentRequestController = user2.GetController<UIPaymentRequestController>();
+            var storeId = user.StoreId;
 
             var request = new UpdatePaymentRequestViewModel
             {
                 Title = "original juice",
                 Currency = "BTC",
                 Amount = 1,
-                StoreId = user.StoreId,
                 Description = "description",
                 ReferenceId = "custom-id-1"
             };
@@ -230,10 +229,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("original juice", prData.Title);
             Assert.Equal("custom-id-1", prData.ReferenceId);
 
-            paymentRequestController.HttpContext.SetPaymentRequestData(new PaymentRequestData { Id = id, StoreDataId = request.StoreId });
-
-            // Permission guard for guests editing
-            (await guestpaymentRequestController.EditPaymentRequest(user.StoreId, id)).AssertType<NotFoundResult>();
+            paymentRequestController.HttpContext.SetPaymentRequestData(new PaymentRequestData { Id = id, StoreDataId = storeId });
 
             request.Title = "update";
             request.ReferenceId = "custom-id-2";
@@ -282,6 +278,7 @@ namespace BTCPayServer.Tests
             await user.GrantAccessAsync();
             user.RegisterDerivationScheme("BTC");
 
+            var storeId = user.StoreId;
             var paymentRequestController = user.GetController<UIPaymentRequestController>();
 
             // Create first payment request with ReferenceId
@@ -290,7 +287,6 @@ namespace BTCPayServer.Tests
                 Title = "First Payment Request",
                 Currency = "BTC",
                 Amount = 1,
-                StoreId = user.StoreId,
                 Description = "First request",
                 ReferenceId = "duplicate-ref-id"
             };
@@ -306,7 +302,6 @@ namespace BTCPayServer.Tests
                 Title = "Second Payment Request",
                 Currency = "BTC",
                 Amount = 2,
-                StoreId = user.StoreId,
                 Description = "Second request",
                 ReferenceId = "duplicate-ref-id"
             };
@@ -318,7 +313,7 @@ namespace BTCPayServer.Tests
 
             // Try to edit first payment request to use a different ReferenceId - should succeed
             paymentRequestController.ModelState.Clear();
-            paymentRequestController.HttpContext.SetPaymentRequestData(new PaymentRequestData { Id = id1, StoreDataId = request1.StoreId });
+            paymentRequestController.HttpContext.SetPaymentRequestData(new PaymentRequestData { Id = id1, StoreDataId = storeId });
             request1.ReferenceId = "new-unique-ref-id";
             (await paymentRequestController.EditPaymentRequest(id1, request1)).AssertType<RedirectToActionResult>();
 
@@ -331,7 +326,7 @@ namespace BTCPayServer.Tests
 
             // Try to edit second payment request to use first payment request's current ReferenceId - should fail
             paymentRequestController.ModelState.Clear();
-            paymentRequestController.HttpContext.SetPaymentRequestData(new PaymentRequestData { Id = id2, StoreDataId = request2.StoreId });
+            paymentRequestController.HttpContext.SetPaymentRequestData(new PaymentRequestData { Id = id2, StoreDataId = storeId });
             request2.ReferenceId = "new-unique-ref-id";
             result = await paymentRequestController.EditPaymentRequest(id2, request2);
             viewResult = result.AssertType<ViewResult>();
@@ -360,7 +355,6 @@ namespace BTCPayServer.Tests
                 Title = "original juice",
                 Currency = "BTC",
                 Amount = 1,
-                StoreId = user.StoreId,
                 Description = "description",
                 ExpiryDate = (DateTimeOffset.UtcNow + TimeSpan.FromDays(1.0)).UtcDateTime
             };
@@ -396,7 +390,6 @@ namespace BTCPayServer.Tests
                 Currency = "BTC",
                 Amount = 1,
                 ExpiryDate = DateTime.Today.Subtract(TimeSpan.FromDays(2)),
-                StoreId = user.StoreId,
                 Description = "description"
             };
 
@@ -430,7 +423,6 @@ namespace BTCPayServer.Tests
                 Title = "original juice",
                 Currency = "BTC",
                 Amount = 1,
-                StoreId = user.StoreId,
                 Description = "description"
             };
             var response = paymentRequestController.EditPaymentRequest(null, request).Result

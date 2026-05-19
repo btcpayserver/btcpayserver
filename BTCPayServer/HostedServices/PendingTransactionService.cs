@@ -256,13 +256,16 @@ public class PendingTransactionService(
         });
     }
 
-    public async Task Broadcasted(PendingTransactionFullId id)
+    public async Task Broadcasted(PendingTransactionFullId id, Transaction transaction)
     {
         await using var ctx = dbContextFactory.CreateContext();
         var pt = await ctx.PendingTransactions.FirstOrDefaultAsync(p =>
             p.CryptoCode == id.CryptoCode && p.StoreId == id.StoreId && p.Id == id.Id &&
             (p.State == PendingTransactionState.Pending || p.State == PendingTransactionState.Signed));
         if (pt is null) return;
+        var pendingPsbt = TryParsePendingPSBT(pt);
+        if (pendingPsbt is null || !HasSameTransactionIntent(pendingPsbt.GetGlobalTransaction(), transaction))
+            return;
         pt.State = PendingTransactionState.Broadcast;
         await ctx.SaveChangesAsync();
         EventAggregator.Publish(new PendingTransactionEvent
@@ -270,6 +273,51 @@ public class PendingTransactionService(
             Data = pt,
             Type = PendingTransactionEvent.Broadcast
         });
+    }
+
+    private PSBT? TryParsePendingPSBT(PendingTransaction pendingTransaction)
+    {
+        var network = networkProvider.GetNetwork<BTCPayNetwork>(pendingTransaction.CryptoCode);
+        if (network is null || pendingTransaction.GetBlob()?.PSBT is not { } psbt)
+            return null;
+        try
+        {
+            return PSBT.Parse(psbt, network.NBitcoinNetwork);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to parse pending transaction PSBT {PendingTransactionId}", pendingTransaction.Id);
+            return null;
+        }
+    }
+
+    private static bool HasSameTransactionIntent(Transaction pendingTransaction, Transaction broadcastTransaction)
+    {
+        if (pendingTransaction.Version != broadcastTransaction.Version ||
+            pendingTransaction.LockTime != broadcastTransaction.LockTime ||
+            pendingTransaction.Inputs.Count != broadcastTransaction.Inputs.Count ||
+            pendingTransaction.Outputs.Count != broadcastTransaction.Outputs.Count)
+            return false;
+
+        for (var i = 0; i < pendingTransaction.Inputs.Count; i++)
+        {
+            var pendingInput = pendingTransaction.Inputs[i];
+            var broadcastInput = broadcastTransaction.Inputs[i];
+            if (pendingInput.PrevOut != broadcastInput.PrevOut ||
+                pendingInput.Sequence != broadcastInput.Sequence)
+                return false;
+        }
+
+        for (var i = 0; i < pendingTransaction.Outputs.Count; i++)
+        {
+            var pendingOutput = pendingTransaction.Outputs[i];
+            var broadcastOutput = broadcastTransaction.Outputs[i];
+            if (pendingOutput.Value != broadcastOutput.Value ||
+                pendingOutput.ScriptPubKey != broadcastOutput.ScriptPubKey)
+                return false;
+        }
+
+        return true;
     }
 
     public record PendingTransactionEvent

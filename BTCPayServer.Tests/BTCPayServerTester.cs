@@ -114,6 +114,12 @@ namespace BTCPayServer.Tests
                 Directory.CreateDirectory(chainDirectory);
 
             StringBuilder config = new StringBuilder();
+            if (string.Equals(Environment.GetEnvironmentVariable("BTCPAY_NODEFAULTCHAIN"), "true", StringComparison.OrdinalIgnoreCase))
+            {
+                Chains = new HashSet<string> { "none" };
+                config.AppendLine("nodefaultchain=true");
+            }
+
             config.AppendLine($"{chain.ToLowerInvariant()}=1");
             if (InContainer)
             {

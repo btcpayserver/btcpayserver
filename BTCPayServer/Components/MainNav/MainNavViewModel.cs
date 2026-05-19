@@ -11,9 +11,6 @@ namespace BTCPayServer.Components.MainNav
         public List<StoreLightningNode> LightningNodes { get; set; }
         public List<StoreApp> Apps { get; set; }
         public int ArchivedAppsCount { get; set; }
-        public string ContactUrl { get; set; }
-        public string UserName { get; set; }
-        public string UserImageUrl { get; set; }
     }
 
     public class StoreApp

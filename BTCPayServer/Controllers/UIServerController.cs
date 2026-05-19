@@ -19,10 +19,11 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Plugins.Emails.Services;
+using BTCPayServer.Plugins.Monetization;
+using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Plugins.Emails.Services;
-using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Services;
 using BTCPayServer.Storage.Services.Providers;
@@ -47,6 +48,7 @@ namespace BTCPayServer.Controllers
                AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public partial class UIServerController : Controller
     {
+        private readonly ISettingsAccessor<MonetizationSettings> _monetizationSettings;
         private readonly UserManager<ApplicationUser> _UserManager;
         private readonly UserService _userService;
         readonly SettingsRepository _SettingsRepository;
@@ -100,7 +102,8 @@ namespace BTCPayServer.Controllers
             IStringLocalizer stringLocalizer,
             ViewLocalizer viewLocalizer,
             BTCPayServerEnvironment environment,
-            LanguagePackUpdateService languagePackUpdateService
+            LanguagePackUpdateService languagePackUpdateService,
+            ISettingsAccessor<MonetizationSettings> monetizationSettings
         )
         {
             _policiesSettings = policiesSettings;
@@ -126,6 +129,7 @@ namespace BTCPayServer.Controllers
             ApplicationLifetime = applicationLifetime;
             Html = html;
             _transactionLinkProviders = transactionLinkProviders;
+            _monetizationSettings = monetizationSettings;
             _localizer = localizer;
             Environment = environment;
             StringLocalizer = stringLocalizer;
@@ -344,7 +348,7 @@ namespace BTCPayServer.Controllers
         {
             ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
             ViewBag.AppsList = await GetAppSelectList();
-            ViewBag.LangDictionaries = await GetLangDictionariesSelectList();
+            ViewBag.LangTranslations = await GetLangTranslationsSelectList();
         }
 
         [HttpPost("server/policies")]
@@ -431,7 +435,7 @@ namespace BTCPayServer.Controllers
 
             await _SettingsRepository.UpdateSetting(settings);
             _ = _transactionLinkProviders.RefreshTransactionLinkTemplates();
-            if (_policiesSettings.LangDictionary != settings.LangDictionary)
+            if (_policiesSettings.LangTranslation != settings.LangTranslation)
                 await _localizer.Load();
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Policies updated successfully"].Value;
             return RedirectToAction(nameof(Policies));
@@ -501,10 +505,10 @@ namespace BTCPayServer.Controllers
             return apps;
         }
 
-        private async Task<List<SelectListItem>> GetLangDictionariesSelectList()
+        private async Task<List<SelectListItem>> GetLangTranslationsSelectList()
         {
-            var dictionaries = await this._localizer.GetDictionaries();
-            return dictionaries.Select(d => new SelectListItem(d.DictionaryName, d.DictionaryName)).OrderBy(d => d.Value).ToList();
+            var translations = await this._localizer.GetTranslations();
+            return translations.Select(t => new SelectListItem(t.TranslationName, t.TranslationName)).OrderBy(t => t.Value).ToList();
         }
 
         private static bool TryParseAsExternalService(TorService torService, [MaybeNullWhen(false)] out ExternalService externalService)

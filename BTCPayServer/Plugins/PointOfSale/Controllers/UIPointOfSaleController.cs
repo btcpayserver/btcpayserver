@@ -138,6 +138,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomTipText = settings.CustomTipText,
                 CustomTipPercentages = settings.CustomTipPercentages,
                 DefaultTaxRate =  settings.DefaultTaxRate,
+                TaxIncludedInPrice = settings.TaxIncludedInPrice,
                 AppId = appId,
                 StoreId = store.Id,
                 HtmlLang = settings.HtmlLang,
@@ -263,11 +264,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 jposData.Amounts is null &&
                 amount is { } o)
             {
-                order.AddLine(new("", 1, o, settings.DefaultTaxRate));
+                order.AddLine(new("", 1, o, settings.DefaultTaxRate, settings.TaxIncludedInPrice));
             }
             for (var i = 0; i < (jposData.Amounts ?? []).Length; i++)
             {
-                order.AddLine(new($"Custom Amount {i + 1}", 1, jposData.Amounts[i], settings.DefaultTaxRate));
+                order.AddLine(new($"Custom Amount {i + 1}", 1, jposData.Amounts[i], settings.DefaultTaxRate, settings.TaxIncludedInPrice));
             }
 
             foreach (var cartItem in jposData.Cart)
@@ -286,10 +287,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     if (cartItem.Price < expectedCartItemPrice)
                         cartItem.Price = expectedCartItemPrice;
                 }
-                order.AddLine(new(cartItem.Id, cartItem.Count, cartItem.Price, itemChoice.TaxRate ?? settings.DefaultTaxRate));
+                order.AddLine(new(cartItem.Id, cartItem.Count, cartItem.Price, itemChoice.TaxRate ?? settings.DefaultTaxRate, settings.TaxIncludedInPrice));
             }
             if (customAmount is { } c && settings.ShowCustomAmount)
-                order.AddLine(new("", 1, c, settings.DefaultTaxRate));
+                order.AddLine(new("", 1, c, settings.DefaultTaxRate, settings.TaxIncludedInPrice));
             if (discount is { } d)
                 order.AddDiscountRate(d);
             if (tip is { } t)
@@ -352,7 +353,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     if (invoiceRequest.Amount is not null && originalAmount != invoiceRequest.Amount.Value )
                     {
                         var diff = invoiceRequest.Amount.Value - originalAmount;
-                        order.AddLine(new("", 1, diff, settings.DefaultTaxRate));
+                        order.AddLine(new("", 1, diff, settings.DefaultTaxRate, false));
                     }
                     break;
             }
@@ -401,7 +402,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         entity.ExtendedNotifications = true;
                         if (formResponseJObject is not null)
                         {
-                            var meta = entity.Metadata.ToJObject();
+                            var meta = entity.Metadata.ToJObject(); 
                             meta.Merge(formResponseJObject);
                             entity.Metadata = InvoiceMetadata.FromJObject(meta);
                         }
@@ -583,6 +584,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 AppName = app.Name,
                 Title = settings.Title,
                 DefaultTaxRate = settings.DefaultTaxRate,
+                TaxIncludedInPrice = settings.TaxIncludedInPrice,
                 DefaultView = settings.DefaultView,
                 ShowItems = settings.ShowItems,
                 ShowCustomAmount = settings.ShowCustomAmount,
@@ -680,6 +682,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 Title = vm.Title,
                 DefaultView = vm.DefaultView,
                 DefaultTaxRate = vm.DefaultTaxRate ?? 0,
+                TaxIncludedInPrice = vm.TaxIncludedInPrice,
                 ShowItems = vm.ShowItems,
                 ShowCustomAmount = vm.ShowCustomAmount,
                 ShowDiscount = vm.ShowDiscount,

@@ -1,5 +1,6 @@
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
+using BTCPayServer.Plugins.GlobalSearch;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,5 +27,16 @@ public class ImpersonationPlugin : BaseBTCPayServerPlugin
                 new PermissionDisplay("Can impersonate the selected users", "Allows impersonation of the selected users."))
         });
         services.AddSingleton<IPermissionHandler, ImpersonationPermissionHandler>();
+
+        services.AddStaticSearch(new ActionResultItemViewModel()
+        {
+            RequiredPolicy = Policies.CanViewProfile,
+            Title = "Log another device from a QR Code",
+            Action = nameof(UIImpersonationController.LoginCodes),
+            Controller = "UIImpersonation",
+            Values = ctx => new { area = Area },
+            Category = "Account",
+            Keywords = ["Login", "Codes", "Login Codes", "QR", "Device", "Impersonate"]
+        });
     }
 }

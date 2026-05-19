@@ -178,13 +178,16 @@ namespace BTCPayServer.Hosting
                 // /Components/{View Component Name}/{View Name}.cshtml
                 o.ViewLocationFormats.Add("/{0}.cshtml");
                 o.PageViewLocationFormats.Add("/{0}.cshtml");
+                o.AreaViewLocationFormats.Add("/{0}.cshtml");
 
                 // Allows the use of Area for plugins
                 o.AreaViewLocationFormats.Add("/Plugins/{2}/Views/{1}/{0}.cshtml");
                 o.AreaViewLocationFormats.Add("/Plugins/{2}/Views/{0}.cshtml");
                 o.AreaViewLocationFormats.Add("/Plugins/{2}/Views/Shared/{0}.cshtml");
 
-                o.AreaViewLocationFormats.Add("/{0}.cshtml");
+                o.AreaViewLocationFormats.Add("/Plugins/{2}/Pages/{1}/{0}.cshtml");
+                o.AreaViewLocationFormats.Add("/Plugins/{2}/Pages/{0}.cshtml");
+                o.AreaViewLocationFormats.Add("/Plugins/{2}/Pages/Shared/{0}.cshtml");
             })
             .AddNewtonsoftJson()
             .AddPlugins(services, Configuration, LoggerFactory, bootstrapServiceProvider)
@@ -291,7 +294,6 @@ namespace BTCPayServer.Hosting
                 rateLimits.SetZone($"zone={ZoneLimits.PublicInvoices} rate=1000r/min burst=100 nodelay");
                 rateLimits.SetZone($"zone={ZoneLimits.Register} rate=1000r/min burst=100 nodelay");
                 rateLimits.SetZone($"zone={ZoneLimits.PayJoin} rate=1000r/min burst=100 nodelay");
-                rateLimits.SetZone($"zone={ZoneLimits.Shopify} rate=1000r/min burst=100 nodelay");
                 rateLimits.SetZone($"zone={ZoneLimits.ForgotPassword} rate=5r/d burst=3 nodelay");
             }
             else
@@ -300,7 +302,6 @@ namespace BTCPayServer.Hosting
                 rateLimits.SetZone($"zone={ZoneLimits.PublicInvoices} rate=4r/min burst=10 delay=3");
                 rateLimits.SetZone($"zone={ZoneLimits.Register} rate=2r/min burst=2 nodelay");
                 rateLimits.SetZone($"zone={ZoneLimits.PayJoin} rate=5r/min burst=3 nodelay");
-                rateLimits.SetZone($"zone={ZoneLimits.Shopify} rate=20r/min burst=3 nodelay");
                 rateLimits.SetZone($"zone={ZoneLimits.ForgotPassword} rate=5r/d burst=5 nodelay");
             }
 

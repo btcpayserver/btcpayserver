@@ -547,6 +547,11 @@
                         "type": "boolean",
                         "description": "True if the instance requires approval to log in"
                     },
+                    "storeQuota": {
+                        "type": "number",
+                        "nullable": true,
+                        "description": "Per-user override for the max number of stores this user can create. Null means the server default applies"
+                    },
                     "created": {
                         "type": "number",
                         "nullable": true,

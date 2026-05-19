@@ -1,0 +1,37 @@
+@model BTCPayServer.Plugins.Dashboard.Models.Dashboard2ViewModel
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Plugins.Dashboard
+@using BTCPayServer.Views.Server
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Dashboard), "Dashboard")
+        .SetCategory(WellKnownCategories.Server));
+    this.ViewData.SetBlazorAllowed(true);
+}
+
+@*
+    BlazorDashboardKit ships a Blazor JS initializer that auto-injects these
+    assets in a pure Blazor Web App. BTCPay hosts the component via MVC
+    RenderComponentAsync, where that initializer path is not guaranteed, so we
+    include them explicitly here. The kit's initializer is idempotent and will
+    no-op when it sees these already present.
+*@
+@section PageHeadContent {
+    <link rel="stylesheet" href="~/_content/BlazorDashboardKit/gridstack/gridstack.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/_content/BlazorDashboardKit/dashboard.css" asp-append-version="true" />
+}
+
+<div class="sticky-header">
+    <h2 class="my-1">@ViewData["Title"]</h2>
+</div>
+
+@(await Html.RenderComponentAsync<BtcpayDashboard>(RenderMode.ServerPrerendered, new
+{
+    OwnerKey = Model.OwnerKey,
+    IsSetUp = Model.IsSetUp
+}))
+
+@section PageFootContent {
+    <script src="~/_content/BlazorDashboardKit/gridstack/gridstack-all.js" asp-append-version="true"></script>
+}

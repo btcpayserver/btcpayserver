@@ -327,6 +327,9 @@
             @if (ViewData.IsCategory(WellKnownCategories.Server))
             {
                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
+                    <a layout-menu-item="@nameof(ServerNavPages.Dashboard)" asp-controller="UIServerDashboard" asp-action="ServerDashboard" text-translate="true">Dashboard</a>
+                </li>
+                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
                     <a layout-menu-item="@nameof(ServerNavPages.Users)" asp-controller="UIServer" asp-action="ListUsers" text-translate="true">Users</a>
                 </li>
                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">

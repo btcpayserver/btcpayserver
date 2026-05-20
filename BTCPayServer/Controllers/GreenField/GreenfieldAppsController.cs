@@ -466,6 +466,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.Currency), "Invalid currency");
             }
 
+            if (request.DefaultDiscount is < 0 or > 100)
+            {
+                ModelState.AddModelError(nameof(request.DefaultDiscount), "Default discount must be between 0 and 100");
+            }
+
             if (request.Template != null)
             {
                 try

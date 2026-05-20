@@ -166,7 +166,7 @@ const posCommon = {
             tip: null,
             tipPercent: null,
             discount: null,
-            discountPercent: srvModel.defaultDiscount || null,
+            discountPercent: srvModel.defaultDiscount ?? null,
             payButtonLoading: false,
             categoriesScrollable: false,
             displayCategory: '*',

@@ -399,14 +399,18 @@ namespace BTCPayServer.Tests
                     AppName = "test app name",
                     Description = "test description",
                     ShowItems = true,
-                    ShowCategories = false
+                    ShowCategories = false,
+                    ShowDiscount = true,
+                    DefaultDiscount = 10m
                 }
             );
             Assert.Equal("test app name", app.Title);
             Assert.Equal("test description", app.Description);
             Assert.True(app.ShowItems);
             Assert.False(app.ShowCategories);
-            Assert.False(app.ShowDiscount);
+            Assert.True(app.ShowDiscount);
+            Assert.Equal(10m, app.DefaultDiscount);
+            Assert.Equal(10m, (await client.GetPosApp(app.Id)).DefaultDiscount);
 
             // Make sure we return a 403 if we try to get an app that doesn't exist
             await AssertHttpError(403, async () =>

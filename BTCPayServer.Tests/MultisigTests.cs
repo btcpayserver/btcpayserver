@@ -568,7 +568,18 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
                     await Expect(s.Page.Locator("#SubmitSignerKeyButton")).ToBeDisabledAsync();
                     await Expect(s.Page.Locator("#SignerKeyFields")).ToHaveClassAsync(new Regex("d-none"));
                     await Expect(s.Page.Locator("#vault-confirm")).ToBeVisibleAsync();
+                    await Expect(s.Page.Locator("#keyPath")).ToHaveValueAsync("m/48'/1'/0'/2'");
+                    await s.Page.FillAsync("#accountNumber", "3");
+                    await Expect(s.Page.Locator("#keyPath")).ToHaveValueAsync("m/48'/1'/3'/2'");
+                    await s.Page.FillAsync("#accountNumber", "0");
+                    await Expect(s.Page.Locator("#keyPath")).ToHaveValueAsync("m/48'/1'/0'/2'");
                     await s.Page.ClickAsync("#vault-confirm");
+                    await TestUtils.EventuallyAsync(async () =>
+                    {
+                        var vaultRequests = await s.Page.EvaluateAsync<string[]>("window.__vaultRequests || []");
+                        Assert.Contains(vaultRequests, command => command.Contains("getxpub", StringComparison.OrdinalIgnoreCase));
+                    }, 30000);
+                    await Expect(s.Page.Locator("#AccountKey")).ToHaveValueAsync(accountKey, new LocatorAssertionsToHaveValueOptions { Timeout = 30000 });
                     await Expect(s.Page.Locator("#SignerKeyFields")).Not.ToHaveClassAsync(new Regex("d-none"));
                     await Expect(s.Page.Locator("#SubmitSignerKeyButton")).ToBeEnabledAsync();
                     Assert.Equal(accountKey, await s.Page.InputValueAsync("#AccountKey"));

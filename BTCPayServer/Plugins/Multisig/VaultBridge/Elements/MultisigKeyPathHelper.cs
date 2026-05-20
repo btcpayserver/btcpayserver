@@ -1,7 +1,7 @@
 using System;
 using NBitcoin;
 
-namespace BTCPayServer.Blazor.VaultBridge.Elements;
+namespace BTCPayServer.Plugins.Multisig.VaultBridge.Elements;
 
 public static class MultisigKeyPathHelper
 {

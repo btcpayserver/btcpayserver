@@ -1,12 +1,14 @@
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Blazor.VaultBridge;
 using BTCPayServer.Blazor.VaultBridge.Elements;
 using BTCPayServer.Hwi;
+using BTCPayServer.Plugins.Multisig.VaultBridge.Elements;
 using Microsoft.JSInterop;
 using NBitcoin;
 
-namespace BTCPayServer.Blazor.VaultBridge;
+namespace BTCPayServer.Plugins.Multisig.VaultBridge;
 
 public class GetMultisigAccountKeyController : HWIController
 {
@@ -32,5 +34,4 @@ public class GetMultisigAccountKeyController : HWIController
             ["accountKeyPath"] = $"m/{keyPath}"
         });
     }
-
 }

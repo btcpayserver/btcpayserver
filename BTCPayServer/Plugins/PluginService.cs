@@ -164,6 +164,18 @@ namespace BTCPayServer.Plugins
             return manifest;
         }
 
+        public async Task ReportInstalledPlugins(CancellationToken cancellationToken = default)
+        {
+            if (Env.IsDeveloping || Env.Build == "Debug")
+                return;
+
+            var plugins = Installed.Select(p => new InstalledPluginRequest(p.Key, p.Value.ToString())).ToList();
+            if (plugins.Count == 0)
+                return;
+
+            await _pluginBuilderClient.ReportInstalledPlugins(plugins, cancellationToken);
+        }
+
         public void InstallPlugin(string plugin)
         {
             PluginManager.QueueCommands(_dataDirectories.Value.PluginDir, ("install", plugin));

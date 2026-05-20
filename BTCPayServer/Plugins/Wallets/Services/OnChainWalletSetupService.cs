@@ -1,18 +1,17 @@
 #nullable enable
 
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.DataProtection;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Services.Wallets;
+namespace BTCPayServer.Plugins.Wallets.Services;
 
 public class OnChainWalletSetupService(
     BTCPayWalletProvider walletProvider,

@@ -1,9 +1,9 @@
-using BTCPayServer;
-using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
+using BTCPayServer.Plugins.Wallets.Services;
 using BTCPayServer.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace BTCPayServer.Plugins.Wallets;
 
@@ -18,6 +18,7 @@ public class WalletsPlugin : BaseBTCPayServerPlugin
     public override void Execute(IServiceCollection services)
     {
         services.AddSearchResultItemProvider<WalletSearchResultProvider>();
+        services.TryAddSingleton<OnChainWalletSetupService>();
         services.AddTransient<HotwalletSafe>();
         services.AddPolicyDefinitions(
             new PolicyDefinition(

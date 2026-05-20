@@ -5,7 +5,7 @@
     Layout = "~/Views/Shared/_LayoutSimple.cshtml";
     ViewData["Title"] = StringLocalizer["Submit multisig signer key"];
     ViewData.SetBlazorAllowed(true);
-    var hasPrefilledValues = !string.IsNullOrWhiteSpace(Model.AccountKey) ||
+    var hasPrefilledValues = !string.IsNullOrWhiteSpace(Model.DisplayAccountKey) ||
                              !string.IsNullOrWhiteSpace(Model.MasterFingerprint) ||
                              !string.IsNullOrWhiteSpace(Model.AccountKeyPath);
     var serverEntryMode = "manual";
@@ -57,9 +57,9 @@
                             <div asp-validation-summary="ModelOnly" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
                             <div id="SignerKeyFields" class="@(serverEntryMode == "hardware" ? "d-none" : string.Empty)">
                                 <div class="mb-3">
-                                    <label asp-for="AccountKey" class="form-label" text-translate="true">Account key (xpub/tpub)</label>
-                                    <input asp-for="AccountKey" class="form-control font-monospace" />
-                                    <span asp-validation-for="AccountKey" class="text-danger"></span>
+                                    <label asp-for="DisplayAccountKey" class="form-label" text-translate="true">Account key (xpub/tpub)</label>
+                                    <input asp-for="DisplayAccountKey" class="form-control font-monospace" />
+                                    <span asp-validation-for="DisplayAccountKey" class="text-danger"></span>
                                 </div>
                                 <div class="row g-3">
                                     <div class="col-md-4">
@@ -98,7 +98,7 @@
             const hardwareHint = document.getElementById("HardwareFetchHint");
             const signerFields = document.getElementById("SignerKeyFields");
             const submitButton = document.getElementById("SubmitSignerKeyButton");
-            const accountKey = document.getElementById("AccountKey");
+            const accountKey = document.getElementById("DisplayAccountKey");
             const masterFingerprint = document.getElementById("MasterFingerprint");
             const accountKeyPath = document.getElementById("AccountKeyPath");
 

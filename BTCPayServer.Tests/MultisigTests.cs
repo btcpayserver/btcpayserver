@@ -579,17 +579,17 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
                         var vaultRequests = await s.Page.EvaluateAsync<string[]>("window.__vaultRequests || []");
                         Assert.Contains(vaultRequests, command => command.Contains("getxpub", StringComparison.OrdinalIgnoreCase));
                     }, 30000);
-                    await Expect(s.Page.Locator("#AccountKey")).ToHaveValueAsync(accountKey, new LocatorAssertionsToHaveValueOptions { Timeout = 30000 });
+                    await Expect(s.Page.Locator("#DisplayAccountKey")).ToHaveValueAsync(accountKey, new LocatorAssertionsToHaveValueOptions { Timeout = 30000 });
                     await Expect(s.Page.Locator("#SignerKeyFields")).Not.ToHaveClassAsync(new Regex("d-none"));
                     await Expect(s.Page.Locator("#SubmitSignerKeyButton")).ToBeEnabledAsync();
-                    Assert.Equal(accountKey, await s.Page.InputValueAsync("#AccountKey"));
+                    Assert.Equal(accountKey, await s.Page.InputValueAsync("#DisplayAccountKey"));
                     Assert.Equal(fingerprint, await s.Page.InputValueAsync("#MasterFingerprint"));
                     Assert.Equal(accountKeyPath, await s.Page.InputValueAsync("#AccountKeyPath"));
                 }
                 else
                 {
                     await s.Page.ClickAsync("#EntryModeManual");
-                    await s.Page.FillAsync("#AccountKey", accountKey);
+                    await s.Page.FillAsync("#DisplayAccountKey", accountKey);
                     await s.Page.FillAsync("#MasterFingerprint", fingerprint);
                     await s.Page.FillAsync("#AccountKeyPath", accountKeyPath);
                 }

@@ -1,4 +1,5 @@
 using System;
+using NBitcoin;
 
 namespace BTCPayServer.Plugins.Multisig.Models;
 
@@ -15,7 +16,8 @@ public class MultisigInviteViewModel
     public int RequiredSigners { get; set; }
     public int TotalSigners { get; set; }
     public string ScriptType { get; set; }
-    public string AccountKey { get; set; }
+    public string DisplayAccountKey { get; set; }
+    public BitcoinExtPubKey AccountKey { get; set; }
     public string MasterFingerprint { get; set; }
     public string AccountKeyPath { get; set; }
     public bool Submitted { get; set; }

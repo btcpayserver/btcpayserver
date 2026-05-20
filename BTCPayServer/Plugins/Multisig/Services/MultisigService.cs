@@ -290,19 +290,19 @@ public class MultisigService(
             return false;
         }
 
-        var normalizedSignerKeys = new string[signerKeys.Length];
+        var signerAccountKeys = new BitcoinExtPubKey[signerKeys.Length];
         for (var i = 0; i < signerKeys.Length; i++)
         {
-            if (!TryNormalizeAccountKeyForNetwork(signerKeys[i], network, out var normalizedSignerKey))
+            if (!TryParseAccountKey(signerKeys[i], network, out var accountKey))
             {
                 validationError = $"Signer {i + 1}: invalid account key.";
                 return false;
             }
 
-            normalizedSignerKeys[i] = normalizedSignerKey;
+            signerAccountKeys[i] = accountKey;
         }
 
-        if (normalizedSignerKeys.Distinct(StringComparer.Ordinal).Count() != normalizedSignerKeys.Length)
+        if (signerAccountKeys.Select(k => k.ToString()).Distinct(StringComparer.Ordinal).Count() != signerAccountKeys.Length)
         {
             validationError = "Signer keys must be unique.";
             return false;
@@ -339,8 +339,7 @@ public class MultisigService(
                 return false;
             }
 
-            var normalizedPath = NormalizePath(path);
-            if (!KeyPath.TryParse(normalizedPath, out _))
+            if (!TryParseKeyPath(path, out _))
             {
                 validationError = $"Signer {i + 1}: invalid account key path.";
                 return false;
@@ -353,7 +352,7 @@ public class MultisigService(
             return false;
         }
 
-        derivationScheme = $"{requiredSigners}-of-{string.Join("-", normalizedSignerKeys)}{suffix}";
+        derivationScheme = $"{requiredSigners}-of-{string.Join("-", signerAccountKeys.Select(k => k.ToString()))}{suffix}";
         return true;
     }
 
@@ -369,8 +368,7 @@ public class MultisigService(
             if (string.IsNullOrWhiteSpace(fp) || string.IsNullOrWhiteSpace(path))
                 continue;
 
-            var normalizedPath = NormalizePath(path);
-            if (!KeyPath.TryParse(normalizedPath, out var parsedPath) || !Regex.IsMatch(fp, "^[0-9a-fA-F]{8}$"))
+            if (!TryParseKeyPath(path, out var parsedPath) || !Regex.IsMatch(fp, "^[0-9a-fA-F]{8}$"))
                 continue;
 
             strategy.AccountKeySettings[i].AccountKeyPath = parsedPath;
@@ -386,32 +384,31 @@ public class MultisigService(
         var participantsByKey = new Dictionary<string, PendingMultisigSetupParticipantData>(StringComparer.Ordinal);
         foreach (var participant in pending.Participants)
         {
-            var key = NormalizeAccountKey(participant.AccountKey, network);
-            if (string.IsNullOrEmpty(key))
+            if (!TryParseAccountKey(participant.AccountKey, network, out var participantAccountKey))
                 continue;
 
-            participantsByKey.TryAdd(key, participant);
+            participantsByKey.TryAdd(participantAccountKey.ToString(), participant);
         }
 
         foreach (var accountSettings in strategy.AccountKeySettings)
         {
-            var key = NormalizeAccountKey(accountSettings.AccountKey?.ToString(), network);
-            if (string.IsNullOrEmpty(key) || !participantsByKey.TryGetValue(key, out var participant))
+            if (accountSettings.AccountKey is null ||
+                !participantsByKey.TryGetValue(accountSettings.AccountKey.ToString(), out var participant))
                 continue;
 
             accountSettings.SignerEmail = participant.Email;
         }
     }
 
-    public bool TryNormalizeAccountKeyForNetwork(string? accountKey, BTCPayNetwork network, out string normalizedAccountKey)
+    private static bool TryParseAccountKey(string? accountKey, BTCPayNetwork network, out BitcoinExtPubKey parsed)
     {
-        normalizedAccountKey = string.Empty;
+        parsed = null!;
         if (string.IsNullOrWhiteSpace(accountKey) || network.NBitcoinNetwork is null)
             return false;
 
         try
         {
-            normalizedAccountKey = new BitcoinExtPubKey(accountKey.Trim(), network.NBitcoinNetwork).ToString();
+            parsed = new BitcoinExtPubKey(accountKey.Trim(), network.NBitcoinNetwork);
             return true;
         }
         catch
@@ -420,8 +417,11 @@ public class MultisigService(
         }
     }
 
-    public static string NormalizePath(string path)
+    public static bool TryParseKeyPath(string? path, out KeyPath keyPath)
     {
+        keyPath = null!;
+        if (string.IsNullOrWhiteSpace(path))
+            return false;
         var normalizedPath = path
             .Replace("’", "'")
             .Replace("`", "'")
@@ -429,14 +429,12 @@ public class MultisigService(
             .Replace(" ", string.Empty);
         normalizedPath = Regex.Replace(normalizedPath, @"([0-9]+)[hH]", "$1'");
         normalizedPath = normalizedPath.StartsWith("m/", StringComparison.OrdinalIgnoreCase) ? normalizedPath[2..] : normalizedPath;
-        return normalizedPath;
-    }
-
-    private string? NormalizeAccountKey(string? accountKey, BTCPayNetwork network)
-    {
-        return TryNormalizeAccountKeyForNetwork(accountKey, network, out var normalizedAccountKey)
-            ? normalizedAccountKey
-            : null;
+        if (KeyPath.TryParse(normalizedPath, out var parsedKeyPath))
+        {
+            keyPath = parsedKeyPath!;
+            return true;
+        }
+        return false;
     }
 
     private MultisigInProgressViewModel CreateInProgressViewModel(string storeId, string storeName, string userId, string cryptoCode, PendingMultisigSetupData pending, HttpContext httpContext, bool includeSetupUrl)

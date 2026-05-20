@@ -74,25 +74,31 @@ public class UIMultisigInviteController(
         if (network is null)
             return NotFound();
 
-        current.AccountKey = vm.AccountKey?.Trim();
+        current.DisplayAccountKey = vm.DisplayAccountKey?.Trim();
         current.MasterFingerprint = vm.MasterFingerprint?.Trim();
         current.AccountKeyPath = vm.AccountKeyPath?.Trim();
 
-        if (string.IsNullOrWhiteSpace(current.AccountKey))
-            ModelState.AddModelError(nameof(vm.AccountKey), stringLocalizer["Please provide your account key."].Value);
-        else if (!multisigService.TryNormalizeAccountKeyForNetwork(current.AccountKey, network, out var normalizedAccountKey))
-            ModelState.AddModelError(string.Empty, stringLocalizer["Invalid account key format."].Value);
+        if (string.IsNullOrWhiteSpace(current.DisplayAccountKey))
+            ModelState.AddModelError(nameof(vm.DisplayAccountKey), stringLocalizer["Please provide your account key."].Value);
         else
-            current.AccountKey = normalizedAccountKey;
+        {
+            try
+            {
+                current.AccountKey = new BitcoinExtPubKey(current.DisplayAccountKey, network.NBitcoinNetwork);
+            }
+            catch
+            {
+                ModelState.AddModelError(string.Empty, stringLocalizer["Invalid account key format."].Value);
+            }
+        }
         if (!string.IsNullOrWhiteSpace(current.MasterFingerprint) && !Regex.IsMatch(current.MasterFingerprint, "^[0-9a-fA-F]{8}$"))
             ModelState.AddModelError(nameof(vm.MasterFingerprint), stringLocalizer["Invalid fingerprint format."].Value);
         if (!string.IsNullOrWhiteSpace(current.AccountKeyPath))
         {
-            var normalizedPath = MultisigService.NormalizePath(current.AccountKeyPath);
-            if (!KeyPath.TryParse(normalizedPath, out _))
+            if (!MultisigService.TryParseKeyPath(current.AccountKeyPath, out var accountKeyPath))
                 ModelState.AddModelError(nameof(vm.AccountKeyPath), stringLocalizer["Invalid account key path."].Value);
             else
-                current.AccountKeyPath = $"m/{normalizedPath}";
+                current.AccountKeyPath = $"m/{accountKeyPath}";
         }
 
         var hasFingerprint = !string.IsNullOrWhiteSpace(current.MasterFingerprint);
@@ -121,7 +127,7 @@ public class UIMultisigInviteController(
             {
                 // Invite links remain reusable for the intended signer until the request expires,
                 // but once a key is submitted the page is read-only and never overwrites it.
-                current.AccountKey = participant.AccountKey;
+                current.DisplayAccountKey = participant.AccountKey;
                 current.MasterFingerprint = participant.MasterFingerprint;
                 current.AccountKeyPath = participant.AccountKeyPath;
                 current.Submitted = true;
@@ -132,15 +138,15 @@ public class UIMultisigInviteController(
             var duplicateKeyFound = pending.Participants
                 .Where(p => !string.Equals(p.UserId, current.UserId, StringComparison.Ordinal))
                 .Any(p =>
-                    multisigService.TryNormalizeAccountKeyForNetwork(p.AccountKey, network, out var normalizedParticipantKey) &&
-                    string.Equals(normalizedParticipantKey, current.AccountKey, StringComparison.Ordinal));
+                    TryParseAccountKey(p.AccountKey, network, out var participantKey) &&
+                    participantKey.ToString() == current.AccountKey.ToString());
             if (duplicateKeyFound)
             {
                 ModelState.AddModelError(string.Empty, stringLocalizer["This signer key is already used in this multisig request."].Value);
                 return View("MultisigInvite", current);
             }
 
-            participant.AccountKey = current.AccountKey;
+            participant.AccountKey = current.DisplayAccountKey;
             participant.MasterFingerprint = current.MasterFingerprint;
             participant.AccountKeyPath = current.AccountKeyPath;
             participant.SubmittedAt = DateTimeOffset.UtcNow;
@@ -198,11 +204,27 @@ public class UIMultisigInviteController(
                 RequiredSigners = pending.RequiredSigners,
                 TotalSigners = pending.TotalSigners,
                 ScriptType = pending.ScriptType,
-                AccountKey = participant.AccountKey,
+                DisplayAccountKey = participant.AccountKey,
                 MasterFingerprint = participant.MasterFingerprint,
                 AccountKeyPath = participant.AccountKeyPath,
                 Submitted = !string.IsNullOrWhiteSpace(participant.AccountKey)
             }
         };
+    }
+
+    private static bool TryParseAccountKey(string? accountKey, BTCPayNetwork network, out BitcoinExtPubKey parsed)
+    {
+        parsed = null!;
+        if (string.IsNullOrWhiteSpace(accountKey) || network.NBitcoinNetwork is null)
+            return false;
+        try
+        {
+            parsed = new BitcoinExtPubKey(accountKey.Trim(), network.NBitcoinNetwork);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

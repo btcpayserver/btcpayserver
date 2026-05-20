@@ -166,7 +166,7 @@ const posCommon = {
             tip: null,
             tipPercent: null,
             discount: null,
-            discountPercent: null,
+            discountPercent: srvModel.defaultDiscount || null,
             payButtonLoading: false,
             categoriesScrollable: false,
             displayCategory: '*',
@@ -239,13 +239,16 @@ const posCommon = {
         displayCategory(category) {
             this.updateDisplay()
         },
-        discountPercent(val) {
-            const value = parseFloat(val)
-            if (isNaN(value)) this.discountPercent = null
-            else if (value < 0) this.discountPercent = '0'
-            else if (value > 100) this.discountPercent = '100'
-            else this.discountPercent = value.toString()
-            this.posOrder.addDiscountRate(isNaN(value) ? null : value)
+        discountPercent: {
+            immediate: true,
+            handler(val) {
+                const value = parseFloat(val)
+                if (isNaN(value)) this.discountPercent = null
+                else if (value < 0) this.discountPercent = '0'
+                else if (value > 100) this.discountPercent = '100'
+                else this.discountPercent = value.toString()
+                this.posOrder.addDiscountRate(isNaN(value) ? null : value)
+            }
         },
         tip(val) {
             this.tipPercent = null

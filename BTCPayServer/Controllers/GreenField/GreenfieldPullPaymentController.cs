@@ -145,7 +145,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
-			var ppId = await _pullPaymentService.CreatePullPayment(storeData, request);
+			var ppId = await _pullPaymentService.CreatePullPayment(storeData, request, Request.GetRequestBaseUrl().ToString());
             var pp = await _pullPaymentService.GetPullPayment(ppId, false);
             return this.Ok(CreatePullPaymentData(pp));
         }

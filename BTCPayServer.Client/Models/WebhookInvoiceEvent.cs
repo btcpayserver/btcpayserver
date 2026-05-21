@@ -19,6 +19,18 @@ namespace BTCPayServer.Client.Models
         [JsonProperty(Order = 3)] public string PullPaymentId { get; set; }
         [JsonProperty(Order = 4)] [JsonConverter(typeof(StringEnumConverter))]public PayoutState PayoutState { get; set; }
     }
+    public class WebhookPullPaymentEvent : StoreWebhookEvent
+    {
+        public WebhookPullPaymentEvent(string type, string storeId)
+        {
+            if (!type.StartsWith("pullpayment", StringComparison.InvariantCultureIgnoreCase))
+                throw new ArgumentException("Invalid event type", nameof(type));
+            Type = type;
+            StoreId = storeId;
+        }
+
+        [JsonProperty(Order = 2)] public string PullPaymentId { get; set; }
+    }
     public class WebhookPaymentRequestEvent : StoreWebhookEvent
     {
         public WebhookPaymentRequestEvent(string type, string storeId)

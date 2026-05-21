@@ -93,7 +93,28 @@ namespace BTCPayServer.HostedServices
                 }
             }
         }
-        public async Task<string> CreatePullPayment(Data.StoreData store, CreatePullPaymentRequest create)
+        public async Task<string> CreatePullPayment(Data.StoreData store, CreatePullPaymentRequest create, string requestBaseUrl = null)
+        {
+            var pullPayment = await CreatePullPaymentCore(store, create, requestBaseUrl);
+            _eventAggregator.Publish(new PullPaymentEvent(PullPaymentEvent.PullPaymentEventType.Created, pullPayment));
+            return pullPayment.Id;
+        }
+
+        public async Task<string> CreateRefundPullPayment(Data.StoreData store, CreatePullPaymentRequest create, string invoiceId, string requestBaseUrl = null)
+        {
+            var pullPayment = await CreatePullPaymentCore(store, create, requestBaseUrl);
+            await using var ctx = _dbContextFactory.CreateContext();
+            ctx.Refunds.Add(new RefundData()
+            {
+                InvoiceDataId = invoiceId,
+                PullPaymentDataId = pullPayment.Id
+            });
+            await ctx.SaveChangesAsync();
+            _eventAggregator.Publish(new PullPaymentEvent(PullPaymentEvent.PullPaymentEventType.Created, pullPayment));
+            return pullPayment.Id;
+        }
+
+        private async Task<Data.PullPaymentData> CreatePullPaymentCore(Data.StoreData store, CreatePullPaymentRequest create, string requestBaseUrl = null)
         {
             var supported = this._handlers.GetSupportedPayoutMethods(store);
             create.PayoutMethods ??= supported.Select(s => s.ToString()).ToArray();
@@ -127,11 +148,12 @@ namespace BTCPayServer.HostedServices
                     Description = create.Description ?? string.Empty,
                     Email = null
                 },
-                BOLT11Expiration = create.BOLT11Expiration ?? store.GetStoreBlob().RefundBOLT11Expiration
+                BOLT11Expiration = create.BOLT11Expiration ?? store.GetStoreBlob().RefundBOLT11Expiration,
+                RequestBaseUrl = requestBaseUrl
             });
             ctx.PullPayments.Add(o);
             await ctx.SaveChangesAsync();
-            return o.Id;
+            return o;
         }
 
         public class PayoutQuery
@@ -768,10 +790,12 @@ namespace BTCPayServer.HostedServices
             {
                 using var ctx = this._dbContextFactory.CreateContext();
                 List<PayoutData> payouts = null;
+                PullPaymentData archivedPullPayment = null;
                 if (cancel.PullPaymentId != null)
                 {
-                    ctx.PullPayments.Attach(new Data.PullPaymentData() { Id = cancel.PullPaymentId, Archived = true })
-                        .Property(o => o.Archived).IsModified = true;
+                    archivedPullPayment = await ctx.PullPayments.FindAsync(cancel.PullPaymentId);
+                    if (archivedPullPayment is not null)
+                        archivedPullPayment.Archived = true;
                     payouts = await ctx.Payouts
                         .Where(p => p.PullPaymentDataId == cancel.PullPaymentId)
                         .Where(p => cancel.StoreIds == null || cancel.StoreIds.Contains(p.StoreDataId))
@@ -809,6 +833,8 @@ namespace BTCPayServer.HostedServices
                 }
 
                 await ctx.SaveChangesAsync();
+                if (archivedPullPayment is not null)
+                    _eventAggregator.Publish(new PullPaymentEvent(PullPaymentEvent.PullPaymentEventType.Archived, archivedPullPayment));
                 foreach (var keyValuePair in result.Where(pair => pair.Value == MarkPayoutRequest.PayoutPaidResult.Ok))
                 {
                     var payout = payouts.First(p => p.Id == keyValuePair.Key);
@@ -1057,5 +1083,16 @@ namespace BTCPayServer.HostedServices
         }
 
         public override string ToString() => $"Payout Event for {Payout.Id} ({Type})";
+    }
+
+    public record PullPaymentEvent(PullPaymentEvent.PullPaymentEventType Type, PullPaymentData PullPayment)
+    {
+        public enum PullPaymentEventType
+        {
+            Created,
+            Archived
+        }
+
+        public override string ToString() => $"Pull Payment Event for {PullPayment.Id} ({Type})";
     }
 }

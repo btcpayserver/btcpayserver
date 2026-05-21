@@ -72,6 +72,8 @@ namespace Microsoft.AspNetCore.Mvc
                 scheme, host, pathbase);
         }
 
+        public static string PullPaymentLink(this LinkGenerator urlHelper, string pullPaymentId, RequestBaseUrl baseUrl)
+        => PullPaymentLink(urlHelper, pullPaymentId, baseUrl.Scheme, baseUrl.Host, baseUrl.PathBase);
         public static string PullPaymentLink(this LinkGenerator urlHelper, string pullPaymentId, string scheme, HostString host, string pathbase)
         {
             return urlHelper.GetUriByAction(

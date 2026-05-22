@@ -54,11 +54,12 @@ public class PendingTransactionService(
             await using var ctx = dbContextFactory.CreateContext();
             var cryptoCode = newTransactionEvent.NewTransactionEvent.CryptoCode;
             var transaction = newTransactionEvent.NewTransactionEvent.TransactionData.Transaction;
-            var txInputs = newTransactionEvent.NewTransactionEvent.TransactionData.Transaction.Inputs
+            var txInputs = transaction.Inputs
                 .Select(i => i.PrevOut.ToString()).ToArray();
             var txHash = newTransactionEvent.NewTransactionEvent.TransactionData.TransactionHash.ToString();
+            var noSignatureTxHash = GetNoSignatureHash(transaction).ToString();
             var pendingTransactions = await ctx.PendingTransactions
-                .Where(p => p.CryptoCode == cryptoCode && (p.TransactionId == txHash || p.OutpointsUsed.Any(o => txInputs.Contains(o))))
+                .Where(p => p.CryptoCode == cryptoCode && (p.NoSignatureTransactionId == noSignatureTxHash || p.OutpointsUsed.Any(o => txInputs.Contains(o))))
                 .ToArrayAsync(cancellationToken: cancellationToken);
             if (!pendingTransactions.Any())
             {
@@ -70,10 +71,10 @@ public class PendingTransactionService(
                 if (pendingTransaction.State == PendingTransactionState.Broadcast)
                     continue;
 
-                if (pendingTransaction.TransactionId == txHash ||
-                    IsSameTransactionIntent(pendingTransaction, transaction))
+                if (pendingTransaction.NoSignatureTransactionId == noSignatureTxHash)
                 {
                     pendingTransaction.State = PendingTransactionState.Broadcast;
+                    pendingTransaction.TransactionId = txHash;
                     continue;
                 }
 
@@ -97,13 +98,13 @@ public class PendingTransactionService(
         if (network is null)
             throw new NotSupportedException("CryptoCode not supported");
 
-        var txId = psbt.GetGlobalTransaction().GetHash();
+        var noSignatureTransactionId = psbt.GetGlobalTransaction().GetHash();
         await using var ctx = dbContextFactory.CreateContext();
         var pendingTransaction = new PendingTransaction
         {
             Id = Guid.NewGuid().ToString(),
             CryptoCode = cryptoCode,
-            TransactionId = txId.ToString(),
+            NoSignatureTransactionId = noSignatureTransactionId.ToString(),
             State = PendingTransactionState.Pending,
             OutpointsUsed = psbt.Inputs.Select(i => i.PrevOut.ToString()).ToArray(),
             Expiry = expiry,
@@ -134,11 +135,12 @@ public class PendingTransactionService(
     public async Task<PendingTransaction?> CollectSignature(PendingTransactionFullId id, PSBT psbt, CancellationToken cancellationToken, string? signerUserId = null)
     {
         const int maxAttempts = 3;
+        var attempt = 0;
         var newPsbtBase64 = psbt.ToBase64();
 
-        for (var attempt = 0; attempt < maxAttempts; attempt++)
+    retry:
+        await using (var ctx = dbContextFactory.CreateContext())
         {
-            await using var ctx = dbContextFactory.CreateContext();
             try
             {
                 var result = await TryCollectSignatureOnce(ctx, id, psbt, newPsbtBase64, cancellationToken);
@@ -157,13 +159,12 @@ public class PendingTransactionService(
                 });
                 return result.PendingTransaction;
             }
-            catch (DbUpdateConcurrencyException) when (attempt < maxAttempts - 1)
+            catch (DbUpdateConcurrencyException) when (++attempt < maxAttempts)
             {
                 // Another signer updated the row first; re-read and merge onto the latest PSBT.
+                goto retry;
             }
         }
-
-        throw new DbUpdateConcurrencyException("Failed to collect pending transaction signatures due to concurrent updates.");
     }
 
     private async Task<(PendingTransaction? PendingTransaction, bool Changed)> TryCollectSignatureOnce(
@@ -264,10 +265,10 @@ public class PendingTransactionService(
             p.CryptoCode == id.CryptoCode && p.StoreId == id.StoreId && p.Id == id.Id &&
             (p.State == PendingTransactionState.Pending || p.State == PendingTransactionState.Signed));
         if (pt is null) return;
-        var pendingPsbt = TryParsePendingPSBT(pt);
-        if (pendingPsbt is null || !HasSameTransactionIntent(pendingPsbt.GetGlobalTransaction(), transaction))
+        if (pt.NoSignatureTransactionId != GetNoSignatureHash(transaction).ToString())
             return;
         pt.State = PendingTransactionState.Broadcast;
+        pt.TransactionId = transaction.GetHash().ToString();
         await ctx.SaveChangesAsync();
         EventAggregator.Publish(new PendingTransactionEvent
         {
@@ -277,55 +278,11 @@ public class PendingTransactionService(
         });
     }
 
-    private PSBT? TryParsePendingPSBT(PendingTransaction pendingTransaction)
+    private static uint256 GetNoSignatureHash(Transaction transaction)
     {
-        var network = networkProvider.GetNetwork<BTCPayNetwork>(pendingTransaction.CryptoCode);
-        if (network is null || pendingTransaction.GetBlob()?.PSBT is not { } psbt)
-            return null;
-        try
-        {
-            return PSBT.Parse(psbt, network.NBitcoinNetwork);
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Failed to parse pending transaction PSBT {PendingTransactionId}", pendingTransaction.Id);
-            return null;
-        }
-    }
-
-    private bool IsSameTransactionIntent(PendingTransaction pendingTransaction, Transaction transaction)
-    {
-        var pendingPsbt = TryParsePendingPSBT(pendingTransaction);
-        return pendingPsbt is not null && HasSameTransactionIntent(pendingPsbt.GetGlobalTransaction(), transaction);
-    }
-
-    private static bool HasSameTransactionIntent(Transaction pendingTransaction, Transaction broadcastTransaction)
-    {
-        if (pendingTransaction.Version != broadcastTransaction.Version ||
-            pendingTransaction.LockTime != broadcastTransaction.LockTime ||
-            pendingTransaction.Inputs.Count != broadcastTransaction.Inputs.Count ||
-            pendingTransaction.Outputs.Count != broadcastTransaction.Outputs.Count)
-            return false;
-
-        for (var i = 0; i < pendingTransaction.Inputs.Count; i++)
-        {
-            var pendingInput = pendingTransaction.Inputs[i];
-            var broadcastInput = broadcastTransaction.Inputs[i];
-            if (pendingInput.PrevOut != broadcastInput.PrevOut ||
-                pendingInput.Sequence != broadcastInput.Sequence)
-                return false;
-        }
-
-        for (var i = 0; i < pendingTransaction.Outputs.Count; i++)
-        {
-            var pendingOutput = pendingTransaction.Outputs[i];
-            var broadcastOutput = broadcastTransaction.Outputs[i];
-            if (pendingOutput.Value != broadcastOutput.Value ||
-                pendingOutput.ScriptPubKey != broadcastOutput.ScriptPubKey)
-                return false;
-        }
-
-        return true;
+        var noSignatureTransaction = transaction.Clone();
+        noSignatureTransaction.RemoveSignatures();
+        return noSignatureTransaction.GetHash();
     }
 
     public record PendingTransactionEvent

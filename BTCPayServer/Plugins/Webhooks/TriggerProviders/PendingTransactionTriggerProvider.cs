@@ -22,7 +22,7 @@ public class PendingTransactionTriggerProvider
     protected override async Task<JObject> GetEmailModel(WebhookTriggerContext<PendingTransactionService.PendingTransactionEvent> webhookTriggerContext)
     {
         var evt = webhookTriggerContext.Event;
-        var id = evt.Data.TransactionId;
+        var id = evt.Data.Id;
         var trimmedId = !string.IsNullOrEmpty(id) && id.Length > 15 ? $"{id.Substring(0, 7)}...{id.Substring(id.Length - 7)}" : id;
 
         var blob = evt.Data.GetBlob() ?? new();
@@ -36,6 +36,8 @@ public class PendingTransactionTriggerProvider
             ["SignaturesNeeded"] = blob.SignaturesNeeded,
             ["SignaturesTotal"] = blob.SignaturesTotal
         };
+        if (evt.Data.TransactionId is not null)
+            o["TransactionId"] = evt.Data.TransactionId;
         model["PendingTransaction"] = o;
         if (blob.RequestBaseUrl is not null && RequestBaseUrl.TryFromUrl(blob.RequestBaseUrl, out var v))
         {
@@ -60,7 +62,10 @@ public class PendingTransactionTriggerProvider
             _ => null
         };
         if (webhook is not null)
-            webhook.PendingTransactionId = evt.Data.TransactionId;
+        {
+            webhook.PendingTransactionId = evt.Data.Id;
+            webhook.TransactionId = evt.Data.TransactionId;
+        }
         return webhook;
     }
 
@@ -76,5 +81,7 @@ public class PendingTransactionTriggerProvider
         public string CryptoCode { get; set; }
 
         [JsonProperty(Order = 2)] public string PendingTransactionId { get; set; } = null!;
+        [JsonProperty(Order = 3, NullValueHandling = NullValueHandling.Ignore)]
+        public string? TransactionId { get; set; }
     }
 }

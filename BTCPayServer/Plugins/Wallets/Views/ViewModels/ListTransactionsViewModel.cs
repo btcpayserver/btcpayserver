@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BTCPayServer;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Services.Invoices;
@@ -33,6 +34,10 @@ namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
         public override int CurrentPageCount => Transactions.Count;
         public string CryptoCode { get; set; }
         public PendingTransaction[] PendingTransactions { get; set; }
-        public List<string> Rates { get; set; }
+        public List<string> Rates { get; set; } = new();
+        public string SearchText { get; set; }
+        public string SearchInputText { get; set; }
+        public SearchString Search { get; set; }
+        public bool HasFilters { get; set; }
     }
 }

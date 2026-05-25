@@ -39,7 +39,10 @@ public class PendingTransactionTriggerProvider
         model["PendingTransaction"] = o;
         if (blob.RequestBaseUrl is not null && RequestBaseUrl.TryFromUrl(blob.RequestBaseUrl, out var v))
         {
-            o["Link"] = linkGenerator.WalletTransactionsLink(new(webhookTriggerContext.Store.Id, evt.Data.CryptoCode), v);
+            var walletId = new WalletId(webhookTriggerContext.Store.Id, evt.Data.CryptoCode);
+            o["Link"] = evt.Type is PendingTransactionService.PendingTransactionEvent.Created or PendingTransactionService.PendingTransactionEvent.SignatureCollected
+                ? linkGenerator.WalletPendingTransactionLink(walletId, evt.Data.Id, v)
+                : linkGenerator.WalletTransactionsLink(walletId, v);
         }
 
         return model;

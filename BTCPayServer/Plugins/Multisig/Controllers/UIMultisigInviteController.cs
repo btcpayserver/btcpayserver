@@ -153,7 +153,7 @@ public class UIMultisigInviteController(
             if (!await storeRepository.TryUpdateSettingAsync(storeId, settingName, setting.XMin, pending))
                 continue;
 
-            await multisigNotificationService.NotifyRequesterOfSubmission(HttpContext, storeId, cryptoCode, pending, participant);
+            await multisigNotificationService.PublishSignerKeySubmittedEvent(HttpContext, storeId, cryptoCode, pending, participant);
             current.Submitted = true;
             TempData[WellKnownTempData.SuccessMessage] = stringLocalizer["Signer key submitted successfully."].Value;
             return View("MultisigInvite", current);

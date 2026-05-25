@@ -16,8 +16,12 @@ public class MultisigPlugin : BaseBTCPayServerPlugin
     {
         services.AddScoped<Services.MultisigService>();
         services.AddScoped<Services.MultisigNotificationService>();
-        services.AddHostedService<HostedServices.MultisigPendingTransactionHostedService>();
+        services.AddHostedService<HostedServices.MultisigEmailTriggerHostedService>();
         services.AddSearchResultItemProvider<MultisigSearchResultProvider>();
+        foreach (var trigger in MultisigEmailTriggers.GetViewModels())
+        {
+            services.AddSingleton(trigger);
+        }
 
         services.AddUIExtension("store-onchain-wallet-setup", "/Plugins/Multisig/Views/SetupWalletCard.cshtml");
         services.AddUIExtension("dashboard-setup-guide-wallet", "/Plugins/Multisig/Views/DashboardSetupGuideExtension.cshtml");

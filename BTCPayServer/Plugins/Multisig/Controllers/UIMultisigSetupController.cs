@@ -130,7 +130,7 @@ public class UIMultisigSetupController(
         {
             try
             {
-                await multisigNotificationService.SendWalletCreatedEmails(HttpContext, vm.StoreId, vm.CryptoCode, finalizedPendingSetting.Value.Pending);
+                await multisigNotificationService.PublishWalletCreatedEvent(HttpContext, vm.StoreId, vm.CryptoCode, finalizedPendingSetting.Value.Pending);
             }
             catch (Exception ex)
             {
@@ -301,7 +301,10 @@ public class UIMultisigSetupController(
             return View("Multisig", vm);
         }
 
-        await multisigNotificationService.SendSignerRequestEmails(HttpContext, vm.StoreId, vm.CryptoCode, pending, newIds.Concat(resendIds).Distinct(StringComparer.Ordinal).ToArray());
+        if (isNewRequest)
+            await multisigNotificationService.EnsureDefaultEmailRules(vm.StoreId);
+
+        await multisigNotificationService.PublishSignerKeyRequestedEvents(HttpContext, vm.StoreId, vm.CryptoCode, pending, newIds.Concat(resendIds).Distinct(StringComparer.Ordinal).ToArray());
 
         TempData[WellKnownTempData.SuccessMessage] = isNewRequest
             ? stringLocalizer["Multisig signer requests were created."].Value

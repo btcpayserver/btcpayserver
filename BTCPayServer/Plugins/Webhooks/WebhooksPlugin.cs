@@ -84,7 +84,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             new("{PendingTransaction.SignaturesCollected}", "The number of signatures collected"),
             new("{PendingTransaction.SignaturesNeeded}", "The number of signatures needed"),
             new("{PendingTransaction.SignaturesTotal}", "The total number of signatures"),
-            new("{PendingTransaction.Link}", "The link to the wallet transaction list")
+            new("{PendingTransaction.Link}", "The link to the pending transaction or wallet transaction list")
         };
 
         var pendingTransactionTriggers = new List<EmailTriggerViewModel>()

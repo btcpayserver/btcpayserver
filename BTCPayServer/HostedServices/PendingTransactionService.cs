@@ -99,12 +99,15 @@ public class PendingTransactionService(
             throw new NotSupportedException("CryptoCode not supported");
 
         var noSignatureTransactionId = psbt.GetGlobalTransaction().GetHash();
+        // If the transaction can't be malleated by a third party, it is safe to show the transaction ID.
+        var malleabilitySafe = psbt.Inputs.All(i => i.GetCoin()?.IsMalleable is false);
         await using var ctx = dbContextFactory.CreateContext();
         var pendingTransaction = new PendingTransaction
         {
             Id = Guid.NewGuid().ToString(),
             CryptoCode = cryptoCode,
             NoSignatureTransactionId = noSignatureTransactionId.ToString(),
+            TransactionId = malleabilitySafe ? noSignatureTransactionId.ToString() : null,
             State = PendingTransactionState.Pending,
             OutpointsUsed = psbt.Inputs.Select(i => i.PrevOut.ToString()).ToArray(),
             Expiry = expiry,

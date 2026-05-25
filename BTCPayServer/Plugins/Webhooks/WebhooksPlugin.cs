@@ -78,8 +78,8 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
         services.AddWebhookTriggerProvider<PendingTransactionTriggerProvider>();
         var pendingTransactionsPlaceholders = new List<EmailTriggerViewModel.PlaceHolder>()
         {
-            new("{PendingTransaction.Id}", "The id of the pending transaction"),
-            new("{PendingTransaction.TrimmedId}", "The trimmed id of the pending transaction"),
+            new("{PendingTransaction.Id}", "The id of the pending transaction (if available)"),
+            new("{PendingTransaction.TrimmedId}", "The trimmed id of the pending transaction (if available)"),
             new("{PendingTransaction.StoreId}", "The store id of the pending transaction"),
             new("{PendingTransaction.SignaturesCollected}", "The number of signatures collected"),
             new("{PendingTransaction.SignaturesNeeded}", "The number of signatures needed"),

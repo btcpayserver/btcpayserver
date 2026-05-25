@@ -27,7 +27,7 @@ namespace BTCPayServer.Services.Rates
             {
                 string name = ((JProperty)item).Name;
                 var value = results[name].Value<decimal?>();
-                if (value.HasValue)
+                if (value is > 0m)
                     list.Add(new PairRate(new CurrencyPair("BTC", name), new BidAsk(value.Value)));
             }
 

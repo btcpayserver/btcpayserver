@@ -7,11 +7,13 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Multisig.Models;
 using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -28,7 +30,8 @@ public class MultisigService(
     StoreRepository storeRepository,
     PaymentMethodHandlerDictionary handlers,
     IDataProtectionProvider dataProtectionProvider,
-    IAuthorizationService authorizationService)
+    IAuthorizationService authorizationService,
+    PermissionService permissionService)
 {
     private const string PendingMultisigSettingPrefix = "PendingMultisigSetup";
     private readonly IDataProtector _inviteProtector = dataProtectionProvider.CreateProtector("MultisigInviteLink");
@@ -69,6 +72,7 @@ public class MultisigService(
         var users = await storeRepository.GetStoreUsers(storeId);
         var selected = (selectedUserIds ?? Array.Empty<string>()).ToHashSet(StringComparer.Ordinal);
         return users
+            .Where(user => CanParticipateInMultisigSetup(storeId, user))
             .Select(user => new MultisigStoreUserItem
             {
                 UserId = user.Id,
@@ -80,6 +84,18 @@ public class MultisigService(
             .ThenBy(user => user.Email, StringComparer.OrdinalIgnoreCase)
             .ThenBy(user => user.UserId, StringComparer.Ordinal)
             .ToList();
+    }
+
+    private bool CanParticipateInMultisigSetup(string storeId, StoreRepository.StoreUser user)
+    {
+        var storeRole = user.StoreRole;
+        if (storeRole is null ||
+            !Permission.TryCreatePermission(WalletPolicies.CanSignWalletTransactions, storeId, out var requiredPermission))
+        {
+            return false;
+        }
+
+        return storeRole.ToPermissionSet(storeId).HasPermission(requiredPermission, permissionService);
     }
 
     public async Task<PendingMultisigSetupData?> GetPendingMultisigSetup(string storeId, string cryptoCode, string? requestId)

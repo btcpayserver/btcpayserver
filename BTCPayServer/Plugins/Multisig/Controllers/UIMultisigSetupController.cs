@@ -413,6 +413,15 @@ public class UIMultisigSetupController(
             return View("Multisig", vm);
         }
 
+        var eligibleParticipants = await multisigService.GetStoreUsers(vm.StoreId, pending.Participants.Select(p => p.UserId));
+        var eligibleParticipantIds = eligibleParticipants.Select(p => p.UserId).ToHashSet(StringComparer.Ordinal);
+        if (pending.Participants.Any(p => !eligibleParticipantIds.Contains(p.UserId)))
+        {
+            ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), stringLocalizer["One or more signers no longer have wallet signing permission."].Value);
+            ApplyPendingContext(vm, pending);
+            return View("Multisig", vm);
+        }
+
         var selectedIds = (vm.MultisigParticipantUserIds ?? Array.Empty<string>())
             .Where(id => !string.IsNullOrWhiteSpace(id))
             .Distinct(StringComparer.Ordinal)

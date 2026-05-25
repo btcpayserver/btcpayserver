@@ -499,6 +499,10 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.GoToRegister();
         var walletManager = await s.RegisterNewUser();
         await s.SkipWizard();
+        await s.Logout();
+        await s.GoToRegister();
+        var employee = await s.RegisterNewUser();
+        await s.SkipWizard();
 
         await using var scope = s.Server.PayTester.GetService<IServiceScopeFactory>().CreateAsyncScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
@@ -508,13 +512,16 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var signerAUser = await userManager.FindByEmailAsync(signerA);
         var signerBUser = await userManager.FindByEmailAsync(signerB);
         var walletManagerUser = await userManager.FindByEmailAsync(walletManager);
+        var employeeUser = await userManager.FindByEmailAsync(employee);
         Assert.NotNull(signerAUser);
         Assert.NotNull(signerBUser);
         Assert.NotNull(walletManagerUser);
+        Assert.NotNull(employeeUser);
 
         await storeRepo.AddOrUpdateStoreUser(storeId, signerAUser.Id, new StoreRoleId("Multisigner Guest"));
         await storeRepo.AddOrUpdateStoreUser(storeId, signerBUser.Id, new StoreRoleId("Multisigner Guest"));
         await storeRepo.AddOrUpdateStoreUser(storeId, walletManagerUser.Id, new StoreRoleId("Wallet Manager"));
+        await storeRepo.AddOrUpdateStoreUser(storeId, employeeUser.Id, StoreRoleId.Employee);
 
         async Task<string> CreateRequest(params string[] participantEmails)
         {
@@ -523,6 +530,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
             await s.GoToLogin();
             await s.LogIn(owner);
             await s.GoToUrl($"/stores/{storeId}/onchain/BTC/import/multisig");
+            await Expect(s.Page.Locator($"label.multisig-signer-item:has-text('{employee}')")).ToHaveCountAsync(0);
             foreach (var participantEmail in participantEmails)
             {
                 await s.Page.Locator($"label.multisig-signer-item:has-text('{participantEmail}') input[type='checkbox']").CheckAsync();
@@ -611,6 +619,15 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var walletManagerKey = CreateTestMultisigSignerKey("letter advice cage absurd amount doctor acoustic avoid letter advice cage above");
 
         var firstRequestId = await CreateRequest(signerA, signerB);
+        await s.GoToUrl($"/stores/{storeId}/onchain/BTC/import/multisig");
+        await s.Page.EvaluateAsync(
+            "(employeeId) => { const form = document.querySelector('button[value=\"create-request\"]').form; const input = document.createElement('input'); input.type = 'hidden'; input.name = 'MultisigParticipantUserIds'; input.value = employeeId; form.appendChild(input); }",
+            employeeUser.Id);
+        await s.Page.ClickAsync("button[value='create-request']");
+        await Expect(s.Page.Locator("body")).ToContainTextAsync("One or more selected users are invalid.");
+        var pendingAfterInvalidSigner = await storeRepo.GetSettingAsync<PendingMultisigSetupData>(storeId, "PendingMultisigSetup-BTC");
+        Assert.DoesNotContain(pendingAfterInvalidSigner.Participants, p => p.UserId == employeeUser.Id);
+
         await s.GoToHome();
         var dashboardMultisigSetup = s.Page.Locator($"#SetupGuide-Multisig-{firstRequestId}");
         await Expect(dashboardMultisigSetup).ToBeVisibleAsync();

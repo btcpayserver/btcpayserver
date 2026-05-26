@@ -298,6 +298,7 @@ namespace BTCPayServer.Hosting
             services.AddExceptionHandler<PluginExceptionHandler>();
             services.TryAddSingleton<AppService>();
             services.AddTransient<PluginService>();
+            services.AddTransient<PluginManagementProjectionService>();
             services.AddSingleton<PluginHookService>();
             services.AddSingleton<IPluginHookService, PluginHookService>(provider => provider.GetService<PluginHookService>());
             services.TryAddTransient<Safe>();

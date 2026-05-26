@@ -37,9 +37,13 @@ namespace BTCPayServer.HostedServices
                 vm.Identifier = notification.Identifier;
                 vm.Type = notification.NotificationType;
                 vm.Body = StringLocalizer["New {0} plugin version {1} released!", notification.Name, notification.Version];
-                vm.ActionLink = linkGenerator.GetPathByAction(nameof(UIServerController.ListPlugins),
+                var actionLink = linkGenerator.GetPathByAction(
+                    nameof(UIServerController.ListPlugins),
                     "UIServer",
-                    new {plugin = notification.PluginIdentifier}, options.RootPath);
+                    pathBase: options.RootPath);
+                vm.ActionLink = actionLink is null
+                    ? null
+                    : $"{actionLink}#{Uri.EscapeDataString(notification.PluginIdentifier)}";
             }
         }
 
@@ -75,17 +79,18 @@ namespace BTCPayServer.HostedServices
         {
             var dh = await settingsRepository.GetSettingAsync<PluginVersionCheckerDataHolder>() ??
                      new PluginVersionCheckerDataHolder();
-            dh.LastVersions ??= new Dictionary<string, Version>();
-            var disabledPlugins = pluginService.GetDisabledPlugins();
+            dh.LastVersions = NormalizeVersions(dh.LastVersions);
+            var disabledPlugins = NormalizeVersions(pluginService.GetDisabledPlugins());
 
-            var installedPlugins = pluginService.Installed;
+            var installedPlugins = NormalizeVersions(pluginService.Installed);
             var remotePlugins = await pluginService.GetRemotePlugins(null, cancellationToken);
             //take the latest version of each plugin
-            var remotePluginsList = remotePlugins
-                .GroupBy(plugin => plugin.Identifier)
+            var remotePluginsByIdentifier = remotePlugins
+                .GroupBy(plugin => plugin.Identifier, StringComparer.OrdinalIgnoreCase)
                 .Select(group => group.OrderByDescending(plugin => plugin.Version).First())
-                .Where(pair => installedPlugins.ContainsKey(pair.Identifier) || disabledPlugins.ContainsKey(pair.Name))
-                .ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
+                .Where(pair => installedPlugins.ContainsKey(pair.Identifier) || disabledPlugins.ContainsKey(pair.Identifier))
+                .ToDictionary(plugin => plugin.Identifier, StringComparer.OrdinalIgnoreCase);
+            var remotePluginsList = remotePluginsByIdentifier.ToDictionary(plugin => plugin.Key, plugin => plugin.Value.Version, StringComparer.OrdinalIgnoreCase);
             var notify = new HashSet<string>();
             foreach (var pair in remotePluginsList)
             {
@@ -105,11 +110,21 @@ namespace BTCPayServer.HostedServices
 
             foreach (string pluginUpdate in notify)
             {
-                var plugin = remotePlugins.First(p => p.Identifier == pluginUpdate);
+                var plugin = remotePluginsByIdentifier[pluginUpdate];
                 await notificationSender.SendNotification(new AdminScope(), new PluginUpdateNotification(plugin));
             }
 
             await settingsRepository.UpdateSetting(dh);
+        }
+
+        private static Dictionary<string, Version> NormalizeVersions(Dictionary<string, Version> versions)
+        {
+            return (versions ?? new Dictionary<string, Version>())
+                .GroupBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(
+                    group => group.First().Key,
+                    group => group.OrderByDescending(pair => pair.Value).First().Value,
+                    StringComparer.OrdinalIgnoreCase);
         }
     }
 }

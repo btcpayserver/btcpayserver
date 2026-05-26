@@ -52,7 +52,9 @@ namespace BTCPayServer.Plugins
             return pluginManifest.Version;
         }
 
-        private string GetShortBtcpayVersion() => Env.Version.TrimStart('v').Split('+')[0];
+        public string GetShortBtcpayVersion() => Env.Version.TrimStart('v').Split('+')[0];
+        public Uri GetPluginSourceBaseUri() => _pluginBuilderClient.HttpClient.BaseAddress;
+        public bool PluginPreReleasesEnabled => _policiesSettings.PluginPreReleases;
 
         public async Task<AvailablePlugin[]> GetRemotePlugins(string searchPluginName, CancellationToken cancellationToken = default)
         {
@@ -104,6 +106,7 @@ namespace BTCPayServer.Plugins
             if (availablePlugin is null)
                 throw new InvalidDataException($"Manifest deserialized to null BuildId: {publishedVersion.BuildId} PluginSlug: {publishedVersion.ProjectSlug}");
 
+            availablePlugin.CatalogSlug = publishedVersion.ProjectSlug;
             availablePlugin.Documentation = publishedVersion.Documentation;
             var buildInfo = publishedVersion.BuildInfo;
             var github = buildInfo?.GetGithubRepository();
@@ -155,12 +158,20 @@ namespace BTCPayServer.Plugins
             version = Uri.EscapeDataString(version);
             Directory.CreateDirectory(Path.GetDirectoryName(filedest));
             var url = $"api/v1/plugins/{pluginSelector}/versions/{version}/download";
-            var manifest = (await _pluginBuilderClient.GetPlugin(pluginSelector, version))?.ManifestInfo?.ToObject<AvailablePlugin>();
-            await File.WriteAllTextAsync(filemanifestdest, JsonConvert.SerializeObject(manifest, Formatting.Indented));
+            var publishedVersion = await _pluginBuilderClient.GetPlugin(pluginSelector, version);
+            if (publishedVersion is null)
+                throw new InvalidDataException($"Plugin version not found for {pluginIdentifier} {version}.");
+            if (publishedVersion.ManifestInfo is null)
+                throw new InvalidDataException($"Plugin manifest not found for {pluginIdentifier} {version}.");
+            var manifest = publishedVersion.ManifestInfo.ToObject<AvailablePlugin>() ??
+                           throw new InvalidDataException($"Plugin manifest deserialized to null for {pluginIdentifier} {version}.");
+            manifest.CatalogSlug = publishedVersion.ProjectSlug;
             using var resp2 = await _pluginBuilderClient.HttpClient.GetAsync(url);
+            resp2.EnsureSuccessStatusCode();
             await using var fs = new FileStream(filedest, FileMode.Create, FileAccess.ReadWrite);
             await resp2.Content.CopyToAsync(fs);
             await fs.FlushAsync();
+            await File.WriteAllTextAsync(filemanifestdest, JsonConvert.SerializeObject(manifest, Formatting.Indented));
             return manifest;
         }
 
@@ -195,6 +206,7 @@ namespace BTCPayServer.Plugins
         public class AvailablePlugin
         {
             public string Identifier { get; set; }
+            public string CatalogSlug { get; set; }
             public string Name { get; set; }
             public Version Version { get; set; }
             public string Description { get; set; }

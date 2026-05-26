@@ -20,6 +20,7 @@ using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.JsonConverters;
+using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
@@ -2587,96 +2588,196 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void GetDisabledPluginUpdates_ReturnsUpdateWhenNewerVersionAvailable()
+        public void PluginProjection_ReturnsDisabledPluginUpdateWhenNewerVersionAvailable()
         {
-            var disabled = new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } };
-            var available = new Dictionary<string, PluginService.AvailablePlugin>()
-            {
-                { "TestPlugin", MakeAvailablePlugin("TestPlugin", "1.1.0") }
-            };
+            var model = CreatePluginProjection(
+                disabled: new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } },
+                allAvailable: [MakeAvailablePlugin("TestPlugin", "1.1.0")]);
 
-            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, available);
-
-            Assert.Single(result);
-            Assert.Equal(new Version(1, 1, 0), result["TestPlugin"].Version);
+            var plugin = Assert.Single(model.DisabledPlugins);
+            Assert.Equal(new Version(1, 1, 0), plugin.RecommendedUpdate.Version);
+            var updateAction = Assert.Single(plugin.Actions, action => action.FormAction == "InstallPlugin");
+            Assert.Equal("TestPlugin", updateAction.Plugin);
+            Assert.Equal("1.1.0", updateAction.Version);
+            Assert.False(updateAction.Disabled);
         }
 
         [Fact]
-        public void GetDisabledPluginUpdates_NoUpdateWhenSameVersion()
+        public void PluginProjection_DoesNotAddDisabledPluginUpdateWhenSameVersion()
         {
-            var disabled = new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } };
-            var available = new Dictionary<string, PluginService.AvailablePlugin>()
-            {
-                { "TestPlugin", MakeAvailablePlugin("TestPlugin", "1.0.0") }
-            };
+            var model = CreatePluginProjection(
+                disabled: new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } },
+                allAvailable: [MakeAvailablePlugin("TestPlugin", "1.0.0")]);
 
-            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, available);
-
-            Assert.Empty(result);
+            var plugin = Assert.Single(model.DisabledPlugins);
+            Assert.DoesNotContain(plugin.Actions, action => action.FormAction == "InstallPlugin");
         }
 
         [Fact]
-        public void GetDisabledPluginUpdates_NoUpdateWhenNoAvailablePlugins()
+        public void PluginProjection_DoesNotAddDisabledPluginUpdateWhenNoAvailablePlugins()
         {
-            var disabled = new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } };
-            var available = new Dictionary<string, PluginService.AvailablePlugin>();
+            var model = CreatePluginProjection(
+                disabled: new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } },
+                allAvailable: []);
 
-            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, available);
-
-            Assert.Empty(result);
+            var plugin = Assert.Single(model.DisabledPlugins);
+            Assert.DoesNotContain(plugin.Actions, action => action.FormAction == "InstallPlugin");
         }
 
         [Fact]
-        public void GetDisabledPluginUpdates_SkipsNullVersion()
+        public void PluginProjection_SkipsDisabledPluginUpdateWhenVersionIsUnknown()
         {
-            var disabled = new Dictionary<string, Version> { { "TestPlugin", null } };
-            var available = new Dictionary<string, PluginService.AvailablePlugin>()
-            {
-                { "TestPlugin", MakeAvailablePlugin("TestPlugin", "1.1.0") }
-            };
+            var model = CreatePluginProjection(
+                disabled: new Dictionary<string, Version> { { "TestPlugin", null } },
+                allAvailable: [MakeAvailablePlugin("TestPlugin", "1.1.0")]);
 
-            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, available);
-
-            Assert.Empty(result);
+            var plugin = Assert.Single(model.DisabledPlugins);
+            Assert.DoesNotContain(plugin.Actions, action => action.FormAction == "InstallPlugin");
         }
 
         [Fact]
-        public void GetDisabledPluginUpdates_CaseInsensitiveIdentifierMatching()
+        public void PluginProjection_UsesCaseInsensitiveDisabledPluginIdentifierMatching()
         {
-            var disabled = new Dictionary<string, Version> { { "MyPlugin", new Version(1, 0, 0, 0) } };
-            var available = new Dictionary<string, PluginService.AvailablePlugin>(StringComparer.OrdinalIgnoreCase)
-            {
-                { "myplugin", MakeAvailablePlugin("myplugin", "1.1.0") }
-            };
+            var model = CreatePluginProjection(
+                disabled: new Dictionary<string, Version> { { "MyPlugin", new Version(1, 0, 0, 0) } },
+                allAvailable: [MakeAvailablePlugin("myplugin", "1.1.0")]);
 
-            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, available);
-
-            Assert.Single(result);
-            Assert.Equal(new Version(1, 1, 0), result["MyPlugin"].Version);
+            var plugin = Assert.Single(model.DisabledPlugins);
+            Assert.Equal(new Version(1, 1, 0), plugin.RecommendedUpdate.Version);
+            var updateAction = Assert.Single(plugin.Actions, action => action.FormAction == "InstallPlugin");
+            Assert.Equal("MyPlugin", updateAction.Plugin);
+            Assert.Equal("1.1.0", updateAction.Version);
+            Assert.False(updateAction.Disabled);
         }
 
         [Fact]
-        public void GetDisabledPluginUpdates_UsesNewestVersionFromMultipleEntries()
+        public void PluginProjection_UsesHighestDisabledVersionForDuplicateIdentifierCasing()
         {
-            var disabled = new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } };
-            // Build the dictionary the same way the controller does
-            var allPlugins = new[]
-            {
-                MakeAvailablePlugin("TestPlugin", "1.1.0"),
-                MakeAvailablePlugin("TestPlugin", "1.3.0"),
-                MakeAvailablePlugin("TestPlugin", "1.2.0")
-            };
-            var available = new Dictionary<string, PluginService.AvailablePlugin>(StringComparer.OrdinalIgnoreCase);
-            foreach (var p in allPlugins)
-            {
-                if (!available.TryGetValue(p.Identifier, out var existing) || p.Version > existing.Version)
-                    available[p.Identifier] = p;
-            }
+            var model = CreatePluginProjection(
+                disabled: new Dictionary<string, Version>
+                {
+                    { "MyPlugin", new Version(1, 0, 0, 0) },
+                    { "myplugin", new Version(1, 2, 0, 0) }
+                },
+                allAvailable: [MakeAvailablePlugin("myplugin", "1.1.0")]);
 
-            var result = UIServerController.ListPluginsViewModel.GetDisabledPluginUpdates(disabled, available);
+            var plugin = Assert.Single(model.DisabledPlugins);
+            Assert.DoesNotContain(plugin.Actions, action => action.FormAction == "InstallPlugin");
+        }
 
-            Assert.Single(result);
-            Assert.Equal(new Version(1, 3, 0), result["TestPlugin"].Version);
+        [Fact]
+        public void PluginProjection_DoesNotListDisabledPluginWhenIdentifierCasingDiffers()
+        {
+            var model = CreatePluginProjection(
+                disabled: new Dictionary<string, Version> { { "MyPlugin", new Version(1, 0, 0, 0) } },
+                allAvailable: [MakeAvailablePlugin("myplugin", "1.1.0")]);
+
+            Assert.Empty(model.AvailablePlugins);
+        }
+
+        [Fact]
+        public void PluginProjection_UsesNewestVersionFromMultipleEntries()
+        {
+            var model = CreatePluginProjection(
+                disabled: new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } },
+                allAvailable: [
+                    MakeAvailablePlugin("TestPlugin", "1.1.0"),
+                    MakeAvailablePlugin("TestPlugin", "1.3.0"),
+                    MakeAvailablePlugin("TestPlugin", "1.2.0")
+                ]);
+
+            var plugin = Assert.Single(model.DisabledPlugins);
+            Assert.Equal(new Version(1, 3, 0), plugin.RecommendedUpdate.Version);
+            var updateAction = Assert.Single(plugin.Actions, action => action.FormAction == "InstallPlugin");
+            Assert.Equal("1.3.0", updateAction.Version);
+        }
+
+        [Fact]
+        public void PluginProjection_PrefersHighestAvailableVersionWithSatisfiedDependencies()
+        {
+            var model = CreatePluginProjection(
+                allAvailable: [
+                    MakeAvailablePlugin("TestPlugin", "2.0.0", ("MissingDependency", ">=1.0.0")),
+                    MakeAvailablePlugin("TestPlugin", "1.5.0")
+                ]);
+
+            var plugin = Assert.Single(model.AvailablePlugins);
+            Assert.Equal(new Version(1, 5, 0), plugin.Plugin.Version);
+        }
+
+        [Fact]
+        public void PluginProjection_DropsUnsafeMetadataLinks()
+        {
+            var availablePlugin = MakeAvailablePlugin("TestPlugin", "1.0.0");
+            availablePlugin.Author = "Author";
+            availablePlugin.AuthorLink = "javascript:alert(1)";
+            availablePlugin.Source = "https://github.com/btcpayserver/test-plugin";
+            availablePlugin.Documentation = "/relative-docs";
+
+            var model = CreatePluginProjection(allAvailable: [availablePlugin]);
+
+            var plugin = Assert.Single(model.AvailablePlugins).Plugin;
+            Assert.Equal("Author", plugin.Author);
+            Assert.Null(plugin.AuthorLink);
+            Assert.Equal("https://github.com/btcpayserver/test-plugin", plugin.Source);
+            Assert.Null(plugin.Documentation);
+        }
+
+        [Fact]
+        public void PluginProjection_PreservesDirectorySelectionWhenSlugIsNotInLegacyList()
+        {
+            var model = CreatePluginProjection(selectedSlug: "unlisted-plugin");
+
+            Assert.Equal("unlisted-plugin", model.SelectedPluginSlug);
+            Assert.True(model.SelectedPluginPanel.HasSelection);
+            Assert.Equal("unlisted-plugin", model.SelectedPluginPanel.SelectedSlug);
+            Assert.Equal("unlisted-plugin", model.SelectedPluginPanel.Plugin.CatalogSlug);
+        }
+
+        [Fact]
+        public void PluginProjection_BlocksUninstallWhenPendingInstallDependsOnInstalledPlugin()
+        {
+            var model = CreatePluginProjection(
+                loadedPlugins: [MakeLoadedPlugin("Dependency")],
+                allAvailable: [MakeAvailablePlugin("Dependent", "1.0.0", ("Dependency", ">=1.0.0"))],
+                commands: [("install", "Dependent")]);
+
+            var plugin = Assert.Single(model.InstalledPlugins);
+            var blockedAction = Assert.Single(plugin.Actions);
+            Assert.True(blockedAction.Disabled);
+            Assert.Null(blockedAction.FormAction);
+            Assert.Null(blockedAction.Plugin);
+            Assert.NotNull(blockedAction.Tooltip);
+        }
+
+        [Fact]
+        public void PluginProjection_DoesNotBlockUninstallWhenDependentPluginIsPendingDelete()
+        {
+            var model = CreatePluginProjection(
+                loadedPlugins: [
+                    MakeLoadedPlugin("Dependency"),
+                    MakeLoadedPlugin("Dependent", ("Dependency", ">=1.0.0"))
+                ],
+                commands: [("delete", "Dependent")]);
+
+            var plugin = Assert.Single(model.InstalledPlugins, plugin => plugin.Current.Identifier == "Dependency");
+            var uninstallAction = Assert.Single(plugin.Actions, action => action.FormAction == "UnInstallPlugin");
+            Assert.Equal("Dependency", uninstallAction.Plugin);
+            Assert.False(uninstallAction.Disabled);
+            Assert.DoesNotContain(plugin.Actions, action => action.FormAction is null && action.Disabled);
+        }
+
+        [Fact]
+        public void PluginDirectoryIframeUrl_IncludesCompatibilityQuery()
+        {
+            var url = UIServerController.BuildDirectoryIframeUrl(
+                new Uri("https://plugins.example.com/catalog"),
+                "2.3.7",
+                true);
+
+            Assert.Equal(
+                "https://plugins.example.com/catalog/public/plugins?embed=1&btcpayVersion=2.3.7&includePreRelease=true",
+                url);
         }
 
         private static PluginService.AvailablePlugin MakeAvailablePlugin(
@@ -2693,6 +2794,59 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
                     Condition = d.condition
                 }).ToArray()
             };
+        }
+
+        private static IBTCPayServerPlugin MakeLoadedPlugin(
+            string identifier,
+            params (string id, string condition)[] dependencies)
+        {
+            return new TestPlugin
+            {
+                Identifier = identifier,
+                Dependencies = dependencies.Select(d => new IBTCPayServerPlugin.PluginDependency
+                {
+                    Identifier = d.id,
+                    Condition = d.condition
+                }).ToArray()
+            };
+        }
+
+        private static ManagePluginsShellViewModel CreatePluginProjection(
+            Dictionary<string, Version> disabled = null,
+            IEnumerable<PluginService.AvailablePlugin> allAvailable = null,
+            string selectedSlug = null,
+            IEnumerable<IBTCPayServerPlugin> loadedPlugins = null,
+            (string command, string plugin)[] commands = null)
+        {
+            var loaded = loadedPlugins?.ToArray() ?? [];
+            return new PluginManagementProjectionService().CreateViewModel(new PluginManagementProjectionService.ProjectionSource
+            {
+                Disabled = disabled ?? new Dictionary<string, Version>(),
+                AllAvailable = allAvailable ?? [],
+                AvailableForListing = allAvailable ?? [],
+                Installed = loaded.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version, StringComparer.OrdinalIgnoreCase),
+                LoadedPlugins = loaded,
+                Commands = commands ?? [],
+                RecommendedPluginIdentifiers = [],
+                SelectedPluginSlug = selectedSlug
+            });
+        }
+
+        private sealed class TestPlugin : IBTCPayServerPlugin
+        {
+            public string Identifier { get; init; }
+            public string Name => Identifier;
+            public Version Version { get; init; } = new(1, 0, 0);
+            public string Description => Identifier;
+            public bool SystemPlugin { get; set; }
+            public IBTCPayServerPlugin.PluginDependency[] Dependencies { get; init; } = [];
+            public void Execute(Microsoft.AspNetCore.Builder.IApplicationBuilder applicationBuilder, IServiceProvider applicationBuilderApplicationServices)
+            {
+            }
+
+            public void Execute(IServiceCollection applicationBuilder)
+            {
+            }
         }
     }
 }

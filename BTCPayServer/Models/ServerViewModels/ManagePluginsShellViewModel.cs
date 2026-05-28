@@ -5,25 +5,15 @@ namespace BTCPayServer.Models.ServerViewModels
 {
     public class ManagePluginsShellViewModel
     {
-        public string Search { get; set; }
         public string SelectedPluginIdentifier { get; set; }
         public string SelectedPluginSlug { get; set; }
         public string DirectoryIframeUrl { get; set; }
         public string DirectoryOrigin { get; set; }
         public string PanelUrl { get; set; }
-        public bool UseLegacyAvailableMode => UseLegacyAvailableModeForSearch || UseLegacyAvailableModeByFlag;
-        public bool UseLegacyAvailableModeForSearch { get; set; }
-        public bool UseLegacyAvailableModeByFlag { get; set; }
         public List<PluginDisabledViewModel> DisabledPlugins { get; set; } = [];
         public List<PluginInstalledCardViewModel> InstalledPlugins { get; set; } = [];
-        public List<PluginAvailableCardViewModel> AvailablePlugins { get; set; } = [];
         public List<PendingPluginActionViewModel> PendingActions { get; set; } = [];
         public PluginSelectedPanelViewModel SelectedPluginPanel { get; set; } = new();
-
-        public bool CanUseEmbeddedDirectory =>
-            !UseLegacyAvailableMode &&
-            !string.IsNullOrEmpty(DirectoryIframeUrl) &&
-            !string.IsNullOrEmpty(DirectoryOrigin);
     }
 
     public class PluginSelectedPanelViewModel
@@ -56,13 +46,6 @@ namespace BTCPayServer.Models.ServerViewModels
         public PluginInfoViewModel Current { get; set; }
         public PluginInfoViewModel Update { get; set; }
         public string PendingAction { get; set; }
-        public List<PluginActionViewModel> Actions { get; set; } = [];
-    }
-
-    public class PluginAvailableCardViewModel
-    {
-        public PluginInfoViewModel Plugin { get; set; }
-        public bool Recommended { get; set; }
         public List<PluginActionViewModel> Actions { get; set; } = [];
     }
 

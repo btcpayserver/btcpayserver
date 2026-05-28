@@ -13,14 +13,11 @@ namespace BTCPayServer.Plugins
             public IEnumerable<IBTCPayServerPlugin> LoadedPlugins { get; set; } = [];
             public Dictionary<string, Version> Installed { get; set; } = new(StringComparer.OrdinalIgnoreCase);
             public IEnumerable<PluginService.AvailablePlugin> AllAvailable { get; set; } = [];
-            public IEnumerable<PluginService.AvailablePlugin> AvailableForListing { get; set; } = [];
             public (string command, string plugin)[] Commands { get; set; } = [];
             public Dictionary<string, Version> Disabled { get; set; } = new(StringComparer.OrdinalIgnoreCase);
-            public IEnumerable<string> RecommendedPluginIdentifiers { get; set; } = [];
             public Func<string, Version> GetVersionOfPendingInstall { get; set; }
             public string SelectedPluginIdentifier { get; set; }
             public string SelectedPluginSlug { get; set; }
-            public string Search { get; set; }
         }
 
         public ManagePluginsShellViewModel CreateViewModel(ProjectionSource source)
@@ -29,27 +26,14 @@ namespace BTCPayServer.Plugins
             var installed = NormalizeVersions(source.Installed);
             var commands = source.Commands ?? [];
             var disabled = NormalizeVersions(source.Disabled);
-            var recommendedIds = new HashSet<string>(
-                source.RecommendedPluginIdentifiers ?? [],
-                StringComparer.OrdinalIgnoreCase);
 
             var allAvailable = (source.AllAvailable ?? [])
-                .Where(plugin => plugin is not null)
-                .ToArray();
-            var availableForListing = (source.AvailableForListing ?? [])
                 .Where(plugin => plugin is not null)
                 .ToArray();
 
             var availableGroups = allAvailable
                 .GroupBy(plugin => plugin.Identifier, StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(group => group.Key, group => group.OrderByDescending(plugin => plugin.Version).ToArray(), StringComparer.OrdinalIgnoreCase);
-
-            var listingCandidates = availableForListing
-                .Where(plugin => !installed.ContainsKey(plugin.Identifier) && !disabled.ContainsKey(plugin.Identifier))
-                .GroupBy(plugin => plugin.Identifier, StringComparer.OrdinalIgnoreCase)
-                .Select(group => GetBestCandidate(group, installed) ?? group.OrderByDescending(plugin => plugin.Version).First())
-                .OrderBy(plugin => plugin.Name, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
 
             var pendingInstallVersions = commands
                 .Where(tuple => tuple.command.Equals("install", StringComparison.OrdinalIgnoreCase))
@@ -130,7 +114,6 @@ namespace BTCPayServer.Plugins
                     BestAvailable = bestAvailable,
                     BestUpdate = bestUpdate,
                     IsDependentOn = DependentOn(identifier),
-                    Recommended = recommendedIds.Contains(identifier),
                     LastPendingAction = commands.LastOrDefault(tuple => tuple.plugin.Equals(identifier, StringComparison.OrdinalIgnoreCase)).command,
                     HasPendingInstall = commands.Any(tuple =>
                         tuple.plugin.Equals(identifier, StringComparison.OrdinalIgnoreCase) &&
@@ -159,7 +142,6 @@ namespace BTCPayServer.Plugins
 
             var model = new ManagePluginsShellViewModel
             {
-                Search = source.Search,
                 DisabledPlugins = disabled
                     .OrderBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase)
                     .Select(pair => CreateDisabledViewModel(GetState(pair.Key), installed))
@@ -167,9 +149,6 @@ namespace BTCPayServer.Plugins
                 InstalledPlugins = loadedPlugins
                     .OrderBy(plugin => plugin.Name, StringComparer.OrdinalIgnoreCase)
                     .Select(plugin => CreateInstalledViewModel(GetState(plugin.Identifier), installed))
-                    .ToList(),
-                AvailablePlugins = listingCandidates
-                    .Select(plugin => CreateAvailableViewModel(GetState(plugin.Identifier), plugin, installed))
                     .ToList(),
                 PendingActions = commands
                     .GroupBy(tuple => tuple.plugin, StringComparer.OrdinalIgnoreCase)
@@ -324,46 +303,6 @@ namespace BTCPayServer.Plugins
                 Current = CreateInfo(state.LoadedPlugin, state.BestAvailable, installed),
                 Update = CreateInfo(state.BestUpdate, installed),
                 PendingAction = state.LastPendingAction,
-                Actions = actions
-            };
-        }
-
-        private PluginAvailableCardViewModel CreateAvailableViewModel(
-            PluginState state,
-            PluginService.AvailablePlugin listingPlugin,
-            Dictionary<string, Version> installed)
-        {
-            var actions = new List<PluginActionViewModel>();
-            var exclusivePendingAction = !string.IsNullOrEmpty(state.LastPendingAction) &&
-                                         (state.LastPendingAction.Equals("delete", StringComparison.OrdinalIgnoreCase) ||
-                                          state.PendingInstallVersion == listingPlugin.Version);
-
-            if (!string.IsNullOrEmpty(state.LastPendingAction))
-            {
-                actions.Add(CreateCancelAction(state.Identifier, state.LastPendingAction, state.PendingInstallVersion, "btn btn-outline-secondary"));
-            }
-
-            if (string.IsNullOrEmpty(state.LastPendingAction) || !exclusivePendingAction)
-            {
-                if (DependenciesMet(listingPlugin.Dependencies, installed))
-                {
-                    actions.Add(CreateInstallAction(state.Identifier, listingPlugin, "btn btn-primary", "Install"));
-                }
-                else
-                {
-                    actions.Add(CreateInstallAction(
-                        state.Identifier,
-                        listingPlugin,
-                        "btn btn-primary",
-                        "Schedule install",
-                        "Schedule install for when the dependencies have been met to ensure a smooth update"));
-                }
-            }
-
-            return new PluginAvailableCardViewModel
-            {
-                Plugin = CreateInfo(listingPlugin, installed),
-                Recommended = state.Recommended,
                 Actions = actions
             };
         }
@@ -674,7 +613,6 @@ namespace BTCPayServer.Plugins
             public PluginService.AvailablePlugin BestAvailable { get; init; }
             public PluginService.AvailablePlugin BestUpdate { get; init; }
             public bool IsDependentOn { get; init; }
-            public bool Recommended { get; init; }
             public string LastPendingAction { get; init; }
             public bool HasPendingInstall { get; init; }
             public bool HasPendingDelete { get; init; }

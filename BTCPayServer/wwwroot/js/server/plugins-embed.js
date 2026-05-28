@@ -3,8 +3,7 @@
     const iframe = document.getElementById("plugins-directory-iframe");
     const panel = document.getElementById("selected-plugin-panel");
     const offcanvasElement = document.getElementById("selected-plugin-offcanvas");
-    const legacyContainer = document.getElementById("plugins-legacy-available");
-    const fallbackAlert = document.getElementById("plugins-embed-fallback-alert");
+    const errorAlert = document.getElementById("plugins-embed-error-alert");
     const availableSection = document.getElementById("available-plugins-section");
     const hiddenPluginIdentifiersElement = document.getElementById("plugins-embed-hidden-plugin-identifiers");
     const darkThemeLink = document.getElementById("DarkThemeLinkTag");
@@ -21,14 +20,14 @@
     let selectedIdentifier = shell.dataset.selectedIdentifier || "";
     let selectedSlug = shell.dataset.selectedSlug || "";
     let ready = false;
-    let fallbackActivated = false;
+    let directoryFailed = false;
     let pendingRequestId = 0;
     let offcanvasInstance = null;
     let readyTimeout = null;
     let handshakeInterval = null;
 
     if (!origin || !iframeUrl || !panelUrl) {
-        activateFallback();
+        showDirectoryError();
         return;
     }
 
@@ -47,25 +46,22 @@
 
     readyTimeout = window.setTimeout(function () {
         if (!ready) {
-            activateFallback();
+            showDirectoryError();
         }
     }, 8000);
 
-    function activateFallback() {
-        if (fallbackActivated) {
+    function showDirectoryError() {
+        if (directoryFailed) {
             return;
         }
 
-        fallbackActivated = true;
+        directoryFailed = true;
         window.clearTimeout(readyTimeout);
         window.clearInterval(handshakeInterval);
         hideOffcanvas();
         shell.classList.add("d-none");
-        if (fallbackAlert) {
-            fallbackAlert.classList.remove("d-none");
-        }
-        if (legacyContainer) {
-            legacyContainer.classList.remove("d-none");
+        if (errorAlert) {
+            errorAlert.classList.remove("d-none");
         }
     }
 
@@ -273,7 +269,7 @@
     }
 
     function postHostContextTo(frame) {
-        if (fallbackActivated || !frame || !frame.contentWindow) {
+        if (directoryFailed || !frame || !frame.contentWindow) {
             return;
         }
 
@@ -285,7 +281,7 @@
     }
 
     function postHostContext() {
-        if (!ready || fallbackActivated) {
+        if (!ready || directoryFailed) {
             return;
         }
 
@@ -336,7 +332,7 @@
     }
 
     window.addEventListener("message", function (event) {
-        if (fallbackActivated || event.origin !== origin) {
+        if (directoryFailed || event.origin !== origin) {
             return;
         }
 
@@ -390,7 +386,7 @@
     });
 
     iframe.addEventListener("load", function () {
-        if (fallbackActivated) {
+        if (directoryFailed) {
             return;
         }
 

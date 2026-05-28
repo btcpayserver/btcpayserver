@@ -6,7 +6,7 @@
     Layout = "_Layout";
     ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Plugins), StringLocalizer["Plugin Directory"])
     {
-        SubMenuItemId = "AvailablePlugins"
+        SubMenuItemId = "PluginDirectory"
     });
 
     var hiddenPluginIdentifiers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -94,107 +94,43 @@
 </div>
 
 <section id="available-plugins-section" class="m-0 plugin-manage-section--available">
-    @if (!Model.CanUseEmbeddedDirectory)
-    {
-        <form method="get" asp-action="PluginDirectory" class="row mb-4" id="searchForm">
-            <div class="col-12 col-lg-6">
-                <div class="input-group">
-                    <input type="text" name="search" class="form-control" placeholder="@StringLocalizer["Search…"]" value="@Model.Search" />
-                    @if (Model.UseLegacyAvailableModeByFlag)
-                    {
-                        <input type="hidden" name="legacy" value="true" />
-                    }
-                    <button type="submit" class="btn btn-primary">
-                        <vc:icon symbol="actions-search" />
-                    </button>
-                </div>
-            </div>
-        </form>
-
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                const searchForm = document.getElementById("searchForm");
-                if (!searchForm) {
-                    return;
-                }
-
-                const submittedKey = "btcpay-plugin-directory-search-submitted";
-
-                searchForm.addEventListener("submit", function() {
-                    sessionStorage.setItem(submittedKey, "true");
-                });
-
-                if (sessionStorage.getItem(submittedKey) === "true") {
-                    sessionStorage.removeItem(submittedKey);
-                    searchForm.scrollIntoView();
-                }
-            });
-        </script>
-    }
-
     <div class="mb-4">
         <h3 class="mb-2" text-translate="true">Available Plugins</h3>
-        @if (Model.CanUseEmbeddedDirectory)
-        {
-            <p class="text-muted mb-0" text-translate="true">Browse the public plugin directory here and install new plugins.</p>
-        }
+        <p class="text-muted mb-0" text-translate="true">Browse the public plugin directory here and install new plugins.</p>
     </div>
 
-    @if (Model.UseLegacyAvailableModeForSearch)
-    {
-        <div class="alert alert-info mb-4">
-            <span text-translate="true">Search currently uses the legacy BTCPay Server list for Available Plugins while the embedded directory does not expose the same search behavior yet.</span>
+    <div id="plugins-embed-error-alert" class="alert alert-warning d-none mb-4" role="alert">
+        <span text-translate="true">BTCPay Server could not load the plugin directory.</span>
+    </div>
+    <div id="plugins-embed-shell"
+         class="pb-5"
+         data-origin="@Model.DirectoryOrigin"
+         data-iframe-url="@Model.DirectoryIframeUrl"
+         data-panel-url="@Model.PanelUrl"
+         data-selected-identifier="@Model.SelectedPluginIdentifier"
+         data-selected-slug="@Model.SelectedPluginSlug"
+         data-panel-error-message="@StringLocalizer["BTCPay Server could not load the plugin panel."]">
+        <script type="application/json" id="plugins-embed-hidden-plugin-identifiers">@Html.Raw(hiddenPluginIdentifiersJson)</script>
+        <iframe id="plugins-directory-iframe"
+                title="@StringLocalizer["Plugin directory"]"
+                class="plugin-manage-frame d-block w-100 border-0"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
+    </div>
+    <div class="offcanvas offcanvas-end shadow plugin-manage-offcanvas"
+         tabindex="-1"
+         id="selected-plugin-offcanvas"
+         data-bs-backdrop="false"
+         data-bs-scroll="true"
+         aria-labelledby="selected-plugin-offcanvas-label">
+        <div class="offcanvas-header justify-content-end px-3 pt-3 pb-0">
+            <h5 class="offcanvas-title visually-hidden" id="selected-plugin-offcanvas-label" text-translate="true">Manage plugin</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="@StringLocalizer["Close"]"></button>
         </div>
-    }
-    else if (Model.UseLegacyAvailableModeByFlag)
-    {
-        <div class="alert alert-info mb-4">
-            <span text-translate="true">Legacy mode is enabled for the Available Plugins section.</span>
-        </div>
-    }
-
-    @if (Model.CanUseEmbeddedDirectory)
-    {
-        <div id="plugins-embed-fallback-alert" class="alert alert-warning d-none mb-4" role="alert">
-            <span text-translate="true">The embedded plugin directory did not respond, so BTCPay Server switched back to the legacy Available Plugins list.</span>
-        </div>
-        <div id="plugins-embed-shell"
-             class="pb-5"
-             data-origin="@Model.DirectoryOrigin"
-             data-iframe-url="@Model.DirectoryIframeUrl"
-             data-panel-url="@Model.PanelUrl"
-             data-selected-identifier="@Model.SelectedPluginIdentifier"
-             data-selected-slug="@Model.SelectedPluginSlug"
-             data-panel-error-message="@StringLocalizer["BTCPay Server could not load the plugin panel."]">
-            <script type="application/json" id="plugins-embed-hidden-plugin-identifiers">@Html.Raw(hiddenPluginIdentifiersJson)</script>
-            <iframe id="plugins-directory-iframe"
-                    title="@StringLocalizer["Plugin directory"]"
-                    class="plugin-manage-frame d-block w-100 border-0"
-                    sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
-        </div>
-        <div class="offcanvas offcanvas-end shadow plugin-manage-offcanvas"
-             tabindex="-1"
-             id="selected-plugin-offcanvas"
-             data-bs-backdrop="false"
-             data-bs-scroll="true"
-             aria-labelledby="selected-plugin-offcanvas-label">
-            <div class="offcanvas-header justify-content-end px-3 pt-3 pb-0">
-                <h5 class="offcanvas-title visually-hidden" id="selected-plugin-offcanvas-label" text-translate="true">Manage plugin</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="@StringLocalizer["Close"]"></button>
-            </div>
-            <div class="offcanvas-body d-flex flex-column overflow-hidden px-4 pt-0 pb-4">
-                <div id="selected-plugin-panel" class="d-flex flex-grow-1">
-                    <partial name="_SelectedPluginPanel" model="Model.SelectedPluginPanel" />
-                </div>
+        <div class="offcanvas-body d-flex flex-column overflow-hidden px-4 pt-0 pb-4">
+            <div id="selected-plugin-panel" class="d-flex flex-grow-1">
+                <partial name="_SelectedPluginPanel" model="Model.SelectedPluginPanel" />
             </div>
         </div>
-        <div id="plugins-legacy-available" class="d-none">
-            <partial name="_AvailablePluginCards" model="Model" />
-        </div>
-        <script src="~/js/server/plugins-embed.js" asp-append-version="true"></script>
-    }
-    else
-    {
-        <partial name="_AvailablePluginCards" model="Model" />
-    }
+    </div>
+    <script src="~/js/server/plugins-embed.js" asp-append-version="true"></script>
 </section>

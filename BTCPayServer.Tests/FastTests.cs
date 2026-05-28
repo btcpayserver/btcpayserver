@@ -2687,7 +2687,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void PluginProjection_DoesNotAddDisabledPluginUpdateWhenNoAvailablePlugins()
+        public void PluginProjection_DoesNotAddDisabledPluginUpdateWhenNoRemotePlugins()
         {
             var model = CreatePluginProjection(
                 disabled: new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } },
@@ -2739,16 +2739,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void PluginProjection_DoesNotListDisabledPluginWhenIdentifierCasingDiffers()
-        {
-            var model = CreatePluginProjection(
-                disabled: new Dictionary<string, Version> { { "MyPlugin", new Version(1, 0, 0, 0) } },
-                allAvailable: [MakeAvailablePlugin("myplugin", "1.1.0")]);
-
-            Assert.Empty(model.AvailablePlugins);
-        }
-
-        [Fact]
         public void PluginProjection_UsesNewestVersionFromMultipleEntries()
         {
             var model = CreatePluginProjection(
@@ -2769,13 +2759,15 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         public void PluginProjection_PrefersHighestAvailableVersionWithSatisfiedDependencies()
         {
             var model = CreatePluginProjection(
+                selectedIdentifier: "TestPlugin",
                 allAvailable: [
                     MakeAvailablePlugin("TestPlugin", "2.0.0", ("MissingDependency", ">=1.0.0")),
                     MakeAvailablePlugin("TestPlugin", "1.5.0")
                 ]);
 
-            var plugin = Assert.Single(model.AvailablePlugins);
-            Assert.Equal(new Version(1, 5, 0), plugin.Plugin.Version);
+            var action = Assert.Single(model.SelectedPluginPanel.Actions, action => action.FormAction == "InstallPlugin");
+            Assert.Equal("1.5.0", action.Version);
+            Assert.Equal(new Version(1, 5, 0), model.SelectedPluginPanel.BestAvailableVersion);
         }
 
         [Fact]
@@ -2787,9 +2779,11 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             availablePlugin.Source = "https://github.com/btcpayserver/test-plugin";
             availablePlugin.Documentation = "/relative-docs";
 
-            var model = CreatePluginProjection(allAvailable: [availablePlugin]);
+            var model = CreatePluginProjection(
+                selectedIdentifier: "TestPlugin",
+                allAvailable: [availablePlugin]);
 
-            var plugin = Assert.Single(model.AvailablePlugins).Plugin;
+            var plugin = model.SelectedPluginPanel.Plugin;
             Assert.Equal("Author", plugin.Author);
             Assert.Null(plugin.AuthorLink);
             Assert.Equal("https://github.com/btcpayserver/test-plugin", plugin.Source);
@@ -2797,7 +2791,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void PluginProjection_PreservesDirectorySelectionWhenSlugIsNotInLegacyList()
+        public void PluginProjection_PreservesDirectorySelectionWhenSlugIsNotInCatalog()
         {
             var model = CreatePluginProjection(selectedSlug: "unlisted-plugin");
 
@@ -2887,6 +2881,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         private static ManagePluginsShellViewModel CreatePluginProjection(
             Dictionary<string, Version> disabled = null,
             IEnumerable<PluginService.AvailablePlugin> allAvailable = null,
+            string selectedIdentifier = null,
             string selectedSlug = null,
             IEnumerable<IBTCPayServerPlugin> loadedPlugins = null,
             (string command, string plugin)[] commands = null)
@@ -2896,11 +2891,10 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             {
                 Disabled = disabled ?? new Dictionary<string, Version>(),
                 AllAvailable = allAvailable ?? [],
-                AvailableForListing = allAvailable ?? [],
                 Installed = loaded.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version, StringComparer.OrdinalIgnoreCase),
                 LoadedPlugins = loaded,
                 Commands = commands ?? [],
-                RecommendedPluginIdentifiers = [],
+                SelectedPluginIdentifier = selectedIdentifier,
                 SelectedPluginSlug = selectedSlug
             });
         }

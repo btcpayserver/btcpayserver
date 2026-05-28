@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Configuration;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Plugins;
 using Microsoft.AspNetCore.Http;
@@ -19,17 +18,13 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/plugins")]
         public async Task<IActionResult> ListPlugins(
             [FromServices] PluginService pluginService,
-            [FromServices] BTCPayServerOptions btcPayServerOptions,
             [FromServices] PluginManagementProjectionService projectionService)
         {
             var model = await BuildManagePluginsShellViewModel(
                 pluginService,
                 projectionService,
-                btcPayServerOptions,
-                search: null,
                 selectedIdentifier: null,
                 selectedSlug: null,
-                legacy: false,
                 setErrorStatusMessage: true);
             return View(model);
         }
@@ -37,21 +32,15 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/plugins/directory")]
         public async Task<IActionResult> PluginDirectory(
             [FromServices] PluginService pluginService,
-            [FromServices] BTCPayServerOptions btcPayServerOptions,
             [FromServices] PluginManagementProjectionService projectionService,
-            string search = null,
             string selectedIdentifier = null,
-            string selectedSlug = null,
-            bool legacy = false)
+            string selectedSlug = null)
         {
             var model = await BuildManagePluginsShellViewModel(
                 pluginService,
                 projectionService,
-                btcPayServerOptions,
-                search,
                 selectedIdentifier,
                 selectedSlug,
-                legacy,
                 setErrorStatusMessage: true);
             return View(model);
         }
@@ -59,7 +48,6 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/plugins/panel")]
         public async Task<IActionResult> SelectedPluginPanel(
             [FromServices] PluginService pluginService,
-            [FromServices] BTCPayServerOptions btcPayServerOptions,
             [FromServices] PluginManagementProjectionService projectionService,
             string identifier = null,
             string slug = null)
@@ -67,11 +55,8 @@ namespace BTCPayServer.Controllers
             var model = await BuildManagePluginsShellViewModel(
                 pluginService,
                 projectionService,
-                btcPayServerOptions,
-                search: null,
                 identifier,
                 slug,
-                legacy: false,
                 setErrorStatusMessage: false);
             return PartialView("_SelectedPluginPanel", model.SelectedPluginPanel);
         }
@@ -120,10 +105,8 @@ namespace BTCPayServer.Controllers
         public IActionResult CancelPluginCommands(
             [FromServices] PluginService pluginService,
             string plugin,
-            string search = null,
             string selectedIdentifier = null,
             string selectedSlug = null,
-            bool legacy = false,
             string returnTo = null)
         {
             pluginService.CancelCommands(plugin);
@@ -133,7 +116,7 @@ namespace BTCPayServer.Controllers
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
 
-            return RedirectToPlugins(returnTo, search, selectedIdentifier, selectedSlug, legacy);
+            return RedirectToPlugins(returnTo, selectedIdentifier, selectedSlug);
         }
 
         [HttpPost("server/plugins/install")]
@@ -141,10 +124,8 @@ namespace BTCPayServer.Controllers
             [FromServices] PluginService pluginService,
             string plugin,
             string version = null,
-            string search = null,
             string selectedIdentifier = null,
             string selectedSlug = null,
-            bool legacy = false,
             string returnTo = null)
         {
             var ctx = new DownloadPluginContext(pluginService, plugin, version, new(), new(), null);
@@ -169,7 +150,7 @@ namespace BTCPayServer.Controllers
                 });
             }
 
-            return RedirectToPlugins(returnTo, search, selectedIdentifier, selectedSlug, legacy);
+            return RedirectToPlugins(returnTo, selectedIdentifier, selectedSlug);
         }
 
         public record DownloadPluginContext(PluginService PluginService, string Plugin, string Version, Dictionary<string, AvailablePlugin> Downloaded, Dictionary<string, string> DependencyFailed, VersionCondition VersionCondition);
@@ -248,34 +229,24 @@ namespace BTCPayServer.Controllers
         private async Task<ManagePluginsShellViewModel> BuildManagePluginsShellViewModel(
             PluginService pluginService,
             PluginManagementProjectionService projectionService,
-            BTCPayServerOptions btcPayServerOptions,
-            string search,
             string selectedIdentifier,
             string selectedSlug,
-            bool legacy,
             bool setErrorStatusMessage)
         {
-            search = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
-            var (allPlugins, availablePlugins) = await GetRemotePlugins(pluginService, search, setErrorStatusMessage);
-            var useLegacyAvailableModeForSearch = search is not null;
+            var allPlugins = await GetRemotePlugins(pluginService, setErrorStatusMessage);
             var model = projectionService.CreateViewModel(new PluginManagementProjectionService.ProjectionSource
             {
                 LoadedPlugins = pluginService.LoadedPlugins,
                 Installed = pluginService.Installed,
                 AllAvailable = allPlugins,
-                AvailableForListing = availablePlugins,
                 Commands = pluginService.GetPendingCommands(),
                 Disabled = pluginService.GetDisabledPlugins(),
-                RecommendedPluginIdentifiers = btcPayServerOptions.RecommendedPlugins ?? [],
                 GetVersionOfPendingInstall = pluginService.GetVersionOfPendingInstall,
                 SelectedPluginIdentifier = selectedIdentifier,
-                SelectedPluginSlug = selectedSlug,
-                Search = search
+                SelectedPluginSlug = selectedSlug
             });
 
             var pluginSourceBaseUri = pluginService.GetPluginSourceBaseUri();
-            model.UseLegacyAvailableModeByFlag = legacy;
-            model.UseLegacyAvailableModeForSearch = useLegacyAvailableModeForSearch;
             model.DirectoryOrigin = pluginSourceBaseUri is null ? null : $"{pluginSourceBaseUri.Scheme}://{pluginSourceBaseUri.Authority}";
             model.PanelUrl = Url.Action(nameof(SelectedPluginPanel));
             var btcpayVersion = pluginService.GetShortBtcpayVersion();
@@ -293,22 +264,13 @@ namespace BTCPayServer.Controllers
             return model;
         }
 
-        private async Task<(AvailablePlugin[] AllPlugins, AvailablePlugin[] AvailablePlugins)> GetRemotePlugins(
+        private async Task<AvailablePlugin[]> GetRemotePlugins(
             PluginService pluginService,
-            string search,
             bool setErrorStatusMessage)
         {
             try
             {
-                var allPlugins = await pluginService.GetRemotePlugins(null);
-                var availablePlugins = string.IsNullOrEmpty(search)
-                    ? allPlugins
-                    : allPlugins
-                        .Where(p =>
-                            p.Identifier.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                            p.Name.Contains(search, StringComparison.OrdinalIgnoreCase))
-                        .ToArray();
-                return (allPlugins, availablePlugins);
+                return await pluginService.GetRemotePlugins(null);
             }
             catch (Exception ex)
             {
@@ -321,21 +283,19 @@ namespace BTCPayServer.Controllers
                     });
                 }
 
-                return (Array.Empty<AvailablePlugin>(), Array.Empty<AvailablePlugin>());
+                return Array.Empty<AvailablePlugin>();
             }
         }
 
-        private IActionResult RedirectToPlugins(string returnTo, string search, string selectedIdentifier, string selectedSlug, bool legacy)
+        private IActionResult RedirectToPlugins(string returnTo, string selectedIdentifier, string selectedSlug)
         {
             var action = returnTo?.Equals("directory", StringComparison.OrdinalIgnoreCase) is true
                 ? nameof(PluginDirectory)
                 : nameof(ListPlugins);
             return RedirectToAction(action, new
             {
-                search,
                 selectedIdentifier,
-                selectedSlug,
-                legacy = legacy ? true : (bool?)null
+                selectedSlug
             });
         }
 

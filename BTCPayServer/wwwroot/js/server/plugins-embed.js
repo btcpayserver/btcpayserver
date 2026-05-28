@@ -4,6 +4,7 @@
     const panel = document.getElementById("selected-plugin-panel");
     const offcanvasElement = document.getElementById("selected-plugin-offcanvas");
     const errorAlert = document.getElementById("plugins-embed-error-alert");
+    const retryButton = document.getElementById("plugins-embed-retry");
     const availableSection = document.getElementById("available-plugins-section");
     const hiddenPluginIdentifiersElement = document.getElementById("plugins-embed-hidden-plugin-identifiers");
     const darkThemeLink = document.getElementById("DarkThemeLinkTag");
@@ -16,6 +17,7 @@
     const iframeUrl = shell.dataset.iframeUrl;
     const panelUrl = shell.dataset.panelUrl;
     const panelErrorMessage = shell.dataset.panelErrorMessage || "BTCPay Server could not load the plugin panel.";
+    const panelRetryLabel = shell.dataset.panelRetryLabel || "Retry";
     let hiddenPluginIdentifiers = [];
     let selectedIdentifier = shell.dataset.selectedIdentifier || "";
     let selectedSlug = shell.dataset.selectedSlug || "";
@@ -27,6 +29,9 @@
     let handshakeInterval = null;
 
     if (!origin || !iframeUrl || !panelUrl) {
+        if (retryButton) {
+            retryButton.classList.add("d-none");
+        }
         showDirectoryError();
         return;
     }
@@ -44,11 +49,33 @@
         }
     }
 
-    readyTimeout = window.setTimeout(function () {
-        if (!ready) {
-            showDirectoryError();
+    function startReadyTimeout() {
+        window.clearTimeout(readyTimeout);
+        readyTimeout = window.setTimeout(function () {
+            if (!ready) {
+                showDirectoryError();
+            }
+        }, 8000);
+    }
+
+    function startHandshake() {
+        window.clearInterval(handshakeInterval);
+        handshakeInterval = window.setInterval(function () {
+            postHostContextTo(iframe);
+        }, 250);
+    }
+
+    function startDirectory() {
+        ready = false;
+        directoryFailed = false;
+        if (errorAlert) {
+            errorAlert.classList.add("d-none");
         }
-    }, 8000);
+        shell.classList.remove("d-none");
+        startReadyTimeout();
+        startHandshake();
+        iframe.src = iframeUrl;
+    }
 
     function showDirectoryError() {
         if (directoryFailed) {
@@ -165,6 +192,7 @@
 
     function getHostColorMode() {
         if (darkThemeLink) {
+            // theme-switch.js enables dark mode by setting this link's rel to "stylesheet".
             return darkThemeLink.getAttribute("rel") === "stylesheet" ? "dark" : "light";
         }
 
@@ -219,6 +247,22 @@
                (slug || "") === (selectedSlug || "");
     }
 
+    function renderPanelError(identifier, slug) {
+        panel.innerHTML = '<div class="plugin-manage-panel d-flex flex-column flex-grow-1"><div class="border rounded p-3" role="alert"><div class="d-flex flex-wrap align-items-center gap-2"><span class="small text-muted me-auto"></span><button type="button" class="btn btn-secondary btn-sm flex-shrink-0"></button></div></div></div>';
+        const alertMessage = panel.querySelector("span");
+        if (alertMessage) {
+            alertMessage.textContent = panelErrorMessage;
+        }
+
+        const retryPanelButton = panel.querySelector("button");
+        if (retryPanelButton) {
+            retryPanelButton.textContent = panelRetryLabel;
+            retryPanelButton.addEventListener("click", function () {
+                reloadPanel(identifier, slug);
+            });
+        }
+    }
+
     async function reloadPanel(identifier, slug) {
         const requestId = ++pendingRequestId;
         panel.setAttribute("aria-busy", "true");
@@ -246,11 +290,7 @@
                 return;
             }
 
-            panel.innerHTML = '<div class="card"><div class="card-body"><div class="alert alert-warning mb-0"></div></div></div>';
-            const alert = panel.querySelector(".alert");
-            if (alert) {
-                alert.textContent = panelErrorMessage;
-            }
+            renderPanelError(identifier, slug);
         } finally {
             if (requestId === pendingRequestId) {
                 panel.removeAttribute("aria-busy");
@@ -393,6 +433,12 @@
         postHostContextTo(iframe);
     });
 
+    if (retryButton) {
+        retryButton.addEventListener("click", function () {
+            startDirectory();
+        });
+    }
+
     if (window.MutationObserver) {
         const themeObserver = new window.MutationObserver(postHostContext);
         if (darkThemeLink) {
@@ -437,8 +483,5 @@
     }
 
     bindDetailsIframes();
-    handshakeInterval = window.setInterval(function () {
-        postHostContextTo(iframe);
-    }, 250);
-    iframe.src = iframeUrl;
+    startDirectory();
 })();

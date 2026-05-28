@@ -1,5 +1,6 @@
 @using System.Collections.Generic
 @using System.Linq
+@using System.Text.Encodings.Web
 @using System.Text.Json
 @model ManagePluginsShellViewModel
 @{
@@ -25,7 +26,9 @@
             hiddenPluginIdentifiers.Add(plugin.Identifier);
         }
     }
-    var hiddenPluginIdentifiersJson = JsonSerializer.Serialize(hiddenPluginIdentifiers.OrderBy(identifier => identifier, StringComparer.OrdinalIgnoreCase).ToArray());
+    var hiddenPluginIdentifiersJson = JsonSerializer.Serialize(
+        hiddenPluginIdentifiers.OrderBy(identifier => identifier, StringComparer.OrdinalIgnoreCase).ToArray(),
+        new JsonSerializerOptions { Encoder = JavaScriptEncoder.Default });
 }
 
 <style>
@@ -100,7 +103,10 @@
     </div>
 
     <div id="plugins-embed-error-alert" class="alert alert-warning d-none mb-4" role="alert">
-        <span text-translate="true">BTCPay Server could not load the plugin directory.</span>
+        <div class="d-flex flex-wrap align-items-center gap-3">
+            <span class="me-auto" text-translate="true">BTCPay Server could not load the plugin directory.</span>
+            <button type="button" id="plugins-embed-retry" class="btn btn-outline-dark btn-sm" text-translate="true">Retry</button>
+        </div>
     </div>
     <div id="plugins-embed-shell"
          class="pb-5"
@@ -109,7 +115,8 @@
          data-panel-url="@Model.PanelUrl"
          data-selected-identifier="@Model.SelectedPluginIdentifier"
          data-selected-slug="@Model.SelectedPluginSlug"
-         data-panel-error-message="@StringLocalizer["BTCPay Server could not load the plugin panel."]">
+         data-panel-error-message="@StringLocalizer["BTCPay Server could not load the plugin panel."]"
+         data-panel-retry-label="@StringLocalizer["Retry"]">
         <script type="application/json" id="plugins-embed-hidden-plugin-identifiers">@Html.Raw(hiddenPluginIdentifiersJson)</script>
         <iframe id="plugins-directory-iframe"
                 title="@StringLocalizer["Plugin directory"]"

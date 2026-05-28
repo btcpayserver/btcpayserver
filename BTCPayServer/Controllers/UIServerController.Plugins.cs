@@ -247,6 +247,7 @@ namespace BTCPayServer.Controllers
             });
 
             var pluginSourceBaseUri = pluginService.GetPluginSourceBaseUri();
+            // The embedded directory iframe trusts the admin-configured plugin source.
             model.DirectoryOrigin = pluginSourceBaseUri is null ? null : $"{pluginSourceBaseUri.Scheme}://{pluginSourceBaseUri.Authority}";
             model.PanelUrl = Url.Action(nameof(SelectedPluginPanel));
             var btcpayVersion = pluginService.GetShortBtcpayVersion();

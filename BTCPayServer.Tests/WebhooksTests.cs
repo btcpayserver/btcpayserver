@@ -14,7 +14,6 @@ using NBitcoin.Payment;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
-using Xunit.Abstractions;
 using static Microsoft.Playwright.Assertions;
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 

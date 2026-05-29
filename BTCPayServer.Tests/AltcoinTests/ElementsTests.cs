@@ -10,7 +10,6 @@ using NBitcoin;
 using NBitcoin.Payment;
 using NBitpayClient;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {

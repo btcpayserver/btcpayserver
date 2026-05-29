@@ -62,7 +62,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using Xunit;
-using Xunit.Abstractions;
 using Xunit.Sdk;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;

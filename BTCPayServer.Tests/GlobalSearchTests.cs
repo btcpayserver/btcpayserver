@@ -7,7 +7,6 @@ using BTCPayServer.Plugins.GlobalSearch.Views;
 using NBitcoin;
 using Newtonsoft.Json;
 using Xunit;
-using Xunit.Abstractions;
 using static Microsoft.Playwright.Assertions;
 
 namespace BTCPayServer.Tests;

@@ -8,7 +8,6 @@ using BTCPayServer.Plugins;
 using BTCPayServer.Tests.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using NBXplorer;
-using Xunit.Abstractions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
 using NBitcoin;

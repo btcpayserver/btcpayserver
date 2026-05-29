@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 using Xunit.Sdk;
@@ -7,7 +8,7 @@ namespace BTCPayServer.Tests
 {
     public class FactWithSecretAttribute : FactAttribute
     {
-        public FactWithSecretAttribute(string secret)
+        public FactWithSecretAttribute(string secret, [CallerFilePath] string sourceFilePath = null, [CallerLineNumber] int sourceLineNumber = -1) : base()
         {
             try
             {

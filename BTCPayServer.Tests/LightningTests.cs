@@ -19,7 +19,6 @@ using NBitcoin;
 using NBitpayClient;
 using Newtonsoft.Json.Linq;
 using Xunit;
-using Xunit.Abstractions;
 using static Microsoft.Playwright.Assertions;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using BTCPayServer.Data;

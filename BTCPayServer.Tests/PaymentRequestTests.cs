@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitpayClient;
 using Xunit;
-using Xunit.Abstractions;
 // ReSharper disable AccessToModifiedClosure
 
 namespace BTCPayServer.Tests

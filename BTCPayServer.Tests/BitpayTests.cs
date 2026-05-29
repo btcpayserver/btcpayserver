@@ -20,7 +20,6 @@ using NBitcoin.Payment;
 using NBitpayClient;
 using Newtonsoft.Json;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests;
 

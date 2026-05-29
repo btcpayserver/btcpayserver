@@ -22,7 +22,6 @@ using NBitcoin;
 using NBitpayClient;
 using Newtonsoft.Json.Linq;
 using Xunit;
-using Xunit.Abstractions;
 using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 using WalletSettingsViewModel = BTCPayServer.Models.StoreViewModels.WalletSettingsViewModel;
 

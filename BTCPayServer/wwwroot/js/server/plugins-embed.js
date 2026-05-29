@@ -105,7 +105,7 @@
 
         if (!offcanvasInstance) {
             offcanvasInstance = window.bootstrap.Offcanvas.getOrCreateInstance(offcanvasElement, {
-                backdrop: false,
+                backdrop: true,
                 scroll: true
             });
         }
@@ -446,26 +446,6 @@
         }
         themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-btcpay-theme"] });
     }
-
-    document.addEventListener("pointerdown", function (event) {
-        if (!isOffcanvasVisible()) {
-            return;
-        }
-
-        if (offcanvasElement.contains(event.target)) {
-            return;
-        }
-
-        hideOffcanvas();
-    }, true);
-
-    iframe.addEventListener("pointerdown", function () {
-        if (!isOffcanvasVisible()) {
-            return;
-        }
-
-        hideOffcanvas();
-    });
 
     offcanvasElement.addEventListener("hidden.bs.offcanvas", function () {
         if (!selectedIdentifier && !selectedSlug) {

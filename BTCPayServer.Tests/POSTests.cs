@@ -26,7 +26,6 @@ using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
-using Xunit.Abstractions;
 using static BTCPayServer.Tests.UnitTest1;
 using static Microsoft.Playwright.Assertions;
 using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;

@@ -11,7 +11,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NBitcoin;
 using Newtonsoft.Json.Linq;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {

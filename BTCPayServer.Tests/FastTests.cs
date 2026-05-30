@@ -42,7 +42,6 @@ using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {

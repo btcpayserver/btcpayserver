@@ -6,7 +6,6 @@ using NBitcoin;
 using Microsoft.Playwright;
 using static Microsoft.Playwright.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {

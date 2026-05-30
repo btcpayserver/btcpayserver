@@ -1,7 +1,7 @@
 using System;
 using System.Text;
 using Microsoft.Extensions.Logging;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace BTCPayServer.Tests.Logging
 {

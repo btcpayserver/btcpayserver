@@ -16,7 +16,6 @@ using Microsoft.Playwright;
 using Newtonsoft.Json.Linq;
 using static Microsoft.Playwright.Assertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {

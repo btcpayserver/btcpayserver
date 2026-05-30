@@ -14,7 +14,6 @@ using Microsoft.Playwright;
 using MimeKit;
 using Newtonsoft.Json;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests;
 

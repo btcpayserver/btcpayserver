@@ -3,7 +3,6 @@ using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests;
 

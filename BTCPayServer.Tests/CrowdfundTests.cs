@@ -19,7 +19,6 @@ using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitpayClient;
 using Xunit;
-using Xunit.Abstractions;
 using static BTCPayServer.Tests.UnitTest1;
 
 namespace BTCPayServer.Tests

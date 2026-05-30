@@ -6,7 +6,6 @@ using NBitcoin;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests;
 

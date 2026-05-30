@@ -8,7 +8,6 @@ using BTCPayServer.Services;
 using BTCPayServer.Views.Server;
 using Microsoft.Playwright;
 using Xunit;
-using Xunit.Abstractions;
 using static BTCPayServer.Tests.SubscriptionTests;
 using static Microsoft.Playwright.Assertions;
 

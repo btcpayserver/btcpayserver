@@ -20,7 +20,6 @@ using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Xunit;
-using Xunit.Abstractions;
 using static Microsoft.Playwright.Assertions;
 using PayoutData = BTCPayServer.Data.PayoutData;
 

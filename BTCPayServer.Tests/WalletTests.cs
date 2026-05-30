@@ -18,7 +18,6 @@ using NBitcoin;
 using NBitcoin.Payment;
 using NBXplorer.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests;
 

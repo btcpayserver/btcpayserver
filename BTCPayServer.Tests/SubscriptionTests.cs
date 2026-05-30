@@ -21,7 +21,6 @@ using NBitcoin;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
 using Xunit;
-using Xunit.Abstractions;
 using static Microsoft.Playwright.Assertions;
 
 namespace BTCPayServer.Tests;

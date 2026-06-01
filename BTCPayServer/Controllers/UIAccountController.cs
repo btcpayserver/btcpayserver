@@ -453,7 +453,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> LoginWithAuthenticator(LoginWithAuthenticatorModel model)
         {
             var user = await signInManager.GetTwoFactorAuthenticationUserAsync();
-            if (!CanLoginOrRegister() || user is null)
+            if (!CanLoginOrRegister() || user is null || !await userManager.IsAuthenticatorConfigured(user))
             {
                 return RedirectToAction("Login");
             }

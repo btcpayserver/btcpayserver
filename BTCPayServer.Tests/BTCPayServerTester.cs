@@ -27,6 +27,7 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.Session;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -106,6 +107,8 @@ namespace BTCPayServer.Tests
         public bool DisableRegistration { get; set; } = false;
         public async Task StartAsync()
         {
+            if (_Host is not null)
+                return;
             if (!Directory.Exists(_Directory))
                 Directory.CreateDirectory(_Directory);
             string chain = NBXplorerDefaultSettings.GetFolderName(ChainName.Regtest);
@@ -411,6 +414,7 @@ namespace BTCPayServer.Tests
 
             var httpAccessor = provider.GetRequiredService<IHttpContextAccessor>();
             httpAccessor.HttpContext = context;
+            context.Session = provider.GetRequiredService<ISessionStore>().Create("Dummy", TimeSpan.MaxValue, TimeSpan.MaxValue, () => true, true);
 
             var controller = (T)ActivatorUtilities.CreateInstance(provider, typeof(T));
 

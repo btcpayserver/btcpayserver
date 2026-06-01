@@ -57,7 +57,7 @@ namespace BTCPayServer.Tests
             });
             var context = await Browser.NewContextAsync();
             Page = await context.NewPageAsync();
-            ServerUri = Server.PayTester.ServerUri;
+            ServerUri ??= Server.PayTester.ServerUri;
             TestLogs.LogInformation($"Playwright: Using {Page.GetType()}");
             TestLogs.LogInformation($"Playwright: Browsing to {ServerUri}");
             await GoToRegister();
@@ -982,5 +982,10 @@ namespace BTCPayServer.Tests
             => Expect(Page.Locator(selector)).ToHaveCountAsync(0);
 
         public GlobalSearchPMO GlobalSearch => new GlobalSearchPMO(this);
+
+        public async Task WaitLoggedIn()
+        {
+            await Page.WaitForURLAsync(ServerUri.AbsoluteUri + $"stores/{StoreId}");
+        }
     }
 }

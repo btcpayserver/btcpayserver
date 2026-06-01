@@ -13,6 +13,7 @@ public class GlobalSearchPMO(PlaywrightTester tester)
     /// <param name="page"></param>
     public async Task GoToPage(string page)
     {
+        await Page.Locator("#globalSearchInput").WaitForAsync();
         await Page.Keyboard.PressAsync("/");
         await Page.Keyboard.TypeAsync(page);
         await Page.Keyboard.PressAsync("Enter");

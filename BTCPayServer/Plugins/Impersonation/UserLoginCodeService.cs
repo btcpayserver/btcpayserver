@@ -19,12 +19,13 @@ public class UserLoginCodeService(IMemoryCache memoryCache)
         return code;
     }
 
-    public string? Verify(string code)
+    public string? Verify(string code, bool remove = true)
     {
         var key = CacheKey(code);
         if (!memoryCache.TryGetValue(key, out var o) || o is not string userId)
             return null;
-        memoryCache.Remove(key);
+        if (remove)
+            memoryCache.Remove(key);
         return userId;
     }
 }

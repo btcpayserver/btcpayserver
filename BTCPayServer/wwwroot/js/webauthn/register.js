@@ -21,7 +21,7 @@ async function register(makeCredentialOptions) {
             publicKey: makeCredentialOptions
         });
     } catch (e) {
-        var msg = "Could not create credentials in browser. Probably because the username is already registered with your authenticator. Please change username or authenticator."
+        var msg = "This device does not support WebAuthn. Please use a different browser or device."
         showErrorAlert(msg, e);
         return;
     }
@@ -53,7 +53,7 @@ async function registerNewCredential(newCredential) {
             clientDataJSON: coerceToBase64Url(clientDataJSON)
         }
     };
-    
+
     document.getElementById("data").value = JSON.stringify(data);
     document.getElementById("registerForm").submit();
 }

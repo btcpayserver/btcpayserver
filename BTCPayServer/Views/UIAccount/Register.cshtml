@@ -6,7 +6,7 @@
     Layout = "_LayoutSignedOut";
 }
 
-<form asp-route-returnUrl="@ViewData["ReturnUrl"]" asp-route-logon="true" method="post">
+<form asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post">
     <fieldset disabled="@(ViewData.ContainsKey("disabled") ? "disabled" : null)" >
         @if (!ViewContext.ModelState.IsValid)
         {

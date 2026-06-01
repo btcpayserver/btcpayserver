@@ -142,6 +142,9 @@ namespace BTCPayServer.Migrations
                     b.Property<bool>("Approved")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("AuthenticatorEnabled")
+                        .HasColumnType("boolean");
+
                     b.Property<byte[]>("Blob")
                         .HasColumnType("bytea");
 
@@ -383,6 +386,9 @@ namespace BTCPayServer.Migrations
 
                     b.Property<string>("Blob2")
                         .HasColumnType("JSONB");
+
+                    b.Property<DateTimeOffset?>("LastUsedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .HasColumnType("text");

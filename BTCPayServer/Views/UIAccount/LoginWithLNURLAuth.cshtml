@@ -8,9 +8,8 @@
 }
 
 <div id="lnurlauth-section" class="twoFaBox">
-    <form id="authform" asp-action="LoginWithLNURLAuth" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
+    <form id="authform" asp-action="LoginWithLNURLAuth" method="post">
         <input type="hidden" asp-for="LNURLEndpoint"/>
-        <input type="hidden" asp-for="UserId"/>
     </form>
     <h2 class="h3 mb-3" text-translate="true">LNURL Authentication</h2>
     <p text-translate="true">Scan the QR code with your Lightning wallet to sign in.</p>
@@ -53,7 +52,7 @@
               document.getElementById("authform").submit();
           }
         }
-        request.open("GET", @Safe.Json(Url.Action("LoginCheck", "UILNURLAuth", new { userId = Model.UserId })), true);
+        request.open("GET", @Safe.Json(Url.Action("LoginCheck", "UILNURLAuth")), true);
         request.send(new FormData());
     }
     check();

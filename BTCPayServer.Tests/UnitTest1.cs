@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -68,6 +69,7 @@ using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 using Microsoft.Extensions.Caching.Memory;
 using PosViewType = BTCPayServer.Client.Models.PosViewType;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Stores;
 using Microsoft.Playwright;
 using NBXplorer.DerivationStrategy;
@@ -1855,76 +1857,95 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
+        [Trait("Playwright", "Playwright")]
         public async Task CanLoginWithNoSecondaryAuthSystemsOrRequestItWhenAdded()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            user.GrantAccess();
+            await using var s = CreatePlaywrightTester();
+            await s.Server.StartAsync();
+            // We need this for WebAuth to be mocked by playwright properly.
+            s.ServerUri = new Uri(s.Server.PayTester.ServerUriWithIP.AbsoluteUri.Replace("127.0.0.1", "localhost"));
+            await s.StartAsync();
+            await s.RegisterNewUser();
+            await s.CreateNewStore();
 
-            var accountController = tester.PayTester.GetController<UIAccountController>();
+            await s.Logout();
 
             //no 2fa or fido2 enabled, login should work
-            Assert.Equal(nameof(UIHomeController.Index),
-                Assert.IsType<RedirectToActionResult>(await accountController.Login(new LoginViewModel()
+            await s.LogIn(s.CreatedUser);
+            await s.GoToProfile(ManageNavPages.TwoFactorAuthentication);
+
+            var cdp = await s.Page.Context.NewCDPSessionAsync(s.Page);
+            await cdp.SendAsync("WebAuthn.enable");
+
+            var authenticatorId = await AddFIDO2(cdp, false);
+
+            await s.Page.FillAsync("#security-device-form input[name='Name']", "TestDevice");
+            await s.Page.ClickAsync("#security-device-form button[type='submit']");
+            await s.FindAlertMessage();
+
+            await s.Logout();
+            await s.LogIn(s.CreatedUser);
+            await s.WaitLoggedIn();
+
+            await RemoveFIDO2(cdp, authenticatorId);
+            await AddFIDO2(cdp, true);
+
+            await s.GoToProfile(ManageNavPages.Passkeys);
+
+            await s.Page.FillAsync("#passkey-form input[name='Name']", "PasskeyTest");
+            await s.Page.ClickAsync("#passkey-form button[type='submit']");
+            await s.FindAlertMessage();
+
+            await s.Logout();
+
+            // No need of password
+            await s.Page.ClickAsync("#passkey-login-btn");
+            await s.WaitLoggedIn();
+
+            await s.GoToProfile(ManageNavPages.TwoFactorAuthentication);
+
+            // Let's remove both FIDO2 and Passkey
+            await s.Page.Locator("a:text('Remove')").First.ClickAsync();
+            await s.ConfirmDeleteModal();
+            await s.FindAlertMessage();
+
+            await s.GoToProfile(ManageNavPages.Passkeys);
+
+            await s.Page.Locator("a:text('Remove')").First.ClickAsync();
+            await s.ConfirmDeleteModal();
+            await s.FindAlertMessage();
+            await s.Logout();
+
+            await s.LogIn(s.CreatedUser);
+            await s.WaitLoggedIn();
+        }
+
+        private static async Task RemoveFIDO2(ICDPSession cdp, string authenticatorId)
+        {
+            await cdp.SendAsync(
+                "WebAuthn.removeVirtualAuthenticator",
+                new Dictionary<string, object>
                 {
-                    Email = user.RegisterDetails.Email,
-                    Password = user.RegisterDetails.Password
-                })).ActionName);
+                    ["authenticatorId"] = authenticatorId
+                });
+        }
 
-            var listController = user.GetController<UIManageController>();
-            var manageController = user.GetController<UIFido2Controller>();
-
-            //by default no fido2 devices available
-            Assert.Empty(Assert
-                .IsType<TwoFactorAuthenticationViewModel>(Assert
-                    .IsType<ViewResult>(await listController.TwoFactorAuthentication()).Model).Credentials);
-            Assert.IsType<CredentialCreateOptions>(Assert
-                    .IsType<ViewResult>(await manageController.Create(new AddFido2CredentialViewModel
+        private static async Task<string> AddFIDO2(ICDPSession cdp, bool passkey)
+        {
+            var result = await cdp.SendAsync("WebAuthn.addVirtualAuthenticator",
+                new Dictionary<string, object>
+                {
+                    ["options"] = new Dictionary<string, object>
                     {
-                        Name = "label"
-                    })).Model);
-
-            //sending an invalid response model back to server, should error out
-            Assert.IsType<RedirectToActionResult>(await manageController.CreateResponse("sdsdsa", "sds"));
-            var statusModel = manageController.TempData.GetStatusMessageModel();
-            Assert.Equal(StatusMessageModel.StatusSeverity.Error, statusModel.Severity);
-
-            var contextFactory = tester.PayTester.GetService<ApplicationDbContextFactory>();
-
-            //add a fake fido2 device in db directly since emulating a fido2 device is hard and annoying
-            using (var context = contextFactory.CreateContext())
-            {
-                var newDevice = new Fido2Credential()
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Name = "fake",
-                    Type = Fido2Credential.CredentialType.FIDO2,
-                    ApplicationUserId = user.UserId
-                };
-                newDevice.SetBlob(new Fido2CredentialBlob() { });
-                await context.Fido2Credentials.AddAsync(newDevice);
-                await context.SaveChangesAsync();
-
-                Assert.NotNull(newDevice.Id);
-                Assert.NotEmpty(Assert
-                    .IsType<TwoFactorAuthenticationViewModel>(Assert
-                        .IsType<ViewResult>(await listController.TwoFactorAuthentication()).Model).Credentials);
-            }
-
-            //check if we are showing the fido2 login screen now
-            var secondLoginResult = Assert.IsType<ViewResult>(await accountController.Login(new LoginViewModel()
-            {
-                Email = user.RegisterDetails.Email,
-                Password = user.RegisterDetails.Password
-            }));
-
-            Assert.Equal("SecondaryLogin", secondLoginResult.ViewName);
-            var vm = Assert.IsType<SecondaryLoginViewModel>(secondLoginResult.Model);
-            //2fa was never enabled for user so this should be empty
-            Assert.Null(vm.LoginWith2FaViewModel);
-            Assert.NotNull(vm.LoginWithFido2ViewModel);
+                        ["protocol"] = "ctap2",
+                        ["transport"] = "internal",
+                        ["hasResidentKey"] = passkey,
+                        ["hasUserVerification"] = passkey,
+                        ["isUserVerified"] = passkey,
+                        ["automaticPresenceSimulation"] = true
+                    }
+                });
+            return result!.Value.GetProperty("authenticatorId").GetString();
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]

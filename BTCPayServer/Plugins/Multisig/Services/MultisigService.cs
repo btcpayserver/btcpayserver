@@ -189,10 +189,19 @@ public class MultisigService(
 
     public string CreateSetupLink(HttpContext httpContext, string storeId, string cryptoCode, string requestId, bool absolute = false)
     {
-        var path = $"{httpContext.Request.PathBase}/stores/{storeId}/onchain/{cryptoCode}/import/multisig?MultisigRequestId={requestId}";
-        return absolute && httpContext.Request.Host.HasValue
-            ? $"{httpContext.Request.Scheme}://{httpContext.Request.Host}{path}"
-            : path;
+        var values = new { area = MultisigPlugin.Area, storeId, cryptoCode, MultisigRequestId = requestId };
+        var link = absolute
+            ? linkGenerator.GetUriByAction(
+                httpContext,
+                nameof(UIMultisigSetupController.SetupMultisig),
+                "UIMultisigSetup",
+                values)
+            : linkGenerator.GetPathByAction(
+                httpContext,
+                nameof(UIMultisigSetupController.SetupMultisig),
+                "UIMultisigSetup",
+                values);
+        return link ?? throw new InvalidOperationException("Unable to generate multisig setup link.");
     }
 
     public async Task<IReadOnlyList<MultisigInProgressViewModel>> GetInProgressForStore(StoreData store, string userId, HttpContext httpContext)

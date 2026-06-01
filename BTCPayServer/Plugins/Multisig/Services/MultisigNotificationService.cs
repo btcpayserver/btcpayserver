@@ -6,11 +6,14 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Emails.Views;
 using BTCPayServer.Plugins.Multisig.Events;
 using BTCPayServer.Plugins.Multisig.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Plugins.Multisig.Services;
@@ -18,6 +21,7 @@ namespace BTCPayServer.Plugins.Multisig.Services;
 public class MultisigNotificationService(
     EventAggregator eventAggregator,
     MultisigService multisigService,
+    LinkGenerator linkGenerator,
     ApplicationDbContextFactory dbContextFactory,
     IEnumerable<EmailTriggerViewModel> emailTriggers)
 {
@@ -93,10 +97,8 @@ public class MultisigNotificationService(
 
     public Task PublishWalletCreatedEvent(HttpContext httpContext, string storeId, string cryptoCode, PendingMultisigSetupData pending)
     {
-        var walletId = new WalletId(storeId, cryptoCode).ToString();
-        var walletLink = $"{httpContext.Request.PathBase}/wallets/{walletId}";
-        if (httpContext.Request.Host.HasValue)
-            walletLink = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}{walletLink}";
+        var walletId = new WalletId(storeId, cryptoCode);
+        var walletLink = linkGenerator.WalletTransactionsLink(walletId, httpContext.Request.GetRequestBaseUrl());
 
         var participantIds = pending.Participants
             .Select(p => p.UserId)

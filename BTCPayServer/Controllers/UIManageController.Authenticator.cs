@@ -1,6 +1,5 @@
 using System;
 using System.Globalization;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
@@ -13,7 +12,6 @@ namespace BTCPayServer.Controllers
 {
     public partial class UIManageController
     {
-        private const string RecoveryCodesKey = nameof(RecoveryCodesKey);
         private const string AuthenicatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
 
         [HttpGet]
@@ -60,10 +58,7 @@ namespace BTCPayServer.Controllers
             await _userManager.UpdateAsync(user);
 
             TempData.SetStatusSuccess(StringLocalizer["Authenticator enabled successfully."]);
-            var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
-            TempData[RecoveryCodesKey] = recoveryCodes.ToArray();
-
-            return RedirectToAction(nameof(GenerateRecoveryCodes));
+            return RedirectToAction(nameof(TwoFactorAuthentication));
         }
 
         [HttpPost]
@@ -77,35 +72,6 @@ namespace BTCPayServer.Controllers
             await _userManager.UpdateAsync(user);
             TempData.SetStatusSuccess(StringLocalizer["Authenticator disabled successfully."]);
             return RedirectToAction(nameof(EnableAuthenticator));
-        }
-
-        [HttpPost]
-        [ActionName(nameof(GenerateRecoveryCodes))]
-        public async Task<IActionResult> GenerateRecoveryCodesPost()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user is null)
-                return NotFound();
-            var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
-            TempData[RecoveryCodesKey] = recoveryCodes.ToArray();
-            return RedirectToAction(nameof(GenerateRecoveryCodes));
-        }
-
-        [HttpGet]
-        public IActionResult GenerateRecoveryCodes()
-        {
-            if (TempData[RecoveryCodesKey] is string[] recoveryCodes)
-            {
-                var model = new GenerateRecoveryCodesViewModel { RecoveryCodes = recoveryCodes };
-                return View(model);
-            }
-
-            return View("Confirm", new ConfirmModel(
-                title: StringLocalizer["Generate new recovery codes"],
-                desc: StringLocalizer["This action will generate new recovery codes for your account. Please confirm to proceed."],
-                action: StringLocalizer["Generate"],
-                buttonClass: "btn-primary"
-            ));
         }
 
         private string GenerateQrCodeUri(string email, string unformattedKey)

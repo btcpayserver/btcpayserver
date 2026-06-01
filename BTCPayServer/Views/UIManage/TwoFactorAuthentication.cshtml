@@ -14,51 +14,10 @@
 
         <h4 class="mb-3" text-translate="true">Authenticator</h4>
 
-        @if (Model.IsAuthenticatorEnabled)
-        {
-            if (Model.RecoveryCodesLeft == 0)
-            {
-                <div class="alert alert-danger">
-                    <h4 class="alert-heading mb-3">
-                        <vc:icon symbol="warning" />
-                        <span text-translate="true">You have no recovery codes left.</span>
-                    </h4>
-                    <p class="mb-0">You must <a asp-action="GenerateRecoveryCodes" class="alert-link">generate a new set of recovery codes</a> before you can log in with a recovery code.</p>
-                </div>
-            }
-            else if (Model.RecoveryCodesLeft == 1)
-            {
-                <div class="alert alert-danger">
-                    <h4 class="alert-heading mb-3">
-                        <vc:icon symbol="warning" />
-                        <span text-translate="true">You only have 1 recovery code left.</span>
-                    </h4>
-                    <p class="mb-0">You can <a asp-action="GenerateRecoveryCodes" class="alert-link">generate a new set of recovery codes</a>.</p>
-                </div>
-            }
-            else if (Model.RecoveryCodesLeft <= 3)
-            {
-                <div class="alert alert-warning">
-                    <h4 class="alert-heading mb-3">
-                        <vc:icon symbol="warning" />
-                        You only have @Model.RecoveryCodesLeft recovery codes left.
-                    </h4>
-                    <p class="mb-0">You should <a asp-action="GenerateRecoveryCodes" class="alert-link">generate a new set of recovery codes</a>.</p>
-                </div>
-            }
-        }
-
         <div class="list-group mb-3">
             @if (Model.IsAuthenticatorEnabled)
             {
-                <a asp-action="GenerateRecoveryCodes" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="@StringLocalizer["Reset recovery codes"]" data-description="@StringLocalizer["Your existing recovery codes will no longer be valid!"]" data-confirm="@StringLocalizer["Reset"]" data-confirm-input="@StringLocalizer["RESET"]">
-                    <div>
-                        <h5 text-translate="true">Reset recovery codes</h5>
-                        <p class="mb-0 me-3" text-translate="true">Regenerate your 2FA recovery codes.</p>
-                    </div>
-                    <vc:icon symbol="caret-right"/>
-                </a>
-                <a asp-action="ResetAuthenticator" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="@StringLocalizer["Reset authenticator app"]" data-description="@StringLocalizer["This process disables 2FA until you verify your authenticator app and will also reset your 2FA recovery codes. If you do not complete your authenticator app configuration you may lose access to your account."]" data-confirm="@StringLocalizer["Reset"]" data-confirm-input="@StringLocalizer["RESET"]">
+                <a asp-action="ResetAuthenticator" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="@StringLocalizer["Reset authenticator app"]" data-description="@StringLocalizer["This process disables 2FA until you verify your authenticator app. If you do not complete your authenticator app configuration you may lose access to your account."]" data-confirm="@StringLocalizer["Reset"]" data-confirm-input="@StringLocalizer["RESET"]">
                     <div>
                         <h5 text-translate="true">Disable Authenticator</h5>
                         <p class="mb-0 me-3" text-translate="true">Invalidates the current authenticator configuration. Useful if you believe your authenticator settings were compromised or if you want to disable authenticator.</p>

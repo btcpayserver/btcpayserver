@@ -457,20 +457,13 @@ namespace BTCPayServer.Controllers
             {
                 return RedirectToAction("Login");
             }
-
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
             if (user.IsDisabledTemporarily)
                 return LockoutView(user);
 
             var session = LoginSession.Load(HttpContext.Session);
 
-            var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty, StringComparison.InvariantCulture)
+            var authenticatorCode = (model?.TwoFactorCode ?? "") .Replace(" ", string.Empty, StringComparison.InvariantCulture)
                 .Replace("-", string.Empty, StringComparison.InvariantCulture);
-            // TwoFactorAuthenticatorSignInAsync
-            //signInManager.TwoFactorAuthenticatorSignInAsync()
             var success = await userManager.VerifyTwoFactorTokenAsync(user, signInManager.Options.Tokens.AuthenticatorTokenProvider, authenticatorCode);
             if (success)
             {
@@ -510,46 +503,6 @@ namespace BTCPayServer.Controllers
             }
             await userManager.ResetAccessFailedCountAsync(user);
             return RedirectToLocal(session.ReturnUrl);
-        }
-
-        [HttpGet("/login/recovery-code")]
-        [AllowAnonymous]
-        public IActionResult LoginWithRecoveryCode()
-        {
-            if (!CanLoginOrRegister())
-                return RedirectToAction("Login");
-            return View();
-        }
-
-        [HttpPost("/login/recovery-code")]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LoginWithRecoveryCode(LoginWithRecoveryCodeViewModel model)
-        {
-            var user = await signInManager.GetTwoFactorAuthenticationUserAsync();
-            var session = UIAccountController.LoginSession.Load(HttpContext.Session);
-            if (!CanLoginOrRegister() || user is null || session is null)
-            {
-                return RedirectToAction("Login");
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            if (user.IsDisabledTemporarily)
-                return LockoutView(user);
-
-            var recoveryCode = model.RecoveryCode.Trim().Split(' ').FirstOrDefault() ?? "";
-            var result = await userManager.RedeemTwoFactorRecoveryCodeAsync(user, recoveryCode);
-            if (result.Succeeded)
-            {
-                return await RedirectLoginSuccess(user, session);
-            }
-            await userManager.AccessFailedAsync(user);
-            ModelState.AddModelError(nameof(model.RecoveryCode), "Invalid recovery code entered.");
-            return View(model);
         }
 
         private IActionResult LockoutView(ApplicationUser user) => View("Lockout", user);

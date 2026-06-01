@@ -110,7 +110,6 @@ namespace BTCPayServer.Controllers
             var model = new TwoFactorAuthenticationViewModel
             {
                 IsAuthenticatorEnabled = await _userManager.IsAuthenticatorConfigured(user),
-                RecoveryCodesLeft = await _userManager.CountRecoveryCodesAsync(user),
                 Credentials = await _fido2Service.GetCredentials(user.Id)
             };
 

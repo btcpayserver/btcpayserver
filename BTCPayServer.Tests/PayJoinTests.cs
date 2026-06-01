@@ -271,7 +271,6 @@ namespace BTCPayServer.Tests
             });
             await AssertDestinationFilled(s, bip21);
             await s.Page.FillAsync("#Outputs_0__Amount", "0.023");
-            await s.TakeScreenshot("filled.png");
             await s.Page.ClickAsync("#SignTransaction");
             await s.Server.WaitForEvent<NewOnChainTransactionEvent>(async () =>
             {
@@ -281,7 +280,7 @@ namespace BTCPayServer.Tests
                 }
                 catch
                 {
-                    await s.TakeScreenshot("Flaky.png");
+                    await s.TakeScreenshot("PayJoinTests-Flaky.png");
                     throw;
                 }
             });

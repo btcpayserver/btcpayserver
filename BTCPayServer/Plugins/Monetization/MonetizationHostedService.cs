@@ -44,6 +44,7 @@ public class MonetizationHostedService(
         this.SubscribeAny<UserEvent.BypassMonetizationChanged>();
         this.SubscribeAny<UserEvent.Registered>();
         this.SubscribeAny<UserEvent.Deleted>();
+        this.SubscribeAny<StoreUserEvent.Removed>();
     }
 
     protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
@@ -206,6 +207,35 @@ public class MonetizationHostedService(
                     EventAggregator.Publish(new SubscriptionEvent.NewSubscriber(s, reg.RequestBaseUrl));
             }
         }
+        else if (evt is StoreUserEvent.Removed removedFromStore)
+        {
+            await using var ctx = dbContextFactory.CreateContext();
+            var settings = monetizationSettingsAccessor.Settings;
+            if (settings.OfferingId is null)
+                return;
+
+            var deleted = await ctx.Database.GetDbConnection().ExecuteAsync("""
+                DELETE FROM customers_identities WHERE type = @associatedType AND value = @userId
+                """, new
+                        {
+                            associatedType = SubscriberDataExtensions.AssociatedIdentityType,
+                            userId = removedFromStore.UserId
+                        });
+
+            if (deleted == 0) return;
+
+            var user = await ctx.Users.FindAsync(removedFromStore.UserId);
+            if (user is null)
+                return;
+
+            await MigrateUsers(settings.OfferingId, settings.DefaultPlanId, OneUserQuery, parameters =>
+            {
+                parameters.Add("userId", removedFromStore.UserId);
+                parameters.Add("email", user.Email);
+                parameters.Add("customerId", CustomerData.GenerateId());
+            }, forceExpired: true);
+        }
+
         else if (evt is UserEvent.Deleted deleted)
         {
             await using var ctx = dbContextFactory.CreateContext();

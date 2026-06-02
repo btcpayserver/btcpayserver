@@ -359,7 +359,7 @@ public class SubscriptionHostedService(
         }
     }
 
-    public async Task<string?> CreateCreditRefund(long subscriberId, decimal amount, RequestBaseUrl requestBaseUrl)
+    public async Task<string?> CreateCreditRefund(long subscriberId, decimal amount, RequestBaseUrl requestBaseUrl, bool autoApprove)
     {
         await using var subCtx = CreateContext(CancellationToken);
         var ctx = subCtx.Context;
@@ -384,7 +384,7 @@ public class SubscriptionHostedService(
             Name = $"Credit refund for {sub.Customer.GetPrimaryIdentity()}",
             Amount = amount,
             Currency = sub.Plan.Currency,
-            AutoApproveClaims = true
+            AutoApproveClaims = autoApprove
         });
         subCtx.AddEvent(new SubscriptionEvent.CreditRefunded(sub, amount, sub.Plan.Currency, pullPaymentId, requestBaseUrl));
         return pullPaymentId;

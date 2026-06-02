@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
@@ -12,9 +13,11 @@ using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Events;
 using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Plugins.Emails.Views;
+using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Stores;
 using BTCPayServer.Views.UIStoreMembership;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
@@ -30,6 +33,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 [Authorize(Policy = SubscriptionsPolicies.CanViewOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [Area(SubscriptionsPlugin.Area)]
 public partial class UIOfferingController(
+    StoreRepository storeRepository,
     ApplicationDbContextFactory dbContextFactory,
     IStringLocalizer stringLocalizer,
     LinkGenerator linkGenerator,
@@ -161,7 +165,12 @@ public partial class UIOfferingController(
         }
         else if (command is "refund" && amount is > 0)
         {
-            var pullPaymentId = await SubsService.CreateCreditRefund(sub.Id, amount.Value, Request.GetRequestBaseUrl());
+            var store = storeRepository.FindStore(storeId);
+            if (!(await authorizationService.AuthorizeAsync(User, store, new PolicyRequirement(Policies.CanCreateNonApprovedPullPayments))).Succeeded)
+                return Forbid();
+
+            var autoApprove = (await authorizationService.AuthorizeAsync(User, store, new PolicyRequirement(Policies.CanCreatePullPayments))).Succeeded;
+            var pullPaymentId = await SubsService.CreateCreditRefund(sub.Id, amount.Value, Request.GetRequestBaseUrl(), autoApprove);
             if (pullPaymentId is null)
             {
                 TempData.SetStatusMessageModel(new()

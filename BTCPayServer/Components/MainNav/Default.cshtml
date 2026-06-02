@@ -296,13 +296,6 @@
                             btn.setAttribute('aria-expanded', 'false')
                         }
                     })
-                    // hide empty plugins drawer
-                    const pluginsNav = document.getElementById('Nav-Plugins')
-                    const pluginsItem = pluginsNav?.closest('.accordion-item')
-                    const pluginsContent = pluginsItem?.querySelector('.navbar-nav')?.innerHTML.trim()
-                    if (pluginsItem && pluginsContent === '') {
-                        pluginsItem.setAttribute('hidden', true)
-                    }
                 })()
             </script>
         }

@@ -10,7 +10,10 @@ public record MultisigSignerKeyRequestedEvent(
     string RequestId,
     string? SignerEmail,
     string? SignerName,
-    string SignerLink);
+    string SignerLink)
+{
+    public override string ToString() => nameof(MultisigSignerKeyRequestedEvent);
+}
 
 public record MultisigSignerKeySubmittedEvent(
     string StoreId,
@@ -19,11 +22,17 @@ public record MultisigSignerKeySubmittedEvent(
     string? RequestedByEmail,
     string? SignerEmail,
     string? SignerName,
-    string SetupLink);
+    string SetupLink)
+{
+    public override string ToString() => nameof(MultisigSignerKeySubmittedEvent);
+}
 
 public record MultisigWalletCreatedEvent(
     string StoreId,
     string CryptoCode,
     string RequestId,
     string WalletLink,
-    IReadOnlyCollection<string> ParticipantUserIds);
+    IReadOnlyCollection<string> ParticipantUserIds)
+{
+    public override string ToString() => nameof(MultisigWalletCreatedEvent);
+}

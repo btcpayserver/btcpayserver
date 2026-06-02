@@ -186,7 +186,7 @@ public class MonetizationHostedService(
                                     identityType = SubscriberDataExtensions.AssociatedIdentityType,
                                     userId = reg.User.Id
                                 });
-                        var canAccess = await ctx.Plans.HasFeature(inviterSub.PlanId, MonetizationFeatures.CanAccess);
+                        var canAccess = inviterSub.IsActive && await ctx.Plans.HasFeature(inviterSub.PlanId, MonetizationFeatures.CanAccess);
                         await userService.SetDisabled(reg.User.Id, !canAccess);
                         return;
                     }
@@ -209,17 +209,53 @@ public class MonetizationHostedService(
         else if (evt is UserEvent.Deleted deleted)
         {
             await using var ctx = dbContextFactory.CreateContext();
+            var associatedUserIds = (await ctx.Database.GetDbConnection().QueryAsync<string>("""
+                SELECT ci.value FROM customers_identities ci
+                JOIN subs_subscribers ss ON ss.customer_id = ci.customer_id
+                JOIN customers_identities ci2 ON ci2.customer_id = ss.customer_id AND ci2.type = @primaryType AND ci2.value = @id
+                WHERE ci.type = @associatedType
+                """, new
+                    {
+                        primaryType = Monetization.SubscriberDataExtensions.IdentityType,
+                        associatedType = Monetization.SubscriberDataExtensions.AssociatedIdentityType,
+                        id = deleted.User.Id
+                    })).ToArray();
+
+            if (associatedUserIds.Length > 0)
+            {
+                await ctx.Database.GetDbConnection().ExecuteAsync("""
+                DELETE FROM customers_identities WHERE type = @associatedType AND value = ANY(@userIds)
+                """, new
+                    {
+                        associatedType = Monetization.SubscriberDataExtensions.AssociatedIdentityType,
+                        userIds = associatedUserIds
+                    });
+
+                var settings = monetizationSettingsAccessor.Settings;
+                foreach (var userId in associatedUserIds)
+                {
+                    var user = await ctx.Users.FindAsync(userId);
+                    if (user is null)
+                        continue;
+                    await MigrateUsers(settings.OfferingId, settings.DefaultPlanId, OneUserQuery, parameters =>
+                    {
+                        parameters.Add("userId", userId);
+                        parameters.Add("email", user.Email);
+                        parameters.Add("customerId", CustomerData.GenerateId());
+                    }, forceExpired: true);
+                }
+            }
+
             await ctx.Database.GetDbConnection()
-                .ExecuteAsync("""
+               .ExecuteAsync("""
                               DELETE FROM subs_subscribers s
                                   USING customers_identities ci
-                              WHERE ci.customer_id = s.customer_id
-                                AND ci.type = @type
-                                AND ci.value = @id;
+                              WHERE ci.customer_id = s.customer_id AND ci.type = @type AND ci.value = @id;
                               DELETE FROM customers_identities ci
                               WHERE ci.type = ANY(ARRAY[@type, @associatedType]) AND ci.value = @id;
                               """, new { type = Monetization.SubscriberDataExtensions.IdentityType, associatedType = Monetization.SubscriberDataExtensions.AssociatedIdentityType, id = deleted.User.Id });
         }
+
     }
 
     private async Task UpdateUserLockout(SubscriptionEvent.SubscriberEvent evt, UserManager<ApplicationUser> userManager, bool activated)
@@ -230,6 +266,26 @@ public class MonetizationHostedService(
             await userService.SetDisabled(user.Id, !activated) is not UserService.SetDisabledResult.Error)
         {
             EventAggregator.Publish(new MonetizationLockoutUpdated([(user.Id, !activated)]));
+        }
+
+        await using var ctx = dbContextFactory.CreateContext();
+        var associatedUserIds = (await ctx.Database.GetDbConnection().QueryAsync<string>("""
+            SELECT ci.value FROM customers_identities ci
+            WHERE ci.customer_id = @customerId AND ci.type = @associatedType
+            """, new
+            {
+                customerId = evt.Subscriber.CustomerId,
+                associatedType = SubscriberDataExtensions.AssociatedIdentityType
+            })).ToArray();
+
+        foreach (var assocUserId in associatedUserIds)
+        {
+            var assocUser = await userManager.FindByIdAsync(assocUserId);
+            if (assocUser is not null &&
+                await userService.SetDisabled(assocUser.Id, !activated) is not UserService.SetDisabledResult.Error)
+            {
+                EventAggregator.Publish(new MonetizationLockoutUpdated([(assocUser.Id, !activated)]));
+            }
         }
     }
 
@@ -268,7 +324,7 @@ public class MonetizationHostedService(
                 parameters.Add("userId", userId);
                 parameters.Add("email", user.Email);
                 parameters.Add("customerId", CustomerData.GenerateId());
-            });
+            }, forceExpired: true);
         }
     }
 
@@ -315,7 +371,8 @@ public class MonetizationHostedService(
                                         )
                                         """;
 
-    public async Task<(string CustomerId, string UserId)[]> MigrateUsers(string? offeringId, string? planId, string usersQuery = AllUsersQuery, Action<DynamicParameters>? addParameters = null)
+    public async Task<(string CustomerId, string UserId)[]> MigrateUsers(string? offeringId, string? planId, string usersQuery = AllUsersQuery,
+        Action<DynamicParameters>? addParameters = null, bool forceExpired = false)
     {
         if (offeringId is null || planId is null)
             return Array.Empty<(string CustomerId, string UserId)>();
@@ -326,7 +383,7 @@ public class MonetizationHostedService(
                 .FirstOrDefault(p => p.Id == planId) is not { } plan)
             return Array.Empty<(string CustomerId, string UserId)>();
 
-        var hasTrial = plan.TrialDays > 0;
+        var hasTrial = !forceExpired && plan.TrialDays > 0;
         var dummy = new SubscriberData();
         dummy.Plan = plan;
         if (hasTrial)
@@ -440,7 +497,7 @@ public class MonetizationHostedService(
                                      NOT (ss.active AND @canAccess) AS lockout_enabled,
                                      CASE WHEN (ss.active AND @canAccess) THEN NULL ELSE 'infinity'::timestamptz END lockout_end
                               FROM unnest(@userIds) AS user_id
-                                       JOIN customers_identities ci ON ci.type = @applicationUserId AND ci.value = user_id
+                                       JOIN customers_identities ci ON ci.type = ANY(ARRAY[@applicationUserId, @associatedApplicationUserId]) AND ci.value = user_id
                                        JOIN subs_subscribers ss ON ss.customer_id = ci.customer_id
                                        JOIN "AspNetUsers" ON "AspNetUsers"."Id" = user_id
                               WHERE ss.plan_id = @planId
@@ -457,6 +514,7 @@ public class MonetizationHostedService(
                     planId = plan.Id,
                     salt = RandomUtils.GetUInt256().ToString(),
                     applicationUserId = SubscriberDataExtensions.IdentityType,
+                    associatedApplicationUserId = SubscriberDataExtensions.AssociatedIdentityType,
                     canAccess
                 })).ToArray();
         foreach (var update in updated)

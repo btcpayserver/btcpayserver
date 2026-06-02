@@ -494,29 +494,53 @@ retry:
             }
         }
 
-        public async Task MassArchive(string[] invoiceIds, bool archive = true)
+        public async Task MassArchive(string storeId, string[] invoiceIds, bool archive = true)
         {
-            using var context = _applicationDbContextFactory.CreateContext();
-            var items = context.Invoices.Where(a => invoiceIds.Contains(a.Id));
-            foreach (InvoiceData invoice in items)
+            await using var context = _applicationDbContextFactory.CreateContext();
+            var conn = context.Database.GetDbConnection();
+            await conn.ExecuteAsync(
+                """
+                UPDATE "Invoices" i
+                SET "Archived" = @archive
+                FROM unnest(@invoiceIds) AS ids("Id")
+                WHERE i."StoreDataId" = @storeId
+                  AND i."Id" = ids."Id"
+                  AND i."Archived" IS DISTINCT FROM @archive;
+                """,
+                new { archive, storeId, invoiceIds });
+        }
+
+        public async Task<bool> ToggleInvoiceArchival(string storeId, string invoiceId, bool? archived = null)
+        {
+            await using var context = _applicationDbContextFactory.CreateContext();
+            var conn = context.Database.GetDbConnection();
+            if (archived is null)
             {
-                invoice.Archived = archive;
+                return await conn.ExecuteScalarAsync<bool>(
+                    """
+                    UPDATE "Invoices" i
+                    SET "Archived" = NOT "Archived"
+                    WHERE i."StoreDataId" = @storeId
+                      AND i."Id" = @invoiceId
+                    RETURNING "Archived";
+                    """,
+                    new { storeId, invoiceId });
             }
-
-            await context.SaveChangesAsync();
+            else
+            {
+                await conn.ExecuteAsync(
+                    """
+                    UPDATE "Invoices" i
+                    SET "Archived" = @archived
+                    WHERE i."StoreDataId" = @storeId
+                      AND i."Id" = @invoiceId
+                      AND i."Archived" IS DISTINCT FROM @archived;
+                    """,
+                    new { storeId, invoiceId, archived });
+                return archived.Value;
+            }
         }
 
-        public async Task ToggleInvoiceArchival(string invoiceId, bool archived, string storeId = null)
-        {
-            using var context = _applicationDbContextFactory.CreateContext();
-            var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
-            if (invoiceData == null || invoiceData.Archived == archived ||
-                (storeId != null &&
-                 !invoiceData.StoreDataId.Equals(storeId, StringComparison.InvariantCultureIgnoreCase)))
-                return;
-            invoiceData.Archived = archived;
-            await context.SaveChangesAsync().ConfigureAwait(false);
-        }
         public async Task<InvoiceEntity> UpdateInvoiceMetadata(string invoiceId, string storeId, JObject metadata)
         {
 retry:

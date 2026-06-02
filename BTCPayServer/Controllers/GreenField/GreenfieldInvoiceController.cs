@@ -146,7 +146,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var invoice = HttpContext.GetInvoiceDataOrNull();
             if (invoice is null)
                 return InvoiceNotFound();
-            await _invoiceRepository.ToggleInvoiceArchival(invoiceId, true, storeId ?? HttpContext.GetStoreData().Id);
+            await _invoiceRepository.ToggleInvoiceArchival(HttpContext.GetStoreData().Id, invoiceId, true);
             return Ok();
         }
 
@@ -277,7 +277,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
-            await _invoiceRepository.ToggleInvoiceArchival(invoiceId, false, storeId ?? HttpContext.GetStoreData().Id);
+            await _invoiceRepository.ToggleInvoiceArchival(HttpContext.GetStoreData().Id, invoiceId, false);
             return await GetInvoice(storeId, invoiceId);
         }
 

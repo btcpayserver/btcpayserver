@@ -2288,7 +2288,7 @@ namespace BTCPayServer.Tests
             });
 
             // ensure archived invoices are not accessible for logged out users
-            await s.Server.PayTester.InvoiceRepository.ToggleInvoiceArchival(i, true);
+            await s.Server.PayTester.InvoiceRepository.ToggleInvoiceArchival(s.StoreId, i);
             await s.GoToHome();
             await s.Logout();
 

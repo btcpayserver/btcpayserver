@@ -130,8 +130,16 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             var pendingTransaction =
                 await pendingTransactionService.GetPendingTransaction(GetPendingTxId(walletId, pendingTransactionId));
-            if (pendingTransaction is null || network is null)
+            if (pendingTransaction is null)
                 return NotFound();
+            if (pendingTransaction.State is not (PendingTransactionState.Pending or PendingTransactionState.Signed))
+            {
+                return RedirectToAction(nameof(WalletTransactions), new
+                {
+                    walletId = walletId.ToString(),
+                    searchText = pendingTransaction.TransactionId
+                });
+            }
             var canSign = (await authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanSignWalletTransactions)).Succeeded;
             var canBroadcastSigned = pendingTransaction.State == PendingTransactionState.Signed &&
                                      (await authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanBroadcastWalletTransactions)).Succeeded;

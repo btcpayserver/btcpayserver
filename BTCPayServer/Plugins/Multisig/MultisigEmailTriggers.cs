@@ -28,7 +28,7 @@ public static class MultisigEmailTriggers
             new("{Request.Id}", "The multisig setup request id"),
             new("{Signer.Email}", "The signer email address"),
             new("{Signer.Name}", "The signer name"),
-            new("{Signer.Link}", "The signer invite link")
+            new("{Signer.Link}", "The multisig setup session link")
         };
 
         yield return new EmailTriggerViewModel

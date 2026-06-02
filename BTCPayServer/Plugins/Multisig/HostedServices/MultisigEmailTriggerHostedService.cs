@@ -72,7 +72,6 @@ public class MultisigEmailTriggerHostedService(
             },
             ["Signer"] = new JObject
             {
-                ["UserId"] = evt.SignerUserId,
                 ["Email"] = evt.SignerEmail,
                 ["Name"] = evt.SignerName ?? evt.SignerEmail,
                 ["Link"] = evt.SignerLink
@@ -93,10 +92,9 @@ public class MultisigEmailTriggerHostedService(
                      storeRepository,
                      permissionService,
                      evt.StoreId,
-                     evt.CryptoCode,
                      allPolicies: new[] { WalletPolicies.CanManageWalletSettings }))
         {
-            recipients.Add(recipient.Email);
+            recipients.Add(recipient);
         }
 
         foreach (var recipient in recipients)
@@ -111,9 +109,8 @@ public class MultisigEmailTriggerHostedService(
                 },
                 ["Signer"] = new JObject
                 {
-                    ["UserId"] = evt.SignerUserId,
                     ["Email"] = evt.SignerEmail,
-                    ["Name"] = evt.SignerName ?? evt.SignerEmail ?? evt.SignerUserId ?? string.Empty
+                    ["Name"] = evt.SignerName ?? evt.SignerEmail ?? string.Empty
                 },
                 ["Recipient"] = new JObject
                 {
@@ -132,13 +129,6 @@ public class MultisigEmailTriggerHostedService(
             storeRepository,
             permissionService,
             evt.StoreId,
-            evt.CryptoCode,
-            anyPolicies: new[]
-            {
-                WalletPolicies.CanCreateWalletTransactions,
-                WalletPolicies.CanManageWalletTransactions,
-                WalletPolicies.CanViewWallet
-            },
             includeUserIds: evt.ParticipantUserIds);
 
         foreach (var recipient in recipients)
@@ -156,7 +146,7 @@ public class MultisigEmailTriggerHostedService(
                 },
                 ["Recipient"] = new JObject
                 {
-                    ["Email"] = recipient.Email
+                    ["Email"] = recipient
                 }
             }, cancellationToken);
         }
@@ -188,14 +178,12 @@ public class MultisigEmailTriggerHostedService(
                 storeRepository,
                 permissionService,
                 walletId.StoreId,
-                walletId.CryptoCode,
                 allPolicies: new[] { WalletPolicies.CanViewWallet },
                 anyPolicies: new[] { WalletPolicies.CanSignWalletTransactions, WalletPolicies.CanManageWalletTransactions })
             : await GetWalletScopedRecipients(
                 storeRepository,
                 permissionService,
                 walletId.StoreId,
-                walletId.CryptoCode,
                 allPolicies: new[] { WalletPolicies.CanViewWallet },
                 anyPolicies: new[]
                 {
@@ -229,7 +217,7 @@ public class MultisigEmailTriggerHostedService(
                 },
                 ["Recipient"] = new JObject
                 {
-                    ["Email"] = recipient.Email
+                    ["Email"] = recipient
                 }
             }, cancellationToken);
         }
@@ -259,19 +247,17 @@ public class MultisigEmailTriggerHostedService(
                $"/wallets/{walletId}/pending/{pendingTransaction.Id}";
     }
 
-    private static async Task<Recipient[]> GetWalletScopedRecipients(
+    private static async Task<string[]> GetWalletScopedRecipients(
         StoreRepository storeRepository,
         PermissionService permissionService,
         string storeId,
-        string cryptoCode,
         IEnumerable<string>? allPolicies = null,
         IEnumerable<string>? anyPolicies = null,
         string? excludeUserId = null,
-        IEnumerable<string>? includeUserIds = null,
-        bool requireWalletTypePolicy = true)
+        IEnumerable<string>? includeUserIds = null)
     {
-        if (string.IsNullOrWhiteSpace(storeId) || string.IsNullOrWhiteSpace(cryptoCode))
-            return Array.Empty<Recipient>();
+        if (string.IsNullOrWhiteSpace(storeId))
+            return Array.Empty<string>();
 
         var requiredAll = (allPolicies ?? Array.Empty<string>())
             .Where(p => !string.IsNullOrWhiteSpace(p))
@@ -299,16 +285,14 @@ public class MultisigEmailTriggerHostedService(
             .Where(u =>
             {
                 var permissionSet = u.StoreRole?.ToPermissionSet(storeId) ?? new PermissionSet();
-                if (requireWalletTypePolicy && !HasPolicy(permissionSet, WalletPolicies.CanViewWallet))
+                if (!HasPolicy(permissionSet, WalletPolicies.CanViewWallet))
                     return false;
                 if (requiredAll.Any(policy => !HasPolicy(permissionSet, policy)))
                     return false;
                 return requiredAny.Length <= 0 || requiredAny.Any(policy => HasPolicy(permissionSet, policy));
             })
-            .Select(u => new Recipient(u.Id, u.Email))
-            .DistinctBy(r => r.Email, StringComparer.OrdinalIgnoreCase)
+            .Select(u => u.Email)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
     }
-
-    private record Recipient(string UserId, string Email);
 }

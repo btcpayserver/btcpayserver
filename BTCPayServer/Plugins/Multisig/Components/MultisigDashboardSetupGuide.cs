@@ -17,7 +17,7 @@ public class MultisigDashboardSetupGuide(MultisigService multisigService) : View
         if (string.IsNullOrEmpty(userId))
             return Content(string.Empty);
 
-        var items = await multisigService.GetInProgressForStore(store, userId, httpContext);
+        var items = await multisigService.GetInProgressForStore(store, httpContext.User, userId, httpContext);
         if (items.Count == 0)
             return Content(string.Empty);
 

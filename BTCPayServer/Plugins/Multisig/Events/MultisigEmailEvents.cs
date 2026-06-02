@@ -8,7 +8,6 @@ public record MultisigSignerKeyRequestedEvent(
     string StoreId,
     string CryptoCode,
     string RequestId,
-    string SignerUserId,
     string? SignerEmail,
     string? SignerName,
     string SignerLink);
@@ -18,7 +17,6 @@ public record MultisigSignerKeySubmittedEvent(
     string CryptoCode,
     string RequestId,
     string? RequestedByEmail,
-    string? SignerUserId,
     string? SignerEmail,
     string? SignerName,
     string SetupLink);

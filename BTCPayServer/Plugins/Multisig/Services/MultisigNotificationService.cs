@@ -55,23 +55,15 @@ public class MultisigNotificationService(
         await ctx.SaveChangesAsync(cancellationToken);
     }
 
-    public Task PublishSignerKeyRequestedEvents(HttpContext httpContext, string storeId, string cryptoCode, PendingMultisigSetupData pending, IEnumerable<string>? participantIds = null)
+    public Task PublishSignerKeyRequestedEvents(HttpContext httpContext, string storeId, string cryptoCode, PendingMultisigSetupData pending)
     {
-        var allowedIds = participantIds?.ToHashSet(StringComparer.Ordinal);
+        var link = multisigService.CreateSessionLink(httpContext, pending.RequestId);
         foreach (var participant in pending.Participants.Where(p => string.IsNullOrWhiteSpace(p.AccountKey)))
         {
-            if (allowedIds is not null && !allowedIds.Contains(participant.UserId))
-                continue;
-
-            var link = multisigService.CreateInviteLink(httpContext, storeId, cryptoCode, pending.RequestId, participant.UserId, pending.ExpiresAt, absolute: true);
-            if (string.IsNullOrEmpty(link))
-                continue;
-
             eventAggregator.Publish(new MultisigSignerKeyRequestedEvent(
                 storeId,
                 cryptoCode,
                 pending.RequestId,
-                participant.UserId,
                 participant.Email,
                 participant.Name,
                 link));
@@ -82,13 +74,12 @@ public class MultisigNotificationService(
 
     public Task PublishSignerKeySubmittedEvent(HttpContext httpContext, string storeId, string cryptoCode, PendingMultisigSetupData pending, PendingMultisigSetupParticipantData participant)
     {
-        var setupLink = multisigService.CreateSetupLink(httpContext, storeId, cryptoCode, pending.RequestId, absolute: true) ?? string.Empty;
+        var setupLink = multisigService.CreateSessionLink(httpContext, pending.RequestId);
         eventAggregator.Publish(new MultisigSignerKeySubmittedEvent(
             storeId,
             cryptoCode,
             pending.RequestId,
             pending.RequestedByEmail,
-            participant.UserId,
             participant.Email,
             participant.Name,
             setupLink));

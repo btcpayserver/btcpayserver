@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using BTCPayServer.Models.StoreViewModels;
 
@@ -10,14 +9,8 @@ public class MultisigSetupViewModel : DerivationSchemeViewModel
     public int? MultisigRequiredSigners { get; set; }
     public int? MultisigTotalSigners { get; set; }
     public string MultisigScriptType { get; set; }
-    public string[] MultisigSigners { get; set; }
-    public string[] MultisigSignerFingerprints { get; set; }
-    public string[] MultisigSignerKeyPaths { get; set; }
     public string[] MultisigParticipantUserIds { get; set; }
     public string MultisigRequestId { get; set; }
-    public string MultisigRemoveUserId { get; set; }
-    public PendingMultisigSetupData MultisigPendingSetup { get; set; }
-    public Dictionary<string, string> MultisigInviteLinks { get; set; } = new(StringComparer.Ordinal);
     public List<MultisigStoreUserItem> MultisigStoreUsers { get; set; } = new();
 }
 

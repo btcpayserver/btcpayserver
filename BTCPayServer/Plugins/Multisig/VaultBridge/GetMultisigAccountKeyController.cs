@@ -27,7 +27,7 @@ public class GetMultisigAccountKeyController : HWIController
         var xpub = await device.GetXPubAsync(keyPath, cancellationToken);
 
         ui.ShowFeedback(FeedbackType.Success, ui.StringLocalizer["Public keys successfully fetched."]);
-        await ui.JSRuntime.InvokeVoidAsync("vault.setMultisigInviteXPub", cancellationToken, new JsonObject
+        await ui.JSRuntime.InvokeVoidAsync("vault.setMultisigSignerKey", cancellationToken, new JsonObject
         {
             ["accountKey"] = xpub.ToString(),
             ["masterFingerprint"] = fingerprint.ToString().ToLowerInvariant(),

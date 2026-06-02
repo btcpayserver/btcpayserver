@@ -138,6 +138,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomTipText = settings.CustomTipText,
                 CustomTipPercentages = settings.CustomTipPercentages,
                 DefaultTaxRate =  settings.DefaultTaxRate,
+                TipTaxRate = settings.TipTaxRate,
                 TaxIncludedInPrice = settings.TaxIncludedInPrice,
                 AppId = appId,
                 StoreId = store.Id,
@@ -295,6 +296,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 order.AddDiscountRate(d);
             if (tip is { } t)
                 order.AddTip(t);
+            order.SetTipTaxRate(settings.TipTaxRate);
 
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
@@ -377,7 +379,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         ItemCode = selectedChoices is [{} c1] ? c1.Id : null,
                         ItemDesc = selectedChoices is [{} c2] ? c2.Title : null,
                         BuyerEmail = email,
-                        TaxIncluded = summary.Tax == 0m ? null : summary.Tax,
+                        TaxIncluded = (summary.Tax - summary.TaxOnTip) <= 0m ? null : (summary.Tax - summary.TaxOnTip),
+                        TaxOnTip = summary.TaxOnTip == 0m ? null : summary.TaxOnTip,
                         OrderId = orderId ?? AppService.GetRandomOrderId(),
                         OrderUrl = Request.GetDisplayUrl(),
                         PosData = JObject.FromObject(jposData),
@@ -584,6 +587,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 AppName = app.Name,
                 Title = settings.Title,
                 DefaultTaxRate = settings.DefaultTaxRate,
+                TipTaxRate = settings.TipTaxRate,
                 TaxIncludedInPrice = settings.TaxIncludedInPrice,
                 DefaultView = settings.DefaultView,
                 ShowItems = settings.ShowItems,
@@ -682,6 +686,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 Title = vm.Title,
                 DefaultView = vm.DefaultView,
                 DefaultTaxRate = vm.DefaultTaxRate ?? 0,
+                TipTaxRate = vm.TipTaxRate ?? 0,
                 TaxIncludedInPrice = vm.TaxIncludedInPrice,
                 ShowItems = vm.ShowItems,
                 ShowCustomAmount = vm.ShowCustomAmount,

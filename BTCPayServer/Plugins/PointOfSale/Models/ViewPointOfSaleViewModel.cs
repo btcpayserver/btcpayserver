@@ -86,6 +86,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public string StoreId { get; set; }
         public bool TaxIncludedInPrice { get; set; }
         public decimal DefaultTaxRate { get; set; }
+        public decimal? TipTaxRate { get; set; }
         public string NotAvailable { get; set; }
     }
 }

@@ -6,6 +6,7 @@ class PoSOrder {
         this._discount = 0;
         this._tip = 0;
         this._tipPercent = 0;
+        this._tipTaxRate = null;
         this.itemLines = [];
     }
 
@@ -30,6 +31,9 @@ class PoSOrder {
     setTipPercent(tip) {
         this._tipPercent = tip;
         this._tip = 0;
+    }
+    setTipTaxRate(tipTaxRate) {
+        this._tipTaxRate = tipTaxRate != null ? +(tipTaxRate) : null;
     }
 
     addDiscountRate(discount) {
@@ -73,6 +77,7 @@ class PoSOrder {
             itemsTotal: 0,
             priceTaxExcluded: 0,
             tip: 0,
+            taxOnTip: 0,
             priceTaxIncluded: 0,
             priceTaxIncludedWithTips: 0
         };
@@ -101,7 +106,11 @@ class PoSOrder {
         ctx.tip = this._round(this._tip);
         ctx.tip += this._round(ctx.priceTaxExcluded * this._tipPercent / 100);
         ctx.priceTaxIncluded = ctx.priceTaxExcluded + ctx.tax;
-        ctx.priceTaxIncludedWithTips = ctx.priceTaxIncluded + ctx.tip;
+        if (this._tipTaxRate != null && this._tipTaxRate > 0 && ctx.tip > 0) {
+            ctx.taxOnTip = this._round(ctx.tip * this._tipTaxRate / 100);
+            ctx.tax += ctx.taxOnTip;
+        }
+        ctx.priceTaxIncludedWithTips = ctx.priceTaxIncluded + ctx.tip + ctx.taxOnTip;
         ctx.priceTaxIncludedWithTips = this._round(ctx.priceTaxIncludedWithTips);
         ctx.itemsTotal = ctx.priceTaxExcluded + ctx.discount;
 
@@ -180,6 +189,9 @@ const posCommon = {
         },
         taxNumeric() {
             return this.summary.tax;
+        },
+        itemTaxNumeric() {
+            return this.summary.tax - (this.summary.taxOnTip || 0);
         },
         taxPercent() {
             return this.posOrder.getTaxRate();
@@ -415,6 +427,7 @@ const posCommon = {
         if (this.persistState) {
             this.cart = loadState('cart');
         }
+        this.posOrder.setTipTaxRate(this.tipTaxRate);
         this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate, this.taxIncludedInPrice);
 
         this.items.forEach(item => {

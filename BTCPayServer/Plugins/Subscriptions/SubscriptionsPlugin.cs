@@ -239,7 +239,7 @@ public class SubscriptionsPlugin : BaseBTCPayServerPlugin
                 {
                     To = ["{Subscriber.Email}"],
                     Subject = "Your credit refund is ready to claim",
-                    Body = "Hello {Customer.Name},\n\nA credit refund of {Refund.Amount} {Refund.Currency} has been issued for your subscription.\n\nClaim your refund here: {Refund.ClaimUrl}\n\nRegards,\n{Store.Name}"
+                    Body = "Hello {Customer.Name},<br/><br/>A credit refund of {Refund.Amount} {Refund.Currency} has been issued for your subscription.<br/><br/><a href=\"{Refund.ClaimUrl}\">Claim your refund here</a><br/><br/>Regards,<br/>{Store.Name}"
                 },
                 PlaceHolders = placeHolders
             },

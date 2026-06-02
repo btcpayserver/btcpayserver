@@ -1,4 +1,5 @@
 @using BTCPayServer.Client
+@using BTCPayServer.Controllers
 @using BTCPayServer.Services
 @inject DisplayFormatter DisplayFormatter
 @model InvoicesModel
@@ -57,6 +58,7 @@
 
     @* Custom Range Modal *@
     <script>
+        var invoicesUrl = @Safe.Json(Url.Action(nameof(UIInvoiceController.ListInvoices), new { storeId = Model.StoreId }));
         const timezoneOffset = new Date().getTimezoneOffset();
 
         delegate('click', '.showInvoice', e => {
@@ -82,7 +84,7 @@
             }
 
             if (filterString !== "") {
-                var redirectUri = "/invoices?Count=" + $("#Count").val() +
+                var redirectUri = invoicesUrl + "?Count=" + $("#Count").val() +
                     "&timezoneoffset=" + $("#TimezoneOffset").val() +
                     "&SearchTerm=" + filterString;
 
@@ -314,7 +316,7 @@
 
 @if (Model.Invoices.Any())
 {
-    <form method="post" asp-action="MassAction">
+    <form method="post" asp-action="MassAction" asp-route-storeId="@Model.StoreId">
         <input type="hidden" name="storeId" value="@Model.StoreId" />
         <div class="table-responsive">
             <table id="invoices" class="table table-hover mass-action">

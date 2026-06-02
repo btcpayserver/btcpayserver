@@ -42,10 +42,23 @@ document.addEventListener("DOMContentLoaded",function () {
                 if (this.tipPercent) calc += ` (${this.tipPercent}%)`
                 if (this.summary.tax)
                 {
-                    calc += ` + ${this.formatCurrency(this.summary.tax, true)}`
-                    if (this.posOrder.getTaxRate())
-                    {
-                        calc += ` (${this.posOrder.getTaxRate()}%)`
+                    const taxOnTip = this.summary.taxOnTip || 0;
+                    const itemTax = this.summary.tax - taxOnTip;
+                    if (itemTax > 0) {
+                        if (this.taxIncludedInPrice) {
+                            const rateLabel = this.posOrder.getTaxRate() ? ` ${this.posOrder.getTaxRate()}%` : ''
+                            calc += ` (incl. ${this.formatCurrency(itemTax, true)} tax${rateLabel})`
+                        } else {
+                            calc += ` + ${this.formatCurrency(itemTax, true)}`
+                            if (this.posOrder.getTaxRate())
+                                calc += ` (${this.posOrder.getTaxRate()}% tax)`
+                        }
+                    }
+                    if (taxOnTip > 0) {
+                        if (this.tipTaxRate)
+                            calc += ` + ${this.formatCurrency(taxOnTip, true)} (${this.tipTaxRate}% tip tax)`
+                        else
+                            calc += ` + ${this.formatCurrency(taxOnTip, true)} (tip tax)`
                     }
                 }
                 return calc

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -97,6 +98,33 @@ namespace BTCPayServer.Controllers
                 RequiresEmailConfirmation = user.RequiresEmailConfirmation
             };
             return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> TwoFactorAuthentication()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return NotFound();
+
+            var model = new TwoFactorAuthenticationViewModel
+            {
+                IsAuthenticatorEnabled = await _userManager.IsAuthenticatorConfigured(user),
+                Credentials = await _fido2Service.GetCredentials(user.Id)
+            };
+
+            return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Passkeys()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return NotFound();
+
+            var credentials = await _fido2Service.GetCredentials(user.Id);
+            return View(credentials.Where(c => c.Type == Fido2Credential.CredentialType.Passkey).ToList());
         }
 
         [HttpPost]

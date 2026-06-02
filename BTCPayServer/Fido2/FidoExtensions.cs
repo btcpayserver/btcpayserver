@@ -18,7 +18,6 @@ namespace BTCPayServer.Fido2
             var b = System.Text.Json.JsonSerializer.Serialize(descriptor);
             if (a == b)
                 return;
-            credential.Type = Fido2Credential.CredentialType.FIDO2;
             credential.Blob2 = System.Text.Json.JsonSerializer.Serialize(descriptor);
         }
     }

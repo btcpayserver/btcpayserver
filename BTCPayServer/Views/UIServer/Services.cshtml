@@ -68,7 +68,10 @@
                 <tr>
                     <td>@s.Name</td>
                     <td style="text-align: right">
-                        <a href="@s.Link" rel="noreferrer noopener" text-translate="true">See information</a>
+                        @{
+                            var link = s.Link ?? Url.Action(s.ActionName, s.ControllerName, s.RouteValues, Context.Request.Scheme);
+                        }
+                        <a href="@link" rel="noreferrer noopener" text-translate="true">See information</a>
                     </td>
                 </tr>
             }

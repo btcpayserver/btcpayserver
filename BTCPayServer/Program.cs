@@ -25,6 +25,9 @@ namespace BTCPayServer
     {
         static async Task Main(string[] args)
         {
+            // Some old instances were not as strict into parsing public keys
+            // we don't want to break this.
+            NBitcoin.ExtPubKey.SkipInvalidMasterExtPubKeyCheck = true;
             if (args.Length > 0 && args[0] == "run")
                 args = args.Skip(1).ToArray(); // Hack to make dotnet watch work
 

@@ -1176,13 +1176,6 @@
       "crypto":true
    },
    {
-      "name":"LCAD",
-      "code":"LCAD",
-      "divisibility":8,
-      "symbol":null,
-      "crypto":true
-   },
-   {
       "name":"LTC",
       "code":"LTC",
       "divisibility":8,

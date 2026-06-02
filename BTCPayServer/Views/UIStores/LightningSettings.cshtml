@@ -105,6 +105,13 @@
                                 <label asp-for="LUD12Enabled" class="form-check-label"></label>
                             </div>
                         </div>
+                        <div class="form-group mb-3">
+                            <div class="d-flex align-items-center">
+                                <input type="checkbox" asp-for="LUD21Enabled" class="btcpay-toggle me-3" />
+                                <label asp-for="LUD21Enabled" class="form-check-label"></label>
+                            </div>
+                            <div class="form-text" text-translate="true">Allows external services to verify Lightning payment settlement via LNURL-pay without authentication</div>
+                        </div>
                     </div>
                 </div>
             </div>

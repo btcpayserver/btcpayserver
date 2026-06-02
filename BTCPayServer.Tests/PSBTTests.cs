@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using NBitcoin;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {

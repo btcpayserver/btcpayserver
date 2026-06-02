@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,7 +32,7 @@ using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Models.ManageViewModels;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.PayJoin.Sender;
@@ -62,13 +63,13 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using Xunit;
-using Xunit.Abstractions;
 using Xunit.Sdk;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 using Microsoft.Extensions.Caching.Memory;
 using PosViewType = BTCPayServer.Client.Models.PosViewType;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Stores;
 using Microsoft.Playwright;
 using NBXplorer.DerivationStrategy;
@@ -474,6 +475,24 @@ namespace BTCPayServer.Tests
             Assert.Contains("test", tx.Tags.Select(l => l.Text));
             Assert.DoesNotContain("test2", tx.Tags.Select(l => l.Text));
             Assert.Single(tx.Tags.GroupBy(l => l.Color));
+
+            var searchText = tx.Id[..12];
+            AssertSearchWalletTransaction(walletController, walletId, true, tx.Id, "label:test", null);
+            AssertSearchWalletTransaction(walletController, walletId, false, tx.Id, "nolabel:true", null);
+            AssertSearchWalletTransaction(walletController, walletId, true, tx.Id, "direction:in", null);
+            AssertSearchWalletTransaction(walletController, walletId, false, tx.Id, "direction:out", null);
+            AssertSearchWalletTransaction(walletController, walletId, true, tx.Id, null, searchText);
+            AssertSearchWalletTransaction(walletController, walletId, true, tx.Id, null, "hello");
+
+            var txTimestamp = tx.Timestamp;
+            AssertSearchWalletTransaction(walletController, walletId, true, tx.Id,
+                $"startdate:{txTimestamp.ToString("o", CultureInfo.InvariantCulture)}", null);
+            AssertSearchWalletTransaction(walletController, walletId, true, tx.Id,
+                $"enddate:{txTimestamp.ToString("o", CultureInfo.InvariantCulture)}", null);
+            AssertSearchWalletTransaction(walletController, walletId, false, tx.Id,
+                $"startdate:{txTimestamp.AddSeconds(1).ToString("o", CultureInfo.InvariantCulture)}", null);
+            AssertSearchWalletTransaction(walletController, walletId, false, tx.Id,
+                $"enddate:{txTimestamp.AddSeconds(-1).ToString("o", CultureInfo.InvariantCulture)}", null);
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
@@ -591,6 +610,19 @@ namespace BTCPayServer.Tests
                 (InvoicesModel)((ViewResult)acc.GetController<UIInvoiceController>(storeId is not null)
                     .ListInvoices(new InvoicesModel { SearchTerm = filter, StoreId = storeId }).Result).Model;
             Assert.Equal(expected, result.Invoices.Any(i => i.InvoiceId == invoiceId));
+        }
+
+        private void AssertSearchWalletTransaction(UIWalletsController walletController, WalletId walletId, bool expected, string transactionId, string searchTerm, string searchText)
+        {
+            var model = new ListTransactionsViewModel
+            {
+                SearchTerm = searchTerm,
+                SearchText = searchText,
+                Count = 50
+            };
+            var result = (ListTransactionsViewModel)((ViewResult)walletController
+                .WalletTransactions(walletId, loadTransactions: true, model: model).Result).Model;
+            Assert.Equal(expected, result.Transactions.Any(tx => tx.Id == transactionId));
         }
 
         // [Fact(Timeout = TestTimeout)]
@@ -857,7 +889,7 @@ namespace BTCPayServer.Tests
             });
             Assert.Equal(0m, invoice.Amount);
             Assert.Equal(InvoiceType.TopUp, invoice.Type);
-            var btcmethod = (await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id))[0];
+            var btcmethod = (await client.GetInvoicePaymentMethods(invoice.Id))[0];
             var paid = btcSent;
             var invoiceAddress = BitcoinAddress.Create(btcmethod.Destination, cashCow.Network);
             var btc = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
@@ -1061,7 +1093,7 @@ namespace BTCPayServer.Tests
             await tester.GenerateWallet();
             var invoiceId = await tester.CreateInvoice(currency: "JPY", amount: 700000m);
             var client = await tester.AsTestAccount().CreateClient();
-            var paymentMethods = await client.GetInvoicePaymentMethods(tester.StoreId, invoiceId);
+            var paymentMethods = await client.GetInvoicePaymentMethods(invoiceId);
             Assert.Equal(1.0m, paymentMethods[0].Amount);
 
             // The fallback doesn't support JPY anymore
@@ -1208,7 +1240,7 @@ namespace BTCPayServer.Tests
             var controller = user.GetController<UIInvoiceController>();
             await controller.CreateInvoice();
             (await controller.CreateInvoice(new CreateInvoiceModel(), default)).AssertType<RedirectToActionResult>();
-            invoice = await client.GetInvoice(user.StoreId, controller.CreatedInvoiceId);
+            invoice = await client.GetInvoice(controller.CreatedInvoiceId);
             Assert.Equal("EUR", invoice.Currency);
             Assert.Equal(InvoiceType.TopUp, invoice.Type);
 
@@ -1605,11 +1637,11 @@ namespace BTCPayServer.Tests
             Assert.Equal(InvoiceStatus.New, zeroInvoice.Status);
             await TestUtils.EventuallyAsync(async () =>
             {
-                zeroInvoice = await greenfield.GetInvoice(user.StoreId, zeroInvoice.Id);
+                zeroInvoice = await greenfield.GetInvoice(zeroInvoice.Id);
                 Assert.Equal(InvoiceStatus.Settled, zeroInvoice.Status);
             });
 
-            var zeroInvoicePM = await greenfield.GetInvoicePaymentMethods(user.StoreId, zeroInvoice.Id);
+            var zeroInvoicePM = await greenfield.GetInvoicePaymentMethods(zeroInvoice.Id);
             Assert.Empty(zeroInvoicePM);
 
             var invoice6 = await btcpayClient.CreateInvoice(user.StoreId,
@@ -1825,76 +1857,95 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
+        [Trait("Playwright", "Playwright")]
         public async Task CanLoginWithNoSecondaryAuthSystemsOrRequestItWhenAdded()
         {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            user.GrantAccess();
+            await using var s = CreatePlaywrightTester();
+            await s.Server.StartAsync();
+            // We need this for WebAuth to be mocked by playwright properly.
+            s.ServerUri = new Uri(s.Server.PayTester.ServerUriWithIP.AbsoluteUri.Replace("127.0.0.1", "localhost"));
+            await s.StartAsync();
+            await s.RegisterNewUser();
+            await s.CreateNewStore();
 
-            var accountController = tester.PayTester.GetController<UIAccountController>();
+            await s.Logout();
 
             //no 2fa or fido2 enabled, login should work
-            Assert.Equal(nameof(UIHomeController.Index),
-                Assert.IsType<RedirectToActionResult>(await accountController.Login(new LoginViewModel()
+            await s.LogIn(s.CreatedUser);
+            await s.GoToProfile(ManageNavPages.TwoFactorAuthentication);
+
+            var cdp = await s.Page.Context.NewCDPSessionAsync(s.Page);
+            await cdp.SendAsync("WebAuthn.enable");
+
+            var authenticatorId = await AddFIDO2(cdp, false);
+
+            await s.Page.FillAsync("#security-device-form input[name='Name']", "TestDevice");
+            await s.Page.ClickAsync("#security-device-form button[type='submit']");
+            await s.FindAlertMessage();
+
+            await s.Logout();
+            await s.LogIn(s.CreatedUser);
+            await s.WaitLoggedIn();
+
+            await RemoveFIDO2(cdp, authenticatorId);
+            await AddFIDO2(cdp, true);
+
+            await s.GoToProfile(ManageNavPages.Passkeys);
+
+            await s.Page.FillAsync("#passkey-form input[name='Name']", "PasskeyTest");
+            await s.Page.ClickAsync("#passkey-form button[type='submit']");
+            await s.FindAlertMessage();
+
+            await s.Logout();
+
+            // No need of password
+            await s.Page.ClickAsync("#passkey-login-btn");
+            await s.WaitLoggedIn();
+
+            await s.GoToProfile(ManageNavPages.TwoFactorAuthentication);
+
+            // Let's remove both FIDO2 and Passkey
+            await s.Page.Locator("a:text('Remove')").First.ClickAsync();
+            await s.ConfirmDeleteModal();
+            await s.FindAlertMessage();
+
+            await s.GoToProfile(ManageNavPages.Passkeys);
+
+            await s.Page.Locator("a:text('Remove')").First.ClickAsync();
+            await s.ConfirmDeleteModal();
+            await s.FindAlertMessage();
+            await s.Logout();
+
+            await s.LogIn(s.CreatedUser);
+            await s.WaitLoggedIn();
+        }
+
+        private static async Task RemoveFIDO2(ICDPSession cdp, string authenticatorId)
+        {
+            await cdp.SendAsync(
+                "WebAuthn.removeVirtualAuthenticator",
+                new Dictionary<string, object>
                 {
-                    Email = user.RegisterDetails.Email,
-                    Password = user.RegisterDetails.Password
-                })).ActionName);
+                    ["authenticatorId"] = authenticatorId
+                });
+        }
 
-            var listController = user.GetController<UIManageController>();
-            var manageController = user.GetController<UIFido2Controller>();
-
-            //by default no fido2 devices available
-            Assert.Empty(Assert
-                .IsType<TwoFactorAuthenticationViewModel>(Assert
-                    .IsType<ViewResult>(await listController.TwoFactorAuthentication()).Model).Credentials);
-            Assert.IsType<CredentialCreateOptions>(Assert
-                    .IsType<ViewResult>(await manageController.Create(new AddFido2CredentialViewModel
+        private static async Task<string> AddFIDO2(ICDPSession cdp, bool passkey)
+        {
+            var result = await cdp.SendAsync("WebAuthn.addVirtualAuthenticator",
+                new Dictionary<string, object>
+                {
+                    ["options"] = new Dictionary<string, object>
                     {
-                        Name = "label"
-                    })).Model);
-
-            //sending an invalid response model back to server, should error out
-            Assert.IsType<RedirectToActionResult>(await manageController.CreateResponse("sdsdsa", "sds"));
-            var statusModel = manageController.TempData.GetStatusMessageModel();
-            Assert.Equal(StatusMessageModel.StatusSeverity.Error, statusModel.Severity);
-
-            var contextFactory = tester.PayTester.GetService<ApplicationDbContextFactory>();
-
-            //add a fake fido2 device in db directly since emulating a fido2 device is hard and annoying
-            using (var context = contextFactory.CreateContext())
-            {
-                var newDevice = new Fido2Credential()
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Name = "fake",
-                    Type = Fido2Credential.CredentialType.FIDO2,
-                    ApplicationUserId = user.UserId
-                };
-                newDevice.SetBlob(new Fido2CredentialBlob() { });
-                await context.Fido2Credentials.AddAsync(newDevice);
-                await context.SaveChangesAsync();
-
-                Assert.NotNull(newDevice.Id);
-                Assert.NotEmpty(Assert
-                    .IsType<TwoFactorAuthenticationViewModel>(Assert
-                        .IsType<ViewResult>(await listController.TwoFactorAuthentication()).Model).Credentials);
-            }
-
-            //check if we are showing the fido2 login screen now
-            var secondLoginResult = Assert.IsType<ViewResult>(await accountController.Login(new LoginViewModel()
-            {
-                Email = user.RegisterDetails.Email,
-                Password = user.RegisterDetails.Password
-            }));
-
-            Assert.Equal("SecondaryLogin", secondLoginResult.ViewName);
-            var vm = Assert.IsType<SecondaryLoginViewModel>(secondLoginResult.Model);
-            //2fa was never enabled for user so this should be empty
-            Assert.Null(vm.LoginWith2FaViewModel);
-            Assert.NotNull(vm.LoginWithFido2ViewModel);
+                        ["protocol"] = "ctap2",
+                        ["transport"] = "internal",
+                        ["hasResidentKey"] = passkey,
+                        ["hasUserVerification"] = passkey,
+                        ["isUserVerified"] = passkey,
+                        ["automaticPresenceSimulation"] = true
+                    }
+                });
+            return result!.Value.GetProperty("authenticatorId").GetString();
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
@@ -2884,8 +2935,8 @@ namespace BTCPayServer.Tests
             {
                 var inv = await client.CreateInvoice(acc.StoreId, new CreateInvoiceRequest() { Amount = 10m, Currency = "USD" });
                 await acc.PayInvoice(inv.Id);
-                await client.MarkInvoiceStatus(acc.StoreId, inv.Id, new MarkInvoiceStatusRequest() { Status = InvoiceStatus.Settled });
-                var refund = await client.RefundInvoice(acc.StoreId, inv.Id, new RefundInvoiceRequest() { RefundVariant = RefundVariant.Fiat, PayoutMethodId = "BTC-CHAIN" });
+                await client.MarkInvoiceStatus(inv.Id, new MarkInvoiceStatusRequest() { Status = InvoiceStatus.Settled });
+                var refund = await client.RefundInvoice(inv.Id, new RefundInvoiceRequest() { RefundVariant = RefundVariant.Fiat, PayoutMethodId = "BTC-CHAIN" });
 
                 async Task AssertData(string currency, decimal awaiting, decimal limit, decimal completed, bool fullyPaid)
                 {

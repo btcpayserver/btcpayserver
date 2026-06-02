@@ -88,11 +88,8 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/webhooks/{webhookId}": {
+        "/api/v1/webhooks/{webhookId}": {
             "parameters": [
-                {
-                    "$ref": "#/components/parameters/StoreId"
-                },
                 {
                     "$ref": "#/components/parameters/WebhookId"
                 }
@@ -101,8 +98,8 @@
                 "tags": [
                     "Webhooks"
                 ],
-                "summary": "Get a webhook of a store",
-                "description": "View webhook of a store",
+                "summary": "Get a webhook",
+                "description": "View webhook",
                 "operationId": "Webhooks_GetWebhook",
                 "responses": {
                     "200": {
@@ -202,11 +199,8 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries": {
+        "/api/v1/webhooks/{webhookId}/deliveries": {
             "parameters": [
-                {
-                    "$ref": "#/components/parameters/StoreId"
-                },
                 {
                     "$ref": "#/components/parameters/WebhookId"
                 }
@@ -254,11 +248,8 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}": {
+        "/api/v1/webhooks/{webhookId}/deliveries/{deliveryId}": {
             "parameters": [
-                {
-                    "$ref": "#/components/parameters/StoreId"
-                },
                 {
                     "$ref": "#/components/parameters/WebhookId"
                 },
@@ -298,11 +289,8 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/request": {
+        "/api/v1/webhooks/{webhookId}/deliveries/{deliveryId}/request": {
             "parameters": [
-                {
-                    "$ref": "#/components/parameters/StoreId"
-                },
                 {
                     "$ref": "#/components/parameters/WebhookId"
                 },
@@ -346,11 +334,8 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver": {
+        "/api/v1/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver": {
             "parameters": [
-                {
-                    "$ref": "#/components/parameters/StoreId"
-                },
                 {
                     "$ref": "#/components/parameters/WebhookId"
                 },

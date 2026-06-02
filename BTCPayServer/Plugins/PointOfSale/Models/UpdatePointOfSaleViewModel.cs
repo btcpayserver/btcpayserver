@@ -45,6 +45,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         [Range(0.0, 100.0)]
         [DisplayFormat(DataFormatString = "{0:0.00####}", ApplyFormatInEditMode = true)]
         public decimal? DefaultTaxRate { get; set; }
+        [Display(Name = "Tip tax rate")]
+        [Range(0.0, 100.0)]
+        [DisplayFormat(DataFormatString = "{0:0.00####}", ApplyFormatInEditMode = true)]
+        public decimal? TipTaxRate { get; set; }
+        [Display(Name = "Tax included in price")]
+        public bool TaxIncludedInPrice { get; set; }
         public string Example1 { get; internal set; }
         public string Example2 { get; internal set; }
         public string ExampleCallback { get; internal set; }
@@ -74,7 +80,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public string CustomTipPercentages { get; set; }
 
         public string Id { get; set; }
-        public Dictionary<string, string> StoreUsers { get; set; }
+        public Dictionary<string, string> StoreUserEmails { get; set; }
 
         [Display(Name = "Redirect invoice to redirect url automatically after paid")]
         public string RedirectAutomatically { get; set; } = string.Empty;

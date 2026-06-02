@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace BTCPayServer
 {
-    public record WalletCreationPermissions(bool CanCreateHotWallet, bool CanCreateColdWallet, bool CanRPCImport);
+    public record WalletCreationPermissions(bool CanCreateHotWallet, bool CanCreateColdWallet);
     public static class AuthorizationExtensions
     {
         public static async Task<bool> CanModifyStore(this IAuthorizationService authorizationService, ClaimsPrincipal user)
@@ -24,20 +24,19 @@ namespace BTCPayServer
             ClaimsPrincipal user)
         {
             if (user.Identity?.IsAuthenticated is not true)
-                return new(false, false, false);
+                return new(false, false);
             var claimUser = user.Identity as ClaimsIdentity;
             if (claimUser is null)
-                return new(false, false, false);
+                return new(false, false);
 
             bool isAdmin = false;
             if (claimUser.AuthenticationType == AuthenticationSchemes.Cookie)
                 isAdmin = user.IsInRole(Roles.ServerAdmin);
             else if (claimUser.AuthenticationType == GreenfieldConstants.AuthenticationType)
                 isAdmin = (await authorizationService.AuthorizeAsync(user, Policies.CanModifyServerSettings)).Succeeded;
-            return isAdmin ? new(true, true, true) :
+            return isAdmin ? new(true, true) :
                    new(policiesSettings?.AllowHotWalletForAll is true,
-                   policiesSettings?.AllowCreateColdWalletForAll is true,
-                   policiesSettings?.AllowHotWalletRPCImportForAll is true);
+                   policiesSettings?.AllowCreateColdWalletForAll is true);
         }
     }
 }

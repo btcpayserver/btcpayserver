@@ -6,7 +6,6 @@ using NBitcoin;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests;
 
@@ -33,7 +32,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
                                        $"[{resp2.AccountKeyPath}]{resp2.DerivationScheme}/0/*," +
                                        $"[{resp3.AccountKeyPath}]{resp3.DerivationScheme}/0/*))";
 
-        var strategy = UIStoresController.ParseDerivationStrategy(multisigDerivationScheme, network);
+        var strategy = UIStoreOnChainWalletsController.ParseDerivationStrategy(multisigDerivationScheme, network);
         strategy.Source = "ManualDerivationScheme";
         var derivationScheme = strategy.AccountDerivation;
 
@@ -65,7 +64,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
                                        $"[{resp2.AccountKeyPath}]{resp2.DerivationScheme}/0/*," +
                                        $"[{resp3.AccountKeyPath}]{resp3.DerivationScheme}/0/*))";
 
-        var strategy = UIStoresController.ParseDerivationStrategy(multisigDerivationScheme, network);
+        var strategy = UIStoreOnChainWalletsController.ParseDerivationStrategy(multisigDerivationScheme, network);
         strategy.Source = "ManualDerivationScheme";
         var derivationScheme = strategy.AccountDerivation;
         await s.CreateNewStore();

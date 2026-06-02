@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Security.Principal;
 using System.Threading.Tasks;
@@ -277,6 +278,16 @@ namespace BTCPayServer.Services.Stores
                 .ToArrayAsync());
         }
 
+        public async Task<int> CountStoresByUserId(string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+                return 0;
+            var defaultRoleId = (await GetDefaultRole()).Id;
+            await using var ctx = _ContextFactory.CreateContext();
+            return await ctx.UserStore
+                .CountAsync(u => u.ApplicationUserId == userId && u.StoreRoleId == defaultRoleId);
+        }
+
         public async Task<StoreData?> GetStoreByInvoiceId(string invoiceId)
         {
             await using var context = _ContextFactory.CreateContext();
@@ -428,30 +439,94 @@ namespace BTCPayServer.Services.Stores
                 store.ApplicationUserId != userId);
         }
 
-        public async Task CreateStore(string ownerId, StoreData storeData, StoreRoleId? roleId = null)
+        public enum CreateStoreResult
+        {
+            Created,
+            QuotaExceeded
+        }
+
+        public async Task<CreateStoreResult> CreateStore(string ownerId, StoreData storeData, StoreRoleId? roleId = null)
         {
             if (!string.IsNullOrEmpty(storeData.Id))
-                throw new ArgumentException("id should be empty", nameof(storeData.StoreName));
+                throw new ArgumentException("id should be empty", nameof(storeData.Id));
             if (string.IsNullOrEmpty(storeData.StoreName))
                 throw new ArgumentException("name should not be empty", nameof(storeData.StoreName));
             ArgumentNullException.ThrowIfNull(ownerId);
-            AssertStoreRoleIfNeeded(storeData.Id, roleId);
-            await using var ctx = _ContextFactory.CreateContext();
-            storeData.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32));
-            roleId ??= await GetDefaultRole();
-
-            var userStore = new UserStore
+            var defaultRole = await GetDefaultRole();
+            roleId ??= defaultRole;
+            var id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32));
+            bool added;
+            await using (var ctx = _ContextFactory.CreateContext())
             {
-                StoreDataId = storeData.Id,
-                ApplicationUserId = ownerId,
-                StoreRoleId = roleId.Id,
-            };
-
-            ctx.Add(storeData);
-            ctx.Add(userStore);
-            await ctx.SaveChangesAsync();
-            _eventAggregator.Publish(new StoreUserEvent.Added(storeData.Id, userStore.ApplicationUserId, roleId.Id));
-            _eventAggregator.Publish(new StoreEvent.Created(storeData));
+                var conn = ctx.Database.GetDbConnection();
+                added = await conn.ExecuteAsync(
+                    """
+                    WITH limits AS (
+                             SELECT
+                                 COALESCE(
+                                         NULLIF(u."Blob2"::jsonb ->> 'storeQuota', '')::integer,
+                                         NULLIF(s."Value"::jsonb ->> 'StoreQuota', '')::integer
+                                 ) AS max_store
+                             FROM "AspNetUsers" u
+                                      LEFT JOIN "Settings" s
+                                                ON s."Id" = 'BTCPayServer.Services.PoliciesSettings'
+                             WHERE u."Id" = @userId
+                         ),
+                         is_admin AS (
+                             SELECT EXISTS(
+                                 SELECT 1
+                                 FROM "AspNetUserRoles" ur
+                                 LEFT JOIN "AspNetRoles" r ON ur."RoleId" = r."Id"
+                                 WHERE ur."UserId" = @userId
+                                   AND r."NormalizedName" = 'SERVERADMIN'
+                             ) AS is_admin
+                         ),
+                         owned_store_count AS (
+                             SELECT COUNT(*) AS current_count
+                             FROM "UserStore" us
+                             WHERE us."ApplicationUserId" = @userId
+                               AND us."Role" = @defaultRole
+                         ),
+                         quota_check AS (
+                             SELECT 1
+                             FROM limits l
+                                      CROSS JOIN owned_store_count c
+                                      CROSS JOIN is_admin a
+                             WHERE l.max_store IS NULL
+                                OR c.current_count < l.max_store
+                                OR a.is_admin = TRUE
+                         ),
+                         insert_store AS (
+                             INSERT INTO "Stores" ("Id", "SpeedPolicy")
+                                 SELECT @storeId, 0
+                                 FROM quota_check
+                                 RETURNING "Id"
+                         )
+                    INSERT INTO "UserStore" (
+                        "ApplicationUserId",
+                        "StoreDataId",
+                        "Role"
+                    )
+                    SELECT
+                        @userId,
+                        insert_store."Id",
+                        @roleId
+                    FROM insert_store;
+""",
+                    new { userId = ownerId, storeId = id, defaultRole = defaultRole.Id, roleId = roleId.Id }) == 1;
+                if (added)
+                {
+                    storeData.Id = id;
+                    ctx.Attach(storeData).State = EntityState.Modified;
+                    await ctx.SaveChangesAsync();
+                }
+            }
+            if (added)
+            {
+                _eventAggregator.Publish(new StoreUserEvent.Added(storeData.Id, ownerId, defaultRole.Id));
+                _eventAggregator.Publish(new StoreEvent.Created(storeData));
+            }
+            return added ? CreateStoreResult.Created : CreateStoreResult.QuotaExceeded;
         }
 
         public async Task<WebhookData[]> GetWebhooks(string storeId)

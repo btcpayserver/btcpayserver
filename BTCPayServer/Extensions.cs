@@ -824,7 +824,7 @@ namespace BTCPayServer
         // Give times for extensions to switch to MainNavViewModel.Store
         // or HttpContext.GetStoreDataOrNull
             => GetStoreDataOrNull(ctx) ??
-               (ctx.Items["BTCPAY.NAVRENDERING"]  is true ? null
+               (ctx.Items["BTCPAY.NAVRENDERING"]  is true ? null!
                : throw new InvalidOperationException("StoreData is not set"));
         public static void SetStoreData(this HttpContext ctx, StoreData? storeData)
             => ctx.Items["BTCPAY.STOREDATA"] = storeData;
@@ -849,6 +849,8 @@ namespace BTCPayServer
 
         public static PaymentRequestData? GetPaymentRequestDataOrNull(this HttpContext ctx)
         => ctx.Items.TryGet("BTCPAY.PAYMENTREQUESTDATA") as PaymentRequestData;
+        public static PaymentRequestData? GetPaymentRequestData(this HttpContext ctx)
+            => GetPaymentRequestDataOrNull(ctx) ?? throw new InvalidOperationException("BTCPAY.PAYMENTREQUESTDATA is not set");
 
         public static void SetPaymentRequestData(this HttpContext ctx, PaymentRequestData? paymentRequestData)
         {

@@ -1,7 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0.201-noble AS builder
-
-RUN apt-get update && apt-get install -y --no-install-recommends chromium-driver \
-    && rm -rf /var/lib/apt/lists/*
+FROM mcr.microsoft.com/dotnet/sdk:10.0.202-noble AS builder
 
 WORKDIR /source
 COPY nuget.config nuget.config

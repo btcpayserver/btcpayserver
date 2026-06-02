@@ -27,9 +27,9 @@ namespace BTCPayServer.Services
         }
 
         [DefaultValue("English")]
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonProperty("LangDictionary", DefaultValueHandling = DefaultValueHandling.Populate)]
         [Display(Name = "Backend's language")]
-        public string LangDictionary { get; set; } = "English";
+        public string LangTranslation { get; set; } = "English";
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [Display(Name = "Admin must approve new users")]
@@ -54,9 +54,6 @@ namespace BTCPayServer.Services
         public bool AllowHotWalletForAll { get; set; }
         [Display(Name = "Non-admins can create Cold Wallets for their Store")]
         public bool AllowCreateColdWalletForAll { get; set; }
-
-        [Display(Name = "Non-admins can import Hot Wallets for their Store")]
-        public bool AllowHotWalletRPCImportForAll { get; set; }
 
         [Display(Name = "Check releases on GitHub and notify when new BTCPay Server version is available")]
         public bool CheckForNewVersions { get; set; }
@@ -101,6 +98,10 @@ namespace BTCPayServer.Services
 
         [Display(Name = "Default store template")]
         public JObject DefaultStoreTemplate { get; set; }
+
+        [Range(0, int.MaxValue)]
+        [Display(Name = "Maximum number of stores non-admins can create")]
+        public int? StoreQuota { get; set; }
 
         [Display(Name = "Register page redirect URL")]
         public string RegisterPageRedirect { get; set; }

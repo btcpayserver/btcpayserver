@@ -1,0 +1,34 @@
+@using BTCPayServer.Plugins.Impersonation
+@model LoginViewModel
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
+@inject BTCPayServer.Services.PoliciesSettings PoliciesSettings
+@{
+	ViewData["Title"] = ViewLocalizer["Sign in with login code"];
+	Layout = "_LayoutSignedOut";
+	Csp.UnsafeEval();
+}
+
+<form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" id="login-form" asp-action="Login">
+    <fieldset>
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="ModelOnly" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
+        }
+        <input asp-for="LoginCode" type="hidden" />
+        <div class="form-group">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" readonly="readonly" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+        <div class="form-check">
+            <input asp-for="RememberMe" type="checkbox" class="form-check-input" />
+            <label asp-for="RememberMe" class="form-check-label"></label>
+            <span asp-validation-for="RememberMe" class="text-danger"></span>
+        </div>
+        <div class="form-group mt-4">
+            <button type="submit" class="btn btn-primary btn-lg w-100" id="LoginButton" name="Method" value="LoginCode">
+                <span text-translate="true">Sign in with login code</span>
+            </button>
+        </div>
+    </fieldset>
+</form>

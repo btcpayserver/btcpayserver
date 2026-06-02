@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Models.WalletViewModels;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
@@ -38,9 +38,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             {
                 return;
             }
-
-            Id = data.Id;
-            StoreId = data.StoreDataId;
             Archived = data.Archived;
             var blob = data.GetBlob();
             FormId = blob.FormId;
@@ -61,9 +58,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public string FormId { get; set; }
 
         public bool Archived { get; set; }
-
-        public string Id { get; set; }
-        [Required] public string StoreId { get; set; }
 
         [Required]
         [Range(double.Epsilon, double.PositiveInfinity, ErrorMessage = "Please provide an amount greater than 0")]

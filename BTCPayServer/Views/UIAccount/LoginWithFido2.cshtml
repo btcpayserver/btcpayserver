@@ -2,11 +2,9 @@
 @model BTCPayServer.Fido2.Models.LoginWithFido2ViewModel
 
 <div class="twoFaBox">
-    <form id="fidoForm" asp-action="LoginWithFido2" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
+    <form id="fidoForm" asp-action="LoginWithFido2" method="post">
         <input type="hidden" asp-for="Data"/>
         <input type="hidden" asp-for="Response"/>
-        <input type="hidden" asp-for="UserId"/>
-        <input type="hidden" asp-for="RememberMe"/>
     </form>
     <h2 class="h3 mb-3" text-translate="true">FIDO2 Authentication</h2>
     <p text-translate="true">Insert your security device and proceed.</p>
@@ -21,7 +19,7 @@
     <button id="btn-start" class="btn btn-primary d-none" type="button" text-translate="true">Start</button>
     <p id="error-message" class="d-none alert alert-danger mb-4"></p>
     <button id="btn-retry" class="btn btn-secondary d-none" type="button" text-translate="true">Retry</button>
-    
+
     <script>
         document.getElementById('btn-retry').addEventListener('click', () => window.location.reload())
         // send to server for registering

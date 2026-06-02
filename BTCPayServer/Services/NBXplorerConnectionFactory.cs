@@ -40,7 +40,7 @@ namespace BTCPayServer.Services
             }
         }
 
-        public async Task<DbConnection> OpenConnection()
+        public virtual async Task<DbConnection> OpenConnection()
         {
             int maxRetries = 10;
             int retries = maxRetries;

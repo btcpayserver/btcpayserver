@@ -1,10 +1,17 @@
-@if (Users?.Any() is true)
+@using BTCPayServer.Abstractions
+@using BTCPayServer.Controllers
+@using BTCPayServer.Plugins.PointOfSale.Controllers
+@using Microsoft.AspNetCore.Mvc
+@using Microsoft.AspNetCore.Routing
+@inject LinkGenerator LinkGenerator
+
+@if (UserEmails?.Any() is true)
 {
     <div @attributes="Attrs" class="@CssClass">
         <label for="SignedInUser" class="form-label" text-translate="true">Signed in user</label>
-        <select id="SignedInUser" class="form-select" value="@_userId" @onchange="@OnUserChanged">
+        <select id="SignedInUser" class="form-select" @onchange="@OnUserChanged">
             <option value="" text-translate="true">None, just open the URL</option>
-            @foreach (var u in Users)
+            @foreach (var u in UserEmails)
             {
                 <option value="@u.Key">@u.Value</option>
             }
@@ -12,62 +19,53 @@
     </div>
 }
 
-@if (string.IsNullOrEmpty(_userId))
-{
-    <QrCode Data="@PosUrl" />
-}
-else
-{
-    @if (IsSelectedUserOwner() && !_ownerConfirmed)
-    {
-        <div>
-            <p><strong>This user is Store Owner</strong></p>
-            <p>Please confirm you want this QR code to be displayed.</p>
-
-            <button type="button" class="btn btn-danger" @onclick="ConfirmOwnerDisplay">Yes, show QR code</button>
-        </div>
-    }
-    else
-    {
-        <UserLoginCode UserId="@_userId" RedirectUrl="@PosPath" />
-    }
-}
+<QrCode Data="@_qr" CanCopy="true" />
 
 @code {
-    [Parameter, EditorRequired] public string PosPath { get; set; }
-
-    [Parameter] public Dictionary<string, string> Users { get; set; }
-    [Parameter] public string PosUrl { get; set; }
+    [Parameter] public Dictionary<string, string> UserEmails { get; set; }
+    [Parameter] public string BaseUrl { get; set; }
+    [Parameter] public string AppId { get; set; }
 
     [Parameter(CaptureUnmatchedValues = true)]
     public Dictionary<string, object> Attrs { get; set; }
 
-    private string _userId;
-    private bool _ownerConfirmed = false;
     private string CssClass => $"form-group {(Attrs?.ContainsKey("class") is true ? Attrs["class"] : "")}".Trim();
+
+    string _qr = null;
+    string _posUrlAbsolute = null;
+    string _posPath = null;
+    protected override void OnParametersSet()
+    {
+        _posPath = LinkGenerator.GetPathByAction(
+            action: nameof(UIPointOfSaleController.ViewPointOfSale),
+            controller: "UIPointOfSale",
+            values: new { appId = AppId },
+            pathBase: RequestBaseUrl.FromUrl(BaseUrl).PathBase);
+        _posUrlAbsolute = LinkGenerator.GetUriByAction(
+            action: nameof(UIPointOfSaleController.ViewPointOfSale),
+            controller: "UIPointOfSale",
+            values: new { appId = AppId },
+            RequestBaseUrl.FromUrl(BaseUrl)
+        );
+
+        _qr = _posUrlAbsolute;
+    }
 
     private void OnUserChanged(ChangeEventArgs e)
     {
-        _userId = e.Value?.ToString();
-        _ownerConfirmed = false; // Reset confirmation when user changes
-    }
-
-    private bool IsSelectedUserOwner()
-    {
-        if (string.IsNullOrEmpty(_userId) || Users == null)
-            return false;
-
-        if (Users.TryGetValue(_userId, out var userInfo))
+        if (string.IsNullOrWhiteSpace(e.Value as string))
         {
-            return userInfo.Contains("Owner", StringComparison.OrdinalIgnoreCase);
+            _qr = _posUrlAbsolute;
         }
-
-        return false;
+        else
+        {
+            var loginUrl = LinkGenerator.GetUriByAction(
+                action: nameof(UIAccountController.Login),
+                controller: "UIAccount",
+                values: new { returnUrl = _posPath, email = (string)e.Value },
+                RequestBaseUrl.FromUrl(BaseUrl)
+            );
+            _qr = loginUrl;
+        }
     }
-
-    private void ConfirmOwnerDisplay()
-    {
-        _ownerConfirmed = true;
-    }
-
 }

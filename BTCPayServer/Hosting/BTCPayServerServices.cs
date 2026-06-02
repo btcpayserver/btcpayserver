@@ -69,6 +69,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Payouts;
+using BTCPayServer.Plugins.Bitcoin;
 using ExchangeSharp;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -389,6 +390,7 @@ namespace BTCPayServer.Hosting
             services.AddScheduledTask<GithubVersionFetcher>(TimeSpan.FromDays(1));
             services.AddScheduledTask<PluginUpdateFetcher>(TimeSpan.FromDays(1));
 
+            services.AddSearchResultItemProvider<ReportingSearchResultProvider>();
             services.AddReportProvider<PaymentsReportProvider>();
             services.AddReportProvider<OnChainWalletReportProvider>();
             services.AddReportProvider<ProductsReportProvider>();
@@ -460,7 +462,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, AppInventoryUpdaterHostedService>();
             services.AddSingleton<IHostedService, TransactionLabelMarkerHostedService>();
             services.AddSingleton<IHostedService, OnChainRateTrackerHostedService>();
-            services.AddSingleton<IHostedService, DynamicDnsHostedService>();
             services.AddSingleton<PaymentRequestStreamer>();
             services.AddSingleton<IHostedService>(s => s.GetRequiredService<PaymentRequestStreamer>());
             services.AddSingleton<IBackgroundJobClient, BackgroundJobClient>();
@@ -551,6 +552,10 @@ namespace BTCPayServer.Hosting
                     new PermissionDisplay("Modify stores webhooks", "Allows modifying the webhooks of all your stores."),
                     new PermissionDisplay("Modify selected stores' webhooks", "Allows modifying the webhooks of the selected stores.")),
                 new PolicyDefinition(
+                    Policies.CanSendStoreEmail,
+                    new PermissionDisplay("Send store emails", "Allows sending emails on behalf of all your stores."),
+                    new PermissionDisplay("Send selected stores' emails", "Allows sending emails on behalf of the selected stores.")),
+                new PolicyDefinition(
                     Policies.CanModifyServerSettings,
                     new PermissionDisplay("Manage your server", "Grants total control on the server settings of your server."),
                     includedPermissions: new[] { Policies.CanUseInternalLightningNode, Policies.CanManageUsers }),
@@ -566,7 +571,8 @@ namespace BTCPayServer.Hosting
                         Policies.CanModifyWebhooks,
                         Policies.CanModifyPaymentRequests,
                         Policies.CanManagePayouts,
-                        Policies.CanUseLightningNodeInStore
+                        Policies.CanUseLightningNodeInStore,
+                        Policies.CanSendStoreEmail
                     }),
                 new PolicyDefinition(
                     Policies.CanViewStoreSettings,
@@ -671,7 +677,7 @@ namespace BTCPayServer.Hosting
                 new PolicyDefinition(
                     Policies.CanViewPayouts,
                     new PermissionDisplay("View payouts", "Allows viewing payouts on all your stores."),
-                    new PermissionDisplay("View payouts in selected stores", "Allows viewing payouts on the selected stores.")),
+                    new PermissionDisplay("View payouts in selected stores", "Allows viewing payouts on the selected stores."))
             });
 
             return services;
@@ -746,6 +752,7 @@ namespace BTCPayServer.Hosting
             services.AddRateProvider<BudaRateProvider>();
             services.AddRateProvider<BitbankRateProvider>();
             services.AddRateProvider<BitnobRateProvider>();
+            services.AddRateProvider<BitcoinKenyaRateProvider>();
             services.AddRateProvider<BitpayRateProvider>();
             services.AddRateProvider<RipioExchangeProvider>();
             services.AddRateProvider<CryptoMarketExchangeRateProvider>();
@@ -911,17 +918,11 @@ namespace BTCPayServer.Hosting
             services.AddAuthentication()
                 .AddCookie(AuthenticationSchemes.LimitedLogin, options =>
                 {
-                    options.Cookie.Name = "pwd_verified";
+                    options.Cookie.Name = "limited_login";
                     options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // short-lived
                     options.SlidingExpiration = false;
                     options.Cookie.HttpOnly = true;
                     options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest;
-                    options.Events.OnRedirectToLogin = context =>
-                    {
-                        context.RedirectUri = QueryHelpers.AddQueryString(context.RedirectUri, [KeyValuePair.Create("allowLimitedLogin", "true")]);
-                        context.Response.Redirect(context.RedirectUri);
-                        return Task.CompletedTask;
-                    };
                     options.LoginPath = "/login";
                     options.AccessDeniedPath = "/errors/403";
                     options.LogoutPath = "/logout";

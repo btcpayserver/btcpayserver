@@ -20,7 +20,6 @@ using Microsoft.Playwright;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {
@@ -355,7 +354,7 @@ namespace BTCPayServer.Tests
 
             await s.GoToLogin();
             await s.LogIn(user2.RegisterDetails.Email, user2.RegisterDetails.Password);
-            await s.GoToUrl($"api-keys/{user1ApiKey}/view-analysis");
+            await s.GoToUrl($"api-keys/{user1ApiKey}/view-analysis", true);
             await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             Assert.Contains("404", await s.Page.ContentAsync());
         }

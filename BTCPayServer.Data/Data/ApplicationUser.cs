@@ -8,8 +8,12 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 namespace BTCPayServer.Data
 {
     // Add profile data for application users by adding properties to the ApplicationUser class
-    public class ApplicationUser : IdentityUser, IHasBlob<UserBlob>
+    public sealed class ApplicationUser : IdentityUser, IHasBlob<UserBlob>
     {
+        public ApplicationUser()
+        {
+            TwoFactorEnabled = true;
+        }
         public bool RequiresEmailConfirmation { get; set; }
         public bool RequiresApproval { get; set; }
         public bool Approved { get; set; }
@@ -19,7 +23,8 @@ namespace BTCPayServer.Data
         public List<APIKeyData> APIKeys { get; set; }
         public DateTimeOffset? Created { get; set; }
         public string DisabledNotifications { get; set; }
-
+        public bool BypassMonetization { get; set; }
+        public bool AuthenticatorEnabled { get; set; }
         public List<NotificationData> Notifications { get; set; }
         public List<UserStore> UserStores { get; set; }
         public List<Fido2Credential> Fido2Credentials { get; set; }
@@ -34,6 +39,9 @@ namespace BTCPayServer.Data
         public bool IsDisabled =>
             this is { LockoutEnabled: true, LockoutEnd: { } lockoutEnd } &&
             DateTimeOffset.UtcNow < lockoutEnd.UtcDateTime;
+        [NotMapped]
+        public bool IsDisabledTemporarily =>
+            IsDisabled && DateTimeOffset.MaxValue - LockoutEnd!.Value >= TimeSpan.FromSeconds(1);
 
         public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
@@ -53,5 +61,6 @@ namespace BTCPayServer.Data
         public string ImageUrl { get; set; }
         public string Name { get; set; }
         public string InvitationToken { get; set; }
+        public int? StoreQuota { get; set; }
     }
 }

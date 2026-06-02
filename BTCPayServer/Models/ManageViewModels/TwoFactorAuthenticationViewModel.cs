@@ -6,9 +6,7 @@ namespace BTCPayServer.Models.ManageViewModels
     public class TwoFactorAuthenticationViewModel
     {
 
-        public int RecoveryCodesLeft { get; set; }
-
-        public bool Is2faEnabled { get; set; }
+        public bool IsAuthenticatorEnabled { get; set; }
 
         public List<Fido2Credential> Credentials { get; set; }
 

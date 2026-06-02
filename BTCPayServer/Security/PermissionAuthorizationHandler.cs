@@ -35,6 +35,8 @@ public class PermissionAuthorizationHandler(
             if (!explicitScope)
                 scope = await GetImplicitScope(userId, context, requirement, httpContext.HttpContext);
         }
+        if (context.HasFailed)
+            return;
         await Handle(context, requirement, scope, userId, explicitScope, httpContext.HttpContext);
     }
 
@@ -74,7 +76,7 @@ public class PermissionAuthorizationHandler(
         foreach (var implicitScopeProvider in implicitScopeProviders)
         {
             var scope = await implicitScopeProvider.GetScope(context, ctx);
-            if (scope is not null)
+            if (context.HasFailed || scope is not null)
                 return scope;
         }
         return null;

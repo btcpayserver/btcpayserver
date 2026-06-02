@@ -141,6 +141,8 @@ namespace BTCPayServer.Payments.Lightning
                 InvoiceId = lightningInvoice.Id,
                 NodeInfo = (await nodeInfo).FirstOrDefault()?.ToString()
             };
+            if (details.PaymentHash is {} h)
+                context.TrackedDestinations.Add(h.ToString());
             paymentPrompt.Details = JObject.FromObject(details, Serializer);
         }
 

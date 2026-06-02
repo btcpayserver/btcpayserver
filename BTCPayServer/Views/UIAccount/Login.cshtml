@@ -1,3 +1,4 @@
+@using BTCPayServer.Plugins.Impersonation
 @model LoginViewModel
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @inject BTCPayServer.Services.PoliciesSettings PoliciesSettings
@@ -8,48 +9,69 @@
 }
 
 <form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" id="login-form" asp-action="Login">
-    <input type="hidden" asp-for="AllowLimitedLogin"></input>
+    <input type="hidden" asp-for="PasskeyResponse"></input>
+    <input type="hidden" asp-for="LoginCode"></input>
     <fieldset disabled="@(ViewData.ContainsKey("disabled") ? "disabled" : null)">
         @if (!ViewContext.ModelState.IsValid)
         {
             <div asp-validation-summary="ModelOnly" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
         }
-        <div class="form-group">
-            <label asp-for="Email" class="form-label"></label>
-            <input asp-for="Email" class="form-control" required autofocus />
-            <span asp-validation-for="Email" class="text-danger"></span>
-        </div>
-        <div class="form-group">
-            <div class="d-flex justify-content-between">
-                <label asp-for="Password" class="form-label"></label>
-                <a asp-action="ForgotPassword" tabindex="-1" text-translate="true">Forgot password?</a>
+        <fieldset id="login-password-fieldset">
+            <div class="form-group">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" required autofocus />
+                <span asp-validation-for="Email" class="text-danger"></span>
             </div>
-            <div class="input-group d-flex">
-                <input asp-for="Password" class="form-control" required />
+            <div class="form-group">
+                <div class="d-flex justify-content-between">
+                    <label asp-for="Password" class="form-label"></label>
+                    <a asp-action="ForgotPassword" tabindex="-1" text-translate="true">Forgot password?</a>
+                </div>
+                <div class="input-group d-flex">
+                    <input asp-for="Password" class="form-control" required />
+                </div>
+                <span asp-validation-for="Password" class="text-danger"></span>
             </div>
-            <span asp-validation-for="Password" class="text-danger"></span>
-        </div>
+        </fieldset>
         <div class="form-check">
             <input asp-for="RememberMe" type="checkbox" class="form-check-input" />
             <label asp-for="RememberMe" class="form-check-label"></label>
             <span asp-validation-for="RememberMe" class="text-danger"></span>
         </div>
         <div class="form-group mt-4">
-            <div class="btn-group w-100">
-                <button type="submit" class="btn btn-primary btn-lg w-100" id="LoginButton"><span class="ps-3" text-translate="true">Sign in</span></button>
-                <button type="button" class="btn btn-outline-primary btn-lg w-auto only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="@StringLocalizer["Scan Login code with camera"]">
-                    <vc:icon symbol="scan-qr" />
-                </button>
-            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-100" id="LoginButton" name="Method" value="Password">
+                <span text-translate="true">Sign in with password</span>
+            </button>
+            <button type="submit" class="d-none" id="PasskeyButton" name="Method" value="Passkey" formnovalidate></button>
+            <button type="submit" class="d-none" id="LoginCodeButton" name="Method" value="LoginCode" formnovalidate></button>
         </div>
+
+        <div class="text-center my-3 text-secondary only-for-js" id="alternative-login-separator">
+            <span text-translate="true">or sign in with</span>
+        </div>
+        <div class="d-flex gap-2 only-for-js">
+            <button type="button" class="btn btn-outline-secondary w-100" id="passkey-login-btn" style="display:none;">
+                <vc:icon symbol="key" />
+                <span text-translate="true">Passkey</span>
+            </button>
+            <button type="button" class="btn btn-outline-secondary w-100" data-bs-toggle="modal" data-bs-target="#scanModal" title="@StringLocalizer["Scan Login code with camera"]">
+                <vc:icon symbol="scan-qr" />
+                <span text-translate="true">LoginCode</span>
+            </button>
+        </div>
+        <div class="text-center mt-2 only-for-js" id="passkey-loading" style="display:none;">
+            <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <span class="ms-2 text-secondary" text-translate="true">Waiting for passkey...</span>
+        </div>
+        <div class="alert alert-danger mt-2 only-for-js" id="passkey-error" style="display:none;"></div>
     </fieldset>
 </form>
-<form asp-action="LoginWithCode" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" id="logincode-form">
-    <input asp-for="LoginCode" type="hidden" class="form-control"/>
-</form>
+
 @if (!PoliciesSettings.LockSubscription)
 {
-    <p class="text-center mt-2 mb-0">
+    <p class="text-center my-3 mb-0">
 		<a id="Register" style="font-size:1.15rem" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]" text-translate="true">Create your account</a>
     </p>
 }
@@ -63,11 +85,16 @@
 
     <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
 
+    <!-- Passkey/WebAuthn scripts -->
+    <script src="~/js/webauthn/helpers.js" asp-append-version="true"></script>
+
     <script type="text/javascript">
+        var passKeyOptionsUrl = @Safe.Json(Url.Action(nameof(BTCPayServer.Controllers.UIAccountController.GetPasskeyOptions)));
         window.addEventListener("load", async () => {
             initCameraScanningApp("Scan login code", data => {
                 document.getElementById("LoginCode").value = data;
-                document.getElementById("logincode-form").submit();
+                document.getElementById("login-password-fieldset").disabled = true;
+                document.getElementById("LoginCodeButton").click();
             }, "scanModal", true);
         });
     </script>

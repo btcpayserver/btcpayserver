@@ -14,7 +14,6 @@ using NBitcoin.Payment;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
-using Xunit.Abstractions;
 using static Microsoft.Playwright.Assertions;
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
@@ -173,7 +172,7 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
             await tester.PayTester.InvoiceRepository.UpdateInvoiceExpiry(invoicePaidAfterExpiration.Id, TimeSpan.FromSeconds(0));
             await user.AssertHasWebhookEvent(WebhookEventType.InvoiceExpired, (WebhookInvoiceEvent x) => Assert.Equal(invoicePaidAfterExpiration.Id, x.InvoiceId));
 
-            var inv = new BitcoinUrlBuilder((await client.GetInvoicePaymentMethods(user.StoreId, invoicePaidAfterExpiration.Id)).Single(model =>
+            var inv = new BitcoinUrlBuilder((await client.GetInvoicePaymentMethods(invoicePaidAfterExpiration.Id)).Single(model =>
                     PaymentMethodId.Parse(model.PaymentMethodId) ==
                     PaymentTypes.CHAIN.GetPaymentMethodId("BTC"))
                 .PaymentLink, tester.ExplorerNode.Network);
@@ -194,7 +193,7 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
             });
             await user.AssertHasWebhookEvent(WebhookEventType.InvoiceCreated, (WebhookInvoiceEvent x) => Assert.Equal(invoiceExpiredPartial.Id, x.InvoiceId));
 
-            inv = new BitcoinUrlBuilder((await client.GetInvoicePaymentMethods(user.StoreId, invoiceExpiredPartial.Id)).Single(model =>
+            inv = new BitcoinUrlBuilder((await client.GetInvoicePaymentMethods(invoiceExpiredPartial.Id)).Single(model =>
                     PaymentMethodId.Parse(model.PaymentMethodId) ==
                     PaymentTypes.CHAIN.GetPaymentMethodId("BTC"))
                 .PaymentLink, tester.ExplorerNode.Network);
@@ -238,7 +237,7 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
                 Currency = "BTC"
             });
 
-            var invoicePaymentRequest = new BitcoinUrlBuilder((await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id)).Single(model =>
+            var invoicePaymentRequest = new BitcoinUrlBuilder((await client.GetInvoicePaymentMethods(invoice.Id)).Single(model =>
                     PaymentMethodId.Parse(model.PaymentMethodId) ==
                     PaymentTypes.CHAIN.GetPaymentMethodId("BTC"))
                 .PaymentLink, tester.ExplorerNode.Network);
@@ -251,7 +250,7 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
                     Assert.Equal(invoice.Id, x.InvoiceId);
                     Assert.Contains(halfPaymentTx.ToString(), x.Payment.Id);
                 });
-            invoicePaymentRequest = new BitcoinUrlBuilder((await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id)).Single(model =>
+            invoicePaymentRequest = new BitcoinUrlBuilder((await client.GetInvoicePaymentMethods(invoice.Id)).Single(model =>
                     PaymentMethodId.Parse(model.PaymentMethodId) ==
                     PaymentTypes.CHAIN.GetPaymentMethodId("BTC"))
                             .PaymentLink, tester.ExplorerNode.Network);
@@ -285,7 +284,7 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
                 Amount = 0.01m,
                 Currency = "BTC",
             });
-            invoicePaymentRequest = new BitcoinUrlBuilder((await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id)).Single(model =>
+            invoicePaymentRequest = new BitcoinUrlBuilder((await client.GetInvoicePaymentMethods(invoice.Id)).Single(model =>
                     PaymentMethodId.Parse(model.PaymentMethodId) ==
                     PaymentTypes.CHAIN.GetPaymentMethodId("BTC"))
                 .PaymentLink, tester.ExplorerNode.Network);
@@ -307,7 +306,7 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
             });
 
             await user.AssertHasWebhookEvent(WebhookEventType.InvoiceCreated,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
-            await client.MarkInvoiceStatus(user.StoreId, invoice.Id, new MarkInvoiceStatusRequest() { Status = InvoiceStatus.Invalid});
+            await client.MarkInvoiceStatus(invoice.Id, new MarkInvoiceStatusRequest() { Status = InvoiceStatus.Invalid});
             await user.AssertHasWebhookEvent(WebhookEventType.InvoiceInvalid,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
 
             //payment request webhook test
@@ -323,7 +322,7 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
                 Description = "lala baba"
             });
             await user.AssertHasWebhookEvent(WebhookEventType.PaymentRequestCreated,  (WebhookPaymentRequestEvent x)=> Assert.Equal(pr.Id, x.PaymentRequestId));
-            pr = await client.UpdatePaymentRequest(user.StoreId, pr.Id,
+            pr = await client.UpdatePaymentRequest(pr.Id,
                 new() { Title = "test pr updated", Amount = 100m,
                     Currency = "USD",
                     //TODO: this is a bug, we should not have these props in create request
@@ -332,15 +331,15 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
                     //END todo
                     Description = "lala baba"});
             await user.AssertHasWebhookEvent(WebhookEventType.PaymentRequestUpdated,  (WebhookPaymentRequestEvent x)=> Assert.Equal(pr.Id, x.PaymentRequestId));
-            var inv = await client.PayPaymentRequest(user.StoreId, pr.Id, new PayPaymentRequestRequest());
+            var inv = await client.PayPaymentRequest(pr.Id, new PayPaymentRequestRequest());
 
-            await client.MarkInvoiceStatus(user.StoreId, inv.Id, new MarkInvoiceStatusRequest() { Status = InvoiceStatus.Settled});
+            await client.MarkInvoiceStatus(inv.Id, new MarkInvoiceStatusRequest() { Status = InvoiceStatus.Settled});
             await user.AssertHasWebhookEvent(WebhookEventType.PaymentRequestStatusChanged,  (WebhookPaymentRequestEvent x)=>
             {
                 Assert.Equal(PaymentRequestStatus.Completed, x.Status);
                 Assert.Equal(pr.Id, x.PaymentRequestId);
             });
-            await client.ArchivePaymentRequest(user.StoreId, pr.Id);
+            await client.ArchivePaymentRequest(pr.Id);
             await user.AssertHasWebhookEvent(WebhookEventType.PaymentRequestArchived,  (WebhookPaymentRequestEvent x)=> Assert.Equal(pr.Id, x.PaymentRequestId));
             //payoyt webhooks test
             var payout = await client.CreatePayout(user.StoreId,
@@ -399,7 +398,7 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
             });
             Assert.NotNull(hook.Secret);
             AssertHook(fakeServer, hook);
-            hook = await clientProfile.GetWebhook(user.StoreId, hook.Id);
+            hook = await clientProfile.GetWebhook(hook.Id);
             AssertHook(fakeServer, hook);
             var hooks = await clientProfile.GetWebhooks(user.StoreId);
             hook = Assert.Single(hooks);
@@ -409,7 +408,7 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
             var req = await fakeServer.GetNextRequest();
             req.Response.StatusCode = 200;
             fakeServer.Done();
-            hook = await clientProfile.UpdateWebhook(user.StoreId, hook.Id, new UpdateStoreWebhookRequest()
+            hook = await clientProfile.UpdateWebhook(hook.Id, new UpdateStoreWebhookRequest()
             {
                 Url = hook.Url,
                 Secret = "lol",
@@ -420,15 +419,15 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
             WebhookDeliveryData delivery = null;
             await TestUtils.EventuallyAsync(async () =>
             {
-                var deliveries = await clientProfile.GetWebhookDeliveries(user.StoreId, hook.Id);
+                var deliveries = await clientProfile.GetWebhookDeliveries(hook.Id);
                 delivery = Assert.Single(deliveries);
             });
 
-            delivery = await clientProfile.GetWebhookDelivery(user.StoreId, hook.Id, delivery.Id);
+            delivery = await clientProfile.GetWebhookDelivery(hook.Id, delivery.Id);
             Assert.NotNull(delivery);
             Assert.Equal(WebhookDeliveryStatus.HttpSuccess, delivery.Status);
 
-            var newDeliveryId = await clientProfile.RedeliverWebhook(user.StoreId, hook.Id, delivery.Id);
+            var newDeliveryId = await clientProfile.RedeliverWebhook(hook.Id, delivery.Id);
             req = await fakeServer.GetNextRequest();
             req.Response.StatusCode = 404;
             Assert.StartsWith("BTCPayServer", Assert.Single(req.Request.Headers.UserAgent));
@@ -436,30 +435,30 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
             {
                 // Releasing semaphore several times may help making this test less flaky
                 fakeServer.Done();
-                var newDelivery = await clientProfile.GetWebhookDelivery(user.StoreId, hook.Id, newDeliveryId);
+                var newDelivery = await clientProfile.GetWebhookDelivery(hook.Id, newDeliveryId);
                 Assert.NotNull(newDelivery);
                 Assert.Equal(404, newDelivery.HttpCode);
-                var req2 = await clientProfile.GetWebhookDeliveryRequest(user.StoreId, hook.Id, newDeliveryId);
+                var req2 = await clientProfile.GetWebhookDeliveryRequest(hook.Id, newDeliveryId);
                 Assert.Equal(delivery.Id, req2.OriginalDeliveryId);
                 Assert.True(req2.IsRedelivery);
                 Assert.Equal(WebhookDeliveryStatus.HttpError, newDelivery.Status);
             });
-            var deliveries = await clientProfile.GetWebhookDeliveries(user.StoreId, hook.Id);
+            var deliveries = await clientProfile.GetWebhookDeliveries(hook.Id);
             Assert.Equal(2, deliveries.Length);
             Assert.Equal(newDeliveryId, deliveries[0].Id);
-            var jObj = await clientProfile.GetWebhookDeliveryRequest(user.StoreId, hook.Id, newDeliveryId);
+            var jObj = await clientProfile.GetWebhookDeliveryRequest(hook.Id, newDeliveryId);
             Assert.NotNull(jObj);
 
             TestLogs.LogInformation("Should not be able to access webhook without proper auth");
             var unauthorized = await user.CreateClient(Policies.CanCreateInvoice);
             await AssertEx.AssertHttpError(403, async () =>
             {
-                await unauthorized.GetWebhookDeliveryRequest(user.StoreId, hook.Id, newDeliveryId);
+                await unauthorized.GetWebhookDeliveryRequest(hook.Id, newDeliveryId);
             });
 
             TestLogs.LogInformation("Can use btcpay.store.canmodifystoresettings to query webhooks");
             clientProfile = await user.CreateClient(Policies.CanModifyStoreSettings, Policies.CanCreateInvoice);
-            await clientProfile.GetWebhookDeliveryRequest(user.StoreId, hook.Id, newDeliveryId);
+            await clientProfile.GetWebhookDeliveryRequest(hook.Id, newDeliveryId);
 
 
             TestLogs.LogInformation("Can prune deliveries");
@@ -467,19 +466,12 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
             cleanup.BatchSize = 1;
             cleanup.PruneAfter = TimeSpan.Zero;
             await cleanup.Do(CancellationToken.None);
-            await AssertEx.AssertHttpError(409, () => clientProfile.RedeliverWebhook(user.StoreId, hook.Id, delivery.Id));
+            await AssertEx.AssertHttpError(409, () => clientProfile.RedeliverWebhook(hook.Id, delivery.Id));
 
             TestLogs.LogInformation("Testing corner cases");
-            Assert.Null(await clientProfile.GetWebhookDeliveryRequest(user.StoreId, "lol", newDeliveryId));
-            Assert.Null(await clientProfile.GetWebhookDeliveryRequest(user.StoreId, hook.Id, "lol"));
-            Assert.Null(await clientProfile.GetWebhookDeliveryRequest(user.StoreId, "lol", "lol"));
-            Assert.Null(await clientProfile.GetWebhook(user.StoreId, "lol"));
-            await AssertEx.AssertHttpError(404, async () =>
-            {
-                await clientProfile.UpdateWebhook(user.StoreId, "lol", new UpdateStoreWebhookRequest() { Url = hook.Url });
-            });
+            Assert.Null(await clientProfile.GetWebhookDeliveryRequest(hook.Id, "lol"));
 
-            Assert.True(await clientProfile.DeleteWebhook(user.StoreId, hook.Id));
-            Assert.False(await clientProfile.DeleteWebhook(user.StoreId, hook.Id));
+            Assert.True(await clientProfile.DeleteWebhook(hook.Id));
+            Assert.False(await clientProfile.DeleteWebhook(hook.Id));
         }
 }

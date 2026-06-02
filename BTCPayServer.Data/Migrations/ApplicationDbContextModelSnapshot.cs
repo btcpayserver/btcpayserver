@@ -18,7 +18,7 @@ namespace BTCPayServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.4")
+                .HasAnnotation("ProductVersion", "10.0.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -142,11 +142,17 @@ namespace BTCPayServer.Migrations
                     b.Property<bool>("Approved")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("AuthenticatorEnabled")
+                        .HasColumnType("boolean");
+
                     b.Property<byte[]>("Blob")
                         .HasColumnType("bytea");
 
                     b.Property<string>("Blob2")
                         .HasColumnType("JSONB");
+
+                    b.Property<bool>("BypassMonetization")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -380,6 +386,9 @@ namespace BTCPayServer.Migrations
 
                     b.Property<string>("Blob2")
                         .HasColumnType("JSONB");
+
+                    b.Property<DateTimeOffset?>("LastUsedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .HasColumnType("text");

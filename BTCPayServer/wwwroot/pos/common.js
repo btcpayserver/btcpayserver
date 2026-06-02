@@ -6,15 +6,17 @@ class PoSOrder {
         this._discount = 0;
         this._tip = 0;
         this._tipPercent = 0;
+        this._tipTaxRate = null;
         this.itemLines = [];
     }
 
     static ItemLine = class {
-        constructor(itemId, count, unitPrice, taxRate = null) {
+        constructor(itemId, count, unitPrice, taxRate = null, taxIncluded = false) {
             this.itemId = itemId;
             this.count = count;
             this.unitPrice = unitPrice;
             this.taxRate = taxRate;
+            this.taxIncluded = taxIncluded;
         }
     }
 
@@ -30,21 +32,24 @@ class PoSOrder {
         this._tipPercent = tip;
         this._tip = 0;
     }
+    setTipTaxRate(tipTaxRate) {
+        this._tipTaxRate = tipTaxRate != null ? +(tipTaxRate) : null;
+    }
 
     addDiscountRate(discount) {
         this._discount = discount;
     }
 
-    setCart(cart, amounts, defaultTaxRate) {
+    setCart(cart, amounts, defaultTaxRate, taxIncludedInPrice) {
         this.itemLines = [];
         for (const item of cart) {
-            this.addLine(new PoSOrder.ItemLine(item.id, item.count, item.price, item.taxRate ?? defaultTaxRate));
+            this.addLine(new PoSOrder.ItemLine(item.id, item.count, item.price, item.taxRate ?? defaultTaxRate, taxIncludedInPrice));
         }
         if (amounts) {
             var i = 1;
             for (const item of amounts) {
                 if (!item) continue;
-                this.addLine(new PoSOrder.ItemLine("Custom Amount " + i, 1, item, defaultTaxRate));
+                this.addLine(new PoSOrder.ItemLine("Custom Amount " + i, 1, item, defaultTaxRate, taxIncludedInPrice));
                 i++;
             }
         }
@@ -72,6 +77,7 @@ class PoSOrder {
             itemsTotal: 0,
             priceTaxExcluded: 0,
             tip: 0,
+            taxOnTip: 0,
             priceTaxIncluded: 0,
             priceTaxIncludedWithTips: 0
         };
@@ -83,18 +89,28 @@ class PoSOrder {
             ctx.discount += discount;
             linePrice -= discount;
 
-            let taxRate = item.taxRate ?? 0;
-            let tax = linePrice * taxRate / 100;
-            tax = this._round(tax);
+            let taxRate = +(item.taxRate ?? 0);
+            let tax, lineExcluded;
+            if (item.taxIncluded && taxRate > 0) {
+                tax = this._round(linePrice * taxRate / (100 + taxRate));
+                lineExcluded = linePrice - tax;
+            } else {
+                tax = this._round(linePrice * taxRate / 100);
+                lineExcluded = linePrice;
+            }
             ctx.tax += tax;
-            ctx.priceTaxExcluded += linePrice;
+            ctx.priceTaxExcluded += lineExcluded;
         }
 
         ctx.priceTaxExcluded = this._round(ctx.priceTaxExcluded);
         ctx.tip = this._round(this._tip);
         ctx.tip += this._round(ctx.priceTaxExcluded * this._tipPercent / 100);
         ctx.priceTaxIncluded = ctx.priceTaxExcluded + ctx.tax;
-        ctx.priceTaxIncludedWithTips = ctx.priceTaxIncluded + ctx.tip;
+        if (this._tipTaxRate != null && this._tipTaxRate > 0 && ctx.tip > 0) {
+            ctx.taxOnTip = this._round(ctx.tip * this._tipTaxRate / 100);
+            ctx.tax += ctx.taxOnTip;
+        }
+        ctx.priceTaxIncludedWithTips = ctx.priceTaxIncluded + ctx.tip + ctx.taxOnTip;
         ctx.priceTaxIncludedWithTips = this._round(ctx.priceTaxIncludedWithTips);
         ctx.itemsTotal = ctx.priceTaxExcluded + ctx.discount;
 
@@ -174,6 +190,9 @@ const posCommon = {
         taxNumeric() {
             return this.summary.tax;
         },
+        itemTaxNumeric() {
+            return this.summary.tax - (this.summary.taxOnTip || 0);
+        },
         taxPercent() {
             return this.posOrder.getTaxRate();
         },
@@ -241,12 +260,12 @@ const posCommon = {
                 if (this.persistState) {
                     saveState('cart', newCart)
                 }
-                this.posOrder.setCart(newCart, this.amounts, this.defaultTaxRate)
+                this.posOrder.setCart(newCart, this.amounts, this.defaultTaxRate, this.taxIncludedInPrice)
             },
             deep: true
         },
         amounts (values) {
-            this.posOrder.setCart(this.cart, values, this.defaultTaxRate)
+            this.posOrder.setCart(this.cart, values, this.defaultTaxRate, this.taxIncludedInPrice)
         }
     },
     methods: {
@@ -321,13 +340,13 @@ const posCommon = {
             // Animate
             if (!$posItem.classList.contains(POS_ITEM_ADDED_CLASS)) $posItem.classList.add(POS_ITEM_ADDED_CLASS);
 
-            this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate);
+            this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate, this.taxIncludedInPrice);
             return itemInCart;
         },
         removeFromCart(id) {
             const index = this.cart.findIndex(lineItem => lineItem.id === id);
             this.cart.splice(index, 1);
-            this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate);
+            this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate, this.taxIncludedInPrice);
         },
         getQuantity(id) {
             const itemInCart = this.cart.find(lineItem => lineItem.id === id);
@@ -347,7 +366,7 @@ const posCommon = {
             if (itemInCart && itemInCart.count <= 0 && addOrRemove) {
                 this.removeFromCart(itemInCart.id);
             }
-            this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate);
+            this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate, this.taxIncludedInPrice);
         },
         clear() {
             this.cart = [];
@@ -408,7 +427,8 @@ const posCommon = {
         if (this.persistState) {
             this.cart = loadState('cart');
         }
-        this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate);
+        this.posOrder.setTipTaxRate(this.tipTaxRate);
+        this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate, this.taxIncludedInPrice);
 
         this.items.forEach(item => {
             // Those images are generated by ASP.NET but not displayed.

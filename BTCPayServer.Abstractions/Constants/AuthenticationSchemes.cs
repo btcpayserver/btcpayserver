@@ -4,7 +4,7 @@ namespace BTCPayServer.Abstractions.Constants
     {
         public const string Cookie = "Identity.Application";
         /// <summary>
-        /// The user could use his password; however, some policies prevented him access to BTCPay Server.
+        /// The user could log in; however, some policies prevented him access to BTCPay Server.
         /// </summary>
         public const string LimitedLogin = "LimitedLogin";
 

@@ -11,6 +11,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
+using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -37,6 +38,8 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly IFileService _fileService;
         private readonly UriResolver _uriResolver;
         private readonly JsonSerializerSettings _serializedSettings;
+        private readonly PoliciesSettings _policiesSettings;
+        private readonly IAuthorizationService _authorizationService;
 
         public GreenfieldStoresController(
             StoreRepository storeRepository,
@@ -44,7 +47,9 @@ namespace BTCPayServer.Controllers.Greenfield
             UserManager<ApplicationUser> userManager,
             IFileService fileService,
             IOptions<MvcNewtonsoftJsonOptions> jsonOptions,
-            UriResolver uriResolver)
+            UriResolver uriResolver,
+            PoliciesSettings policiesSettings,
+            IAuthorizationService authorizationService)
         {
             _storeRepository = storeRepository;
             _currencyNameTable = currencyNameTable;
@@ -52,6 +57,8 @@ namespace BTCPayServer.Controllers.Greenfield
             _fileService = fileService;
             _uriResolver = uriResolver;
             _serializedSettings = jsonOptions.Value.SerializerSettings;
+            _policiesSettings = policiesSettings;
+            _authorizationService = authorizationService;
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -89,7 +96,13 @@ namespace BTCPayServer.Controllers.Greenfield
             var validationResult = Validate(request);
             if (validationResult != null) return validationResult;
             ToModel(request, store);
-            await _storeRepository.CreateStore(User.GetId(), store);
+
+            var result = await _storeRepository.CreateStore(User.GetId(), store);
+            if (result == StoreRepository.CreateStoreResult.QuotaExceeded)
+            {
+                return this.CreateAPIError(403, "store-limit-reached",
+                    $"You have reached the maximum number of stores allowed.");
+            }
             return Ok(await FromModel(store));
         }
 

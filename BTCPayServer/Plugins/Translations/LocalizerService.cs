@@ -37,7 +37,7 @@ namespace BTCPayServer.Plugins.Translations
         {
             try
             {
-                _LoadedTranslations = await GetTranslations(settingsAccessor.Settings.LangDictionary);
+                _LoadedTranslations = await GetTranslations(settingsAccessor.Settings.LangTranslation);
             }
             catch (Exception ex)
             {
@@ -46,7 +46,7 @@ namespace BTCPayServer.Plugins.Translations
             }
         }
 
-        public async Task<LoadedTranslations> GetTranslations(string dictionaryName)
+        public async Task<LoadedTranslations> GetTranslations(string translationName)
         {
             await using var ctx = contextFactory.CreateContext();
             var conn = ctx.Database.GetDbConnection();
@@ -56,7 +56,7 @@ namespace BTCPayServer.Plugins.Translations
                 "SELECT 't'::BOOL fallback, sentence, translation FROM translations WHERE dict_id=(SELECT fallback FROM lang_dictionaries WHERE dict_id=@dict_id)",
             new
             {
-                dict_id = dictionaryName,
+                dict_id = translationName,
             });
             var defaultDict = Translations.Default;
             var loading = defaultTranslationProviders.Select(d => d.GetDefaultTranslations()).ToArray();
@@ -71,12 +71,12 @@ namespace BTCPayServer.Plugins.Translations
             defaultDict = new Translations(additionalDefault, defaultDict);
             var fallback = new Translations(all.Where(a => a.fallback).Select(o => KeyValuePair.Create(o.sentence, o.translation)), defaultDict);
             var translations = new Translations(all.Where(a => !a.fallback).Select(o => KeyValuePair.Create(o.sentence, o.translation)), fallback);
-            return new LoadedTranslations(translations, fallback, dictionaryName);
+            return new LoadedTranslations(translations, fallback, translationName);
         }
 
-        public async Task Save(Dictionary dictionary, Translations translations)
+        public async Task Save(Translation translation, Translations translations)
         {
-            var loadedTranslations = await GetTranslations(dictionary.DictionaryName);
+            var loadedTranslations = await GetTranslations(translation.TranslationName);
             translations = translations.WithFallback(loadedTranslations.Fallback);
             await using var ctx = contextFactory.CreateContext();
             var diffs = loadedTranslations.Translations.CalculateDiff(translations);
@@ -86,9 +86,9 @@ namespace BTCPayServer.Plugins.Translations
             List<string> values = new List<string>();
 
             // The basic idea here is that we can remove from
-            // the dictionary any translations which are the same
+            // the translation any translations which are the same
             // as the fallback. This way, if the fallback gets updated,
-            // it will also update the dictionary.
+            // it will also update the translation.
             foreach (var diff in diffs)
             {
                 if (diff is Translations.Diff.Added a)
@@ -134,45 +134,45 @@ namespace BTCPayServer.Plugins.Translations
                 _LoadedTranslations = loadedTranslations with { Translations = translations };
         }
 
-        public record Dictionary(string DictionaryName, string? Fallback, string Source, JObject Metadata);
-        public async Task<Dictionary[]> GetDictionaries()
+        public record Translation(string TranslationName, string? Fallback, string Source, JObject Metadata);
+        public async Task<Translation[]> GetTranslations()
         {
             await using var ctx = contextFactory.CreateContext();
             var db = ctx.Database.GetDbConnection();
             var rows = await db.QueryAsync<(string dict_id, string? fallback, string? source, string? metadata)>("SELECT * FROM lang_dictionaries");
-            return rows.Select(r => new Dictionary(r.dict_id, r.fallback, r.source ?? "", JObject.Parse(r.metadata ?? "{}"))).ToArray();
+            return rows.Select(r => new Translation(r.dict_id, r.fallback, r.source ?? "", JObject.Parse(r.metadata ?? "{}"))).ToArray();
         }
-        public async Task<Dictionary?> GetDictionary(string name)
+        public async Task<Translation?> GetTranslation(string name)
         {
             await using var ctx = contextFactory.CreateContext();
             var db = ctx.Database.GetDbConnection();
             var r = await db.QueryFirstOrDefaultAsync("SELECT * FROM lang_dictionaries WHERE dict_id=@dict_id", new { dict_id = name });
             if (r is null)
                 return null;
-            return new Dictionary(r.dict_id, r.fallback, r.source ?? "", JObject.Parse(r.metadata ?? "{}"));
+            return new Translation(r.dict_id, r.fallback, r.source ?? "", JObject.Parse(r.metadata ?? "{}"));
         }
 
-        public async Task<Dictionary> CreateDictionary(string langName, string? fallback, string source)
+        public async Task<Translation> CreateTranslation(string langName, string? fallback, string source)
         {
             await using var ctx = contextFactory.CreateContext();
             var db = ctx.Database.GetDbConnection();
             await db.ExecuteAsync("INSERT INTO lang_dictionaries (dict_id, fallback, source) VALUES (@langName, @fallback, @source)", new { langName, fallback, source });
-            return new Dictionary(langName, fallback, source ?? "", new JObject());
+            return new Translation(langName, fallback, source ?? "", new JObject());
         }
 
-        public async Task DeleteDictionary(string dictionary)
+        public async Task DeleteTranslation(string translationName)
         {
             await using var ctx = contextFactory.CreateContext();
             var db = ctx.Database.GetDbConnection();
-            await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id=@dict_id AND source='Custom'", new { dict_id = dictionary });
+            await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id=@dict_id AND source='Custom'", new { dict_id = translationName });
         }
 
-        public async Task UpdateVersion(string dictionary, string version)
+        public async Task UpdateVersion(string translationName, string version)
         {
             await using var ctx = contextFactory.CreateContext();
             var db = ctx.Database.GetDbConnection();
             await db.ExecuteAsync("UPDATE lang_dictionaries SET metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{version}', to_jsonb(@version::text)) WHERE dict_id = @dict_id",
-                new { dict_id = dictionary, version });
+                new { dict_id = translationName, version });
         }
     }
 }

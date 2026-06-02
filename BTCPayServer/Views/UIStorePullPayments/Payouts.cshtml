@@ -2,11 +2,11 @@
 @using BTCPayServer.Payouts
 @using BTCPayServer.Views.Stores
 @using BTCPayServer.Client
-@model BTCPayServer.Models.WalletViewModels.PayoutsModel
+@model BTCPayServer.Plugins.Wallets.Views.ViewModels.PayoutsModel
 
 @inject PayoutMethodHandlerDictionary PayoutHandlers;
 @{
-    var storeId = Context.GetRouteValue("storeId") as string;
+    var storeId = Context.GetStoreData().Id;
     ViewData.SetLayoutModel(new(nameof(StoreNavPages.Payouts), string.IsNullOrEmpty(Model.PullPaymentName) ? StringLocalizer["Payouts"] : StringLocalizer["Payouts for pull payment {0}", Model.PullPaymentName]));
     Model.PaginationQuery ??= new Dictionary<string, object>();
     Model.PaginationQuery.Add("pullPaymentId", Model.PullPaymentId);
@@ -102,7 +102,7 @@
             @foreach (var state in Model.PayoutMethods)
             {
                 <li class="nav-item py-0">
-                    <a asp-action="Payouts" asp-route-storeId="@Context.GetRouteValue("storeId")"
+                    <a asp-action="Payouts" asp-route-storeId="@(Model.PullPaymentId is null ? Context.GetRouteValue("storeId") : null)"
                        asp-route-payoutState="@Model.PayoutState"
                        asp-route-payoutMethodId="@state.ToString()"
                        asp-route-pullPaymentId="@Model.PullPaymentId"
@@ -125,7 +125,7 @@
             {
                 <a id="@state.Key-view"
                    asp-action="Payouts"
-                   asp-route-storeId="@Context.GetRouteValue("storeId")"
+                   asp-route-storeId="@(Model.PullPaymentId is null ? Context.GetRouteValue("storeId") : null)"
                    asp-route-payoutState="@state.Key"
                    asp-route-pullPaymentId="@Model.PullPaymentId"
                    asp-route-payoutMethodId="@Model.PayoutMethodId"

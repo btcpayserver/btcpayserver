@@ -185,7 +185,8 @@ public partial class UIStoresController
                 store.SetPaymentMethodConfig(_handlers[lnurl], new LNURLPaymentMethodConfig
                 {
                     UseBech32Scheme = true,
-                    LUD12Enabled = false
+                    LUD12Enabled = false,
+                    LUD21Enabled = true
                 });
 
                 await _storeRepo.UpdateStore(store);
@@ -257,6 +258,7 @@ public partial class UIStoresController
             vm.LNURLEnabled = !store.GetStoreBlob().GetExcludedPaymentMethods().Match(lnurlId);
             vm.LNURLBech32Mode = lnurl.UseBech32Scheme;
             vm.LUD12Enabled = lnurl.LUD12Enabled;
+            vm.LUD21Enabled = lnurl.LUD21Enabled;
         }
 
         return View(vm);
@@ -300,7 +302,8 @@ public partial class UIStoresController
         var lnurl = GetConfig<LNURLPaymentMethodConfig>(lnurlId, store);
         if (lnurl is null || (
                 lnurl.UseBech32Scheme != vm.LNURLBech32Mode ||
-                lnurl.LUD12Enabled != vm.LUD12Enabled))
+                lnurl.LUD12Enabled != vm.LUD12Enabled ||
+                lnurl.LUD21Enabled != vm.LUD21Enabled))
         {
             needUpdate = true;
         }
@@ -308,7 +311,8 @@ public partial class UIStoresController
         store.SetPaymentMethodConfig(_handlers[lnurlId], new LNURLPaymentMethodConfig
         {
             UseBech32Scheme = vm.LNURLBech32Mode,
-            LUD12Enabled = vm.LUD12Enabled
+            LUD12Enabled = vm.LUD12Enabled,
+            LUD21Enabled = vm.LUD21Enabled
         });
 
         if (store.SetStoreBlob(blob))

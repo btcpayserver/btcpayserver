@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Razor.TagHelpers;
 namespace BTCPayServer.Abstractions.TagHelpers;
 
 [HtmlTargetElement("form", Attributes = "[permissioned]")]
+[HtmlTargetElement("div", Attributes = "[permissioned]")]
+[HtmlTargetElement("button", Attributes = "[permissioned]")]
+[HtmlTargetElement("input", Attributes = "[permissioned]")]
 public partial class PermissionedFormTagHelper(
     IAuthorizationService authorizationService,
     IHttpContextAccessor httpContextAccessor)
@@ -24,9 +27,16 @@ public partial class PermissionedFormTagHelper(
             PermissionResource, Permissioned);
         if (!res.Succeeded)
         {
-            var content = await output.GetChildContentAsync();
-            var html = SubmitButtonRegex().Replace(content.GetContent(), "");
-            output.Content.SetHtmlContent($"<fieldset disabled>{html}</fieldset>");
+            if (context.TagName is "input" or "button")
+            {
+                output.Attributes.Add("disabled", "disabled");
+            }
+            else
+            {
+                var content = await output.GetChildContentAsync();
+                var html = SubmitButtonRegex().Replace(content.GetContent(), "");
+                output.Content.SetHtmlContent($"<fieldset disabled>{html}</fieldset>");
+            }
         }
     }
 

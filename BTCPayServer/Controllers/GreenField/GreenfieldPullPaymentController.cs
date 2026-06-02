@@ -582,8 +582,9 @@ retry:
         }
 
         [HttpDelete("~/api/v1/stores/{storeId}/pull-payments/{pullPaymentId}")]
+        [HttpDelete("~/api/v1/pull-payments/{pullPaymentId}")]
         [Authorize(Policy = Policies.CanArchivePullPayments, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public async Task<IActionResult> ArchivePullPayment(string storeId, string pullPaymentId)
+        public async Task<IActionResult> ArchivePullPayment(string? storeId, string pullPaymentId)
         {
             var pp = HttpContext.GetPullPaymentDataOrNull();
             if (pp is null)
@@ -591,8 +592,6 @@ retry:
             await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(pp.Id));
             return Ok();
         }
-
-
 
         [HttpGet("~/api/v1/stores/{storeId}/payouts")]
         [Authorize(Policy = Policies.CanViewPayouts, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

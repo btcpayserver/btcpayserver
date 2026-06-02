@@ -31,7 +31,7 @@ services:
         - "sshd_datadir:/root/.ssh"
 
   devlnd:
-    image: btcpayserver/bitcoin:30.2
+    image: btcpayserver/bitcoin:31.0
     environment:
       BITCOIN_NETWORK: testnet
       BITCOIN_WALLETDIR: "/data/wallets"
@@ -40,6 +40,7 @@ services:
         connect=bitcoind:39388
         fallbackfee=0.0002
         rpcallowip=0.0.0.0/0
+        unsafesqlitesync=1
     depends_on:
       - nbxplorer
       - postgres
@@ -47,7 +48,7 @@ services:
       - merchant_lnd
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.5.29
+    image: nicolasdorier/nbxplorer:2.6.5
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -72,7 +73,7 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:30.2
+    image: btcpayserver/bitcoin:31.0
     environment:
       BITCOIN_NETWORK: testnet
       BITCOIN_WALLETDIR: "/data/wallets"
@@ -88,6 +89,7 @@ services:
         zmqpubrawtx=tcp://0.0.0.0:28333
         deprecatedrpc=signrawtransaction
         fallbackfee=0.0002
+        unsafesqlitesync=1
     ports:
       - "43782:43782"
       - "39388:39388"

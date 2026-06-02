@@ -144,11 +144,11 @@ namespace BTCPayServer.Tests
 
         public async Task ModifyOnchainPaymentSettings(Action<WalletSettingsViewModel> modify)
         {
-            var storeController = GetController<UIStoresController>();
-            var response = await storeController.WalletSettings(StoreId, "BTC");
+            var walletController = GetController<UIStoreOnChainWalletsController>();
+            var response = await walletController.WalletSettings(StoreId, "BTC");
             WalletSettingsViewModel walletSettings = (WalletSettingsViewModel)((ViewResult)response).Model;
             modify(walletSettings);
-            storeController.UpdateWalletSettings(walletSettings).GetAwaiter().GetResult();
+            walletController.UpdateWalletSettings(walletSettings).GetAwaiter().GetResult();
         }
 
         public T GetController<T>(bool setImplicitStore = true) where T : ControllerBase
@@ -177,23 +177,22 @@ namespace BTCPayServer.Tests
         }
 
         public async Task<WalletId> RegisterDerivationSchemeAsync(string cryptoCode, ScriptPubKeyType segwit = ScriptPubKeyType.Legacy,
-            bool importKeysToNBX = false, bool importsKeysToBitcoinCore = false)
+            bool importKeysToNBX = false)
         {
             if (StoreId is null)
                 await CreateStoreAsync();
             SupportedNetwork = parent.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            var store = parent.PayTester.GetController<UIStoresController>(UserId, StoreId, true);
+            var walletController = parent.PayTester.GetController<UIStoreOnChainWalletsController>(UserId, StoreId, true);
 
             var generateRequest = new WalletSetupRequest
             {
                 ScriptPubKeyType = segwit,
                 SavePrivateKeys = importKeysToNBX,
-                ImportKeysToRPC = importsKeysToBitcoinCore
             };
 
-            await store.GenerateWallet(StoreId, cryptoCode, WalletSetupMethod.HotWallet, generateRequest);
-            Assert.NotNull(store.GenerateWalletResponse);
-            GenerateWalletResponseV = store.GenerateWalletResponse;
+            await walletController.GenerateWallet(StoreId, cryptoCode, WalletSetupMethod.HotWallet, generateRequest);
+            Assert.NotNull(walletController.GenerateWalletResponse);
+            GenerateWalletResponseV = walletController.GenerateWalletResponse;
             return new WalletId(StoreId, cryptoCode);
         }
 
@@ -576,7 +575,7 @@ retry:
             var cryptoCode = "BTC";
             var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
             var client = await CreateClient();
-            var methods = await client.GetInvoicePaymentMethods(StoreId, invoiceId);
+            var methods = await client.GetInvoicePaymentMethods(invoiceId);
             var method = methods.First(m => m.PaymentMethodId == pmi.ToString());
             var address = method.Destination;
             var tx = await client.CreateOnChainTransaction(StoreId, cryptoCode, new CreateOnChainTransactionRequest()
@@ -599,7 +598,7 @@ retry:
         {
             var cryptoCode = "BTC";
             var client = await CreateClient();
-            var methods = await client.GetInvoicePaymentMethods(StoreId, invoiceId);
+            var methods = await client.GetInvoicePaymentMethods(invoiceId);
             var method = methods.First(m => m.PaymentMethodId == $"{cryptoCode}-LN");
             var bolt11 = method.Destination;
             await parent.CustomerLightningD.Pay(bolt11);
@@ -611,7 +610,7 @@ retry:
             var cryptoCode = "BTC";
             var network = SupportedNetwork.NBitcoinNetwork;
             var client = await CreateClient();
-            var methods = await client.GetInvoicePaymentMethods(StoreId, invoiceId);
+            var methods = await client.GetInvoicePaymentMethods(invoiceId);
             var method = methods.First(m => m.PaymentMethodId == $"{cryptoCode}-LNURL");
             var lnurL = LNURL.LNURL.Parse(method.PaymentLink, out var tag);
             var http = new HttpClient();
@@ -627,7 +626,7 @@ retry:
             return TestUtils.EventuallyAsync(async () =>
             {
                 var client = await CreateClient();
-                var invoice = await client.GetInvoice(StoreId, invoiceId);
+                var invoice = await client.GetInvoice(invoiceId);
                 if (invoice.Status == InvoiceStatus.Settled)
                     return;
                 Assert.Equal(InvoiceStatus.Processing, invoice.Status);

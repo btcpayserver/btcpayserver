@@ -1,3 +1,4 @@
+@model string
 @{
     Layout = "_LayoutError.cshtml";
     ViewData["Title"] = "403 - Denied";
@@ -5,6 +6,11 @@
 
 What are you looking at?
 <br /><br />
+@if (!string.IsNullOrEmpty(Model))
+{
+    <span id="details">You are missing the <b>@Model</b> permission.</span>
+    <br /><br />
+}
 <a href="https://twitter.com/r0ckstardev" target="_blank" rel="noreferrer noopener">
     <img src="~/img/errorpages/429_rockstardev.jpg" alt="Vin is angry because you caused 403" title="Move away that cursor" asp-append-version="true" />
 </a>

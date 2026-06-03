@@ -914,6 +914,7 @@ namespace BTCPayServer.Hosting
                 opt.LoginPath = "/login";
                 opt.AccessDeniedPath = "/errors/403";
                 opt.LogoutPath = "/logout";
+                ConfigureAccessDeniedRedirect(opt);
             });
             services.AddAuthentication()
                 .AddCookie(AuthenticationSchemes.LimitedLogin, options =>
@@ -926,8 +927,26 @@ namespace BTCPayServer.Hosting
                     options.LoginPath = "/login";
                     options.AccessDeniedPath = "/errors/403";
                     options.LogoutPath = "/logout";
+                    ConfigureAccessDeniedRedirect(options);
                 })
                 .AddAPIKeyAuthentication();
+        }
+
+        private static void ConfigureAccessDeniedRedirect(CookieAuthenticationOptions options)
+        {
+            var onRedirectToAccessDenied = options.Events.OnRedirectToAccessDenied;
+            options.Events.OnRedirectToAccessDenied = context =>
+            {
+                if (context.HttpContext.Items.TryGetValue(PermissionAuthorizationHandler.PolicyRequirementKey, out var p) &&
+                    p is PolicyRequirement policyRequirement)
+                {
+                    context.RedirectUri = QueryHelpers.AddQueryString(
+                        context.RedirectUri,
+                        UIErrorController.MissingPermissionQueryKey,
+                        policyRequirement.Policy);
+                }
+                return onRedirectToAccessDenied(context);
+            };
         }
 
         public static IApplicationBuilder UsePayServer(this IApplicationBuilder app)

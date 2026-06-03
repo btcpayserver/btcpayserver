@@ -613,6 +613,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.AssertPageAccess(false, StorePath(storeId, "payment-requests"));
         await s.AssertPageAccess(false, StorePath(storeId, "pull-payments"));
         await s.AssertPageAccess(false, StorePath(storeId, "payouts"));
+        await Expect(s.Page.Locator("#details")).ToHaveTextAsync("You are missing the btcpay.store.canviewpayouts permission.");
         await s.AssertPageAccess(true, WalletImport(storeId, cryptoCode));
         await s.AssertPageAccess(false, WalletImportSeed(storeId, cryptoCode));
         await AssertWalletSettingsCannotTargetAnotherStore();

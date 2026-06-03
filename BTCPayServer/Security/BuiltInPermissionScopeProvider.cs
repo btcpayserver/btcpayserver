@@ -69,10 +69,15 @@ public class BuiltInPermissionScopeProvider(
                 // 3. Checks in walletId
                 if (storeId == null)
                 {
-                    if (routeData.Values.TryGetValue("walletId", out var walletId) &&
-                        WalletId.TryParse(walletId as string ?? "", out var w))
+                    if (routeData.Values.TryGetValue("walletId", out var walletId))
                     {
-                        storeId = w.StoreId;
+                        if (WalletId.TryParse(walletId as string ?? "", out var w))
+                            storeId = w.StoreId;
+                        else
+                        {
+                            authContext.Fail();
+                            return null;
+                        }
                     }
                 }
             }

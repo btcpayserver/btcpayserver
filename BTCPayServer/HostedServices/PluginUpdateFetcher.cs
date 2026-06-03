@@ -9,6 +9,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Plugins;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
 
@@ -16,19 +17,19 @@ namespace BTCPayServer.HostedServices
 {
     internal class PluginUpdateNotification : BaseNotification
     {
-        private const string TYPE = "pluginupdate";
+        private const string Type = "pluginupdate";
 
         internal class Handler(LinkGenerator linkGenerator, BTCPayServerOptions options, IStringLocalizer stringLocalizer) : NotificationHandler<PluginUpdateNotification>
         {
             private IStringLocalizer StringLocalizer { get; } = stringLocalizer;
 
-            public override string NotificationType => TYPE;
+            public override string NotificationType => Type;
 
             public override (string identifier, string name)[] Meta
             {
                 get
                 {
-                    return new (string identifier, string name)[] {(TYPE, StringLocalizer["Plugin update"])};
+                    return new (string identifier, string name)[] {(Type, StringLocalizer["Plugin update"])};
                 }
             }
 
@@ -37,13 +38,12 @@ namespace BTCPayServer.HostedServices
                 vm.Identifier = notification.Identifier;
                 vm.Type = notification.NotificationType;
                 vm.Body = StringLocalizer["New {0} plugin version {1} released!", notification.Name, notification.Version];
-                var actionLink = linkGenerator.GetPathByAction(
-                    nameof(UIServerController.ListPlugins),
-                    "UIServer",
-                    pathBase: options.RootPath);
-                vm.ActionLink = actionLink is null
-                    ? null
-                    : $"{actionLink}#{Uri.EscapeDataString(notification.PluginIdentifier)}";
+                vm.ActionLink = linkGenerator.GetPathByAction(
+                    action: nameof(UIServerController.ListPlugins),
+                    controller: "UIServer",
+                    pathBase: options.RootPath,
+                    fragment: new FragmentString($"#{Uri.EscapeDataString(notification.PluginIdentifier)}"))
+                    ?? throw new InvalidOperationException("Could not generate plugin management action link.");
             }
         }
 
@@ -63,8 +63,8 @@ namespace BTCPayServer.HostedServices
         public string Name { get; set; }
 
         public string Version { get; set; }
-        public override string Identifier => TYPE;
-        public override string NotificationType => TYPE;
+        public override string Identifier => Type;
+        public override string NotificationType => Type;
     }
 
     public class PluginVersionCheckerDataHolder
@@ -108,9 +108,8 @@ namespace BTCPayServer.HostedServices
 
             dh.LastVersions = remotePluginsList;
 
-            foreach (string pluginUpdate in notify)
+            foreach (var plugin in notify.Select(pluginUpdate => remotePluginsByIdentifier[pluginUpdate]))
             {
-                var plugin = remotePluginsByIdentifier[pluginUpdate];
                 await notificationSender.SendNotification(new AdminScope(), new PluginUpdateNotification(plugin));
             }
 

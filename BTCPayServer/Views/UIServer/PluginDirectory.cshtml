@@ -1,7 +1,4 @@
-@using System.Collections.Generic
 @using System.Linq
-@using System.Text.Encodings.Web
-@using System.Text.Json
 @model ManagePluginsShellViewModel
 @{
     Layout = "_Layout";
@@ -11,24 +8,19 @@
     });
 
     var hiddenPluginIdentifiers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-    foreach (var plugin in Model.InstalledPlugins)
+    foreach (var identifier in Model.InstalledPlugins.Select(plugin => plugin.Current?.Identifier).Where(identifier => !string.IsNullOrEmpty(identifier)))
     {
-        var identifier = plugin.Current?.Identifier;
-        if (!string.IsNullOrEmpty(identifier))
-        {
-            hiddenPluginIdentifiers.Add(identifier);
-        }
+        hiddenPluginIdentifiers.Add(identifier);
     }
-    foreach (var plugin in Model.DisabledPlugins)
+
+    foreach (var plugin in Model.DisabledPlugins.Where(plugin => !string.IsNullOrEmpty(plugin.Identifier)))
     {
-        if (!string.IsNullOrEmpty(plugin.Identifier))
-        {
-            hiddenPluginIdentifiers.Add(plugin.Identifier);
-        }
+        hiddenPluginIdentifiers.Add(plugin.Identifier);
     }
-    var hiddenPluginIdentifiersJson = JsonSerializer.Serialize(
-        hiddenPluginIdentifiers.OrderBy(identifier => identifier, StringComparer.OrdinalIgnoreCase).ToArray(),
-        new JsonSerializerOptions { Encoder = JavaScriptEncoder.Default });
+
+    var hiddenPluginIdentifiersPayload = hiddenPluginIdentifiers
+        .OrderBy(identifier => identifier, StringComparer.OrdinalIgnoreCase)
+        .ToArray();
 }
 
 <style>
@@ -117,7 +109,7 @@
          data-selected-slug="@Model.SelectedPluginSlug"
          data-panel-error-message="@StringLocalizer["BTCPay Server could not load the plugin panel."]"
          data-panel-retry-label="@StringLocalizer["Retry"]">
-        <script type="application/json" id="plugins-embed-hidden-plugin-identifiers">@Html.Raw(hiddenPluginIdentifiersJson)</script>
+        <script type="application/json" id="plugins-embed-hidden-plugin-identifiers">@Safe.Json(hiddenPluginIdentifiersPayload)</script>
         <iframe id="plugins-directory-iframe"
                 title="@StringLocalizer["Plugin directory"]"
                 class="plugin-manage-frame d-block w-100 border-0"

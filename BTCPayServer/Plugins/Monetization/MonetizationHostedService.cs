@@ -215,13 +215,16 @@ public class MonetizationHostedService(
 
             var deleted = await ctx.Database.GetDbConnection().ExecuteAsync("""
                 DELETE FROM customers_identities ci
-                USING customers c
-                WHERE ci.customer_id = c.id AND ci.type = @associatedType AND ci.value = @userId AND c.store_id = @storeId
+                WHERE ci.type = @associatedType AND ci.value = @userId
+                  AND ci.customer_id IN (
+                      SELECT ss.customer_id FROM subs_subscribers ss
+                      WHERE ss.offering_id = @offeringId
+                  )
                 """, new
                         {
                             associatedType = SubscriberDataExtensions.AssociatedIdentityType,
                             userId = removedFromStore.UserId,
-                            storeId = removedFromStore.StoreId
+                            offeringId = removedOfferingId
                         });
 
             if (deleted == 0) return;
@@ -241,8 +244,8 @@ public class MonetizationHostedService(
         else if (evt is UserEvent.Deleted deleted)
         {
             await using var ctx = dbContextFactory.CreateContext();
-            var associatedUserIds = (await ctx.Database.GetDbConnection().QueryAsync<string>("""
-                SELECT ci.value FROM customers_identities ci
+            var associatedUsers = (await ctx.Database.GetDbConnection().QueryAsync<(string CustomerId, string UserId)>("""
+                SELECT ci.customer_id, ci.value FROM customers_identities ci
                 JOIN subs_subscribers ss ON ss.customer_id = ci.customer_id
                 JOIN customers_identities ci2 ON ci2.customer_id = ss.customer_id AND ci2.type = @primaryType AND ci2.value = @id
                 WHERE ci.type = @associatedType
@@ -253,11 +256,17 @@ public class MonetizationHostedService(
                         id = deleted.User.Id
                     })).ToArray();
 
-            if (associatedUserIds.Length > 0)
+            if (associatedUsers.Length > 0)
             {
+                var customerIds = associatedUsers.Select(u => u.CustomerId).ToArray();
+                var associatedUserIds = associatedUsers.Select(u => u.UserId).ToArray();
                 await ctx.Database.GetDbConnection().ExecuteAsync("""
-                    DELETE FROM customers_identities WHERE type = @associatedType AND value = ANY(@userIds)
-                    """, new { associatedType = Monetization.SubscriberDataExtensions.AssociatedIdentityType, userIds = associatedUserIds });
+                    DELETE FROM customers_identities WHERE type = @associatedType AND customer_id = ANY(@customerIds)
+                    """, new
+                        {
+                            associatedType = Monetization.SubscriberDataExtensions.AssociatedIdentityType,
+                            customerIds
+                        });
 
                 if (monetizationSettingsAccessor.Settings is { OfferingId: { } removedOfferingId, DefaultPlanId: { } removedDefaultPlanId })
                 {
@@ -275,17 +284,19 @@ public class MonetizationHostedService(
                     }
                 }
             }
-
             await ctx.Database.GetDbConnection()
                .ExecuteAsync("""
-                              DELETE FROM subs_subscribers s
-                                  USING customers_identities ci
-                              WHERE ci.customer_id = s.customer_id AND ci.type = @type AND ci.value = @id;
-                              DELETE FROM customers_identities ci
-                              WHERE ci.type = ANY(ARRAY[@type, @associatedType]) AND ci.value = @id;
-                              """, new { type = Monetization.SubscriberDataExtensions.IdentityType, associatedType = Monetization.SubscriberDataExtensions.AssociatedIdentityType, id = deleted.User.Id });
+                      DELETE FROM subs_subscribers s
+                          USING customers_identities ci
+                      WHERE ci.customer_id = s.customer_id AND ci.type = @type AND ci.value = @id;
+                      DELETE FROM customers_identities ci
+                      WHERE ci.type = ANY(ARRAY[@type, @associatedType]) AND ci.value = @id;
+                      """, new {
+                   type = Monetization.SubscriberDataExtensions.IdentityType,
+                   associatedType = Monetization.SubscriberDataExtensions.AssociatedIdentityType,
+                   id = deleted.User.Id
+               });
         }
-
     }
 
     private async Task UpdateUserLockout(SubscriptionEvent.SubscriberEvent evt, UserManager<ApplicationUser> userManager, bool activated)
@@ -321,26 +332,24 @@ public class MonetizationHostedService(
 
     private async Task DetachAndLockAssociatedUsers(ApplicationDbContext ctx, PlanData plan)
     {
-        var associatedUserIds = (await ctx.Database.GetDbConnection().QueryAsync<string>("""
-            SELECT ci.value FROM customers_identities ci
+        var associatedUsers = (await ctx.Database.GetDbConnection().QueryAsync<(string CustomerId, string UserId)>("""
+            SELECT ci.customer_id, ci.value FROM customers_identities ci
             JOIN subs_subscribers ss ON ss.customer_id = ci.customer_id
             WHERE ss.plan_id = @planId AND ci.type = @associatedIdentityType
-            """, new
-            {
-                planId = plan.Id,
-                associatedIdentityType = SubscriberDataExtensions.AssociatedIdentityType
-            })).ToArray();
+            """, new { planId = plan.Id, associatedIdentityType = SubscriberDataExtensions.AssociatedIdentityType })).ToArray();
 
-        if (associatedUserIds.Length == 0)
+        if (associatedUsers.Length == 0)
             return;
 
+        var customerIds = associatedUsers.Select(u => u.CustomerId).ToArray();
+        var associatedUserIds = associatedUsers.Select(u => u.UserId).ToArray();
         await ctx.Database.GetDbConnection().ExecuteAsync("""
-        DELETE FROM customers_identities WHERE type = @associatedIdentityType AND value = ANY(@userIds)
+        DELETE FROM customers_identities WHERE type = @associatedIdentityType AND customer_id = ANY(@customerIds)
         """, new
-        {
-            associatedIdentityType = SubscriberDataExtensions.AssociatedIdentityType,
-            userIds = associatedUserIds
-        });
+            {
+                associatedIdentityType = SubscriberDataExtensions.AssociatedIdentityType,
+                customerIds
+            });
 
         if (monetizationSettingsAccessor.Settings is not { OfferingId: { } offeringId, DefaultPlanId: { } defaultPlanId })
             return;

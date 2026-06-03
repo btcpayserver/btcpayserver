@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using BTCPayServer.Abstractions;
 using BTCPayServer.Data.Subscriptions;
 
@@ -30,6 +30,15 @@ public class SubscriptionEvent
         public decimal Amount { get; set; } = amount;
         public string Currency { get; set; } = currency;
         public override string ToString() => $"Subscriber {Subscriber.ToNiceString()} debited (Amount: {Amount} {Currency}, New Total: {Total} {Currency})";
+    }
+
+    public class CreditRefunded(SubscriberData subscriber, decimal amount, string currency, string pullPaymentId, RequestBaseUrl requestBaseUrl) : SubscriberEvent(subscriber)
+    {
+        public decimal Amount { get; } = amount;
+        public string Currency { get; } = currency;
+        public string PullPaymentId { get; } = pullPaymentId;
+        public RequestBaseUrl RequestBaseUrl { get; } = requestBaseUrl;
+        public override string ToString() => $"Subscriber {Subscriber.ToNiceString()} credit refunded (Amount: {Amount} {Currency})";
     }
 
     public class SubscriberActivated(SubscriberData subscriber) : SubscriberEvent(subscriber)

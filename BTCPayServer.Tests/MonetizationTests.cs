@@ -480,7 +480,10 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
         // Delete sponsor — associated employee should get detached
         await s.GoToServer(ServerNavPages.Users);
         var users = new PMO.UsersPMO(s);
-        await users.DeleteUser("sponsor@gmail.com");
+        await s.Server.WaitForEvent<MonetizationHostedService.MonetizationLockoutUpdated>(async () =>
+        {
+            await users.DeleteUser("sponsor@gmail.com");
+        });
         await AssertSubscribed(s, "employee@gmail.com", true);
         var facto = s.Server.PayTester.GetService<ApplicationDbContextFactory>();
         var settings = s.Server.PayTester.GetService<SettingsRepository>();

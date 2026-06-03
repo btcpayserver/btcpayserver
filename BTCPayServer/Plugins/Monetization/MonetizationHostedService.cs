@@ -210,16 +210,18 @@ public class MonetizationHostedService(
         else if (evt is StoreUserEvent.Removed removedFromStore)
         {
             await using var ctx = dbContextFactory.CreateContext();
-            var settings = monetizationSettingsAccessor.Settings;
-            if (settings.OfferingId is null)
+            if (monetizationSettingsAccessor.Settings is not { OfferingId: { } removedOfferingId, DefaultPlanId: { } removedDefaultPlanId })
                 return;
 
             var deleted = await ctx.Database.GetDbConnection().ExecuteAsync("""
-                DELETE FROM customers_identities WHERE type = @associatedType AND value = @userId
+                DELETE FROM customers_identities ci
+                USING customers c
+                WHERE ci.customer_id = c.id AND ci.type = @associatedType AND ci.value = @userId AND c.store_id = @storeId
                 """, new
                         {
                             associatedType = SubscriberDataExtensions.AssociatedIdentityType,
-                            userId = removedFromStore.UserId
+                            userId = removedFromStore.UserId,
+                            storeId = removedFromStore.StoreId
                         });
 
             if (deleted == 0) return;
@@ -228,7 +230,7 @@ public class MonetizationHostedService(
             if (user is null)
                 return;
 
-            await MigrateUsers(settings.OfferingId, settings.DefaultPlanId, OneUserQuery, parameters =>
+            await MigrateUsers(removedOfferingId, removedDefaultPlanId, OneUserQuery, parameters =>
             {
                 parameters.Add("userId", removedFromStore.UserId);
                 parameters.Add("email", user.Email);
@@ -254,25 +256,23 @@ public class MonetizationHostedService(
             if (associatedUserIds.Length > 0)
             {
                 await ctx.Database.GetDbConnection().ExecuteAsync("""
-                DELETE FROM customers_identities WHERE type = @associatedType AND value = ANY(@userIds)
-                """, new
-                    {
-                        associatedType = Monetization.SubscriberDataExtensions.AssociatedIdentityType,
-                        userIds = associatedUserIds
-                    });
+                    DELETE FROM customers_identities WHERE type = @associatedType AND value = ANY(@userIds)
+                    """, new { associatedType = Monetization.SubscriberDataExtensions.AssociatedIdentityType, userIds = associatedUserIds });
 
-                var settings = monetizationSettingsAccessor.Settings;
-                foreach (var userId in associatedUserIds)
+                if (monetizationSettingsAccessor.Settings is { OfferingId: { } removedOfferingId, DefaultPlanId: { } removedDefaultPlanId })
                 {
-                    var user = await ctx.Users.FindAsync(userId);
-                    if (user is null)
-                        continue;
-                    await MigrateUsers(settings.OfferingId, settings.DefaultPlanId, OneUserQuery, parameters =>
+                    foreach (var userId in associatedUserIds)
                     {
-                        parameters.Add("userId", userId);
-                        parameters.Add("email", user.Email);
-                        parameters.Add("customerId", CustomerData.GenerateId());
-                    }, forceExpired: true);
+                        var user = await ctx.Users.FindAsync(userId);
+                        if (user is null)
+                            continue;
+                        await MigrateUsers(removedOfferingId, removedDefaultPlanId, OneUserQuery, parameters =>
+                        {
+                            parameters.Add("userId", userId);
+                            parameters.Add("email", user.Email);
+                            parameters.Add("customerId", CustomerData.GenerateId());
+                        }, forceExpired: true);
+                    }
                 }
             }
 
@@ -342,14 +342,15 @@ public class MonetizationHostedService(
             userIds = associatedUserIds
         });
 
-        var settings = monetizationSettingsAccessor.Settings;
+        if (monetizationSettingsAccessor.Settings is not { OfferingId: { } offeringId, DefaultPlanId: { } defaultPlanId })
+            return;
+
         foreach (var userId in associatedUserIds)
         {
             var user = await ctx.Users.FindAsync(userId);
             if (user is null)
                 continue;
-
-            await MigrateUsers(settings.OfferingId, settings.DefaultPlanId, OneUserQuery, parameters =>
+            await MigrateUsers(offeringId, defaultPlanId, OneUserQuery, parameters =>
             {
                 parameters.Add("userId", userId);
                 parameters.Add("email", user.Email);

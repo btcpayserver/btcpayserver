@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Events;
 using BTCPayServer.Plugins.Monetization;
 using BTCPayServer.Services;
@@ -284,6 +285,221 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
             await s.LogIn("enrolled-invited@gmail.com");
             Assert.Contains("subscriber-portal", s.Page.Url);
         }
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanAssociateUsersToSubscriber()
+    {
+        await using var s = CreatePlaywrightTester(newDb: true);
+        await s.StartAsync();
+        await s.RegisterNewUser(true);
+        var (_, storeId) = await s.CreateNewStore();
+        await GoToMonetization(s);
+        await s.ClickPagePrimary();
+        await s.ConfirmModal();
+        await s.FindAlertMessage(partialText: "Monetization activated");
+        var offeringPMO = await GoToOffering(s);
+        var edit = await offeringPMO.Edit("Starter Plan");
+        edit.EnableFeatures = ["allow-user-association"];
+        await edit.Save();
+        await GoToMonetization(s);
+        offeringPMO = await GoToOffering(s);
+        var sponsorEv = await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await CreateUserAsAdmin(s, "sponsor@gmail.com", byPassMonetization: false);
+        });
+        Assert.Equal("sponsor@gmail.com", sponsorEv.Subscriber.Customer.Email.Get());
+        await AssertSubscribed(s, "sponsor@gmail.com", true);
+        await s.AddUserToStore(storeId, "sponsor@gmail.com", "Owner");
+
+        string inviteLink;
+        await using (await s.SwitchPage())
+        {
+            await s.GoToUrl("/");
+            await s.LogIn("sponsor@gmail.com");
+            await s.GoToUrl($"/stores/{storeId}/users");
+            await s.Page.FillAsync("#Email", "employee@gmail.com");
+            await s.Page.ClickAsync("input[type='submit'], button[type='submit']");
+            await s.Page.WaitForSelectorAsync("a[href*='/invite/']");
+            inviteLink = await s.Page.Locator("a[href*='/invite/']").First.GetAttributeAsync("href");
+        }
+
+        await using (await s.SwitchPage())
+        {
+            await s.GoToUrl(inviteLink!);
+            await s.Page.FillAsync("#Password", s.Password);
+            await s.Page.FillAsync("#ConfirmPassword", s.Password);
+            await s.ClickPagePrimary();
+        }
+        await AssertSubscribed(s, "employee@gmail.com", false);
+        await CanLog(s, "employee@gmail.com");
+
+        await GoToMonetization(s);
+        offeringPMO = await GoToOffering(s);
+        var lockoutUpdated = await s.Server.WaitForEvent<MonetizationHostedService.MonetizationLockoutUpdated>(async () =>
+        {
+            await offeringPMO.GoToPlans();
+            edit = await offeringPMO.Edit("Starter Plan");
+            edit.DisableFeatures = ["can-access"];
+            await edit.Save();
+        });
+        Assert.Equal(2, lockoutUpdated.Updated.Length);
+        Assert.All(lockoutUpdated.Updated, u => Assert.True(u.LockoutEnabled));
+        await using (await s.SwitchPage())
+        {
+            await s.GoToUrl("/");
+            await s.LogIn("employee@gmail.com");
+            await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Warning, partialText: "Your user account is currently disabled.");
+        }
+
+        await GoToMonetization(s);
+        offeringPMO = await GoToOffering(s);
+        lockoutUpdated = await s.Server.WaitForEvent<MonetizationHostedService.MonetizationLockoutUpdated>(async () =>
+        {
+            await offeringPMO.GoToPlans();
+            edit = await offeringPMO.Edit("Starter Plan");
+            edit.EnableFeatures = ["can-access"];
+            await edit.Save();
+        });
+        Assert.Equal(2, lockoutUpdated.Updated.Length);
+        Assert.All(lockoutUpdated.Updated, u => Assert.False(u.LockoutEnabled));
+        await CanLog(s, "employee@gmail.com");
+
+        lockoutUpdated = await s.Server.WaitForEvent<MonetizationHostedService.MonetizationLockoutUpdated>(async () =>
+        {
+            await offeringPMO.GoToPlans();
+            edit = await offeringPMO.Edit("Starter Plan");
+            edit.DisableFeatures = ["allow-user-association"];
+            await edit.Save();
+        });
+        await AssertSubscribed(s, "employee@gmail.com", true);
+
+        var facto = s.Server.PayTester.GetService<ApplicationDbContextFactory>();
+        var settings = s.Server.PayTester.GetService<SettingsRepository>();
+        var monetization = await settings.GetSettingAsync<MonetizationSettings>() ?? new();
+        await using (var ctx = facto.CreateContext())
+        {
+            var employeeSub = await ctx.Subscribers.GetBySelector(monetization.OfferingId, CustomerSelector.ByEmail("employee@gmail.com"));
+            Assert.NotNull(employeeSub);
+            Assert.Equal(SubscriberData.PhaseTypes.Expired, employeeSub.Phase);
+            Assert.False(employeeSub.IsActive);
+        }
+        await using (await s.SwitchPage())
+        {
+            await s.GoToUrl("/");
+            await s.LogIn("employee@gmail.com");
+            Assert.Contains("subscriber-portal", s.Page.Url);
+        }
+
+        // case: Re-enable allow-user-association, expire sponsor, invite new employee — should be locked
+        await offeringPMO.GoToPlans();
+        edit = await offeringPMO.Edit("Starter Plan");
+        edit.EnableFeatures = ["allow-user-association"];
+        await edit.Save();
+        string inviteLink2;
+        await using (await s.SwitchPage())
+        {
+            await s.GoToUrl("/");
+            await s.LogIn("sponsor@gmail.com");
+            await s.GoToUrl($"/stores/{storeId}/users");
+            await s.Page.FillAsync("#Email", "employee2@gmail.com");
+            await s.Page.ClickAsync("input[type='submit'], button[type='submit']");
+            await s.Page.WaitForSelectorAsync("a[href*='/invite/']");
+            inviteLink2 = await s.Page.Locator("a[href*='/invite/']").First.GetAttributeAsync("href");
+        }
+        await GoToMonetization(s);
+        offeringPMO = await GoToOffering(s);
+        await offeringPMO.GoToSubscribers();
+        await s.Server.WaitForEvent<MonetizationHostedService.MonetizationLockoutUpdated>(async () =>
+        {
+            await offeringPMO.Suspend("sponsor@gmail.com", "Testing case");
+        });
+        await using (await s.SwitchPage())
+        {
+            await s.GoToUrl(inviteLink2!);
+            await s.Page.FillAsync("#Password", s.Password);
+            await s.Page.FillAsync("#ConfirmPassword", s.Password);
+            await s.ClickPagePrimary();
+        }
+        await AssertSubscribed(s, "employee2@gmail.com", false);
+        await using (await s.SwitchPage())
+        {
+            await s.GoToUrl("/");
+            await s.LogIn("employee2@gmail.com");
+            await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Warning, partialText: "Your user account is currently disabled.");
+        }
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task WhenSponsorDeleted_AssociatedUsersGetDetachedWithExpiredSubscription()
+    {
+        await using var s = CreatePlaywrightTester(newDb: true);
+        await s.StartAsync();
+        await s.RegisterNewUser(true);
+        var (_, storeId) = await s.CreateNewStore();
+        await GoToMonetization(s);
+        await s.ClickPagePrimary();
+        await s.ConfirmModal();
+        await s.FindAlertMessage(partialText: "Monetization activated");
+        var offeringPMO = await GoToOffering(s);
+        var edit = await offeringPMO.Edit("Starter Plan");
+        edit.EnableFeatures = ["allow-user-association"];
+        await edit.Save();
+        await GoToMonetization(s);
+        offeringPMO = await GoToOffering(s);
+        var sponsorEv = await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await CreateUserAsAdmin(s, "sponsor@gmail.com", byPassMonetization: false);
+        });
+        Assert.Equal("sponsor@gmail.com", sponsorEv.Subscriber.Customer.Email.Get());
+        await AssertSubscribed(s, "sponsor@gmail.com", true);
+        await s.AddUserToStore(storeId, "sponsor@gmail.com", "Owner");
+        string inviteLink;
+        await using (await s.SwitchPage())
+        {
+            await s.GoToUrl("/");
+            await s.LogIn("sponsor@gmail.com");
+            await s.GoToUrl($"/stores/{storeId}/users");
+            await s.Page.FillAsync("#Email", "employee@gmail.com");
+            await s.Page.ClickAsync("input[type='submit'], button[type='submit']");
+            await s.Page.WaitForSelectorAsync("a[href*='/invite/']");
+            inviteLink = await s.Page.Locator("a[href*='/invite/']").First.GetAttributeAsync("href");
+        }
+        await using (await s.SwitchPage())
+        {
+            await s.GoToUrl(inviteLink!);
+            await s.Page.FillAsync("#Password", s.Password);
+            await s.Page.FillAsync("#ConfirmPassword", s.Password);
+            await s.ClickPagePrimary();
+        }
+        await AssertSubscribed(s, "employee@gmail.com", false);
+        await CanLog(s, "employee@gmail.com");
+
+        // Delete sponsor — associated employee should get detached
+        await s.GoToServer(ServerNavPages.Users);
+        var users = new PMO.UsersPMO(s);
+        await users.DeleteUser("sponsor@gmail.com");
+        await AssertSubscribed(s, "employee@gmail.com", true);
+        var facto = s.Server.PayTester.GetService<ApplicationDbContextFactory>();
+        var settings = s.Server.PayTester.GetService<SettingsRepository>();
+        var monetization = await settings.GetSettingAsync<MonetizationSettings>() ?? new();
+        await using var ctx = facto.CreateContext();
+        var employeeSub = await ctx.Subscribers.GetBySelector(monetization.OfferingId, CustomerSelector.ByEmail("employee@gmail.com"));
+        Assert.NotNull(employeeSub);
+        Assert.Equal(SubscriberData.PhaseTypes.Expired, employeeSub.Phase);
+        Assert.False(employeeSub.IsActive);
+        await using (await s.SwitchPage())
+        {
+            await s.GoToUrl("/");
+            await s.LogIn("employee@gmail.com");
+            Assert.Contains("subscriber-portal", s.Page.Url);
+        }
+        await GoToMonetization(s);
+        offeringPMO = await GoToOffering(s);
+        await offeringPMO.GoToSubscribers();
+        await offeringPMO.AssertHasNotSubscriber("sponsor@gmail.com");
     }
 
     private async Task SetBypassMonetization(PlaywrightTester s, string email, bool bypass)

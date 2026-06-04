@@ -1,5 +1,6 @@
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
@@ -774,18 +775,18 @@ namespace BTCPayServer
         public static StoreData AddCachedStoreData(this HttpContext ctx, StoreData storeData)
         {
             if (!ctx.Items.TryGetValue("BTCPAY.CACHEDSTOREDATA", out var item) ||
-                item is not Dictionary<string, StoreData> dictionary)
+                item is not ConcurrentDictionary<string, StoreData> dictionary)
             {
-                dictionary = new Dictionary<string, StoreData>();
+                dictionary = new ConcurrentDictionary<string, StoreData>();
                 ctx.Items["BTCPAY.CACHEDSTOREDATA"] = dictionary;
             }
-            dictionary[storeData.Id] = storeData;
+            dictionary.TryAdd(storeData.Id, storeData);
             return storeData;
         }
         public static StoreData? GetCachedStoreData(this HttpContext ctx, string storeId)
         {
             if (!ctx.Items.TryGetValue("BTCPAY.CACHEDSTOREDATA", out var item) ||
-                item is not Dictionary<string, StoreData> dictionary)
+                item is not ConcurrentDictionary<string, StoreData> dictionary)
                 return null;
             dictionary.TryGetValue(storeId, out var storeData);
             return storeData;

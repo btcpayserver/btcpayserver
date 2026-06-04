@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Abstractions;
 using BTCPayServer.JsonConverters;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Plugins.Multisig.Models;
@@ -24,6 +26,30 @@ public class PendingMultisigSetupData
     public bool IsPendingParticipant(string userId)
     => !string.IsNullOrEmpty(userId) &&
        Participants.Any(p => string.Equals(p.UserId, userId, StringComparison.Ordinal));
+
+    public DerivationSchemeSettings GetDiredivationSchemeSettings(BTCPayNetwork network)
+    {
+        var suffix = ScriptType.ToLowerInvariant() switch
+        {
+            "p2wsh" => string.Empty,
+            "p2sh-p2wsh" => "-[p2sh]",
+            "p2sh" => "-[legacy]",
+            _ => string.Empty
+        };
+
+        var multisigDerivation = $"{RequiredSigners}-of-{string.Join("-", Participants.Select(k => k.AccountKey.ToString()))}{suffix}";
+        var strategy = new DerivationSchemeSettings(new DerivationSchemeParser(network).Parse(multisigDerivation), network);
+        strategy.Source = "ManualDerivationScheme";
+        strategy.IsMultiSigOnServer = true;
+        strategy.DefaultIncludeNonWitnessUtxo = true;
+        for (int i = 0; i < Participants.Count; i++)
+        {
+            strategy.AccountKeySettings[i].SignerEmail = Participants[i].Email;
+            strategy.AccountKeySettings[i].AccountKeyPath =  Participants[i].AccountKeyPath.KeyPath;
+            strategy.AccountKeySettings[i].RootFingerprint =  Participants[i].AccountKeyPath.MasterFingerprint;
+        }
+        return strategy;
+    }
 }
 
 public sealed record PendingMultisigSetupContext(
@@ -37,6 +63,6 @@ public class PendingMultisigSetupParticipantData
     public string Email { get; set; }
     public string Name { get; set; }
     public string AccountKey { get; set; }
-    public string MasterFingerprint { get; set; }
-    public string AccountKeyPath { get; set; }
+    [JsonConverter(typeof(NBitcoin.JsonConverters.KeyPathJsonConverter))]
+    public RootedKeyPath AccountKeyPath { get; set; }
 }

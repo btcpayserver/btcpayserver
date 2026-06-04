@@ -115,14 +115,9 @@
                                     <span asp-validation-for="DisplayAccountKey" class="text-danger"></span>
                                 </div>
                                 <div class="row g-3">
-                                    <div class="col-md-4">
-                                        <label asp-for="MasterFingerprint" class="form-label" text-translate="true">Master fingerprint</label>
-                                        <input asp-for="MasterFingerprint" class="form-control font-monospace" placeholder="@StringLocalizer["d90c6a4f"]" />
-                                        <span asp-validation-for="MasterFingerprint" class="text-danger"></span>
-                                    </div>
                                     <div class="col-md-8">
                                         <label asp-for="AccountKeyPath" class="form-label" text-translate="true">Account key path</label>
-                                        <input asp-for="AccountKeyPath" class="form-control font-monospace" placeholder="@StringLocalizer["m/48'/1'/0'/2'"]" />
+                                        <input asp-for="AccountKeyPath" class="form-control font-monospace" placeholder="@StringLocalizer["d90c6a4f/48'/1'/0'/2'"]" />
                                         <span asp-validation-for="AccountKeyPath" class="text-danger"></span>
                                     </div>
                                 </div>
@@ -159,10 +154,9 @@
                 const signerFields = document.getElementById("SignerKeyFields");
                 const submitButton = document.getElementById("SubmitSignerKeyButton");
                 const accountKey = document.getElementById("DisplayAccountKey");
-                const masterFingerprint = document.getElementById("MasterFingerprint");
                 const accountKeyPath = document.getElementById("AccountKeyPath");
 
-                if (!signerFields || !submitButton || !accountKey || !masterFingerprint || !accountKeyPath) {
+                if (!signerFields || !submitButton || !accountKey || !accountKeyPath) {
                     return;
                 }
 
@@ -172,7 +166,6 @@
 
                 function setReadonly(readonly) {
                     accountKey.readOnly = readonly;
-                    masterFingerprint.readOnly = readonly;
                     accountKeyPath.readOnly = readonly;
                 }
 
@@ -184,30 +177,6 @@
                     }
                     submitButton.disabled = !ready;
                 }
-
-                function parseAccountOrigin() {
-                    const raw = (accountKey.value || "").trim();
-                    const match = raw.match(/^\[([0-9a-fA-F]{8})(\/[0-9hH'\/]+)\](.+)$/);
-                    if (!match) {
-                        masterFingerprint.value = "";
-                        accountKeyPath.value = "";
-                        return;
-                    }
-
-                    const fingerprint = match[1].toLowerCase();
-                    const path = match[2].replace(/[hH]/g, "'");
-                    const xpub = (match[3] || "").trim();
-                    if (!xpub) {
-                        masterFingerprint.value = "";
-                        accountKeyPath.value = "";
-                        return;
-                    }
-
-                    accountKey.value = xpub;
-                    masterFingerprint.value = fingerprint;
-                    accountKeyPath.value = `m${path}`;
-                }
-
                 setReadonly(useHardware);
                 if (useHardware) {
                     refreshHardwareState();
@@ -216,13 +185,11 @@
                 }
 
                 accountKey.addEventListener("input", () => {
-                    parseAccountOrigin();
                     if (useHardware) {
                         refreshHardwareState();
                     }
                 });
                 accountKey.addEventListener("change", () => {
-                    parseAccountOrigin();
                     if (useHardware) {
                         refreshHardwareState();
                     }
@@ -231,7 +198,6 @@
                 if (useHardware) {
                     vault.setMultisigSignerKey = function (data) {
                         accountKey.value = data.accountKey || "";
-                        masterFingerprint.value = data.masterFingerprint || "";
                         accountKeyPath.value = data.accountKeyPath || "";
                         refreshHardwareState();
                     };

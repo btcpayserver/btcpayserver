@@ -17,6 +17,8 @@ using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Plugins.Multisig.Controllers;
 
@@ -190,13 +192,7 @@ public class UIMultisigWalletsController(
             return View("MultisigConfirm", vm);
         }
 
-        var pending = pendingSetting.Value.Pending;
-        if (!TryBuildPendingStrategy(pending, network, out var currentStrategy, out var validationError))
-        {
-            ModelState.AddModelError(nameof(vm.MultisigRequestId), validationError);
-            return View("MultisigConfirm", vm);
-        }
-
+        var strategy = pendingSetting.Value.Pending.GetDiredivationSchemeSettings(network);
         var wallet = walletProvider.GetWallet(network);
         if (wallet is null)
         {
@@ -204,9 +200,9 @@ public class UIMultisigWalletsController(
             return View("MultisigConfirm", vm);
         }
 
-        await wallet.TrackAsync(currentStrategy.AccountDerivation);
+        await wallet.TrackAsync(strategy.AccountDerivation);
         var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
-        store.SetPaymentMethodConfig(paymentMethodHandlerDictionary[paymentMethodId], currentStrategy);
+        store.SetPaymentMethodConfig(paymentMethodHandlerDictionary[paymentMethodId], strategy);
         var storeBlob = store.GetStoreBlob();
         storeBlob.SetExcluded(paymentMethodId, false);
         store.SetStoreBlob(storeBlob);
@@ -228,7 +224,6 @@ public class UIMultisigWalletsController(
 
     private async Task<IActionResult> FinalizeMultisigRequest(PendingMultisigSetupData pending, BTCPayNetwork network)
     {
-
         if (pending.Participants.Count != pending.TotalSigners || pending.Participants.Any(p => string.IsNullOrWhiteSpace(p.AccountKey)))
         {
             TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Complete signer collection before creating the multisig wallet."].Value;
@@ -243,70 +238,23 @@ public class UIMultisigWalletsController(
             return RedirectToMultisigSetup(pending.RequestId);
         }
 
-        if (!TryBuildPendingStrategy(pending, network, out var strategy, out var multisigValidationError))
-        {
-            TempData[WellKnownTempData.ErrorMessage] = multisigValidationError;
-            return RedirectToMultisigSetup(pending.RequestId);
-        }
-
+        var strategy = pending.GetDiredivationSchemeSettings(network);
         var vm = new MultisigSetupViewModel
         {
-            StoreId = pending.StoreId,
-            CryptoCode = pending.CryptoCode,
             MultisigRequestId = pending.RequestId,
-            MultisigRequiredSigners = pending.RequiredSigners,
-            MultisigTotalSigners = pending.TotalSigners,
-            MultisigScriptType = pending.ScriptType,
-            Confirmation = true,
-            DerivationScheme = strategy.AccountDerivation.ToString()
+            Confirmation = true
         };
-
-        return ConfirmAddresses(vm, strategy, network);
+        vm.AddressSamples = new List<(string KeyPath, string Address)>();
+        var result = BTCPayServer.Controllers.Greenfield.GreenfieldStoreOnChainPaymentMethodsController.GetPreviewResultData(0, 10, network, strategy.AccountDerivation);
+        foreach (var sample in result.Addresses)
+        {
+            vm.AddressSamples.Add((sample.KeyPath, sample.Address));
+        }
+        return View("MultisigConfirm", vm);
     }
 
     IActionResult RedirectToMultisigSetup(string multisigSetupId)
     => RedirectToAction(nameof(UIMultisigSetupController.SetupMultisigStatus), "UIMultisigSetup", new { multisigSetupId });
-
-    private IActionResult ConfirmAddresses(MultisigSetupViewModel vm, DerivationSchemeSettings strategy, BTCPayNetwork network)
-    {
-        vm.DerivationScheme = strategy.AccountDerivation.ToString();
-        vm.AddressSamples = new List<(string KeyPath, string Address)>();
-        if (!string.IsNullOrEmpty(vm.DerivationScheme))
-        {
-            var result = BTCPayServer.Controllers.Greenfield.GreenfieldStoreOnChainPaymentMethodsController.GetPreviewResultData(0, 10, network, strategy.AccountDerivation);
-            foreach (var sample in result.Addresses)
-            {
-                vm.AddressSamples.Add((sample.KeyPath, sample.Address));
-            }
-        }
-
-        vm.Confirmation = true;
-        return View("MultisigConfirm", vm);
-    }
-
-    private bool TryBuildPendingStrategy(PendingMultisigSetupData pending, BTCPayNetwork network, out DerivationSchemeSettings strategy, out string validationError)
-    {
-        strategy = default!;
-        validationError = string.Empty;
-
-        if (!multisigService.TryBuildDerivationScheme(
-                pending.RequiredSigners,
-                pending.TotalSigners,
-                pending.ScriptType,
-                pending.Participants,
-                network,
-                out var multisigDerivation,
-                out validationError))
-            return false;
-
-        strategy = BTCPayServer.Controllers.UIStoreOnChainWalletsController.ParseDerivationStrategy(multisigDerivation, network);
-        strategy.Source = "ManualDerivationScheme";
-        multisigService.ApplySignerOrigins(pending.Participants, strategy);
-        strategy.IsMultiSigOnServer = true;
-        strategy.DefaultIncludeNonWitnessUtxo = true;
-        multisigService.ApplySignerIdentities(pending, strategy, network);
-        return true;
-    }
 
     private async Task<(PendingMultisigSetupData Pending, uint XMin)?> GetPendingRequestWithVersion(string storeId, string cryptoCode, string? requestId)
     {

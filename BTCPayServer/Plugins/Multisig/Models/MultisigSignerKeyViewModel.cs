@@ -8,7 +8,6 @@ public class MultisigSignerKeyViewModel
     public int TotalSigners { get; set; }
     public string ScriptType { get; set; }
     public string DisplayAccountKey { get; set; }
-    public string MasterFingerprint { get; set; }
     public string AccountKeyPath { get; set; }
     public string InputMethod { get; set; }
 }

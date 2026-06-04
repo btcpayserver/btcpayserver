@@ -106,7 +106,6 @@ public class UIMultisigSetupController(
             return NotFound();
 
         current.DisplayAccountKey = vm.DisplayAccountKey?.Trim();
-        current.MasterFingerprint = vm.MasterFingerprint?.Trim();
         current.AccountKeyPath = vm.AccountKeyPath?.Trim();
         current.InputMethod = NormalizeInputMethod(vm.InputMethod) ?? ManualInputMethod;
 
@@ -124,22 +123,11 @@ public class UIMultisigSetupController(
                 ModelState.AddModelError(string.Empty, StringLocalizer["Invalid account key format."].Value);
             }
         }
-        if (!string.IsNullOrWhiteSpace(current.MasterFingerprint) && !Regex.IsMatch(current.MasterFingerprint, "^[0-9a-fA-F]{8}$"))
-            ModelState.AddModelError(nameof(vm.MasterFingerprint), StringLocalizer["Invalid fingerprint format."].Value);
-        if (!string.IsNullOrWhiteSpace(current.AccountKeyPath))
-        {
-            if (!MultisigService.TryParseKeyPath(current.AccountKeyPath, out var accountKeyPath))
-                ModelState.AddModelError(nameof(vm.AccountKeyPath), StringLocalizer["Invalid account key path."].Value);
-            else
-                current.AccountKeyPath = $"m/{accountKeyPath}";
-        }
 
-        var hasFingerprint = !string.IsNullOrWhiteSpace(current.MasterFingerprint);
-        var hasAccountKeyPath = !string.IsNullOrWhiteSpace(current.AccountKeyPath);
-        if (hasFingerprint && !hasAccountKeyPath)
-            ModelState.AddModelError(nameof(vm.AccountKeyPath), StringLocalizer["Provide account key path when fingerprint is set."].Value);
-        if (hasAccountKeyPath && !hasFingerprint)
-            ModelState.AddModelError(nameof(vm.MasterFingerprint), StringLocalizer["Provide fingerprint when account key path is set."].Value);
+        if (!RootedKeyPath.TryParse(current.AccountKeyPath ?? "", out var accountKeyPath))
+            ModelState.AddModelError(nameof(vm.AccountKeyPath), StringLocalizer["Invalid account key path."].Value);
+        else
+            current.AccountKeyPath = accountKeyPath.ToString();
 
         if (!ModelState.IsValid)
             return View(current);
@@ -165,18 +153,15 @@ public class UIMultisigSetupController(
 
             var duplicateKeyFound = pending.Participants
                 .Where(p => !string.Equals(p.UserId, currentUserId, StringComparison.Ordinal))
-                .Any(p =>
-                    TryParseAccountKey(p.AccountKey, network, out var participantKey) &&
-                    participantKey.ToString() == normalizedAccountKey);
+                .Any(p => p.AccountKey == normalizedAccountKey);
             if (duplicateKeyFound)
             {
                 ModelState.AddModelError(string.Empty, StringLocalizer["This signer key is already used in this multisig request."].Value);
                 return View(current);
             }
 
-            participant.AccountKey = current.DisplayAccountKey;
-            participant.MasterFingerprint = current.MasterFingerprint;
-            participant.AccountKeyPath = current.AccountKeyPath;
+            participant.AccountKey = normalizedAccountKey;
+            participant.AccountKeyPath = accountKeyPath;
             if (!await storeRepository.TryUpdateSettingAsync(storeId, setupContext.SettingName, setupContext.XMin, pending))
                 continue;
 
@@ -217,25 +202,8 @@ public class UIMultisigSetupController(
                 TotalSigners = pending.TotalSigners,
                 ScriptType = pending.ScriptType,
                 DisplayAccountKey = participant.AccountKey,
-                MasterFingerprint = participant.MasterFingerprint,
-                AccountKeyPath = participant.AccountKeyPath
+                AccountKeyPath = participant.AccountKeyPath?.ToString()
             }
         };
-    }
-
-    private static bool TryParseAccountKey(string? accountKey, BTCPayNetwork network, out BitcoinExtPubKey parsed)
-    {
-        parsed = null!;
-        if (string.IsNullOrWhiteSpace(accountKey) || network.NBitcoinNetwork is null)
-            return false;
-        try
-        {
-            parsed = new BitcoinExtPubKey(accountKey.Trim(), network.NBitcoinNetwork);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
     }
 }

@@ -30,8 +30,7 @@ public class GetMultisigAccountKeyController : HWIController
         await ui.JSRuntime.InvokeVoidAsync("vault.setMultisigSignerKey", cancellationToken, new JsonObject
         {
             ["accountKey"] = xpub.ToString(),
-            ["masterFingerprint"] = fingerprint.ToString().ToLowerInvariant(),
-            ["accountKeyPath"] = $"m/{keyPath}"
+            ["accountKeyPath"] = new RootedKeyPath(fingerprint, keyPath).ToString()
         });
     }
 }

@@ -4,6 +4,7 @@ using BTCPayServer.Abstractions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Plugins.Wallets;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json;

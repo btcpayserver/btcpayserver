@@ -52,16 +52,6 @@ namespace Microsoft.AspNetCore.Mvc
             );
         }
 
-        public static string WalletPendingTransactionLink(this LinkGenerator urlHelper, WalletId walletId, string pendingTransactionId, RequestBaseUrl baseUrl)
-        {
-            return urlHelper.GetUriByAction(
-                action: nameof(UIWalletsController.ViewPendingTransaction),
-                controller: "UIWallets",
-                values: new { area = WalletsPlugin.Area, walletId = walletId.ToString(), pendingTransactionId },
-                baseUrl
-            );
-        }
-
         public static string AppLink(this LinkGenerator urlHelper, string appId, string scheme, HostString host, string pathbase)
         {
             return urlHelper.GetUriByAction(

@@ -50,7 +50,7 @@ public class MultisigSearchResultProvider(
             context.ItemResults.Add(new ResultItemViewModel
             {
                 Title = stringLocalizer["Multisig setup in progress"].Value,
-                Url = context.Url.Action(nameof(UIMultisigStatusController.Status), "UIMultisigStatus", new { area = MultisigPlugin.Area, multisigSetupId = pending.RequestId }),
+                Url = context.Url.Action(nameof(UIMultisigSetupController.SetupMultisigStatus), "UIMultisigSetup", new { area = MultisigPlugin.Area, multisigSetupId = pending.RequestId }),
                 Category = category,
                 Keywords = ["Multisig", "Setup multisig", "Setup status", "Signer request", "Submit signer key", "Signer", "Signers", "XPUB", "Vault", "Hardware wallet", cryptoCode, translated, untranslated]
             });
@@ -63,7 +63,7 @@ public class MultisigSearchResultProvider(
         {
             RequiredPolicy = WalletPolicies.CanManageWalletSettings,
             Title = stringLocalizer["Set up a multisig wallet"].Value,
-            Url = context.Url.Action(nameof(UIMultisigSetupController.SetupMultisig), "UIMultisigSetup", new { area = MultisigPlugin.Area, storeId, cryptoCode }),
+            Url = context.Url.Action(nameof(UIMultisigWalletsController.SetupMultisig), "UIMultisigWallets", new { area = MultisigPlugin.Area, storeId, cryptoCode }),
             Category = category,
             Keywords = ["Multisig", "Setup multisig", "Signer request", "Submit signer key", "Signer", "Signers", "XPUB", "Vault", "Hardware wallet", cryptoCode, translated, untranslated]
         });

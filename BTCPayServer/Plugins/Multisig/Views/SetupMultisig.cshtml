@@ -14,7 +14,7 @@
     <p class="lead text-secondary mt-3" text-translate="true">Build your multisig derivation using guided inputs, then import it in one step.</p>
 </header>
 
-<form asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigSetup" asp-action="CreateMultisigRequest" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" method="post" class="my-5">
+<form asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigWallets" asp-action="SetupMultisig" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" method="post" class="my-5">
     <div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
 
     <div class="row g-3">

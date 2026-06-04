@@ -29,7 +29,7 @@
                         </header>
 
                         <div class="list-group mt-3">
-                            <a asp-action="SubmitMultisigSigner"
+                            <a asp-action="SetupMultisigSubmitKey"
                                asp-route-multisigSetupId="@Model.RequestId"
                                asp-route-method="hardware"
                                id="SubmitSignerKeyHardware"
@@ -60,7 +60,7 @@
                         </div>
 
                         <div class="list-group mt-4">
-                            <a asp-action="SubmitMultisigSigner"
+                            <a asp-action="SetupMultisigSubmitKey"
                                asp-route-multisigSetupId="@Model.RequestId"
                                asp-route-method="manual"
                                id="SubmitSignerKeyManual"
@@ -77,7 +77,7 @@
                         </div>
 
                         <div class="mt-4">
-                            <a asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigStatus" asp-action="Status" asp-route-multisigSetupId="@Model.RequestId" class="btn btn-secondary" text-translate="true">Back to setup</a>
+                            <a asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigSetup" asp-action="SetupMultisigStatus" asp-route-multisigSetupId="@Model.RequestId" class="btn btn-secondary" text-translate="true">Back to setup</a>
                         </div>
                     }
                     else
@@ -129,12 +129,12 @@
                             </div>
                             <div class="d-flex flex-wrap gap-3 mt-4">
                                 <button type="submit" id="SubmitSignerKeyButton" class="btn btn-primary" disabled="@useHardware" text-translate="true">Submit signer key</button>
-                                <a asp-action="SubmitMultisigSigner"
+                                <a asp-action="SetupMultisigSubmitKey"
                                    asp-route-multisigSetupId="@Model.RequestId"
                                    id="BackToSignerKeyInputMethods"
                                    class="btn btn-secondary"
                                    text-translate="true">Choose another method</a>
-                                <a asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigStatus" asp-action="Status" asp-route-multisigSetupId="@Model.RequestId" class="btn btn-secondary" text-translate="true">Back to setup</a>
+                                <a asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigSetup" asp-action="SetupMultisigStatus" asp-route-multisigSetupId="@Model.RequestId" class="btn btn-secondary" text-translate="true">Back to setup</a>
                             </div>
                         </form>
                     }

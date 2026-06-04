@@ -10,15 +10,8 @@ public static class UrlHelperExtensions
 {
     public static string MultisigSetupSessionLink(this LinkGenerator linkGenerator, string requestId, RequestBaseUrl requestBaseUrl)
         => linkGenerator.GetUriByAction(
-            action: nameof(UIMultisigStatusController.Status),
-            controller: "UIMultisigStatus",
-            values:  new { area = MultisigPlugin.Area, multisigSetupId = requestId },
-            requestBaseUrl: requestBaseUrl);
-
-    public static string CreateSignerKeyLink(this LinkGenerator linkGenerator, string requestId, RequestBaseUrl requestBaseUrl)
-    => linkGenerator.GetUriByAction(
-            action: nameof(UIMultisigSignerKeyController.SubmitMultisigSigner),
-            controller: "UIMultisigSignerKey",
+            action: nameof(UIMultisigSetupController.SetupMultisigStatus),
+            controller: "UIMultisigSetup",
             values:  new { area = MultisigPlugin.Area, multisigSetupId = requestId },
             requestBaseUrl: requestBaseUrl);
 }

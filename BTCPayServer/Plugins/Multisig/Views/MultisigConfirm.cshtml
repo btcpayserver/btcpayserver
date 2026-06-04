@@ -4,7 +4,7 @@
 }
 
 @section Navbar {
-    <a asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigStatus" asp-action="Status" asp-route-multisigSetupId="@Model.MultisigRequestId">
+    <a asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigSetup" asp-action="SetupMultisigStatus" asp-route-multisigSetupId="@Model.MultisigRequestId">
         <vc:icon symbol="back" />
     </a>
 }
@@ -14,7 +14,7 @@
     <p class="lead text-secondary mt-3" text-translate="true">Please check that your wallet is generating the same addresses as below.</p>
 </header>
 
-<form method="post" asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigSetup" asp-action="FinalizeMultisigSetup" asp-route-multisigSetupId="@Model.MultisigRequestId">
+<form method="post" asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigWallets" asp-action="FinalizeMultisigSetup" asp-route-multisigSetupId="@Model.MultisigRequestId">
     <input asp-for="Config" type="hidden"/>
     <input asp-for="Confirmation" type="hidden"/>
     <input asp-for="MultisigRequestId" type="hidden" />

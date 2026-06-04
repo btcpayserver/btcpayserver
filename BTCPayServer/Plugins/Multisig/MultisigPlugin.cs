@@ -32,5 +32,6 @@ public class MultisigPlugin : BaseBTCPayServerPlugin
 
         services.AddUIExtension("store-onchain-wallet-setup", "/Plugins/Multisig/Views/SetupWalletCard.cshtml");
         services.AddUIExtension("dashboard-setup-guide-wallet", "/Plugins/Multisig/Views/DashboardSetupGuideExtension.cshtml");
+        services.AddScheduledDbScript("Multisig Setup Cleanup", "DELETE FROM multisig_setups WHERE expires_at < NOW()");
     }
 }

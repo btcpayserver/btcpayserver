@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using NBitcoin;
+using Npgsql;
 
 namespace BTCPayServer.Plugins.Multisig.Controllers;
 
@@ -150,18 +151,18 @@ public class UIMultisigSetupController(
                 new { area = MultisigPlugin.Area, multisigSetupId = current.RequestId });
         }
 
-        var duplicateKeyFound = pending.Participants
-            .Where(p => !string.Equals(p.UserId, currentUserId, StringComparison.Ordinal))
-            .Any(p => p.AccountKey == normalizedAccountKey);
-        if (duplicateKeyFound)
+        participant.AccountKey = normalizedAccountKey;
+        participant.AccountKeyPath = accountKeyPath;
+
+        try
+        {
+            await multisigService.UpdateParticipant(storeId, pending.RequestId, currentUserId, participant);
+        }
+        catch (PostgresException e) when (e is { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: "UQ_multisig_setups_participants_multisig_setup_id_account_key" })
         {
             ModelState.AddModelError(string.Empty, StringLocalizer["This signer key is already used in this multisig request."].Value);
             return View(current);
         }
-
-        participant.AccountKey = normalizedAccountKey;
-        participant.AccountKeyPath = accountKeyPath;
-        await multisigService.UpdateParticipant(storeId, pending.RequestId, currentUserId, participant);
 
         multisigNotificationService.PublishSignerKeySubmittedEvent(pending, participant);
         TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Signer key submitted successfully."].Value;

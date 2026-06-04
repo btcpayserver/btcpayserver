@@ -2,7 +2,6 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace BTCPayServer.Plugins.Wallets;
 

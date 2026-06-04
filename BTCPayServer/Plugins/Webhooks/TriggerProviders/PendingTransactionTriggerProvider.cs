@@ -81,6 +81,6 @@ public class PendingTransactionTriggerProvider
 
         public string CryptoCode { get; set; }
 
-        [JsonProperty] public string PendingTransactionId { get; set; } = null!;
+        [JsonProperty(Order = 2)] public string PendingTransactionId { get; set; } = null!;
     }
 }

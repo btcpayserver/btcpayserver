@@ -1,7 +1,6 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Security.Principal;
 using System.Threading.Tasks;
@@ -732,7 +731,6 @@ retry:
         {
             return JsonConvert.SerializeObject(obj, SerializerSettings);
         }
-
         public async Task<T?> GetSettingAsync<T>(string storeId, string name) where T : class
         {
             await using var ctx = _ContextFactory.CreateContext();

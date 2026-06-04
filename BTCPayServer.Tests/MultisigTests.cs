@@ -289,7 +289,8 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
                     Email = "signer-b@example.com",
                     Name = "Signer B"
                 }
-            ]
+            ],
+            RequestBaseUrl = RequestBaseUrl.FromUrl("https://example.com"),
         };
 
         Assert.True(await storeRepository.TryCreateSettingAsync(storeId, settingName, pending));

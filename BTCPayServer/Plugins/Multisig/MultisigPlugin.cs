@@ -22,8 +22,8 @@ public class MultisigPlugin : BaseBTCPayServerPlugin
               AND COALESCE("Value"->>'RequestId', "Value"->>'requestId') = @id
             LIMIT 1
             """));
-        services.AddScoped<Services.MultisigService>();
-        services.AddScoped<Services.MultisigNotificationService>();
+        services.AddSingleton<Services.MultisigService>();
+        services.AddSingleton<Services.MultisigNotificationService>();
         services.AddHostedService<HostedServices.MultisigEmailTriggerHostedService>();
         services.AddSearchResultItemProvider<MultisigSearchResultProvider>();
         foreach (var trigger in MultisigEmailTriggers.GetViewModels())

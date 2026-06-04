@@ -43,9 +43,7 @@ public class MultisigSearchResultProvider(
             if (hasWallet && !pending.ReplacesExistingWallet)
                 return;
 
-            var canManageSetup = await context.IsAuthorized(WalletPolicies.CanManageWalletSettings);
-            var canSign = await context.IsAuthorized(WalletPolicies.CanSignWalletTransactions);
-            var setupAccess = MultisigService.GetSetupAccess(canManageSetup, canSign, context.UserId, pending);
+            var setupAccess = await context.AuthorizationService.GetSetupAccess(storeId, context.User, pending);
             if (!setupAccess.CanViewStatus)
                 return;
 

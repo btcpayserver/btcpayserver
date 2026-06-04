@@ -20,7 +20,6 @@ namespace BTCPayServer.Plugins.Multisig.Services;
 
 public class MultisigNotificationService(
     EventAggregator eventAggregator,
-    MultisigService multisigService,
     LinkGenerator linkGenerator,
     ApplicationDbContextFactory dbContextFactory,
     IEnumerable<EmailTriggerViewModel> emailTriggers)
@@ -55,9 +54,9 @@ public class MultisigNotificationService(
         await ctx.SaveChangesAsync(cancellationToken);
     }
 
-    public Task PublishSignerKeyRequestedEvents(HttpContext httpContext, string storeId, string cryptoCode, PendingMultisigSetupData pending)
+    public Task PublishSignerKeyRequestedEvents(string storeId, string cryptoCode, PendingMultisigSetupData pending)
     {
-        var link = multisigService.CreateSessionLink(httpContext, pending.RequestId);
+        var link = linkGenerator.CreateSessionLink(pending.RequestId, pending.RequestBaseUrl);
         foreach (var participant in pending.Participants.Where(p => string.IsNullOrWhiteSpace(p.AccountKey)))
         {
             eventAggregator.Publish(new MultisigSignerKeyRequestedEvent(
@@ -72,9 +71,9 @@ public class MultisigNotificationService(
         return Task.CompletedTask;
     }
 
-    public Task PublishSignerKeySubmittedEvent(HttpContext httpContext, string storeId, string cryptoCode, PendingMultisigSetupData pending, PendingMultisigSetupParticipantData participant)
+    public Task PublishSignerKeySubmittedEvent(string storeId, string cryptoCode, PendingMultisigSetupData pending, PendingMultisigSetupParticipantData participant)
     {
-        var setupLink = multisigService.CreateSessionLink(httpContext, pending.RequestId);
+        var setupLink = linkGenerator.CreateSessionLink(pending.RequestId, pending.RequestBaseUrl);
         eventAggregator.Publish(new MultisigSignerKeySubmittedEvent(
             storeId,
             cryptoCode,
@@ -86,10 +85,10 @@ public class MultisigNotificationService(
         return Task.CompletedTask;
     }
 
-    public Task PublishWalletCreatedEvent(HttpContext httpContext, string storeId, string cryptoCode, PendingMultisigSetupData pending)
+    public Task PublishWalletCreatedEvent(string storeId, string cryptoCode, PendingMultisigSetupData pending)
     {
         var walletId = new WalletId(storeId, cryptoCode);
-        var walletLink = linkGenerator.WalletTransactionsLink(walletId, httpContext.Request.GetRequestBaseUrl());
+        var walletLink = linkGenerator.WalletTransactionsLink(walletId, pending.RequestBaseUrl);
 
         var participantIds = pending.Participants
             .Select(p => p.UserId)

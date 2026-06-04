@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Multisig.Models;
 using BTCPayServer.Plugins.Multisig.Services;
@@ -27,6 +28,7 @@ public class UIMultisigSetupController(
     ExplorerClientProvider explorerProvider,
     OnChainWalletSetupService onChainWalletSetupService,
     MultisigService multisigService,
+    IAuthorizationService authorizationService,
     MultisigNotificationService multisigNotificationService,
     IStringLocalizer stringLocalizer,
     ILogger<UIMultisigSetupController> logger) : Controller
@@ -140,7 +142,7 @@ public class UIMultisigSetupController(
         {
             try
             {
-                await multisigNotificationService.PublishWalletCreatedEvent(HttpContext, vm.StoreId, vm.CryptoCode, finalizedPendingSetting.Value.Pending);
+                await multisigNotificationService.PublishWalletCreatedEvent(vm.StoreId, vm.CryptoCode, finalizedPendingSetting.Value.Pending);
             }
             catch (Exception ex)
             {
@@ -181,7 +183,7 @@ public class UIMultisigSetupController(
             return View("Multisig", vm);
         }
 
-        var requesterUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var requesterUserId = User.GetId();
         var requesterStoreUser = vm.MultisigStoreUsers.FirstOrDefault(u => string.Equals(u.UserId, requesterUserId, StringComparison.Ordinal));
         var requesterEmail = requesterStoreUser?.Email ?? User.FindFirstValue(ClaimTypes.Email) ?? User.Identity?.Name;
 
@@ -227,7 +229,8 @@ public class UIMultisigSetupController(
                         Name = selectedUser.Name
                     };
                 })
-                .ToList()
+                .ToList(),
+            RequestBaseUrl = HttpContext.Request.GetRequestBaseUrl()
         };
 
         var settingName = MultisigService.GetPendingMultisigSettingName(vm.CryptoCode);
@@ -243,7 +246,7 @@ public class UIMultisigSetupController(
 
         await multisigNotificationService.EnsureDefaultEmailRules(vm.StoreId);
 
-        await multisigNotificationService.PublishSignerKeyRequestedEvents(HttpContext, vm.StoreId, vm.CryptoCode, pending);
+        await multisigNotificationService.PublishSignerKeyRequestedEvents(vm.StoreId, vm.CryptoCode, pending);
 
         TempData[WellKnownTempData.SuccessMessage] = stringLocalizer["Multisig signer requests were created."].Value;
         return RedirectToAction(nameof(UIMultisigStatusController.Status), "UIMultisigStatus", new { area = MultisigPlugin.Area, multisigSetupId = pending.RequestId });
@@ -291,15 +294,10 @@ public class UIMultisigSetupController(
 
     private async Task<IActionResult> RenderSessionView(PendingMultisigSetupContext setupContext)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
-            return Forbid();
-
-        var setupAccess = await multisigService.GetSetupAccess(setupContext.StoreId, User, userId, setupContext.Pending);
+        var setupAccess = await authorizationService.GetSetupAccess(setupContext.StoreId, User, setupContext.Pending);
         if (!setupAccess.CanViewStatus)
             return Forbid();
-
-        var model = multisigService.CreateInProgressViewModel(setupContext.StoreId, userId, setupContext.CryptoCode, setupContext.Pending, HttpContext, setupAccess.CanManageWalletSettings);
+        var model = multisigService.CreateInProgressViewModel(setupContext.StoreId, User.GetId(), setupContext.CryptoCode, setupContext.Pending, setupAccess.CanManageWalletSettings);
         return View("MultisigStatus", model);
     }
 

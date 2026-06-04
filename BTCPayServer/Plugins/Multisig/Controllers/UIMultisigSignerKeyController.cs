@@ -24,6 +24,7 @@ public class UIMultisigSignerKeyController(
     StoreRepository storeRepository,
     ExplorerClientProvider explorerProvider,
     MultisigService multisigService,
+    IAuthorizationService authorizationService,
     MultisigNotificationService multisigNotificationService,
     IStringLocalizer stringLocalizer) : Controller
 {
@@ -158,7 +159,7 @@ public class UIMultisigSignerKeyController(
             if (!await storeRepository.TryUpdateSettingAsync(setupContext.StoreId, setupContext.SettingName, setupContext.XMin, pending))
                 continue;
 
-            await multisigNotificationService.PublishSignerKeySubmittedEvent(HttpContext, setupContext.StoreId, setupContext.CryptoCode, pending, participant);
+            await multisigNotificationService.PublishSignerKeySubmittedEvent(setupContext.StoreId, setupContext.CryptoCode, pending, participant);
             TempData[WellKnownTempData.SuccessMessage] = stringLocalizer["Signer key submitted successfully."].Value;
             return RedirectToAction(nameof(UIMultisigStatusController.Status), "UIMultisigStatus", new { area = MultisigPlugin.Area, multisigSetupId = current.RequestId });
         }
@@ -169,16 +170,13 @@ public class UIMultisigSignerKeyController(
 
     private async Task<SignerKeyLoadResult> LoadSignerKeyViewModel(string multisigSetupId)
     {
-        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(currentUserId))
-            return new SignerKeyLoadResult { Status = SignerKeyLoadStatus.Invalid };
-
+        var currentUserId = User.GetId();
         var setupContext = await multisigService.GetPendingMultisigSetupContext(multisigSetupId);
         if (setupContext is null || !IsSupportedCryptoCode(setupContext.CryptoCode))
             return new SignerKeyLoadResult { Status = SignerKeyLoadStatus.Invalid };
         var pending = setupContext.Pending;
 
-        var access = await multisigService.GetSetupAccess(setupContext.StoreId, User, currentUserId, pending);
+        var access = await authorizationService.GetSetupAccess(setupContext.StoreId, User, pending);
         if (!access.CanSignWalletTransactions || !access.IsParticipant)
             return new SignerKeyLoadResult { Status = SignerKeyLoadStatus.Forbidden };
 

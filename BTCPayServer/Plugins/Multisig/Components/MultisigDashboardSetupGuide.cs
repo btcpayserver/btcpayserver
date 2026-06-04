@@ -1,23 +1,22 @@
-using System.Security.Claims;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Plugins.Multisig.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Plugins.Multisig.Components;
 
-public class MultisigDashboardSetupGuide(MultisigService multisigService) : ViewComponent
+public class MultisigDashboardSetupGuide(MultisigService multisigService, IAuthorizationService authorizationService) : ViewComponent
 {
     public async Task<IViewComponentResult> InvokeAsync(StoreDashboardViewModel model)
     {
         var httpContext = ViewContext.HttpContext;
         var store = httpContext.GetStoreData();
-        var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userId = httpContext.User.GetIdOrNull();
         if (string.IsNullOrEmpty(userId))
             return Content(string.Empty);
 
-        var items = await multisigService.GetInProgressForStore(store, httpContext.User, userId, httpContext);
+        var items = await multisigService.GetInProgressForStore(authorizationService, store, httpContext.User);
         if (items.Count == 0)
             return Content(string.Empty);
 

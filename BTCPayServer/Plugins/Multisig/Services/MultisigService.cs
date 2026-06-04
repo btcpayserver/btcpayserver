@@ -8,7 +8,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
-using BTCPayServer.Plugins.Multisig.Controllers;
 using BTCPayServer.Plugins.Multisig.Models;
 using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Payments;
@@ -18,7 +17,6 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
@@ -33,23 +31,9 @@ public class MultisigService(
     ApplicationDbContextFactory dbContextFactory,
     PaymentMethodHandlerDictionary handlers,
     LinkGenerator linkGenerator,
-    IAuthorizationService authorizationService,
     PermissionService permissionService)
 {
     private const string PendingMultisigSettingPrefix = "PendingMultisigSetup";
-
-    public readonly record struct MultisigSetupAccess(bool CanManageWalletSettings, bool CanSignWalletTransactions, bool IsParticipant)
-    {
-        public bool CanViewStatus => CanManageWalletSettings || (CanSignWalletTransactions && IsParticipant);
-    }
-
-    public static MultisigSetupAccess GetSetupAccess(bool canManageWalletSettings, bool canSignWalletTransactions, string? userId, PendingMultisigSetupData? pending)
-    {
-        return new MultisigSetupAccess(
-            canManageWalletSettings,
-            canSignWalletTransactions,
-            IsPendingParticipant(pending, userId));
-    }
 
     public async Task PopulateSetupViewModel(MultisigSetupViewModel vm)
     {
@@ -133,28 +117,6 @@ public class MultisigService(
         return $"{PendingMultisigSettingPrefix}-{cryptoCode.ToUpperInvariant()}";
     }
 
-    public string CreateSessionLink(HttpContext httpContext, string requestId)
-    {
-        var values = new { area = MultisigPlugin.Area, multisigSetupId = requestId };
-        var link = linkGenerator.GetUriByAction(
-            httpContext,
-            nameof(UIMultisigStatusController.Status),
-            "UIMultisigStatus",
-            values);
-        return link ?? throw new InvalidOperationException("Unable to generate multisig setup link.");
-    }
-
-    public string CreateSignerKeyLink(HttpContext httpContext, string requestId)
-    {
-        var values = new { area = MultisigPlugin.Area, multisigSetupId = requestId };
-        var link = linkGenerator.GetPathByAction(
-            httpContext,
-            nameof(UIMultisigSignerKeyController.SubmitMultisigSigner),
-            "UIMultisigSignerKey",
-            values);
-        return link ?? throw new InvalidOperationException("Unable to generate multisig signer key link.");
-    }
-
     public bool HasOnChainWallet(StoreData store, string cryptoCode)
     {
         var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
@@ -162,17 +124,11 @@ public class MultisigService(
                store.GetPaymentMethodConfig<DerivationSchemeSettings>(paymentMethodId, handlers) is not null;
     }
 
-    public async Task<MultisigSetupAccess> GetSetupAccess(string storeId, ClaimsPrincipal user, string? userId, PendingMultisigSetupData? pending)
-    {
-        var canManageWalletSettings = (await authorizationService.AuthorizeAsync(user, storeId, WalletPolicies.CanManageWalletSettings)).Succeeded;
-        var canSignWalletTransactions = (await authorizationService.AuthorizeAsync(user, storeId, WalletPolicies.CanSignWalletTransactions)).Succeeded;
-        return GetSetupAccess(canManageWalletSettings, canSignWalletTransactions, userId, pending);
-    }
-
-    public async Task<IReadOnlyList<MultisigInProgressViewModel>> GetInProgressForStore(StoreData store, ClaimsPrincipal user, string userId, HttpContext httpContext)
+    public async Task<IReadOnlyList<MultisigInProgressViewModel>> GetInProgressForStore(IAuthorizationService authorizationService, StoreData store, ClaimsPrincipal user)
     {
         var result = new List<MultisigInProgressViewModel>();
-        var setupAccess = await GetSetupAccess(store.Id, user, userId, pending: null);
+        var setupAccess = await authorizationService.GetSetupAccess(store.Id, user, pending: null);
+        var userId = user.GetId();
         var cryptoCodes = handlers.OfType<BitcoinLikePaymentHandler>()
             .Select(h => h.Network.CryptoCode)
             .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -187,11 +143,11 @@ public class MultisigService(
             if (!pending.ReplacesExistingWallet && HasOnChainWallet(store, cryptoCode))
                 continue;
 
-            var pendingAccess = setupAccess with { IsParticipant = IsPendingParticipant(pending, userId) };
+            var pendingAccess = setupAccess with { IsParticipant = pending.IsPendingParticipant(userId) };
             if (!pendingAccess.CanViewStatus)
                 continue;
 
-            result.Add(CreateInProgressViewModel(store.Id, userId, cryptoCode, pending, httpContext, pendingAccess.CanManageWalletSettings));
+            result.Add(CreateInProgressViewModel(store.Id, user.GetId(), cryptoCode, pending, pendingAccess.CanManageWalletSettings));
         }
 
         return result
@@ -384,13 +340,13 @@ public class MultisigService(
         return true;
     }
 
-    public MultisigInProgressViewModel CreateInProgressViewModel(string storeId, string userId, string cryptoCode, PendingMultisigSetupData pending, HttpContext httpContext, bool canCreateWallet)
+    public MultisigInProgressViewModel CreateInProgressViewModel(string storeId, string userId, string cryptoCode, PendingMultisigSetupData pending, bool canCreateWallet)
     {
         var participant = pending.Participants.FirstOrDefault(p => string.Equals(p.UserId, userId, StringComparison.Ordinal));
         var didParticipate = participant is not null;
         var yourKeySubmitted = !string.IsNullOrWhiteSpace(participant?.AccountKey);
         var submittedSigners = pending.Participants.Count(p => !string.IsNullOrWhiteSpace(p.AccountKey));
-        var sessionUrl = CreateSessionLink(httpContext, pending.RequestId);
+        var sessionUrl = linkGenerator.CreateSessionLink(pending.RequestId, pending.RequestBaseUrl);
 
         return new MultisigInProgressViewModel
         {
@@ -404,7 +360,7 @@ public class MultisigService(
             YourKeySubmitted = yourKeySubmitted,
             ExpiresAt = pending.ExpiresAt,
             SessionUrl = sessionUrl,
-            SignerKeyUrl = didParticipate ? CreateSignerKeyLink(httpContext, pending.RequestId) : null,
+            SignerKeyUrl = didParticipate ? linkGenerator.CreateSignerKeyLink(pending.RequestId, pending.RequestBaseUrl) : null,
             CanCreateWallet = canCreateWallet,
             Participants = pending.Participants
                 .Select(p => new MultisigInProgressParticipantViewModel
@@ -415,11 +371,5 @@ public class MultisigService(
                 })
                 .ToArray()
         };
-    }
-
-    private static bool IsPendingParticipant(PendingMultisigSetupData? pending, string? userId)
-    {
-        return !string.IsNullOrEmpty(userId) &&
-               pending?.Participants.Any(p => string.Equals(p.UserId, userId, StringComparison.Ordinal)) is true;
     }
 }

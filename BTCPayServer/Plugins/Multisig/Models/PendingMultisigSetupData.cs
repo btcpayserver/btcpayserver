@@ -44,7 +44,7 @@ public class PendingMultisigSetupData
         strategy.DefaultIncludeNonWitnessUtxo = true;
         for (int i = 0; i < Participants.Count; i++)
         {
-            strategy.AccountKeySettings[i].SignerEmail = Participants[i].Email;
+            strategy.AccountKeySettings[i].SignerUserId = Participants[i].UserId;
             strategy.AccountKeySettings[i].AccountKeyPath =  Participants[i].AccountKeyPath.KeyPath;
             strategy.AccountKeySettings[i].RootFingerprint =  Participants[i].AccountKeyPath.MasterFingerprint;
         }

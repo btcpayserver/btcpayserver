@@ -279,6 +279,15 @@ public partial class UIOfferingController(
                         });
                         return GoToOffering(storeId, offeringId);
                     }
+                    if (migrateToPlanId == planId)
+                    {
+                        TempData.SetStatusMessageModel(new()
+                        {
+                            Severity = StatusMessageModel.StatusSeverity.Error,
+                            Html = StringLocalizer["Cannot migrate subscribers to the plan being retired."]
+                        });
+                        return GoToOffering(storeId, offeringId);
+                    }
                     var targetPlan = await ctx.Plans.GetPlanFromId(migrateToPlanId, offeringId, storeId);
                     if (targetPlan is null || targetPlan.Status != PlanData.PlanStatus.Active)
                     {

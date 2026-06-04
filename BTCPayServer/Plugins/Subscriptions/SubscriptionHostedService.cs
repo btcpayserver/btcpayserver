@@ -520,7 +520,8 @@ public class SubscriptionHostedService(
                 {
                     checkout.CreditedByInvoice += diff;
                     await subCtx.CreditSubscriber(sub, $"Credit purchase (Inv: {invoice.Id})", diff);
-                    await TryStartPlan(subCtx, checkout, sub);
+                    if (plan.Status != PlanData.PlanStatus.Retired)
+                        await TryStartPlan(subCtx, checkout, sub);
                 }
                 else
                 {

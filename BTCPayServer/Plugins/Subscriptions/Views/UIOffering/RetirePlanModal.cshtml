@@ -94,16 +94,27 @@
             const migrateTimingSelect = document.getElementById('retireMigrateTiming');
             if (migrateTimingSelect) migrateTimingSelect.value = 'period-end';
 
-            const migrateSelect = document.getElementById('retireMigratePlanId');
+			const migrateSelect = document.getElementById('retireMigratePlanId');
+            const migrateRadio = document.getElementById('retireAction-migrate');
             if (migrateSelect) {
                 Array.from(migrateSelect.options).forEach(function (opt) {
                     opt.hidden = opt.value === planId;
+                    opt.disabled = opt.value === planId;
                 });
-                const firstVisible = Array.from(migrateSelect.options).find(o => !o.hidden);
-                if (firstVisible) {
-                    migrateSelect.value = firstVisible.value;
-                    if (migratePlanInput) migratePlanInput.value = firstVisible.value;
+                const validTargets = Array.from(migrateSelect.options).filter(o => !o.hidden);
+                const hasTarget = validTargets.length > 0;
+                if (hasTarget) {
+                    migrateSelect.value = validTargets[0].value;
+                    if (migratePlanInput) migratePlanInput.value = validTargets[0].value;
+                } else {
+                    migrateSelect.value = '';
+                    if (migratePlanInput) migratePlanInput.value = '';
                 }
+                if (migrateRadio) {
+                    migrateRadio.disabled = !hasTarget;
+                    migrateRadio.closest('.form-check').classList.toggle('text-muted', !hasTarget);
+                }
+                if (migrateSelect) migrateSelect.disabled = !hasTarget;
             }
         });
 

@@ -7,11 +7,13 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
+using BTCPayServer.Payments;
 using BTCPayServer.Plugins.Multisig.Models;
 using BTCPayServer.Plugins.Multisig.Services;
 using BTCPayServer.Plugins.Wallets;
-using BTCPayServer.Plugins.Wallets.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
@@ -24,9 +26,10 @@ namespace BTCPayServer.Plugins.Multisig.Controllers;
 public class UIMultisigWalletsController(
     StoreRepository storeRepository,
     ExplorerClientProvider explorerProvider,
-    OnChainWalletSetupService onChainWalletSetupService,
+    BTCPayWalletProvider walletProvider,
     MultisigService multisigService,
     MultisigNotificationService multisigNotificationService,
+    PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
     IStringLocalizer stringLocalizer) : Controller
 {
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
@@ -194,12 +197,20 @@ public class UIMultisigWalletsController(
             return View("MultisigConfirm", vm);
         }
 
-        var saveResult = await onChainWalletSetupService.SaveWallet(store, network, currentStrategy, setupRequest: null);
-        if (!saveResult.Success)
+        var wallet = walletProvider.GetWallet(network);
+        if (wallet is null)
         {
-            ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer[saveResult.ErrorMessage ?? "Wallet setup failed."].Value);
-            return ConfirmAddresses(vm, currentStrategy, network);
+            ModelState.AddModelError(nameof(vm.MultisigRequestId), StringLocalizer["Wallet is not available."].Value);
+            return View("MultisigConfirm", vm);
         }
+
+        await wallet.TrackAsync(currentStrategy.AccountDerivation);
+        var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
+        store.SetPaymentMethodConfig(paymentMethodHandlerDictionary[paymentMethodId], currentStrategy);
+        var storeBlob = store.GetStoreBlob();
+        storeBlob.SetExcluded(paymentMethodId, false);
+        store.SetStoreBlob(storeBlob);
+        await storeRepository.UpdateStore(store);
 
         var finalizedPendingSetting = await GetPendingRequestWithVersion(vm.StoreId, vm.CryptoCode, vm.MultisigRequestId);
         if (finalizedPendingSetting is not null &&

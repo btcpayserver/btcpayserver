@@ -15,7 +15,6 @@
 </header>
 
 <form method="post" asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigWallets" asp-action="FinalizeMultisigSetup" asp-route-multisigSetupId="@Model.MultisigRequestId">
-    <input asp-for="Config" type="hidden"/>
     <input asp-for="Confirmation" type="hidden"/>
     <input asp-for="MultisigRequestId" type="hidden" />
     <div asp-validation-summary="All"></div>

@@ -17,35 +17,8 @@ public class OnChainWalletSetupService(
     BTCPayWalletProvider walletProvider,
     PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
     StoreRepository storeRepository,
-    EventAggregator eventAggregator,
-    IDataProtectionProvider dataProtectionProvider)
+    EventAggregator eventAggregator)
 {
-    private readonly IDataProtector _dataProtector = dataProtectionProvider.CreateProtector("ConfigProtector");
-
-    public string ProtectConfig(string cryptoCode, DerivationSchemeSettings derivationSchemeSettings)
-    {
-        var handler = paymentMethodHandlerDictionary.GetBitcoinHandler(cryptoCode);
-        return _dataProtector.ProtectString(JToken.FromObject(derivationSchemeSettings, handler.Serializer).ToString());
-    }
-
-    public bool TryParseProtectedConfig(string cryptoCode, string protectedConfig, out DerivationSchemeSettings? derivationSchemeSettings)
-    {
-        derivationSchemeSettings = null;
-        if (string.IsNullOrWhiteSpace(protectedConfig))
-            return false;
-
-        try
-        {
-            var handler = paymentMethodHandlerDictionary.GetBitcoinHandler(cryptoCode);
-            derivationSchemeSettings = handler.ParsePaymentMethodConfig(JToken.Parse(_dataProtector.UnprotectString(protectedConfig)));
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
     public async Task<OnChainWalletSetupResult> SaveWallet(StoreData store, BTCPayNetwork network, DerivationSchemeSettings derivationSchemeSettings, WalletSetupRequest? setupRequest)
     {
         var wallet = walletProvider.GetWallet(network);

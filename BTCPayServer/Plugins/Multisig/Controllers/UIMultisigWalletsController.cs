@@ -176,12 +176,6 @@ public class UIMultisigWalletsController(
 
     private async Task<IActionResult> ConfirmMultisigSetup(MultisigSetupViewModel vm, StoreData store, BTCPayNetwork network)
     {
-        if (!onChainWalletSetupService.TryParseProtectedConfig(vm.CryptoCode, vm.Config, out var strategy) || strategy is null)
-        {
-            ModelState.AddModelError(nameof(vm.Config), StringLocalizer["Config file was not in the correct format"].Value);
-            return View("MultisigConfirm", vm);
-        }
-
         if (string.IsNullOrEmpty(vm.MultisigRequestId))
         {
             ModelState.AddModelError(nameof(vm.MultisigRequestId), StringLocalizer["The multisig request was not found or has expired."].Value);
@@ -202,18 +196,11 @@ public class UIMultisigWalletsController(
             return View("MultisigConfirm", vm);
         }
 
-        if (!HasSameMultisigStrategy(strategy, currentStrategy))
-        {
-            ModelState.AddModelError(nameof(vm.MultisigRequestId), StringLocalizer["This multisig request changed. Please review it again before creating the wallet."].Value);
-            vm.Config = onChainWalletSetupService.ProtectConfig(vm.CryptoCode, currentStrategy);
-            return ConfirmAddresses(vm, currentStrategy, network);
-        }
-
-        var saveResult = await onChainWalletSetupService.SaveWallet(store, network, strategy, setupRequest: null);
+        var saveResult = await onChainWalletSetupService.SaveWallet(store, network, currentStrategy, setupRequest: null);
         if (!saveResult.Success)
         {
             ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer[saveResult.ErrorMessage ?? "Wallet setup failed."].Value);
-            return ConfirmAddresses(vm, strategy, network);
+            return ConfirmAddresses(vm, currentStrategy, network);
         }
 
         var finalizedPendingSetting = await GetPendingRequestWithVersion(vm.StoreId, vm.CryptoCode, vm.MultisigRequestId);
@@ -268,7 +255,6 @@ public class UIMultisigWalletsController(
             MultisigRequiredSigners = pending.RequiredSigners,
             MultisigTotalSigners = pending.TotalSigners,
             MultisigScriptType = pending.ScriptType,
-            Config = onChainWalletSetupService.ProtectConfig(pending.CryptoCode, strategy),
             Confirmation = true,
             DerivationScheme = strategy.AccountDerivation.ToString()
         };
@@ -317,30 +303,6 @@ public class UIMultisigWalletsController(
         strategy.IsMultiSigOnServer = true;
         strategy.DefaultIncludeNonWitnessUtxo = true;
         multisigService.ApplySignerIdentities(pending, strategy, network);
-        return true;
-    }
-
-    private static bool HasSameMultisigStrategy(DerivationSchemeSettings left, DerivationSchemeSettings right)
-    {
-        if (!string.Equals(left.AccountDerivation?.ToString(), right.AccountDerivation?.ToString(), StringComparison.Ordinal) ||
-            left.IsMultiSigOnServer != right.IsMultiSigOnServer ||
-            left.DefaultIncludeNonWitnessUtxo != right.DefaultIncludeNonWitnessUtxo)
-            return false;
-
-        var leftKeys = left.AccountKeySettings ?? Array.Empty<AccountKeySettings>();
-        var rightKeys = right.AccountKeySettings ?? Array.Empty<AccountKeySettings>();
-        if (leftKeys.Length != rightKeys.Length)
-            return false;
-
-        for (var i = 0; i < leftKeys.Length; i++)
-        {
-            if (!string.Equals(leftKeys[i].AccountKey?.ToString(), rightKeys[i].AccountKey?.ToString(), StringComparison.Ordinal) ||
-                !string.Equals(leftKeys[i].AccountKeyPath?.ToString(), rightKeys[i].AccountKeyPath?.ToString(), StringComparison.Ordinal) ||
-                !string.Equals(leftKeys[i].RootFingerprint?.ToString(), rightKeys[i].RootFingerprint?.ToString(), StringComparison.Ordinal) ||
-                !string.Equals(leftKeys[i].SignerEmail, rightKeys[i].SignerEmail, StringComparison.Ordinal))
-                return false;
-        }
-
         return true;
     }
 

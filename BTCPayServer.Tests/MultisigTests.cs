@@ -8,6 +8,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Plugins.Multisig.Models;
+using BTCPayServer.Plugins.Multisig.Services;
 using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
@@ -258,77 +259,6 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
     }
 
     [Fact]
-    [Trait("Integration", "Integration")]
-    public async Task PendingMultisigSetupRejectsStaleConcurrentWrites()
-    {
-        var dbTester = CreateDBTester();
-        await dbTester.MigrateAsync();
-        var dbContextFactory = dbTester.CreateContextFactory();
-        var storeId = await CreateTestStore(dbContextFactory);
-        var storeRepository = CreateStoreRepository(dbContextFactory);
-        var settingName = Plugins.Multisig.Services.MultisigService.GetPendingMultisigSettingName("BTC");
-        var pending = new PendingMultisigSetupData
-        {
-            RequestId = "request-1",
-            RequestedByUserId = "owner@example.com",
-            ScriptType = "Segwit",
-            RequiredSigners = 2,
-            TotalSigners = 2,
-            ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
-            Participants =
-            [
-                new PendingMultisigSetupParticipantData
-                {
-                    UserId = "signer-a",
-                    Email = "signer-a@example.com",
-                    Name = "Signer A"
-                },
-                new PendingMultisigSetupParticipantData
-                {
-                    UserId = "signer-b",
-                    Email = "signer-b@example.com",
-                    Name = "Signer B"
-                }
-            ],
-            RequestBaseUrl = RequestBaseUrl.FromUrl("https://example.com"),
-        };
-
-        Assert.True(await storeRepository.TryCreateSettingAsync(storeId, settingName, pending));
-        var signerAView = await storeRepository.GetSettingWithVersionAsync<PendingMultisigSetupData>(storeId, settingName);
-        var signerBView = await storeRepository.GetSettingWithVersionAsync<PendingMultisigSetupData>(storeId, settingName);
-        Assert.NotNull(signerAView);
-        Assert.NotNull(signerBView);
-        Assert.Equal(signerAView.XMin, signerBView.XMin);
-
-        var signerA = signerAView.Value.Participants.Single(p => p.UserId == "signer-a");
-        signerA.AccountKey = "xpub-a";
-        Assert.True(await storeRepository.TryUpdateSettingAsync(storeId, settingName, signerAView.XMin, signerAView.Value));
-
-        var signerB = signerBView.Value.Participants.Single(p => p.UserId == "signer-b");
-        signerB.AccountKey = "xpub-b";
-        Assert.False(await storeRepository.TryUpdateSettingAsync(storeId, settingName, signerBView.XMin, signerBView.Value));
-
-        var afterStaleWrite = await storeRepository.GetSettingWithVersionAsync<PendingMultisigSetupData>(storeId, settingName);
-        Assert.NotNull(afterStaleWrite);
-        Assert.Equal("xpub-a", afterStaleWrite.Value.Participants.Single(p => p.UserId == "signer-a").AccountKey);
-        Assert.Null(afterStaleWrite.Value.Participants.Single(p => p.UserId == "signer-b").AccountKey);
-
-        signerB = afterStaleWrite.Value.Participants.Single(p => p.UserId == "signer-b");
-        signerB.AccountKey = "xpub-b";
-        Assert.True(await storeRepository.TryUpdateSettingAsync(storeId, settingName, afterStaleWrite.XMin, afterStaleWrite.Value));
-
-        var afterFreshWrite = await storeRepository.GetSettingWithVersionAsync<PendingMultisigSetupData>(storeId, settingName);
-        Assert.NotNull(afterFreshWrite);
-        Assert.Equal("xpub-a", afterFreshWrite.Value.Participants.Single(p => p.UserId == "signer-a").AccountKey);
-        Assert.Equal("xpub-b", afterFreshWrite.Value.Participants.Single(p => p.UserId == "signer-b").AccountKey);
-
-        Assert.False(await storeRepository.TryDeleteSettingAsync(storeId, settingName, signerAView.XMin));
-        Assert.NotNull(await storeRepository.GetSettingWithVersionAsync<PendingMultisigSetupData>(storeId, settingName));
-        Assert.True(await storeRepository.TryDeleteSettingAsync(storeId, settingName, afterFreshWrite.XMin));
-        Assert.Null(await storeRepository.GetSettingWithVersionAsync<PendingMultisigSetupData>(storeId, settingName));
-    }
-
-    [Fact]
     [Trait("Playwright", "Playwright-2")]
     public async Task CanEnableAndUseMultisigWallet()
     {
@@ -478,6 +408,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await using var scope = s.Server.PayTester.GetService<IServiceScopeFactory>().CreateAsyncScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var storeRepo = scope.ServiceProvider.GetRequiredService<StoreRepository>();
+        var multisigService = scope.ServiceProvider.GetRequiredService<MultisigService>();
 
         var signerAUser = await userManager.FindByEmailAsync(signerA);
         var signerBUser = await userManager.FindByEmailAsync(signerB);
@@ -515,7 +446,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
                 await s.Page.ClickAsync("#CreateSignerRequest");
             });
             Assert.Equal("Multisig signer request for BTC", signerRequestEmail.Subject);
-            var currentPending = await storeRepo.GetSettingAsync<PendingMultisigSetupData>(storeId, "PendingMultisigSetup-BTC");
+            var currentPending = await multisigService.GetPendingMultisigSetupForCryptoCode(storeId, "BTC");
             Assert.NotNull(currentPending);
             Assert.Equal(storeId, currentPending.StoreId);
             Assert.Equal("BTC", currentPending.CryptoCode);
@@ -603,7 +534,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
             employeeUser.Id);
         await s.Page.ClickAsync("#CreateSignerRequest");
         await Expect(s.Page.Locator("body")).ToContainTextAsync("One or more selected users are invalid.");
-        var pendingAfterInvalidSigner = await storeRepo.GetSettingAsync<PendingMultisigSetupData>(storeId, "PendingMultisigSetup-BTC");
+        var pendingAfterInvalidSigner = await multisigService.GetPendingMultisigSetupForCryptoCode(storeId, "BTC");
         Assert.DoesNotContain(pendingAfterInvalidSigner.Participants, p => p.UserId == employeeUser.Id);
 
         await s.GoToHome();
@@ -620,17 +551,17 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         Assert.Contains("/errors/403", new Uri(s.Page.Url).AbsolutePath, StringComparison.OrdinalIgnoreCase);
 
         await SubmitSigner(signerA, firstRequestId, signerAKey.AccountKey, signerAKey.AccountKeyPath, "Signer key submitted successfully.", useVaultCallback: true);
-        var pendingAfterFirstSubmit = await storeRepo.GetSettingAsync<PendingMultisigSetupData>(storeId, "PendingMultisigSetup-BTC");
+        var pendingAfterFirstSubmit =  await multisigService.GetPendingMultisigSetupForCryptoCode(storeId, "BTC");
         var signerAParticipant = pendingAfterFirstSubmit.Participants.Single(p => p.UserId == signerAUser.Id);
         Assert.Equal(signerAKey.AccountKey, signerAParticipant.AccountKey);
 
         await SubmitSigner(signerA, firstRequestId, signerBKey.AccountKey, signerBKey.AccountKeyPath, "Your signer key is submitted.", submitForm: false);
-        var pendingAfterResubmit = await storeRepo.GetSettingAsync<PendingMultisigSetupData>(storeId, "PendingMultisigSetup-BTC");
+        var pendingAfterResubmit =  await multisigService.GetPendingMultisigSetupForCryptoCode(storeId, "BTC");
         var signerAAfterResubmit = pendingAfterResubmit.Participants.Single(p => p.UserId == signerAUser.Id);
         Assert.Equal(signerAKey.AccountKey, signerAAfterResubmit.AccountKey);
 
         await SubmitSigner(signerB, firstRequestId, signerAKey.AccountKey, signerAKey.AccountKeyPath, "This signer key is already used in this multisig request.", expectNotification: false);
-        var pendingAfterDuplicate = await storeRepo.GetSettingAsync<PendingMultisigSetupData>(storeId, "PendingMultisigSetup-BTC");
+        var pendingAfterDuplicate =  await multisigService.GetPendingMultisigSetupForCryptoCode(storeId, "BTC");
         var signerBParticipant = pendingAfterDuplicate.Participants.Single(p => p.UserId == signerBUser.Id);
         Assert.True(string.IsNullOrWhiteSpace(signerBParticipant.AccountKey));
 
@@ -643,7 +574,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
         var secondRequestId = await CreateRequest(walletManager, signerB);
         Assert.NotEqual(firstRequestId, secondRequestId);
-        var pendingAfterSecondRequest = await storeRepo.GetSettingAsync<PendingMultisigSetupData>(storeId, "PendingMultisigSetup-BTC");
+        var pendingAfterSecondRequest = await multisigService.GetPendingMultisigSetupForCryptoCode(storeId, "BTC");
         Assert.Equal(secondRequestId, pendingAfterSecondRequest?.RequestId);
         var staleSessionResponse = await s.Page.GotoAsync(s.Link(firstSessionPath), new() { WaitUntil = WaitUntilState.Commit });
         Assert.Equal(404, staleSessionResponse?.Status);

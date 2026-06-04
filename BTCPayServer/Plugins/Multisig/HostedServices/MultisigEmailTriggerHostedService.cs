@@ -125,7 +125,7 @@ public class MultisigEmailTriggerHostedService(
         }
     }
 
-    private void AddSetup(JObject model, PendingMultisigSetupData setup)
+    private void AddSetup(JObject model, MultisigSetupData setup)
     {
         model["CryptoCode"] = setup.CryptoCode;
         model["Setup"] ??= new JObject();

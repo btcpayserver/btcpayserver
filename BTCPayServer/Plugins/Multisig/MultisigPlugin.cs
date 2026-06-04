@@ -16,10 +16,9 @@ public class MultisigPlugin : BaseBTCPayServerPlugin
         services.AddSingleton(new BuiltInPermissionScopeProvider.RouteValueToStoreIdQuery(
             "multisigSetupId",
             """
-            SELECT "StoreId"
-            FROM "StoreSettings"
-            WHERE "Name" LIKE 'PendingMultisigSetup-%'
-              AND COALESCE("Value"->>'RequestId', "Value"->>'requestId') = @id
+            SELECT "store_id"
+            FROM "multisig_setups"
+            WHERE "id" = @id
             LIMIT 1
             """));
         services.AddSingleton<Services.MultisigService>();

@@ -11,7 +11,6 @@ using BTCPayServer.Plugins.Multisig.Services;
 using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 
@@ -20,7 +19,7 @@ namespace BTCPayServer.Plugins.Multisig;
 public class MultisigSearchResultProvider(
     PaymentMethodHandlerDictionary handlers,
     PrettyNameProvider prettyNameProvider,
-    StoreRepository storeRepository,
+    MultisigService multisigService,
     IStringLocalizer stringLocalizer) : ISearchResultItemProvider
 {
     public async Task ProvideAsync(SearchResultItemProviderContext context, CancellationToken cancellationToken)
@@ -36,7 +35,7 @@ public class MultisigSearchResultProvider(
         var translated = prettyNameProvider.PrettyName(paymentMethodId, false);
         var untranslated = prettyNameProvider.PrettyName(paymentMethodId, true);
         var category = stringLocalizer["On-chain wallets", cryptoCode].Value + " ❯ " + translated;
-        var pending = await storeRepository.GetSettingAsync<Models.PendingMultisigSetupData>(storeId, MultisigService.GetPendingMultisigSettingName(cryptoCode));
+        var pending = await multisigService.GetPendingMultisigSetupForCryptoCode(storeId, cryptoCode);
         var hasWallet = context.Store.GetPaymentMethodConfig<DerivationSchemeSettings>(paymentMethodId, handlers) is not null;
         if (pending is not null && pending.ExpiresAt >= System.DateTimeOffset.UtcNow)
         {

@@ -9,7 +9,7 @@ namespace BTCPayServer.Plugins.Multisig;
 
 public static class Extensions
 {
-    public static async Task<MultisigSetupAccess> GetSetupAccess(this IAuthorizationService authorizationService, string storeId, ClaimsPrincipal user, PendingMultisigSetupData? pending)
+    public static async Task<MultisigSetupAccess> GetSetupAccess(this IAuthorizationService authorizationService, string storeId, ClaimsPrincipal user, MultisigSetupData? pending)
         => new(
             (await authorizationService.AuthorizeAsync(user, storeId, WalletPolicies.CanManageWalletSettings)).Succeeded,
             (await authorizationService.AuthorizeAsync(user, storeId, WalletPolicies.CanSignWalletTransactions)).Succeeded,

@@ -2,9 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using NBitcoin;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Plugins.Multisig.Services;
@@ -31,8 +32,6 @@ public class MultisigService(
     LinkGenerator linkGenerator,
     PermissionService permissionService)
 {
-    private const string PendingMultisigSettingPrefix = "PendingMultisigSetup";
-
     public async Task PopulateSetupViewModel(MultisigSetupViewModel vm)
     {
         vm.MultisigScriptType ??= "p2wsh";
@@ -75,47 +74,145 @@ public class MultisigService(
         return storeRole.ToPermissionSet(storeId).HasPermission(requiredPermission, permissionService);
     }
 
-    public async Task<PendingMultisigSetupContext?> GetPendingMultisigSetupContext(string storeId, string? multisigSetupId)
+    public async Task<MultisigSetupData?> GetPendingMultisigSetupContext(string storeId, string? multisigSetupId)
     {
         if (string.IsNullOrWhiteSpace(multisigSetupId))
             return null;
 
         await using var ctx = dbContextFactory.CreateContext();
-        var row = await ctx.Database.GetDbConnection().QueryFirstOrDefaultAsync<(string? StoreId, string Name, string Value, uint XMin)>(
+        var row = await ctx.Database.GetDbConnection().QueryFirstOrDefaultAsync<string>(
             """
-            SELECT "StoreId", "Name", "Value", xmin
-            FROM "StoreSettings"
-            WHERE "StoreId"= @storeId
-              AND "Name" LIKE @namePattern
-              AND COALESCE("Value"->>'RequestId', "Value"->>'requestId') = @multisigSetupId
-            LIMIT 1
+            SELECT data
+            FROM multisig_setups
+            WHERE store_id = @storeId AND id = @multisigSetupId AND expires_at > NOW()
             """,
             new
             {
                 storeId,
-                namePattern = $"{PendingMultisigSettingPrefix}-%",
                 multisigSetupId
             });
-        if (row.StoreId is null)
-            return null;
-
-        var pending = JsonConvert.DeserializeObject<PendingMultisigSetupData>(row.Value, storeRepository.SerializerSettings);
-        if (pending is null ||
-            pending.ExpiresAt < DateTimeOffset.UtcNow ||
-            !string.Equals(pending.RequestId, multisigSetupId, StringComparison.Ordinal) ||
-            string.IsNullOrWhiteSpace(pending.StoreId) ||
-            !string.Equals(pending.StoreId, row.StoreId, StringComparison.Ordinal) ||
-            string.IsNullOrWhiteSpace(pending.CryptoCode))
-            return null;
-
-        return new PendingMultisigSetupContext(row.Name, pending, row.XMin);
+        return await ToSetupData(row, ctx);
     }
 
-    public static string GetPendingMultisigSettingName(string cryptoCode)
+    private async Task<MultisigSetupData?> ToSetupData(string? row, ApplicationDbContext ctx)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(cryptoCode);
-        return $"{PendingMultisigSettingPrefix}-{cryptoCode.ToUpperInvariant()}";
+        if (row is null)
+            return null;
+        var pending = JsonConvert.DeserializeObject<MultisigSetupData>(row, storeRepository.SerializerSettings);
+        if (pending is null)
+            return null;
+        pending.Participants = await GetParticipants(ctx, pending.RequestId);
+        return pending;
     }
+
+    public async Task<MultisigSetupData?> GetPendingMultisigSetupForCryptoCode(string storeId, string cryptoCode)
+    {
+        await using var ctx = dbContextFactory.CreateContext();
+        var row = await ctx.Database.GetDbConnection().QueryFirstOrDefaultAsync<string>(
+            """
+            SELECT data
+            FROM multisig_setups
+            WHERE store_id = @storeId AND crypto_code = @cryptoCode AND expires_at > NOW()
+            """,
+            new { storeId, cryptoCode = cryptoCode.ToUpperInvariant() });
+        return await ToSetupData(row, ctx);
+    }
+
+    public async Task SavePendingMultisigSetup(MultisigSetupData pending)
+    {
+        await using var ctx = dbContextFactory.CreateContext();
+        var connection = ctx.Database.GetDbConnection();
+        await connection.OpenAsync();
+        await using var transaction = await connection.BeginTransactionAsync();
+        await connection.ExecuteAsync(
+            """
+            DELETE FROM multisig_setups
+            WHERE store_id = @storeId AND crypto_code = @cryptoCode;
+            INSERT INTO multisig_setups (id, store_id, crypto_code, data, expires_at)
+            VALUES (@id, @storeId, @cryptoCode, @data::JSONB, @expiresAt);
+            """,
+            new
+            {
+                id = pending.RequestId,
+                storeId = pending.StoreId,
+                cryptoCode = pending.CryptoCode.ToUpperInvariant(),
+                data = JsonConvert.SerializeObject(pending, storeRepository.SerializerSettings),
+                expiresAt = pending.ExpiresAt
+            }, transaction);
+
+        await connection.ExecuteAsync(
+            """
+            INSERT INTO multisig_setups_participants (multisig_setup_id, user_id)
+            VALUES (@setupId, @userId)
+            """,
+            pending.Participants.Select(p => new
+            {
+                setupId = pending.RequestId,
+                userId = p.UserId
+            }).ToArray(), transaction);
+        await transaction.CommitAsync();
+        pending.Participants = await GetParticipants(ctx, pending.RequestId);
+    }
+
+    public async Task UpdateParticipant(string storeId, string setupId, string userId, PendingMultisigSetupParticipantData participant)
+    {
+        await using var ctx = dbContextFactory.CreateContext();
+        var connection = ctx.Database.GetDbConnection();
+        await connection.ExecuteAsync(
+            """
+            UPDATE multisig_setups_participants msp
+            SET account_key = @accountKey, account_key_path = @accountKeyPath
+            FROM multisig_setups ms
+            WHERE msp.multisig_setup_id = ms.id
+              AND msp.multisig_setup_id = @setupId
+              AND msp.user_id = @userId
+              AND ms.store_id = @storeId;
+            """,
+            new { setupId, userId, storeId, accountKey = participant.AccountKey, accountKeyPath = participant.AccountKeyPath.ToString() });
+    }
+
+    public async Task DeletePendingMultisigSetup(string storeId, string setupId)
+    {
+        await using var ctx = dbContextFactory.CreateContext();
+        await ctx.Database.GetDbConnection().ExecuteAsync(
+            """
+            DELETE FROM multisig_setups
+            WHERE store_id = @storeId AND id = @setupId
+            """,
+            new { storeId, setupId });
+    }
+
+    private async Task<List<PendingMultisigSetupParticipantData>> GetParticipants(ApplicationDbContext ctx, string setupId)
+    {
+        var rows = await ctx.Database.GetDbConnection().QueryAsync<PendingMultisigSetupParticipantRow>(
+            """
+            SELECT p.user_id AS UserId,
+                   u."Email",
+                   COALESCE(u."Blob2"->>'Name', u."Blob2"->>'name') AS Name,
+                   p.account_key AS AccountKey,
+                   p.account_key_path AS AccountKeyPath
+            FROM multisig_setups_participants p
+            JOIN "AspNetUsers" u ON u."Id" = p.user_id
+            WHERE p.multisig_setup_id = @setupId
+            ORDER BY p.user_id
+            """,
+            new { setupId });
+        return rows.Select(row => new PendingMultisigSetupParticipantData
+        {
+            UserId = row.UserId,
+            Email = row.Email,
+            Name = row.Name,
+            AccountKey = row.AccountKey,
+            AccountKeyPath = row.AccountKeyPath is null ? null : RootedKeyPath.Parse(row.AccountKeyPath)
+        }).ToList();
+    }
+
+    private sealed record PendingMultisigSetupParticipantRow(
+        string UserId,
+        string? Email,
+        string? Name,
+        string? AccountKey,
+        string? AccountKeyPath);
 
     public bool HasOnChainWallet(StoreData store, string cryptoCode)
     {
@@ -136,7 +233,7 @@ public class MultisigService(
 
         foreach (var cryptoCode in cryptoCodes)
         {
-            var pending = await storeRepository.GetSettingAsync<PendingMultisigSetupData>(store.Id, GetPendingMultisigSettingName(cryptoCode));
+            var pending = (await GetPendingMultisigSetupForCryptoCode(store.Id, cryptoCode));
             if (pending is null || pending.ExpiresAt < DateTimeOffset.UtcNow)
                 continue;
 
@@ -157,7 +254,7 @@ public class MultisigService(
             .ToList();
     }
 
-    public MultisigInProgressViewModel CreateInProgressViewModel(string storeId, string userId, PendingMultisigSetupData pending, bool canCreateWallet)
+    public MultisigInProgressViewModel CreateInProgressViewModel(string storeId, string userId, MultisigSetupData pending, bool canCreateWallet)
     {
         var participant = pending.Participants.FirstOrDefault(p => string.Equals(p.UserId, userId, StringComparison.Ordinal));
         var didParticipate = participant is not null;

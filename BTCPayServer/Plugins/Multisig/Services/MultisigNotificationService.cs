@@ -51,7 +51,7 @@ public class MultisigNotificationService(
         await ctx.SaveChangesAsync(cancellationToken);
     }
 
-    public Task PublishSignerKeyRequestedEvents(PendingMultisigSetupData pending)
+    public Task PublishSignerKeyRequestedEvents(MultisigSetupData pending)
     {
         foreach (var participant in pending.Participants.Where(p => string.IsNullOrWhiteSpace(p.AccountKey)))
         {
@@ -64,7 +64,7 @@ public class MultisigNotificationService(
         return Task.CompletedTask;
     }
 
-    public void PublishSignerKeySubmittedEvent(PendingMultisigSetupData pending, PendingMultisigSetupParticipantData participant)
+    public void PublishSignerKeySubmittedEvent(MultisigSetupData pending, PendingMultisigSetupParticipantData participant)
     {
         eventAggregator.Publish(new MultisigSignerKeySubmittedEvent(
             pending,
@@ -72,7 +72,7 @@ public class MultisigNotificationService(
             participant.Name)));
     }
 
-    public void PublishWalletCreatedEvent(PendingMultisigSetupData pending)
+    public void PublishWalletCreatedEvent(MultisigSetupData pending)
     {
         var walletLink = linkGenerator.WalletTransactionsLink(new WalletId(pending.StoreId, pending.CryptoCode), pending.RequestBaseUrl);
         var participantIds = pending.Participants

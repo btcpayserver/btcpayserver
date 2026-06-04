@@ -12,6 +12,34 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql(
+                """
+                CREATE TABLE "multisig_setups" (
+                    "id" text NOT NULL,
+                    "store_id" text NOT NULL,
+                    "crypto_code" text NOT NULL,
+                    "data" JSONB NOT NULL,
+                    "expires_at" timestamp with time zone NOT NULL,
+                    CONSTRAINT "PK_multisig_setups" PRIMARY KEY ("id"),
+                    CONSTRAINT "FK_multisig_setups_Stores_store_id" FOREIGN KEY ("store_id") REFERENCES "Stores" ("Id") ON DELETE CASCADE,
+                    CONSTRAINT "UQ_multisig_setups_store_id_crypto_code" UNIQUE ("store_id", "crypto_code")
+                );
+
+                CREATE INDEX "IX_multisig_setups_store_id" ON "multisig_setups" ("store_id");
+
+                CREATE TABLE "multisig_setups_participants" (
+                    "multisig_setup_id" text NOT NULL,
+                    "user_id" text NOT NULL,
+                    "account_key" text NULL,
+                    "account_key_path" text NULL,
+                    CONSTRAINT "PK_multisig_setups_participants" PRIMARY KEY ("multisig_setup_id", "user_id"),
+                    CONSTRAINT "FK_multisig_setups_participants_multisig_setups_multisig_setup_id" FOREIGN KEY ("multisig_setup_id") REFERENCES "multisig_setups" ("id") ON DELETE CASCADE,
+                    CONSTRAINT "FK_multisig_setups_participants_AspNetUsers_user_id" FOREIGN KEY ("user_id") REFERENCES "AspNetUsers" ("Id") ON DELETE CASCADE
+                );
+
+                CREATE INDEX "IX_multisig_setups_participants_user_id" ON "multisig_setups_participants" ("user_id");
+                """);
+
             migrationBuilder.RenameColumn(
                 name: "TransactionId",
                 table: "PendingTransactions",
@@ -31,6 +59,12 @@ namespace BTCPayServer.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql(
+                """
+                DROP TABLE IF EXISTS "multisig_setups_participants";
+                DROP TABLE IF EXISTS "multisig_setups";
+                """);
+
             migrationBuilder.DropColumn(
                 name: "TransactionId",
                 table: "PendingTransactions");

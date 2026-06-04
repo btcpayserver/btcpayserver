@@ -7,21 +7,21 @@ namespace BTCPayServer.Plugins.Multisig.Events;
 
 public record MultisigSignerInfo(string Email, string Name);
 public record MultisigSignerKeyRequestedEvent(
-    PendingMultisigSetupData Setup,
+    MultisigSetupData Setup,
     MultisigSignerInfo Signer)
 {
     public override string ToString() => nameof(MultisigSignerKeyRequestedEvent);
 }
 
 public record MultisigSignerKeySubmittedEvent(
-    PendingMultisigSetupData Setup,
+    MultisigSetupData Setup,
     MultisigSignerInfo Signer)
 {
     public override string ToString() => nameof(MultisigSignerKeySubmittedEvent);
 }
 
 public record MultisigWalletCreatedEvent(
-    PendingMultisigSetupData Setup,
+    MultisigSetupData Setup,
     string WalletLink,
     IReadOnlyCollection<string> ParticipantUserIds)
 {

@@ -4,12 +4,11 @@ using System.Linq;
 using BTCPayServer.Abstractions;
 using BTCPayServer.JsonConverters;
 using NBitcoin;
-using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Plugins.Multisig.Models;
 
-public class PendingMultisigSetupData
+public class MultisigSetupData
 {
     public string RequestId { get; set; }
     public string StoreId { get; set; }
@@ -20,6 +19,8 @@ public class PendingMultisigSetupData
     public int TotalSigners { get; set; }
     public bool ReplacesExistingWallet { get; set; }
     public DateTimeOffset ExpiresAt { get; set; }
+
+    [JsonIgnore]
     public List<PendingMultisigSetupParticipantData> Participants { get; set; } = new();
     [JsonConverter(typeof(RequestBaseUrlConverter))]
     public RequestBaseUrl RequestBaseUrl { get; set; }
@@ -52,17 +53,11 @@ public class PendingMultisigSetupData
     }
 }
 
-public sealed record PendingMultisigSetupContext(
-    string SettingName,
-    PendingMultisigSetupData Pending,
-    uint XMin);
-
 public class PendingMultisigSetupParticipantData
 {
     public string UserId { get; set; }
     public string Email { get; set; }
     public string Name { get; set; }
     public string AccountKey { get; set; }
-    [JsonConverter(typeof(NBitcoin.JsonConverters.KeyPathJsonConverter))]
     public RootedKeyPath AccountKeyPath { get; set; }
 }

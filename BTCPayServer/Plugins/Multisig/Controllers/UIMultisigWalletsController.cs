@@ -110,7 +110,7 @@ public class UIMultisigWalletsController(
             return View(vm);
         }
 
-        var pending = new PendingMultisigSetupData
+        var pending = new MultisigSetupData
         {
             RequestId = Guid.NewGuid().ToString("N"),
             StoreId = vm.StoreId,
@@ -123,29 +123,15 @@ public class UIMultisigWalletsController(
             ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
             Participants = selectedIds
                 .Select(selectedId =>
-                {
-                    var selectedUser = usersById[selectedId];
-                    return new PendingMultisigSetupParticipantData
+                    new PendingMultisigSetupParticipantData
                     {
-                        UserId = selectedUser.UserId,
-                        Email = selectedUser.Email,
-                        Name = selectedUser.Name
-                    };
-                })
+                        UserId = selectedId
+                    })
                 .ToList(),
             RequestBaseUrl = HttpContext.Request.GetRequestBaseUrl()
         };
 
-        var settingName = MultisigService.GetPendingMultisigSettingName(vm.CryptoCode);
-        var setting = await storeRepository.GetSettingWithVersionAsync<PendingMultisigSetupData>(vm.StoreId, settingName);
-        var updated = setting is null
-            ? await storeRepository.TryCreateSettingAsync(vm.StoreId, settingName, pending)
-            : await storeRepository.TryUpdateSettingAsync(vm.StoreId, settingName, setting.XMin, pending);
-        if (!updated)
-        {
-            ModelState.AddModelError(nameof(vm.MultisigRequestId), StringLocalizer["The multisig request changed. Reload the page and try again."].Value);
-            return View(vm);
-        }
+        await multisigService.SavePendingMultisigSetup(pending);
 
         await multisigNotificationService.EnsureDefaultEmailRules(vm.StoreId);
 
@@ -159,11 +145,10 @@ public class UIMultisigWalletsController(
     public async Task<IActionResult> FinalizeMultisigSetup(string multisigSetupId, MultisigSetupViewModel vm)
     {
         var store = HttpContext.GetStoreData();
-        var setupContext = await multisigService.GetPendingMultisigSetupContext(store.Id, multisigSetupId);
-        if (setupContext is null)
+        var pending = await multisigService.GetPendingMultisigSetupContext(store.Id, multisigSetupId);
+        if (pending is null)
             return NotFound();
 
-        var pending = setupContext.Pending;
         vm.StoreId = pending.StoreId;
         vm.CryptoCode = pending.CryptoCode;
         vm.MultisigRequestId = pending.RequestId;
@@ -185,14 +170,14 @@ public class UIMultisigWalletsController(
             return View("MultisigConfirm", vm);
         }
 
-        var pendingSetting = await GetPendingRequestWithVersion(vm.StoreId, vm.CryptoCode, vm.MultisigRequestId);
-        if (pendingSetting is null)
+        var pending = await multisigService.GetPendingMultisigSetupContext(vm.StoreId, vm.MultisigRequestId);
+        if (pending is null)
         {
             ModelState.AddModelError(nameof(vm.MultisigRequestId), StringLocalizer["The multisig request was not found or has expired."].Value);
             return View("MultisigConfirm", vm);
         }
 
-        var strategy = pendingSetting.Value.Pending.GetDiredivationSchemeSettings(network);
+        var strategy = pending.GetDiredivationSchemeSettings(network);
         var wallet = walletProvider.GetWallet(network);
         if (wallet is null)
         {
@@ -208,21 +193,17 @@ public class UIMultisigWalletsController(
         store.SetStoreBlob(storeBlob);
         await storeRepository.UpdateStore(store);
 
-        var finalizedPendingSetting = await GetPendingRequestWithVersion(vm.StoreId, vm.CryptoCode, vm.MultisigRequestId);
-        if (finalizedPendingSetting is not null &&
-            await storeRepository.TryDeleteSettingAsync(
-                vm.StoreId,
-                MultisigService.GetPendingMultisigSettingName(vm.CryptoCode),
-                finalizedPendingSetting.Value.XMin))
+        var finalizedPendingSetting = await multisigService.GetPendingMultisigSetupContext(vm.StoreId, vm.MultisigRequestId);
+        if (finalizedPendingSetting is not null)
         {
-            multisigNotificationService.PublishWalletCreatedEvent(finalizedPendingSetting.Value.Pending);
+            await multisigService.DeletePendingMultisigSetup(vm.StoreId, vm.MultisigRequestId);
+            multisigNotificationService.PublishWalletCreatedEvent(finalizedPendingSetting);
         }
-
         TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Wallet settings for {0} have been updated.", network.CryptoCode].Value;
         return RedirectToAction(nameof(BTCPayServer.Controllers.UIStoreOnChainWalletsController.WalletSettings), "UIStoreOnChainWallets", new { area = WalletsPlugin.Area, storeId = vm.StoreId, cryptoCode = vm.CryptoCode });
     }
 
-    private async Task<IActionResult> FinalizeMultisigRequest(PendingMultisigSetupData pending, BTCPayNetwork network)
+    private async Task<IActionResult> FinalizeMultisigRequest(MultisigSetupData pending, BTCPayNetwork network)
     {
         if (pending.Participants.Count != pending.TotalSigners || pending.Participants.Any(p => string.IsNullOrWhiteSpace(p.AccountKey)))
         {
@@ -255,23 +236,6 @@ public class UIMultisigWalletsController(
 
     IActionResult RedirectToMultisigSetup(string multisigSetupId)
     => RedirectToAction(nameof(UIMultisigSetupController.SetupMultisigStatus), "UIMultisigSetup", new { multisigSetupId });
-
-    private async Task<(PendingMultisigSetupData Pending, uint XMin)?> GetPendingRequestWithVersion(string storeId, string cryptoCode, string? requestId)
-    {
-        if (string.IsNullOrWhiteSpace(requestId))
-            return null;
-
-        var setting = await storeRepository.GetSettingWithVersionAsync<PendingMultisigSetupData>(
-            storeId,
-            MultisigService.GetPendingMultisigSettingName(cryptoCode));
-        var pending = setting?.Value;
-        if (pending is null ||
-            pending.ExpiresAt < DateTimeOffset.UtcNow ||
-            !string.Equals(pending.RequestId, requestId, StringComparison.Ordinal))
-            return null;
-
-        return (pending, setting!.XMin);
-    }
 
     private static string? NormalizeMultisigScriptType(string? scriptType)
     {

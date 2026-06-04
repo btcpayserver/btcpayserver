@@ -8,7 +8,6 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Plugins.Multisig.Models;
 using BTCPayServer.Plugins.Multisig.Services;
 using BTCPayServer.Plugins.Wallets;
-using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
@@ -23,7 +22,6 @@ public class UIMultisigSetupController(
     MultisigService multisigService,
     IStringLocalizer stringLocalizer,
     BTCPayNetworkProvider networkProvider,
-    StoreRepository storeRepository,
     MultisigNotificationService multisigNotificationService,
     IAuthorizationService authorizationService) : Controller
 {
@@ -32,31 +30,32 @@ public class UIMultisigSetupController(
     [HttpGet("{multisigSetupId}")]
     public async Task<IActionResult> SetupMultisigStatus(string multisigSetupId)
     {
-        var setupContext = await multisigService.GetPendingMultisigSetupContext(this.HttpContext.GetStoreData().Id, multisigSetupId);
+        var setup = await multisigService.GetPendingMultisigSetupContext(this.HttpContext.GetStoreData().Id, multisigSetupId);
         var store = HttpContext.GetStoreDataOrNull();
-        if (setupContext is null || store is null)
+        if (setup is null || store is null)
             return NotFound();
 
-        if (!setupContext.Pending.ReplacesExistingWallet && multisigService.HasOnChainWallet(store, setupContext.Pending.CryptoCode))
+        if (!setup.ReplacesExistingWallet && multisigService.HasOnChainWallet(store, setup.CryptoCode))
             return NotFound();
 
-        var setupAccess = await authorizationService.GetSetupAccess(setupContext.Pending.StoreId, User, setupContext.Pending);
+        var setupAccess = await authorizationService.GetSetupAccess(setup.StoreId, User, setup);
         if (!setupAccess.CanViewStatus)
             return Forbid();
 
-        var model = multisigService.CreateInProgressViewModel(setupContext.Pending.StoreId, User.GetId(), setupContext.Pending, setupAccess.CanManageWalletSettings);
+        var model = multisigService.CreateInProgressViewModel(setup.StoreId, User.GetId(), setup, setupAccess.CanManageWalletSettings);
         return View(model);
     }
 
-      private const string HardwareInputMethod = "hardware";
+    private const string HardwareInputMethod = "hardware";
     private const string ManualInputMethod = "manual";
+
     private static bool IsSupportedCryptoCode(string? cryptoCode) =>
         string.Equals(cryptoCode, "BTC", StringComparison.OrdinalIgnoreCase);
+
     private static string? NormalizeInputMethod(string? method) =>
         string.Equals(method, HardwareInputMethod, StringComparison.OrdinalIgnoreCase) ? HardwareInputMethod :
         string.Equals(method, ManualInputMethod, StringComparison.OrdinalIgnoreCase) ? ManualInputMethod :
         null;
-    private const int UpdateRetries = 5;
 
     private enum SignerKeyLoadStatus
     {
@@ -84,8 +83,10 @@ public class UIMultisigSetupController(
         if (!string.IsNullOrWhiteSpace(vm.DisplayAccountKey))
         {
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Your signer key is submitted."].Value;
-            return RedirectToAction(nameof(UIMultisigSetupController.SetupMultisigStatus), "UIMultisigSetup", new { area = MultisigPlugin.Area, multisigSetupId = vm.RequestId });
+            return RedirectToAction(nameof(UIMultisigSetupController.SetupMultisigStatus), "UIMultisigSetup",
+                new { area = MultisigPlugin.Area, multisigSetupId = vm.RequestId });
         }
+
         vm.InputMethod = NormalizeInputMethod(method);
         return View(vm);
     }
@@ -134,53 +135,46 @@ public class UIMultisigSetupController(
 
         var storeId = this.HttpContext.GetStoreData().Id;
         var normalizedAccountKey = accountKey!.ToString();
-        for (var attempt = 0; attempt < UpdateRetries; attempt++)
+        var pending = await multisigService.GetPendingMultisigSetupContext(storeId, current.RequestId);
+        if (pending is null)
+            return NotFound();
+
+        var participant = pending.Participants.Find(p => string.Equals(p.UserId, currentUserId, StringComparison.Ordinal));
+        if (participant is null)
+            return NotFound();
+
+        if (!string.IsNullOrWhiteSpace(participant.AccountKey))
         {
-            var setupContext = await multisigService.GetPendingMultisigSetupContext(storeId, current.RequestId);
-            if (setupContext is null)
-                return NotFound();
-            var pending = setupContext.Pending;
-
-            var participant = pending.Participants.Find(p => string.Equals(p.UserId, currentUserId, StringComparison.Ordinal));
-            if (participant is null)
-                return NotFound();
-
-            if (!string.IsNullOrWhiteSpace(participant.AccountKey))
-            {
-                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Your signer key is submitted."].Value;
-                return RedirectToAction(nameof(UIMultisigSetupController.SetupMultisigStatus), "UIMultisigSetup", new { area = MultisigPlugin.Area, multisigSetupId = current.RequestId });
-            }
-
-            var duplicateKeyFound = pending.Participants
-                .Where(p => !string.Equals(p.UserId, currentUserId, StringComparison.Ordinal))
-                .Any(p => p.AccountKey == normalizedAccountKey);
-            if (duplicateKeyFound)
-            {
-                ModelState.AddModelError(string.Empty, StringLocalizer["This signer key is already used in this multisig request."].Value);
-                return View(current);
-            }
-
-            participant.AccountKey = normalizedAccountKey;
-            participant.AccountKeyPath = accountKeyPath;
-            if (!await storeRepository.TryUpdateSettingAsync(storeId, setupContext.SettingName, setupContext.XMin, pending))
-                continue;
-
-            multisigNotificationService.PublishSignerKeySubmittedEvent(pending, participant);
-            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Signer key submitted successfully."].Value;
-            return RedirectToAction(nameof(UIMultisigSetupController.SetupMultisigStatus), "UIMultisigSetup", new { area = MultisigPlugin.Area, multisigSetupId = current.RequestId });
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Your signer key is submitted."].Value;
+            return RedirectToAction(nameof(UIMultisigSetupController.SetupMultisigStatus), "UIMultisigSetup",
+                new { area = MultisigPlugin.Area, multisigSetupId = current.RequestId });
         }
 
-        ModelState.AddModelError(string.Empty, StringLocalizer["This multisig request changed while you were submitting your signer key. Please try again."].Value);
-        return View(current);
+        var duplicateKeyFound = pending.Participants
+            .Where(p => !string.Equals(p.UserId, currentUserId, StringComparison.Ordinal))
+            .Any(p => p.AccountKey == normalizedAccountKey);
+        if (duplicateKeyFound)
+        {
+            ModelState.AddModelError(string.Empty, StringLocalizer["This signer key is already used in this multisig request."].Value);
+            return View(current);
+        }
+
+        participant.AccountKey = normalizedAccountKey;
+        participant.AccountKeyPath = accountKeyPath;
+        await multisigService.UpdateParticipant(storeId, pending.RequestId, currentUserId, participant);
+
+        multisigNotificationService.PublishSignerKeySubmittedEvent(pending, participant);
+        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Signer key submitted successfully."].Value;
+        return RedirectToAction(nameof(UIMultisigSetupController.SetupMultisigStatus), "UIMultisigSetup",
+            new { area = MultisigPlugin.Area, multisigSetupId = current.RequestId });
     }
 
     private async Task<SignerKeyLoadResult> LoadSignerKeyViewModel(string storeId, string multisigSetupId)
     {
         var currentUserId = User.GetId();
-        var setupContext = await multisigService.GetPendingMultisigSetupContext(storeId, multisigSetupId);
-        if (setupContext is null || !IsSupportedCryptoCode(setupContext.Pending.CryptoCode))
+        var pending = await multisigService.GetPendingMultisigSetupContext(storeId, multisigSetupId);
+        if (pending is null || !IsSupportedCryptoCode(pending.CryptoCode))
             return new SignerKeyLoadResult { Status = SignerKeyLoadStatus.Invalid };
-        var pending = setupContext.Pending;
 
         var access = await authorizationService.GetSetupAccess(storeId, User, pending);
         if (!access.CanSignWalletTransactions || !access.IsParticipant)

@@ -86,10 +86,6 @@ public class UIMultisigSetupController(
             return View("Multisig", vm);
         }
 
-        var requesterUserId = User.GetId();
-        var requesterStoreUser = vm.MultisigStoreUsers.FirstOrDefault(u => string.Equals(u.UserId, requesterUserId, StringComparison.Ordinal));
-        var requesterEmail = requesterStoreUser?.Email ?? User.FindFirstValue(ClaimTypes.Email) ?? User.Identity?.Name;
-
         if (selectedIds.Length == 0)
         {
             ModelState.AddModelError(nameof(vm.MultisigParticipantUserIds), stringLocalizer["Select at least one signer."].Value);
@@ -115,7 +111,7 @@ public class UIMultisigSetupController(
             RequestId = Guid.NewGuid().ToString("N"),
             StoreId = vm.StoreId,
             CryptoCode = vm.CryptoCode.ToUpperInvariant(),
-            RequestedByEmail = requesterEmail,
+            RequestedByUserId = User.GetId(),
             ScriptType = scriptType,
             RequiredSigners = required,
             TotalSigners = totalSigners,
@@ -149,7 +145,7 @@ public class UIMultisigSetupController(
 
         await multisigNotificationService.EnsureDefaultEmailRules(vm.StoreId);
 
-        await multisigNotificationService.PublishSignerKeyRequestedEvents(vm.StoreId, vm.CryptoCode, pending);
+        await multisigNotificationService.PublishSignerKeyRequestedEvents(pending);
 
         TempData[WellKnownTempData.SuccessMessage] = stringLocalizer["Multisig signer requests were created."].Value;
         return RedirectToAction(nameof(UIMultisigStatusController.Status), "UIMultisigStatus", new { area = MultisigPlugin.Area, multisigSetupId = pending.RequestId });
@@ -228,7 +224,7 @@ public class UIMultisigSetupController(
         {
             try
             {
-                await multisigNotificationService.PublishWalletCreatedEvent(vm.StoreId, vm.CryptoCode, finalizedPendingSetting.Value.Pending);
+                await multisigNotificationService.PublishWalletCreatedEvent(finalizedPendingSetting.Value.Pending);
             }
             catch (Exception ex)
             {

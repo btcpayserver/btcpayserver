@@ -270,7 +270,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var pending = new PendingMultisigSetupData
         {
             RequestId = "request-1",
-            RequestedByEmail = "owner@example.com",
+            RequestedByUserId = "owner@example.com",
             ScriptType = "Segwit",
             RequiredSigners = 2,
             TotalSigners = 2,

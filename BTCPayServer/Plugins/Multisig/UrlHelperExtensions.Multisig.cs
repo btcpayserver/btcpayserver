@@ -8,7 +8,7 @@ namespace BTCPayServer.Plugins.Multisig;
 
 public static class UrlHelperExtensions
 {
-    public static string CreateSessionLink(this LinkGenerator linkGenerator, string requestId, RequestBaseUrl requestBaseUrl)
+    public static string MultisigSetupSessionLink(this LinkGenerator linkGenerator, string requestId, RequestBaseUrl requestBaseUrl)
         => linkGenerator.GetUriByAction(
             action: nameof(UIMultisigStatusController.Status),
             controller: "UIMultisigStatus",

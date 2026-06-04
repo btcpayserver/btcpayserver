@@ -90,7 +90,7 @@
     <div class="d-flex justify-content-end gap-3 mt-4">
         @if (Model.CanSubmitSignerKey)
         {
-            <a id="SubmitSignerKeyCta" href="@Model.SignerKeyUrl" class="btn btn-primary" text-translate="true">Submit signer key</a>
+            <a id="SubmitSignerKeyCta" asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigSignerKey" asp-action="SubmitMultisigSigner" asp-route-multisigSetupId="@Model.RequestId" class="btn btn-primary" text-translate="true">Submit signer key</a>
         }
         @if (Model.ReadyToCreateWallet && Model.CanCreateWallet)
         {

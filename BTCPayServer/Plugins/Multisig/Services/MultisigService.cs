@@ -348,7 +348,7 @@ public class MultisigService(
         var didParticipate = participant is not null;
         var yourKeySubmitted = !string.IsNullOrWhiteSpace(participant?.AccountKey);
         var submittedSigners = pending.Participants.Count(p => !string.IsNullOrWhiteSpace(p.AccountKey));
-        var sessionUrl = linkGenerator.CreateSessionLink(pending.RequestId, pending.RequestBaseUrl);
+        var sessionUrl = linkGenerator.MultisigSetupSessionLink(pending.RequestId, pending.RequestBaseUrl);
 
         return new MultisigInProgressViewModel
         {
@@ -362,7 +362,6 @@ public class MultisigService(
             YourKeySubmitted = yourKeySubmitted,
             ExpiresAt = pending.ExpiresAt,
             SessionUrl = sessionUrl,
-            SignerKeyUrl = didParticipate ? linkGenerator.CreateSignerKeyLink(pending.RequestId, pending.RequestBaseUrl) : null,
             CanCreateWallet = canCreateWallet,
             Participants = pending.Participants
                 .Select(p => new MultisigInProgressParticipantViewModel

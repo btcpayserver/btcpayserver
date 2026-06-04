@@ -14,12 +14,11 @@ public class MultisigInProgressViewModel
     public bool YourKeySubmitted { get; set; }
     public DateTimeOffset ExpiresAt { get; set; }
     public string SessionUrl { get; set; }
-    public string SignerKeyUrl { get; set; }
     public bool CanCreateWallet { get; set; }
     public MultisigInProgressParticipantViewModel[] Participants { get; set; } = [];
 
     public int MissingSigners => Math.Max(0, TotalSigners - SubmittedSigners);
-    public bool CanSubmitSignerKey => DidParticipate && !YourKeySubmitted && !string.IsNullOrEmpty(SignerKeyUrl);
+    public bool CanSubmitSignerKey => DidParticipate && !YourKeySubmitted;
     public bool ReadyToCreateWallet => MissingSigners == 0;
 }
 

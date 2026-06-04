@@ -12,7 +12,7 @@ public class PendingMultisigSetupData
     public string RequestId { get; set; }
     public string StoreId { get; set; }
     public string CryptoCode { get; set; }
-    public string RequestedByEmail { get; set; }
+    public string RequestedByUserId { get; set; }
     public string ScriptType { get; set; }
     public int RequiredSigners { get; set; }
     public int TotalSigners { get; set; }

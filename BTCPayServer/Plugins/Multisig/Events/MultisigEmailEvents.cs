@@ -1,36 +1,27 @@
 #nullable enable
 
 using System.Collections.Generic;
+using BTCPayServer.Plugins.Multisig.Models;
 
 namespace BTCPayServer.Plugins.Multisig.Events;
 
+public record MultisigSignerInfo(string Email, string Name);
 public record MultisigSignerKeyRequestedEvent(
-    string StoreId,
-    string CryptoCode,
-    string RequestId,
-    string? SignerEmail,
-    string? SignerName,
-    string SignerLink)
+    PendingMultisigSetupData Setup,
+    MultisigSignerInfo Signer)
 {
     public override string ToString() => nameof(MultisigSignerKeyRequestedEvent);
 }
 
 public record MultisigSignerKeySubmittedEvent(
-    string StoreId,
-    string CryptoCode,
-    string RequestId,
-    string? RequestedByEmail,
-    string? SignerEmail,
-    string? SignerName,
-    string SetupLink)
+    PendingMultisigSetupData Setup,
+    MultisigSignerInfo Signer)
 {
     public override string ToString() => nameof(MultisigSignerKeySubmittedEvent);
 }
 
 public record MultisigWalletCreatedEvent(
-    string StoreId,
-    string CryptoCode,
-    string RequestId,
+    PendingMultisigSetupData Setup,
     string WalletLink,
     IReadOnlyCollection<string> ParticipantUserIds)
 {

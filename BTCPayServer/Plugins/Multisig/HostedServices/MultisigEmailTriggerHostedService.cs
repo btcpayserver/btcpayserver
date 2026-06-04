@@ -12,6 +12,7 @@ using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Plugins.Multisig.Events;
+using BTCPayServer.Plugins.Multisig.Models;
 using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
@@ -60,64 +61,77 @@ public class MultisigEmailTriggerHostedService(
 
     private async Task PublishSignerKeyRequested(MultisigSignerKeyRequestedEvent evt, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(evt.SignerEmail))
+        if (string.IsNullOrWhiteSpace(evt.Signer.Email))
             return;
+        var model = new JObject();
+        AddSetup(model, evt.Setup);
+        AddSigner(model, evt.Signer);
+        await PublishTrigger(evt.Setup.StoreId, MultisigEmailTriggers.SignerKeyRequested, model, cancellationToken);
+    }
 
-        await PublishTrigger(evt.StoreId, MultisigEmailTriggers.SignerKeyRequested, new JObject
+    private void AddSigner(JObject obj, MultisigSignerInfo info)
+    {
+        obj["Signer"] ??= new JObject();
+        var signer = (JObject)obj["Signer"]!;
+        signer["Email"] = info.Email;
+        signer["Name"] = info.Name ?? info.Email ?? string.Empty;
+        signer["MailboxAddress"] = GetMailboxAddress(info);
+    }
+    private void AddRecipient(JObject obj, RecipientInfo recipient)
+    {
+        obj["Recipient"] ??= new JObject();
+        var signer = (JObject)obj["Recipient"]!;
+        signer["Email"] = recipient.Email;
+        signer["Name"] = recipient.Name ?? recipient.Email ?? string.Empty;
+        signer["MailboxAddress"] = GetMailboxAddress(new(recipient.Email ?? "", recipient.Name ?? ""));
+    }
+
+    private string? GetMailboxAddress(MultisigSignerInfo info)
+    {
+        var name = info.Name;
+        var email = info.Email;
+        if (name == email)
+            return email;
+        try
         {
-            ["CryptoCode"] = evt.CryptoCode,
-            ["Request"] = new JObject
-            {
-                ["Id"] = evt.RequestId
-            },
-            ["Signer"] = new JObject
-            {
-                ["Email"] = evt.SignerEmail,
-                ["Name"] = evt.SignerName ?? evt.SignerEmail,
-                ["Link"] = evt.SignerLink
-            }
-        }, cancellationToken);
+            return new MimeKit.MailboxAddress(name ?? "", email).ToString();
+        }
+        catch  // Invalid encoding or format; treat as no valid mailbox
+        {
+        }
+        return email;
     }
 
     private async Task PublishSignerKeySubmitted(MultisigSignerKeySubmittedEvent evt, CancellationToken cancellationToken)
     {
-        var recipients = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        if (!string.IsNullOrWhiteSpace(evt.RequestedByEmail))
-            recipients.Add(evt.RequestedByEmail);
 
         await using var scope = serviceScopeFactory.CreateAsyncScope();
         var storeRepository = scope.ServiceProvider.GetRequiredService<StoreRepository>();
         var permissionService = scope.ServiceProvider.GetRequiredService<PermissionService>();
-        foreach (var recipient in await GetWalletScopedRecipients(
-                     storeRepository,
-                     permissionService,
-                     evt.StoreId,
-                     allPolicies: new[] { WalletPolicies.CanManageWalletSettings }))
-        {
-            recipients.Add(recipient);
-        }
+
+        var recipients = await GetWalletScopedRecipients(
+            storeRepository,
+            permissionService,
+            evt.Setup.StoreId,
+            allPolicies: new[] { WalletPolicies.CanManageWalletSettings });
 
         foreach (var recipient in recipients)
         {
-            await PublishTrigger(evt.StoreId, MultisigEmailTriggers.SignerKeySubmitted, new JObject
-            {
-                ["CryptoCode"] = evt.CryptoCode,
-                ["Request"] = new JObject
-                {
-                    ["Id"] = evt.RequestId,
-                    ["Link"] = evt.SetupLink
-                },
-                ["Signer"] = new JObject
-                {
-                    ["Email"] = evt.SignerEmail,
-                    ["Name"] = evt.SignerName ?? evt.SignerEmail ?? string.Empty
-                },
-                ["Recipient"] = new JObject
-                {
-                    ["Email"] = recipient
-                }
-            }, cancellationToken);
+            var model = new JObject();
+            AddSetup(model, evt.Setup);
+            AddRecipient(model, recipient);
+            AddSigner(model, evt.Signer);
+            await PublishTrigger(evt.Setup.StoreId, MultisigEmailTriggers.SignerKeySubmitted, model, cancellationToken);
         }
+    }
+
+    private void AddSetup(JObject model, PendingMultisigSetupData setup)
+    {
+        model["CryptoCode"] = setup.CryptoCode;
+        model["Setup"] ??= new JObject();
+        var req = (JObject)model["Setup"]!;
+        req["Id"] = setup.RequestId;
+        req["Link"] = linkGenerator.MultisigSetupSessionLink(setup.RequestId, setup.RequestBaseUrl);
     }
 
     private async Task PublishWalletCreated(MultisigWalletCreatedEvent evt, CancellationToken cancellationToken)
@@ -128,27 +142,21 @@ public class MultisigEmailTriggerHostedService(
         var recipients = await GetWalletScopedRecipients(
             storeRepository,
             permissionService,
-            evt.StoreId,
+            evt.Setup.StoreId,
             includeUserIds: evt.ParticipantUserIds);
 
         foreach (var recipient in recipients)
         {
-            await PublishTrigger(evt.StoreId, MultisigEmailTriggers.WalletCreated, new JObject
+            var model = new JObject
             {
-                ["CryptoCode"] = evt.CryptoCode,
-                ["Request"] = new JObject
-                {
-                    ["Id"] = evt.RequestId
-                },
                 ["Wallet"] = new JObject
                 {
                     ["Link"] = evt.WalletLink
-                },
-                ["Recipient"] = new JObject
-                {
-                    ["Email"] = recipient
                 }
-            }, cancellationToken);
+            };
+            AddSetup(model, evt.Setup);
+            AddRecipient(model, recipient);
+            await PublishTrigger(evt.Setup.StoreId, MultisigEmailTriggers.WalletCreated, model, cancellationToken);
         }
     }
 
@@ -205,7 +213,7 @@ public class MultisigEmailTriggerHostedService(
 
         foreach (var recipient in recipients)
         {
-            await PublishTrigger(walletId.StoreId, trigger, new JObject
+            var model = new JObject
             {
                 ["CryptoCode"] = walletId.CryptoCode,
                 ["PendingTransaction"] = new JObject
@@ -214,12 +222,10 @@ public class MultisigEmailTriggerHostedService(
                     ["SignaturesCollected"] = signaturesCollected,
                     ["SignaturesNeeded"] = signaturesNeeded,
                     ["SignaturesMissing"] = Math.Max(0, signaturesNeeded - signaturesCollected)
-                },
-                ["Recipient"] = new JObject
-                {
-                    ["Email"] = recipient
                 }
-            }, cancellationToken);
+            };
+            AddRecipient(model, recipient);
+            await PublishTrigger(walletId.StoreId, trigger, model, cancellationToken);
         }
     }
 
@@ -234,20 +240,16 @@ public class MultisigEmailTriggerHostedService(
         return derivation is { AccountKeySettings.Length: > 1, IsMultiSigOnServer: true };
     }
 
-    private string GetPendingTransactionLink(WalletId walletId, PendingTransaction pendingTransaction)
+    private string? GetPendingTransactionLink(WalletId walletId, PendingTransaction pendingTransaction)
     {
         var blob = pendingTransaction.GetBlob();
         if (blob?.RequestBaseUrl is not null && RequestBaseUrl.TryFromUrl(blob.RequestBaseUrl, out var requestBaseUrl))
             return linkGenerator.WalletPendingTransactionLink(walletId, pendingTransaction.Id, requestBaseUrl);
-
-        return linkGenerator.GetPathByAction(
-                   nameof(UIWalletsController.ViewPendingTransaction),
-                   "UIWallets",
-                   new { area = WalletsPlugin.Area, walletId = walletId.ToString(), pendingTransactionId = pendingTransaction.Id }) ??
-               $"/wallets/{walletId}/pending/{pendingTransaction.Id}";
+        return null;
     }
 
-    private static async Task<string[]> GetWalletScopedRecipients(
+    record RecipientInfo(string Email, string Name);
+    private static async Task<RecipientInfo[]> GetWalletScopedRecipients(
         StoreRepository storeRepository,
         PermissionService permissionService,
         string storeId,
@@ -257,7 +259,7 @@ public class MultisigEmailTriggerHostedService(
         IEnumerable<string>? includeUserIds = null)
     {
         if (string.IsNullOrWhiteSpace(storeId))
-            return Array.Empty<string>();
+            return Array.Empty<RecipientInfo>();
 
         var requiredAll = (allPolicies ?? Array.Empty<string>())
             .Where(p => !string.IsNullOrWhiteSpace(p))
@@ -291,8 +293,8 @@ public class MultisigEmailTriggerHostedService(
                     return false;
                 return requiredAny.Length <= 0 || requiredAny.Any(policy => HasPolicy(permissionSet, policy));
             })
-            .Select(u => u.Email)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Select(u => new RecipientInfo(u.Email, u.UserBlob.Name))
+            .DistinctBy(u => u.Email, StringComparer.OrdinalIgnoreCase)
             .ToArray();
     }
 }

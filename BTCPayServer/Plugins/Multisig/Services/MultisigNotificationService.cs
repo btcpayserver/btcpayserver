@@ -71,12 +71,12 @@ public class MultisigNotificationService(
         return Task.CompletedTask;
     }
 
-    public Task PublishSignerKeySubmittedEvent(string storeId, string cryptoCode, PendingMultisigSetupData pending, PendingMultisigSetupParticipantData participant)
+    public Task PublishSignerKeySubmittedEvent(string storeId, PendingMultisigSetupData pending, PendingMultisigSetupParticipantData participant)
     {
         var setupLink = linkGenerator.CreateSessionLink(pending.RequestId, pending.RequestBaseUrl);
         eventAggregator.Publish(new MultisigSignerKeySubmittedEvent(
             storeId,
-            cryptoCode,
+            pending.CryptoCode,
             pending.RequestId,
             pending.RequestedByEmail,
             participant.Email,

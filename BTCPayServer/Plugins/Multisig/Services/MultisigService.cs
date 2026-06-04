@@ -108,7 +108,7 @@ public class MultisigService(
             string.IsNullOrWhiteSpace(pending.CryptoCode))
             return null;
 
-        return new PendingMultisigSetupContext(row.StoreId, pending.CryptoCode.ToUpperInvariant(), row.Name, pending, row.XMin);
+        return new PendingMultisigSetupContext(row.StoreId, row.Name, pending, row.XMin);
     }
 
     public static string GetPendingMultisigSettingName(string cryptoCode)
@@ -147,7 +147,7 @@ public class MultisigService(
             if (!pendingAccess.CanViewStatus)
                 continue;
 
-            result.Add(CreateInProgressViewModel(store.Id, user.GetId(), cryptoCode, pending, pendingAccess.CanManageWalletSettings));
+            result.Add(CreateInProgressViewModel(store.Id, user.GetId(), pending, pendingAccess.CanManageWalletSettings));
         }
 
         return result
@@ -340,7 +340,7 @@ public class MultisigService(
         return true;
     }
 
-    public MultisigInProgressViewModel CreateInProgressViewModel(string storeId, string userId, string cryptoCode, PendingMultisigSetupData pending, bool canCreateWallet)
+    public MultisigInProgressViewModel CreateInProgressViewModel(string storeId, string userId, PendingMultisigSetupData pending, bool canCreateWallet)
     {
         var participant = pending.Participants.FirstOrDefault(p => string.Equals(p.UserId, userId, StringComparison.Ordinal));
         var didParticipate = participant is not null;
@@ -351,7 +351,7 @@ public class MultisigService(
         return new MultisigInProgressViewModel
         {
             StoreId = storeId,
-            CryptoCode = cryptoCode,
+            CryptoCode = pending.CryptoCode,
             RequestId = pending.RequestId,
             RequiredSigners = pending.RequiredSigners,
             TotalSigners = pending.TotalSigners,

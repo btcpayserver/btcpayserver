@@ -28,7 +28,6 @@ public class PendingMultisigSetupData
 
 public sealed record PendingMultisigSetupContext(
     string StoreId,
-    string CryptoCode,
     string SettingName,
     PendingMultisigSetupData Pending,
     uint XMin);

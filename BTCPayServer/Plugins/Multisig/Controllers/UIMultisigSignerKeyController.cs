@@ -159,7 +159,7 @@ public class UIMultisigSignerKeyController(
             if (!await storeRepository.TryUpdateSettingAsync(setupContext.StoreId, setupContext.SettingName, setupContext.XMin, pending))
                 continue;
 
-            await multisigNotificationService.PublishSignerKeySubmittedEvent(setupContext.StoreId, setupContext.CryptoCode, pending, participant);
+            await multisigNotificationService.PublishSignerKeySubmittedEvent(setupContext.StoreId, pending, participant);
             TempData[WellKnownTempData.SuccessMessage] = stringLocalizer["Signer key submitted successfully."].Value;
             return RedirectToAction(nameof(UIMultisigStatusController.Status), "UIMultisigStatus", new { area = MultisigPlugin.Area, multisigSetupId = current.RequestId });
         }
@@ -172,7 +172,7 @@ public class UIMultisigSignerKeyController(
     {
         var currentUserId = User.GetId();
         var setupContext = await multisigService.GetPendingMultisigSetupContext(multisigSetupId);
-        if (setupContext is null || !IsSupportedCryptoCode(setupContext.CryptoCode))
+        if (setupContext is null || !IsSupportedCryptoCode(setupContext.Pending.CryptoCode))
             return new SignerKeyLoadResult { Status = SignerKeyLoadStatus.Invalid };
         var pending = setupContext.Pending;
 
@@ -190,7 +190,7 @@ public class UIMultisigSignerKeyController(
             UserId = participant.UserId,
             ViewModel = new MultisigSignerKeyViewModel
             {
-                CryptoCode = setupContext.CryptoCode,
+                CryptoCode = pending.CryptoCode,
                 RequestId = pending.RequestId,
                 RequiredSigners = pending.RequiredSigners,
                 TotalSigners = pending.TotalSigners,

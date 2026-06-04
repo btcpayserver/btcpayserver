@@ -30,14 +30,14 @@ public class UIMultisigStatusController(
         if (!string.Equals(store.Id, setupContext.StoreId, StringComparison.Ordinal))
             return NotFound();
 
-        if (!setupContext.Pending.ReplacesExistingWallet && multisigService.HasOnChainWallet(store, setupContext.CryptoCode))
+        if (!setupContext.Pending.ReplacesExistingWallet && multisigService.HasOnChainWallet(store, setupContext.Pending.CryptoCode))
             return NotFound();
 
         var setupAccess = await authorizationService.GetSetupAccess(setupContext.StoreId, User, setupContext.Pending);
         if (!setupAccess.CanViewStatus)
             return Forbid();
 
-        var model = multisigService.CreateInProgressViewModel(setupContext.StoreId, User.GetId(), setupContext.CryptoCode, setupContext.Pending, setupAccess.CanManageWalletSettings);
+        var model = multisigService.CreateInProgressViewModel(setupContext.StoreId, User.GetId(), setupContext.Pending, setupAccess.CanManageWalletSettings);
         return View("MultisigStatus", model);
     }
 }

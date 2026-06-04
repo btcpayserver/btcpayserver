@@ -79,7 +79,7 @@ public class UIMultisigSetupController(
             return NotFound();
 
         vm.StoreId = setupContext.StoreId;
-        vm.CryptoCode = setupContext.CryptoCode;
+        vm.CryptoCode = setupContext.Pending.CryptoCode;
         vm.MultisigRequestId = setupContext.Pending.RequestId;
 
         var checkResult = GetContext(vm.CryptoCode, out var store, out var network);
@@ -279,12 +279,12 @@ public class UIMultisigSetupController(
         var vm = new MultisigSetupViewModel
         {
             StoreId = setupContext.StoreId,
-            CryptoCode = setupContext.CryptoCode,
+            CryptoCode = pending.CryptoCode,
             MultisigRequestId = pending.RequestId,
             MultisigRequiredSigners = pending.RequiredSigners,
             MultisigTotalSigners = pending.TotalSigners,
             MultisigScriptType = pending.ScriptType,
-            Config = onChainWalletSetupService.ProtectConfig(setupContext.CryptoCode, strategy),
+            Config = onChainWalletSetupService.ProtectConfig(pending.CryptoCode, strategy),
             Confirmation = true,
             DerivationScheme = strategy.AccountDerivation.ToString()
         };
@@ -297,7 +297,7 @@ public class UIMultisigSetupController(
         var setupAccess = await authorizationService.GetSetupAccess(setupContext.StoreId, User, setupContext.Pending);
         if (!setupAccess.CanViewStatus)
             return Forbid();
-        var model = multisigService.CreateInProgressViewModel(setupContext.StoreId, User.GetId(), setupContext.CryptoCode, setupContext.Pending, setupAccess.CanManageWalletSettings);
+        var model = multisigService.CreateInProgressViewModel(setupContext.StoreId, User.GetId(), setupContext.Pending, setupAccess.CanManageWalletSettings);
         return View("MultisigStatus", model);
     }
 

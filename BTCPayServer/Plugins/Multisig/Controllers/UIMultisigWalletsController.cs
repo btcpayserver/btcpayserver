@@ -15,7 +15,6 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
-using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Plugins.Multisig.Controllers;
 
@@ -28,8 +27,7 @@ public class UIMultisigWalletsController(
     OnChainWalletSetupService onChainWalletSetupService,
     MultisigService multisigService,
     MultisigNotificationService multisigNotificationService,
-    IStringLocalizer stringLocalizer,
-    ILogger<UIMultisigWalletsController> logger) : Controller
+    IStringLocalizer stringLocalizer) : Controller
 {
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
 
@@ -210,14 +208,7 @@ public class UIMultisigWalletsController(
                 MultisigService.GetPendingMultisigSettingName(vm.CryptoCode),
                 finalizedPendingSetting.Value.XMin))
         {
-            try
-            {
-                await multisigNotificationService.PublishWalletCreatedEvent(finalizedPendingSetting.Value.Pending);
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning(ex, "Failed to send wallet-created multisig emails for store {StoreId}", vm.StoreId);
-            }
+            multisigNotificationService.PublishWalletCreatedEvent(finalizedPendingSetting.Value.Pending);
         }
 
         TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Wallet settings for {0} have been updated.", network.CryptoCode].Value;

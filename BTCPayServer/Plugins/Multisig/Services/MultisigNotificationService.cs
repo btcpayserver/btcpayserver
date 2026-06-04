@@ -64,16 +64,15 @@ public class MultisigNotificationService(
         return Task.CompletedTask;
     }
 
-    public Task PublishSignerKeySubmittedEvent(PendingMultisigSetupData pending, PendingMultisigSetupParticipantData participant)
+    public void PublishSignerKeySubmittedEvent(PendingMultisigSetupData pending, PendingMultisigSetupParticipantData participant)
     {
         eventAggregator.Publish(new MultisigSignerKeySubmittedEvent(
             pending,
             new(participant.Email,
             participant.Name)));
-        return Task.CompletedTask;
     }
 
-    public Task PublishWalletCreatedEvent(PendingMultisigSetupData pending)
+    public void PublishWalletCreatedEvent(PendingMultisigSetupData pending)
     {
         var walletLink = linkGenerator.WalletTransactionsLink(new WalletId(pending.StoreId, pending.CryptoCode), pending.RequestBaseUrl);
         var participantIds = pending.Participants
@@ -84,6 +83,5 @@ public class MultisigNotificationService(
             pending,
             walletLink,
             participantIds));
-        return Task.CompletedTask;
     }
 }

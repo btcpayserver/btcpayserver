@@ -180,7 +180,7 @@ public class UIMultisigSetupController(
             if (!await storeRepository.TryUpdateSettingAsync(storeId, setupContext.SettingName, setupContext.XMin, pending))
                 continue;
 
-            await multisigNotificationService.PublishSignerKeySubmittedEvent(pending, participant);
+            multisigNotificationService.PublishSignerKeySubmittedEvent(pending, participant);
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Signer key submitted successfully."].Value;
             return RedirectToAction(nameof(UIMultisigSetupController.SetupMultisigStatus), "UIMultisigSetup", new { area = MultisigPlugin.Area, multisigSetupId = current.RequestId });
         }

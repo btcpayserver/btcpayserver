@@ -77,26 +77,28 @@ public class MultisigService(
         return storeRole.ToPermissionSet(storeId).HasPermission(requiredPermission, permissionService);
     }
 
-    public async Task<PendingMultisigSetupContext?> GetPendingMultisigSetupContext(string? multisigSetupId)
+    public async Task<PendingMultisigSetupContext?> GetPendingMultisigSetupContext(string storeId, string? multisigSetupId)
     {
         if (string.IsNullOrWhiteSpace(multisigSetupId))
             return null;
 
         await using var ctx = dbContextFactory.CreateContext();
-        var row = await ctx.Database.GetDbConnection().QueryFirstOrDefaultAsync<(string StoreId, string Name, string Value, uint XMin)>(
+        var row = await ctx.Database.GetDbConnection().QueryFirstOrDefaultAsync<(string? StoreId, string Name, string Value, uint XMin)>(
             """
             SELECT "StoreId", "Name", "Value", xmin
             FROM "StoreSettings"
-            WHERE "Name" LIKE @namePattern
+            WHERE "StoreId"= @storeId
+              AND "Name" LIKE @namePattern
               AND COALESCE("Value"->>'RequestId', "Value"->>'requestId') = @multisigSetupId
             LIMIT 1
             """,
             new
             {
+                storeId,
                 namePattern = $"{PendingMultisigSettingPrefix}-%",
                 multisigSetupId
             });
-        if (row.Value is null)
+        if (row.StoreId is null)
             return null;
 
         var pending = JsonConvert.DeserializeObject<PendingMultisigSetupData>(row.Value, storeRepository.SerializerSettings);
@@ -108,7 +110,7 @@ public class MultisigService(
             string.IsNullOrWhiteSpace(pending.CryptoCode))
             return null;
 
-        return new PendingMultisigSetupContext(row.StoreId, row.Name, pending, row.XMin);
+        return new PendingMultisigSetupContext(row.Name, pending, row.XMin);
     }
 
     public static string GetPendingMultisigSettingName(string cryptoCode)

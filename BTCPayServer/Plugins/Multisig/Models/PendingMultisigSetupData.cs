@@ -27,7 +27,6 @@ public class PendingMultisigSetupData
 }
 
 public sealed record PendingMultisigSetupContext(
-    string StoreId,
     string SettingName,
     PendingMultisigSetupData Pending,
     uint XMin);

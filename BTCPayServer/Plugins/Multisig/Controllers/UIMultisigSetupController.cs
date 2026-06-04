@@ -74,13 +74,14 @@ public class UIMultisigSetupController(
     [HttpPost("/multisig-setups/{multisigSetupId}/finalize")]
     public async Task<IActionResult> FinalizeMultisigSetup(string multisigSetupId, MultisigSetupViewModel vm)
     {
-        var setupContext = await multisigService.GetPendingMultisigSetupContext(multisigSetupId);
+        var setupContext = await multisigService.GetPendingMultisigSetupContext(this.HttpContext.GetStoreData().Id, multisigSetupId);
         if (setupContext is null)
             return NotFound();
 
-        vm.StoreId = setupContext.StoreId;
-        vm.CryptoCode = setupContext.Pending.CryptoCode;
-        vm.MultisigRequestId = setupContext.Pending.RequestId;
+        var pending = setupContext.Pending;
+        vm.StoreId = pending.StoreId;
+        vm.CryptoCode = pending.CryptoCode;
+        vm.MultisigRequestId = pending.RequestId;
 
         var checkResult = GetContext(vm.CryptoCode, out var store, out var network);
         if (checkResult is not null)
@@ -88,7 +89,7 @@ public class UIMultisigSetupController(
 
         return vm.Confirmation
             ? await ConfirmMultisigSetup(vm, store!, network!)
-            : await FinalizeMultisigRequest(setupContext, network!);
+            : await FinalizeMultisigRequest(pending, network!);
     }
 
     private async Task<IActionResult> ConfirmMultisigSetup(MultisigSetupViewModel vm, StoreData store, BTCPayNetwork network)
@@ -252,33 +253,32 @@ public class UIMultisigSetupController(
         return RedirectToAction(nameof(UIMultisigStatusController.Status), "UIMultisigStatus", new { area = MultisigPlugin.Area, multisigSetupId = pending.RequestId });
     }
 
-    private async Task<IActionResult> FinalizeMultisigRequest(PendingMultisigSetupContext setupContext, BTCPayNetwork network)
+    private async Task<IActionResult> FinalizeMultisigRequest(PendingMultisigSetupData pending, BTCPayNetwork network)
     {
-        var pending = setupContext.Pending;
 
         if (pending.Participants.Count != pending.TotalSigners || pending.Participants.Any(p => string.IsNullOrWhiteSpace(p.AccountKey)))
         {
             ModelState.AddModelError(string.Empty, stringLocalizer["Complete signer collection before creating the multisig wallet."].Value);
-            return await RenderSessionView(setupContext);
+            return await RenderSessionView(pending);
         }
 
-        var eligibleParticipants = await multisigService.GetStoreUsers(setupContext.StoreId, pending.Participants.Select(p => p.UserId));
+        var eligibleParticipants = await multisigService.GetStoreUsers(pending.StoreId, pending.Participants.Select(p => p.UserId));
         var eligibleParticipantIds = eligibleParticipants.Select(p => p.UserId).ToHashSet(StringComparer.Ordinal);
         if (pending.Participants.Any(p => !eligibleParticipantIds.Contains(p.UserId)))
         {
             ModelState.AddModelError(string.Empty, stringLocalizer["One or more signers no longer have wallet signing permission."].Value);
-            return await RenderSessionView(setupContext);
+            return await RenderSessionView(pending);
         }
 
         if (!TryBuildPendingStrategy(pending, network, out var strategy, out var multisigValidationError))
         {
             ModelState.AddModelError(string.Empty, multisigValidationError);
-            return await RenderSessionView(setupContext);
+            return await RenderSessionView(pending);
         }
 
         var vm = new MultisigSetupViewModel
         {
-            StoreId = setupContext.StoreId,
+            StoreId = pending.StoreId,
             CryptoCode = pending.CryptoCode,
             MultisigRequestId = pending.RequestId,
             MultisigRequiredSigners = pending.RequiredSigners,
@@ -292,12 +292,12 @@ public class UIMultisigSetupController(
         return ConfirmAddresses(vm, strategy, network);
     }
 
-    private async Task<IActionResult> RenderSessionView(PendingMultisigSetupContext setupContext)
+    private async Task<IActionResult> RenderSessionView(PendingMultisigSetupData pending)
     {
-        var setupAccess = await authorizationService.GetSetupAccess(setupContext.StoreId, User, setupContext.Pending);
+        var setupAccess = await authorizationService.GetSetupAccess(pending.StoreId, User, pending);
         if (!setupAccess.CanViewStatus)
             return Forbid();
-        var model = multisigService.CreateInProgressViewModel(setupContext.StoreId, User.GetId(), setupContext.Pending, setupAccess.CanManageWalletSettings);
+        var model = multisigService.CreateInProgressViewModel(pending.StoreId, User.GetId(), pending, setupAccess.CanManageWalletSettings);
         return View("MultisigStatus", model);
     }
 

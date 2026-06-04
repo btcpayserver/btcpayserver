@@ -22,22 +22,19 @@ public class UIMultisigStatusController(
     [HttpGet("{multisigSetupId}")]
     public async Task<IActionResult> Status(string multisigSetupId)
     {
-        var setupContext = await multisigService.GetPendingMultisigSetupContext(multisigSetupId);
+        var setupContext = await multisigService.GetPendingMultisigSetupContext(this.HttpContext.GetStoreData().Id, multisigSetupId);
         var store = HttpContext.GetStoreDataOrNull();
         if (setupContext is null || store is null)
-            return NotFound();
-
-        if (!string.Equals(store.Id, setupContext.StoreId, StringComparison.Ordinal))
             return NotFound();
 
         if (!setupContext.Pending.ReplacesExistingWallet && multisigService.HasOnChainWallet(store, setupContext.Pending.CryptoCode))
             return NotFound();
 
-        var setupAccess = await authorizationService.GetSetupAccess(setupContext.StoreId, User, setupContext.Pending);
+        var setupAccess = await authorizationService.GetSetupAccess(setupContext.Pending.StoreId, User, setupContext.Pending);
         if (!setupAccess.CanViewStatus)
             return Forbid();
 
-        var model = multisigService.CreateInProgressViewModel(setupContext.StoreId, User.GetId(), setupContext.Pending, setupAccess.CanManageWalletSettings);
+        var model = multisigService.CreateInProgressViewModel(setupContext.Pending.StoreId, User.GetId(), setupContext.Pending, setupAccess.CanManageWalletSettings);
         return View("MultisigStatus", model);
     }
 }

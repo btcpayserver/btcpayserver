@@ -23,7 +23,17 @@ public class GlobalSearchTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.CreateNewStore();
 
         await s.GlobalSearch.GoToPage("Setup wallet");
-        await s.Page.WaitForURLAsync(s.ServerUri + $"stores/{s.StoreId}/onchain/BTC");
+        try
+        {
+            await s.Page.WaitForURLAsync(s.ServerUri + $"stores/{s.StoreId}/onchain/BTC");
+        }
+        catch
+        {
+            await s.TakeScreenshot("TestGlobalSearch-flaky.png");
+            s.TestLogs.LogInformation(s.Page.Url);
+            throw;
+        }
+
         var admin = (s.CreatedUser, s.Password);
 
         // Create a new invoice and check that you can search for it either via invoice id, bitcoin address or transaction id.

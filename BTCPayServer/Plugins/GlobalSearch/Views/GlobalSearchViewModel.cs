@@ -45,5 +45,11 @@ public class ResultItemViewModel
     public string Category { get; set; }
     public string Url { get; set; }
     public string[] Keywords { get; set; }
+
+    /// <summary>
+    /// Lower order values appear first (higher up), and higher order values appear later (lower down).
+    /// </summary>
+    [JsonIgnore]
+    public int Order { get; set; }
 }
 

@@ -76,7 +76,7 @@ public static class MultisigEmailTriggers
                 Body = EmailsPlugin.CreateEmail(
                     "<b>{Signer.Name}</b> submitted a signer key for the multisig wallet setup.",
                     "Open request",
-                    "{Request.Link}")
+                    "{Setup.Link}")
             },
             PlaceHolders =
                 new List<EmailTriggerViewModel.PlaceHolder>()
@@ -118,7 +118,7 @@ public static class MultisigEmailTriggers
             Description = "Multisig - Pending Transaction Created",
             DefaultEmail = new EmailTriggerViewModel.Default
             {
-                To = ["{Recipient.Email}"],
+                To = ["{Recipient.MailboxAddress}"],
                 Subject = "Pending multisig transaction requires signatures ({CryptoCode})",
                 Body = EmailsPlugin.CreateEmail(
                     "A pending multisig transaction was created and needs signatures.",

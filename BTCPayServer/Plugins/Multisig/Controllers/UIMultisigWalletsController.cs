@@ -82,7 +82,6 @@ public class UIMultisigWalletsController(
             return View(vm);
         }
         vm.MultisigScriptType = scriptType;
-        vm.MultisigStoreUsers = await multisigService.GetStoreUsers(vm.StoreId, selectedIds);
         var usersById = vm.MultisigStoreUsers.ToDictionary(u => u.UserId, u => u, StringComparer.Ordinal);
         if (!selectedIds.All(usersById.ContainsKey))
         {

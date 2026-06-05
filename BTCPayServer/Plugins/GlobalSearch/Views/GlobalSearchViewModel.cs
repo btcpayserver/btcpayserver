@@ -37,6 +37,7 @@ public class ResultItemViewModel
         Category = other.Category;
         Url = other.Url;
         Keywords = other.Keywords?.ToArray();
+        Order = other.Order;
     }
     [JsonIgnore]
     public string RequiredPolicy { get; set; }

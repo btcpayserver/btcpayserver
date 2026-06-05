@@ -44,7 +44,7 @@ public class MultisigSearchResultProvider(
             {
                 var setupAccess = await context.AuthorizationService.GetSetupAccess(storeId, context.User, pending);
                 if (!setupAccess.CanViewStatus)
-                    return;
+                    continue;
 
                 context.ItemResults.Add(new ResultItemViewModel
                 {

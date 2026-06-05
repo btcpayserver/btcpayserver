@@ -494,7 +494,7 @@ public class UIStoreOnChainWalletsController(
                     AccountKey = e.AccountKey.ToString(),
                     MasterFingerprint = e.RootFingerprint is { } fp ? fp.ToString() : null,
                     AccountKeyPath = e.AccountKeyPath == null ? "" : $"m/{e.AccountKeyPath}",
-                    SignerEmail = userById.TryGetValue(e.SignerUserId ?? "", out var u) ? u.Email : null,
+                    SignerEmail = userById.TryGetValue(e.SignerUserId ?? "", out var u) ? u.GetMailboxAddress().ToString() : null,
                 }).ToList(),
             Config = _dataProtector.ProtectString(JToken.FromObject(derivation, handler.Serializer).ToString()),
             PayJoinEnabled = storeBlob.PayJoinEnabled,

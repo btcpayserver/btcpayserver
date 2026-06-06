@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Services;
 using Dapper;
@@ -387,7 +388,7 @@ namespace BTCPayServer.Tests
             await tester.Page.Locator("#ConfirmInput").FillAsync("Delete");
             await tester.Page.Locator("#ConfirmContinue").ClickAsync();
 
-            var fallbackAlert = await tester.FindAlertMessage();
+            var fallbackAlert = await tester.FindAlertMessage(StatusMessageModel.StatusSeverity.Error);
             Assert.Contains("Translation French cannot be uninstalled because it is used as fallback by: FrenchCustom", await fallbackAlert.TextContentAsync());
 
             await tester.Page.Locator("#Delete-German").ClickAsync();

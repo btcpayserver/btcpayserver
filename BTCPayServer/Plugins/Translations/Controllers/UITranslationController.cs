@@ -246,6 +246,12 @@ public class UITranslationController(
             TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Translation {0} is the currently selected one and cannot be uninstalled", translation].Value;
             return RedirectToAction(nameof(ListTranslations));
         }
+        var fallbackUsers = await localizer.GetTranslationsUsingFallback(translation);
+        if (fallbackUsers.Length > 0)
+        {
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Translation {0} cannot be uninstalled because it is used as fallback by: {1}", translation, string.Join(", ", fallbackUsers)].Value;
+            return RedirectToAction(nameof(ListTranslations));
+        }
         await localizer.DeleteTranslation(translation);
         TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Translation {0} deleted", translation].Value;
         return RedirectToAction(nameof(ListTranslations));

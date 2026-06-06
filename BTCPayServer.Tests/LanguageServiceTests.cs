@@ -361,6 +361,47 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
+        [Trait("Playwright", "Playwright")]
+        public async Task LanguagePack_IsNotEditable_AndCanBeUninstalled_WithFallbackProtection()
+        {
+            await using var tester = CreatePlaywrightTester(newDb: true);
+            await tester.StartAsync();
+            await tester.RegisterNewUser(true);
+            await tester.CreateNewStore();
+
+            var factory = tester.Server.PayTester.GetService<ApplicationDbContextFactory>();
+            var db = factory.CreateContext().Database.GetDbConnection();
+            await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('French', 'English', 'LanguagePack')");
+            await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('FrenchCustom', 'French', 'Custom')");
+            await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('German', 'English', 'LanguagePack')");
+
+            await tester.GoToServer(Views.Server.ServerNavPages.Translations);
+            await tester.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+
+            await Expect(tester.Page.Locator("#Delete-French")).ToBeVisibleAsync();
+            await Expect(tester.Page.Locator("#Delete-German")).ToBeVisibleAsync();
+
+            await Expect(tester.Page.Locator("a[href='/server/translations/French']")).ToHaveCountAsync(0);
+
+            await tester.Page.Locator("#Delete-French").ClickAsync();
+            await tester.Page.Locator("#ConfirmInput").FillAsync("Delete");
+            await tester.Page.Locator("#ConfirmContinue").ClickAsync();
+
+            var fallbackAlert = await tester.FindAlertMessage();
+            Assert.Contains("Translation French cannot be uninstalled because it is used as fallback by: FrenchCustom", await fallbackAlert.TextContentAsync());
+
+            await tester.Page.Locator("#Delete-German").ClickAsync();
+            await tester.Page.Locator("#ConfirmInput").FillAsync("Delete");
+            await tester.Page.Locator("#ConfirmContinue").ClickAsync();
+
+            var successAlert = await tester.FindAlertMessage();
+            Assert.Contains("Translation German deleted", await successAlert.TextContentAsync());
+
+            var german = await db.QueryFirstOrDefaultAsync("SELECT 1 FROM lang_dictionaries WHERE dict_id='German'");
+            Assert.Null(german);
+        }
+
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanUpdateTranslationsInDatabase()
         {

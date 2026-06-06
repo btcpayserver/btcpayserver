@@ -51,7 +51,7 @@ namespace BTCPayServer.Plugins.Translations
         }
         public Translations(IEnumerable<KeyValuePair<string, string?>> records, Translations? fallback)
         {
-            Dictionary<string, string> thisRecords = new Dictionary<string, string>();
+            var thisRecords = new Dictionary<string, string>();
             foreach (var r in records)
             {
                 var v = r.Value?.Trim();

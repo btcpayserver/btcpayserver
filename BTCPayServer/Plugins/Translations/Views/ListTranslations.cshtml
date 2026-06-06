@@ -109,7 +109,7 @@
 									<button id="Select-@v.TranslationName" type="submit" class="btn btn-link p-0" text-translate="true">Select</button>
 								</form>
 							}
-							@if (!v.IsSelected && v.Editable)
+							@if (!v.IsSelected && (v.Editable || v.IsDownloadedLanguagePack))
 							{
 								<a id="Delete-@v.TranslationName"
 								   asp-action="UninstallLanguagePack"

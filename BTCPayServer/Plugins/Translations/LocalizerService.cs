@@ -164,7 +164,15 @@ namespace BTCPayServer.Plugins.Translations
         {
             await using var ctx = contextFactory.CreateContext();
             var db = ctx.Database.GetDbConnection();
-            await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id=@dict_id AND source='Custom'", new { dict_id = translationName });
+            await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id=@dict_id AND source IN ('Custom', 'LanguagePack')", new { dict_id = translationName });
+        }
+
+        public async Task<string[]> GetTranslationsUsingFallback(string fallback)
+        {
+            await using var ctx = contextFactory.CreateContext();
+            var db = ctx.Database.GetDbConnection();
+            var rows = await db.QueryAsync<string>("SELECT dict_id FROM lang_dictionaries WHERE fallback=@fallback ORDER BY dict_id", new { fallback });
+            return rows.ToArray();
         }
 
         public async Task UpdateVersion(string translationName, string version)

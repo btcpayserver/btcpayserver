@@ -187,8 +187,8 @@ public partial class UIStoresController
         await _storeRepo.UpdateStore(CurrentStore);
 
         TempData[WellKnownTempData.SuccessMessage] = CurrentStore.Archived
-            ? "The store has been archived and will no longer appear in the stores list by default."
-            : "The store has been unarchived and will appear in the stores list by default again.";
+            ? StringLocalizer["The store has been archived and will no longer appear in the stores list by default."].Value
+            : StringLocalizer["The store has been unarchived and will appear in the stores list by default again."].Value;
 
         return RedirectToAction(nameof(GeneralSettings), new
         {

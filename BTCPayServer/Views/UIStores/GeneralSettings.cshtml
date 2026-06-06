@@ -59,11 +59,11 @@
                 <div class="d-flex align-items-center justify-content-between gap-2">
                     <label asp-for="LogoFile" class="form-label"></label>
                     @if (!string.IsNullOrEmpty(Model.LogoUrl))
-                    {
-                        <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveLogoFile" value="true">
-                            <vc:icon symbol="cross" />Remove
-                        </button>
-                    }
+	                    {
+	                        <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveLogoFile" value="true">
+	                            <vc:icon symbol="cross" /><span text-translate="true">Remove</span>
+	                        </button>
+	                    }
                 </div>
                 @if (canUpload)
                 {
@@ -86,11 +86,11 @@
                 <div class="d-flex align-items-center justify-content-between gap-2">
                     <label asp-for="CssFile" class="form-label"></label>
                     @if (!string.IsNullOrEmpty(Model.CssUrl))
-                    {
-                        <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveCssFile" value="true">
-                            <vc:icon symbol="cross" />Remove
-                        </button>
-                    }
+	                    {
+	                        <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveCssFile" value="true">
+	                            <vc:icon symbol="cross" /><span text-translate="true">Remove</span>
+	                        </button>
+	                    }
                 </div>
                 @if (canUpload)
                 {

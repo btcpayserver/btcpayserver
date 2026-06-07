@@ -135,8 +135,10 @@ public class UITranslationController(
     [HttpGet("server/translations/{translation}")]
     public async Task<IActionResult> EditTranslation(string translation)
     {
-        if ((await localizer.GetTranslation(translation)) is null)
+        var d = await localizer.GetTranslation(translation);
+        if (d is null || d.Source == "LanguagePack")
             return NotFound();
+
         var translations = await localizer.GetTranslations(translation);
         return View(new EditTranslationViewModel().SetTranslations(translations.Translations));
     }

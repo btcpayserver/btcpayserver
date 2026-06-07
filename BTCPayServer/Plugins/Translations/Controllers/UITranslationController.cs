@@ -147,7 +147,7 @@ public class UITranslationController(
     public async Task<IActionResult> EditTranslation(string translation, EditTranslationViewModel viewModel)
     {
         var d = await localizer.GetTranslation(translation);
-        if (d is null)
+        if (d is null || d.Source == "LanguagePack")
             return NotFound();
         if (environment.CheatMode && viewModel.Command == "Fake")
         {

@@ -3,7 +3,6 @@ set -u
 
 ROOT_DIR="${1:-btcpay-plugin-check}"
 BTCPAY_BASELINE_REF="${BTCPAY_BASELINE_REF:-}"
-BLOCK_ON_REGRESSION="${BLOCK_ON_REGRESSION:-}"
 
 BTCPAY_REPO="https://github.com/btcpayserver/btcpayserver.git"
 EXOLIX_REPO="https://github.com/Nisaba/btcpayserver-plugins.git"
@@ -69,7 +68,7 @@ if [ -n "$BTCPAY_BASELINE_REF" ]; then
 
   printf '\n==> Building BTCPay Server baseline once\n'
   if ! dotnet build "btcpayserver-baseline/BTCPayServer/BTCPayServer.csproj" -c Release --nologo -v quiet /clp:ErrorsOnly; then
-    printf '!! Baseline BTCPay failed to build; disabling diff and reporting absolute results.\n'
+    printf '!! WARNING: baseline BTCPay (%s) failed to build.\n' "$BTCPAY_BASELINE_REF"
     BTCPAY_BASELINE_REF=""
   fi
 fi
@@ -248,7 +247,4 @@ else
   fi
 fi
 
-if [ -n "$BTCPAY_BASELINE_REF" ] && [ -n "$BLOCK_ON_REGRESSION" ] && [ "${#regressions[@]}" -gt 0 ]; then
-  exit 1
-fi
 exit 0

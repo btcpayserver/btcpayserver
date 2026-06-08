@@ -60,6 +60,10 @@ jobs:
           name: Run pre-release checks
           command: |
             cd .circleci && ./run-tests.sh "PreReleaseCheck=PreReleaseCheck"
+      - run:
+          name: Check BTCPay plugin compatibility
+          command: |
+            cd .circleci && ./check-btcpay-plugin-compat.sh
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined
   docker:
     docker:

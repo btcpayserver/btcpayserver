@@ -73,7 +73,7 @@ public class UITranslationController(
                 LastUpdated = manifestEntry?.Updated,
                 Fallback = translation.Fallback,
                 IsSelected = isSelected,
-                IsDownloadedLanguagePack = isDownloadedPack,
+                IsDeletable = translation.Source == "LanguagePack" || translation.Source == "Custom",
                 UpdateAvailable = updateAvailable
             };
             if (isSelected)
@@ -218,12 +218,26 @@ public class UITranslationController(
         var existingTranslation = await localizer.GetTranslation(language);
         if (existingTranslation is null)
         {
-            existingTranslation = await localizer.CreateTranslation(language, Translations.DefaultLanguage, "LanguagePack");
-            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' downloaded successfully", language].Value;
+            try
+            {
+                existingTranslation = await localizer.CreateTranslation(language, Translations.DefaultLanguage, "LanguagePack");
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' downloaded successfully", language].Value;
+            }
+            catch (DbException)
+            {
+                existingTranslation = await localizer.GetTranslation(language);
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' updated successfully", language].Value;
+            }
         }
         else
         {
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' updated successfully", language].Value;
+        }
+
+        if (existingTranslation is null)
+        {
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Failed to download language pack: {0}", language].Value;
+            return RedirectToAction(nameof(ListTranslations));
         }
 
         await localizer.Save(existingTranslation, translations);

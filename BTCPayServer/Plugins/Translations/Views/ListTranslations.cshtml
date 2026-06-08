@@ -97,7 +97,7 @@
 					</td>
 					<td class="actions-col">
 						<div class="d-inline-flex align-items-center gap-3">
-                            @if (v.IsDownloadedLanguagePack && v.UpdateAvailable)
+                            @if (v.UpdateAvailable)
                             {
                                 <form method="post" asp-action="DownloadLanguagePack" asp-route-language="@v.TranslationName" class="d-inline">
                                     <button type="submit" class="btn btn-link p-0" text-translate="true">Update</button>
@@ -109,7 +109,7 @@
 									<button id="Select-@v.TranslationName" type="submit" class="btn btn-link p-0" text-translate="true">Select</button>
 								</form>
 							}
-							@if (!v.IsSelected && (v.Editable || v.IsDownloadedLanguagePack))
+							@if (!v.IsSelected && v.IsDeletable)
 							{
 								<a id="Delete-@v.TranslationName"
 								   asp-action="UninstallLanguagePack"

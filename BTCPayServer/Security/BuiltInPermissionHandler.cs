@@ -22,7 +22,7 @@ public class BuiltInPermissionHandler(
 
     //TODO: In the future, we will add these store permissions to actual aspnet roles and remove this class.
     private static readonly PermissionSet ServerAdminRolePermissions =
-        new PermissionSet(new[] { Permission.Create(Policies.CanViewStoreSettings) });
+        new PermissionSet(new[] { Permission.Create(Policies.CanModifyStoreSettings) });
 
     public async Task HandleAsync(AuthorizationHandlerContext authContext, PermissionAuthorizationContext permContext)
     {

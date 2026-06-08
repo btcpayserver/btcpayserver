@@ -827,6 +827,7 @@ namespace BTCPayServer.Tests
             await settings.UpdateSetting(policies);
             await s.RegisterNewUser(isAdmin: true);
             await s.GoToUrl("/server/services");
+            await s.Page.WaitForLoadStateAsync();
             Assert.Contains("server/services/ssh", await s.Page.ContentAsync());
             using (var client = await s.Server.PayTester.GetService<BTCPayServerOptions>().SSHSettings
                 .ConnectAsync())

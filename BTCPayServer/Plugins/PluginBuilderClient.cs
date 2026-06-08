@@ -87,7 +87,7 @@ namespace BTCPayServer.Plugins
         public async Task<PublishedVersion[]> GetPluginVersionsForDownload(string identifier, string btcpayVersion, bool includePreRelease = false, bool includeAllVersions = false)
         {
             var queryString = $"?btcpayVersion={btcpayVersion}&includePreRelease={includePreRelease}&includeAllVersions={includeAllVersions}";
-            var url = $"api/v1/plugins/{identifier}{queryString}";
+            var url = $"api/v1/plugins/{Uri.EscapeDataString(identifier)}{queryString}";
 
             var result = await _httpClient.GetStringAsync(url);
             return JsonConvert.DeserializeObject<PublishedVersion[]>(result, serializerSettings)

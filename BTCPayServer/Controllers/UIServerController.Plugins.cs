@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Configuration;
+using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Plugins;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,86 +18,52 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/plugins")]
         public async Task<IActionResult> ListPlugins(
             [FromServices] PluginService pluginService,
-            [FromServices] BTCPayServerOptions btcPayServerOptions,
-            string search = null)
+            [FromServices] PluginManagementProjectionService projectionService)
         {
-            IEnumerable<PluginService.AvailablePlugin> availablePlugins;
-            IEnumerable<PluginService.AvailablePlugin> allPlugins;
-            try
-            {
-                allPlugins = await pluginService.GetRemotePlugins(null);
-                availablePlugins = string.IsNullOrEmpty(search)
-                    ? allPlugins
-                    : allPlugins.Where(p =>
-                        p.Identifier.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                        p.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
-            }
-            catch (Exception ex)
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = StringLocalizer["Remote plugins lookup failed. Try again later. Error: {0}", ex.Message].Value
-                });
-                availablePlugins = Array.Empty<PluginService.AvailablePlugin>();
-                allPlugins = [];
-            }
-            var availablePluginsByIdentifier = new Dictionary<string, AvailablePlugin>(StringComparer.OrdinalIgnoreCase);
-            foreach (var p in allPlugins)
-            {
-                if (!availablePluginsByIdentifier.TryGetValue(p.Identifier, out var existing) || p.Version > existing.Version)
-                    availablePluginsByIdentifier[p.Identifier] = p;
-            }
-            
-            var disabled = pluginService.GetDisabledPlugins();
-            var installed = pluginService.Installed;
-            var disabledPluginUpdates = ListPluginsViewModel.GetDisabledPluginUpdates(disabled, availablePluginsByIdentifier);
-            var res = new ListPluginsViewModel()
-            {
-                Plugins = pluginService.LoadedPlugins,
-                Installed = installed,
-                Available = availablePlugins,
-                Commands = pluginService.GetPendingCommands(),
-                Disabled = disabled,
-                CanShowRestart = true,
-                DownloadedPluginsByIdentifier = availablePluginsByIdentifier,
-                DisabledPluginUpdates = disabledPluginUpdates
-            };
-            return View(res);
+            var model = await BuildManagePluginsShellViewModel(
+                pluginService,
+                projectionService,
+                selectedIdentifier: null,
+                selectedSlug: null,
+                setErrorStatusMessage: true);
+            return View(model);
         }
 
-        public class ListPluginsViewModel
+        [HttpGet("server/plugins/directory")]
+        public async Task<IActionResult> PluginDirectory(
+            [FromServices] PluginService pluginService,
+            [FromServices] PluginManagementProjectionService projectionService,
+            string selectedIdentifier = null,
+            string selectedSlug = null)
         {
-            public IEnumerable<IBTCPayServerPlugin> Plugins { get; set; }
-            public IEnumerable<PluginService.AvailablePlugin> Available { get; set; }
-            public (string command, string plugin)[] Commands { get; set; }
-            public bool CanShowRestart { get; set; }
-            public Dictionary<string, Version> Disabled { get; set; }
-            public Dictionary<string, AvailablePlugin> DownloadedPluginsByIdentifier { get; set; } = new Dictionary<string, AvailablePlugin>();
-            public Dictionary<string, Version> Installed { get; set; }
-            public Dictionary<string, PluginService.AvailablePlugin> DisabledPluginUpdates { get; set; }
+            var model = await BuildManagePluginsShellViewModel(
+                pluginService,
+                projectionService,
+                selectedIdentifier,
+                selectedSlug,
+                setErrorStatusMessage: true);
+            return View(model);
+        }
 
-            public static Dictionary<string, PluginService.AvailablePlugin> GetDisabledPluginUpdates(
-                Dictionary<string, Version> disabled,
-                Dictionary<string, AvailablePlugin> availablePluginsByIdentifier)
-            {
-                var result = new Dictionary<string, PluginService.AvailablePlugin>();
-                foreach (var (disabledPlugin, disabledVersion) in disabled)
-                {
-                    if (disabledVersion == null) continue;
-                    if (availablePluginsByIdentifier.TryGetValue(disabledPlugin, out var available))
-                    {
-                        if (available.Version > disabledVersion)
-                            result[disabledPlugin] = available;
-                    }
-                }
-                return result;
-            }
+        [HttpGet("server/plugins/panel")]
+        public async Task<IActionResult> SelectedPluginPanel(
+            [FromServices] PluginService pluginService,
+            [FromServices] PluginManagementProjectionService projectionService,
+            string identifier = null,
+            string slug = null)
+        {
+            var model = await BuildManagePluginsShellViewModel(
+                pluginService,
+                projectionService,
+                identifier,
+                slug,
+                setErrorStatusMessage: false);
+            return PartialView("_SelectedPluginPanel", model.SelectedPluginPanel);
         }
 
         [HttpPost("server/plugins/uninstall-all")]
         public IActionResult UnInstallAllDisabledPlugin(
-            [FromServices] PluginService pluginService, string plugin)
+            [FromServices] PluginService pluginService)
         {
             var disabled = pluginService.GetDisabledPlugins();
             foreach (var d in disabled)
@@ -107,7 +73,8 @@ namespace BTCPayServer.Controllers
 
         [HttpPost("server/plugins/uninstall")]
         public IActionResult UnInstallPlugin(
-            [FromServices] PluginService pluginService, string plugin)
+            [FromServices] PluginService pluginService,
+            string plugin)
         {
             pluginService.UninstallPlugin(plugin);
             TempData.SetStatusMessageModel(new StatusMessageModel
@@ -116,12 +83,13 @@ namespace BTCPayServer.Controllers
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
 
-            return RedirectToAction("ListPlugins");
+            return RedirectToAction(nameof(ListPlugins));
         }
 
         [HttpPost("server/plugins/enable")]
         public IActionResult EnablePlugin(
-            [FromServices] PluginService pluginService, string plugin)
+            [FromServices] PluginService pluginService,
+            string plugin)
         {
             pluginService.EnablePlugin(plugin);
             TempData.SetStatusMessageModel(new StatusMessageModel
@@ -130,12 +98,16 @@ namespace BTCPayServer.Controllers
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
 
-            return RedirectToAction("ListPlugins");
+            return RedirectToAction(nameof(ListPlugins));
         }
 
         [HttpPost("server/plugins/cancel")]
         public IActionResult CancelPluginCommands(
-            [FromServices] PluginService pluginService, string plugin)
+            [FromServices] PluginService pluginService,
+            string plugin,
+            string selectedIdentifier = null,
+            string selectedSlug = null,
+            string returnTo = null)
         {
             pluginService.CancelCommands(plugin);
             TempData.SetStatusMessageModel(new StatusMessageModel
@@ -144,12 +116,17 @@ namespace BTCPayServer.Controllers
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
 
-            return RedirectToAction("ListPlugins");
+            return RedirectToPlugins(returnTo, selectedIdentifier, selectedSlug);
         }
 
         [HttpPost("server/plugins/install")]
         public async Task<IActionResult> InstallPlugin(
-            [FromServices] PluginService pluginService, string plugin, bool update = false, string version = null)
+            [FromServices] PluginService pluginService,
+            string plugin,
+            string version = null,
+            string selectedIdentifier = null,
+            string selectedSlug = null,
+            string returnTo = null)
         {
             var ctx = new DownloadPluginContext(pluginService, plugin, version, new(), new(), null);
             await DownloadPluginAndDependencies(ctx);
@@ -173,7 +150,7 @@ namespace BTCPayServer.Controllers
                 });
             }
 
-            return RedirectToAction("ListPlugins");
+            return RedirectToPlugins(returnTo, selectedIdentifier, selectedSlug);
         }
 
         public record DownloadPluginContext(PluginService PluginService, string Plugin, string Version, Dictionary<string, AvailablePlugin> Downloaded, Dictionary<string, string> DependencyFailed, VersionCondition VersionCondition);
@@ -246,7 +223,135 @@ namespace BTCPayServer.Controllers
                 Message = StringLocalizer["Files uploaded, restart server to load plugins"].Value,
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
-            return RedirectToAction("ListPlugins");
+            return RedirectToAction(nameof(ListPlugins));
+        }
+
+        private async Task<ManagePluginsShellViewModel> BuildManagePluginsShellViewModel(
+            PluginService pluginService,
+            PluginManagementProjectionService projectionService,
+            string selectedIdentifier,
+            string selectedSlug,
+            bool setErrorStatusMessage)
+        {
+            var allPlugins = await GetRemotePlugins(pluginService, setErrorStatusMessage);
+            var model = projectionService.CreateViewModel(new PluginManagementProjectionService.ProjectionSource
+            {
+                LoadedPlugins = pluginService.LoadedPlugins,
+                Installed = pluginService.Installed,
+                AllAvailable = allPlugins,
+                Commands = pluginService.GetPendingCommands(),
+                Disabled = pluginService.GetDisabledPlugins(),
+                GetVersionOfPendingInstall = pluginService.GetVersionOfPendingInstall,
+                SelectedPluginIdentifier = selectedIdentifier,
+                SelectedPluginSlug = selectedSlug
+            });
+
+            var pluginSourceBaseUri = pluginService.GetPluginSourceBaseUri();
+            // The embedded directory iframe trusts the admin-configured plugin source.
+            model.DirectoryOrigin = pluginSourceBaseUri is null ? null : $"{pluginSourceBaseUri.Scheme}://{pluginSourceBaseUri.Authority}";
+            model.PanelUrl = Url.Action(nameof(SelectedPluginPanel));
+            var btcpayVersion = pluginService.GetShortBtcpayVersion();
+            var preReleaseEnabled = pluginService.PluginPreReleasesEnabled;
+            model.DirectoryIframeUrl = BuildDirectoryIframeUrl(
+                pluginSourceBaseUri,
+                btcpayVersion,
+                preReleaseEnabled);
+            model.SelectedPluginPanel.EmbeddedDetailsUrl = BuildPluginDetailsEmbedUrl(
+                pluginSourceBaseUri,
+                model.SelectedPluginSlug,
+                model.SelectedPluginPanel.Actions.FirstOrDefault(action => action.FormAction == nameof(InstallPlugin))?.Version,
+                btcpayVersion,
+                preReleaseEnabled);
+            return model;
+        }
+
+        private async Task<AvailablePlugin[]> GetRemotePlugins(
+            PluginService pluginService,
+            bool setErrorStatusMessage)
+        {
+            try
+            {
+                return await pluginService.GetRemotePlugins(null);
+            }
+            catch (Exception ex)
+            {
+                if (setErrorStatusMessage)
+                {
+                    TempData.SetStatusMessageModel(new StatusMessageModel
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Error,
+                        Message = StringLocalizer["Remote plugins lookup failed. Try again later. Error: {0}", ex.Message].Value
+                    });
+                }
+
+                return Array.Empty<AvailablePlugin>();
+            }
+        }
+
+        private IActionResult RedirectToPlugins(string returnTo, string selectedIdentifier, string selectedSlug)
+        {
+            var action = returnTo?.Equals("directory", StringComparison.OrdinalIgnoreCase) is true
+                ? nameof(PluginDirectory)
+                : nameof(ListPlugins);
+            return RedirectToAction(action, new
+            {
+                selectedIdentifier,
+                selectedSlug
+            });
+        }
+
+        internal static string BuildDirectoryIframeUrl(
+            Uri pluginSourceBaseUri,
+            string btcpayVersion,
+            bool includePreRelease)
+        {
+            if (pluginSourceBaseUri is null)
+            {
+                return null;
+            }
+
+            var baseUri = pluginSourceBaseUri.AbsoluteUri.EndsWith("/", StringComparison.Ordinal)
+                ? pluginSourceBaseUri
+                : new Uri(pluginSourceBaseUri.AbsoluteUri + "/");
+            var builder = new UriBuilder(new Uri(baseUri, "public/plugins"));
+            var query = new List<string> { "embed=1" };
+            if (!string.IsNullOrEmpty(btcpayVersion))
+            {
+                query.Add($"btcpayVersion={Uri.EscapeDataString(btcpayVersion)}");
+                query.Add($"includePreRelease={includePreRelease.ToString().ToLowerInvariant()}");
+            }
+            builder.Query = string.Join("&", query);
+            return builder.Uri.ToString();
+        }
+
+        private static string BuildPluginDetailsEmbedUrl(
+            Uri pluginSourceBaseUri,
+            string selectedSlug,
+            string selectedVersion,
+            string btcpayVersion,
+            bool includePreRelease)
+        {
+            if (pluginSourceBaseUri is null || string.IsNullOrEmpty(selectedSlug))
+            {
+                return null;
+            }
+
+            var baseUri = pluginSourceBaseUri.AbsoluteUri.EndsWith("/", StringComparison.Ordinal)
+                ? pluginSourceBaseUri
+                : new Uri(pluginSourceBaseUri.AbsoluteUri + "/");
+            var builder = new UriBuilder(new Uri(baseUri, $"public/plugins/{Uri.EscapeDataString(selectedSlug)}"));
+            var query = new List<string> { "embed=1" };
+            if (!string.IsNullOrEmpty(btcpayVersion))
+            {
+                query.Add($"btcpayVersion={Uri.EscapeDataString(btcpayVersion)}");
+                query.Add($"includePreRelease={includePreRelease.ToString().ToLowerInvariant()}");
+            }
+            if (!string.IsNullOrEmpty(selectedVersion))
+            {
+                query.Add($"version={Uri.EscapeDataString(selectedVersion)}");
+            }
+            builder.Query = string.Join("&", query);
+            return builder.Uri.ToString();
         }
     }
 }

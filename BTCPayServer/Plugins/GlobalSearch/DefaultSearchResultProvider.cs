@@ -80,8 +80,8 @@ public class DefaultSearchResultProvider : ISearchResultItemProvider
             AddPage(results, "View the logs", context.Url.Action(nameof(UIServerController.LogsView), "UIServer"), "Server", ["Server", "Settings", "Logs", "View"]);
             AddPage(results, "Configure a file provider", context.Url.Action(nameof(UIServerController.Files), "UIServer"), "Server", ["Server", "Settings", "Files", "Storage", "Configure"]);
 
-            var pluginsUrl = context.Url.Action(nameof(UIServerController.ListPlugins), "UIServer");
-            AddPage(results, "Install, update, and configure plugins", pluginsUrl, "Server", ["Plugins", "Configure", "Update", "Install"]);
+            AddPage(results, "View installed plugins", context.Url.Action(nameof(UIServerController.ListPlugins), "UIServer"), "Server", ["Plugins", "Installed", "Update", "Configure"]);
+            AddPage(results, "Browse the plugin directory", context.Url.Action(nameof(UIServerController.PluginDirectory), "UIServer"), "Server", ["Plugins", "Directory", "Install"]);
         }
 
         if (canViewProfile)

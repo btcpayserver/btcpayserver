@@ -668,7 +668,7 @@
                 var ptblob = @pendingTransaction.GetBlob();
                 var isMultisigPending = (ptblob?.SignaturesNeeded ?? 0) > 0 && (ptblob?.SignaturesTotal ?? 0) > 1;
                 <tr>
-                    <td>@pendingTransaction.TransactionId</td>
+                    <td>@(pendingTransaction.TransactionId?.ToString() ?? "—")</td>
                     <td>@pendingTransaction.State</td>
                     @if (showMultisigColumns)
                     {

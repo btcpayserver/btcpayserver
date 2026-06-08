@@ -1,0 +1,107 @@
+@model MultisigSetupViewModel
+@{
+    ViewData.SetTitle(StringLocalizer["Multisig setup"]);
+}
+
+@section Navbar {
+    <a asp-area="@WalletsPlugin.Area" asp-controller="UIStoreOnChainWallets" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+        <vc:icon symbol="back" />
+    </a>
+}
+
+<header class="text-center">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3" text-translate="true">Build your multisig derivation using guided inputs, then import it in one step.</p>
+</header>
+
+<form asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigWallets" asp-action="SetupMultisig" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" method="post" class="my-5">
+    <div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label asp-for="MultisigRequiredSigners" class="form-label" text-translate="true">Required signatures (M)</label>
+            <input asp-for="MultisigRequiredSigners" class="form-control" type="number" min="1" max="15" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="MultisigTotalSigners" class="form-label" text-translate="true">Total signers (N)</label>
+            <input asp-for="MultisigTotalSigners" class="form-control" type="number" min="1" max="15" id="MultisigTotalSigners" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="MultisigScriptType" class="form-label" text-translate="true">Script type</label>
+            <select asp-for="MultisigScriptType" class="form-select" id="MultisigScriptType">
+                <option value="p2wsh">P2WSH</option>
+                <option value="p2sh-p2wsh">P2SH-P2WSH</option>
+                <option value="p2sh">P2SH</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="mt-4 border rounded p-3">
+        <h4 class="mb-2" text-translate="true">Request signer keys from store users</h4>
+        <p class="text-secondary mb-3" text-translate="true">Select the store users who should provide signer keys for this multisig wallet.</p>
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <span class="small text-secondary">
+                <span id="SelectedSignerCount">0</span> @StringLocalizer["selected"] ·
+                <span id="SelectedSignerSummary">0/@(Model.MultisigTotalSigners ?? 0)</span> @StringLocalizer["total signers"]
+            </span>
+        </div>
+        <div id="SignerList" class="d-flex flex-column gap-2 overflow-auto" style="max-height: 360px;">
+            @foreach (var user in Model.MultisigStoreUsers)
+            {
+                var displayName = !string.IsNullOrWhiteSpace(user.Name) ? user.Name : user.Email;
+                var showEmail = !string.IsNullOrWhiteSpace(user.Email) &&
+                                !string.Equals(displayName, user.Email, StringComparison.OrdinalIgnoreCase);
+                <label class="border rounded p-3 d-flex align-items-center gap-3 multisig-signer-item">
+                    <input class="form-check-input m-0 fs-5 flex-shrink-0 multisig-signer-checkbox" type="checkbox" name="MultisigParticipantUserIds" value="@user.UserId" @(user.Selected ? "checked" : "") />
+                    <span class="d-flex flex-column flex-grow-1">
+                        <span class="fw-semibold">@displayName</span>
+                        @if (showEmail)
+                        {
+                            <span class="text-secondary small">@user.Email</span>
+                        }
+                    </span>
+                </label>
+            }
+        </div>
+        <div class="mt-3 d-flex flex-wrap align-items-center justify-content-end gap-2">
+            <button id="CreateSignerRequest" type="submit" class="btn btn-primary text-nowrap" text-translate="true">Send requests</button>
+        </div>
+    </div>
+
+    <div class="d-flex gap-3 mt-4">
+        <a asp-area="@WalletsPlugin.Area" asp-controller="UIStoreOnChainWallets" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="xpub" class="btn btn-secondary" text-translate="true">Use manual xpub entry</a>
+    </div>
+</form>
+
+<script>
+    (function () {
+        const maxSigners = 15;
+        const totalInput = document.getElementById("MultisigTotalSigners");
+        const createRequestButton = document.getElementById("CreateSignerRequest");
+        const selectedSignerCount = document.getElementById("SelectedSignerCount");
+        const selectedSignerSummary = document.getElementById("SelectedSignerSummary");
+        const signerCheckboxes = Array.from(document.querySelectorAll(".multisig-signer-checkbox"));
+
+        function parseCount(value, fallback) {
+            const parsed = parseInt(value, 10);
+            if (Number.isNaN(parsed) || parsed < 1) return fallback;
+            return Math.min(parsed, maxSigners);
+        }
+
+        function refreshSelectedSigners() {
+            const selected = signerCheckboxes.filter(c => c.checked).length;
+            const currentTotal = parseCount(totalInput.value, 1);
+            if (selected > currentTotal) {
+                totalInput.value = selected.toString();
+            }
+
+            selectedSignerCount.textContent = selected.toString();
+            selectedSignerSummary.textContent = `${selected}/${parseCount(totalInput.value, 1)}`;
+            createRequestButton.disabled = selected === 0;
+        }
+
+        totalInput.addEventListener("input", refreshSelectedSigners);
+        signerCheckboxes.forEach(c => c.addEventListener("change", refreshSelectedSigners));
+        refreshSelectedSigners();
+    })();
+</script>

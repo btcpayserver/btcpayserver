@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -22,6 +23,7 @@ using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Localization;
@@ -48,6 +50,7 @@ public class UIStoreOnChainWalletsController(
     EventAggregator eventAggregator,
     IHtmlHelper html,
     IStringLocalizer stringLocalizer,
+    UserManager<ApplicationUser> userManager,
     HotwalletSafe hotwalletSafe)
     : Controller
 {
@@ -459,6 +462,16 @@ public class UIStoreOnChainWalletsController(
         var handler = paymentMethodHandlerDictionary.GetBitcoinHandler(cryptoCode);
 
         var hw = await hotwalletSafe.TryUnlock(User, new WalletId(storeId, cryptoCode));
+
+        var userById = new Dictionary<string, ApplicationUser>();
+        foreach (var participant in derivation.AccountKeySettings.Where(p => p.SignerUserId != null))
+        {
+            var user = await userManager.FindByIdAsync(participant.SignerUserId);
+            if (user == null)
+                continue;
+            userById.TryAdd(user.Id, user);
+        }
+
         var vm = new WalletSettingsViewModel
         {
             StoreId = storeId,
@@ -480,7 +493,8 @@ public class UIStoreOnChainWalletsController(
                 {
                     AccountKey = e.AccountKey.ToString(),
                     MasterFingerprint = e.RootFingerprint is { } fp ? fp.ToString() : null,
-                    AccountKeyPath = e.AccountKeyPath == null ? "" : $"m/{e.AccountKeyPath}"
+                    AccountKeyPath = e.AccountKeyPath == null ? "" : $"m/{e.AccountKeyPath}",
+                    SignerEmail = userById.TryGetValue(e.SignerUserId ?? "", out var u) ? u.GetMailboxAddress().ToString() : null,
                 }).ToList(),
             Config = _dataProtector.ProtectString(JToken.FromObject(derivation, handler.Serializer).ToString()),
             PayJoinEnabled = storeBlob.PayJoinEnabled,

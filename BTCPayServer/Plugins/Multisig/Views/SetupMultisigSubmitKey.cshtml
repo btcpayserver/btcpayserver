@@ -1,0 +1,208 @@
+@model MultisigSignerKeyViewModel
+@{
+    Layout = "~/Views/Shared/_LayoutSimple.cshtml";
+    ViewData["Title"] = StringLocalizer["Submit multisig signer key"];
+    var inputMethod = Model.InputMethod?.ToLowerInvariant();
+    var useHardware = inputMethod == "hardware";
+    var useManual = inputMethod == "manual";
+    var showMethodSelection = !useHardware && !useManual;
+    ViewData.SetBlazorAllowed(useHardware);
+}
+
+<main class="py-4 py-lg-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8">
+                <div class="bg-tile m-0 p-3 p-sm-5 rounded">
+                    <header class="mb-4">
+                        <h1 class="h3 mb-3">@ViewData["Title"]</h1>
+                        <p class="text-secondary mb-0">
+                            @StringLocalizer["Request {0} - {1}/{2} ({3}).", Model.RequestId, Model.RequiredSigners, Model.TotalSigners, Model.ScriptType.ToUpperInvariant()]
+                        </p>
+                    </header>
+
+                    @if (showMethodSelection)
+                    {
+                        <header class="border-top pt-4 mt-4">
+                            <h2 class="h5 mb-2" text-translate="true">Choose input method</h2>
+                            <p class="text-secondary mb-0" text-translate="true">Select how you want to provide your multisig signer key.</p>
+                        </header>
+
+                        <div class="list-group mt-3">
+                            <a asp-action="SetupMultisigSubmitKey"
+                               asp-route-multisigSetupId="@Model.RequestId"
+                               asp-route-method="hardware"
+                               id="SubmitSignerKeyHardware"
+                               class="list-group-item list-group-item-action only-for-js d-flex align-items-center gap-3 p-4">
+                                <div class="flex-shrink-0 text-primary">
+                                    <vc:icon symbol="wallet-hardware" />
+                                </div>
+                                <div class="flex-grow-1 d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between gap-2 me-2">
+                                    <div>
+                                        <h3 class="h5 mb-1" text-translate="true">Hardware wallet</h3>
+                                        <p class="mb-0 text-secondary" text-translate="true">Fetch your account key, fingerprint, and key path using BTCPay Server Vault</p>
+                                    </div>
+                                    <small class="d-block text-primary mt-2 mt-lg-0" text-translate="true">Recommended</small>
+                                </div>
+                                <vc:icon symbol="caret-right" />
+                            </a>
+                            <noscript>
+                                <div class="list-group-item disabled d-flex align-items-center gap-3 p-4">
+                                    <div class="flex-shrink-0 text-primary">
+                                        <vc:icon symbol="wallet-hardware" />
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h3 class="h5 mb-1" text-translate="true">Hardware wallet</h3>
+                                        <p class="mb-0" text-translate="true">Please enable JavaScript for this option to be available</p>
+                                    </div>
+                                </div>
+                            </noscript>
+                        </div>
+
+                        <div class="list-group mt-4">
+                            <a asp-action="SetupMultisigSubmitKey"
+                               asp-route-multisigSetupId="@Model.RequestId"
+                               asp-route-method="manual"
+                               id="SubmitSignerKeyManual"
+                               class="list-group-item list-group-item-action d-flex align-items-center gap-3 p-4">
+                                <div class="flex-shrink-0 text-primary">
+                                    <vc:icon symbol="wallet-xpub" />
+                                </div>
+                                <div class="flex-grow-1 me-2">
+                                    <h3 class="h5 mb-1" text-translate="true">Manual entry</h3>
+                                    <p class="mb-0 text-secondary" text-translate="true">Paste your account key and optional origin information manually</p>
+                                </div>
+                                <vc:icon symbol="caret-right" />
+                            </a>
+                        </div>
+
+                        <div class="mt-4">
+                            <a asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigSetup" asp-action="SetupMultisigStatus" asp-route-multisigSetupId="@Model.RequestId" class="btn btn-secondary" text-translate="true">Back to setup</a>
+                        </div>
+                    }
+                    else
+                    {
+                        @if (useHardware)
+                        {
+                            <div id="HardwareFlowSection" class="mb-4">
+                                <h2 class="h5 mb-2" text-translate="true">Extract from BTCPay Server Vault</h2>
+                                <p class="text-secondary mb-3" text-translate="true">Use your hardware wallet to auto-fill account key, fingerprint, and key path.</p>
+                                <component type="typeof(BTCPayServer.Blazor.VaultBridge.VaultBridgeUI)"
+                                           param-Controller="@(new GetMultisigAccountKeyController
+                                                              {
+                                                                  CryptoCode = Model.CryptoCode,
+                                                                  ScriptType = Model.ScriptType
+                                                              })"
+                                           render-mode="Server" />
+                                <p id="HardwareFetchHint" class="text-secondary mt-3 mb-0" text-translate="true">Fetch signer data from device to continue.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <header class="mb-4">
+                                <h2 class="h5 mb-2" text-translate="true">Enter signer key manually</h2>
+                                <p class="text-secondary mb-0" text-translate="true">Paste your account key and optional origin information.</p>
+                            </header>
+                        }
+
+                        <form method="post" id="SubmitSignerKeyForm">
+                            <input type="hidden" name="InputMethod" value="@inputMethod" />
+                            <div asp-validation-summary="ModelOnly" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
+                            <div id="SignerKeyFields" class="@(useHardware ? "d-none" : string.Empty)">
+                                <div class="mb-3">
+                                    <label asp-for="DisplayAccountKey" class="form-label" text-translate="true">Account key (xpub/tpub)</label>
+                                    <input asp-for="DisplayAccountKey" class="form-control font-monospace" />
+                                    <span asp-validation-for="DisplayAccountKey" class="text-danger"></span>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <label asp-for="AccountKeyPath" class="form-label" text-translate="true">Account key path</label>
+                                        <input asp-for="AccountKeyPath" class="form-control font-monospace" placeholder="@StringLocalizer["d90c6a4f/48'/1'/0'/2'"]" />
+                                        <span asp-validation-for="AccountKeyPath" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-3 mt-4">
+                                <button type="submit" id="SubmitSignerKeyButton" class="btn btn-primary" disabled="@useHardware" text-translate="true">Submit signer key</button>
+                                <a asp-action="SetupMultisigSubmitKey"
+                                   asp-route-multisigSetupId="@Model.RequestId"
+                                   id="BackToSignerKeyInputMethods"
+                                   class="btn btn-secondary"
+                                   text-translate="true">Choose another method</a>
+                                <a asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigSetup" asp-action="SetupMultisigStatus" asp-route-multisigSetupId="@Model.RequestId" class="btn btn-secondary" text-translate="true">Back to setup</a>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section PageFootContent
+{
+    @if (!showMethodSelection)
+    {
+        @if (useHardware)
+        {
+            <script src="~/js/vaultbridge.js" asp-append-version="true"></script>
+        }
+        <script>
+            (() => {
+                const useHardware = @(useHardware ? "true" : "false");
+                const hardwareHint = document.getElementById("HardwareFetchHint");
+                const signerFields = document.getElementById("SignerKeyFields");
+                const submitButton = document.getElementById("SubmitSignerKeyButton");
+                const accountKey = document.getElementById("DisplayAccountKey");
+                const accountKeyPath = document.getElementById("AccountKeyPath");
+
+                if (!signerFields || !submitButton || !accountKey || !accountKeyPath) {
+                    return;
+                }
+
+                function hasRequiredSignerValues() {
+                    return !!(accountKey.value && accountKey.value.trim());
+                }
+
+                function setReadonly(readonly) {
+                    accountKey.readOnly = readonly;
+                    accountKeyPath.readOnly = readonly;
+                }
+
+                function refreshHardwareState() {
+                    const ready = hasRequiredSignerValues();
+                    signerFields.classList.toggle("d-none", !ready);
+                    if (hardwareHint) {
+                        hardwareHint.classList.toggle("d-none", ready);
+                    }
+                    submitButton.disabled = !ready;
+                }
+                setReadonly(useHardware);
+                if (useHardware) {
+                    refreshHardwareState();
+                } else {
+                    submitButton.disabled = false;
+                }
+
+                accountKey.addEventListener("input", () => {
+                    if (useHardware) {
+                        refreshHardwareState();
+                    }
+                });
+                accountKey.addEventListener("change", () => {
+                    if (useHardware) {
+                        refreshHardwareState();
+                    }
+                });
+
+                if (useHardware) {
+                    vault.setMultisigSignerKey = function (data) {
+                        accountKey.value = data.accountKey || "";
+                        accountKeyPath.value = data.accountKeyPath || "";
+                        refreshHardwareState();
+                    };
+                }
+            })();
+        </script>
+    }
+}

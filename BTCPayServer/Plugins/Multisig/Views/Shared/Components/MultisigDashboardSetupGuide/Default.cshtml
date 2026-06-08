@@ -1,0 +1,33 @@
+@model IReadOnlyList<BTCPayServer.Plugins.Multisig.Models.MultisigInProgressViewModel>
+
+@foreach (var multisig in Model)
+{
+    var setupState = multisig.ReadyToCreateWallet
+        ? StringLocalizer["Ready to create wallet"]
+        : multisig.CanSubmitSignerKey
+            ? StringLocalizer["Awaiting your key"]
+            : multisig.MissingSigners == 1
+                ? StringLocalizer["Waiting for 1 signer"]
+                : StringLocalizer["Waiting for {0} signers", multisig.MissingSigners];
+    var participationState = multisig.DidParticipate
+        ? (multisig.YourKeySubmitted ? StringLocalizer["You participated"] : StringLocalizer["You are invited"])
+        : StringLocalizer["You are not a signer"];
+    var canCreateWallet = multisig.ReadyToCreateWallet && multisig.CanCreateWallet;
+    var actionText = multisig.CanSubmitSignerKey
+        ? StringLocalizer["Submit key"]
+        : canCreateWallet
+            ? StringLocalizer["Create wallet"]
+            : StringLocalizer["View status"];
+    var actionUrl = multisig.SessionUrl;
+    <a href="@actionUrl"
+       id="SetupGuide-Multisig-@multisig.RequestId"
+       class="list-group-item list-group-item-action d-flex align-items-center order-1">
+        <vc:icon symbol="wallet-new" />
+        <div class="content">
+            <h5 class="mb-0" text-translate="true">Multisig wallet setup</h5>
+            <div class="text-secondary small">@StringLocalizer["{0}-of-{1} {2} · {3}/{4} submitted · {5} · {6}", multisig.RequiredSigners, multisig.TotalSigners, multisig.CryptoCode, multisig.SubmittedSigners, multisig.TotalSigners, setupState, participationState]</div>
+        </div>
+        <span class="text-primary text-nowrap me-2">@actionText</span>
+        <vc:icon symbol="caret-right" />
+    </a>
+}

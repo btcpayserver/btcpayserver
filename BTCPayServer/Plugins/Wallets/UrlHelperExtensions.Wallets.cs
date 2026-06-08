@@ -1,6 +1,8 @@
 #nullable enable
+using BTCPayServer.Abstractions;
 using BTCPayServer.Controllers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 
 namespace BTCPayServer.Plugins.Wallets;
 
@@ -13,4 +15,11 @@ public static class UrlHelperExtensions
     public static string? WalletTransactions(this IUrlHelper helper, string walletId) => WalletTransactions(helper, WalletId.Parse(walletId));
     public static string? WalletTransactions(this IUrlHelper helper, WalletId walletId)
         => helper.Action(nameof(UIWalletsController.WalletTransactions), "UIWallets", new { area = WalletsPlugin.Area, walletId });
+    public static string WalletPendingTransactionLink(this LinkGenerator urlHelper, WalletId walletId, string pendingTransactionId, RequestBaseUrl baseUrl)
+        => urlHelper.GetUriByAction(
+            action: nameof(UIWalletsController.ViewPendingTransaction),
+            controller: "UIWallets",
+            values: new { area = WalletsPlugin.Area, walletId = walletId.ToString(), pendingTransactionId },
+            baseUrl
+        );
 }

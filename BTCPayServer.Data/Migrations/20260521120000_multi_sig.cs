@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260521120000_split_pending_transaction_ids")]
+    [Migration("20260521120000_multi_sig")]
     public partial class split_pending_transaction_ids : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

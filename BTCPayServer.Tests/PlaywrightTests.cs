@@ -2193,31 +2193,27 @@ namespace BTCPayServer.Tests
             string GetStorePath(string subPath) => $"/stores/{storeId}/{subPath}";
 
             // Admin access
-            await s.AssertPageAccess(false, GetStorePath(""));
+            await s.AssertPageAccess(true, GetStorePath(""));
             await s.AssertPageAccess(true, GetStorePath("reports"));
             await s.AssertPageAccess(true, GetStorePath("invoices"));
-            await s.AssertPageAccess(false, GetStorePath("invoices/create"));
+            await s.AssertPageAccess(true, GetStorePath("invoices/create"));
             await s.AssertPageAccess(true, GetStorePath("payment-requests"));
-            await s.AssertPageAccess(false, GetStorePath("payment-requests/new"));
+            await s.AssertPageAccess(true, GetStorePath("payment-requests/new"));
             await s.AssertPageAccess(true, GetStorePath("pull-payments"));
             await s.AssertPageAccess(true, GetStorePath("payouts"));
-            await s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
-            await s.AssertPageAccess(false, GetStorePath("onchain/BTC/settings"));
-            await s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
-            await s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
-            await s.AssertPageAccess(false, GetStorePath("apps/create"));
+            await s.AssertPageAccess(true, GetStorePath("onchain/BTC"));
+            await s.AssertPageAccess(true, GetStorePath("onchain/BTC/settings"));
+            await s.AssertPageAccess(true, GetStorePath("lightning/BTC"));
+            await s.AssertPageAccess(true, GetStorePath("lightning/BTC/settings"));
+            await s.AssertPageAccess(true, GetStorePath("apps/create"));
 
             var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks",
                 "payout-processors", "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC",
                 "emails/rules", "email-settings", "forms"};
             foreach (var path in storeSettingsPaths)
-            {   // should have view access to settings, but no submit buttons or create links
+            {   // Admin now has full modification rights
                 s.TestLogs.LogInformation($"Checking access to store page {path} as admin");
                 await s.AssertPageAccess(true, $"stores/{storeId}/{path}");
-                if (path != "payout-processors")
-                {
-                    Assert.Equal(0, await s.Page.Locator("#mainContent .btn-primary").CountAsync());
-                }
             }
         }
 

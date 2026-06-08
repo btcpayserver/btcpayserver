@@ -180,12 +180,12 @@ fi
 printf 'dotnet SDK: '
 dotnet --version
 
-printf '\n==================== PASS: master ====================\n'
+printf '\n======= PASS: master =======\n'
 splice_all "$BTCPAY_MASTER_ABS"
 build_all MASTER_RESULT
 
 if [ -n "$BTCPAY_BASELINE_REF" ]; then
-  printf '\n==================== PASS: baseline (%s) ====================\n' "$BTCPAY_BASELINE_REF"
+  printf '\n======= PASS: baseline (%s) ========\n' "$BTCPAY_BASELINE_REF"
   splice_all "$BTCPAY_BASELINE_ABS"
   build_all BASE_RESULT
 fi
@@ -222,7 +222,7 @@ for name in "${!MASTER_RESULT[@]}"; do
 done
 
 if [ -z "$BTCPAY_BASELINE_REF" ]; then
-  printf 'OK:     %s\n' "${plain_ok[*]:-(none)}"
+  printf 'OK: %s\n' "${plain_ok[*]:-(none)}"
   printf 'FAILED: %s\n' "${plain_fail[*]:-(none)}"
   if [ "${#plain_fail[@]}" -eq 0 ]; then
     printf 'All plugin builds passed.\n'
@@ -230,10 +230,10 @@ if [ -z "$BTCPAY_BASELINE_REF" ]; then
     printf 'One or more plugin builds failed. See output above.\n'
   fi
 else
-  printf 'still-ok:     %s\n' "${still_ok[*]:-(none)}"
+  printf 'still-ok: %s\n' "${still_ok[*]:-(none)}"
   printf 'still-broken: %s\n' "${still_broken[*]:-(none)}"
-  printf 'newly-fixed:  %s\n' "${newly_fixed[*]:-(none)}"
-  printf 'REGRESSION:   %s\n' "${regressions[*]:-(none)}"
+  printf 'newly-fixed: %s\n' "${newly_fixed[*]:-(none)}"
+  printf 'REGRESSION: %s\n' "${regressions[*]:-(none)}"
   printf '\n'
   if [ "${#regressions[@]}" -gt 0 ]; then
     printf '!! %d plugin(s) built against %s but FAIL against master.\n' "${#regressions[@]}" "$BTCPAY_BASELINE_REF"

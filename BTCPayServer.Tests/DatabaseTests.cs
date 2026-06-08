@@ -307,7 +307,7 @@ namespace BTCPayServer.Tests
         public async Task CanMigratePendingTransactionIds()
         {
             var tester = CreateDBTester();
-            await tester.MigrateUntil("20260521120000_split_pending_transaction_ids");
+            await tester.MigrateUntil("20260521120000_multi_sig");
 
             const string storeId = "TestStore";
             const string pendingTransactionId = "pending-transaction-id";

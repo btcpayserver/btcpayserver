@@ -116,8 +116,8 @@
 								   asp-route-translation="@v.TranslationName"
 								   data-bs-toggle="modal"
 								   data-bs-target="#ConfirmModal"
-								   data-description="The translation <b>@Html.Encode(v.TranslationName)</b> will be removed from this server."
-								   data-confirm-input="@StringLocalizer["Delete"]"
+                                   data-description="@StringLocalizer["The translation <b>{0}</b> will be removed from this server.", Html.Encode(v.TranslationName)]"
+                                   data-confirm-input="@StringLocalizer["Delete"]"
 								   class="btn btn-link p-0 text-danger"
 								   text-translate="true">Uninstall</a>
 							}

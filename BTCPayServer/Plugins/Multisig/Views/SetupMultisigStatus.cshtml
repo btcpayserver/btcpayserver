@@ -1,0 +1,102 @@
+@model BTCPayServer.Plugins.Multisig.Models.MultisigInProgressViewModel
+@{
+    ViewData.SetTitle(StringLocalizer["Multisig setup"]);
+    var remainingSigners = Math.Max(0, Model.TotalSigners - Model.SubmittedSigners);
+    var progressStatus = remainingSigners == 0
+        ? StringLocalizer["All signer keys submitted"].Value
+        : remainingSigners == 1
+            ? StringLocalizer["Waiting for 1 signer"].Value
+            : StringLocalizer["Waiting for {0} signers", remainingSigners].Value;
+}
+
+<header class="text-center mb-4">
+    <h1>@ViewData["Title"]</h1>
+    <p class="lead text-secondary mt-3">
+        @StringLocalizer["{0}-of-{1} {2} · {3}/{4} submitted · {5}", Model.RequiredSigners, Model.TotalSigners, Model.CryptoCode, Model.SubmittedSigners, Model.TotalSigners, progressStatus]
+    </p>
+</header>
+
+<div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
+
+<div class="border rounded p-3">
+    <h2 class="h4 mb-2" text-translate="true">Request signer keys from store users</h2>
+    <p class="text-secondary mb-4" text-translate="true">Track signer key collection and finalize setup once all keys are submitted.</p>
+
+    <div class="border rounded p-3 mb-4">
+        <div class="row g-4 align-items-center">
+            <div class="col-12 col-lg">
+                <h3 class="h5 mb-2" text-translate="true">Signer request link</h3>
+                <p class="text-secondary mb-1" text-translate="true">Request id:</p>
+                <p class="text-secondary text-break mb-3">@Model.RequestId</p>
+                <p class="text-secondary mb-3" text-translate="true">BTCPay Server sends email requests if email is enabled. You can also share this link or QR code with the selected signers.</p>
+                <div class="input-group">
+                    <input id="MultisigSessionLink" class="form-control" value="@Model.SessionUrl" readonly />
+                    <button type="button"
+                            class="btn btn-secondary clipboard-button"
+                            data-clipboard-target="#MultisigSessionLink"
+                            title="@StringLocalizer["Copy session link"]"
+                            aria-label="@StringLocalizer["Copy session link"]">
+                        <vc:icon symbol="actions-copy" />
+                    </button>
+                </div>
+            </div>
+            <div class="col-12 col-lg-auto text-center">
+                <vc:qr-code data="@Model.SessionUrl" size="240" />
+            </div>
+        </div>
+    </div>
+
+    <p class="text-secondary mb-3">
+        @StringLocalizer["{0}/{1} signer keys submitted", Model.SubmittedSigners, Model.TotalSigners]
+    </p>
+    <div class="table-responsive-md">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+            <tr>
+                <th text-translate="true">Signer</th>
+                <th class="text-end" text-translate="true">Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var participant in Model.Participants)
+            {
+                var displayName = !string.IsNullOrWhiteSpace(participant.Name) ? participant.Name : participant.Email;
+                var showEmail = !string.IsNullOrWhiteSpace(participant.Email) &&
+                                !string.Equals(displayName, participant.Email, StringComparison.OrdinalIgnoreCase);
+                <tr>
+                    <td class="text-break">
+                        <div>@displayName</div>
+                        @if (showEmail)
+                        {
+                            <div class="text-secondary small">@participant.Email</div>
+                        }
+                    </td>
+                    <td class="text-end">
+                        @if (participant.Submitted)
+                        {
+                            <span class="badge badge-translucent rounded-pill text-bg-success" text-translate="true">Submitted</span>
+                        }
+                        else
+                        {
+                            <span class="badge rounded-pill text-bg-warning" text-translate="true">Pending</span>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-end gap-3 mt-4">
+        @if (Model.CanSubmitSignerKey)
+        {
+            <a id="SubmitSignerKeyCta" asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigSetup" asp-action="SetupMultisigSubmitKey" asp-route-multisigSetupId="@Model.RequestId" class="btn btn-primary" text-translate="true">Submit signer key</a>
+        }
+        @if (Model.ReadyToCreateWallet && Model.CanCreateWallet)
+        {
+            <form method="post" asp-area="@MultisigPlugin.Area" asp-controller="UIMultisigWallets" asp-action="FinalizeMultisigSetup" asp-route-multisigSetupId="@Model.RequestId">
+                <button id="FinalizeMultisig" type="submit" class="btn btn-primary" text-translate="true">Create multisig</button>
+            </form>
+        }
+    </div>
+</div>

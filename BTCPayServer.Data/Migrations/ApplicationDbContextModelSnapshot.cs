@@ -851,6 +851,9 @@ namespace BTCPayServer.Migrations
                     b.PrimitiveCollection<string[]>("OutpointsUsed")
                         .HasColumnType("text[]");
 
+                    b.Property<string>("NoSignatureTransactionId")
+                        .HasColumnType("text");
+
                     b.Property<int>("State")
                         .HasColumnType("integer");
 
@@ -860,11 +863,17 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("TransactionId")
                         .HasColumnType("text");
 
+                    b.Property<uint>("XMin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id");
 
                     b.HasIndex("StoreId");
 
-                    b.HasIndex("TransactionId");
+                    b.HasIndex("NoSignatureTransactionId");
 
                     b.ToTable("PendingTransactions");
                 });

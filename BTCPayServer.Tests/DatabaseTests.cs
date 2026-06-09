@@ -2,13 +2,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NBitcoin;
+using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
@@ -156,16 +159,26 @@ namespace BTCPayServer.Tests
 
             var networkProvider = CreateNetworkProvider();
             var network = networkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork;
-            var service = new PendingTransactionService(
+            var service = new TestPendingTransactionService(
                 networkProvider,
                 tester.CreateContextFactory(),
                 new EventAggregator(new BTCPayServer.Logging.Logs()),
                 NullLogger<PendingTransactionService>.Instance);
             var requestBaseUrl = RequestBaseUrl.FromUrl("https://example.com");
-            var psbtA = CreatePendingTransactionPSBT(network, 1, Money.Satoshis(10_000));
+            var p2shMultisig = CreateP2SHMultisigPendingTransaction(network, 1, Money.Satoshis(10_000));
+            var psbtA = p2shMultisig.Psbt;
             var psbtB = CreatePendingTransactionPSBT(network, 2, Money.Satoshis(20_000));
             var pendingA = await service.CreatePendingTransaction(storeId, "BTC", psbtA, requestBaseUrl);
             var pendingB = await service.CreatePendingTransaction(storeId, "BTC", psbtB, requestBaseUrl);
+
+            var noSignatureHash = psbtA.GetGlobalTransaction().GetHash();
+            var finalTransactionHash = p2shMultisig.FinalTransaction.GetHash();
+            Assert.Equal(noSignatureHash.ToString(), pendingA.NoSignatureTransactionId);
+            Assert.Null(pendingA.TransactionId);
+            Assert.NotEqual(noSignatureHash, finalTransactionHash);
+            var finalTransactionWithoutSignatures = p2shMultisig.FinalTransaction.Clone();
+            finalTransactionWithoutSignatures.RemoveSignatures();
+            Assert.Equal(noSignatureHash, finalTransactionWithoutSignatures.GetHash());
 
             await service.Broadcasted(new PendingTransactionService.PendingTransactionFullId("BTC", storeId, pendingA.Id), psbtB.GetGlobalTransaction());
 
@@ -175,18 +188,93 @@ namespace BTCPayServer.Tests
                 Assert.Equal(PendingTransactionState.Pending, reloadedPendingA.State);
             }
 
-            var malleatedTransaction = psbtA.GetGlobalTransaction().Clone();
-            malleatedTransaction.Inputs[0].ScriptSig = new Script(Op.GetPushOp(new byte[] { 1, 2, 3 }));
-            Assert.NotEqual(psbtA.GetGlobalTransaction().GetHash(), malleatedTransaction.GetHash());
-            await service.Broadcasted(new PendingTransactionService.PendingTransactionFullId("BTC", storeId, pendingA.Id), malleatedTransaction);
+            await service.Broadcasted(new PendingTransactionService.PendingTransactionFullId("BTC", storeId, pendingA.Id), p2shMultisig.FinalTransaction);
 
             await using (var ctx = tester.CreateContext())
             {
                 var reloadedPendingA = await ctx.PendingTransactions.SingleAsync(p => p.Id == pendingA.Id);
                 var reloadedPendingB = await ctx.PendingTransactions.SingleAsync(p => p.Id == pendingB.Id);
                 Assert.Equal(PendingTransactionState.Broadcast, reloadedPendingA.State);
+                Assert.Equal(noSignatureHash.ToString(), reloadedPendingA.NoSignatureTransactionId);
+                Assert.Equal(finalTransactionHash.ToString(), reloadedPendingA.TransactionId);
+                Assert.NotEqual(reloadedPendingA.NoSignatureTransactionId, reloadedPendingA.TransactionId);
                 Assert.Equal(PendingTransactionState.Pending, reloadedPendingB.State);
             }
+        }
+
+        [Fact]
+        public async Task CanMatchPendingTransactionBroadcastEventByNoSignatureHash()
+        {
+            var tester = CreateDBTester();
+            await tester.MigrateUntil();
+            const string storeId = "TestStore";
+
+            await using (var ctx = tester.CreateContext())
+            {
+                await ctx.Database.GetDbConnection().ExecuteAsync("""
+                    INSERT INTO "Stores" ("Id", "SpeedPolicy") VALUES (@storeId, 0);
+                    """, new { storeId });
+            }
+
+            var networkProvider = CreateNetworkProvider();
+            var network = networkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork;
+            var service = new TestPendingTransactionService(
+                networkProvider,
+                tester.CreateContextFactory(),
+                new EventAggregator(new BTCPayServer.Logging.Logs()),
+                NullLogger<PendingTransactionService>.Instance);
+            var requestBaseUrl = RequestBaseUrl.FromUrl("https://example.com");
+            var p2shMultisig = CreateP2SHMultisigPendingTransaction(network, 1, Money.Satoshis(10_000));
+            var conflictingPsbt = CreatePendingTransactionPSBT(network, 1, Money.Satoshis(20_000));
+            var matchingPending = await service.CreatePendingTransaction(storeId, "BTC", p2shMultisig.Psbt, requestBaseUrl);
+            var conflictingPending = await service.CreatePendingTransaction(storeId, "BTC", conflictingPsbt, requestBaseUrl);
+
+            await service.ProcessEventForTest(new NewOnChainTransactionEvent
+            {
+                PaymentMethodId = PaymentMethodId.Parse("BTC-CHAIN"),
+                NewTransactionEvent = new NewTransactionEvent
+                {
+                    CryptoCode = "BTC",
+                    TransactionData = new TransactionResult
+                    {
+                        Transaction = p2shMultisig.FinalTransaction,
+                        TransactionHash = p2shMultisig.FinalTransaction.GetHash()
+                    }
+                }
+            });
+
+            await using (var ctx = tester.CreateContext())
+            {
+                var reloadedMatching = await ctx.PendingTransactions.SingleAsync(p => p.Id == matchingPending.Id);
+                var reloadedConflict = await ctx.PendingTransactions.SingleAsync(p => p.Id == conflictingPending.Id);
+                Assert.Equal(PendingTransactionState.Broadcast, reloadedMatching.State);
+                Assert.Equal(p2shMultisig.FinalTransaction.GetHash().ToString(), reloadedMatching.TransactionId);
+                Assert.Equal(PendingTransactionState.Invalidated, reloadedConflict.State);
+                Assert.Null(reloadedConflict.TransactionId);
+            }
+        }
+
+        private static (PSBT Psbt, Transaction FinalTransaction) CreateP2SHMultisigPendingTransaction(Network network, uint prevTxNonce, Money amount)
+        {
+            var keys = new[] { new Key(), new Key(), new Key() };
+            var redeemScript = PayToMultiSigTemplate.Instance.GenerateScriptPubKey(2, keys.Select(key => key.PubKey).ToArray());
+            var tx = Transaction.Create(network);
+            tx.Version = 2;
+            tx.LockTime = LockTime.Zero;
+            tx.Inputs.Add(new TxIn(new OutPoint(uint256.Parse($"{prevTxNonce:x64}"), 0))
+            {
+                Sequence = Sequence.Final
+            });
+            tx.Outputs.Add(amount, new Key().GetScriptPubKey(ScriptPubKeyType.Legacy));
+            var psbt = PSBT.FromTransaction(tx, network);
+            psbt.Inputs[0].RedeemScript = redeemScript;
+
+            var finalTransaction = tx.Clone();
+            finalTransaction.Inputs[0].ScriptSig = new Script(
+                Op.GetPushOp(new byte[] { 1, 2, 3 }),
+                Op.GetPushOp(new byte[] { 4, 5, 6 }),
+                Op.GetPushOp(redeemScript.ToBytes()));
+            return (psbt, finalTransaction);
         }
 
         private static PSBT CreatePendingTransactionPSBT(Network network, uint prevTxNonce, Money amount)
@@ -200,6 +288,47 @@ namespace BTCPayServer.Tests
             });
             tx.Outputs.Add(amount, new Key().GetScriptPubKey(ScriptPubKeyType.Legacy));
             return PSBT.FromTransaction(tx, network);
+        }
+
+        private class TestPendingTransactionService(
+            BTCPayNetworkProvider networkProvider,
+            ApplicationDbContextFactory dbContextFactory,
+            EventAggregator eventAggregator,
+            ILogger<PendingTransactionService> logger)
+            : PendingTransactionService(networkProvider, dbContextFactory, eventAggregator, logger)
+        {
+            public Task ProcessEventForTest(object evt)
+            {
+                return base.ProcessEvent(evt, default);
+            }
+        }
+
+        [Fact]
+        public async Task CanMigratePendingTransactionIds()
+        {
+            var tester = CreateDBTester();
+            await tester.MigrateUntil("20260521120000_multi_sig");
+
+            const string storeId = "TestStore";
+            const string pendingTransactionId = "pending-transaction-id";
+            const string noSignatureTransactionId = "no-signature-transaction-id";
+            await using (var ctx = tester.CreateContext())
+            {
+                await ctx.Database.GetDbConnection().ExecuteAsync("""
+                    INSERT INTO "Stores" ("Id", "SpeedPolicy") VALUES (@storeId, 0);
+                    INSERT INTO "PendingTransactions" ("Id", "TransactionId", "CryptoCode", "StoreId", "State", "OutpointsUsed", "Blob2")
+                    VALUES (@pendingTransactionId, @noSignatureTransactionId, 'BTC', @storeId, 0, ARRAY['prevout:0']::TEXT[], '{}'::JSONB);
+                    """, new { storeId, pendingTransactionId, noSignatureTransactionId });
+            }
+
+            await tester.CompleteMigrations();
+
+            await using (var ctx = tester.CreateContext())
+            {
+                var pendingTransaction = await ctx.PendingTransactions.SingleAsync(p => p.Id == pendingTransactionId);
+                Assert.Equal(noSignatureTransactionId, pendingTransaction.NoSignatureTransactionId);
+                Assert.Null(pendingTransaction.TransactionId);
+            }
         }
 
         [Fact]

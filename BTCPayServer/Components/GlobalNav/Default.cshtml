@@ -73,6 +73,9 @@
             </button>
             <ul id="globalNavServerMenu" class="dropdown-menu dropdown-menu-end py-0">
                 <li class="py-1 px-3">
+                    <a layout-menu-item="@nameof(ServerNavPages.Dashboard)" asp-controller="UIServerDashboard" asp-action="ServerDashboard" text-translate="true">Dashboard</a>
+                </li>
+                <li class="py-1 px-3">
                     <a layout-menu-item="@nameof(ServerNavPages.Policies)" asp-area="" asp-controller="UIServer" asp-action="Policies" text-translate="true">Policies</a>
                 </li>
                 <li class="py-1 px-3">

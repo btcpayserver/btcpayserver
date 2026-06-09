@@ -259,23 +259,17 @@
 <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete store"], StringLocalizer["The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store."], StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />
 <partial name="ShowQR" />
 
-@section PageHeadContent {
-    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true" />
-}
-
 @section PageFootContent {
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
     <partial name="_ValidationScriptsPartial"/>
     <script>
     document.addEventListener("DOMContentLoaded", function () {
         const storeId = @Safe.Json(Model.Id);
-        const qrApp = initQRShow({ title: "Store ID QR" });
+        const qrApp = initQRShow({ title: @Safe.Json(StringLocalizer["Store Id QR Code"].Value) });
         delegate("click", "button[data-store-id-qr]", e => {
             e.preventDefault();
-            qrApp.showData(storeId, "Store ID");
+            qrApp.showData(storeId, @Safe.Json(StringLocalizer["Store Id"].Value));
         });
     });
     (() => {

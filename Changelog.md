@@ -27,6 +27,7 @@
 * Fix searched text corrupting the search filter (#7338) @NicolasDorier
 * Fix BTCPay Server hanging on shutdown when Bitcoin support is disabled @NicolasDorier
 * Prevent 2FA code submission when the authenticator is not configured @NicolasDorier
+* Invoice Date Filter - Date Selector Widget closes the month list when clicked (#7384 #7388) @senutpal
 
 ### Improvements
 

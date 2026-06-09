@@ -31,6 +31,7 @@
 ### Improvements
 
 * Show missing permissions on the 403 page (#7387) @NicolasDorier
+* Adds inline QR and copy actions to the `Store Id` field on the Store Settings page. (#7396) @BuffaloDyl
 * Unnest UI routes for Pull Requests, Pull Payments, Invoices, and Apps (#7368) @NicolasDorier
 * Improve language pack selection (#7347) @teamssUTXO
 * Display Bylls as Bull Bitcoin in rate sources (#7364) @BullishNode

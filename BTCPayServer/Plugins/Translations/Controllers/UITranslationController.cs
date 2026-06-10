@@ -252,24 +252,47 @@ public class UITranslationController(
         var existing = await localizer.GetTranslation(translation);
         if (existing is null)
             return NotFound();
+        if (existing.Source != "LanguagePack" && existing.Source != "Custom")
+        {
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Translation {0} is not user-installed and cannot be uninstalled", translation].Value;
+            return RedirectToAction(nameof(ListTranslations));
+        }
         if (policiesSettings.LangTranslation == translation)
         {
             TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Translation {0} is the currently selected one and cannot be uninstalled", translation].Value;
             return RedirectToAction(nameof(ListTranslations));
         }
-        var result = await localizer.DeleteTranslation(translation);
-        if (result.Type == LocalizerService.DeleteTranslationResultType.NotUserInstalled)
+
+        var fallbackUsers = (await localizer.GetTranslations())
+            .Where(t => t.Fallback == translation)
+            .Select(t => t.TranslationName)
+            .OrderBy(t => t)
+            .ToArray();
+        if (fallbackUsers.Length > 0)
         {
-            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Translation {0} is not user-installed and cannot be uninstalled", translation].Value;
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Translation {0} cannot be uninstalled because it is used as fallback by: {1}", translation, string.Join(", ", fallbackUsers)].Value;
             return RedirectToAction(nameof(ListTranslations));
         }
-        if (result.Type == LocalizerService.DeleteTranslationResultType.UsedAsFallback)
+
+        try
         {
-            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Translation {0} cannot be uninstalled because it is used as fallback by: {1}", translation, string.Join(", ", result.FallbackUsers)].Value;
-            return RedirectToAction(nameof(ListTranslations));
+            await localizer.DeleteTranslation(translation);
         }
-        if (result.Type == LocalizerService.DeleteTranslationResultType.NotFound)
-            return NotFound();
+        catch (DbException)
+        {
+            fallbackUsers = (await localizer.GetTranslations())
+                .Where(t => t.Fallback == translation)
+                .Select(t => t.TranslationName)
+                .OrderBy(t => t)
+                .ToArray();
+            if (fallbackUsers.Length > 0)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Translation {0} cannot be uninstalled because it is used as fallback by: {1}", translation, string.Join(", ", fallbackUsers)].Value;
+                return RedirectToAction(nameof(ListTranslations));
+            }
+            throw;
+        }
+
         TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Translation {0} deleted", translation].Value;
         return RedirectToAction(nameof(ListTranslations));
     }

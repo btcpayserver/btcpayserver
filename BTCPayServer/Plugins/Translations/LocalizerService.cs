@@ -25,16 +25,6 @@ namespace BTCPayServer.Plugins.Translations
         ISettingsAccessor<PoliciesSettings> settingsAccessor,
         IEnumerable<IDefaultTranslationProvider> defaultTranslationProviders)
     {
-        public enum DeleteTranslationResultType
-        {
-            Deleted,
-            NotFound,
-            NotUserInstalled,
-            UsedAsFallback
-        }
-
-        public record DeleteTranslationResult(DeleteTranslationResultType Type, string[] FallbackUsers);
-
         public record LoadedTranslations(Translations Translations, Translations Fallback, string LangName);
         LoadedTranslations _LoadedTranslations = new(Translations.Default, Translations.Default, Translations.DefaultLanguage);
         public Translations Translations => _LoadedTranslations.Translations;
@@ -170,48 +160,11 @@ namespace BTCPayServer.Plugins.Translations
             return new Translation(langName, fallback, source ?? "", new JObject());
         }
 
-        public async Task<DeleteTranslationResult> DeleteTranslation(string translationName)
+        public async Task DeleteTranslation(string translationName)
         {
             await using var ctx = contextFactory.CreateContext();
             var db = ctx.Database.GetDbConnection();
-            await db.OpenAsync();
-            await using var transaction = await db.BeginTransactionAsync();
-
-            var existing = await db.QueryFirstOrDefaultAsync<(string dict_id, string source)>(
-                "SELECT dict_id, COALESCE(source, '') source FROM lang_dictionaries WHERE dict_id=@dict_id FOR UPDATE",
-                new { dict_id = translationName },
-                transaction);
-
-            if (string.IsNullOrEmpty(existing.dict_id))
-            {
-                await transaction.RollbackAsync();
-                return new DeleteTranslationResult(DeleteTranslationResultType.NotFound, []);
-            }
-
-            if (existing.source != "LanguagePack" && existing.source != "Custom")
-            {
-                await transaction.RollbackAsync();
-                return new DeleteTranslationResult(DeleteTranslationResultType.NotUserInstalled, []);
-            }
-
-            var fallbackUsers = (await db.QueryAsync<string>(
-                "SELECT dict_id FROM lang_dictionaries WHERE fallback=@fallback ORDER BY dict_id FOR UPDATE",
-                new { fallback = translationName },
-                transaction)).ToArray();
-
-            if (fallbackUsers.Length > 0)
-            {
-                await transaction.RollbackAsync();
-                return new DeleteTranslationResult(DeleteTranslationResultType.UsedAsFallback, fallbackUsers);
-            }
-
-            await db.ExecuteAsync(
-                "DELETE FROM lang_dictionaries WHERE dict_id=@dict_id AND source IN ('Custom', 'LanguagePack')",
-                new { dict_id = translationName },
-                transaction);
-
-            await transaction.CommitAsync();
-            return new DeleteTranslationResult(DeleteTranslationResultType.Deleted, []);
+            await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id=@dict_id AND source IN ('Custom', 'LanguagePack')", new { dict_id = translationName });
         }
 
         public async Task UpdateVersion(string translationName, string version)

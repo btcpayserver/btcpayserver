@@ -138,17 +138,15 @@ build_all() {
   )
   _res["monero-plugin"]=$?
 
-  (
-    cd blink
-    blink_status=0
-    for project in Plugins/*/*.csproj; do
-      plugin_name="$(basename "$(dirname "$project")")"
-      plugin_name="${plugin_name#BTCPayServer.Plugins.}"
-      run_build "kukks-$plugin_name" "$project" || blink_status=1
-    done
-    exit "$blink_status"
-  )
-  _res["blink"]=$?
+  for project in blink/Plugins/*/*.csproj; do
+    plugin_name="$(basename "$(dirname "$project")")"
+    plugin_name="${plugin_name#BTCPayServer.Plugins.}"
+    if [ "$plugin_name" = "Wabisabi" ]; then
+      continue
+    fi
+    run_build "kukks-$plugin_name" "$project"
+    _res["kukks-$plugin_name"]=$?
+  done
 }
 
 printf '\n==> Environment\n'

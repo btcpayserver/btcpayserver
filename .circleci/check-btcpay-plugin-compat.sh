@@ -12,6 +12,7 @@ BOLTCARDS_REPO="https://github.com/NicolasDorier/boltcards-plugin.git"
 SHOPIFY_REPO="https://github.com/btcpayserver/btcpayserver-shopify-plugin.git"
 MONERO_REPO="https://github.com/btcpay-monero/btcpayserver-monero-plugin.git"
 BLINK_REPO="https://github.com/Kukks/BTCPayServerPlugins.git"
+CASHU_REPO="https://github.com/cashubtc/BTCNutServer.git"
 
 BTCPAY_SPLICE_ABS=""
 
@@ -64,9 +65,11 @@ git clone "$BOLTCARDS_REPO" boltcards-plugin
 git clone "$SHOPIFY_REPO" shopify-plugin
 git clone "$MONERO_REPO" monero-plugin
 git clone "$BLINK_REPO" blink
+git clone "$CASHU_REPO" cashu-plugin
 
 printf '\n==> Initializing non-BTCPay plugin submodules\n'
 GIT_LFS_SKIP_SMUDGE=1 git -C blink submodule update --init --depth 1 --recommend-shallow --filter=blob:none submodules/walletwasabi
+git -C cashu-plugin submodule update --init --depth 1 --recommend-shallow --filter=blob:none submodules/DotNut
 
 printf '\n==> Wiring SamRock Boltz submodule from the cloned Boltz repo\n'
 rm -rf samrock-protocol/submodules/boltz
@@ -88,6 +91,7 @@ splice_all() {
   replace_btcpay_copy shopify-plugin/submodules/btcpayserver
   replace_btcpay_copy monero-plugin/submodules/btcpayserver
   replace_btcpay_copy blink/submodules/btcpayserver
+  replace_btcpay_copy cashu-plugin/submodules/btcpayserver
   replace_btcpay_copy samrock-protocol/submodules/boltz/btcpayserver
 }
 
@@ -137,6 +141,12 @@ build_all() {
     run_build "monero-plugin" "Plugins/Monero/BTCPayServer.Plugins.Monero.csproj"
   )
   _res["monero-plugin"]=$?
+
+  (
+    cd cashu-plugin
+    run_build "cashu-plugin" "Plugin/BTCPayServer.Plugins.Cashu/BTCPayServer.Plugins.Cashu.csproj"
+  )
+  _res["cashu-plugin"]=$?
 
   for project in blink/Plugins/*/*.csproj; do
     plugin_name="$(basename "$(dirname "$project")")"

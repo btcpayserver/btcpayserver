@@ -1,5 +1,3 @@
-using BTCPayServer;
-using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Services;

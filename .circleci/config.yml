@@ -60,6 +60,21 @@ jobs:
           name: Run pre-release checks
           command: |
             cd .circleci && ./run-tests.sh "PreReleaseCheck=PreReleaseCheck"
+  plugin_compatibility:
+    docker:
+      - image: mcr.microsoft.com/dotnet/sdk:10.0.301-noble
+    steps:
+      - run:
+          name: Install checkout dependencies
+          command: |
+            apt-get update
+            apt-get install -y --no-install-recommends openssh-client
+      - checkout
+      - run:
+          name: Check BTCPay plugin compatibility
+          command: |
+            cd .circleci
+            ./check-btcpay-plugin-compat.sh
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined
   docker:
     docker:
@@ -99,6 +114,12 @@ workflows:
             tags:
               only: /(v[1-9]+(\.[0-9]+)*(-[a-z0-9-]+)?)|(v[a-z0-9-]+)/
       - release_checks:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /(v[1-9]+(\.[0-9]+)*(-[a-z0-9-]+)?)|(v[a-z0-9-]+)/
+      - plugin_compatibility:
           filters:
             branches:
               ignore: /.*/

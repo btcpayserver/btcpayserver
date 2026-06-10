@@ -1,7 +1,7 @@
 @using BTCPayServer.Views.Server
 @model CreateTranslationViewModel
 @{
-	ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Translations), "Create a new translation")
+	ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Translations), StringLocalizer["Create a new translation"])
         .SetCategory(WellKnownCategories.Server));
 }
 <form method="post">

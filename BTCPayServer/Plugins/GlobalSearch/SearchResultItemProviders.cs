@@ -42,9 +42,10 @@ public class SearchResultItemProviders(
         }
 
         await FilterAuthorizedItems(ctx);
-        Translate(ctx);
+        ctx.ItemResults.Sort((a, b) => a.Order.CompareTo(b.Order));
         if (ctx.ItemResults.Count > maxResult)
             ctx.ItemResults = ctx.ItemResults.Take(maxResult.Value).ToList();
+        Translate(ctx);
         return new GlobalSearchViewModel()
         {
             Items = ctx.ItemResults,
@@ -83,6 +84,7 @@ public class SearchResultItemProviders(
                     result.Keywords[i] = stringLocalizer[result.Keywords[i]];
                 }
             }
+            result.Order = o.Order;
             ctx.ItemResults.Add(result);
         }
     }

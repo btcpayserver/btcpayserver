@@ -1,10 +1,12 @@
 @using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Client
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @inject IFileService FileService;
 @model GeneralSettingsViewModel
 @{
 	ViewData.SetLayoutModel(new LayoutModel("General", StringLocalizer["General"]).SetCategory(WellKnownCategories.Store));
 	var canUpload = await FileService.IsAvailable();
+    Csp.UnsafeEval();
 }
 <form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">
     <div class="sticky-header">
@@ -22,7 +24,22 @@
             }
             <div class="form-group">
                 <label asp-for="Id" class="form-label"></label>
-                <input asp-for="Id" readonly class="form-control" />
+                <div class="input-group">
+                    <input asp-for="Id" readonly class="form-control" />
+                    <button type="button"
+                            class="btn btn-outline-secondary only-for-js"
+                            data-store-id-qr
+                            aria-label="@StringLocalizer["Show store ID QR"]">
+                        <vc:icon symbol="qr-code" />
+                    </button>
+                    <button type="button"
+                            class="btn btn-outline-secondary only-for-js clipboard-button"
+                            data-clipboard="@Model.Id"
+                            data-clipboard-confirm="@StringLocalizer["Copied"]"
+                            aria-label="@StringLocalizer["Copy store ID"]">
+                        <vc:icon symbol="actions-copy" />
+                    </button>
+                </div>
             </div>
             <div class="form-group">
                 <label asp-for="StoreName" class="form-label"></label>
@@ -59,11 +76,11 @@
                 <div class="d-flex align-items-center justify-content-between gap-2">
                     <label asp-for="LogoFile" class="form-label"></label>
                     @if (!string.IsNullOrEmpty(Model.LogoUrl))
-                    {
-                        <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveLogoFile" value="true">
-                            <vc:icon symbol="cross" />Remove
-                        </button>
-                    }
+	                    {
+	                        <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveLogoFile" value="true">
+	                            <vc:icon symbol="cross" /><span text-translate="true">Remove</span>
+	                        </button>
+	                    }
                 </div>
                 @if (canUpload)
                 {
@@ -86,11 +103,11 @@
                 <div class="d-flex align-items-center justify-content-between gap-2">
                     <label asp-for="CssFile" class="form-label"></label>
                     @if (!string.IsNullOrEmpty(Model.CssUrl))
-                    {
-                        <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveCssFile" value="true">
-                            <vc:icon symbol="cross" />Remove
-                        </button>
-                    }
+	                    {
+	                        <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveCssFile" value="true">
+	                            <vc:icon symbol="cross" /><span text-translate="true">Remove</span>
+	                        </button>
+	                    }
                 </div>
                 @if (canUpload)
                 {
@@ -240,10 +257,21 @@
 </div>
 
 <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete store"], StringLocalizer["The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store."], StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />
+<partial name="ShowQR" />
 
 @section PageFootContent {
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
     <partial name="_ValidationScriptsPartial"/>
     <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const storeId = @Safe.Json(Model.Id);
+        const qrApp = initQRShow({ title: @Safe.Json(StringLocalizer["Store Id QR Code"].Value) });
+        delegate("click", "button[data-store-id-qr]", e => {
+            e.preventDefault();
+            qrApp.showData(storeId, @Safe.Json(StringLocalizer["Store Id"].Value));
+        });
+    });
     (() => {
         const $colorValue = document.getElementById('BrandColor');
         const $colorInput = document.getElementById('BrandColorInput');

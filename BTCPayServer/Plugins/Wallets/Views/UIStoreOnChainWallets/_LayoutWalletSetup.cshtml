@@ -1,5 +1,6 @@
 ﻿@{
     Layout = "_LayoutWizard";
+    var storeId = Context.GetStoreDataOrNull()?.Id ?? Context.GetRouteValue("storeId")?.ToString();
 }
 
 @section PageHeadContent {
@@ -13,7 +14,7 @@
 @section Navbar {
     @await RenderSectionAsync("Navbar", false)
 
-    <a asp-area="" asp-controller="UIStores" asp-action="Index" asp-route-storeId="@Context.GetRouteValue("storeId")" id="CancelWizard" class="cancel">
+    <a asp-area="" asp-controller="UIStores" asp-action="Index" asp-route-storeId="@storeId" id="CancelWizard" class="cancel">
         <vc:icon symbol="cross" />
     </a>
 }

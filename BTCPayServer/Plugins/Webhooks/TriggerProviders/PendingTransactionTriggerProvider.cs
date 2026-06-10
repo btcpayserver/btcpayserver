@@ -4,6 +4,7 @@ using BTCPayServer.Abstractions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Plugins.Wallets;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json;
@@ -39,7 +40,10 @@ public class PendingTransactionTriggerProvider
         model["PendingTransaction"] = o;
         if (blob.RequestBaseUrl is not null && RequestBaseUrl.TryFromUrl(blob.RequestBaseUrl, out var v))
         {
-            o["Link"] = linkGenerator.WalletTransactionsLink(new(webhookTriggerContext.Store.Id, evt.Data.CryptoCode), v);
+            var walletId = new WalletId(webhookTriggerContext.Store.Id, evt.Data.CryptoCode);
+            o["Link"] = evt.Type is PendingTransactionService.PendingTransactionEvent.Created or PendingTransactionService.PendingTransactionEvent.SignatureCollected
+                ? linkGenerator.WalletPendingTransactionLink(walletId, evt.Data.Id, v)
+                : linkGenerator.WalletTransactionsLink(walletId, v);
         }
 
         return model;
@@ -60,7 +64,9 @@ public class PendingTransactionTriggerProvider
             _ => null
         };
         if (webhook is not null)
+        {
             webhook.PendingTransactionId = evt.Data.TransactionId;
+        }
         return webhook;
     }
 

@@ -1277,3 +1277,9 @@ main .sticky-header + [class*='table-responsive'] {
         --sticky-header-height: 0;
     }
 }
+
+/* Fix flatpickr month dropdown options background in dark mode */
+.flatpickr-current-month .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
+    background-color: var(--btcpay-bg-tile);
+    color: var(--btcpay-body-text);
+}

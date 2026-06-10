@@ -28,6 +28,7 @@
 * Fix BTCPay Server hanging on shutdown when Bitcoin support is disabled @NicolasDorier
 * Prevent 2FA code submission when the authenticator is not configured @NicolasDorier
 * Invoice Date Filter - Date Selector Widget closes the month list when clicked (#7384 #7388) @senutpal
+* Invoice Date Filter - Date Selector Widget had month dropdown with white text on a white background in Dark Mode (#7385) @senutpal
 * Refunds and pull payments were unable to make payments from LND 0.21.0 (https://github.com/btcpayserver/BTCPayServer.Lightning/pull/178) @warioishere
 
 ### Improvements

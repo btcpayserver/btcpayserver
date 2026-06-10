@@ -493,6 +493,7 @@ namespace BTCPayServer.Tests
                 ("Good afternoon", "Good afternoon"),
                 ("Goodbye", "Goodbye"),
                 ("lol", null)]);
+            await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id='French'");
             await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id='English'");
         }
 

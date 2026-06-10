@@ -9,7 +9,7 @@ namespace BTCPayServer.Migrations
 {
     /// <inheritdoc />
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260610130000_translationsFallbackRestrict")]
+    [Migration("20260610081428_TranslationsFallbackRestrict")]
     public partial class TranslationsFallbackRestrict : Migration
     {
         /// <inheritdoc />

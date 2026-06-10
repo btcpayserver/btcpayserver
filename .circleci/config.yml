@@ -74,7 +74,7 @@ jobs:
           name: Check BTCPay plugin compatibility
           command: |
             cd .circleci
-            BTCPAY_BASELINE_REF="v2.3.9" ./check-btcpay-plugin-compat.sh || true
+            ./check-btcpay-plugin-compat.sh
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined
   docker:
     docker:
@@ -128,7 +128,6 @@ workflows:
       - docker:
           requires:
             - release_checks
-            - plugin_compatibility
           filters:
             # ignore any commit on any branch by default
             branches:

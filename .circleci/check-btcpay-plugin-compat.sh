@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 set -u
 
-ROOT_DIR="${1:-btcpay-plugin-check}"
-BTCPAY_BASELINE_REF="${BTCPAY_BASELINE_REF:-}"
+ROOT_DIR="${1:-/tmp/btcpay-plugin-check}"
+BTCPAY_ABS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-BTCPAY_REPO="https://github.com/btcpayserver/btcpayserver.git"
 EXOLIX_REPO="https://github.com/Nisaba/btcpayserver-plugins.git"
 SAMROCK_REPO="https://github.com/rockstardev/SamRockProtocol.git"
 BOLTZ_REPO="https://github.com/BoltzExchange/boltz-btcpay-plugin.git"
@@ -52,26 +51,9 @@ fi
 
 mkdir "$ROOT_DIR"
 cd "$ROOT_DIR"
-ROOT_ABS="$(pwd)"
-BTCPAY_MASTER_ABS="$ROOT_ABS/btcpayserver-master"
-BTCPAY_BASELINE_ABS="$ROOT_ABS/btcpayserver-baseline"
 
-printf '==> Cloning BTCPay Server master\n'
-git clone --depth 1 --branch master "$BTCPAY_REPO" btcpayserver-master
-
-printf '\n==> Building BTCPay Server master once\n'
-dotnet build "btcpayserver-master/BTCPayServer/BTCPayServer.csproj" -c Release --nologo -v quiet /clp:ErrorsOnly || exit 1
-
-if [ -n "$BTCPAY_BASELINE_REF" ]; then
-  printf '\n==> Cloning BTCPay Server baseline (%s)\n' "$BTCPAY_BASELINE_REF"
-  git clone --depth 1 --branch "$BTCPAY_BASELINE_REF" "$BTCPAY_REPO" btcpayserver-baseline
-
-  printf '\n==> Building BTCPay Server baseline once\n'
-  if ! dotnet build "btcpayserver-baseline/BTCPayServer/BTCPayServer.csproj" -c Release --nologo -v quiet /clp:ErrorsOnly; then
-    printf '!! WARNING: baseline BTCPay (%s) failed to build.\n' "$BTCPAY_BASELINE_REF"
-    BTCPAY_BASELINE_REF=""
-  fi
-fi
+printf '==> Building BTCPay Server checkout once\n'
+dotnet build "$BTCPAY_ABS/BTCPayServer/BTCPayServer.csproj" -c Release --nologo -v quiet /clp:ErrorsOnly || exit 1
 
 printf '\n==> Cloning plugin source repositories\n'
 git clone "$EXOLIX_REPO" exolix-plugin
@@ -109,8 +91,7 @@ splice_all() {
   replace_btcpay_copy samrock-protocol/submodules/boltz/btcpayserver
 }
 
-declare -A MASTER_RESULT
-declare -A BASE_RESULT
+declare -A RESULT
 
 build_all() {
   local -n _res="$1"
@@ -171,80 +152,38 @@ build_all() {
 }
 
 printf '\n==> Environment\n'
-printf 'BTCPay master: '
-git -C btcpayserver-master rev-parse HEAD
-if [ -n "$BTCPAY_BASELINE_REF" ]; then
-  printf 'BTCPay baseline (%s): ' "$BTCPAY_BASELINE_REF"
-  git -C btcpayserver-baseline rev-parse HEAD
-fi
+printf 'BTCPay checkout: '
+git -C "$BTCPAY_ABS" rev-parse HEAD
 printf 'dotnet SDK: '
 dotnet --version
 
-printf '\n======= PASS: master =======\n'
-splice_all "$BTCPAY_MASTER_ABS"
-build_all MASTER_RESULT
-
-if [ -n "$BTCPAY_BASELINE_REF" ]; then
-  printf '\n======= PASS: baseline (%s) ========\n' "$BTCPAY_BASELINE_REF"
-  splice_all "$BTCPAY_BASELINE_ABS"
-  build_all BASE_RESULT
-fi
+printf '\n======= Building plugins =======\n'
+splice_all "$BTCPAY_ABS"
+build_all RESULT
 
 printf '\n==> Summary\n'
 
-regressions=()
-still_broken=()
-still_ok=()
-newly_fixed=()
 plain_fail=()
 plain_ok=()
 
-for name in "${!MASTER_RESULT[@]}"; do
-  m="${MASTER_RESULT[$name]}"
-  if [ -z "$BTCPAY_BASELINE_REF" ]; then
-    if [ "$m" -eq 0 ]; then
-      plain_ok+=("$name")
-    else
-      plain_fail+=("$name")
-    fi
-    continue
-  fi
-  b="${BASE_RESULT[$name]:-1}"
-  if [ "$b" -eq 0 ] && [ "$m" -ne 0 ]; then
-    regressions+=("$name")
-  elif [ "$b" -ne 0 ] && [ "$m" -ne 0 ]; then
-    still_broken+=("$name")
-  elif [ "$b" -ne 0 ] && [ "$m" -eq 0 ]; then
-    newly_fixed+=("$name")
+for name in "${!RESULT[@]}"; do
+  if [ "${RESULT[$name]}" -eq 0 ]; then
+    plain_ok+=("$name")
   else
-    still_ok+=("$name")
+    plain_fail+=("$name")
   fi
 done
 
-if [ -z "$BTCPAY_BASELINE_REF" ]; then
-  printf 'OK: %s\n' "${plain_ok[*]:-(none)}"
-  printf 'FAILED: %s\n' "${plain_fail[*]:-(none)}"
-  if [ "${#plain_fail[@]}" -eq 0 ]; then
-    printf 'All plugin builds passed.\n'
-  else
-    printf 'One or more plugin builds failed. See output above.\n'
-  fi
+printf 'OK: %s\n' "${plain_ok[*]:-(none)}"
+printf 'FAILED: %s\n' "${plain_fail[*]:-(none)}"
+if [ "${#plain_fail[@]}" -eq 0 ]; then
+  printf 'All plugin builds passed.\n'
 else
-  printf 'still-ok: %s\n' "${still_ok[*]:-(none)}"
-  printf 'still-broken: %s\n' "${still_broken[*]:-(none)}"
-  printf 'newly-fixed: %s\n' "${newly_fixed[*]:-(none)}"
-  printf 'REGRESSION: %s\n' "${regressions[*]:-(none)}"
-  printf '\n'
-  if [ "${#regressions[@]}" -gt 0 ]; then
-    printf '!! %d plugin(s) built against %s but FAIL against master.\n' "${#regressions[@]}" "$BTCPAY_BASELINE_REF"
-    printf '!! These are user-facing regressions: consider a Core fix (revert + [Obsolete]),\n'
-    printf '!! or ping the author only if Core cannot absorb it.\n'
-  else
-    printf 'No new regressions versus %s.\n' "$BTCPAY_BASELINE_REF"
-  fi
-  if [ "${#still_broken[@]}" -gt 0 ]; then
-    printf '(Note: still-broken plugins were already broken before this release.)\n'
-  fi
+  printf 'One or more plugin builds failed. See output above.\n'
+fi
+
+if [ "${#plain_fail[@]}" -gt 0 ]; then
+  exit 1
 fi
 
 exit 0

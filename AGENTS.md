@@ -1,5 +1,14 @@
 # Agent Instructions
 
+## Creating Migrations
+
+* Run `dotnet ef migrations add <migration-name>` to generate the migration.
+* Copy the attributes from the generated `.Designer.cs` file to the `.cs` migration file.
+* Remove the generated `.Designer.cs` file.
+* Remove the `Down()` method.
+* Do not use `migrationBuilder.IsNpgsql()`; assume PostgreSQL is used.
+* If a migration cannot be generated through `dotnet ef migrations`, add a migration file prefixed by date in the `Migrations` folder, for example `20260525115757_passkey.cs`, and use `migrationBuilder.Sql` to run raw SQL.
+
 ## Updating `Changelog.md`
 
 When asked to update or review the changelog, focus on user-visible changes and keep entries concise.

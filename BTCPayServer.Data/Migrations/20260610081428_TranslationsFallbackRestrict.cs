@@ -15,25 +15,15 @@ namespace BTCPayServer.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            if (migrationBuilder.IsNpgsql())
-            {
-                migrationBuilder.Sql(
-                    "ALTER TABLE lang_dictionaries DROP CONSTRAINT lang_dictionaries_fallback_fkey;");
-                migrationBuilder.Sql(
-                    "ALTER TABLE lang_dictionaries ADD CONSTRAINT lang_dictionaries_fallback_fkey FOREIGN KEY (fallback) REFERENCES lang_dictionaries(dict_id) ON UPDATE CASCADE ON DELETE RESTRICT;");
-            }
+            migrationBuilder.Sql(
+                "ALTER TABLE lang_dictionaries DROP CONSTRAINT lang_dictionaries_fallback_fkey;");
+            migrationBuilder.Sql(
+                "ALTER TABLE lang_dictionaries ADD CONSTRAINT lang_dictionaries_fallback_fkey FOREIGN KEY (fallback) REFERENCES lang_dictionaries(dict_id) ON UPDATE CASCADE ON DELETE RESTRICT;");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            if (migrationBuilder.IsNpgsql())
-            {
-                migrationBuilder.Sql(
-                    "ALTER TABLE lang_dictionaries DROP CONSTRAINT lang_dictionaries_fallback_fkey;");
-                migrationBuilder.Sql(
-                    "ALTER TABLE lang_dictionaries ADD CONSTRAINT lang_dictionaries_fallback_fkey FOREIGN KEY (fallback) REFERENCES lang_dictionaries(dict_id) ON UPDATE CASCADE ON DELETE SET NULL;");
-            }
         }
     }
 }

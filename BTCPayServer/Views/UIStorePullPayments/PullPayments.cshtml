@@ -81,10 +81,15 @@
             }
         </script>
     }
+
+	<form method="post" asp-action="MassAction" asp-route-storeId="@storeId">
     <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
+        <table class="table table-hover mass-action">
+            <thead class="mass-action-head">
             <tr>
+                <th class="mass-action-select-col only-for-js">
+                    <input type="checkbox" class="form-check-input mass-action-select-all" />
+                </th>
                 <th scope="col" class="date-col">
                     <div class="d-flex align-items-center gap-3">
                         <a asp-action="PullPayments"
@@ -106,10 +111,34 @@
                 <th scope="col" class="actions-col"></th>
             </tr>
             </thead>
+			<thead class="mass-action-actions">
+				<tr>
+					<th class="mass-action-select-col only-for-js">
+						<input type="checkbox" class="form-check-input mass-action-select-all" />
+					</th>
+					<th colspan="4">
+						<div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+							<div>
+								<strong class="mass-action-selected-count">0</strong>
+								<span text-translate="true">selected</span>
+							</div>
+							<div class="d-inline-flex align-items-center gap-3">
+								<button type="button" class="btn btn-link" permission="@Policies.CanArchivePullPayments" data-bs-toggle="modal" data-bs-target="#MassArchiveModal">
+									<vc:icon symbol="actions-archive" />
+									<span text-translate="true">Archive</span>
+								</button>
+							</div>
+						</div>
+					</th>
+				</tr>
+			</thead>
             <tbody>
             @foreach (var pp in Model.PullPayments)
             {
                 <tr class="mass-action-row">
+                    <td class="only-for-js align-middle">
+                        <input name="selectedItems" type="checkbox" class="form-check-input mass-action-select" value="@pp.Id" />
+                    </td>
                     <td class="date-col">@pp.StartDate.ToBrowserDate()</td>
                     <td>
                         <a
@@ -174,6 +203,26 @@
             </tbody>
         </table>
     </div>
+	<div class="modal fade" id="MassArchiveModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" text-translate="true">Archive pull payments</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+						<vc:icon symbol="close" />
+					</button>
+				</div>
+				<div class="modal-body">
+					<p class="mb-0" text-translate="true">Do you really want to archive the selected pull payments?</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" text-translate="true">Cancel</button>
+					<button type="submit" name="command" value="archive" class="btn btn-danger" id="ArchiveSelectedConfirm" text-translate="true">Archive</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	</form>
     <vc:pager view-model="Model" />
 
     <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Archive pull payment"], StringLocalizer["Do you really want to archive the pull payment?"], StringLocalizer["Archive"]))" />

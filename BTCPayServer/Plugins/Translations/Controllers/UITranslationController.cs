@@ -73,7 +73,7 @@ public class UITranslationController(
                 LastUpdated = manifestEntry?.Updated,
                 Fallback = translation.Fallback,
                 IsSelected = isSelected,
-                IsDownloadedLanguagePack = isDownloadedPack,
+                IsDeletable = translation.Source == "LanguagePack" || translation.Source == "Custom",
                 UpdateAvailable = updateAvailable
             };
             if (isSelected)
@@ -135,8 +135,10 @@ public class UITranslationController(
     [HttpGet("server/translations/{translation}")]
     public async Task<IActionResult> EditTranslation(string translation)
     {
-        if ((await localizer.GetTranslation(translation)) is null)
+        var d = await localizer.GetTranslation(translation);
+        if (d is null || d.Source == "LanguagePack")
             return NotFound();
+
         var translations = await localizer.GetTranslations(translation);
         return View(new EditTranslationViewModel().SetTranslations(translations.Translations));
     }
@@ -145,7 +147,7 @@ public class UITranslationController(
     public async Task<IActionResult> EditTranslation(string translation, EditTranslationViewModel viewModel)
     {
         var d = await localizer.GetTranslation(translation);
-        if (d is null)
+        if (d is null || d.Source == "LanguagePack")
             return NotFound();
         if (environment.CheatMode && viewModel.Command == "Fake")
         {
@@ -216,12 +218,26 @@ public class UITranslationController(
         var existingTranslation = await localizer.GetTranslation(language);
         if (existingTranslation is null)
         {
-            existingTranslation = await localizer.CreateTranslation(language, Translations.DefaultLanguage, "LanguagePack");
-            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' downloaded successfully", language].Value;
+            try
+            {
+                existingTranslation = await localizer.CreateTranslation(language, Translations.DefaultLanguage, "LanguagePack");
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' downloaded successfully", language].Value;
+            }
+            catch (DbException)
+            {
+                existingTranslation = await localizer.GetTranslation(language);
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' updated successfully", language].Value;
+            }
         }
         else
         {
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' updated successfully", language].Value;
+        }
+
+        if (existingTranslation is null)
+        {
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Failed to download language pack: {0}", language].Value;
+            return RedirectToAction(nameof(ListTranslations));
         }
 
         await localizer.Save(existingTranslation, translations);
@@ -246,7 +262,37 @@ public class UITranslationController(
             TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Translation {0} is the currently selected one and cannot be uninstalled", translation].Value;
             return RedirectToAction(nameof(ListTranslations));
         }
-        await localizer.DeleteTranslation(translation);
+
+        var fallbackUsers = (await localizer.GetTranslations())
+            .Where(t => t.Fallback == translation)
+            .Select(t => t.TranslationName)
+            .OrderBy(t => t)
+            .ToArray();
+        if (fallbackUsers.Length > 0)
+        {
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Translation {0} cannot be uninstalled because it is used as fallback by: {1}", translation, string.Join(", ", fallbackUsers)].Value;
+            return RedirectToAction(nameof(ListTranslations));
+        }
+
+        try
+        {
+            await localizer.DeleteTranslation(translation);
+        }
+        catch (DbException)
+        {
+            fallbackUsers = (await localizer.GetTranslations())
+                .Where(t => t.Fallback == translation)
+                .Select(t => t.TranslationName)
+                .OrderBy(t => t)
+                .ToArray();
+            if (fallbackUsers.Length > 0)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Translation {0} cannot be uninstalled because it is used as fallback by: {1}", translation, string.Join(", ", fallbackUsers)].Value;
+                return RedirectToAction(nameof(ListTranslations));
+            }
+            throw;
+        }
+
         TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Translation {0} deleted", translation].Value;
         return RedirectToAction(nameof(ListTranslations));
     }

@@ -2019,6 +2019,7 @@ namespace BTCPayServer.Plugins.Translations
   "Transaction successfully signed": "",
   "transactions": "",
   "Transactions": "",
+  "Translation {0} cannot be uninstalled because it is used as fallback by: {1}": "",
   "Translation {0} deleted": "",
   "Translation {0} is not user-installed and cannot be uninstalled": "",
   "Translation {0} is the currently selected one and cannot be uninstalled": "",

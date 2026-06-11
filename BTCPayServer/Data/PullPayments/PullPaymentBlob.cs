@@ -27,6 +27,8 @@ namespace BTCPayServer.Data
 
         public bool AutoApproveClaims { get; set; }
 
+        public string RequestBaseUrl { get; set; }
+
         public class PullPaymentView
         {
             public string Title { get; set; }

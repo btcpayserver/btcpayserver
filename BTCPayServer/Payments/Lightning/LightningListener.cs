@@ -484,21 +484,23 @@ namespace BTCPayServer.Payments.Lightning
             ConnectionString = connectionString;
         }
 
+        internal enum RecordedState { RecordedNow, AlreadyRecorded, RetryLater }
+
         internal bool AddListenedInvoice(ListenedInvoice invoice)
         {
             return _ListenedInvoices.TryAdd(invoice.PaymentMethodDetails.InvoiceId, invoice);
         }
 
-        internal async Task<(LightningInvoiceStatus? Status, bool PaymentRecorded)> PollPayment(ListenedInvoice listenedInvoice, CancellationToken cancellation)
+        internal async Task<(LightningInvoiceStatus? Status, RecordedState RecordedState)> PollPayment(ListenedInvoice listenedInvoice, CancellationToken cancellation)
         {
             var client = _lightningClientFactory.Create(ConnectionString, _network);
             LightningInvoice lightningInvoice = await client.GetInvoice(listenedInvoice.PaymentMethodDetails.InvoiceId, cancellation);
-            var recorded = false;
+            var state = RecordedState.RetryLater;
             if (lightningInvoice?.Status is LightningInvoiceStatus.Paid)
-                recorded = await AddPayment(lightningInvoice, listenedInvoice.InvoiceId, listenedInvoice.PaymentMethod.PaymentMethodId);
-            if (recorded)
+                state = await AddPayment(lightningInvoice, listenedInvoice.InvoiceId, listenedInvoice.PaymentMethod.PaymentMethodId);
+            if (state is RecordedState.RecordedNow)
                 Logs.PayServer.LogInformation($"{_network.CryptoCode} (Lightning): Payment detected via polling on {listenedInvoice.InvoiceId}");
-            return (lightningInvoice?.Status, recorded);
+            return (lightningInvoice?.Status, state);
         }
 
         public bool Empty => _ListenedInvoices.IsEmpty;
@@ -550,7 +552,8 @@ namespace BTCPayServer.Payments.Lightning
                         if (notification.Status == LightningInvoiceStatus.Paid &&
                             notification.PaidAt.HasValue && (notification.AmountReceived ?? notification.Amount) != null)
                         {
-                            if (await AddPayment(notification, listenedInvoice.InvoiceId, listenedInvoice.PaymentMethod.PaymentMethodId))
+                            var state = await AddPayment(notification, listenedInvoice.InvoiceId, listenedInvoice.PaymentMethod.PaymentMethodId);
+                            if (state is RecordedState.RecordedNow)
                             {
                                 Logs.PayServer.LogInformation("{CryptoCode} (Lightning): Payment detected via notification ({InvoiceId})", _network.CryptoCode,
                                     listenedInvoice.InvoiceId);
@@ -598,9 +601,9 @@ namespace BTCPayServer.Payments.Lightning
         {
             foreach (var invoice in _ListenedInvoices.Values)
             {
-                var (status, recorded) = await PollPayment(invoice, cancellation);
+                var (status, state) = await PollPayment(invoice, cancellation);
                 if (status is null ||
-                    (status is LightningInvoiceStatus.Paid && recorded) ||
+                    (status is LightningInvoiceStatus.Paid && state is RecordedState.RecordedNow or RecordedState.AlreadyRecorded) ||
                     status is LightningInvoiceStatus.Expired)
                     _ListenedInvoices.TryRemove(invoice.PaymentMethodDetails.InvoiceId, out var _);
             }
@@ -615,11 +618,11 @@ namespace BTCPayServer.Payments.Lightning
         bool _ErrorAlreadyLogged = false;
         readonly ConcurrentDictionary<string, ListenedInvoice> _ListenedInvoices = new ConcurrentDictionary<string, ListenedInvoice>();
 
-        public async Task<bool> AddPayment(LightningInvoice notification, string invoiceId, PaymentMethodId paymentMethodId)
+        internal async Task<RecordedState> AddPayment(LightningInvoice notification, string invoiceId, PaymentMethodId paymentMethodId)
         {
             var invoiceEntity = await _invoiceRepository.GetInvoice(invoiceId);
             if (notification?.PaidAt is null || invoiceEntity is null)
-                return false;
+                return RecordedState.AlreadyRecorded;
 
             var paidAmount = notification.AmountReceived ?? notification.Amount;
             if (paidAmount is null)
@@ -627,7 +630,7 @@ namespace BTCPayServer.Payments.Lightning
                 Logs.PayServer.LogWarning(
                     "{CryptoCode} (Lightning): Invoice {InvoiceId} is paid according to the node but no amount was returned; cannot record the payment yet.",
                     _network.CryptoCode, invoiceId);
-                return false;
+                return RecordedState.RetryLater;
             }
 
             var handler = _handlers[paymentMethodId];
@@ -665,7 +668,7 @@ namespace BTCPayServer.Payments.Lightning
                     _eventAggregator.Publish(new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) { Payment = payment });
             }
 
-            return payment != null;
+            return payment != null ? RecordedState.RecordedNow : RecordedState.AlreadyRecorded;
         }
 
         internal void RemoveExpiredInvoices()

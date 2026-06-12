@@ -620,10 +620,13 @@ namespace BTCPayServer.Payments.Lightning
 
         internal async Task<RecordedState> AddPayment(LightningInvoice notification, string invoiceId, PaymentMethodId paymentMethodId)
         {
+            if (notification is null)
+                return RecordedState.RetryLater;
             var invoiceEntity = await _invoiceRepository.GetInvoice(invoiceId);
-            if (notification?.PaidAt is null || invoiceEntity is null)
+            if (invoiceEntity is null)
                 return RecordedState.AlreadyRecorded;
 
+            var paidAt = notification.PaidAt ?? DateTimeOffset.UtcNow;
             var paidAmount = notification.AmountReceived ?? notification.Amount;
             if (paidAmount is null)
             {
@@ -638,7 +641,7 @@ namespace BTCPayServer.Payments.Lightning
             var paymentData = new PaymentData()
             {
                 Id = paymentHash?.ToString() ?? notification.BOLT11,
-                Created = notification.PaidAt.Value,
+                Created = paidAt,
                 Status = PaymentStatus.Settled,
                 Currency = _network.CryptoCode,
                 InvoiceDataId = invoiceId,

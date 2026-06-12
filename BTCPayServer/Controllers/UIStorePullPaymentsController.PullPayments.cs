@@ -273,6 +273,27 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(PullPayments), new { storeId = HttpContext.GetStoreData().Id });
         }
 
+        [HttpPost("stores/{storeId}/pull-payments/mass-action")]
+        [Authorize(Policy = Policies.CanArchivePullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public async Task<IActionResult> MassAction(string command, string[] selectedItems, string storeId)
+        {
+            if (selectedItems is { Length: > 0 })
+            {
+                switch (command)
+                {
+                    case "archive":
+                        await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(selectedItems));
+                        TempData.SetStatusMessageModel(new StatusMessageModel
+                        {
+                            Message = StringLocalizer["Pull payments archived"].Value,
+                            Severity = StatusMessageModel.StatusSeverity.Success
+                        });
+                        break;
+                }
+            }
+            return RedirectToAction(nameof(PullPayments), new { storeId });
+        }
+
         [Authorize(Policy = Policies.CanManagePayouts, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpPost("pull-payments/{pullPaymentId}/payouts")]
         [HttpPost("stores/{storeId}/pull-payments/payouts")]

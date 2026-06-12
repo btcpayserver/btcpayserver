@@ -489,17 +489,16 @@ namespace BTCPayServer.Payments.Lightning
             return _ListenedInvoices.TryAdd(invoice.PaymentMethodDetails.InvoiceId, invoice);
         }
 
-        internal async Task<LightningInvoiceStatus?> PollPayment(ListenedInvoice listenedInvoice, CancellationToken cancellation)
+        internal async Task<(LightningInvoiceStatus? Status, bool PaymentRecorded)> PollPayment(ListenedInvoice listenedInvoice, CancellationToken cancellation)
         {
             var client = _lightningClientFactory.Create(ConnectionString, _network);
             LightningInvoice lightningInvoice = await client.GetInvoice(listenedInvoice.PaymentMethodDetails.InvoiceId, cancellation);
-            if (lightningInvoice?.Status is LightningInvoiceStatus.Paid &&
-                await AddPayment(lightningInvoice, listenedInvoice.InvoiceId, listenedInvoice.PaymentMethod.PaymentMethodId))
-            {
+            var recorded = false;
+            if (lightningInvoice?.Status is LightningInvoiceStatus.Paid)
+                recorded = await AddPayment(lightningInvoice, listenedInvoice.InvoiceId, listenedInvoice.PaymentMethod.PaymentMethodId);
+            if (recorded)
                 Logs.PayServer.LogInformation($"{_network.CryptoCode} (Lightning): Payment detected via polling on {listenedInvoice.InvoiceId}");
-            }
-
-            return lightningInvoice?.Status;
+            return (lightningInvoice?.Status, recorded);
         }
 
         public bool Empty => _ListenedInvoices.IsEmpty;
@@ -599,9 +598,9 @@ namespace BTCPayServer.Payments.Lightning
         {
             foreach (var invoice in _ListenedInvoices.Values)
             {
-                var status = await PollPayment(invoice, cancellation);
+                var (status, recorded) = await PollPayment(invoice, cancellation);
                 if (status is null ||
-                    status is LightningInvoiceStatus.Paid ||
+                    (status is LightningInvoiceStatus.Paid && recorded) ||
                     status is LightningInvoiceStatus.Expired)
                     _ListenedInvoices.TryRemove(invoice.PaymentMethodDetails.InvoiceId, out var _);
             }

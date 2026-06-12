@@ -17,6 +17,7 @@
 * Allow setting the maximum number of stores per user (#7320) @Abhijay007
 * Allow server admins to specify whether invited users subscribe to monetization (#7318) @TChukwuleta
 * Add separate `CanSendStoreEmail` permission for the store email API (#7345) @Abhijay007
+* Can bulk archive pull payments (#7400) @TChukwuleta
 
 ### Fixes
 

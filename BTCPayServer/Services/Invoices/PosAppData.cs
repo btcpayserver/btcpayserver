@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using BTCPayServer.Plugins.PointOfSale;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -68,10 +69,23 @@ public class PosAppData
         Tip = summary.Tip;
         Total = summary.PriceTaxIncludedWithTips;
     }
+
+    internal void NormalizeCartItemNotes()
+    {
+        if (Cart is null)
+            return;
+
+        Cart = Cart.Where(item => item is not null).ToArray();
+        foreach (var item in Cart)
+            item.NormalizeNote();
+    }
 }
 
 public class PosAppCartItem
 {
+    public const int MaxNoteLength = 500;
+    string _note;
+
     [JsonProperty(PropertyName = "id")]
     public string Id { get; set; }
 
@@ -82,6 +96,13 @@ public class PosAppCartItem
     [JsonProperty(PropertyName = "title")]
     public string Title { get; set; }
 
+    [JsonProperty(PropertyName = "note", NullValueHandling = NullValueHandling.Ignore)]
+    public string Note
+    {
+        get => _note;
+        set => _note = NormalizeNote(value);
+    }
+
     [JsonProperty(PropertyName = "count")]
     public int Count { get; set; }
 
@@ -90,6 +111,20 @@ public class PosAppCartItem
 
     [JsonProperty(PropertyName = "image")]
     public string Image { get; set; }
+
+    internal void NormalizeNote()
+    {
+        Note = Note;
+    }
+
+    public static string NormalizeNote(string note)
+    {
+        if (string.IsNullOrWhiteSpace(note))
+            return null;
+
+        note = note.Trim();
+        return note.Length <= MaxNoteLength ? note : note[..MaxNoteLength];
+    }
 }
 
 public class PosAppCartItemPriceJsonConverter : JsonConverter

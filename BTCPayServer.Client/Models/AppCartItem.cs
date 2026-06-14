@@ -9,6 +9,7 @@ public class AppCartItem
 {
     public string Id { get; set; }
     public string Title { get; set; }
+    public string Note { get; set; }
     public int Count { get; set; }
     [JsonConverter(typeof(NumericStringJsonConverter))]
     public decimal Price { get; set; }

@@ -73,6 +73,9 @@ public class PosReceiptData
         Dictionary<string,string> cartData = new();
         foreach (var cartItem in jposData.Cart ?? [])
         {
+            if (cartItem is null)
+                continue;
+
             var selectedChoice = appItems.FirstOrDefault(item => item.Id == cartItem.Id);
             if (selectedChoice is null)
                 continue;
@@ -87,7 +90,10 @@ public class PosReceiptData
             var totalPrice = displayFormatter.Currency(cartItem.Price * cartItem.Count, currency, DisplayFormatter.CurrencyFormat.Symbol);
             var ident = selectedChoice.Title ?? selectedChoice.Id;
             var key = selectedChoice.PriceType == AppItemPriceType.Fixed ? ident : $"{ident} ({singlePrice})";
-            cartData.Add(key, $"{cartItem.Count} x {singlePrice} = {totalPrice}");
+            var value = $"{cartItem.Count} x {singlePrice} = {totalPrice}";
+            if (!string.IsNullOrEmpty(cartItem.Note))
+                value = $"{value}\nNote: {cartItem.Note}";
+            cartData.Add(key, value);
         }
 
         for (var i = 0; i < (jposData.Amounts ?? []).Length; i++)

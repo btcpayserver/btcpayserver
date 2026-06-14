@@ -255,6 +255,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
 
             jposData.Cart ??= [];
+            jposData.NormalizeCartItemNotes();
 
             if (currentView is PosViewType.Print)
                 return NotFound();

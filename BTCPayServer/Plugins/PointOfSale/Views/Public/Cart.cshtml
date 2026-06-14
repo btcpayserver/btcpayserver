@@ -119,6 +119,7 @@
                             <td class="align-middle">
                                 <h6 class="fw-semibold mb-1">{{ item.title }}</h6>
                                 <button type="button" v-on:click="removeFromCart(item.id)" class="btn btn-sm btn-link p-0 text-danger fw-semibold" text-translate="true">Remove</button>
+                                <textarea class="form-control form-control-sm mt-2" rows="2" maxlength="500" v-model="item.note" v-on:click.stop placeholder="@StringLocalizer["Item note"]"></textarea>
                             </td>
                             <td class="align-middle">
                                 <div class="d-flex align-items-center gap-2 justify-content-end quantity">

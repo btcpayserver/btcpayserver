@@ -32,7 +32,7 @@ public class WalletSearchResultProvider(
 
         context.ItemResults.Add(new ResultItemViewModel()
         {
-            Title = "List wallets",
+            Title = StringLocalizer["List wallets"],
             Category = OnChainCategory,
             Url = context.Url.Action(nameof(UIWalletsController.ListWallets), "UIWallets", new { area = WalletsPlugin.Area }),
             Keywords = ["List", "Wallets"],

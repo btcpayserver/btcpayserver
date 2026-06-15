@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -52,7 +53,15 @@ public class GlobalSearchTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
         // Now check that you can see some admin only route in the search suggestions
         await s.GoToHome();
-        await s.GlobalSearch.Fill("server settings");
+        try
+        {
+            await s.GlobalSearch.Fill("server settings");
+        }
+        catch
+        {
+            await s.TakeScreenshot("Flaky-GlobalSearch.png");
+            throw;
+        }
         await s.GlobalSearch.AssertShow("Configure the server settings");
 
         // Logout, create a new non admin user

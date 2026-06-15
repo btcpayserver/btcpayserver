@@ -42,7 +42,7 @@ public class InvoiceSearchResultProvider(InvoiceRepository invoice,
                 new ResultItemViewModel
                 {
                     Category = Category,
-                    Title = "Browse the invoices",
+                    Title = StringLocalizer["Browse the invoices"],
                     Url = context.Url.Action(nameof(UIInvoiceController.ListInvoices), "UIInvoice", new { storeId = store.Id }),
                     Keywords = ["Invoices", "List", "Browse"],
                     RequiredPolicy = Policies.CanViewInvoices
@@ -50,7 +50,7 @@ public class InvoiceSearchResultProvider(InvoiceRepository invoice,
                 new ResultItemViewModel
                 {
                     Category = Category,
-                    Title = "Create Invoice",
+                    Title = StringLocalizer["Create Invoice"],
                     Url = context.Url.Action(nameof(UIInvoiceController.CreateInvoice), "UIInvoice", new { storeId = store.Id }),
                     Keywords = ["Invoice"],
                     RequiredPolicy = Policies.CanCreateInvoice

@@ -261,6 +261,7 @@ namespace BTCPayServer.Plugins.Translations
   "Broadcast (Simple)": "",
   "Broadcast transaction": "",
   "Browse all deposit addresses": "",
+  "Browse the invoices": "",
   "Browser connection": "",
   "Browser Redirect": "",
   "BTCPay exposes Core Lightning's REST service for outside consumption, you will find connection information here.": "",

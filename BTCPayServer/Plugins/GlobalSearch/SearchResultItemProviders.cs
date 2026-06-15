@@ -7,11 +7,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.GlobalSearch.Views;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
-using Microsoft.Extensions.Primitives;
 
 namespace BTCPayServer.Plugins.GlobalSearch;
 

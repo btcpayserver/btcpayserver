@@ -5,6 +5,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace BTCPayServer;
 
@@ -23,6 +24,12 @@ public static partial class Extensions
     public static IServiceCollection AddDefaultTranslations(this IServiceCollection services, params KeyValuePair<string, string?>[] keyValues)
     {
         services.AddSingleton<IDefaultTranslationProvider>(new InMemoryDefaultTranslationProvider(keyValues));
+        return services;
+    }
+    public static IServiceCollection AddTranslationProvider<T>(this IServiceCollection services) where T: class, IDefaultTranslationProvider
+    {
+        services.TryAddSingleton<T>();
+        services.AddSingleton<IDefaultTranslationProvider, T>(o => o.GetRequiredService<T>());
         return services;
     }
 }

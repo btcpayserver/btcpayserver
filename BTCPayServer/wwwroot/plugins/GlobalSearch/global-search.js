@@ -47,10 +47,10 @@
         yesterday.setUTCDate(yesterday.getUTCDate() - 1);
         const yesterdayIso = yesterday.toISOString().slice(0, 10);
         const suggestedQueries = [
-            {query: `date:${todayIso}`, hint: 'Find invoices and requests created today'},
-            {query: `date:${yesterdayIso}`, hint: 'Find invoices and requests from yesterday'},
-            {query: 'tx:4e3a67', hint: 'Find by transaction id (prefix supported)'},
-            {query: 'server settings', hint: 'Jump to server settings pages quickly'}
+            {query: `date:${todayIso}`, hint: vm.translate['Find invoices and requests created today']},
+            {query: `date:${yesterdayIso}`, hint: vm.translate['Find invoices and requests from yesterday']},
+            {query: 'tx:4e3a67', hint: vm.translate['Find by transaction id (prefix supported)']},
+            {query: 'server settings', hint: vm.translate['Jump to server settings pages quickly']}
         ];
 
         let latestSearchToken = 0;

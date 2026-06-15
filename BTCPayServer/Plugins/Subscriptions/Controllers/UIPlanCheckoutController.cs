@@ -1,8 +1,9 @@
-﻿#nullable enable
+#nullable enable
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Views.UIStoreMembership;
@@ -31,8 +32,9 @@ public class UIPlanCheckoutController(
         await using var ctx = DbContextFactory.CreateContext();
         var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
         var plan = checkout?.Plan;
-        if (plan is null || checkout is null)
+        if (plan is null || checkout is null || plan?.Status == PlanData.PlanStatus.Retired)
             return NotFound();
+
         string? prefilledEmail = null;
         if (checkout.Subscriber is not null)
             prefilledEmail = checkout.Subscriber.Customer.Email.Get();
@@ -77,6 +79,10 @@ public class UIPlanCheckoutController(
         var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
         if (checkout is null)
             return NotFound();
+
+        if (checkout.Plan.Status == PlanData.PlanStatus.Retired)
+            return NotFound();
+
         var checkoutInvoice = checkout.InvoiceId is null ? null : await ctx.Invoices.FindAsync([checkout.InvoiceId], cancellationToken);
         if (checkoutInvoice is not null)
         {

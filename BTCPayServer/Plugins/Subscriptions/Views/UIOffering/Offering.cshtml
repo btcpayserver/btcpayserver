@@ -106,21 +106,27 @@
                             data-plan-id="@p.Data.Id"
                             data-plan-name="@p.Data.Name"
                             data-allow-trial="@(p.Data.TrialDays > 0)">
-                            <td class="fw-semibold text-nowrap plan-name-col">
-                                <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    @p.Data.Name
-                                </span>
-                                <div class="dropdown-menu">
-                                    <a
-                                        href="#"
-                                        text-translate="true"
-                                        class="new-subscriber-link dropdown-item lh-base"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#newSubscriberModal">
-                                        Create a new subscriber
-                                    </a>
-                                </div>
-                            </td>
+							<td class="fw-semibold text-nowrap plan-name-col">
+								@if (p.Data.Status == PlanData.PlanStatus.Active)
+								{
+									<span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+										@p.Data.Name
+									</span>
+									<div class="dropdown-menu">
+										<a href="#"
+										   text-translate="true"
+										   class="new-subscriber-link dropdown-item lh-base"
+										   data-bs-toggle="modal"
+										   data-bs-target="#newSubscriberModal">
+											Create a new subscriber
+										</a>
+									</div>
+								}
+								else
+								{
+									<span>@p.Data.Name</span>
+								}
+							</td>
                             <td>
                                 <vc:truncate-center
                                     text="@p.Data.Id"
@@ -149,6 +155,50 @@
                                        asp-route-offeringId="@offeringId"
                                        asp-route-planId="@p.Data.Id"
                                        permission="@SubscriptionsPolicies.CanModifyOfferings">Edit</a>
+
+									@if (p.Data.Status == PlanData.PlanStatus.Active)
+									{
+										@if (p.Data.MemberCount > 0)
+										{
+											<a href="#"
+												data-bs-toggle="modal"
+												data-bs-target="#retirePlanModal"
+												data-plan-id="@p.Data.Id"
+												data-plan-name="@p.Data.Name"
+												data-retire-url="@Url.Action("RetirePlan", new { storeId, offeringId, planId = p.Data.Id })"
+												permission="@SubscriptionsPolicies.CanModifyOfferings"
+												text-translate="true">Retire</a>
+										}
+										else
+										{
+											<a asp-action="RetirePlan"
+												asp-route-storeId="@storeId"
+												asp-route-offeringId="@offeringId"
+												asp-route-planId="@p.Data.Id"
+												data-bs-toggle="modal"
+												data-bs-target="#ConfirmModal"
+												data-title="@StringLocalizer["Retire Plan"]"
+												data-description="@ViewLocalizer["Are you sure you want to retire <b>{0}</b>?", Html.Encode(p.Data.Name)]"
+												data-confirm="@StringLocalizer["Retire"]"
+												data-action="@Url.Action("RetirePlan", new { storeId, offeringId, planId = p.Data.Id })"
+												permission="@SubscriptionsPolicies.CanModifyOfferings"
+												text-translate="true">Retire</a>
+										}
+									}
+									else
+									{
+										<a asp-action="UnretirePlan"
+											asp-route-storeId="@storeId"
+											asp-route-offeringId="@offeringId"
+											asp-route-planId="@p.Data.Id"
+											data-bs-toggle="modal"
+											data-bs-target="#ConfirmModal"
+											data-description="@ViewLocalizer["This will restore plan <b>{0}</b> to active.", Html.Encode(p.Data.Name)]"
+											data-confirm="@StringLocalizer["Restore"]"
+											data-action="@Url.Action("UnretirePlan", new { storeId, offeringId, planId = p.Data.Id })"
+											permission="@SubscriptionsPolicies.CanModifyOfferings"
+											text-translate="true">Restore</a>
+									}
                                     <a
                                         asp-action="DeletePlan"
                                         asp-route-storeId="@storeId"
@@ -173,6 +223,7 @@
             </table>
         </div>
         <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Remove plan"], StringLocalizer["This action will remove this plan. Are you sure?"], StringLocalizer["Delete"]))" />
+		<partial name="RetirePlanModal" model="@Model.SelectablePlans" />
     }
     else if (Model.Section == SubscriptionSection.Subscribers)
     {

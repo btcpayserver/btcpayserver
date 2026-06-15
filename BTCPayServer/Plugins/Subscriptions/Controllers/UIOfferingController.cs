@@ -61,6 +61,16 @@ public partial class UIOfferingController(
         if (plan is null)
             return NotFound();
 
+        if (plan.Status == PlanData.PlanStatus.Retired)
+        {
+            TempData.SetStatusMessageModel(new()
+            {
+                Severity = StatusMessageModel.StatusSeverity.Error,
+                Html = StringLocalizer["Cannot create a new subscriber on a retired plan."]
+            });
+            return GoToOffering(storeId, offeringId, SubscriptionSection.Subscribers);
+        }
+
         var checkoutData = new PlanCheckoutData()
         {
             PlanId = planId,
@@ -259,7 +269,94 @@ public partial class UIOfferingController(
         return GoToOffering(storeId, offeringId, SubscriptionSection.Plans);
     }
 
+    [HttpPost("stores/{storeId}/offerings/{offeringId}/plans/{planId}/retire")]
+    [Authorize(Policy = SubscriptionsPolicies.CanModifyOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    public async Task<IActionResult> RetirePlan(string storeId, string offeringId, string planId,
+        string retireAction = "nothing", string? migrateToPlanId = null, string? migrateTiming = null)
+    {
+        await using var ctx = DbContextFactory.CreateContext();
+        var plan = await ctx.Plans.GetPlanFromId(planId, offeringId, storeId);
+        if (plan is null)
+            return NotFound();
 
+        var activeSubscribers = await ctx.Subscribers.Where(s => s.PlanId == planId && s.IsActive).ToListAsync();
+        if (activeSubscribers.Any())
+        {
+            switch (retireAction)
+            {
+                case "disable-autorenew":
+                    foreach (var sub in activeSubscribers)
+                        sub.AutoRenew = false;
+                    await ctx.SaveChangesAsync();
+                    break;
+
+                case "suspend":
+                    foreach (var sub in activeSubscribers)
+                        await SubsService.Suspend(sub.Id, $"Plan '{plan.Name}' has been retired.");
+                    break;
+
+                case "migrate":
+                    if (migrateToPlanId is null)
+                    {
+                        TempData.SetStatusMessageModel(new()
+                        {
+                            Severity = StatusMessageModel.StatusSeverity.Error,
+                            Html = StringLocalizer["Please select a plan to migrate subscribers to."]
+                        });
+                        return GoToOffering(storeId, offeringId);
+                    }
+                    if (migrateToPlanId == planId)
+                    {
+                        TempData.SetStatusMessageModel(new()
+                        {
+                            Severity = StatusMessageModel.StatusSeverity.Error,
+                            Html = StringLocalizer["Cannot migrate subscribers to the plan being retired."]
+                        });
+                        return GoToOffering(storeId, offeringId);
+                    }
+                    var targetPlan = await ctx.Plans.GetPlanFromId(migrateToPlanId, offeringId, storeId);
+                    if (targetPlan is null || targetPlan.Status != PlanData.PlanStatus.Active)
+                    {
+                        TempData.SetStatusMessageModel(new()
+                        {
+                            Severity = StatusMessageModel.StatusSeverity.Error,
+                            Html = StringLocalizer["The selected migration plan is unavailable."]
+                        });
+                        return GoToOffering(storeId, offeringId);
+                    }
+                    var immediate = migrateTiming == "immediate";
+                    await SubsService.BulkMigratePlan(planId, migrateToPlanId, offeringId, immediate);
+                    await SubscriptionHostedService.UpdatePlanStats(ctx, planId);
+                    await SubscriptionHostedService.UpdatePlanStats(ctx, migrateToPlanId);
+                    break;
+
+                case "nothing":
+                default:
+                    break;
+            }
+        }
+        plan.Status = PlanData.PlanStatus.Retired;
+        await ctx.SaveChangesAsync();
+        eventAggregator.Publish(new SubscriptionEvent.PlanUpdated(plan));
+        TempData.SetStatusSuccess(StringLocalizer["Plan '{0}' has been retired.", plan.Name]);
+        return GoToOffering(storeId, offeringId);
+    }
+
+    [HttpPost("stores/{storeId}/offerings/{offeringId}/plans/{planId}/unretire")]
+    [Authorize(Policy = SubscriptionsPolicies.CanModifyOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    public async Task<IActionResult> UnretirePlan(string storeId, string offeringId, string planId)
+    {
+        await using var ctx = DbContextFactory.CreateContext();
+        var plan = await ctx.Plans.GetPlanFromId(planId, offeringId, storeId);
+        if (plan is null)
+            return NotFound();
+
+        plan.Status = PlanData.PlanStatus.Active;
+        await ctx.SaveChangesAsync();
+        eventAggregator.Publish(new SubscriptionEvent.PlanUpdated(plan));
+        TempData.SetStatusSuccess(StringLocalizer["Plan '{0}' has been restored to active state.", plan.Name]);
+        return GoToOffering(storeId, offeringId);
+    }
 
     public static string CreateOfferingCondition(string offeringId)
         => Predicate(OfferingCondition(offeringId));

@@ -205,7 +205,7 @@ const posCommon = {
             const data = { subTotal: this.summary.priceTaxExcluded, total: this.summary.priceTaxIncludedWithTips }
             const amounts = this.amounts.filter(e => e) // clear empty or zero values
             if (amounts) data.amounts = amounts.map(parseFloat)
-            if (this.cart) data.cart = this.cart
+            if (this.cart) data.cart = this.cart.map(this.prepareCartItem)
             if (this.summary.discount > 0) data.discountAmount = this.summary.discount
             if (this.discountPercentNumeric > 0) data.discountPercentage = this.discountPercentNumeric
             if (this.summary.tip > 0) data.tip = this.summary.tip
@@ -367,6 +367,15 @@ const posCommon = {
                 this.removeFromCart(itemInCart.id);
             }
             this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate, this.taxIncludedInPrice);
+        },
+        prepareCartItem(item) {
+            const cartItem = { ...item };
+            if (typeof cartItem.note === 'string') {
+                const note = cartItem.note.trim().slice(0, 500);
+                if (note) cartItem.note = note;
+                else delete cartItem.note;
+            }
+            return cartItem;
         },
         clear() {
             this.cart = [];

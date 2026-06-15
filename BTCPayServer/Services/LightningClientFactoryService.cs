@@ -34,7 +34,7 @@ namespace BTCPayServer.Services
 
         public static string OnionNamedClient { get; set; } = "lightning.onion";
 
-        public ILightningClient Create(string lightningConnectionString, BTCPayNetwork network)
+        public virtual ILightningClient Create(string lightningConnectionString, BTCPayNetwork network)
         {
             ArgumentNullException.ThrowIfNull(lightningConnectionString);
             ArgumentNullException.ThrowIfNull(network);

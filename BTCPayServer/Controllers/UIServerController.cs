@@ -347,7 +347,6 @@ namespace BTCPayServer.Controllers
         private async Task UpdateViewBag()
         {
             ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
-            ViewBag.AppsList = await GetAppSelectList();
             ViewBag.LangTranslations = await GetLangTranslationsSelectList();
         }
 
@@ -423,15 +422,23 @@ namespace BTCPayServer.Controllers
                 ;
                 if (!string.IsNullOrEmpty(settings.RootAppId))
                 {
-                    settings.RootAppType = apps[settings.RootAppId];
+                    if (apps.TryGetValue(settings.RootAppId, out var rootAppType))
+                        settings.RootAppType = rootAppType;
+                    else
+                        this.ModelState.AddModelError(nameof(settings.RootAppId), StringLocalizer["Invalid AppId"]);
                 }
 
-                foreach (var domainToAppMappingItem in settings.DomainToAppMapping)
+                for (int i =0; i < settings.DomainToAppMapping.Count; i++)
                 {
-                    domainToAppMappingItem.AppType = apps[domainToAppMappingItem.AppId];
+                    var domainToAppMappingItem = settings.DomainToAppMapping[i];
+                    if (apps.TryGetValue(domainToAppMappingItem.AppId, out var rootAppType))
+                        domainToAppMappingItem.AppType = rootAppType;
+                    else
+                        this.ModelState.AddModelError($"DomainToAppMapping[{i}].AppId", StringLocalizer["Invalid AppId"]);
                 }
             }
-
+            if (!this.ModelState.IsValid)
+                return View(settings);
 
             await _SettingsRepository.UpdateSetting(settings);
             _ = _transactionLinkProviders.RefreshTransactionLinkTemplates();
@@ -493,16 +500,6 @@ namespace BTCPayServer.Controllers
             }
 
             return View(result);
-        }
-
-        private async Task<List<SelectListItem>> GetAppSelectList()
-        {
-            var types = _AppService.GetAvailableAppTypes();
-            var apps = (await _AppService.GetAllApps(null, true))
-                .Select(a =>
-                    new SelectListItem($"{types[a.AppType]} - {a.AppName} - {a.StoreName}", a.Id)).ToList();
-            apps.Insert(0, new SelectListItem("(None)", null));
-            return apps;
         }
 
         private async Task<List<SelectListItem>> GetLangTranslationsSelectList()

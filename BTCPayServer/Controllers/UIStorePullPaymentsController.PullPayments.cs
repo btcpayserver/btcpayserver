@@ -282,7 +282,7 @@ namespace BTCPayServer.Controllers
                 switch (command)
                 {
                     case "archive":
-                        await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(selectedItems));
+                        await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(selectedItems) { StoreIds = new[] { storeId } });
                         TempData.SetStatusMessageModel(new StatusMessageModel
                         {
                             Message = StringLocalizer["Pull payments archived"].Value,

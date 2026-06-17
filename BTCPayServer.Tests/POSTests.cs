@@ -1219,16 +1219,8 @@ goodies:
             await s.Page.Locator("#RootAppId").WaitForAsync();
             await s.Page.Locator("#RootAppId").ScrollIntoViewIfNeededAsync();
 
-            var options = await s.Page.Locator("#RootAppId option").AllTextContentsAsync();
-            var targetOption = options.FirstOrDefault(o => o.Contains("Point of"));
-            if (targetOption != null)
-            {
-                await s.Page.Locator("#RootAppId").SelectOptionAsync(new[] { new SelectOptionValue { Label = targetOption } });
-            }
-            else
-            {
-                throw new Exception($"Could not find Point of Sale option. Available options: {string.Join(", ", options)}");
-            }
+            await s.Page.Locator("#RootAppId").FillAsync(appId);
+
             await s.ClickPagePrimary();
             await s.FindAlertMessage();
 
@@ -1253,21 +1245,13 @@ goodies:
             // Let's check with domain mapping as well.
             await s.GoToUrl(prevUrl);
             await s.GoToServer(ServerNavPages.Policies);
-            await s.Page.Locator("#RootAppId").SelectOptionAsync("");
+            await s.Page.Locator("#RootAppId").FillAsync("");
             await s.ClickPagePrimary();
             await s.Page.ClickAsync("#AddDomainButton");
             await s.Page.Locator("#DomainToAppMapping_0__Domain").FillAsync(new Uri(s.Page.Url, UriKind.Absolute).DnsSafeHost);
 
-            var domainOptions = await s.Page.Locator("#DomainToAppMapping_0__AppId option").AllTextContentsAsync();
-            var targetDomainOption = domainOptions.FirstOrDefault(o => o.Contains("Point of"));
-            if (targetDomainOption != null)
-            {
-                await s.Page.Locator("#DomainToAppMapping_0__AppId").SelectOptionAsync(new[] { new SelectOptionValue { Label = targetDomainOption } });
-            }
-            else
-            {
-                throw new Exception($"Could not find Point of Sale option for domain mapping. Available options: {string.Join(", ", domainOptions)}");
-            }
+            await s.Page.Locator("#DomainToAppMapping_0__AppId").FillAsync(appId);
+
             await s.ClickPagePrimary();
             await s.FindAlertMessage(partialText: "Policies updated successfully");
 

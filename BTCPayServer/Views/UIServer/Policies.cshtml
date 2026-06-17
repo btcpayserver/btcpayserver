@@ -224,7 +224,8 @@
                 </div>
                 <div class="form-group mb-5">
                     <label asp-for="RootAppId" class="form-label"></label>
-                    <select asp-for="RootAppId" asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.RootAppId))" class="form-select"></select>
+                    <input type="text" class="form-control" asp-for="RootAppId" placeholder="AppId (3ZUJp4LGqRvQP...)" />
+                    <span asp-validation-for="RootAppId" class="text-danger d-block"></span>
                     @if (!Model.DomainToAppMapping.Any())
                     {
                         <button id="AddDomainButton" type="submit" name="command" value="add-domain" class="btn btn-link px-0" text-translate="true">Map specific domains to specific apps</button>
@@ -256,10 +257,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label asp-for="DomainToAppMapping[index].AppId" class="form-label"></label>
-                                    <select asp-for="DomainToAppMapping[index].AppId"
-                                            asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.DomainToAppMapping[index].AppId))"
-                                            class="form-select">
-                                    </select>
+                                    <input type="text" class="form-control" asp-for="DomainToAppMapping[index].AppId" placeholder="AppId (3ZUJp4LGqRvQP...)" />
                                     <span asp-validation-for="DomainToAppMapping[index].AppId" class="text-danger"></span>
                                 </div>
                             </div>

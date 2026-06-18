@@ -42,7 +42,7 @@ namespace BTCPayServer.Tests
     {
         internal readonly string _Directory;
         public ILoggerProvider LoggerProvider { get; }
-
+        public bool? BindAllInterfaces { get; set; }
         ILog TestLogs;
         public BTCPayServerTester(ILog testLogs, ILoggerProvider loggerProvider, string scope)
         {
@@ -124,9 +124,9 @@ namespace BTCPayServer.Tests
             }
 
             config.AppendLine($"{chain.ToLowerInvariant()}=1");
-            if (InContainer)
+            if (BindAllInterfaces ?? InContainer)
             {
-                config.AppendLine($"bind=0.0.0.0");
+                config.AppendLine("bind=0.0.0.0");
             }
             config.AppendLine($"port={Port}");
             config.AppendLine($"chains={string.Join(',', Chains)}");

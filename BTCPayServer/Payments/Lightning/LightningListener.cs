@@ -282,7 +282,20 @@ namespace BTCPayServer.Payments.Lightning
             {
                 instance.RemoveExpiredInvoices();
                 if (!instance.Empty)
+                {
                     instance.EnsureListening(_Cts.Token);
+                    // Re-poll periodically during live sessions to catch invoices stuck in RetryLater
+                    // (e.g. nodes that return null amount in the initial WS notification).
+                    // PollAllListenedInvoices is normally only called on session start (reconnect path),
+                    // leaving RetryLater invoices unresolved until the next disconnect.
+                    if (instance.IsListening &&
+                        instance.LastFullPoll is { } last &&
+                        DateTimeOffset.UtcNow - last > TimeSpan.FromMinutes(5.0))
+                    {
+                        instance.LastFullPoll = DateTimeOffset.UtcNow;
+                        _ = instance.PollAllListenedInvoices(_Cts.Token);
+                    }
+                }
             }
         }
 

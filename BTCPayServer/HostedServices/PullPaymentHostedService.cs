@@ -775,14 +775,19 @@ namespace BTCPayServer.HostedServices
                 List<PayoutData> payouts = null;
                 if (cancel.PullPaymentIds != null)
                 {
-                    foreach (var ppId in cancel.PullPaymentIds)
+                    var ppIds = cancel.StoreIds == null
+                        ? cancel.PullPaymentIds
+                        : (await ctx.PullPayments
+                            .Where(pp => cancel.PullPaymentIds.Contains(pp.Id) && cancel.StoreIds.Contains(pp.StoreId))
+                            .Select(pp => pp.Id)
+                            .ToListAsync()).ToArray();
+                    foreach (var ppId in ppIds)
                     {
                         ctx.PullPayments.Attach(new Data.PullPaymentData() { Id = ppId, Archived = true })
                             .Property(o => o.Archived).IsModified = true;
                     }
                     payouts = await ctx.Payouts
-                        .Where(p => cancel.PullPaymentIds.Contains(p.PullPaymentDataId))
-                        .Where(p => cancel.StoreIds == null || cancel.StoreIds.Contains(p.StoreDataId))
+                        .Where(p => ppIds.Contains(p.PullPaymentDataId))
                         .ToListAsync();
 
                     cancel.PayoutIds = payouts.Select(data => data.Id).ToArray();

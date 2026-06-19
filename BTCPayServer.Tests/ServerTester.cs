@@ -109,25 +109,24 @@ namespace BTCPayServer.Tests
 
         public void ActivateLightning()
         {
-            ActivateLightning(LightningConnectionType.CLightning);
+            ActivateLightning(LightningTestImplementation.CoreLightning);
         }
-        public void ActivateLightning(string internalNode)
+        public void ActivateLightning(LightningTestImplementation internalNode)
         {
             var btc = NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork;
             var factory = new LightningClientFactory(btc);
             CustomerLightningD = factory.Create(GetEnvironment("TEST_CUSTOMERLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30992/"));
             MerchantLightningD = factory.Create(GetEnvironment("TEST_MERCHANTLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30993/"));
-            MerchantCharge = new ChargeTester(this, "TEST_MERCHANTCHARGE", "type=charge;server=http://127.0.0.1:54938/;api-token=foiewnccewuify;allowinsecure=true", "merchant_lightningd", btc);
             MerchantLnd = new LndMockTester(this, "TEST_MERCHANTLND", "http://lnd:lnd@127.0.0.1:35531/", "merchant_lnd", btc);
             PayTester.UseLightning = true;
             PayTester.IntegratedLightning = GetLightningConnectionString(internalNode, true);
         }
-        public string GetLightningConnectionString(string connectionType, bool isMerchant)
+        public string GetLightningConnectionString(LightningTestImplementation connectionType, bool isMerchant)
         {
             string connectionString = null;
-            if (connectionType is null)
+            if (connectionType is LightningTestImplementation.Internal)
                 return LightningPaymentMethodConfig.InternalNode;
-            if (connectionType == LightningConnectionType.CLightning)
+            if (connectionType == LightningTestImplementation.CoreLightning)
             {
                 if (isMerchant)
                     connectionString = "type=clightning;server=" +
@@ -136,7 +135,7 @@ namespace BTCPayServer.Tests
                     connectionString = "type=clightning;server=" +
                                    ((CLightningClient)CustomerLightningD).Address.AbsoluteUri;
             }
-            else if (connectionType == LightningConnectionType.LndREST)
+            else if (connectionType == LightningTestImplementation.LND)
             {
                 if (isMerchant)
                     connectionString = $"type=lnd-rest;server={MerchantLnd.Swagger.BaseUrl};allowinsecure=true";
@@ -144,7 +143,7 @@ namespace BTCPayServer.Tests
                     throw new NotSupportedException();
             }
             else
-                throw new NotSupportedException(connectionType);
+                throw new NotSupportedException(connectionType.ToString());
             return connectionString;
         }
 
@@ -217,7 +216,6 @@ namespace BTCPayServer.Tests
         public ILightningClient CustomerLightningD { get; set; }
 
         public ILightningClient MerchantLightningD { get; private set; }
-        public ChargeTester MerchantCharge { get; private set; }
         public LndMockTester MerchantLnd { get; set; }
 
         internal string GetEnvironment(string variable, string defaultValue)

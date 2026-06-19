@@ -3005,7 +3005,7 @@ namespace BTCPayServer.Tests
             VerifyLightning(methods);
             VerifyOnChain(methods);
 
-            var connStr = tester.GetLightningConnectionString(LightningConnectionType.CLightning, true);
+            var connStr = tester.GetLightningConnectionString(LightningTestImplementation.CoreLightning, true);
             await adminClient.UpdateStorePaymentMethod(store.Id, "BTC-LN",
                  new UpdatePaymentMethodRequest()
                  {
@@ -3369,7 +3369,7 @@ namespace BTCPayServer.Tests
             await admin.GrantAccessAsync(true);
 
             var adminClient = await admin.CreateClient(Policies.Unrestricted);
-            admin.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
+            admin.RegisterLightningNode("BTC", LightningTestImplementation.CoreLightning);
             var payoutAmount = LightMoney.Satoshis(1000);
             var inv = await tester.MerchantLnd.Client.CreateInvoice(payoutAmount, "Donation to merchant", TimeSpan.FromHours(1), default);
             var resp = await tester.CustomerLightningD.Pay(inv.BOLT11);

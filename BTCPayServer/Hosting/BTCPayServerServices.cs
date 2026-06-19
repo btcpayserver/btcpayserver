@@ -11,16 +11,12 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Payouts.LightningLike;
-using BTCPayServer.Forms;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
-using BTCPayServer.Lightning.Charge;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Lightning.Eclair;
 using BTCPayServer.Lightning.Phoenixd;
-using BTCPayServer.Lightning.LNbank;
 using BTCPayServer.Lightning.LND;
-using BTCPayServer.Lightning.LNDhub;
 using BTCPayServer.Logging;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Payments;
@@ -134,8 +130,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<ISwaggerProvider, DefaultSwaggerProvider>();
             services.TryAddSingleton<SocketFactory>();
 
-            services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
-                new ChargeLightningConnectionStringHandler(client));
             services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(_ =>
                 new CLightningConnectionStringHandler());
             services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
@@ -144,10 +138,6 @@ namespace BTCPayServer.Hosting
                 new PhoenixdConnectionStringHandler(client));
             services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
                 new LndConnectionStringHandler(client));
-            services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
-                new LndHubConnectionStringHandler(client));
-            services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
-                new LNbankConnectionStringHandler(client));
             services.TryAddSingleton<LightningClientFactoryService>();
             services.AddHttpClient(LightningClientFactoryService.OnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();

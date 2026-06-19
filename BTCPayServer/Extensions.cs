@@ -28,6 +28,10 @@ using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hwi;
 using BTCPayServer.Lightning;
+using BTCPayServer.Lightning.CLightning;
+using BTCPayServer.Lightning.Eclair;
+using BTCPayServer.Lightning.LND;
+using BTCPayServer.Lightning.Phoenixd;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.NTag424;
@@ -263,20 +267,18 @@ namespace BTCPayServer
 
         [Obsolete("Use GetDisplayName(this ILightningClient client, string connectionString) instead")]
         public static string GetDisplayName(this ILightningClient client) => GetDisplayName(client, client.ToString());
+
         public static string GetDisplayName(this ILightningClient client, string connectionString)
-        {
-            if (client is IExtendedLightningClient { DisplayName: { } displayName })
-                    return displayName;
-            var kv = client.ExtractValues(connectionString);
-            if (!kv.TryGetValue("type", out var type))
-                return "???";
-            var lncType = typeof(LightningConnectionType);
-            var fields = lncType.GetFields(BindingFlags.Public | BindingFlags.Static);
-            var field = fields.FirstOrDefault(f => f.GetValue(lncType)?.ToString() == type);
-            if (field == null) return type;
-            DisplayAttribute attr = field.GetCustomAttribute<DisplayAttribute>();
-            return attr?.Name ?? type;
-        }
+            => client switch
+            {
+                CLightningClient _ => "Core Lightning",
+                LndClient => "LND",
+                EclairLightningClient => "Eclair",
+                PhoenixdLightningClient => "Phoenix",
+                IExtendedLightningClient { DisplayName: { } n } => n,
+                _ when client.ExtractValues(connectionString).TryGetValue("type", out var t) => t,
+                _ => client.GetType().Name
+            };
 
         private static bool TryParseLegacy(string str, out Dictionary<string, string> connectionString)
         {

@@ -40,6 +40,13 @@ using Xunit.Sdk;
 
 namespace BTCPayServer.Tests
 {
+    public enum LightningTestImplementation
+    {
+        CoreLightning,
+        LND,
+        Internal
+    }
+
     public class TestAccount
     {
         readonly ServerTester parent;
@@ -266,15 +273,15 @@ namespace BTCPayServer.Tests
 
         public bool IsAdmin { get; internal set; }
 
-        public void RegisterLightningNode(string cryptoCode, string connectionType = null, bool isMerchant = true)
+        public void RegisterLightningNode(string cryptoCode, LightningTestImplementation connectionType = LightningTestImplementation.Internal, bool isMerchant = true)
         {
             RegisterLightningNodeAsync(cryptoCode, connectionType, isMerchant).GetAwaiter().GetResult();
         }
         public Task RegisterLightningNodeAsync(string cryptoCode, bool isMerchant = true)
         {
-            return RegisterLightningNodeAsync(cryptoCode, null, isMerchant);
+            return RegisterLightningNodeAsync(cryptoCode, LightningTestImplementation.Internal, isMerchant);
         }
-        public async Task RegisterLightningNodeAsync(string cryptoCode, string connectionType, bool isMerchant = true)
+        public async Task RegisterLightningNodeAsync(string cryptoCode, LightningTestImplementation connectionType, bool isMerchant = true)
         {
             var connectionString = parent.GetLightningConnectionString(connectionType, isMerchant);
             var client = await this.CreateClient();

@@ -1338,7 +1338,7 @@ namespace BTCPayServer.Tests
             var cryptoCode = "BTC";
             await user.GrantAccessAsync(true);
             user.RegisterDerivationScheme(cryptoCode, ScriptPubKeyType.Segwit);
-            user.RegisterLightningNode(cryptoCode, LightningConnectionType.CLightning);
+            user.RegisterLightningNode(cryptoCode, LightningTestImplementation.CoreLightning);
 
             var invoice = user.BitPay.CreateInvoice(
                 new Invoice

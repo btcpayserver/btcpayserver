@@ -42,7 +42,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             }, e => e.Type == PayoutEvent.PayoutEventType.Created)).Payout;
         }
         s.Server.DeleteStore = false;
-        s.Server.ActivateLightning(LightningConnectionType.LndREST);
+        s.Server.ActivateLightning(LightningTestImplementation.LND);
         await s.StartAsync();
         await s.Server.EnsureChannelsSetup();
         await s.RegisterNewUser(true);
@@ -637,7 +637,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await tester.EnsureChannelsSetup();
         var acc = tester.NewAccount();
         await acc.GrantAccessAsync(true);
-        acc.RegisterLightningNode("BTC", LightningConnectionType.CLightning, false);
+        acc.RegisterLightningNode("BTC", LightningTestImplementation.CoreLightning, false);
         var storeId = (await acc.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
         var client = await acc.CreateClient();
         var result = await client.CreatePullPayment(storeId, new CreatePullPaymentRequest()

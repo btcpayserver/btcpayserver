@@ -863,7 +863,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         var (_, storeId) = await s.CreateNewStore();
         await s.GoToStore();
         await s.GenerateWallet(isHotWallet: true);
-        await s.AddLightningNode(LightningConnectionType.CLightning, false);
+        await s.AddLightningNode(LightningTestImplementation.CoreLightning, false);
         await s.AddUserToStore(storeId, manager, "Manager");
         await s.AddUserToStore(storeId, employee, "Employee");
         await s.AddUserToStore(storeId, guest, "Guest");

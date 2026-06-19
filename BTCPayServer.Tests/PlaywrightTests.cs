@@ -348,7 +348,7 @@ namespace BTCPayServer.Tests
             await s.RegisterNewUser(true);
             var (_, storeId) = await s.CreateNewStore();
             var network = s.Server.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode).NBitcoinNetwork;
-            await s.AddLightningNode(LightningConnectionType.CLightning, false);
+            await s.AddLightningNode(LightningTestImplementation.CoreLightning, false);
             await s.GoToLightningSettings();
             // LNURL is true by default
             await Expect(s.Page.Locator("#LNURLEnabled")).ToBeCheckedAsync();
@@ -466,7 +466,7 @@ namespace BTCPayServer.Tests
 
             await s.GoToHome();
             var (_, newStoreId) = await s.CreateNewStore(false);
-            await s.AddLightningNode(LightningConnectionType.LndREST, false);
+            await s.AddLightningNode(LightningTestImplementation.LND, false);
             await s.GoToLightningSettings();
             await s.Page.CheckAsync("#LNURLEnabled");
             await s.ClickPagePrimary();
@@ -546,7 +546,7 @@ namespace BTCPayServer.Tests
             //ensure ln address is not available as Lightning is not enable
             Assert.Equal(0, await s.Page.Locator("#menu-item-LightningAddress").CountAsync());
 
-            await s.AddLightningNode(LightningConnectionType.LndREST, false);
+            await s.AddLightningNode(LightningTestImplementation.LND, false);
 
             // Navigate to store to refresh the menu and show Lightning Address
             await s.GoToStore(s.StoreId);
@@ -2180,7 +2180,7 @@ namespace BTCPayServer.Tests
             var (_, storeId) = await s.CreateNewStore();
             await s.GoToStore();
             await s.GenerateWallet(isHotWallet: true);
-            await s.AddLightningNode(LightningConnectionType.CLightning, false);
+            await s.AddLightningNode(LightningTestImplementation.CoreLightning, false);
 
             // Add apps
             await s.CreateApp("PointOfSale");

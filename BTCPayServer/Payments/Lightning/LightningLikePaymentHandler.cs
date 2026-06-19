@@ -10,7 +10,6 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
-using BTCPayServer.Lightning.LndHub;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
@@ -159,10 +158,6 @@ namespace BTCPayServer.Payments.Lightning
                 using var cts = new CancellationTokenSource(LightningTimeout);
                 var client = CreateLightningClient(supportedPaymentMethod);
 
-                // LNDhub-compatible implementations might not offer all of GetInfo data.
-                // Skip checks in those cases, see https://github.com/lnbits/lnbits/issues/1182
-                var isLndHub = client is LndHubLightningClient;
-
                 LightningNodeInformation info;
                 try
                 {
@@ -196,7 +191,8 @@ namespace BTCPayServer.Payments.Lightning
                 if (summary?.Status is not null)
                 {
                     var blocksGap = summary.Status.ChainHeight - info.BlockHeight;
-                    if (blocksGap > 10 && !(isLndHub && info.BlockHeight == 0))
+                    // If BlockHeight is 0, maybe the provider just doesn't support it.
+                    if (blocksGap > 10 && info.BlockHeight != 0)
                     {
                         throw new PaymentMethodUnavailableException(
                             $"The lightning node is not synched ({blocksGap} blocks left)");

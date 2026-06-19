@@ -476,7 +476,7 @@ namespace BTCPayServer.Tests
             await FindAlertMessage();
         }
 
-        public async Task AddLightningNode(string connectionType = null, bool test = true)
+        public async Task AddLightningNode(LightningTestImplementation connectionType = LightningTestImplementation.Internal, bool test = true)
         {
             var cryptoCode = "BTC";
             if (!(await Page.ContentAsync()).Contains("Connect to a Lightning node"))
@@ -486,9 +486,9 @@ namespace BTCPayServer.Tests
 
             var connectionString = connectionType switch
             {
-                LightningConnectionType.CLightning =>
+                LightningTestImplementation.CoreLightning =>
                     $"type=clightning;server={((CLightningClient)Server.MerchantLightningD).Address.AbsoluteUri}",
-                LightningConnectionType.LndREST =>
+                LightningTestImplementation.LND =>
                     $"type=lnd-rest;server={Server.MerchantLnd.Swagger.BaseUrl};allowinsecure=true",
                 _ => null
             };

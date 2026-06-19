@@ -319,7 +319,6 @@ volumes:
     elementsd_liquid_datadir:
     customer_lightningd_datadir:
     merchant_lightningd_datadir:
-    lightning_charge_datadir:
     customer_lnd_datadir:
     merchant_lnd_datadir:
     postgres_test_datadir:

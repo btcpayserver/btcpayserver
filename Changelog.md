@@ -47,6 +47,7 @@
 
 * Remove deprecated Shopify Scripts integration (#6608) @NicolasDorier
 * Deprecate LCAD (#7363) @BullishNode
+* Remove support of some lightning backends: Lightning Charge, LNDHub, LNBank.
 
 ## 2.3.9
 

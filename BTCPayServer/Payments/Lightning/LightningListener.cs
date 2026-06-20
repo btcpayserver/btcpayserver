@@ -284,17 +284,8 @@ namespace BTCPayServer.Payments.Lightning
                 if (!instance.Empty)
                 {
                     instance.EnsureListening(_Cts.Token);
-                    // Re-poll periodically during live sessions to catch invoices stuck in RetryLater
-                    // (e.g. nodes that return null amount in the initial WS notification).
-                    // PollAllListenedInvoices is normally only called on session start (reconnect path),
-                    // leaving RetryLater invoices unresolved until the next disconnect.
-                    if (instance.IsListening &&
-                        instance.LastFullPoll is { } last &&
-                        DateTimeOffset.UtcNow - last > TimeSpan.FromMinutes(5.0))
-                    {
-                        instance.LastFullPoll = DateTimeOffset.UtcNow;
-                        _ = instance.PollAllListenedInvoices(_Cts.Token);
-                    }
+                    if (instance.IsListening && !instance.PaidButNoAmountEmpty)
+                        _ = instance.PollPaidButNoAmountInvoices(_Cts.Token);
                 }
             }
         }
@@ -511,6 +502,7 @@ namespace BTCPayServer.Payments.Lightning
             if (lightningInvoice is null)
             {
                 _ListenedInvoices.TryRemove(listenedInvoice.PaymentMethodDetails.InvoiceId, out _);
+                _PaidButNoAmount.TryRemove(listenedInvoice.PaymentMethodDetails.InvoiceId, out _);
                 return;
             }
             if (await AddPayment(lightningInvoice, listenedInvoice.InvoiceId, listenedInvoice.PaymentMethod.PaymentMethodId))
@@ -605,12 +597,32 @@ namespace BTCPayServer.Payments.Lightning
 
         bool _ErrorAlreadyLogged = false;
         readonly ConcurrentDictionary<string, ListenedInvoice> _ListenedInvoices = new ConcurrentDictionary<string, ListenedInvoice>();
+        readonly ConcurrentDictionary<string, bool> _PaidButNoAmount = new ConcurrentDictionary<string, bool>();
+        public bool PaidButNoAmountEmpty => _PaidButNoAmount.IsEmpty;
+
+        internal async Task PollPaidButNoAmountInvoices(CancellationToken cancellation)
+        {
+            foreach (var id in _PaidButNoAmount.Keys)
+            {
+                if (_ListenedInvoices.TryGetValue(id, out var invoice))
+                    await PollPayment(invoice, cancellation);
+                else
+                    _PaidButNoAmount.TryRemove(id, out _);
+            }
+        }
 
         internal async Task<bool> AddPayment(LightningInvoice notification, string invoiceId, PaymentMethodId paymentMethodId)
         {
             var state = await AddPaymentCore(notification, invoiceId, paymentMethodId);
             if (state is not RecordedState.RetryLater)
+            {
                 _ListenedInvoices.TryRemove(notification.Id, out _);
+                _PaidButNoAmount.TryRemove(notification.Id, out _);
+            }
+            else if (notification.Status is LightningInvoiceStatus.Paid)
+            {
+                _PaidButNoAmount.TryAdd(notification.Id, true);
+            }
             return state is RecordedState.RecordedNow;
         }
         enum RecordedState { RecordedNow, AlreadyRecorded, RetryLater, Expired }
@@ -700,7 +712,10 @@ namespace BTCPayServer.Payments.Lightning
             foreach (var invoice in _ListenedInvoices)
             {
                 if (invoice.Value.IsExpired())
-                    _ListenedInvoices.TryRemove(invoice.Key, out var _);
+                {
+                    _ListenedInvoices.TryRemove(invoice.Key, out _);
+                    _PaidButNoAmount.TryRemove(invoice.Key, out _);
+                }
             }
 
             if (_ListenedInvoices.IsEmpty)

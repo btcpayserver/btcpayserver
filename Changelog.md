@@ -34,6 +34,7 @@
 * Uninstall button is missing for language packs (#7390 #7392) @teamssUTXO
 * Lightning invoice silently dropped when the node doesn't return amount on reconnection (#7402) @atharrva01
 * The Server Policies page would timeout when the server had too many apps (#7406) @NicolasDorier
+* Fix support for Core lightning 26.06 (#7412) @NicolasDorier
 
 ### Improvements
 

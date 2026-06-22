@@ -2,6 +2,11 @@
 
 ## 2.4.0
 
+### Breaking changes
+
+* LNDHub, LNBank and Lightning Charge backends are no longer supported.
+* If you use Boltcards Extension or Shopify v2 plugins, you will need to upgrade to the latest version of the plugin.
+
 ### New features
 
 * Add multisig wallet setup (#7218) @thgO-O

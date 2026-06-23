@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Microsoft.Playwright;
 using static Microsoft.Playwright.Assertions;
@@ -21,7 +22,15 @@ public class GlobalSearchPMO(PlaywrightTester tester)
     {
         await Page.Keyboard.PressAsync("/");
         await Page.Locator("#globalSearchInput").FillAsync(query);
-        await Page.Locator("#globalSearchResults:not([hidden])").WaitForAsync();
+        try
+        {
+            await Page.Locator("#globalSearchResults:not([hidden])").WaitForAsync();
+        }
+        catch
+        {
+            await tester.TakeScreenshot("Flaky-GlobalSearch.png");
+            throw;
+        }
     }
 
     public Task Enter() => Page.Keyboard.PressAsync("Enter");

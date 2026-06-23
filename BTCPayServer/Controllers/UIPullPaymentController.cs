@@ -94,23 +94,9 @@ namespace BTCPayServer.Controllers
             {
                 var url = Url.Action(nameof(UILNURLController.GetLNURLForPullPayment), "UILNURL", new { cryptoCode, pullPaymentId = vm.Id }, Request.Scheme, Request.Host.ToString());
                 vm.LnurlEndpoint = url != null ? new Uri(url) : null;
-                vm.SetupDeepLink = $"boltcard://program?url={GetBoltcardDeeplinkUrl(vm, OnExistingBehavior.UpdateVersion)}";
-                vm.ResetDeepLink = $"boltcard://reset?url={GetBoltcardDeeplinkUrl(vm, OnExistingBehavior.KeepVersion)}";
             }
 
             return View(nameof(ViewPullPayment), vm);
-        }
-
-        private string GetBoltcardDeeplinkUrl(ViewPullPaymentModel vm, OnExistingBehavior onExisting)
-        {
-            var registerUrl = Url.Action(nameof(GreenfieldPullPaymentController.RegisterBoltcard), "GreenfieldPullPayment",
-                            new
-                            {
-                                pullPaymentId = vm.Id,
-                                onExisting = onExisting.ToString()
-                            }, Request.Scheme, Request.Host.ToString()) ?? "";
-            registerUrl = Uri.EscapeDataString(registerUrl);
-            return registerUrl;
         }
 
         [HttpGet("pull-payments/edit/{pullPaymentId}")]

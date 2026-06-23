@@ -29,7 +29,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BTCPayServer.NTag424" Version="1.0.25" />
     <PackageReference Include="JetBrains.Annotations.Sources" Version="2025.2.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

@@ -34,7 +34,6 @@ using BTCPayServer.Lightning.LND;
 using BTCPayServer.Lightning.Phoenixd;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
@@ -207,11 +206,6 @@ namespace BTCPayServer
             }
         }
 
-        public static CardKey CreatePullPaymentCardKey(this IssuerKey issuerKey, byte[] uid, int version, string pullPaymentId)
-        {
-            var data = Encoding.UTF8.GetBytes(pullPaymentId);
-            return issuerKey.CreateCardKey(uid, version, data);
-        }
         public static DateTimeOffset TruncateMilliSeconds(this DateTimeOffset dt) => new (dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second, 0, dt.Offset);
         public static decimal? GetDue(this InvoiceCryptoInfo invoiceCryptoInfo)
         {

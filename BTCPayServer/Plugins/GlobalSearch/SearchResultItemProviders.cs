@@ -73,8 +73,6 @@ public class SearchResultItemProviders(
             var result = new ResultItemViewModel(o);
             if (result.Title is not null)
                 result.Title = stringLocalizer[result.Title];
-            if (result.SubTitle is not null)
-                result.SubTitle = stringLocalizer[result.SubTitle];
             if (result.Category is not null)
                 result.Category = stringLocalizer[result.Category];
             if (result.Keywords is not null)

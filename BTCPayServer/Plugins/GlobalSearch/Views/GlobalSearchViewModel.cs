@@ -33,7 +33,6 @@ public class ResultItemViewModel
     public ResultItemViewModel(ResultItemViewModel other)
     {
         Title = other.Title;
-        SubTitle = other.SubTitle;
         Category = other.Category;
         Url = other.Url;
         Keywords = other.Keywords?.ToArray();
@@ -42,7 +41,6 @@ public class ResultItemViewModel
     [JsonIgnore]
     public string RequiredPolicy { get; set; }
     public string Title { get; set; }
-    public string SubTitle { get; set; }
     public string Category { get; set; }
     public string Url { get; set; }
     public string[] Keywords { get; set; }

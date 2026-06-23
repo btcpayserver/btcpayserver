@@ -37,8 +37,6 @@ public class StaticSearchResultProvider(
             {
                 if (item.Title is not null)
                     translations.Add(item.Title);
-                if (item.SubTitle is not null)
-                    translations.Add(item.SubTitle);
                 if (item.Category is not null)
                     translations.Add(item.Category);
                 if (item.Keywords is not null)
@@ -74,8 +72,7 @@ public class StaticSearchResultProvider(
                 Category = item.Category,
                 Title = item.Title,
                 Keywords = item.Keywords,
-                Url = context.Url.Action(item.Action, item.Controller, item.Values?.Invoke(context)),
-                SubTitle = item.SubTitle
+                Url = context.Url.Action(item.Action, item.Controller, item.Values?.Invoke(context))
             });
         }
     }

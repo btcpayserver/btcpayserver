@@ -1,6 +1,7 @@
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Plugins.DynamicDNS.Controllers;
+using BTCPayServer.Plugins.GlobalSearch;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -22,6 +23,16 @@ public class DynamicDnsPlugin : BaseBTCPayServerPlugin
             ControllerName = "UIDynamicDns",
             ActionName = nameof(UIDynamicDnsController.DynamicDnsService),
             RouteValues = new { area = Area }
+        });
+        services.AddStaticSearch(new ActionResultItemViewModel()
+        {
+            Title = "Setup Dynamic DNS",
+            Keywords = new[] { "Dynamic DNS", "DDNS", "DynDns", "DNS" },
+            Action = nameof(UIDynamicDnsController.DynamicDnsService),
+            Controller = "UIDynamicDns",
+            Values = ctx => new { area = Area },
+            Category = "Server",
+            RequiredPolicy = Client.Policies.CanModifyServerSettings
         });
     }
 }

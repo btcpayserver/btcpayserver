@@ -22,15 +22,7 @@ public class GlobalSearchPMO(PlaywrightTester tester)
     {
         await Page.Keyboard.PressAsync("/");
         await Page.Locator("#globalSearchInput").FillAsync(query);
-        try
-        {
-            await Page.Locator("#globalSearchResults:not([hidden])").WaitForAsync();
-        }
-        catch
-        {
-            await tester.TakeScreenshot("Flaky-GlobalSearch.png");
-            throw;
-        }
+        await Page.Locator("#globalSearchResults:not([hidden])").WaitForAsync();
     }
 
     public Task Enter() => Page.Keyboard.PressAsync("Enter");

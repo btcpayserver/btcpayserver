@@ -459,6 +459,8 @@
         });
 
         syncSearchActionState();
+        if (!!input.value.trim())
+            runSearch();
     };
 
     const isEditableElement = element => {

@@ -4,7 +4,7 @@
 
 ### Breaking changes
 
-* LNDHub, LNBank and Lightning Charge backends are no longer supported.
+* LNBank and Lightning Charge backends are no longer supported.
 * If you use Boltcards Extension or Shopify v2 plugins, you will need to upgrade to the latest version of the plugin.
 
 ### New features

@@ -13,6 +13,7 @@ SHOPIFY_REPO="https://github.com/btcpayserver/btcpayserver-shopify-plugin.git"
 MONERO_REPO="https://github.com/btcpay-monero/btcpayserver-monero-plugin.git"
 BLINK_REPO="https://github.com/Kukks/BTCPayServerPlugins.git"
 CASHU_REPO="https://github.com/cashubtc/BTCNutServer.git"
+TETHER_REPO="https://github.com/btcpayserver-tether/BTCPayServer.Plugins.USDt.git"
 
 BTCPAY_SPLICE_ABS=""
 
@@ -66,6 +67,7 @@ git clone "$SHOPIFY_REPO" shopify-plugin
 git clone "$MONERO_REPO" monero-plugin
 git clone "$BLINK_REPO" blink
 git clone "$CASHU_REPO" cashu-plugin
+git clone "$TETHER_REPO" tether-plugin
 
 printf '\n==> Initializing non-BTCPay plugin submodules\n'
 GIT_LFS_SKIP_SMUDGE=1 git -C blink submodule update --init --depth 1 --recommend-shallow --filter=blob:none submodules/walletwasabi
@@ -77,7 +79,6 @@ git clone ./boltz samrock-protocol/submodules/boltz
 
 printf '\n==> Applying compatibility patches in disposable plugin checkouts\n'
 retarget_net10 samrock-protocol/Plugins/SamRockProtocol/SamRockProtocol.csproj
-retarget_net10 shopify-plugin/Plugins/BTCPayServer.Plugins.ShopifyPlugin/BTCPayServer.Plugins.ShopifyPlugin.csproj
 rm -f monero-plugin/global.json
 
 splice_all() {
@@ -92,6 +93,7 @@ splice_all() {
   replace_btcpay_copy monero-plugin/submodules/btcpayserver
   replace_btcpay_copy blink/submodules/btcpayserver
   replace_btcpay_copy cashu-plugin/submodules/btcpayserver
+  replace_btcpay_copy tether-plugin/submodules/btcpayserver
   replace_btcpay_copy samrock-protocol/submodules/boltz/btcpayserver
 }
 
@@ -147,6 +149,12 @@ build_all() {
     run_build "cashu-plugin" "Plugin/BTCPayServer.Plugins.Cashu/BTCPayServer.Plugins.Cashu.csproj"
   )
   _res["cashu-plugin"]=$?
+
+  (
+    cd tether-plugin
+    run_build "tether-plugin" "BTCPayServer.Plugins.USDt/BTCPayServer.Plugins.USDt.csproj"
+  )
+  _res["tether-plugin"]=$?
 
   for project in blink/Plugins/*/*.csproj; do
     plugin_name="$(basename "$(dirname "$project")")"

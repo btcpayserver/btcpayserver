@@ -105,9 +105,9 @@ namespace BTCPayServer.HostedServices
             return pullPayment.Id;
         }
 
-        public async Task<string> CreateRefundPullPayment(Data.StoreData store, CreatePullPaymentRequest create, string invoiceId, string requestBaseUrl = null)
+        public async Task<string> CreateRefundPullPayment(Data.StoreData store, CreatePullPaymentRequest create, string invoiceId)
         {
-            var pullPayment = await CreatePullPaymentCore(store, create, requestBaseUrl);
+            var pullPayment = await CreatePullPaymentCore(store, create);
             await using var ctx = _dbContextFactory.CreateContext();
             ctx.Refunds.Add(new RefundData()
             {
@@ -115,7 +115,9 @@ namespace BTCPayServer.HostedServices
                 PullPaymentDataId = pullPayment.Id
             });
             await ctx.SaveChangesAsync();
-            _eventAggregator.Publish(new PullPaymentEvent(PullPaymentEvent.PullPaymentEventType.Created, pullPayment));
+            var invoice = await _invoiceRepository.GetInvoice(invoiceId);
+            if (invoice is not null)
+                _eventAggregator.Publish(new Events.InvoiceEvent(invoice, Events.InvoiceEvent.Refund) { PullPaymentId = pullPayment.Id });
             return pullPayment.Id;
         }
 
@@ -318,7 +320,8 @@ namespace BTCPayServer.HostedServices
             ILogger<PullPaymentHostedService> logger,
             Logs logs,
             DisplayFormatter displayFormatter,
-            CurrencyNameTable currencyNameTable) : base(logs)
+            CurrencyNameTable currencyNameTable,
+            Services.Invoices.InvoiceRepository invoiceRepository) : base(logs)
         {
             _dbContextFactory = dbContextFactory;
             _jsonSerializerSettings = jsonSerializerSettings;
@@ -331,6 +334,7 @@ namespace BTCPayServer.HostedServices
             _logger = logger;
             _currencyNameTable = currencyNameTable;
             _displayFormatter = displayFormatter;
+            _invoiceRepository = invoiceRepository;
         }
 
         Channel<object> _Channel;
@@ -345,6 +349,7 @@ namespace BTCPayServer.HostedServices
         private readonly ILogger<PullPaymentHostedService> _logger;
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly DisplayFormatter _displayFormatter;
+        private readonly Services.Invoices.InvoiceRepository _invoiceRepository;
         private readonly CompositeDisposable _subscriptions = new CompositeDisposable();
 
         internal override Task[] InitializeTasks()

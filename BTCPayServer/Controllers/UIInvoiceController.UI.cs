@@ -529,7 +529,7 @@ namespace BTCPayServer.Controllers
                 createPullPayment.Amount = Math.Round(createPullPayment.Amount - reduceByAmount, ppDivisibility);
             }
 
-            var ppId = await _paymentHostedService.CreateRefundPullPayment(store, createPullPayment, invoice.Id, Request.GetRequestBaseUrl().ToString());
+            var ppId = await _paymentHostedService.CreateRefundPullPayment(store, createPullPayment, invoice.Id);
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Html = "Refund successfully created!<br />Share the link to this page with a customer.<br />The customer needs to enter their address and claim the refund.<br />Once a customer claims the refund, you will get a notification and would need to approve and initiate it from your Store > Payouts.",

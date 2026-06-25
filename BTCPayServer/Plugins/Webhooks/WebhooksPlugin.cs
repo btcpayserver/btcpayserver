@@ -69,7 +69,6 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
         // Add built-in webhooks
         AddInvoiceWebhooks(services);
         AddPayoutWebhooks(services);
-        AddPullPaymentWebhooks(services);
         AddPaymentRequestWebhooks(services);
         AddPendingTransactionWebhooks(services);
     }
@@ -275,56 +274,11 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
         services.AddWebhookTriggerViewModels(payoutTriggers);
     }
 
-    private static void AddPullPaymentWebhooks(IServiceCollection services)
-    {
-        services.AddWebhookTriggerProvider<PullPaymentTriggerProvider>();
-        var pullPaymentPlaceholders = new List<EmailTriggerViewModel.PlaceHolder>()
-        {
-            new("{PullPayment.Id}", "The id of the pull payment"),
-            new("{PullPayment.TrimmedId}", "The trimmed id of the pull payment"),
-            new("{PullPayment.Name}", "The name of the pull payment"),
-            new("{PullPayment.Description}", "The description of the pull payment"),
-            new("{PullPayment.Amount}", "The amount of the pull payment"),
-            new("{PullPayment.Currency}", "The currency of the pull payment"),
-            new("{PullPayment.Link}", "The link to the pull payment where the refund can be claimed"),
-            new("{PullPayment.AutoApproveClaims}", "Whether claims are automatically approved"),
-            new("{PullPayment.Archived}", "Whether the pull payment is archived")
-        };
-        pullPaymentPlaceholders.AddRange(InvoiceTriggerProvider.GetInvoicePlaceholders());
-        var pullPaymentTriggers = new List<EmailTriggerViewModel>()
-        {
-            new()
-            {
-                Trigger = WebhookEventType.PullPaymentCreated,
-                Description = "Pull Payment - Created",
-                DefaultEmail = new()
-                {
-                    Subject = "Pull Payment {PullPayment.Id} created",
-                    Body = "Pull Payment {PullPayment.Id} ({PullPayment.Name}) created.\nView pull payment: {PullPayment.Link}",
-                    CanIncludeCustomerEmail = true
-                },
-                PlaceHolders = pullPaymentPlaceholders
-            },
-            new()
-            {
-                Trigger = WebhookEventType.PullPaymentArchived,
-                Description = "Pull Payment - Archived",
-                DefaultEmail = new()
-                {
-                    Subject = "Pull Payment {PullPayment.Id} archived",
-                    Body = "Pull Payment {PullPayment.Id} ({PullPayment.Name}) archived."
-                },
-                PlaceHolders = pullPaymentPlaceholders
-            }
-        };
-
-        services.AddWebhookTriggerViewModels(pullPaymentTriggers);
-    }
-
     private static void AddInvoiceWebhooks(IServiceCollection services)
     {
         services.AddWebhookTriggerProvider<InvoiceTriggerProvider>();
         var invoicePlaceholders = InvoiceTriggerProvider.GetInvoicePlaceholders();
+        var refundPlaceholders = InvoiceTriggerProvider.GetRefundPlaceholders();
         var emailTriggers = new List<EmailTriggerViewModel>()
         {
             new()
@@ -435,6 +389,18 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
                     CanIncludeCustomerEmail = true
                 },
                 PlaceHolders = invoicePlaceholders
+            },
+            new()
+            {
+                Trigger = WebhookEventType.InvoiceRefund,
+                Description = "Invoice - Refund Created",
+                DefaultEmail = new()
+                {
+                    Subject = "Refund available for Invoice {Invoice.Id}",
+                    Body = "A refund has been created for Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}).\nClaim your refund here: {PullPayment.Link}",
+                    CanIncludeCustomerEmail = true
+                },
+                PlaceHolders = refundPlaceholders
             }
         };
         services.AddWebhookTriggerViewModels(emailTriggers);

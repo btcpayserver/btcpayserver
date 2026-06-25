@@ -18,6 +18,7 @@ namespace BTCPayServer.Events
         PaidAfterExpiration = 1009,
         ExpiredPaidPartial = 2000,
         MarkedCompleted = 2008,
+        Refund = 2009,
     }
     public class InvoiceEvent : IHasInvoiceId
     {
@@ -33,6 +34,7 @@ namespace BTCPayServer.Events
         public const string FailedToConfirm = "invoice_failedToConfirm";
         public const string Confirmed = "invoice_confirmed";
         public const string Completed = "invoice_completed";
+        public const string Refund = "invoice_refund";
 
         public string InvoiceId => Invoice.Id;
         public static Dictionary<string, InvoiceEventCode> EventCodes = new Dictionary<string, InvoiceEventCode>()
@@ -49,6 +51,7 @@ namespace BTCPayServer.Events
             {PaidAfterExpiration, InvoiceEventCode.PaidAfterExpiration},
             {ExpiredPaidPartial, InvoiceEventCode.ExpiredPaidPartial},
             {MarkedCompleted, InvoiceEventCode.MarkedCompleted},
+            {Refund, InvoiceEventCode.Refund},
         };
 
         public InvoiceEvent(InvoiceEntity invoice, string name)
@@ -69,6 +72,10 @@ namespace BTCPayServer.Events
         /// Only set for Expired event
         /// </summary>
         public bool PaidPartial { get; internal set; }
+        /// <summary>
+        /// Only set for Refund event
+        /// </summary>
+        public string PullPaymentId { get; set; }
 
         public override string ToString()
         {

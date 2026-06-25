@@ -5,10 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
-using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Plugins.Webhooks.HostedServices;
-using BTCPayServer.Plugins.Webhooks.TriggerProviders;
 using BTCPayServer.Views.Stores;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -153,30 +151,6 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
         var serialized = JsonConvert.SerializeObject(obj, WebhookEvent.DefaultSerializerSettings);
         Assert.DoesNotContain("orignalDeliveryId", serialized);
         Assert.Contains("originalDeliveryId", serialized);
-    }
-
-    [Fact]
-    [Trait("Fast", "Fast")]
-    public async Task PullPaymentTriggerProvider_EmitsWebhookEvents()
-    {
-        var provider = new PullPaymentTriggerProvider(null!, null!, null!);
-        var pullPayment = new BTCPayServer.Data.PullPaymentData()
-        {
-            Id = "abc123xyz",
-            StoreId = "store1"
-        };
-
-        var created = await provider.GetWebhookEventAsync(new PullPaymentEvent(PullPaymentEvent.PullPaymentEventType.Created, pullPayment));
-        var createdEvt = Assert.IsType<WebhookPullPaymentEvent>(created);
-        Assert.Equal(WebhookEventType.PullPaymentCreated, createdEvt.Type);
-        Assert.Equal("store1", createdEvt.StoreId);
-        Assert.Equal("abc123xyz", createdEvt.PullPaymentId);
-
-        pullPayment.Archived = true;
-        var archived = await provider.GetWebhookEventAsync(new PullPaymentEvent(PullPaymentEvent.PullPaymentEventType.Archived, pullPayment));
-        var archivedEvt = Assert.IsType<WebhookPullPaymentEvent>(archived);
-        Assert.Equal(WebhookEventType.PullPaymentArchived, archivedEvt.Type);
-        Assert.Equal("abc123xyz", archivedEvt.PullPaymentId);
     }
 
      [Fact()]
@@ -396,19 +370,6 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
                  Assert.Equal(payout.Id, x.PayoutId);
                  Assert.Equal(PayoutState.Cancelled, x.PayoutState);
              });
-            // pull payment webhooks test
-            var pullPayment = await client.CreatePullPayment(user.StoreId, new CreatePullPaymentRequest()
-            {
-                Name = "Test pull payment",
-                Amount = 10m,
-                Currency = "USD",
-                PayoutMethods = new[] { "BTC" }
-            });
-            await user.AssertHasWebhookEvent(WebhookEventType.PullPaymentCreated, (WebhookPullPaymentEvent x) =>
-                Assert.Equal(pullPayment.Id, x.PullPaymentId));
-            await client.ArchivePullPayment(pullPayment.Id);
-            await user.AssertHasWebhookEvent(WebhookEventType.PullPaymentArchived, (WebhookPullPaymentEvent x) =>
-                Assert.Equal(pullPayment.Id, x.PullPaymentId));
         }
 
         [Fact]

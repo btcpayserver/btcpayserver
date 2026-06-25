@@ -2,6 +2,8 @@
 
 ## 2.4.0
 
+See the [blog post announcement](https://blog.btcpayserver.org/btcpay-server-2-4-0/).
+
 ### Breaking changes
 
 * LNBank and Lightning Charge backends are no longer supported.

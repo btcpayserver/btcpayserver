@@ -19,11 +19,6 @@ public partial class BTCPayServerClient
         return await SendHttpRequest<PullPaymentData>($"api/v1/pull-payments/{HttpUtility.UrlEncode(pullPaymentId)}", null, HttpMethod.Get, cancellationToken);
     }
 
-    public virtual async Task<RegisterBoltcardResponse> RegisterBoltcard(string pullPaymentId, RegisterBoltcardRequest request, CancellationToken cancellationToken = default)
-    {
-        return await SendHttpRequest<RegisterBoltcardResponse>($"api/v1/pull-payments/{HttpUtility.UrlEncode(pullPaymentId)}/boltcards", request, HttpMethod.Post, cancellationToken);
-    }
-
     public virtual async Task<PullPaymentData[]> GetPullPayments(string storeId, bool includeArchived = false, CancellationToken cancellationToken = default)
     {
         var query = new Dictionary<string, object> { { "includeArchived", includeArchived } };

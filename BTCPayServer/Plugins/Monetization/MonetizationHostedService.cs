@@ -44,6 +44,7 @@ public class MonetizationHostedService(
         this.SubscribeAny<UserEvent.BypassMonetizationChanged>();
         this.SubscribeAny<UserEvent.Registered>();
         this.SubscribeAny<UserEvent.Deleted>();
+        this.SubscribeAny<StoreUserEvent.Removed>();
     }
 
     protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
@@ -97,6 +98,9 @@ public class MonetizationHostedService(
         {
             await using var ctx = dbContextFactory.CreateContext();
             await UpdateUserLockoutStatus(ctx, pu.Plan);
+
+            if (pu.Plan.GetFeature(MonetizationFeatures.AllowUserAssociation) is null)
+                await DetachAndLockAssociatedUsers(ctx, pu.Plan);
         }
 
 
@@ -165,6 +169,31 @@ public class MonetizationHostedService(
             var userSub = await ctx.Subscribers.GetBySelector(offeringId, CustomerSelector.ByIdentity(SubscriberDataExtensions.IdentityType, reg.User.Id));
             if (userSub is not null)
                 return;
+
+            if (reg is UserEvent.Invited { InvitedByUser: { } inviter })
+            {
+                var inviterSub = await ctx.Subscribers.GetBySelector(offeringId, CustomerSelector.ByIdentity(SubscriberDataExtensions.IdentityType, inviter.Id));
+                if (inviterSub is not null)
+                {
+                    await inviterSub.Plan.EnsureFeatureLoaded(ctx);
+                    if (inviterSub.Plan.GetFeature(MonetizationFeatures.AllowUserAssociation) is not null)
+                    {
+                        await ctx.Database.GetDbConnection().ExecuteAsync("""
+                            INSERT INTO customers_identities (customer_id, type, value)
+                            VALUES (@customerId, @identityType, @userId) ON CONFLICT DO NOTHING;
+                            """, new
+                                {
+                                    customerId = inviterSub.CustomerId,
+                                    identityType = SubscriberDataExtensions.AssociatedIdentityType,
+                                    userId = reg.User.Id
+                                });
+                        var canAccess = inviterSub.IsActive && await ctx.Plans.HasFeature(inviterSub.PlanId, MonetizationFeatures.CanAccess);
+                        await userService.SetDisabled(reg.User.Id, !canAccess);
+                        return;
+                    }
+                }
+            }
+
             var inserted = (await MigrateUsers(offeringId, defaultPlanId, OneUserQuery, parameters =>
             {
                 parameters.Add("userId", reg.User.Id);
@@ -178,19 +207,95 @@ public class MonetizationHostedService(
                     EventAggregator.Publish(new SubscriptionEvent.NewSubscriber(s, reg.RequestBaseUrl));
             }
         }
+        else if (evt is StoreUserEvent.Removed removedFromStore)
+        {
+            await using var ctx = dbContextFactory.CreateContext();
+            if (monetizationSettingsAccessor.Settings is not { OfferingId: { } removedOfferingId, DefaultPlanId: { } removedDefaultPlanId })
+                return;
+
+            var deleted = await ctx.Database.GetDbConnection().ExecuteAsync("""
+                DELETE FROM customers_identities ci
+                WHERE ci.type = @associatedType AND ci.value = @userId
+                  AND ci.customer_id IN (
+                      SELECT ss.customer_id FROM subs_subscribers ss
+                      WHERE ss.offering_id = @offeringId
+                  )
+                """, new
+                        {
+                            associatedType = SubscriberDataExtensions.AssociatedIdentityType,
+                            userId = removedFromStore.UserId,
+                            offeringId = removedOfferingId
+                        });
+
+            if (deleted == 0) return;
+
+            var user = await ctx.Users.FindAsync(removedFromStore.UserId);
+            if (user is null)
+                return;
+
+            await MigrateUsers(removedOfferingId, removedDefaultPlanId, OneUserQuery, parameters =>
+            {
+                parameters.Add("userId", removedFromStore.UserId);
+                parameters.Add("email", user.Email);
+                parameters.Add("customerId", CustomerData.GenerateId());
+            }, forceExpired: true);
+        }
+
         else if (evt is UserEvent.Deleted deleted)
         {
             await using var ctx = dbContextFactory.CreateContext();
+            var associatedUsers = (await ctx.Database.GetDbConnection().QueryAsync<(string CustomerId, string UserId)>("""
+                SELECT ci.customer_id, ci.value FROM customers_identities ci
+                JOIN subs_subscribers ss ON ss.customer_id = ci.customer_id
+                JOIN customers_identities ci2 ON ci2.customer_id = ss.customer_id AND ci2.type = @primaryType AND ci2.value = @id
+                WHERE ci.type = @associatedType
+                """, new
+                    {
+                        primaryType = Monetization.SubscriberDataExtensions.IdentityType,
+                        associatedType = Monetization.SubscriberDataExtensions.AssociatedIdentityType,
+                        id = deleted.User.Id
+                    })).ToArray();
+
+            if (associatedUsers.Length > 0)
+            {
+                var customerIds = associatedUsers.Select(u => u.CustomerId).ToArray();
+                var associatedUserIds = associatedUsers.Select(u => u.UserId).ToArray();
+                await ctx.Database.GetDbConnection().ExecuteAsync("""
+                    DELETE FROM customers_identities WHERE type = @associatedType AND customer_id = ANY(@customerIds)
+                    """, new
+                        {
+                            associatedType = Monetization.SubscriberDataExtensions.AssociatedIdentityType,
+                            customerIds
+                        });
+
+                if (monetizationSettingsAccessor.Settings is { OfferingId: { } removedOfferingId, DefaultPlanId: { } removedDefaultPlanId })
+                {
+                    foreach (var userId in associatedUserIds)
+                    {
+                        var user = await ctx.Users.FindAsync(userId);
+                        if (user is null)
+                            continue;
+                        await MigrateUsers(removedOfferingId, removedDefaultPlanId, OneUserQuery, parameters =>
+                        {
+                            parameters.Add("userId", userId);
+                            parameters.Add("email", user.Email);
+                            parameters.Add("customerId", CustomerData.GenerateId());
+                        }, forceExpired: true);
+                    }
+                }
+            }
             await ctx.Database.GetDbConnection()
-                .ExecuteAsync("""
-                              DELETE FROM subs_subscribers s
-                                  USING customers_identities ci
-                              WHERE ci.customer_id = s.customer_id
-                                AND ci.type = @type
-                                AND ci.value = @id;
-                              DELETE FROM customers_identities ci
-                              WHERE ci.type = @type AND ci.value = @id;
-                              """, new { type = Monetization.SubscriberDataExtensions.IdentityType, id = deleted.User.Id });
+               .ExecuteAsync("""
+                      DELETE FROM subs_subscribers s
+                          USING customers_identities ci
+                      WHERE ci.customer_id = s.customer_id AND ci.type = @type AND ci.value = @id;
+                      DELETE FROM customers_identities ci
+                      WHERE ci.type = ANY(ARRAY[@type, @associatedType]) AND ci.value = @id;
+                      """, new {
+                   type = Monetization.SubscriberDataExtensions.IdentityType,
+                   associatedType = Monetization.SubscriberDataExtensions.AssociatedIdentityType,
+                   id = deleted.User.Id
+               });
         }
     }
 
@@ -202,6 +307,64 @@ public class MonetizationHostedService(
             await userService.SetDisabled(user.Id, !activated) is not UserService.SetDisabledResult.Error)
         {
             EventAggregator.Publish(new MonetizationLockoutUpdated([(user.Id, !activated)]));
+        }
+
+        await using var ctx = dbContextFactory.CreateContext();
+        var associatedUserIds = (await ctx.Database.GetDbConnection().QueryAsync<string>("""
+            SELECT ci.value FROM customers_identities ci
+            WHERE ci.customer_id = @customerId AND ci.type = @associatedType
+            """, new
+            {
+                customerId = evt.Subscriber.CustomerId,
+                associatedType = SubscriberDataExtensions.AssociatedIdentityType
+            })).ToArray();
+
+        foreach (var assocUserId in associatedUserIds)
+        {
+            var assocUser = await userManager.FindByIdAsync(assocUserId);
+            if (assocUser is not null &&
+                await userService.SetDisabled(assocUser.Id, !activated) is not UserService.SetDisabledResult.Error)
+            {
+                EventAggregator.Publish(new MonetizationLockoutUpdated([(assocUser.Id, !activated)]));
+            }
+        }
+    }
+
+    private async Task DetachAndLockAssociatedUsers(ApplicationDbContext ctx, PlanData plan)
+    {
+        var associatedUsers = (await ctx.Database.GetDbConnection().QueryAsync<(string CustomerId, string UserId)>("""
+            SELECT ci.customer_id, ci.value FROM customers_identities ci
+            JOIN subs_subscribers ss ON ss.customer_id = ci.customer_id
+            WHERE ss.plan_id = @planId AND ci.type = @associatedIdentityType
+            """, new { planId = plan.Id, associatedIdentityType = SubscriberDataExtensions.AssociatedIdentityType })).ToArray();
+
+        if (associatedUsers.Length == 0)
+            return;
+
+        var customerIds = associatedUsers.Select(u => u.CustomerId).ToArray();
+        var associatedUserIds = associatedUsers.Select(u => u.UserId).ToArray();
+        await ctx.Database.GetDbConnection().ExecuteAsync("""
+        DELETE FROM customers_identities WHERE type = @associatedIdentityType AND customer_id = ANY(@customerIds)
+        """, new
+            {
+                associatedIdentityType = SubscriberDataExtensions.AssociatedIdentityType,
+                customerIds
+            });
+
+        if (monetizationSettingsAccessor.Settings is not { OfferingId: { } offeringId, DefaultPlanId: { } defaultPlanId })
+            return;
+
+        foreach (var userId in associatedUserIds)
+        {
+            var user = await ctx.Users.FindAsync(userId);
+            if (user is null)
+                continue;
+            await MigrateUsers(offeringId, defaultPlanId, OneUserQuery, parameters =>
+            {
+                parameters.Add("userId", userId);
+                parameters.Add("email", user.Email);
+                parameters.Add("customerId", CustomerData.GenerateId());
+            }, forceExpired: true);
         }
     }
 
@@ -248,7 +411,8 @@ public class MonetizationHostedService(
                                         )
                                         """;
 
-    public async Task<(string CustomerId, string UserId)[]> MigrateUsers(string? offeringId, string? planId, string usersQuery = AllUsersQuery, Action<DynamicParameters>? addParameters = null)
+    public async Task<(string CustomerId, string UserId)[]> MigrateUsers(string? offeringId, string? planId, string usersQuery = AllUsersQuery,
+        Action<DynamicParameters>? addParameters = null, bool forceExpired = false)
     {
         if (offeringId is null || planId is null)
             return Array.Empty<(string CustomerId, string UserId)>();
@@ -259,7 +423,7 @@ public class MonetizationHostedService(
                 .FirstOrDefault(p => p.Id == planId) is not { } plan)
             return Array.Empty<(string CustomerId, string UserId)>();
 
-        var hasTrial = plan.TrialDays > 0;
+        var hasTrial = !forceExpired && plan.TrialDays > 0;
         var dummy = new SubscriberData();
         dummy.Plan = plan;
         if (hasTrial)
@@ -373,7 +537,7 @@ public class MonetizationHostedService(
                                      NOT (ss.active AND @canAccess) AS lockout_enabled,
                                      CASE WHEN (ss.active AND @canAccess) THEN NULL ELSE 'infinity'::timestamptz END lockout_end
                               FROM unnest(@userIds) AS user_id
-                                       JOIN customers_identities ci ON ci.type = @applicationUserId AND ci.value = user_id
+                                       JOIN customers_identities ci ON ci.type = ANY(ARRAY[@applicationUserId, @associatedApplicationUserId]) AND ci.value = user_id
                                        JOIN subs_subscribers ss ON ss.customer_id = ci.customer_id
                                        JOIN "AspNetUsers" ON "AspNetUsers"."Id" = user_id
                               WHERE ss.plan_id = @planId
@@ -390,6 +554,7 @@ public class MonetizationHostedService(
                     planId = plan.Id,
                     salt = RandomUtils.GetUInt256().ToString(),
                     applicationUserId = SubscriberDataExtensions.IdentityType,
+                    associatedApplicationUserId = SubscriberDataExtensions.AssociatedIdentityType,
                     canAccess
                 })).ToArray();
         foreach (var update in updated)
@@ -408,7 +573,9 @@ public class MonetizationHostedService(
                                     SELECT ci.value
                                     FROM subs_subscribers s
                                     JOIN customers_identities ci ON ci.customer_id = s.customer_id
-                                    WHERE s.offering_id=@offeringId AND s.plan_id = @planId AND ci.type = @applicationUserId
-                                    """, new { planId = plan.Id, offeringId = plan.OfferingId, applicationUserId = SubscriberDataExtensions.IdentityType }))
+                                    WHERE s.offering_id=@offeringId AND s.plan_id = @planId AND ci.type = ANY(ARRAY[@applicationUserId, @associatedApplicationUserId])
+                                    """,
+            new { planId = plan.Id, offeringId = plan.OfferingId, applicationUserId = SubscriberDataExtensions.IdentityType,
+                associatedApplicationUserId = SubscriberDataExtensions.AssociatedIdentityType }))
             .ToArray();
 }

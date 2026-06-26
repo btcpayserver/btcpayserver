@@ -114,6 +114,9 @@ namespace BTCPayServer.Hosting
                 if (!Uri.TryCreate(pluginSource, UriKind.Absolute, out var r) || (r.Scheme != "https" && r.Scheme != "http"))
                     r = new Uri(PoliciesSettings.DefaultPluginSource, UriKind.Absolute);
                 httpClient.BaseAddress = r;
+
+                var env = prov.GetRequiredService<BTCPayServerEnvironment>();
+                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"BTCPayServer/{env.Version}");
             });
 
             services.AddSingleton<PrettyNameProvider>();

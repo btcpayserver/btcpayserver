@@ -334,26 +334,50 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateAPIError("non-refundable", "Cannot refund this invoice");
 
             PaymentPrompt? paymentPrompt = null;
-            PayoutMethodId? payoutMethodId = null;
-            if (request.PayoutMethodId is null)
-                request.PayoutMethodId = invoice.GetDefaultPaymentMethodId(store, _networkProvider)?.ToString();
 
-            if (request.PayoutMethodId is not null && PayoutMethodId.TryParse(request.PayoutMethodId, out payoutMethodId))
+            // `payoutMethods` (array) supersedes the deprecated single `payoutMethodId`.
+            // If neither is provided, fall back to the default payout method of the original invoice.
+            string?[] requestedPayoutMethods;
+#pragma warning disable CS0618 // Type or member is obsolete
+            var errorKey = request.PayoutMethods is not null ? nameof(request.PayoutMethods) : nameof(request.PayoutMethodId);
+            if (request.PayoutMethods is { } payoutMethods)
+                requestedPayoutMethods = payoutMethods;
+            else if (request.PayoutMethodId is { } legacyPayoutMethodId)
+                requestedPayoutMethods = [legacyPayoutMethodId];
+            else
+                requestedPayoutMethods = [invoice.GetDefaultPaymentMethodId(store, _networkProvider)?.ToString()];
+#pragma warning restore CS0618 // Type or member is obsolete
+
+            var supported = _payoutHandlers.GetSupportedPayoutMethods(store);
+            // When the caller explicitly provides `payoutMethods`, reject invalid/unsupported entries
+            // instead of silently dropping them (consistent with the pull payment endpoint).
+            var explicitlyRequested = request.PayoutMethods is not null;
+            var payoutMethodIds = new List<PayoutMethodId>();
+            foreach (var p in requestedPayoutMethods)
             {
-                var supported = _payoutHandlers.GetSupportedPayoutMethods(store);
-                if (supported.Contains(payoutMethodId))
+                if (p is not null && PayoutMethodId.TryParse(p, out var pmid) && supported.Contains(pmid))
                 {
-                    var paymentMethodId = invoice.GetClosestPaymentMethodId([payoutMethodId]);
-                    paymentPrompt = paymentMethodId is null ? null : invoice.GetPaymentPrompt(paymentMethodId);
+                    if (!payoutMethodIds.Contains(pmid))
+                        payoutMethodIds.Add(pmid);
                 }
+                else if (explicitlyRequested)
+                {
+                    ModelState.AddModelError(errorKey, $"Invalid or unsupported payout method: {p}");
+                }
+            }
+
+            if (payoutMethodIds.Count > 0)
+            {
+                var paymentMethodId = invoice.GetClosestPaymentMethodId(payoutMethodIds);
+                paymentPrompt = paymentMethodId is null ? null : invoice.GetPaymentPrompt(paymentMethodId);
             }
             if (paymentPrompt is null)
             {
-                ModelState.AddModelError(nameof(request.PayoutMethodId), "Please select one of the payment methods which were available for the original invoice");
+                ModelState.AddModelError(errorKey, "Please select one of the payment methods which were available for the original invoice");
             }
             if (request.RefundVariant is null)
                 ModelState.AddModelError(nameof(request.RefundVariant), "`refundVariant` is mandatory");
-            if (!ModelState.IsValid || paymentPrompt is null || payoutMethodId is null)
+            if (!ModelState.IsValid || paymentPrompt is null || payoutMethodIds.Count == 0)
                 return this.CreateValidationError(ModelState);
 
             var accounting = paymentPrompt.Calculate();
@@ -379,7 +403,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 Name = request.Name ?? $"Refund {invoice.Id}",
                 Description = request.Description,
-                PayoutMethods = new[] { payoutMethodId.ToString() },
+                PayoutMethods = payoutMethodIds.Select(p => p.ToString()).ToArray(),
             };
 
             if (request.RefundVariant != RefundVariant.Custom)

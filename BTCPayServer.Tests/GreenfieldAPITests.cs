@@ -1907,6 +1907,18 @@ namespace BTCPayServer.Tests
                 });
             });
             Assert.Contains("PayoutMethods: Please select one of the payment methods which were available for the original invoice", validationError.Message);
+
+            // A mix of valid and invalid entries is rejected: the invalid entry is reported and the
+            // request is not silently truncated to the valid subset.
+            validationError = await AssertValidationError(new[] { "PayoutMethods" }, async () =>
+            {
+                await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest
+                {
+                    PayoutMethods = new[] { method.PaymentMethodId, "fake payment method" },
+                    RefundVariant = RefundVariant.CurrentRate
+                });
+            });
+            Assert.Contains("Invalid or unsupported payout method: fake payment method", validationError.Message);
         }
 
         [Fact(Timeout = TestTimeout)]

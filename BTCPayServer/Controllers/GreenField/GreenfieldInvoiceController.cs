@@ -349,11 +349,21 @@ namespace BTCPayServer.Controllers.Greenfield
 #pragma warning restore CS0618 // Type or member is obsolete
 
             var supported = _payoutHandlers.GetSupportedPayoutMethods(store);
+            // When the caller explicitly provides `payoutMethods`, reject invalid/unsupported entries
+            // instead of silently dropping them (consistent with the pull payment endpoint).
+            var explicitlyRequested = request.PayoutMethods is not null;
             var payoutMethodIds = new List<PayoutMethodId>();
             foreach (var p in requestedPayoutMethods)
             {
-                if (p is not null && PayoutMethodId.TryParse(p, out var pmid) && supported.Contains(pmid) && !payoutMethodIds.Contains(pmid))
-                    payoutMethodIds.Add(pmid);
+                if (p is not null && PayoutMethodId.TryParse(p, out var pmid) && supported.Contains(pmid))
+                {
+                    if (!payoutMethodIds.Contains(pmid))
+                        payoutMethodIds.Add(pmid);
+                }
+                else if (explicitlyRequested)
+                {
+                    ModelState.AddModelError(errorKey, $"Invalid or unsupported payout method: {p}");
+                }
             }
 
             if (payoutMethodIds.Count > 0)

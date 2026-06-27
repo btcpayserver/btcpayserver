@@ -13,6 +13,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Controllers;
 using BTCPayServer.Plugins;
+using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
@@ -383,12 +384,14 @@ namespace BTCPayServer.Tests
                     new JObject()
                     {
                         { "id", "ddd"},
+                        { "note", "  no onions  "},
                         {"price", 4},
                         {"count", 1}
                     }
                 }}
             }, out var items));
             Assert.Equal("ddd", items[0].Id);
+            Assert.Equal("no onions", items[0].Note);
             Assert.Equal(1, items[0].Count);
             Assert.Equal(4, items[0].Price);
 
@@ -430,6 +433,69 @@ namespace BTCPayServer.Tests
                 }}
             }, out items));
         }
+
+        [Fact]
+        public void CanCreatePosReceiptWithCartItemNotes()
+        {
+            var choices = new[]
+            {
+                new AppItem
+                {
+                    Id = "pizza",
+                    Title = "Pizza",
+                    PriceType = AppItemPriceType.Fixed,
+                    Price = 10m
+                },
+                new AppItem
+                {
+                    Id = "coffee",
+                    Title = "Coffee",
+                    PriceType = AppItemPriceType.Fixed,
+                    Price = 3m
+                }
+            };
+            var longNote = new string('x', PosAppCartItem.MaxNoteLength + 1);
+            var appData = new PosAppData
+            {
+                Cart =
+                [
+                    null,
+                    new PosAppCartItem
+                    {
+                        Id = "pizza",
+                        Count = 1,
+                        Price = 10m,
+                        Note = "  no onions\nextra cheese  "
+                    },
+                    new PosAppCartItem
+                    {
+                        Id = "coffee",
+                        Count = 1,
+                        Price = 3m,
+                        Note = longNote
+                    }
+                ]
+            };
+            appData.NormalizeCartItemNotes();
+            Assert.Equal(2, appData.Cart.Length);
+
+            var order = new PoSOrder(2);
+            order.AddLine(new PoSOrder.ItemLine("pizza", 1, 10m, 0m));
+            order.AddLine(new PoSOrder.ItemLine("coffee", 1, 3m, 0m));
+
+            var receiptData = PosReceiptData.Create(
+                false,
+                choices,
+                appData,
+                order,
+                order.Calculate(),
+                "USD",
+                new DisplayFormatter(GetCurrencyNameTable()));
+
+            Assert.Equal("1 x $10.00 = $10.00\nNote: no onions\nextra cheese", receiptData.Cart["Pizza"]);
+            Assert.Equal($"1 x $3.00 = $3.00\nNote: {new string('x', PosAppCartItem.MaxNoteLength)}", receiptData.Cart["Coffee"]);
+        }
+
         PaymentMethodId BTC = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
         PaymentMethodId LTC = PaymentTypes.CHAIN.GetPaymentMethodId("LTC");
 

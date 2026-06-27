@@ -64,6 +64,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
+using BTCPayServer.Lightning.LNDhub;
 using BTCPayServer.Payouts;
 using BTCPayServer.Plugins.Bitcoin;
 using ExchangeSharp;
@@ -138,6 +139,8 @@ namespace BTCPayServer.Hosting
                 new PhoenixdConnectionStringHandler(client));
             services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
                 new LndConnectionStringHandler(client));
+            services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
+                new LndHubConnectionStringHandler(client));
             services.TryAddSingleton<LightningClientFactoryService>();
             services.AddHttpClient(LightningClientFactoryService.OnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();

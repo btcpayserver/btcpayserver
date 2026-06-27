@@ -477,16 +477,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             createPullPayment.AutoApproveClaims = createPullPayment.AutoApproveClaims && (await _authorizationService.AuthorizeAsync(User, storeId ,Policies.CanCreatePullPayments)).Succeeded;
-            var ppId = await _pullPaymentService.CreatePullPayment(store, createPullPayment);
-
-            await using var ctx = _dbContextFactory.CreateContext();
-
-            ctx.Refunds.Add(new RefundData
-            {
-                InvoiceDataId = invoice.Id,
-                PullPaymentDataId = ppId
-            });
-            await ctx.SaveChangesAsync(cancellationToken);
+            var ppId = await _pullPaymentService.CreateRefundPullPayment(store, createPullPayment, invoice.Id);
 
             var pp = await _pullPaymentService.GetPullPayment(ppId, false);
             return this.Ok(CreatePullPaymentData(pp));

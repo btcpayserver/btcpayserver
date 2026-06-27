@@ -351,7 +351,7 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
                     PayoutMethodId = "BTC"
                 });
             await user.AssertHasWebhookEvent(WebhookEventType.PayoutCreated,  (WebhookPayoutEvent x)=> Assert.Equal(payout.Id, x.PayoutId));
-             await client.MarkPayout(user.StoreId, payout.Id, new MarkPayoutRequest(){ State = PayoutState.AwaitingApproval});
+             await client.MarkPayout(user.StoreId, payout.Id, new Client.Models.MarkPayoutRequest(){ State = PayoutState.AwaitingApproval});
              await user.AssertHasWebhookEvent(WebhookEventType.PayoutUpdated,  (WebhookPayoutEvent x)=>
              {
                  Assert.Equal(payout.Id, x.PayoutId);

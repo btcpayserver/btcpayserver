@@ -135,7 +135,9 @@ public partial class UIStoresController : Controller
         var userId = GetUserId();
         if (userId is null)
             return Forbid();
-        var store = await _storeRepo.FindStore(storeId, userId);
+
+        // We do not need to pass userId to FindStore, because the user may just be an admin
+        var store = await _storeRepo.FindStore(storeId);
         if (store is null)
             return NotFound();
         IActionResult? redirect = null;

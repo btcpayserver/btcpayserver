@@ -149,7 +149,7 @@ namespace BTCPayServer.Controllers
                 PayoutMethods = selectedPaymentMethodIds.Select(p => p.ToString()).ToArray(),
                 BOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration),
                 AutoApproveClaims = model.AutoApproveClaims
-            }, Request.GetRequestBaseUrl().ToString());
+            });
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Message = StringLocalizer["Pull payment request created"].Value,

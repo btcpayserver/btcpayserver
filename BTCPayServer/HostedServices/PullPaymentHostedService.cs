@@ -98,11 +98,9 @@ namespace BTCPayServer.HostedServices
                 }
             }
         }
-        public async Task<string> CreatePullPayment(Data.StoreData store, CreatePullPaymentRequest create, string requestBaseUrl = null)
+        public async Task<string> CreatePullPayment(Data.StoreData store, CreatePullPaymentRequest create)
         {
-            var pullPayment = await CreatePullPaymentCore(store, create, requestBaseUrl);
-            _eventAggregator.Publish(new PullPaymentEvent(PullPaymentEvent.PullPaymentEventType.Created, pullPayment));
-            return pullPayment.Id;
+            return (await CreatePullPaymentCore(store, create)).Id;
         }
 
         public async Task<string> CreateRefundPullPayment(Data.StoreData store, CreatePullPaymentRequest create, string invoiceId)
@@ -121,7 +119,7 @@ namespace BTCPayServer.HostedServices
             return pullPayment.Id;
         }
 
-        private async Task<Data.PullPaymentData> CreatePullPaymentCore(Data.StoreData store, CreatePullPaymentRequest create, string requestBaseUrl = null)
+        private async Task<Data.PullPaymentData> CreatePullPaymentCore(Data.StoreData store, CreatePullPaymentRequest create)
         {
             var supported = this._handlers.GetSupportedPayoutMethods(store);
             create.PayoutMethods ??= supported.Select(s => s.ToString()).ToArray();
@@ -155,8 +153,7 @@ namespace BTCPayServer.HostedServices
                     Description = create.Description ?? string.Empty,
                     Email = null
                 },
-                BOLT11Expiration = create.BOLT11Expiration ?? store.GetStoreBlob().RefundBOLT11Expiration,
-                RequestBaseUrl = requestBaseUrl
+                BOLT11Expiration = create.BOLT11Expiration ?? store.GetStoreBlob().RefundBOLT11Expiration
             });
             ctx.PullPayments.Add(o);
             await ctx.SaveChangesAsync();
@@ -800,7 +797,6 @@ namespace BTCPayServer.HostedServices
             {
                 using var ctx = this._dbContextFactory.CreateContext();
                 List<PayoutData> payouts = null;
-                List<PullPaymentData> archivedPullPayments = null;
                 if (cancel.PullPaymentIds != null)
                 {
                     var ppIds = cancel.StoreIds == null
@@ -809,7 +805,7 @@ namespace BTCPayServer.HostedServices
                             .Where(pp => cancel.PullPaymentIds.Contains(pp.Id) && cancel.StoreIds.Contains(pp.StoreId))
                             .Select(pp => pp.Id)
                             .ToListAsync()).ToArray();
-                    archivedPullPayments = await ctx.PullPayments
+                    var archivedPullPayments = await ctx.PullPayments
                         .Where(pp => ppIds.Contains(pp.Id))
                         .ToListAsync();
                     foreach (var pp in archivedPullPayments)
@@ -850,11 +846,6 @@ namespace BTCPayServer.HostedServices
                 }
 
                 await ctx.SaveChangesAsync();
-                if (archivedPullPayments is not null)
-                {
-                    foreach (var pp in archivedPullPayments)
-                        _eventAggregator.Publish(new PullPaymentEvent(PullPaymentEvent.PullPaymentEventType.Archived, pp));
-                }
                 foreach (var keyValuePair in result.Where(pair => pair.Value == MarkPayoutRequest.PayoutPaidResult.Ok))
                 {
                     var payout = payouts.First(p => p.Id == keyValuePair.Key);
@@ -1103,16 +1094,5 @@ namespace BTCPayServer.HostedServices
         }
 
         public override string ToString() => $"Payout Event for {Payout.Id} ({Type})";
-    }
-
-    public record PullPaymentEvent(PullPaymentEvent.PullPaymentEventType Type, PullPaymentData PullPayment)
-    {
-        public enum PullPaymentEventType
-        {
-            Created,
-            Archived
-        }
-
-        public override string ToString() => $"Pull Payment Event for {PullPayment.Id} ({Type})";
     }
 }

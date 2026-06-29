@@ -127,10 +127,6 @@
         }
     }
 
-    function isOffcanvasVisible() {
-        return offcanvasElement.classList.contains("show");
-    }
-
     function alignAvailableSection() {
         if (!availableSection || window.innerWidth < 992) {
             return;

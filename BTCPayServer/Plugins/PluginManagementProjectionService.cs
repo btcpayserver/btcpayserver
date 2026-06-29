@@ -20,21 +20,58 @@ namespace BTCPayServer.Plugins
             public string SelectedPluginSlug { get; set; }
         }
 
-        public ManagePluginsShellViewModel CreateViewModel(ProjectionSource source)
+        public InstalledPluginsViewModel CreateInstalledPluginsViewModel(ProjectionSource source)
         {
-            var loadedPlugins = source.LoadedPlugins.Where(plugin => !plugin.SystemPlugin).ToArray();
-            var installed = NormalizeVersions(source.Installed);
-            var commands = source.Commands ?? [];
-            var disabled = NormalizeVersions(source.Disabled);
+            source ??= new ProjectionSource();
+            var data = CreatePluginsStateData(source);
+            return new InstalledPluginsViewModel
+            {
+                DisabledPlugins = data.Disabled
+                    .OrderBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase)
+                    .Select(pair => CreateDisabledViewModel(BuildState(pair.Key, data), data.Installed))
+                    .ToList(),
+                InstalledPlugins = data.LoadedPlugins
+                    .OrderBy(plugin => plugin.Name, StringComparer.OrdinalIgnoreCase)
+                    .Select(plugin => CreateInstalledPluginCardViewModel(BuildState(plugin.Identifier, data), data.Installed))
+                    .ToList(),
+                PendingActions = CreatePendingActions(data.Commands)
+            };
+        }
 
+        public PluginDirectoryViewModel CreatePluginDirectoryViewModel(ProjectionSource source)
+        {
+            source ??= new ProjectionSource();
+            var data = CreatePluginsStateData(source);
+            var selected = CreateSelectedPanel(source, data);
+            return new PluginDirectoryViewModel
+            {
+                SelectedPluginIdentifier = selected.SelectedIdentifier,
+                SelectedPluginSlug = selected.SelectedSlug,
+                HiddenPluginIdentifiers = CreateHiddenPluginIdentifiers(data),
+                PendingActions = CreatePendingActions(data.Commands),
+                SelectedPluginPanel = selected.Panel
+            };
+        }
+
+        public PluginSelectedPanelViewModel CreateSelectedPluginPanelViewModel(ProjectionSource source)
+        {
+            source ??= new ProjectionSource();
+            var data = CreatePluginsStateData(source);
+            return CreateSelectedPanel(source, data).Panel;
+        }
+
+        private static PluginsStateData CreatePluginsStateData(ProjectionSource source)
+        {
+            var loadedPlugins = (source.LoadedPlugins ?? []).Where(plugin => !plugin.SystemPlugin).ToArray();
+            var installed = source.Installed ?? new Dictionary<string, Version>(StringComparer.OrdinalIgnoreCase);
+            var commands = source.Commands ?? [];
+            var disabled = source.Disabled ?? new Dictionary<string, Version>(StringComparer.OrdinalIgnoreCase);
             var allAvailable = (source.AllAvailable ?? [])
                 .Where(plugin => plugin is not null)
                 .ToArray();
-
-            var availableGroups = allAvailable
+            var availableVersionsByIdentifier = allAvailable
                 .GroupBy(plugin => plugin.Identifier, StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(group => group.Key, group => group.OrderByDescending(plugin => plugin.Version).ToArray(), StringComparer.OrdinalIgnoreCase);
-
             var pendingInstallVersions = commands
                 .Where(tuple => tuple.command.Equals("install", StringComparison.OrdinalIgnoreCase))
                 .Select(tuple => tuple.plugin)
@@ -44,164 +81,37 @@ namespace BTCPayServer.Plugins
                     plugin => source.GetVersionOfPendingInstall?.Invoke(plugin),
                     StringComparer.OrdinalIgnoreCase);
 
-            var pendingDeletePlugins = commands
-                .Where(tuple => tuple.command.Equals("delete", StringComparison.OrdinalIgnoreCase))
-                .Select(tuple => tuple.plugin)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            var pendingDependencyPlugins = commands
-                .Where(tuple =>
-                    tuple.command.Equals("install", StringComparison.OrdinalIgnoreCase) ||
-                    tuple.command.Equals("enable", StringComparison.OrdinalIgnoreCase))
-                .Select(tuple => tuple.plugin)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            bool DependentOn(string plugin)
-            {
-                foreach (var installedPlugin in loadedPlugins)
-                {
-                    if (pendingDeletePlugins.Contains(installedPlugin.Identifier))
-                    {
-                        continue;
-                    }
-
-                    if (installedPlugin.Dependencies.Any(dep => dep.Identifier.Equals(plugin, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        return true;
-                    }
-                }
-
-                foreach (var pendingPlugin in pendingDependencyPlugins)
-                {
-                    if (availableGroups.TryGetValue(pendingPlugin, out var pendingAvailableVersions) &&
-                        pendingAvailableVersions.Any(availablePlugin =>
-                            availablePlugin.Dependencies.Any(dep => dep.Identifier.Equals(plugin, StringComparison.OrdinalIgnoreCase))))
-                    {
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-
-            PluginState BuildState(string identifier)
-            {
-                availableGroups.TryGetValue(identifier, out var availableVersions);
-                var bestAvailable = GetBestCandidate(availableVersions, installed) ?? availableVersions?.FirstOrDefault();
-
-                var loadedPlugin = loadedPlugins.FirstOrDefault(plugin =>
-                    plugin.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase));
-                disabled.TryGetValue(identifier, out var disabledVersion);
-
-                var installedVersion = loadedPlugin?.Version;
-                var currentVersion = installedVersion ?? disabledVersion;
-                var updateCandidates = currentVersion is null
-                    ? []
-                    : availableVersions?
-                        .Where(plugin => plugin.Version > currentVersion)
-                        .ToArray() ?? [];
-
-                var bestUpdate = GetBestCandidate(updateCandidates, installed);
-
-                pendingInstallVersions.TryGetValue(identifier, out var pendingVersion);
-
-                return new PluginState
-                {
-                    Identifier = identifier,
-                    LoadedPlugin = loadedPlugin,
-                    DisabledVersion = disabledVersion,
-                    BestAvailable = bestAvailable,
-                    BestUpdate = bestUpdate,
-                    IsDependentOn = DependentOn(identifier),
-                    LastPendingAction = commands.LastOrDefault(tuple => tuple.plugin.Equals(identifier, StringComparison.OrdinalIgnoreCase)).command,
-                    HasPendingInstall = commands.Any(tuple =>
-                        tuple.plugin.Equals(identifier, StringComparison.OrdinalIgnoreCase) &&
-                        tuple.command.Equals("install", StringComparison.OrdinalIgnoreCase)),
-                    HasPendingDelete = commands.Any(tuple =>
-                        tuple.plugin.Equals(identifier, StringComparison.OrdinalIgnoreCase) &&
-                        tuple.command.Equals("delete", StringComparison.OrdinalIgnoreCase)),
-                    HasPendingEnable = commands.Any(tuple =>
-                        tuple.plugin.Equals(identifier, StringComparison.OrdinalIgnoreCase) &&
-                        tuple.command.Equals("enable", StringComparison.OrdinalIgnoreCase)),
-                    PendingInstallVersion = pendingVersion
-                };
-            }
-
-            var states = new Dictionary<string, PluginState>(StringComparer.OrdinalIgnoreCase);
-            PluginState GetState(string identifier)
-            {
-                if (!states.TryGetValue(identifier, out var state))
-                {
-                    state = BuildState(identifier);
-                    states[identifier] = state;
-                }
-
-                return state;
-            }
-
-            var model = new ManagePluginsShellViewModel
-            {
-                DisabledPlugins = disabled
-                    .OrderBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase)
-                    .Select(pair => CreateDisabledViewModel(GetState(pair.Key), installed))
-                    .ToList(),
-                InstalledPlugins = loadedPlugins
-                    .OrderBy(plugin => plugin.Name, StringComparer.OrdinalIgnoreCase)
-                    .Select(plugin => CreateInstalledViewModel(GetState(plugin.Identifier), installed))
-                    .ToList(),
-                PendingActions = commands
-                    .GroupBy(tuple => tuple.plugin, StringComparer.OrdinalIgnoreCase)
-                    .Select(group => new PendingPluginActionViewModel
-                    {
-                        Plugin = group.Key,
-                        Action = group.Last().command
-                    })
-                    .OrderBy(action => action.Plugin, StringComparer.OrdinalIgnoreCase)
-                    .ToList()
-            };
-
-            var selectedState = ResolveSelectedState(source.SelectedPluginIdentifier, source.SelectedPluginSlug, GetState, loadedPlugins, disabled, allAvailable);
-            model.SelectedPluginIdentifier = selectedState?.Identifier ?? source.SelectedPluginIdentifier;
-            model.SelectedPluginSlug = selectedState?.ResolvedSlug ?? source.SelectedPluginSlug;
-            model.SelectedPluginPanel = selectedState?.State is null && !string.IsNullOrEmpty(model.SelectedPluginSlug)
-                ? CreateDirectoryOnlyPanelViewModel(model.SelectedPluginIdentifier, model.SelectedPluginSlug)
-                : CreateSelectedPanelViewModel(selectedState?.State, installed);
-            return model;
+            return new PluginsStateData(
+                loadedPlugins,
+                installed,
+                commands,
+                disabled,
+                allAvailable,
+                availableVersionsByIdentifier,
+                pendingInstallVersions);
         }
 
-        private static PluginSelectedPanelViewModel CreateDirectoryOnlyPanelViewModel(
-            string selectedIdentifier,
-            string selectedSlug)
+        private (string SelectedIdentifier, string SelectedSlug, PluginSelectedPanelViewModel Panel) CreateSelectedPanel(
+            ProjectionSource source,
+            PluginsStateData data)
         {
-            return new PluginSelectedPanelViewModel
+            var selectedState = ResolveSelectedState(
+                source.SelectedPluginIdentifier,
+                source.SelectedPluginSlug,
+                data.LoadedPlugins,
+                data.Disabled,
+                data.AllAvailable);
+            if (selectedState is null)
             {
-                HasSelection = true,
-                SelectedIdentifier = selectedIdentifier,
-                SelectedSlug = selectedSlug,
-                Plugin = new PluginInfoViewModel
-                {
-                    Identifier = string.IsNullOrEmpty(selectedIdentifier) ? selectedSlug : selectedIdentifier,
-                    CatalogSlug = selectedSlug,
-                    Name = selectedSlug
-                }
-            };
-        }
-
-        private PluginSelectedPanelViewModel CreateSelectedPanelViewModel(
-            PluginState state,
-            Dictionary<string, Version> installed)
-        {
-            if (state is null)
-            {
-                return new PluginSelectedPanelViewModel { HasSelection = false };
+                return (null, null, new PluginSelectedPanelViewModel { HasSelection = false });
             }
 
-            var plugin = CreatePanelInfo(state, installed);
-            var actions = CreatePanelActions(state, installed);
+            var state = BuildState(selectedState.Identifier, data);
+            var plugin = CreatePanelInfo(state, data.Installed);
+            var actions = CreatePanelActions(state, data.Installed);
             var (currentState, description) = GetPanelStateText(state, plugin);
 
-            return new PluginSelectedPanelViewModel
+            var panel = new PluginSelectedPanelViewModel
             {
                 HasSelection = true,
                 SelectedIdentifier = state.Identifier,
@@ -216,6 +126,112 @@ namespace BTCPayServer.Plugins
                 PendingVersion = state.PendingInstallVersion,
                 Actions = actions
             };
+            return (panel.SelectedIdentifier, panel.SelectedSlug, panel);
+        }
+
+        private static List<PendingPluginActionViewModel> CreatePendingActions((string command, string plugin)[] commands)
+        {
+            return commands
+                .GroupBy(tuple => tuple.plugin, StringComparer.OrdinalIgnoreCase)
+                .Select(group => new PendingPluginActionViewModel
+                {
+                    Plugin = group.Key,
+                    Action = group.Last().command
+                })
+                .OrderBy(action => action.Plugin, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        private static string[] CreateHiddenPluginIdentifiers(PluginsStateData data)
+        {
+            return data.LoadedPlugins
+                .Select(plugin => plugin.Identifier)
+                .Concat(data.Disabled.Keys)
+                .Where(identifier => !string.IsNullOrEmpty(identifier))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(identifier => identifier, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+        }
+
+        private static PluginState BuildState(string identifier, PluginsStateData data)
+        {
+            data.AvailableVersionsByIdentifier.TryGetValue(identifier, out var availableVersions);
+            var bestAvailable = GetBestCandidate(availableVersions, data.Installed) ?? availableVersions?.FirstOrDefault();
+
+            var loadedPlugin = data.LoadedPlugins.FirstOrDefault(plugin =>
+                plugin.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+            data.Disabled.TryGetValue(identifier, out var disabledVersion);
+
+            var installedVersion = loadedPlugin?.Version;
+            var currentVersion = installedVersion ?? disabledVersion;
+            var updateCandidates = currentVersion is null
+                ? []
+                : availableVersions?
+                    .Where(plugin => plugin.Version > currentVersion)
+                    .ToArray() ?? [];
+
+            var bestUpdate = GetBestCandidate(updateCandidates, data.Installed);
+
+            data.PendingInstallVersions.TryGetValue(identifier, out var pendingVersion);
+
+            return new PluginState
+            {
+                Identifier = identifier,
+                LoadedPlugin = loadedPlugin,
+                DisabledVersion = disabledVersion,
+                BestAvailable = bestAvailable,
+                BestUpdate = bestUpdate,
+                IsRequiredByOtherPlugins = HasPluginsDependingOn(identifier, data),
+                LastPendingAction = data.Commands.LastOrDefault(tuple => tuple.plugin.Equals(identifier, StringComparison.OrdinalIgnoreCase)).command,
+                HasPendingInstall = data.Commands.Any(tuple =>
+                    tuple.plugin.Equals(identifier, StringComparison.OrdinalIgnoreCase) &&
+                    tuple.command.Equals("install", StringComparison.OrdinalIgnoreCase)),
+                HasPendingDelete = data.Commands.Any(tuple =>
+                    tuple.plugin.Equals(identifier, StringComparison.OrdinalIgnoreCase) &&
+                    tuple.command.Equals("delete", StringComparison.OrdinalIgnoreCase)),
+                HasPendingEnable = data.Commands.Any(tuple =>
+                    tuple.plugin.Equals(identifier, StringComparison.OrdinalIgnoreCase) &&
+                    tuple.command.Equals("enable", StringComparison.OrdinalIgnoreCase)),
+                PendingInstallVersion = pendingVersion
+            };
+        }
+
+        private static bool HasPluginsDependingOn(string plugin, PluginsStateData data)
+        {
+            var pendingDeletePlugins = data.Commands
+                .Where(tuple => tuple.command.Equals("delete", StringComparison.OrdinalIgnoreCase))
+                .Select(tuple => tuple.plugin)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var installedPlugin in data.LoadedPlugins)
+            {
+                if (pendingDeletePlugins.Contains(installedPlugin.Identifier))
+                {
+                    continue;
+                }
+
+                if (installedPlugin.Dependencies.Any(dep => dep.Identifier.Equals(plugin, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return true;
+                }
+            }
+
+            foreach (var pendingPlugin in data.Commands
+                         .Where(tuple =>
+                             tuple.command.Equals("install", StringComparison.OrdinalIgnoreCase) ||
+                             tuple.command.Equals("enable", StringComparison.OrdinalIgnoreCase))
+                         .Select(tuple => tuple.plugin)
+                         .Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                if (data.AvailableVersionsByIdentifier.TryGetValue(pendingPlugin, out var pendingAvailableVersions) &&
+                    pendingAvailableVersions.Any(availablePlugin =>
+                        availablePlugin.Dependencies.Any(dep => dep.Identifier.Equals(plugin, StringComparison.OrdinalIgnoreCase))))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private PluginDisabledViewModel CreateDisabledViewModel(PluginState state, Dictionary<string, Version> installed)
@@ -265,7 +281,7 @@ namespace BTCPayServer.Plugins
             };
         }
 
-        private PluginInstalledCardViewModel CreateInstalledViewModel(PluginState state, Dictionary<string, Version> installed)
+        private PluginInstalledCardViewModel CreateInstalledPluginCardViewModel(PluginState state, Dictionary<string, Version> installed)
         {
             var actions = new List<PluginActionViewModel>();
             if (!string.IsNullOrEmpty(state.LastPendingAction))
@@ -285,7 +301,7 @@ namespace BTCPayServer.Plugins
                         dependenciesMet ? null : "Schedule upgrade for when the dependencies have been met to ensure a smooth update"));
                 }
 
-                if (state.IsDependentOn)
+                if (state.IsRequiredByOtherPlugins)
                 {
                     actions.Add(CreateDisabledAction(
                         "Uninstall",
@@ -316,53 +332,7 @@ namespace BTCPayServer.Plugins
                 return actions;
             }
 
-            if (state.DisabledVersion is not null)
-            {
-                if (state.BestUpdate is not null)
-                {
-                    var dependenciesMet = DependenciesMet(state.BestUpdate.Dependencies, installed);
-                    actions.Add(CreateInstallAction(
-                        state.Identifier,
-                        state.BestUpdate,
-                        "btn btn-primary",
-                        dependenciesMet ? "Update" : "Schedule update",
-                        dependenciesMet ? null : "Schedule upgrade for when the dependencies have been met to ensure a smooth update"));
-                }
-
-                actions.Add(CreatePostAction("EnablePlugin", "Enable", "btn btn-outline-primary", state.Identifier));
-                actions.Add(CreatePostAction("UnInstallPlugin", "Uninstall", "btn btn-outline-danger", state.Identifier));
-                return actions;
-            }
-
-            if (state.LoadedPlugin is not null)
-            {
-                if (state.BestUpdate is not null)
-                {
-                    var dependenciesMet = DependenciesMet(state.BestUpdate.Dependencies, installed);
-                    actions.Add(CreateInstallAction(
-                        state.Identifier,
-                        state.BestUpdate,
-                        "btn btn-primary",
-                        dependenciesMet ? "Update" : "Schedule update",
-                        dependenciesMet ? null : "Schedule upgrade for when the dependencies have been met to ensure a smooth update"));
-                }
-
-                if (state.IsDependentOn)
-                {
-                    actions.Add(CreateDisabledAction(
-                        "Uninstall",
-                        "btn btn-outline-danger",
-                        "This plugin cannot be uninstalled as it is depended on by other plugins."));
-                }
-                else
-                {
-                    actions.Add(CreatePostAction("UnInstallPlugin", "Uninstall", "btn btn-outline-danger", state.Identifier));
-                }
-
-                return actions;
-            }
-
-            if (state.BestAvailable is not null)
+            if (state.LoadedPlugin is null && state.DisabledVersion is null && state.BestAvailable is not null)
             {
                 var dependenciesMet = DependenciesMet(state.BestAvailable.Dependencies, installed);
                 actions.Add(CreateInstallAction(
@@ -386,15 +356,13 @@ namespace BTCPayServer.Plugins
 
             if (state.DisabledVersion is not null)
             {
-                return state.BestUpdate is not null
-                    ? ("Disabled", $"Version {state.DisabledVersion} is disabled. BTCPay Server can update or re-enable it from here.")
-                    : ("Disabled", $"Version {state.DisabledVersion} is disabled on this server.");
+                return ("Disabled", $"Version {state.DisabledVersion} is disabled on this server.");
             }
 
             if (state.LoadedPlugin is not null)
             {
                 return state.BestUpdate is not null
-                    ? ("Installed", $"Version {state.BestUpdate.Version} is available for update.")
+                    ? ("Installed", $"Version {state.BestUpdate.Version} is available. Manage updates from Installed Plugins.")
                     : ("Installed", "This plugin is already installed on the server.");
             }
 
@@ -429,7 +397,6 @@ namespace BTCPayServer.Plugins
         private static SelectedState ResolveSelectedState(
             string selectedIdentifier,
             string selectedSlug,
-            Func<string, PluginState> getState,
             IEnumerable<IBTCPayServerPlugin> loadedPlugins,
             Dictionary<string, Version> disabled,
             IEnumerable<PluginService.AvailablePlugin> allAvailable)
@@ -441,7 +408,7 @@ namespace BTCPayServer.Plugins
                     plugin.CatalogSlug.Equals(selectedSlug, StringComparison.OrdinalIgnoreCase));
                 if (available is not null)
                 {
-                    return new SelectedState(available.Identifier, available.CatalogSlug, getState(available.Identifier));
+                    return new SelectedState(available.Identifier, available.CatalogSlug);
                 }
             }
 
@@ -453,7 +420,7 @@ namespace BTCPayServer.Plugins
                 {
                     var resolvedSlug = allAvailable.FirstOrDefault(plugin =>
                         plugin.Identifier.Equals(selectedIdentifier, StringComparison.OrdinalIgnoreCase))?.CatalogSlug;
-                    return new SelectedState(selectedIdentifier, resolvedSlug, getState(selectedIdentifier));
+                    return new SelectedState(selectedIdentifier, resolvedSlug);
                 }
             }
 
@@ -466,16 +433,6 @@ namespace BTCPayServer.Plugins
                 .OrderByDescending(plugin => plugin.Version)
                 .ToArray() ?? [];
             return ordered.FirstOrDefault(plugin => DependenciesMet(plugin.Dependencies, installed)) ?? ordered.FirstOrDefault();
-        }
-
-        private static Dictionary<string, Version> NormalizeVersions(Dictionary<string, Version> versions)
-        {
-            return (versions ?? new Dictionary<string, Version>())
-                .GroupBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase)
-                .ToDictionary(
-                    group => group.First().Key,
-                    group => group.OrderByDescending(pair => pair.Value).First().Value,
-                    StringComparer.OrdinalIgnoreCase);
         }
 
         private static PluginActionViewModel CreateInstallAction(
@@ -612,7 +569,7 @@ namespace BTCPayServer.Plugins
             public Version DisabledVersion { get; init; }
             public PluginService.AvailablePlugin BestAvailable { get; init; }
             public PluginService.AvailablePlugin BestUpdate { get; init; }
-            public bool IsDependentOn { get; init; }
+            public bool IsRequiredByOtherPlugins { get; init; }
             public string LastPendingAction { get; init; }
             public bool HasPendingInstall { get; init; }
             public bool HasPendingDelete { get; init; }
@@ -620,6 +577,15 @@ namespace BTCPayServer.Plugins
             public Version PendingInstallVersion { get; init; }
         }
 
-        private sealed record SelectedState(string Identifier, string ResolvedSlug, PluginState State);
+        private sealed record PluginsStateData(
+            IBTCPayServerPlugin[] LoadedPlugins,
+            Dictionary<string, Version> Installed,
+            (string command, string plugin)[] Commands,
+            Dictionary<string, Version> Disabled,
+            PluginService.AvailablePlugin[] AllAvailable,
+            Dictionary<string, PluginService.AvailablePlugin[]> AvailableVersionsByIdentifier,
+            Dictionary<string, Version> PendingInstallVersions);
+
+        private sealed record SelectedState(string Identifier, string ResolvedSlug);
     }
 }

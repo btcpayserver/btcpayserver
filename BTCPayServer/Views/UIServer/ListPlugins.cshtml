@@ -1,5 +1,5 @@
 @using System.Linq
-@model ManagePluginsShellViewModel
+@model InstalledPluginsViewModel
 @{
     Layout = "_Layout";
     ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Plugins), StringLocalizer["Installed Plugins"])
@@ -12,16 +12,6 @@
 <style>
     .version-switch .nav-link { display: inline; }
     .version-switch .nav-link.active { display: none; }
-
-    .plugin-manage-content {
-        display: flex;
-        flex-direction: column;
-        gap: 3rem;
-    }
-
-    .plugin-manage-section {
-        margin: 0;
-    }
 </style>
 
 <partial name="_StatusMessage" />
@@ -46,10 +36,10 @@
     </div>
 }
 
-<div class="plugin-manage-content">
+<div class="d-flex flex-column gap-5">
 @if (Model.DisabledPlugins.Any())
 {
-    <section class="plugin-manage-section order-1">
+    <section class="m-0 order-1">
         <h3 class="mb-4" text-translate="true">Disabled Plugins</h3>
         <ul class="list-group list-group-flush d-inline-block">
             @foreach (var plugin in Model.DisabledPlugins)
@@ -96,7 +86,7 @@
 
 @if (Model.InstalledPlugins.Any())
 {
-    <section id="plugins-installed" class="plugin-manage-section order-2">
+    <section id="plugins-installed" class="m-0 order-2">
         <h3 class="mb-4" text-translate="true">Installed Plugins</h3>
         <div class="row mb-4">
             @foreach (var plugin in Model.InstalledPlugins)

@@ -44,13 +44,6 @@
     {
         pageRouteValues["selectedSlug"] = Model.SelectedSlug;
     }
-
-    Dictionary<string, string> GetActionRouteValues(string formAction)
-    {
-        return formAction == "InstallPlugin" || formAction == "CancelPluginCommands"
-            ? pageRouteValues
-            : null;
-    }
 }
 
 @if (!Model.HasSelection)
@@ -181,7 +174,7 @@ else
                 {
                     <form method="post"
                           asp-action="@action.FormAction"
-                          asp-all-route-data="@GetActionRouteValues(action.FormAction)"
+                          asp-all-route-data="pageRouteValues"
                           class="d-grid">
                         <input type="hidden" name="plugin" value="@action.Plugin" />
                         @if (!string.IsNullOrEmpty(action.Version))
@@ -209,7 +202,6 @@ else
             <form method="post" asp-action="InstallPlugin" asp-all-route-data="pageRouteValues" class="d-none" data-plugin-install-form="true">
                 <input type="hidden" name="plugin" value="@Model.SelectedIdentifier" />
                 <input type="hidden" name="version" />
-                <input type="hidden" name="selectedIdentifier" value="@Model.SelectedIdentifier" />
             </form>
         }
     </div>

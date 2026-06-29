@@ -20,12 +20,12 @@ namespace BTCPayServer.Controllers
             [FromServices] PluginService pluginService,
             [FromServices] PluginManagementProjectionService projectionService)
         {
-            var model = await BuildManagePluginsShellViewModel(
+            var source = await BuildPluginProjectionSource(
                 pluginService,
-                projectionService,
                 selectedIdentifier: null,
                 selectedSlug: null,
                 setErrorStatusMessage: true);
+            var model = projectionService.CreateInstalledPluginsViewModel(source);
             return View(model);
         }
 
@@ -36,12 +36,13 @@ namespace BTCPayServer.Controllers
             string selectedIdentifier = null,
             string selectedSlug = null)
         {
-            var model = await BuildManagePluginsShellViewModel(
+            var source = await BuildPluginProjectionSource(
                 pluginService,
-                projectionService,
                 selectedIdentifier,
                 selectedSlug,
                 setErrorStatusMessage: true);
+            var model = projectionService.CreatePluginDirectoryViewModel(source);
+            EnrichPluginDirectoryUrls(pluginService, model);
             return View(model);
         }
 
@@ -52,13 +53,18 @@ namespace BTCPayServer.Controllers
             string identifier = null,
             string slug = null)
         {
-            var model = await BuildManagePluginsShellViewModel(
+            var source = await BuildPluginProjectionSource(
                 pluginService,
-                projectionService,
                 identifier,
                 slug,
                 setErrorStatusMessage: false);
-            return PartialView("_SelectedPluginPanel", model.SelectedPluginPanel);
+            var model = projectionService.CreateSelectedPluginPanelViewModel(source);
+            EnrichSelectedPluginPanelUrl(
+                model,
+                pluginService.GetPluginSourceBaseUri(),
+                pluginService.GetShortBtcpayVersion(),
+                pluginService.PluginPreReleasesEnabled);
+            return PartialView("_SelectedPluginPanel", model);
         }
 
         [HttpPost("server/plugins/uninstall-all")]
@@ -226,15 +232,14 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(ListPlugins));
         }
 
-        private async Task<ManagePluginsShellViewModel> BuildManagePluginsShellViewModel(
+        private async Task<PluginManagementProjectionService.ProjectionSource> BuildPluginProjectionSource(
             PluginService pluginService,
-            PluginManagementProjectionService projectionService,
             string selectedIdentifier,
             string selectedSlug,
             bool setErrorStatusMessage)
         {
             var allPlugins = await GetRemotePlugins(pluginService, setErrorStatusMessage);
-            var model = projectionService.CreateViewModel(new PluginManagementProjectionService.ProjectionSource
+            return new PluginManagementProjectionService.ProjectionSource
             {
                 LoadedPlugins = pluginService.LoadedPlugins,
                 Installed = pluginService.Installed,
@@ -244,8 +249,11 @@ namespace BTCPayServer.Controllers
                 GetVersionOfPendingInstall = pluginService.GetVersionOfPendingInstall,
                 SelectedPluginIdentifier = selectedIdentifier,
                 SelectedPluginSlug = selectedSlug
-            });
+            };
+        }
 
+        private void EnrichPluginDirectoryUrls(PluginService pluginService, PluginDirectoryViewModel model)
+        {
             var pluginSourceBaseUri = pluginService.GetPluginSourceBaseUri();
             // The embedded directory iframe trusts the admin-configured plugin source.
             model.DirectoryOrigin = pluginSourceBaseUri is null ? null : $"{pluginSourceBaseUri.Scheme}://{pluginSourceBaseUri.Authority}";
@@ -256,13 +264,21 @@ namespace BTCPayServer.Controllers
                 pluginSourceBaseUri,
                 btcpayVersion,
                 preReleaseEnabled);
-            model.SelectedPluginPanel.EmbeddedDetailsUrl = BuildPluginDetailsEmbedUrl(
+            EnrichSelectedPluginPanelUrl(model.SelectedPluginPanel, pluginSourceBaseUri, btcpayVersion, preReleaseEnabled);
+        }
+
+        private void EnrichSelectedPluginPanelUrl(
+            PluginSelectedPanelViewModel panel,
+            Uri pluginSourceBaseUri,
+            string btcpayVersion,
+            bool preReleaseEnabled)
+        {
+            panel.EmbeddedDetailsUrl = BuildPluginDetailsEmbedUrl(
                 pluginSourceBaseUri,
-                model.SelectedPluginSlug,
-                model.SelectedPluginPanel.Actions.FirstOrDefault(action => action.FormAction == nameof(InstallPlugin))?.Version,
+                panel.SelectedSlug,
+                panel.Actions.FirstOrDefault(action => action.FormAction == nameof(InstallPlugin))?.Version,
                 btcpayVersion,
                 preReleaseEnabled);
-            return model;
         }
 
         private async Task<AvailablePlugin[]> GetRemotePlugins(

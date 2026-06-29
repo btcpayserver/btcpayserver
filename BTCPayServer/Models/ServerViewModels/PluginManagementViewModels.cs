@@ -3,15 +3,21 @@ using System.Collections.Generic;
 
 namespace BTCPayServer.Models.ServerViewModels
 {
-    public class ManagePluginsShellViewModel
+    public class InstalledPluginsViewModel
+    {
+        public List<PluginDisabledViewModel> DisabledPlugins { get; set; } = [];
+        public List<PluginInstalledCardViewModel> InstalledPlugins { get; set; } = [];
+        public List<PendingPluginActionViewModel> PendingActions { get; set; } = [];
+    }
+
+    public class PluginDirectoryViewModel
     {
         public string SelectedPluginIdentifier { get; set; }
         public string SelectedPluginSlug { get; set; }
         public string DirectoryIframeUrl { get; set; }
         public string DirectoryOrigin { get; set; }
         public string PanelUrl { get; set; }
-        public List<PluginDisabledViewModel> DisabledPlugins { get; set; } = [];
-        public List<PluginInstalledCardViewModel> InstalledPlugins { get; set; } = [];
+        public string[] HiddenPluginIdentifiers { get; set; } = [];
         public List<PendingPluginActionViewModel> PendingActions { get; set; } = [];
         public PluginSelectedPanelViewModel SelectedPluginPanel { get; set; } = new();
     }

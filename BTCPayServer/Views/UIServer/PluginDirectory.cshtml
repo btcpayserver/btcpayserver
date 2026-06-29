@@ -1,26 +1,11 @@
 @using System.Linq
-@model ManagePluginsShellViewModel
+@model PluginDirectoryViewModel
 @{
     Layout = "_Layout";
     ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Plugins), StringLocalizer["Plugin Directory"])
     {
         SubMenuItemId = "PluginDirectory"
     });
-
-    var hiddenPluginIdentifiers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-    foreach (var identifier in Model.InstalledPlugins.Select(plugin => plugin.Current?.Identifier).Where(identifier => !string.IsNullOrEmpty(identifier)))
-    {
-        hiddenPluginIdentifiers.Add(identifier);
-    }
-
-    foreach (var plugin in Model.DisabledPlugins.Where(plugin => !string.IsNullOrEmpty(plugin.Identifier)))
-    {
-        hiddenPluginIdentifiers.Add(plugin.Identifier);
-    }
-
-    var hiddenPluginIdentifiersPayload = hiddenPluginIdentifiers
-        .OrderBy(identifier => identifier, StringComparer.OrdinalIgnoreCase)
-        .ToArray();
 }
 
 <style>
@@ -109,7 +94,7 @@
          data-selected-slug="@Model.SelectedPluginSlug"
          data-panel-error-message="@StringLocalizer["BTCPay Server could not load the plugin panel."]"
          data-panel-retry-label="@StringLocalizer["Retry"]">
-        <script type="application/json" id="plugins-embed-hidden-plugin-identifiers">@Safe.Json(hiddenPluginIdentifiersPayload)</script>
+        <script type="application/json" id="plugins-embed-hidden-plugin-identifiers">@Safe.Json(Model.HiddenPluginIdentifiers)</script>
         <iframe id="plugins-directory-iframe"
                 title="@StringLocalizer["Plugin directory"]"
                 class="plugin-manage-frame d-block w-100 border-0"

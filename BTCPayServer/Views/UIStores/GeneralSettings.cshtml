@@ -48,7 +48,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="StoreTimeZone" class="form-label"></label>
-                <input asp-for="StoreTimeZone" class="form-control" list="timezone-selection-suggestion" autocomplete="off" />
+                <input asp-for="StoreTimeZone" class="form-control" list="timezone-selection-suggestion" autocomplete="off" placeholder="@StringLocalizer["Server default ({0})", Model.ServerTimeZone]" />
                 <datalist id="timezone-selection-suggestion">
                     @foreach (var timeZone in TimeZoneInfo.GetSystemTimeZones())
                     {

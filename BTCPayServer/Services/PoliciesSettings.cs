@@ -32,6 +32,8 @@ namespace BTCPayServer.Services
         [Display(Name = "Backend's language")]
         public string LangTranslation { get; set; } = "English";
 
+        [DefaultValue("UTC")]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
         [Display(Name = "Server Time Zone")]
         public string ServerTimeZone { get; set; } = TimeZoneInfo.Utc.Id;
 

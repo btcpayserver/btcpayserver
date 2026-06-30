@@ -41,6 +41,7 @@ public partial class UIStoresController
             InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes,
             DefaultCurrency = storeBlob.DefaultCurrency,
             StoreTimeZone = storeBlob.DefaultTimeZone,
+            ServerTimeZone = _policiesSettings.ServerTimeZone,
             AdditionalTrackedRates = string.Join(',', storeBlob.AdditionalTrackedRates?.ToArray() ?? []),
             BOLT11Expiration = (long)storeBlob.RefundBOLT11Expiration.TotalDays,
             Archived = store.Archived,
@@ -60,6 +61,7 @@ public partial class UIStoresController
         [FromForm] bool RemoveLogoFile = false,
         [FromForm] bool RemoveCssFile = false)
     {
+        model.ServerTimeZone = _policiesSettings.ServerTimeZone;
         bool needUpdate = false;
         if (CurrentStore.StoreName != model.StoreName)
         {
@@ -84,7 +86,8 @@ public partial class UIStoresController
         blob.NetworkFeeMode = model.NetworkFeeMode;
         blob.PaymentTolerance = model.PaymentTolerance;
         blob.DefaultCurrency = model.DefaultCurrency.ToUpperInvariant().Trim();
-        blob.DefaultTimeZone = model.StoreTimeZone;
+        model.StoreTimeZone = model.StoreTimeZone?.Trim();
+        blob.DefaultTimeZone = string.IsNullOrEmpty(model.StoreTimeZone) ? null : model.StoreTimeZone;
         blob.AdditionalTrackedRates = model.AdditionalTrackedRates?.Split(',', StringSplitOptions.RemoveEmptyEntries);
         blob.ShowRecommendedFee = model.ShowRecommendedFee;
         blob.RecommendedFeeBlockTarget = model.RecommendedFeeBlockTarget;
@@ -96,7 +99,7 @@ public partial class UIStoresController
             ModelState.AddModelError(nameof(model.BrandColor), StringLocalizer["The brand color needs to be a valid hex color code"]);
             return View(model);
         }
-        if (string.IsNullOrEmpty(model.StoreTimeZone) || !TimeZoneInfo.TryFindSystemTimeZoneById(model.StoreTimeZone, out _))
+        if (!string.IsNullOrEmpty(model.StoreTimeZone) && !TimeZoneInfo.TryFindSystemTimeZoneById(model.StoreTimeZone, out _))
         {
             ModelState.AddModelError(nameof(model.StoreTimeZone), $"Invalid Timezone: {model.StoreTimeZone}");
         }

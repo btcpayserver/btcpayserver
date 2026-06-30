@@ -266,7 +266,7 @@ namespace BTCPayServer.Controllers.Greenfield
             //we do not include OnChainMinValue and LightningMaxValue because moving the CurrencyValueJsonConverter to the Client csproj is hard and requires a refactor (#1571 & #1572)
             blob.NetworkFeeMode = restModel.NetworkFeeMode.Value;
             blob.DefaultCurrency = restModel.DefaultCurrency;
-            blob.DefaultTimeZone = restModel.TimeZone;
+            blob.DefaultTimeZone = string.IsNullOrWhiteSpace(restModel.TimeZone) ? null : restModel.TimeZone;
             blob.AdditionalTrackedRates = restModel.AdditionalTrackedRates?.ToArray();
             blob.ReceiptOptions = InvoiceDataBase.ReceiptOptions.Merge(restModel.Receipt, null);
             blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi.Value;
@@ -345,7 +345,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.LogoUrl), "Logo is not a valid url");
             }
 
-            if (string.IsNullOrEmpty(request.TimeZone) || !TimeZoneInfo.TryFindSystemTimeZoneById(request.TimeZone, out _))
+            if (!string.IsNullOrWhiteSpace(request.TimeZone) && !TimeZoneInfo.TryFindSystemTimeZoneById(request.TimeZone, out _))
             {
                 ModelState.AddModelError(nameof(request.TimeZone), $"Invalid Timezone: {request.TimeZone}");
             }

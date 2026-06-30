@@ -12,7 +12,6 @@ namespace BTCPayServer.Models
         public int? Total { get; set; }
         [DisplayFormat(ConvertEmptyStringToNull = false)]
         public string SearchTerm { get; set; }
-        public int? TimezoneOffset { get; set; }
         public Dictionary<string, object> PaginationQuery { get; set; }
 
         public abstract int CurrentPageCount { get; }

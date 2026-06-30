@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Models.NotificationViewModels;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -15,13 +16,14 @@ namespace BTCPayServer.Controllers
     [Route("notifications/{action:lowercase=Index}")]
     public class UINotificationsController(
         StoreRepository storeRepo,
-        NotificationManager notificationManager) : Controller
+        NotificationManager notificationManager,
+        TimeZoneProvider timeZoneProvider) : Controller
     {
         [HttpGet]
         public async Task<IActionResult> Index(NotificationIndexViewModel model = null)
         {
             model ??= new NotificationIndexViewModel { Skip = 0 };
-            var timezoneOffset = model.TimezoneOffset ?? 0;
+            var timezoneOffset = await timeZoneProvider.GetUserTimeZone(User);
             model.Status ??= "Unread";
             ViewBag.Status = model.Status;
             if (User.GetIdOrNull() is not string userId)

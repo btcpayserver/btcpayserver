@@ -54,8 +54,6 @@ namespace BTCPayServer.Data
             }
         }
 
-        public string DefaultTimeZone { get; set; }
-
         public string StoreSupportUrl { get; set; }
 
         CurrencyPair[] _DefaultCurrencyPairs;

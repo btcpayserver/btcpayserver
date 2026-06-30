@@ -40,7 +40,7 @@ public partial class UIStoresController
             PaymentTolerance = storeBlob.PaymentTolerance,
             InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes,
             DefaultCurrency = storeBlob.DefaultCurrency,
-            StoreTimeZone = storeBlob.DefaultTimeZone,
+            StoreTimeZone = store.TimeZone,
             ServerTimeZone = _policiesSettings.ServerTimeZone,
             AdditionalTrackedRates = string.Join(',', storeBlob.AdditionalTrackedRates?.ToArray() ?? []),
             BOLT11Expiration = (long)storeBlob.RefundBOLT11Expiration.TotalDays,
@@ -81,13 +81,18 @@ public partial class UIStoresController
             needUpdate = true;
         }
 
+        model.StoreTimeZone = model.StoreTimeZone?.Trim();
+        if (CurrentStore.TimeZone != model.StoreTimeZone)
+        {
+            CurrentStore.TimeZone = string.IsNullOrEmpty(model.StoreTimeZone) ? null : model.StoreTimeZone;
+            needUpdate = true;
+        }
+
         var blob = CurrentStore.GetStoreBlob();
         blob.AnyoneCanInvoice = model.AnyoneCanCreateInvoice;
         blob.NetworkFeeMode = model.NetworkFeeMode;
         blob.PaymentTolerance = model.PaymentTolerance;
         blob.DefaultCurrency = model.DefaultCurrency.ToUpperInvariant().Trim();
-        model.StoreTimeZone = model.StoreTimeZone?.Trim();
-        blob.DefaultTimeZone = string.IsNullOrEmpty(model.StoreTimeZone) ? null : model.StoreTimeZone;
         blob.AdditionalTrackedRates = model.AdditionalTrackedRates?.Split(',', StringSplitOptions.RemoveEmptyEntries);
         blob.ShowRecommendedFee = model.ShowRecommendedFee;
         blob.RecommendedFeeBlockTarget = model.RecommendedFeeBlockTarget;

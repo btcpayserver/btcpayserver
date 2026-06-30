@@ -40,7 +40,6 @@
 <partial name="_StatusMessage" />
 <form asp-route-status="@Model.Status" class="d-flex flex-wrap align-items-center gap-md-4 gap-sm-0 mb-4 col-xxl-8" asp-action="Index" method="get">
     <input asp-for="Count" type="hidden" />
-    <input asp-for="TimezoneOffset" type="hidden" />
     <input type="hidden" asp-for="Status" value="@Model.Status" />
 
     <div class="col-12 col-md-6 col-lg-4 mb-3 mb-md-0">

@@ -12,14 +12,14 @@ namespace BTCPayServer
         private static readonly string[] StripFilters = ["status", "exceptionstatus", "unusual", "includearchived", "appid", "startdate", "enddate", "label", "nolabel", "direction"];
 
         private readonly string _originalString;
-        private readonly int _timezoneOffset;
+        private readonly TimeZoneInfo _timeZone;
 
-        public SearchString(string str, int timezoneOffset = 0)
+        public SearchString(string str, TimeZoneInfo timeZone)
         {
             str ??= string.Empty;
             str = str.Trim();
             _originalString = str;
-            _timezoneOffset = timezoneOffset;
+            _timeZone = timeZone;
             TextSearch = _originalString;
             var splitted = str.Split(new [] { FilterSeparator }, StringSplitOptions.RemoveEmptyEntries);
             Filters
@@ -61,7 +61,7 @@ namespace BTCPayServer
                 return Finalize(ToString().Replace(keyValue, string.Empty));
             }
 
-            var dateFilter = GetFilterDate(key, _timezoneOffset);
+            var dateFilter = GetFilterDate(key);
             if (dateFilter != null)
             {
                 var current = GetFilterArray(key).First();
@@ -115,7 +115,7 @@ namespace BTCPayServer
             return bool.TryParse(Filters[key].First(), out var r) ? r : null;
         }
 
-        public DateTimeOffset? GetFilterDate(string key, int timezoneOffset)
+        public DateTimeOffset? GetFilterDate(string key)
         {
             key = UnifyKey(key);
             if (!Filters.ContainsKey(key))
@@ -127,18 +127,21 @@ namespace BTCPayServer
                 // handle special string values
                 case "-24h":
                 case "-1d":
-                    return DateTimeOffset.UtcNow.AddDays(-1).AddMinutes(timezoneOffset);
+                    var lastDay = DateTimeOffset.UtcNow.AddDays(-1);
+                    return lastDay - _timeZone.GetUtcOffset(lastDay);
                 case "-3d":
-                    return DateTimeOffset.UtcNow.AddDays(-3).AddMinutes(timezoneOffset);
+                    var lastThreeDays = DateTimeOffset.UtcNow.AddDays(-3);
+                    return lastThreeDays - _timeZone.GetUtcOffset(lastThreeDays);
                 case "-7d":
-                    return DateTimeOffset.UtcNow.AddDays(-7).AddMinutes(timezoneOffset);
+                    var lastSevenDays = DateTimeOffset.UtcNow.AddDays(-7);
+                    return lastSevenDays - _timeZone.GetUtcOffset(lastSevenDays);
             }
 
             // default parsing logic
             var success = DateTimeOffset.TryParse(val, null, DateTimeStyles.AssumeUniversal, out var r);
             if (success)
             {
-                r = r.AddMinutes(timezoneOffset);
+                r = r - _timeZone.GetUtcOffset(r);
                 return r;
             }
 

@@ -51,13 +51,12 @@ namespace BTCPayServer
                 if (section != null && !string.IsNullOrEmpty(section.SearchTerm))
                 {
                     model.SearchTerm = section.SearchTerm;
-                    model.TimezoneOffset = section.TimezoneOffset ?? 0;
                     model.Count = section.Count ?? BasePagingViewModel.CountDefault;
                 }
             }
             else
             {
-                prop.SetValue(prefCookie, new ListQueryDataHolder(model.SearchTerm, model.TimezoneOffset, model.Count));
+                prop.SetValue(prefCookie, new ListQueryDataHolder(model.SearchTerm, model.Count));
                 ctrl.Response.Cookies.Append(nameof(UserPrefsCookie), JsonConvert.SerializeObject(prefCookie));
             }
 

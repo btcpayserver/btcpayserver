@@ -1430,16 +1430,17 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         [Fact]
         public void CanParseFilter()
         {
+            var utc = TimeZoneInfo.Utc;
             var storeId = "6DehZnc9S7qC6TUTNWuzJ1pFsHTHvES6An21r3MjvLey";
             var filter = "storeid:abc, status:abed, blabhbalh ";
-            var search = new SearchString(filter);
+            var search = new SearchString(filter, utc);
             Assert.Equal("storeid:abc, status:abed, blabhbalh", search.ToString());
             Assert.Equal("blabhbalh", search.TextSearch);
             Assert.Single(search.Filters["storeid"], "abc");
             Assert.Single(search.Filters["status"], "abed");
 
             filter = "status:abed, status:abed2";
-            search = new SearchString(filter);
+            search = new SearchString(filter, utc);
             Assert.Null(search.TextSearch);
             Assert.Null(search.TextFilters);
             Assert.Equal("status:abed, status:abed2", search.ToString());
@@ -1449,7 +1450,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.Equal("abed2", search.Filters["status"].Skip(1).First());
 
             filter = "StartDate:2019-04-25 01:00 AM, hekki,orderid:MYORDERID,orderid:MYORDERID_2";
-            search = new SearchString(filter);
+            search = new SearchString(filter, utc);
             Assert.Equal("2019-04-25 01:00 AM", search.Filters["startdate"].First());
             Assert.Equal("hekki", search.TextSearch);
             Assert.Equal("orderid:MYORDERID,orderid:MYORDERID_2", search.TextFilters);
@@ -1458,7 +1459,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.Equal(filter, search.ToString());
 
             filter = "label:test,nolabel:true,direction:in, hekki";
-            search = new SearchString(filter);
+            search = new SearchString(filter, utc);
             Assert.Equal("hekki", search.TextSearch);
             Assert.Null(search.TextFilters);
             Assert.Equal("hekki", search.TextCombined);
@@ -1469,7 +1470,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
 
             // modify search
             filter = $"status:settled,exceptionstatus:paidLate,unusual:true, fulltext searchterm, storeid:{storeId},startdate:2019-04-25 01:00:00";
-            search = new SearchString(filter);
+            search = new SearchString(filter, utc);
             Assert.Equal(filter, search.ToString());
             Assert.Equal("fulltext searchterm", search.TextSearch);
             Assert.Single(search.Filters["storeid"], storeId);
@@ -1478,49 +1479,72 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.Single(search.Filters["unusual"], "true");
 
             // toggle off bool with same value
-            var modified = new SearchString(search.Toggle("unusual", "true"));
+            var modified = new SearchString(search.Toggle("unusual", "true"), utc);
             Assert.Null(modified.GetFilterBool("unusual"));
 
             // add to array
-            modified = new SearchString(modified.Toggle("status", "processing"));
+            modified = new SearchString(modified.Toggle("status", "processing"), utc);
             var statusArray = modified.GetFilterArray("status");
             Assert.Equal(2, statusArray.Length);
             Assert.Contains("processing", statusArray);
             Assert.Contains("settled", statusArray);
 
             // toggle off array with same value
-            modified = new SearchString(modified.Toggle("status", "settled"));
+            modified = new SearchString(modified.Toggle("status", "settled"), utc);
             statusArray = modified.GetFilterArray("status");
             Assert.Single(statusArray, "processing");
 
             // toggle off array with null value
-            modified = new SearchString(modified.Toggle("status", null));
+            modified = new SearchString(modified.Toggle("status", null), utc);
             Assert.Null(modified.GetFilterArray("status"));
 
             // toggle off date with null value
-            modified = new SearchString(modified.Toggle("startdate", "-7d"));
+            modified = new SearchString(modified.Toggle("startdate", "-7d"), utc);
             Assert.Single(modified.GetFilterArray("startdate"), "-7d");
-            modified = new SearchString(modified.Toggle("startdate", null));
+            modified = new SearchString(modified.Toggle("startdate", null), utc);
             Assert.Null(modified.GetFilterArray("startdate"));
 
             // toggle off date with same value
-            modified = new SearchString(modified.Toggle("enddate", "-7d"));
+            modified = new SearchString(modified.Toggle("enddate", "-7d"), utc);
             Assert.Single(modified.GetFilterArray("enddate"), "-7d");
-            modified = new SearchString(modified.Toggle("enddate", "-7d"));
+            modified = new SearchString(modified.Toggle("enddate", "-7d"), utc);
             Assert.Null(modified.GetFilterArray("enddate"));
 
-            search = new SearchString("7,startdate:-7d");
+            search = new SearchString("7,startdate:-7d", utc);
             Assert.Equal("startdate:-7d", search.WithoutSearchText());
+        }
+
+        [Fact]
+        public void CanParseFilterDateWithTimeZone()
+        {
+            var utc = TimeZoneInfo.Utc;
+            var search = new SearchString("startdate:2026-01-15 10:00:00", utc);
+            Assert.Equal(
+                new DateTimeOffset(2026, 1, 15, 10, 0, 0, TimeSpan.Zero),
+                search.GetFilterDate("startdate"));
+
+            var paris = TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris");
+            search = new SearchString("startdate:2026-01-15 10:00:00", paris);
+            Assert.Equal(
+                new DateTimeOffset(2026, 1, 15, 9, 0, 0, TimeSpan.Zero),
+                search.GetFilterDate("startdate"));
+
+            var tokyo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");
+            search = new SearchString("startdate:2026-06-30 17:00:00", tokyo);
+            Assert.Equal(
+                new DateTimeOffset(2026, 6, 30, 8, 0, 0, TimeSpan.Zero),
+                search.GetFilterDate("startdate"));
         }
 
         [Fact]
         public void BuildWalletTransactionsFilterSeparatesTextAndStructuredTerms()
         {
+            var utc = TimeZoneInfo.Utc;
             var result = UIWalletsController.BuildWalletTransactionsFilter(
                 "direction:out,label:primary-label,nolabel:true,startdate:2026-03-01T12:34:56",
                 "abc123tx",
                 "secondary-label",
-                120);
+                utc);
 
             Assert.Equal("abc123tx", result.SearchInputText);
             Assert.Equal("abc123tx", result.SearchText);
@@ -1540,7 +1564,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.True(result.HasLabelFilter);
             Assert.True(result.HasFilters);
 
-            result = UIWalletsController.BuildWalletTransactionsFilter(null, "abc", null, 120);
+            result = UIWalletsController.BuildWalletTransactionsFilter(null, "abc", null, utc);
 
             Assert.Equal(string.Empty, result.SearchTerm);
             Assert.Equal("abc", result.SearchText);
@@ -1549,7 +1573,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.False(result.HasLabelFilter);
             Assert.True(result.HasFilters);
 
-            result = UIWalletsController.BuildWalletTransactionsFilter("foo:bar", null, null, 120);
+            result = UIWalletsController.BuildWalletTransactionsFilter("foo:bar", null, null, utc);
 
             Assert.Equal(string.Empty, result.SearchTerm);
             Assert.Equal(string.Empty, result.SearchText);
@@ -1558,7 +1582,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.False(result.HasLabelFilter);
             Assert.False(result.HasFilters);
 
-            result = UIWalletsController.BuildWalletTransactionsFilter(string.Empty, null, null, 120);
+            result = UIWalletsController.BuildWalletTransactionsFilter(string.Empty, null, null, utc);
 
             Assert.Equal(string.Empty, result.SearchTerm);
             Assert.Equal(string.Empty, result.SearchText);

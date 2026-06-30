@@ -33,6 +33,7 @@ namespace BTCPayServer.Data
         public byte[] StoreCertificate { get; set; }
 
         public string StoreBlob { get; set; }
+        public string TimeZone { get; set; }
 
         [Obsolete("Use GetDefaultPaymentId instead")]
         public string DefaultCrypto { get; set; }

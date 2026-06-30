@@ -271,7 +271,7 @@
 
         const count = @Safe.Json(Model.Count);
         const skipInitial = @Safe.Json(Model.Skip);
-        const loadMoreUrl = @Safe.Json(Url.Action("WalletTransactions", new {walletId, labelFilter, searchTerm = Model.SearchTerm, searchText = Model.SearchText, timezoneOffset = Model.TimezoneOffset, skip = Model.Skip, count = Model.Count, loadTransactions = true}));
+        const loadMoreUrl = @Safe.Json(Url.Action("WalletTransactions", new {walletId, labelFilter, searchTerm = Model.SearchTerm, searchText = Model.SearchText, skip = Model.Skip, count = Model.Count, loadTransactions = true}));
         // The next time we load transactions, skip will become 0
         let skip = @Safe.Json(Model.Skip) - count;
 
@@ -478,7 +478,6 @@
 <div id="TransactionsToolbar" class="d-flex flex-wrap gap-3 mb-4">
     <form id="WalletTransactionsSearch" class="d-flex flex-wrap align-items-center gap-3 mb-0" asp-action="WalletTransactions" asp-route-walletId="@walletId" method="get">
         <input id="Count" name="Count" type="hidden" value="@Model.Count" />
-        <input id="TimezoneOffset" name="TimezoneOffset" type="hidden" value="@Model.TimezoneOffset" />
         <input name="SearchTerm" type="hidden" value="@Model.SearchTerm" />
         @if (!string.IsNullOrEmpty(labelFilter))
         {
@@ -547,17 +546,17 @@
                         </div>
                     </li>
                     <li>
-                        <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("label"), "nolabel")" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item @(labelFilterCount == 0 ? "custom-active" : string.Empty)" text-translate="true">All Labels</a>
+                        <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("label"), "nolabel")" class="dropdown-item @(labelFilterCount == 0 ? "custom-active" : string.Empty)" text-translate="true">All Labels</a>
                     </li>
                     <li>
-                        <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("label"), "nolabel", "true")" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item @(hasNoLabelFilter ? "custom-active" : string.Empty)" text-translate="true">No Label</a>
+                        <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("label"), "nolabel", "true")" class="dropdown-item @(hasNoLabelFilter ? "custom-active" : string.Empty)" text-translate="true">No Label</a>
                     </li>
                     <li><hr class="dropdown-divider"></li>
                     <li id="LabelFilterResultsAnchor" class="d-none"></li>
                     @foreach (var label in visibleLabels)
                     {
                         <li class="label-filter-item">
-                            <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("nolabel"), "label", label.Text)" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item transaction-label-text label-filter-link@((searchLabelFilters.Any(value => value.Equals(label.Text, StringComparison.OrdinalIgnoreCase)) || labelFilter == label.Text) ? " active" : string.Empty)" style="--btcpay-dropdown-link-active-bg:@label.Color;--btcpay-dropdown-link-active-color:@label.TextColor;">
+                            <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("nolabel"), "label", label.Text)" class="dropdown-item transaction-label-text label-filter-link@((searchLabelFilters.Any(value => value.Equals(label.Text, StringComparison.OrdinalIgnoreCase)) || labelFilter == label.Text) ? " active" : string.Empty)" style="--btcpay-dropdown-link-active-bg:@label.Color;--btcpay-dropdown-link-active-color:@label.TextColor;">
                                 <span class="label-filter-text">@label.Text</span>
                                 <small class="label-filter-count@(label.UsageCount > 0 ? string.Empty : " d-none")">@label.UsageCount</small>
                             </a>
@@ -566,7 +565,7 @@
                 </ul>
                 <template id="label-filter-item-template">
                     <li class="label-filter-item">
-                        <a href="@Url.Action("WalletTransactions", new { walletId, labelFilter = string.Empty, count = Model.Count, searchText = Model.SearchText, searchTerm = SetSearchFilter(SetSearchFilter("nolabel"), "label", "LABEL_PLACEHOLDER"), timezoneOffset = Model.TimezoneOffset })" class="dropdown-item transaction-label-text label-filter-link">
+                        <a href="@Url.Action("WalletTransactions", new { walletId, labelFilter = string.Empty, count = Model.Count, searchText = Model.SearchText, searchTerm = SetSearchFilter(SetSearchFilter("nolabel"), "label", "LABEL_PLACEHOLDER") })" class="dropdown-item transaction-label-text label-filter-link">
                             <span class="label-filter-text"></span>
                             <small class="label-filter-count d-none"></small>
                         </a>
@@ -601,11 +600,11 @@
                 }
             </button>
             <div class="dropdown-menu" aria-labelledby="DateOptionsToggle">
-                <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("startdate"), "enddate")" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item @((!HasArrayFilter("startdate") && !HasCustomDateFilter()) ? "custom-active" : string.Empty)" text-translate="true">All Time</a>
+                <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("startdate"), "enddate")" class="dropdown-item @((!HasArrayFilter("startdate") && !HasCustomDateFilter()) ? "custom-active" : string.Empty)" text-translate="true">All Time</a>
                 <hr class="dropdown-divider" />
-                <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("enddate"), "startdate", "-1d")" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item @(HasArrayFilter("startdate", "-1d") ? "custom-active" : "")" text-translate="true">Last 24 hours</a>
-                <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("enddate"), "startdate", "-3d")" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item @(HasArrayFilter("startdate", "-3d") ? "custom-active" : "")" text-translate="true">Last 3 days</a>
-                <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("enddate"), "startdate", "-7d")" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item @(HasArrayFilter("startdate", "-7d") ? "custom-active" : "")" text-translate="true">Last 7 days</a>
+                <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("enddate"), "startdate", "-1d")" class="dropdown-item @(HasArrayFilter("startdate", "-1d") ? "custom-active" : "")" text-translate="true">Last 24 hours</a>
+                <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("enddate"), "startdate", "-3d")" class="dropdown-item @(HasArrayFilter("startdate", "-3d") ? "custom-active" : "")" text-translate="true">Last 3 days</a>
+                <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("enddate"), "startdate", "-7d")" class="dropdown-item @(HasArrayFilter("startdate", "-7d") ? "custom-active" : "")" text-translate="true">Last 7 days</a>
                 <button type="button" class="dropdown-item @(HasCustomDateFilter() ? "custom-active" : "")" data-bs-toggle="modal" data-bs-target="#customRangeModal" text-translate="true">Custom Range</button>
             </div>
         </div>
@@ -635,9 +634,9 @@
                 Export
             </button>
             <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
-                <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="csv" asp-route-labelFilter="@labelFilter" asp-route-searchTerm="@Model.SearchTerm" asp-route-searchText="@Model.SearchText" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item export-link" target="_blank" id="ExportCSV" text-translate="true">CSV</a>
-                <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="json" asp-route-labelFilter="@labelFilter" asp-route-searchTerm="@Model.SearchTerm" asp-route-searchText="@Model.SearchText" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item export-link" target="_blank" id="ExportJSON" text-translate="true">JSON</a>
-                <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="bip329" asp-route-labelFilter="@labelFilter" asp-route-searchTerm="@Model.SearchTerm" asp-route-searchText="@Model.SearchText" asp-route-timezoneOffset="@Model.TimezoneOffset" class="dropdown-item export-link" target="_blank" id="ExportBIP329" text-translate="true">Wallet Labels (BIP-329)</a>
+                <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="csv" asp-route-labelFilter="@labelFilter" asp-route-searchTerm="@Model.SearchTerm" asp-route-searchText="@Model.SearchText" class="dropdown-item export-link" target="_blank" id="ExportCSV" text-translate="true">CSV</a>
+                <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="json" asp-route-labelFilter="@labelFilter" asp-route-searchTerm="@Model.SearchTerm" asp-route-searchText="@Model.SearchText" class="dropdown-item export-link" target="_blank" id="ExportJSON" text-translate="true">JSON</a>
+                <a asp-action="Export" asp-route-walletId="@walletId" asp-route-format="bip329" asp-route-labelFilter="@labelFilter" asp-route-searchTerm="@Model.SearchTerm" asp-route-searchText="@Model.SearchText" class="dropdown-item export-link" target="_blank" id="ExportBIP329" text-translate="true">Wallet Labels (BIP-329)</a>
             </div>
         </div>
     </div>

@@ -1064,7 +1064,7 @@ retry:
         public bool IncludeRefunds { get; set; }
         public bool OrderByDesc { get; set; } = true;
 
-        public void FillFromSearchText(SearchString fs, int timezoneOffset)
+        public void FillFromSearchText(SearchString fs)
         {
             TextSearch = fs.TextSearch;
             Unusual = fs.GetFilterBool("unusual");
@@ -1074,8 +1074,8 @@ retry:
             StoreId = fs.GetFilterArray("storeid");
             ItemCode = fs.GetFilterArray("itemcode");
             OrderId = fs.GetFilterArray("orderid");
-            StartDate = fs.GetFilterDate("startdate", timezoneOffset);
-            EndDate = fs.GetFilterDate("enddate", timezoneOffset);
+            StartDate = fs.GetFilterDate("startdate");
+            EndDate = fs.GetFilterDate("enddate");
         }
     }
 

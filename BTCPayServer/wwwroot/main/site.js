@@ -489,6 +489,30 @@ document.addEventListener("DOMContentLoaded", () => {
         e.target.removeAttribute('placeholder')
     })
 
+    // Timezone Selection
+    document.querySelectorAll('[data-set-browser-timezone]').forEach($btn => {
+        const timezone = window.Intl && Intl.DateTimeFormat().resolvedOptions().timeZone
+        const $label = $btn.querySelector('[data-browser-timezone-label]')
+        if (!timezone) {
+            $btn.hidden = true
+            return
+        }
+        if ($label) {
+            $label.textContent = ($btn.dataset.labelTemplate || '').replace('__timezone__', timezone)
+        }
+        $btn.dataset.browserTimezone = timezone
+    })
+    delegate('click', '[data-set-browser-timezone]', e => {
+        const $btn = e.target.closest('[data-set-browser-timezone]')
+        const timezone = $btn.dataset.browserTimezone
+        const inputId = $btn.dataset.timezoneInput
+        const $input = inputId ? document.getElementById(inputId) : null
+        if ($input && timezone) {
+            $input.value = timezone
+            $input.dispatchEvent(new Event('change', { bubbles: true }))
+        }
+    })
+
     // Offcanvas navigation
     const mainMenuToggle = document.getElementById('mainMenuToggle')
     if (mainMenuToggle) {

@@ -48,12 +48,18 @@
             </div>
             <div class="form-group">
                 <label asp-for="StoreTimeZone" class="form-label"></label>
-                <select asp-for="StoreTimeZone" asp-items="Model.TimeZones" class="form-select">
-                    <option value="@Model.StoreTimeZone">@Model.StoreTimeZone</option>
-                </select>
+                <input asp-for="StoreTimeZone" class="form-control" list="timezone-selection-suggestion" autocomplete="off" />
+                <datalist id="timezone-selection-suggestion">
+                    @foreach (var timeZone in Model.TimeZones)
+                    {
+                        <option value="@timeZone.Id">@timeZone.DisplayName</option>
+                    }
+                </datalist>
                 <span asp-validation-for="StoreTimeZone" class="text-danger"></span>
-                <div id="PreferredExchangeHelpBlock" class="form-text">
-                    <span text-translate="true">Current Timezone is @Model.StoreTimeZone</span>.
+                <div id="StoreTimeZoneHelpBlock" class="form-text">
+                    <button type="button" class="btn btn-link p-0 only-for-js" data-set-browser-timezone data-timezone-input="StoreTimeZone" data-label-template="@StringLocalizer["Set to browser's timezone ({0})", "__timezone__"]">
+                        <span data-browser-timezone-label text-translate="true">Set to browser's timezone</span>
+                    </button>
                 </div>
             </div>
             <div class="form-group">

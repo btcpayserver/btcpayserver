@@ -1,9 +1,9 @@
 using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
@@ -19,10 +19,10 @@ namespace BTCPayServer.Models.StoreViewModels
         [MinLength(1)]
         public string StoreName { get; set; }
 
-        [Display(Name = "Store Timezone")]
+        [Display(Name = "Store timezone")]
         public string StoreTimeZone { get; set; } = TimeZoneInfo.Utc.Id;
 
-        public SelectList TimeZones { get; set; } = new(TimeZoneInfo.GetSystemTimeZones(), nameof(TimeZoneInfo.Id), nameof(TimeZoneInfo.Id));
+        public ReadOnlyCollection<TimeZoneInfo> TimeZones { get; set; } = TimeZoneInfo.GetSystemTimeZones();
 
         [Uri]
         [Display(Name = "Store Website")]

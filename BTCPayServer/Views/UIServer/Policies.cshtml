@@ -145,6 +145,22 @@
                 <div class="mb-5">
                     <h4 class="mb-3" text-translate="true">Server</h4>
 					<div class="form-group">
+						<label asp-for="ServerTimeZone" class="form-label"></label>
+						<input asp-for="ServerTimeZone" class="form-control" list="server-timezone-selection-suggestion" autocomplete="off" />
+						<datalist id="server-timezone-selection-suggestion">
+							@foreach (var timeZone in Model.TimeZones)
+							{
+								<option value="@timeZone.Id">@timeZone.DisplayName</option>
+							}
+						</datalist>
+						<span asp-validation-for="ServerTimeZone" class="text-danger"></span>
+						<div id="ServerTimeZoneHelpBlock" class="form-text">
+							<button type="button" class="btn btn-link p-0 only-for-js" data-set-browser-timezone data-timezone-input="ServerTimeZone" data-label-template="@StringLocalizer["Set to browser's timezone ({0})", "__timezone__"]">
+								<span data-browser-timezone-label text-translate="true">Set to browser's timezone</span>
+							</button>
+						</div>
+					</div>
+					<div class="form-group">
 						<label asp-for="LangTranslation" class="form-label"></label>
 						<select asp-for="LangTranslation"
 								asp-items="@(new SelectList(ViewBag.LangTranslations, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.LangTranslation))"

@@ -401,6 +401,11 @@ namespace BTCPayServer.Controllers
                                             .Where(tuple => tuple.Link is not null)
                                             .ToList();
 
+            if (string.IsNullOrEmpty(settings.ServerTimeZone) || !TimeZoneInfo.TryFindSystemTimeZoneById(settings.ServerTimeZone, out _))
+            {
+                ModelState.AddModelError(nameof(settings.ServerTimeZone), $"Invalid Timezone: {settings.ServerTimeZone}");
+            }
+
             if (!ModelState.IsValid)
             {
                 return View(settings);

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Validation;
@@ -21,8 +20,6 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Store timezone")]
         public string StoreTimeZone { get; set; } = TimeZoneInfo.Utc.Id;
-
-        public ReadOnlyCollection<TimeZoneInfo> TimeZones { get; set; } = TimeZoneInfo.GetSystemTimeZones();
 
         [Uri]
         [Display(Name = "Store Website")]

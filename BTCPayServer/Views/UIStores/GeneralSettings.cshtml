@@ -50,7 +50,7 @@
                 <label asp-for="StoreTimeZone" class="form-label"></label>
                 <input asp-for="StoreTimeZone" class="form-control" list="timezone-selection-suggestion" autocomplete="off" />
                 <datalist id="timezone-selection-suggestion">
-                    @foreach (var timeZone in Model.TimeZones)
+                    @foreach (var timeZone in TimeZoneInfo.GetSystemTimeZones())
                     {
                         <option value="@timeZone.Id">@timeZone.DisplayName</option>
                     }

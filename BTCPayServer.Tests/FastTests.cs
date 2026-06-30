@@ -2746,7 +2746,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         public void PluginProjection_PrefersHighestAvailableVersionWithSatisfiedDependencies()
         {
             var model = CreatePluginDirectoryProjection(
-                selectedIdentifier: "TestPlugin",
+                selectedSlug: "testplugin",
                 allAvailable: [
                     MakeAvailablePlugin("TestPlugin", "2.0.0", ("MissingDependency", ">=1.0.0")),
                     MakeAvailablePlugin("TestPlugin", "1.5.0")
@@ -2882,7 +2882,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             availablePlugin.Documentation = "/relative-docs";
 
             var model = CreatePluginDirectoryProjection(
-                selectedIdentifier: "TestPlugin",
+                selectedSlug: "testplugin",
                 allAvailable: [availablePlugin]);
 
             var plugin = model.SelectedPluginPanel.Plugin;
@@ -2915,7 +2915,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         public void PluginProjection_DoesNotShowManagementActionsForInstalledPluginInDirectoryPanel()
         {
             var model = CreatePluginDirectoryProjection(
-                selectedIdentifier: "InstalledPlugin",
+                selectedSlug: "installedplugin",
                 loadedPlugins: [MakeLoadedPlugin("InstalledPlugin")],
                 allAvailable: [MakeAvailablePlugin("InstalledPlugin", "1.1.0")]);
 
@@ -2929,7 +2929,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         public void PluginProjection_DoesNotShowManagementActionsForDisabledPluginInDirectoryPanel()
         {
             var model = CreatePluginDirectoryProjection(
-                selectedIdentifier: "DisabledPlugin",
+                selectedSlug: "disabledplugin",
                 disabled: new Dictionary<string, Version> { { "DisabledPlugin", new Version(1, 0, 0) } },
                 allAvailable: [MakeAvailablePlugin("DisabledPlugin", "1.1.0")]);
 
@@ -2943,7 +2943,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         public void PluginProjection_ShowsOnlyCancelForPendingActionInDirectoryPanel()
         {
             var model = CreatePluginDirectoryProjection(
-                selectedIdentifier: "TestPlugin",
+                selectedSlug: "testplugin",
                 allAvailable: [MakeAvailablePlugin("TestPlugin", "1.0.0")],
                 commands: [("install", "TestPlugin")]);
 
@@ -3003,6 +3003,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             return new PluginService.AvailablePlugin
             {
                 Identifier = identifier,
+                CatalogSlug = identifier.ToLowerInvariant(),
                 Name = identifier,
                 Version = Version.Parse(version),
                 Dependencies = dependencies.Select(d => new IBTCPayServerPlugin.PluginDependency
@@ -3060,18 +3061,17 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         private static PluginDirectoryViewModel CreatePluginDirectoryProjection(
             Dictionary<string, Version> disabled = null,
             IEnumerable<PluginService.AvailablePlugin> allAvailable = null,
-            string selectedIdentifier = null,
             string selectedSlug = null,
             IEnumerable<IBTCPayServerPlugin> loadedPlugins = null,
             (string command, string plugin)[] commands = null)
         {
             return new PluginManagementProjectionService().CreatePluginDirectoryViewModel(CreatePluginProjectionSource(
-                disabled,
-                allAvailable,
-                selectedIdentifier,
-                selectedSlug,
-                loadedPlugins,
-                commands));
+                disabled: disabled,
+                allAvailable: allAvailable,
+                selectedIdentifier: null,
+                selectedSlug: selectedSlug,
+                loadedPlugins: loadedPlugins,
+                commands: commands));
         }
 
         private static PluginManagementProjectionService.ProjectionSource CreatePluginProjectionSource(

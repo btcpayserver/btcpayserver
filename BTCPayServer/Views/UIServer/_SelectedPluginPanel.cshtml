@@ -6,14 +6,39 @@
     {
         ["returnTo"] = "directory"
     };
+    var hasAvailableUpdate = Model.InstalledVersion is not null &&
+                             Model.BestAvailableVersion is not null &&
+                             Model.BestAvailableVersion.CompareTo(Model.InstalledVersion) > 0;
+    string stateLabel = null;
+    string stateDescription = null;
+    if (!string.IsNullOrEmpty(Model.PendingAction))
+    {
+        var pendingVersionSuffix = Model.PendingVersion is null ? string.Empty : $" {Model.PendingVersion}";
+        stateLabel = StringLocalizer["Pending action"].Value;
+        stateDescription = StringLocalizer["BTCPay Server has queued {0}{1} for this plugin.", Model.PendingAction, pendingVersionSuffix].Value;
+    }
+    else if (Model.DisabledVersion is not null)
+    {
+        stateLabel = StringLocalizer["Disabled"].Value;
+        stateDescription = StringLocalizer["Version {0} is disabled on this server.", Model.DisabledVersion].Value;
+    }
+    else if (Model.InstalledVersion is not null)
+    {
+        stateLabel = StringLocalizer["Installed"].Value;
+        stateDescription = hasAvailableUpdate
+            ? StringLocalizer["Version {0} is available. Manage updates from Installed Plugins.", Model.BestAvailableVersion].Value
+            : StringLocalizer["This plugin is already installed on the server."].Value;
+    }
+    else if (Model.Plugin is not null && !Model.Plugin.DependenciesMet)
+    {
+        stateDescription = StringLocalizer["Dependencies are not met yet, so BTCPay Server will schedule the install."].Value;
+    }
     var stateClass = Model.DisabledVersion is not null
         ? "bg-danger"
         : Model.InstalledVersion is not null
             ? "bg-success"
             : "bg-secondary";
-    var showState = Model.DisabledVersion is not null ||
-                    Model.InstalledVersion is not null ||
-                    !string.IsNullOrEmpty(Model.PendingAction);
+    var showState = !string.IsNullOrEmpty(stateLabel);
     var showEmbeddedDetails = !string.IsNullOrEmpty(Model.EmbeddedDetailsUrl);
     var showFacts = Model.InstalledVersion is not null ||
                     Model.DisabledVersion is not null ||
@@ -36,10 +61,6 @@
     var visibleActions = Model.Actions
         .Where(action => action != embedInstallAction)
         .ToList();
-    if (!string.IsNullOrEmpty(Model.SelectedIdentifier))
-    {
-        pageRouteValues["selectedIdentifier"] = Model.SelectedIdentifier;
-    }
     if (!string.IsNullOrEmpty(Model.SelectedSlug))
     {
         pageRouteValues["selectedSlug"] = Model.SelectedSlug;
@@ -60,7 +81,7 @@ else
             <div class="d-flex flex-column gap-2 pb-3 border-bottom">
                 @if (showState)
                 {
-                    <span class="badge align-self-start @stateClass">@Model.CurrentState</span>
+                    <span class="badge align-self-start @stateClass">@stateLabel</span>
                 }
                 <h3 class="h4 lh-1 mb-0" data-bs-toggle="tooltip" title="@Model.Plugin.Identifier">@Model.Plugin.Name</h3>
                 <div class="text-muted font-monospace small text-break">@Model.Plugin.Identifier</div>
@@ -82,9 +103,9 @@ else
         }
 
         <div class="plugin-manage-panel-body d-flex flex-column flex-grow-1 gap-3 overflow-hidden">
-            @if (!showEmbeddedDetails && !string.IsNullOrEmpty(Model.StateDescription))
+            @if (!showEmbeddedDetails && !string.IsNullOrEmpty(stateDescription))
             {
-                <p class="alert alert-success mb-0 py-2 px-3">@Model.StateDescription</p>
+                <p class="alert alert-success mb-0 py-2 px-3">@stateDescription</p>
             }
 
             @if (!showEmbeddedDetails)

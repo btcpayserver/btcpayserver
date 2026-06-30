@@ -19,7 +19,7 @@
     const panelErrorMessage = shell.dataset.panelErrorMessage || "BTCPay Server could not load the plugin panel.";
     const panelRetryLabel = shell.dataset.panelRetryLabel || "Retry";
     let hiddenPluginIdentifiers = [];
-    let selectedIdentifier = shell.dataset.selectedIdentifier || "";
+    let selectedIdentifier = "";
     let selectedSlug = shell.dataset.selectedSlug || "";
     let ready = false;
     let directoryFailed = false;
@@ -220,13 +220,9 @@
         return url.toString();
     }
 
-    function updateHistory(identifier, slug) {
+    function updateHistory(slug) {
         const url = new URL(window.location.href);
-        if (identifier) {
-            url.searchParams.set("selectedIdentifier", identifier);
-        } else {
-            url.searchParams.delete("selectedIdentifier");
-        }
+        url.searchParams.delete("selectedIdentifier");
         if (slug) {
             url.searchParams.set("selectedSlug", slug);
         } else {
@@ -234,13 +230,11 @@
         }
 
         window.history.replaceState(window.history.state, "", url);
-        shell.dataset.selectedIdentifier = identifier || "";
         shell.dataset.selectedSlug = slug || "";
     }
 
-    function sameSelection(identifier, slug) {
-        return (identifier || "") === (selectedIdentifier || "") &&
-               (slug || "") === (selectedSlug || "");
+    function sameSelection(slug) {
+        return (slug || "") === (selectedSlug || "");
     }
 
     function renderPanelError(identifier, slug) {
@@ -350,11 +344,6 @@
         }
         pluginInput.value = data.identifier;
 
-        const selectedIdentifierInput = form.querySelector("input[name='selectedIdentifier']");
-        if (selectedIdentifierInput) {
-            selectedIdentifierInput.value = data.identifier;
-        }
-
         let versionInput = form.querySelector("input[name='version']");
         if (!versionInput) {
             versionInput = document.createElement("input");
@@ -407,14 +396,15 @@
         }
 
         markReady();
-        if (sameSelection(data.identifier || "", data.slug)) {
+        if (sameSelection(data.slug)) {
+            selectedIdentifier = data.identifier || "";
             showOffcanvas();
             return;
         }
 
         selectedIdentifier = data.identifier || "";
         selectedSlug = data.slug;
-        updateHistory(selectedIdentifier, selectedSlug);
+        updateHistory(selectedSlug);
         alignAvailableSection();
         showOffcanvas();
         reloadPanel(selectedIdentifier, selectedSlug);
@@ -450,11 +440,11 @@
 
         selectedIdentifier = "";
         selectedSlug = "";
-        updateHistory("", "");
+        updateHistory("");
         postHostContext();
     });
 
-    if (selectedIdentifier || selectedSlug) {
+    if (selectedSlug) {
         showOffcanvas();
     }
 

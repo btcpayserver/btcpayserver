@@ -12,7 +12,6 @@ namespace BTCPayServer.Models.ServerViewModels
 
     public class PluginDirectoryViewModel
     {
-        public string SelectedPluginIdentifier { get; set; }
         public string SelectedPluginSlug { get; set; }
         public string DirectoryIframeUrl { get; set; }
         public string DirectoryOrigin { get; set; }
@@ -29,8 +28,6 @@ namespace BTCPayServer.Models.ServerViewModels
         public string SelectedSlug { get; set; }
         public string EmbeddedDetailsUrl { get; set; }
         public PluginInfoViewModel Plugin { get; set; }
-        public string CurrentState { get; set; }
-        public string StateDescription { get; set; }
         public Version InstalledVersion { get; set; }
         public Version BestAvailableVersion { get; set; }
         public Version DisabledVersion { get; set; }

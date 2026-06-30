@@ -20,7 +20,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public string StoreName { get; set; }
 
         [Display(Name = "Store Timezone")]
-        public string StoreTimeZone { get; set; } = TimeZoneInfo.Local.Id;
+        public string StoreTimeZone { get; set; } = TimeZoneInfo.Utc.Id;
 
         public SelectList TimeZones { get; set; } = new(TimeZoneInfo.GetSystemTimeZones(), nameof(TimeZoneInfo.Id), nameof(TimeZoneInfo.Id));
 

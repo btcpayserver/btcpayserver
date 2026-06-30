@@ -985,7 +985,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("fr-FR", newStore.DefaultLang);
             Assert.Equal(NetworkFeeMode.MultiplePaymentsOnly, newStore.NetworkFeeMode);
             Assert.False(newStore.ShowStoreHeader);
-            Assert.Equal(TimeZoneInfo.Local.Id, newStore.TimeZone);
+            Assert.Equal(TimeZoneInfo.Utc.Id, newStore.TimeZone);
 
             newStore = await client.CreateStore(new (){ Name = "Yes you can also customize"});
             Assert.Equal("Yes you can also customize", newStore.Name);
@@ -994,7 +994,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("fr-FR", newStore.DefaultLang);
             Assert.Equal(NetworkFeeMode.MultiplePaymentsOnly, newStore.NetworkFeeMode);
             Assert.False(newStore.ShowStoreHeader);
-            Assert.Equal(TimeZoneInfo.Local.Id, newStore.TimeZone);
+            Assert.Equal(TimeZoneInfo.Utc.Id, newStore.TimeZone);
 
             await s.GoToUrl("/stores/create");
             Assert.Equal("Can Use Store?" ,await s.Page.InputValueAsync("#Name"));
@@ -1011,7 +1011,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("fr-FR", newStore.DefaultLang);
             Assert.Equal(NetworkFeeMode.MultiplePaymentsOnly, newStore.NetworkFeeMode);
             Assert.False(newStore.ShowStoreHeader);
-            Assert.Equal(TimeZoneInfo.Local.Id, newStore.TimeZone);
+            Assert.Equal(TimeZoneInfo.Utc.Id, newStore.TimeZone);
 
             await s.GoToServer();
             await s.Page.ClickAsync("#ResetTemplate");

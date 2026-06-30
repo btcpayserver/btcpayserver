@@ -22,7 +22,7 @@ namespace BTCPayServer.Client.Models
         public string CssUrl { get; set; }
         public string PaymentSoundUrl { get; set; }
 
-        public string TimeZone { get; set; } = TimeZoneInfo.Local.Id;
+        public string TimeZone { get; set; } = TimeZoneInfo.Utc.Id;
 
         public string SupportUrl { get; set; }
 

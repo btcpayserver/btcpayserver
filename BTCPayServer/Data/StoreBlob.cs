@@ -54,7 +54,7 @@ namespace BTCPayServer.Data
             }
         }
 
-        public string DefaultTimeZone { get; set; } = TimeZoneInfo.Local.Id;
+        public string DefaultTimeZone { get; set; } = TimeZoneInfo.Utc.Id;
 
         public string StoreSupportUrl { get; set; }
 

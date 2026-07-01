@@ -906,23 +906,23 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         });
 
         await s.Page.ClickAsync("#DateOptionsToggle");
-        await s.Page.ClickAsync("#DateOptionsToggle + .dropdown-menu a:text-is('Last 24 hours')");
+        await s.Page.ClickAsync("#DateOptionsToggle + .dropdown-menu a:text-is('Last 30 days')");
         await s.Page.WaitForLoadStateAsync();
 
         await TestUtils.EventuallyAsync(async () =>
         {
             Assert.Equal(targetSearchText, await s.Page.InputValueAsync("#SearchText"));
-            Assert.Contains("24 Hours", await s.Page.InnerTextAsync("#DateOptionsToggle"));
+            Assert.Contains("Last 30 days", await s.Page.InnerTextAsync("#DateOptionsToggle"));
 
             var hiddenSearchTerm = await s.Page.InputValueAsync("input[name='SearchTerm']");
-            Assert.Contains("startdate:-1d", hiddenSearchTerm);
+            Assert.Contains("startdate:last30d", hiddenSearchTerm);
             Assert.DoesNotContain(targetSearchText, hiddenSearchTerm);
 
             var urlAfterPreset = new Uri(s.Page.Url);
             var qsAfterPreset = HttpUtility.ParseQueryString(urlAfterPreset.Query);
             Assert.Equal(targetSearchText, qsAfterPreset["SearchText"]);
             Assert.Equal(timezoneOffset.ToString(CultureInfo.InvariantCulture), qsAfterPreset["timezoneOffset"] ?? qsAfterPreset["TimezoneOffset"]);
-            Assert.Contains("startdate:-1d", Uri.UnescapeDataString(qsAfterPreset["SearchTerm"] ?? string.Empty));
+            Assert.Contains("startdate:last30d", Uri.UnescapeDataString(qsAfterPreset["SearchTerm"] ?? string.Empty));
         });
     }
 

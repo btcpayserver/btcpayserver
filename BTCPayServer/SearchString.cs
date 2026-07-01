@@ -122,6 +122,10 @@ namespace BTCPayServer
                 return null;
 
             var val = Filters[key].First();
+            var periodDate = GetPeriodDate(key, val);
+            if (periodDate is not null)
+                return periodDate;
+
             switch (val)
             {
                 // handle special string values
@@ -146,6 +150,34 @@ namespace BTCPayServer
             }
 
             return null;
+        }
+
+        private DateTimeOffset? GetPeriodDate(string key, string val)
+        {
+            var now = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, _timeZone);
+            var today = now.Date;
+            var startOfThisMonth = new DateTime(today.Year, today.Month, 1);
+            var startOfThisQuarter = new DateTime(today.Year, ((today.Month - 1) / 3) * 3 + 1, 1);
+            var startOfThisYear = new DateTime(today.Year, 1, 1);
+
+            var localDate = (key, val) switch
+            {
+                ("startdate", "thismonth") => startOfThisMonth,
+                ("startdate", "lastmonth") => startOfThisMonth.AddMonths(-1),
+                ("enddate", "lastmonth") => startOfThisMonth.AddTicks(-1),
+                ("startdate", "last30d") => today.AddDays(-29),
+                ("startdate", "thisquarter") => startOfThisQuarter,
+                ("startdate", "yeartodate") => startOfThisYear,
+                _ => (DateTime?)null
+            };
+
+            return localDate is null ? null : ToDateTimeOffset(localDate.Value);
+        }
+
+        private DateTimeOffset ToDateTimeOffset(DateTime localDate)
+        {
+            var local = DateTime.SpecifyKind(localDate, DateTimeKind.Unspecified);
+            return new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(local, _timeZone), TimeSpan.Zero);
         }
 
         public bool ContainsFilter(string key)

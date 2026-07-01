@@ -1499,19 +1499,19 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.Null(modified.GetFilterArray("status"));
 
             // toggle off date with null value
-            modified = new SearchString(modified.Toggle("startdate", "-7d"), utc);
-            Assert.Single(modified.GetFilterArray("startdate"), "-7d");
+            modified = new SearchString(modified.Toggle("startdate", "last30d"), utc);
+            Assert.Single(modified.GetFilterArray("startdate"), "last30d");
             modified = new SearchString(modified.Toggle("startdate", null), utc);
             Assert.Null(modified.GetFilterArray("startdate"));
 
             // toggle off date with same value
-            modified = new SearchString(modified.Toggle("enddate", "-7d"), utc);
-            Assert.Single(modified.GetFilterArray("enddate"), "-7d");
-            modified = new SearchString(modified.Toggle("enddate", "-7d"), utc);
+            modified = new SearchString(modified.Toggle("enddate", "lastmonth"), utc);
+            Assert.Single(modified.GetFilterArray("enddate"), "lastmonth");
+            modified = new SearchString(modified.Toggle("enddate", "lastmonth"), utc);
             Assert.Null(modified.GetFilterArray("enddate"));
 
-            search = new SearchString("7,startdate:-7d", utc);
-            Assert.Equal("startdate:-7d", search.WithoutSearchText());
+            search = new SearchString("7,startdate:last30d", utc);
+            Assert.Equal("startdate:last30d", search.WithoutSearchText());
         }
 
         [Fact]

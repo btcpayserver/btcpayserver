@@ -403,11 +403,22 @@
         Model.Search?.ContainsFilter(key) is true && Model.Search.GetFilterBool(key) is true;
 
     private bool HasCustomDateFilter() =>
-        Model.Search?.ContainsFilter("enddate") is true ||
-        (Model.Search?.ContainsFilter("startdate") is true &&
-         !HasArrayFilter("startdate", "-1d") &&
-         !HasArrayFilter("startdate", "-3d") &&
-         !HasArrayFilter("startdate", "-7d"));
+        (Model.Search?.ContainsFilter("startdate") is true || Model.Search?.ContainsFilter("enddate") is true) &&
+        !HasDatePreset("thismonth") &&
+        !HasDatePreset("lastmonth") &&
+        !HasDatePreset("last30d") &&
+        !HasDatePreset("thisquarter") &&
+        !HasDatePreset("yeartodate");
+
+    private bool HasDatePreset(string value) =>
+        HasArrayFilter("startdate", value) && (value != "lastmonth" || HasArrayFilter("enddate", value));
+
+    private string DatePresetSearchFilter(string value)
+    {
+        var search = SetSearchFilter(SetSearchFilter("startdate"), "enddate");
+        search = SetSearchFilter(search, "startdate", value);
+        return value == "lastmonth" ? SetSearchFilter(search, "enddate", value) : search;
+    }
 
     private string SetSearchFilter(string search, string key, params string[] values)
     {
@@ -577,17 +588,25 @@
             <button id="DateOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                 @if (hasDateFilter)
                 {
-                    if (HasArrayFilter("startdate", "-1d"))
+                    if (HasDatePreset("thismonth"))
                     {
-                        <span text-translate="true">24 Hours</span>
+                        <span text-translate="true">This month</span>
                     }
-                    else if (HasArrayFilter("startdate", "-3d"))
+                    else if (HasDatePreset("lastmonth"))
                     {
-                        <span text-translate="true">3 Days</span>
+                        <span text-translate="true">Last month</span>
                     }
-                    else if (HasArrayFilter("startdate", "-7d"))
+                    else if (HasDatePreset("last30d"))
                     {
-                        <span text-translate="true">7 Days</span>
+                        <span text-translate="true">Last 30 days</span>
+                    }
+                    else if (HasDatePreset("thisquarter"))
+                    {
+                        <span text-translate="true">This quarter</span>
+                    }
+                    else if (HasDatePreset("yeartodate"))
+                    {
+                        <span text-translate="true">Year to date</span>
                     }
                     else
                     {
@@ -602,9 +621,11 @@
             <div class="dropdown-menu" aria-labelledby="DateOptionsToggle">
                 <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("startdate"), "enddate")" class="dropdown-item @((!HasArrayFilter("startdate") && !HasCustomDateFilter()) ? "custom-active" : string.Empty)" text-translate="true">All Time</a>
                 <hr class="dropdown-divider" />
-                <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("enddate"), "startdate", "-1d")" class="dropdown-item @(HasArrayFilter("startdate", "-1d") ? "custom-active" : "")" text-translate="true">Last 24 hours</a>
-                <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("enddate"), "startdate", "-3d")" class="dropdown-item @(HasArrayFilter("startdate", "-3d") ? "custom-active" : "")" text-translate="true">Last 3 days</a>
-                <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@SetSearchFilter(SetSearchFilter("enddate"), "startdate", "-7d")" class="dropdown-item @(HasArrayFilter("startdate", "-7d") ? "custom-active" : "")" text-translate="true">Last 7 days</a>
+                <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@DatePresetSearchFilter("thismonth")" class="dropdown-item @(HasDatePreset("thismonth") ? "custom-active" : "")" text-translate="true">This month</a>
+                <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@DatePresetSearchFilter("lastmonth")" class="dropdown-item @(HasDatePreset("lastmonth") ? "custom-active" : "")" text-translate="true">Last month</a>
+                <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@DatePresetSearchFilter("last30d")" class="dropdown-item @(HasDatePreset("last30d") ? "custom-active" : "")" text-translate="true">Last 30 days</a>
+                <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@DatePresetSearchFilter("thisquarter")" class="dropdown-item @(HasDatePreset("thisquarter") ? "custom-active" : "")" text-translate="true">This quarter</a>
+                <a asp-action="WalletTransactions" asp-route-walletId="@walletId" asp-route-labelFilter="@labelFilter" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@DatePresetSearchFilter("yeartodate")" class="dropdown-item @(HasDatePreset("yeartodate") ? "custom-active" : "")" text-translate="true">Year to date</a>
                 <button type="button" class="dropdown-item @(HasCustomDateFilter() ? "custom-active" : "")" data-bs-toggle="modal" data-bs-target="#customRangeModal" text-translate="true">Custom Range</button>
             </div>
         </div>

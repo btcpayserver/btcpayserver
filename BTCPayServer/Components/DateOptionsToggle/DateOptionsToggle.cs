@@ -14,6 +14,7 @@ public class DateOptionsToggle : ViewComponent
         string action,
         string? controller = null,
         IDictionary<string, string>? routeValues = null,
+        string? customRangeTitle = null,
         bool showAllTime = false)
     {
         return View(new DateOptionsToggleModel
@@ -22,6 +23,7 @@ public class DateOptionsToggle : ViewComponent
             Action = action,
             Controller = controller,
             RouteValues = routeValues ?? new Dictionary<string, string>(),
+            CustomRangeTitle = customRangeTitle ?? "Filter by Custom Range",
             ShowAllTime = showAllTime,
             Url = Url
         });
@@ -36,6 +38,7 @@ public class DateOptionsToggleModel
     public required string Action { get; init; }
     public string? Controller { get; init; }
     public required IDictionary<string, string> RouteValues { get; init; }
+    public required string CustomRangeTitle { get; init; }
     public bool ShowAllTime { get; init; }
     public required IUrlHelper Url { get; init; }
 

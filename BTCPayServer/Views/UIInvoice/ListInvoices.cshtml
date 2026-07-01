@@ -151,51 +151,6 @@
 
 <partial name="_StatusMessage" />
 
-@* Custom Range Modal *@
-<div class="modal fade" id="customRangeModal" tabindex="-1" role="dialog" aria-labelledby="customRangeModalTitle" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 550px;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="customRangeModalTitle" text-translate="true">Filter invoices by Custom Range</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
-                    <vc:icon symbol="close" />
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group row">
-                    <label for="dtpStartDate" class="col-sm-3 col-form-label" text-translate="true">Start Date</label>
-                    <div class="col-sm-9">
-                        <div class="input-group">
-                            <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
-                                   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-                                   placeholder="@StringLocalizer["Start Date"]" />
-                            <button type="button" class="btn btn-secondary input-group-clear" title="@StringLocalizer["Clear"]">
-                                <vc:icon symbol="close" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label class="col-sm-3 col-form-label" text-translate="true">End Date</label>
-                    <div class="col-sm-9">
-                        <div class="input-group">
-                            <input id="dtpEndDate" class="form-control flatdtpicker" type="datetime-local"
-                                   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-                                   placeholder="@StringLocalizer["End Date"]" />
-                            <button type="button" class="btn btn-secondary input-group-clear" title="@StringLocalizer["Clear"]">
-                                <vc:icon symbol="close" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="btnCustomRangeDate" type="button" class="btn btn-primary" text-translate="true">Filter</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
     <input asp-for="Count" type="hidden" />
     <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
@@ -254,7 +209,8 @@
         {
             ["storeId"] = Model.StoreId,
             ["count"] = Model.Count.ToString()
-        }
+        },
+        customRangeTitle = StringLocalizer["Filter invoices by Custom Range"].Value
     })
     @if (statusFilterCount > 0 || appFilterCount > 0 || hasDateFilter || !string.IsNullOrEmpty(Model.SearchText))
     {

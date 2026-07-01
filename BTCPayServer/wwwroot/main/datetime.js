@@ -2,12 +2,10 @@
 // By order of precedence:
 // 1. opts
 // 2. window.defaultDateTimeFormat (Typically defined in _Layout.cshtml)
-// 3. default: {dateStyle: 'short', timeStyle: 'short', locales: 'default'}
 function getDateFormater(opts) {
     opts = opts || {};
     const cleanOptions = options => Object.fromEntries(Object.entries(options).filter(([_, value]) => value != null));
     const options = Object.assign(
-        {dateStyle: 'short', timeStyle: 'short'},
         cleanOptions(window.defaultDateTimeFormat || {}),
         cleanOptions(opts));
     const locales = opts.locales || (window.defaultDateTimeFormat || {}).locales || 'default';

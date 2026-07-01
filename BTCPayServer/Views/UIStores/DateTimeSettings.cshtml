@@ -1,0 +1,54 @@
+@using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Client
+@model DateTimeSettingsViewModel
+@{
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.DateTime), StringLocalizer["Date and Time"]).SetCategory(WellKnownCategories.Store));
+}
+
+<form method="post" permissioned="@Policies.CanModifyStoreSettings">
+    <div class="sticky-header">
+        <h2 text-translate="true">Date and Time</h2>
+        <button id="page-primary" type="submit" class="btn btn-primary" text-translate="true">Save</button>
+    </div>
+
+    <partial name="_StatusMessage" />
+
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
+            }
+
+            <div class="form-group">
+                <label asp-for="StoreTimeZone" class="form-label"></label>
+                <input asp-for="StoreTimeZone" class="form-control" list="timezone-selection-suggestion" autocomplete="off" placeholder="@StringLocalizer["Server default ({0})", Model.ServerTimeZone]" />
+                <datalist id="timezone-selection-suggestion">
+                    @foreach (var timeZone in TimeZoneInfo.GetSystemTimeZones())
+                    {
+                        <option value="@timeZone.Id">@timeZone.DisplayName</option>
+                    }
+                </datalist>
+                <span asp-validation-for="StoreTimeZone" class="text-danger"></span>
+                <div id="StoreTimeZoneHelpBlock" class="form-text">
+                    <span text-translate="true">Leave empty to use the server timezone:</span> @Model.ServerTimeZone.
+                    <button type="button" class="btn btn-link p-0 only-for-js" data-set-browser-timezone data-timezone-input="StoreTimeZone" data-label-template="@StringLocalizer["Set to browser's timezone ({0})", "__timezone__"]">
+                        <span data-browser-timezone-label text-translate="true">Set to browser's timezone</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group mt-4">
+                <label asp-for="PreferredDateFormat" class="form-label"></label>
+                <select asp-for="PreferredDateFormat" class="form-select" id="PreferredDateFormat">
+                    @foreach (var template in DateFormatterOptions.DateTemplates)
+                    {
+                        <option value="@template.Name" data-preview="@template.Preview">@template.Name - @template.Preview</option>
+                    }
+                </select>
+                <span asp-validation-for="PreferredDateFormat" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+</form>
+

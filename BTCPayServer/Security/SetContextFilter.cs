@@ -86,7 +86,7 @@ public class SetContextFilter(
         if (context.Controller is Controller controller &&
             context.HttpContext.GetStoreDataOrNull() is {} s)
         {
-            controller.ViewData.SetTimeZone(timeZoneProvider.GetStoreTimeZone(s));
+            controller.ViewData.SetDateFormatterOptions(timeZoneProvider, s);
         }
 
 

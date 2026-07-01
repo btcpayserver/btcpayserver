@@ -53,6 +53,9 @@
                                     <a layout-menu-item="@(nameof(StoreNavPages.Rates))" asp-controller="UIStores" asp-action="Rates" asp-route-storeId="@Model.Store.Id" text-translate="true">Rates</a>
                                 </li>
                                 <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
+                                    <a layout-menu-item="@(nameof(StoreNavPages.DateTime))" asp-controller="UIStores" asp-action="DateTimeSettings" asp-route-storeId="@Model.Store.Id" text-translate="true">Date and Time</a>
+                                </li>
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a layout-menu-item="@(nameof(StoreNavPages.CheckoutAppearance))" asp-controller="UIStores" asp-action="CheckoutAppearance" asp-route-storeId="@Model.Store.Id" text-translate="true">Checkout Appearance</a>
                                 </li>
 

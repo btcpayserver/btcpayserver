@@ -5,5 +5,10 @@ namespace BTCPayServer.Components.DateFormatterOptions;
 
 public class DeclareDateFormatterOptions : ViewComponent
 {
-    public IViewComponentResult Invoke() => View(ViewData.GetDateFormatterOptions());
+    public IViewComponentResult Invoke() => View(ViewData.GetDateFormatterOptions() ?? new()
+    {
+        DateStyle = "short",
+        TimeStyle = "short",
+        Locales = "default"
+    });
 }

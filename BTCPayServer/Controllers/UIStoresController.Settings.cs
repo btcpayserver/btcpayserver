@@ -19,6 +19,66 @@ namespace BTCPayServer.Controllers;
 
 public partial class UIStoresController
 {
+    [HttpGet("{storeId}/date-time")]
+    public IActionResult DateTimeSettings(string storeId)
+    {
+        var store = HttpContext.GetStoreDataOrNull();
+        if (store == null) return NotFound();
+
+        var storeBlob = store.GetStoreBlob();
+        return View(new DateTimeSettingsViewModel
+        {
+            StoreTimeZone = store.TimeZone,
+            ServerTimeZone = _policiesSettings.ServerTimeZone,
+            PreferredDateFormat = storeBlob.PreferredDateFormat ?? DateFormatterOptions.DefaultTemplateName
+        });
+    }
+
+    [HttpPost("{storeId}/date-time")]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    public async Task<IActionResult> DateTimeSettings(string storeId, DateTimeSettingsViewModel model)
+    {
+        model.ServerTimeZone = _policiesSettings.ServerTimeZone;
+        model.StoreTimeZone = model.StoreTimeZone?.Trim();
+        model.PreferredDateFormat ??= DateFormatterOptions.DefaultTemplateName;
+
+        if (!string.IsNullOrEmpty(model.StoreTimeZone) && !TimeZoneInfo.TryFindSystemTimeZoneById(model.StoreTimeZone, out _))
+        {
+            ModelState.AddModelError(nameof(model.StoreTimeZone), $"Invalid Timezone: {model.StoreTimeZone}");
+        }
+        if (DateFormatterOptions.GetTemplate(model.PreferredDateFormat) is null)
+        {
+            ModelState.AddModelError(nameof(model.PreferredDateFormat), StringLocalizer["Invalid date format"]);
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var needUpdate = false;
+        var timeZone = string.IsNullOrEmpty(model.StoreTimeZone) ? null : model.StoreTimeZone;
+        if (CurrentStore.TimeZone != timeZone)
+        {
+            CurrentStore.TimeZone = timeZone;
+            needUpdate = true;
+        }
+
+        var blob = CurrentStore.GetStoreBlob();
+        blob.PreferredDateFormat = model.PreferredDateFormat == DateFormatterOptions.DefaultTemplateName ? null : model.PreferredDateFormat;
+        if (CurrentStore.SetStoreBlob(blob))
+        {
+            needUpdate = true;
+        }
+
+        if (needUpdate)
+        {
+            await _storeRepo.UpdateStore(CurrentStore);
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Store successfully updated"].Value;
+        }
+
+        return RedirectToAction(nameof(DateTimeSettings), new { storeId = CurrentStore.Id });
+    }
+
     [HttpGet("{storeId}/settings")]
     public async Task<IActionResult> GeneralSettings(string storeId)
     {
@@ -40,8 +100,6 @@ public partial class UIStoresController
             PaymentTolerance = storeBlob.PaymentTolerance,
             InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes,
             DefaultCurrency = storeBlob.DefaultCurrency,
-            StoreTimeZone = store.TimeZone,
-            ServerTimeZone = _policiesSettings.ServerTimeZone,
             AdditionalTrackedRates = string.Join(',', storeBlob.AdditionalTrackedRates?.ToArray() ?? []),
             BOLT11Expiration = (long)storeBlob.RefundBOLT11Expiration.TotalDays,
             Archived = store.Archived,
@@ -61,7 +119,6 @@ public partial class UIStoresController
         [FromForm] bool RemoveLogoFile = false,
         [FromForm] bool RemoveCssFile = false)
     {
-        model.ServerTimeZone = _policiesSettings.ServerTimeZone;
         bool needUpdate = false;
         if (CurrentStore.StoreName != model.StoreName)
         {
@@ -81,13 +138,6 @@ public partial class UIStoresController
             needUpdate = true;
         }
 
-        model.StoreTimeZone = model.StoreTimeZone?.Trim();
-        if (CurrentStore.TimeZone != model.StoreTimeZone)
-        {
-            CurrentStore.TimeZone = string.IsNullOrEmpty(model.StoreTimeZone) ? null : model.StoreTimeZone;
-            needUpdate = true;
-        }
-
         var blob = CurrentStore.GetStoreBlob();
         blob.AnyoneCanInvoice = model.AnyoneCanCreateInvoice;
         blob.NetworkFeeMode = model.NetworkFeeMode;
@@ -103,10 +153,6 @@ public partial class UIStoresController
         {
             ModelState.AddModelError(nameof(model.BrandColor), StringLocalizer["The brand color needs to be a valid hex color code"]);
             return View(model);
-        }
-        if (!string.IsNullOrEmpty(model.StoreTimeZone) && !TimeZoneInfo.TryFindSystemTimeZoneById(model.StoreTimeZone, out _))
-        {
-            ModelState.AddModelError(nameof(model.StoreTimeZone), $"Invalid Timezone: {model.StoreTimeZone}");
         }
         blob.BrandColor = model.BrandColor;
         blob.ApplyBrandColorToBackend = model.ApplyBrandColorToBackend && !string.IsNullOrEmpty(model.BrandColor);

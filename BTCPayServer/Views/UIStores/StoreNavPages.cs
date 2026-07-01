@@ -8,6 +8,7 @@ namespace BTCPayServer.Views.Stores
         Create,
         Dashboard,
         General,
+        DateTime,
         Rates,
         OnchainSettings,
         LightningSettings,

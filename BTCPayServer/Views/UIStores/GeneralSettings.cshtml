@@ -47,22 +47,6 @@
                 <span asp-validation-for="StoreName" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="StoreTimeZone" class="form-label"></label>
-                <input asp-for="StoreTimeZone" class="form-control" list="timezone-selection-suggestion" autocomplete="off" placeholder="@StringLocalizer["Server default ({0})", Model.ServerTimeZone]" />
-                <datalist id="timezone-selection-suggestion">
-                    @foreach (var timeZone in TimeZoneInfo.GetSystemTimeZones())
-                    {
-                        <option value="@timeZone.Id">@timeZone.DisplayName</option>
-                    }
-                </datalist>
-                <span asp-validation-for="StoreTimeZone" class="text-danger"></span>
-                <div id="StoreTimeZoneHelpBlock" class="form-text">
-                    <button type="button" class="btn btn-link p-0 only-for-js" data-set-browser-timezone data-timezone-input="StoreTimeZone" data-label-template="@StringLocalizer["Set to browser's timezone ({0})", "__timezone__"]">
-                        <span data-browser-timezone-label text-translate="true">Set to browser's timezone</span>
-                    </button>
-                </div>
-            </div>
-            <div class="form-group">
                 <label asp-for="StoreWebsite" class="form-label"></label>
                 <input asp-for="StoreWebsite" class="form-control" />
                 <span asp-validation-for="StoreWebsite" class="text-danger"></span>

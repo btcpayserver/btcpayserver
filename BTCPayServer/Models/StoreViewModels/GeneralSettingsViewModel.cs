@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Validation;
@@ -17,11 +16,6 @@ namespace BTCPayServer.Models.StoreViewModels
         [MaxLength(50)]
         [MinLength(1)]
         public string StoreName { get; set; }
-
-        [Display(Name = "Store timezone")]
-        public string StoreTimeZone { get; set; }
-
-        public string ServerTimeZone { get; set; }
 
         [Uri]
         [Display(Name = "Store Website")]

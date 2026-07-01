@@ -205,7 +205,7 @@ namespace BTCPayServer.Controllers
             if (!await ValidateAccessForArchivedInvoice(i))
                 return NotFound();
 
-            ViewData.SetDateFormatterOptions(_timeZoneProvider, store);
+            ViewData.SetDateFormatterOptions(_dateFormatterOptionsProvider, store);
             var receipt = InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, i.ReceiptOptions);
             if (receipt.Enabled is not true)
             {
@@ -1061,7 +1061,7 @@ namespace BTCPayServer.Controllers
         {
             model = this.ParseListQuery(model ?? new InvoicesModel());
             var searchTerm = string.IsNullOrEmpty(model.SearchText) ? model.SearchTerm : $"{model.SearchText},{model.SearchTerm}";
-            var fs = new SearchString(searchTerm, _timeZoneProvider.GetStoreTimeZone(this.HttpContext.GetStoreData()));
+            var fs = new SearchString(searchTerm, _dateFormatterOptionsProvider.GetStoreTimeZone(this.HttpContext.GetStoreData()));
             string? storeId = model.StoreId;
             var storeIds = new HashSet<string>();
             if (storeId is not null)

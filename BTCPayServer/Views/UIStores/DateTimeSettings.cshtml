@@ -41,7 +41,7 @@
 
             <div class="form-group mt-4">
                 <label asp-for="PreferredDateTimeLocale" class="form-label"></label>
-                <input asp-for="PreferredDateTimeLocale" class="form-control" list="locale-selection-suggestion" autocomplete="off" placeholder="@StringLocalizer["Browser default"]" />
+                <input asp-for="PreferredDateTimeLocale" class="form-control" list="locale-selection-suggestion" autocomplete="off" placeholder="@StringLocalizer["Server default ({0})", Model.ServerLocale]" />
                 <datalist id="locale-selection-suggestion">
                     @foreach (var culture in CultureInfo.GetCultures(CultureTypes.SpecificCultures).OrderBy(c => c.Name))
                     {
@@ -50,7 +50,7 @@
                 </datalist>
                 <span asp-validation-for="PreferredDateTimeLocale" class="text-danger"></span>
                 <div id="StoreLocaleHelpBlock" class="form-text">
-                    <span text-translate="true">Leave empty to use the browser locale.</span>
+                    <span text-translate="true">Leave empty to use the server locale:</span> @Model.ServerLocale.
                     <button type="button" class="btn btn-link p-0 only-for-js" data-set-browser-locale data-locale-input="PreferredDateTimeLocale" data-label-template="@StringLocalizer["Set to browser's locale ({0})", "__locale__"]">
                         <span data-browser-locale-label text-translate="true">Set to browser's locale</span>
                     </button>

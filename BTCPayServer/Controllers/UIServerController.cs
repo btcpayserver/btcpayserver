@@ -405,6 +405,11 @@ namespace BTCPayServer.Controllers
             {
                 ModelState.AddModelError(nameof(settings.ServerTimeZone), $"Invalid Timezone: {settings.ServerTimeZone}");
             }
+            if (string.IsNullOrEmpty(settings.ServerLocale) ||
+                settings.ServerLocale != "default" && CultureInfo.GetCultures(CultureTypes.SpecificCultures).All(c => c.Name != settings.ServerLocale))
+            {
+                ModelState.AddModelError(nameof(settings.ServerLocale), StringLocalizer["Invalid locale"]);
+            }
 
             if (!ModelState.IsValid)
             {

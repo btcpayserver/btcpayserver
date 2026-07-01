@@ -8,6 +8,7 @@ public class DateTimeSettingsViewModel
     public string StoreTimeZone { get; set; }
 
     public string ServerTimeZone { get; set; }
+    public string ServerLocale { get; set; }
 
     [Display(Name = "Locale")]
     public string PreferredDateTimeLocale { get; set; }

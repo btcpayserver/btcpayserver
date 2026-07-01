@@ -52,7 +52,7 @@ namespace BTCPayServer.Controllers
         private readonly UriResolver _uriResolver;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly StoreLabelRepository _storeLabelRepository;
-        private readonly TimeZoneProvider _timeZoneProvider;
+        private readonly DateFormatterOptionsProvider _dateFormatterOptionsProvider;
 
 
         public FormDataService FormDataService { get; }
@@ -75,7 +75,7 @@ namespace BTCPayServer.Controllers
             ApplicationDbContextFactory dbContextFactory,
             BTCPayNetworkProvider networkProvider,
             StoreLabelRepository storeLabelRepository,
-            TimeZoneProvider timeZoneProvider)
+            DateFormatterOptionsProvider dateFormatterOptionsProvider)
         {
             _InvoiceController = invoiceController;
             _handlers = handlers;
@@ -92,7 +92,7 @@ namespace BTCPayServer.Controllers
             ViewLocalizer = viewLocalizer;
             _networkProvider = networkProvider;
             _storeLabelRepository = storeLabelRepository;
-            _timeZoneProvider = timeZoneProvider;
+            _dateFormatterOptionsProvider = dateFormatterOptionsProvider;
         }
 
         [HttpGet("/stores/{storeId}/payment-requests")]
@@ -101,7 +101,7 @@ namespace BTCPayServer.Controllers
         {
             model = this.ParseListQuery(model ?? new ListPaymentRequestsViewModel());
 
-            var fs = new SearchString(model.SearchTerm, _timeZoneProvider.GetStoreTimeZone(this.HttpContext.GetStoreData()));
+            var fs = new SearchString(model.SearchTerm, _dateFormatterOptionsProvider.GetStoreTimeZone(this.HttpContext.GetStoreData()));
             var textSearch = model.SearchText;
             var startDate = fs.GetFilterDate("startdate");
             var endDate   = fs.GetFilterDate("enddate");

@@ -31,6 +31,7 @@ public partial class UIStoresController
         {
             StoreTimeZone = store.TimeZone,
             ServerTimeZone = _policiesSettings.ServerTimeZone,
+            ServerLocale = _policiesSettings.ServerLocale,
             PreferredDateTimeLocale = storeBlob.PreferredDateTimeLocale,
             PreferredDateStyle = storeBlob.PreferredDateStyle ?? "short",
             PreferredTimeStyle = storeBlob.PreferredTimeStyle ?? "short",
@@ -43,6 +44,7 @@ public partial class UIStoresController
     public async Task<IActionResult> DateTimeSettings(string storeId, DateTimeSettingsViewModel model)
     {
         model.ServerTimeZone = _policiesSettings.ServerTimeZone;
+        model.ServerLocale = _policiesSettings.ServerLocale;
         model.StoreTimeZone = model.StoreTimeZone?.Trim();
         model.PreferredDateTimeLocale = model.PreferredDateTimeLocale?.Trim();
         model.PreferredDateStyle ??= "short";

@@ -619,7 +619,7 @@
                             {
                                 var cssClass = string.IsNullOrEmpty(evt.GetCssClass()) ? null : $"text-{evt.GetCssClass()}";
                                 <tr>
-                                    <td class="@cssClass">@evt.Timestamp.ToBrowserDate("o", "short", "medium")</td>
+                                    <td class="@cssClass">@evt.Timestamp.ToBrowserDate()</td>
                                     <td class="@cssClass">@evt.Message</td>
                                 </tr>
                             }

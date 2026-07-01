@@ -17,13 +17,13 @@ namespace BTCPayServer.Controllers
     public class UINotificationsController(
         StoreRepository storeRepo,
         NotificationManager notificationManager,
-        TimeZoneProvider timeZoneProvider) : Controller
+        DateFormatterOptionsProvider dateFormatterOptionsProvider) : Controller
     {
         [HttpGet]
         public async Task<IActionResult> Index(NotificationIndexViewModel model = null)
         {
             model ??= new NotificationIndexViewModel { Skip = 0 };
-            var timezoneOffset = await timeZoneProvider.GetUserTimeZone(User);
+            var timezoneOffset = await dateFormatterOptionsProvider.GetUserTimeZone(User);
             model.Status ??= "Unread";
             ViewBag.Status = model.Status;
             if (User.GetIdOrNull() is not string userId)

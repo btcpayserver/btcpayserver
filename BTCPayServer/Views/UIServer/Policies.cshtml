@@ -161,6 +161,23 @@
 						</div>
 					</div>
 					<div class="form-group">
+						<label asp-for="ServerLocale" class="form-label"></label>
+						<input asp-for="ServerLocale" class="form-control" list="server-locale-selection-suggestion" autocomplete="off" />
+						<datalist id="server-locale-selection-suggestion">
+							<option value="default">Browser default</option>
+							@foreach (var culture in System.Globalization.CultureInfo.GetCultures(System.Globalization.CultureTypes.SpecificCultures).OrderBy(c => c.Name))
+							{
+								<option value="@culture.Name">@culture.EnglishName</option>
+							}
+						</datalist>
+						<span asp-validation-for="ServerLocale" class="text-danger"></span>
+						<div id="ServerLocaleHelpBlock" class="form-text">
+							<button type="button" class="btn btn-link p-0 only-for-js" data-set-browser-locale data-locale-input="ServerLocale" data-label-template="@StringLocalizer["Set to browser's locale ({0})", "__locale__"]">
+								<span data-browser-locale-label text-translate="true">Set to browser's locale</span>
+							</button>
+						</div>
+					</div>
+					<div class="form-group">
 						<label asp-for="LangTranslation" class="form-label"></label>
 						<select asp-for="LangTranslation"
 								asp-items="@(new SelectList(ViewBag.LangTranslations, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.LangTranslation))"

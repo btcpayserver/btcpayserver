@@ -84,7 +84,7 @@ namespace BTCPayServer.Controllers
         InvoiceRepository invoiceRepository,
         DisplayFormatter displayFormatter,
         HotwalletSafe hotwalletSafe,
-        TimeZoneProvider timeZoneProvider)
+        DateFormatterOptionsProvider dateFormatterOptionsProvider)
         : Controller
     {
         private StoreRepository Repository { get; } = repo;
@@ -735,7 +735,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             var network = handlers.GetBitcoinHandler(walletId.CryptoCode).Network;
             var wallet = walletProvider.GetWallet(network);
-            var filter = BuildWalletTransactionsFilter(model.SearchTerm, model.SearchText, labelFilter, timeZoneProvider.GetStoreTimeZone(this.HttpContext.GetStoreData()));
+            var filter = BuildWalletTransactionsFilter(model.SearchTerm, model.SearchText, labelFilter, dateFormatterOptionsProvider.GetStoreTimeZone(this.HttpContext.GetStoreData()));
 
             var filterAtSource = !filter.HasFilters;
             var requiresMetadataFiltering = RequiresWalletTransactionMetadataFiltering(filter);
@@ -2104,7 +2104,7 @@ namespace BTCPayServer.Controllers
             var network = handlers.GetBitcoinHandler(walletId.CryptoCode).Network;
             var wallet = walletProvider.GetWallet(network);
 
-            var filter = BuildWalletTransactionsFilter(searchTerm, searchText, labelFilter, timeZoneProvider.GetStoreTimeZone(this.HttpContext.GetStoreData()));
+            var filter = BuildWalletTransactionsFilter(searchTerm, searchText, labelFilter, dateFormatterOptionsProvider.GetStoreTimeZone(this.HttpContext.GetStoreData()));
             var requiresMetadataFiltering = RequiresWalletTransactionMetadataFiltering(filter);
 
             var input = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, cancellationToken: cancellationToken);

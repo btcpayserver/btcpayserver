@@ -21,7 +21,7 @@ public class SetContextFilter(
     AppService appService,
     PullPaymentHostedService pullPaymentHostedService,
     StoreRepository storeRepository,
-    TimeZoneProvider timeZoneProvider) : IAsyncActionFilter
+    DateFormatterOptionsProvider dateFormatterOptionsProvider) : IAsyncActionFilter
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
@@ -86,7 +86,7 @@ public class SetContextFilter(
         if (context.Controller is Controller controller &&
             context.HttpContext.GetStoreDataOrNull() is {} s)
         {
-            controller.ViewData.SetDateFormatterOptions(timeZoneProvider, s);
+            controller.ViewData.SetDateFormatterOptions(dateFormatterOptionsProvider, s);
         }
 
 

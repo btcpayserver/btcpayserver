@@ -7,16 +7,9 @@ namespace BTCPayServer;
 
 public static class ViewDataDictionaryExtensions
 {
-    public static void SetDateFormatterOptions(this ViewDataDictionary viewData, TimeZoneProvider timeZoneProvider, StoreData store)
+    public static void SetDateFormatterOptions(this ViewDataDictionary viewData, DateFormatterOptionsProvider dateFormatterOptionsProvider, StoreData store)
     {
-        var dateFormatterOptions = new DateFormatterOptions();
-        dateFormatterOptions.TimeZone = timeZoneProvider.GetStoreTimeZone(store).Id;
-        var storeBlob = store.GetStoreBlob();
-        dateFormatterOptions.Locale = storeBlob.PreferredDateTimeLocale;
-        dateFormatterOptions.DateStyle = storeBlob.PreferredDateStyle;
-        dateFormatterOptions.TimeStyle = storeBlob.PreferredTimeStyle;
-        dateFormatterOptions.Hour12 = storeBlob.PreferredHour12;
-        SetDateFormatterOptions(viewData, dateFormatterOptions);
+        SetDateFormatterOptions(viewData, dateFormatterOptionsProvider.GetStoreDateFormatterOptions(store));
     }
 
     public static void SetDateFormatterOptions(this ViewDataDictionary viewData, DateFormatterOptions? options)

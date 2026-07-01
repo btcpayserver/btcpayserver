@@ -13,7 +13,7 @@ namespace BTCPayServer.Plugins.GlobalSearch;
 
 public class InvoiceSearchResultProvider(InvoiceRepository invoice,
     IStringLocalizer stringLocalizer,
-    TimeZoneProvider timeZoneProvider) : ISearchResultItemProvider
+    DateFormatterOptionsProvider dateFormatterOptionsProvider) : ISearchResultItemProvider
 {
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
     const string Category = "Payments";
@@ -21,7 +21,7 @@ public class InvoiceSearchResultProvider(InvoiceRepository invoice,
     {
         if (context is { UserQuery: string q, Store: { } s })
         {
-            var search = new SearchString(q, timeZoneProvider.GetStoreTimeZone(s));
+            var search = new SearchString(q, dateFormatterOptionsProvider.GetStoreTimeZone(s));
             var invQuery = new InvoiceQuery();
             invQuery.FillFromSearchText(search);
             invQuery.StoreId = [context.Store.Id];

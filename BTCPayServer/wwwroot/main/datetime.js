@@ -8,9 +8,9 @@ function getDateFormater(opts) {
     const options = Object.assign(
         cleanOptions(window.defaultDateTimeFormat || {}),
         cleanOptions(opts));
-    const locales = opts.locales || (window.defaultDateTimeFormat || {}).locales || 'default';
+    const locale = opts.locale || (window.defaultDateTimeFormat || {}).locale || 'default';
     // initialize and set localized attribute
-    return new Intl.DateTimeFormat(locales, options);
+    return new Intl.DateTimeFormat(locale, options);
 }
 
 function formatDateTimes(format, root) {

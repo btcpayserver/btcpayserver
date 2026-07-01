@@ -13,8 +13,8 @@ public class DateFormatterOptions
     public static DateFormatterOptions Parse(string json)
         => JsonConvert.DeserializeObject<DateFormatterOptions>(json);
 
-    [JsonProperty("locales", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-    public string Locales { get; set; }
+    [JsonProperty("locale", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+    public string Locale { get; set; }
 
     [JsonProperty("dateStyle", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
     public string DateStyle { get; set; }
@@ -75,15 +75,4 @@ public class DateFormatterOptions
 
     [JsonProperty("formatMatcher", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
     public string FormatMatcher { get; set; }
-
-    public JObject ToJson()
-        => JObject.FromObject(this);
-
-    public DateFormatterOptions Merge(DateFormatterOptions otherOptions)
-    {
-        var templateJson = otherOptions.ToJson();
-        var thisJson = ToJson();
-        thisJson.Merge(templateJson, new JsonMergeSettings { MergeNullValueHandling = MergeNullValueHandling.Ignore });
-        return thisJson.ToObject<DateFormatterOptions>();
-    }
 }

@@ -9,6 +9,6 @@ public class DeclareDateFormatterOptions : ViewComponent
     {
         DateStyle = "short",
         TimeStyle = "short",
-        Locales = "default"
+        Locale = "default"
     });
 }

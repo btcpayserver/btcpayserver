@@ -9,6 +9,9 @@ public class DateTimeSettingsViewModel
 
     public string ServerTimeZone { get; set; }
 
+    [Display(Name = "Locale")]
+    public string PreferredDateTimeLocale { get; set; }
+
     [Display(Name = "Date format")]
     public string PreferredDateStyle { get; set; }
 

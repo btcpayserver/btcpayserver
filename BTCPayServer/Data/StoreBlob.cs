@@ -77,6 +77,8 @@ namespace BTCPayServer.Data
 
         public string DefaultLang { get; set; }
 
+        public string PreferredDateTimeLocale { get; set; }
+
         public string PreferredDateStyle { get; set; }
 
         public string PreferredTimeStyle { get; set; }

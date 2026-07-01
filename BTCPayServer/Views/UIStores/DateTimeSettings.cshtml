@@ -1,5 +1,6 @@
 @using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Client
+@using System.Globalization
 @model DateTimeSettingsViewModel
 @{
     ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.DateTime), StringLocalizer["Date and Time"]).SetCategory(WellKnownCategories.Store));
@@ -39,6 +40,19 @@
             </div>
 
             <div class="form-group mt-4">
+                <label asp-for="PreferredDateTimeLocale" class="form-label"></label>
+                <input asp-for="PreferredDateTimeLocale" class="form-control" list="locale-selection-suggestion" autocomplete="off" placeholder="@StringLocalizer["Browser default"]" />
+                <datalist id="locale-selection-suggestion">
+                    @foreach (var culture in CultureInfo.GetCultures(CultureTypes.SpecificCultures).OrderBy(c => c.Name))
+                    {
+                        <option value="@culture.Name">@culture.EnglishName</option>
+                    }
+                </datalist>
+                <span asp-validation-for="PreferredDateTimeLocale" class="text-danger"></span>
+                <div class="form-text" text-translate="true">Leave empty to use the browser locale.</div>
+            </div>
+
+            <div class="form-group mt-4">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label asp-for="PreferredDateStyle" class="form-label"></label>
@@ -75,12 +89,14 @@
 @section PageFootContent {
     <script>
         const updateDateTimeFormatPreview = () => {
+            const locale = document.getElementById('PreferredDateTimeLocale').value || undefined;
             const dateStyle = document.getElementById('PreferredDateStyle').value;
             const timeStyle = document.getElementById('PreferredTimeStyle').value;
             const hour12 = document.getElementById('PreferredHour12').checked;
-            const sampleDate = new Date(2026, 5, 16, 10, 40, 53);
-            document.getElementById('DateTimeFormatPreview').textContent = getDateFormater({ dateStyle, timeStyle, hour12 }).format(sampleDate);
+            const sampleDate = new Date(2026, 5, 16, 17, 40, 53);
+            document.getElementById('DateTimeFormatPreview').textContent = getDateFormater({ locale, dateStyle, timeStyle, hour12 }).format(sampleDate);
         }
+        delegate('input', '#PreferredDateTimeLocale', updateDateTimeFormatPreview)
         delegate('change', '#PreferredDateStyle', updateDateTimeFormatPreview)
         delegate('change', '#PreferredTimeStyle', updateDateTimeFormatPreview)
         delegate('change', '#PreferredHour12', updateDateTimeFormatPreview)

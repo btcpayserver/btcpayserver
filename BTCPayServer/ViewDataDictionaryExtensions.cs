@@ -12,6 +12,7 @@ public static class ViewDataDictionaryExtensions
         var dateFormatterOptions = new DateFormatterOptions();
         dateFormatterOptions.TimeZone = timeZoneProvider.GetStoreTimeZone(store).Id;
         var storeBlob = store.GetStoreBlob();
+        dateFormatterOptions.Locale = storeBlob.PreferredDateTimeLocale;
         dateFormatterOptions.DateStyle = storeBlob.PreferredDateStyle;
         dateFormatterOptions.TimeStyle = storeBlob.PreferredTimeStyle;
         dateFormatterOptions.Hour12 = storeBlob.PreferredHour12;

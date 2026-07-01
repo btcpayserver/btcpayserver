@@ -1,0 +1,50 @@
+@model BTCPayServer.Components.DateOptionsToggle.DateOptionsToggleModel
+
+<div class="dropdown">
+    <button id="DateOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        @if (Model.HasDateFilter)
+        {
+            if (Model.HasDatePreset("thismonth"))
+            {
+                <span text-translate="true">This month</span>
+            }
+            else if (Model.HasDatePreset("lastmonth"))
+            {
+                <span text-translate="true">Last month</span>
+            }
+            else if (Model.HasDatePreset("last30d"))
+            {
+                <span text-translate="true">Last 30 days</span>
+            }
+            else if (Model.HasDatePreset("thisquarter"))
+            {
+                <span text-translate="true">This quarter</span>
+            }
+            else if (Model.HasDatePreset("yeartodate"))
+            {
+                <span text-translate="true">Year to date</span>
+            }
+            else
+            {
+                <span text-translate="true">Custom</span>
+            }
+        }
+        else
+        {
+            <span text-translate="true">All Time</span>
+        }
+    </button>
+    <div class="dropdown-menu" aria-labelledby="DateOptionsToggle">
+        @if (Model.ShowAllTime)
+        {
+            <a href="@Model.AllTimeUrl()" class="dropdown-item @(!Model.HasDateFilter ? "custom-active" : string.Empty)" text-translate="true">All Time</a>
+            <hr class="dropdown-divider" />
+        }
+        <a href="@Model.DatePresetUrl("thismonth")" class="dropdown-item @(Model.HasDatePreset("thismonth") ? "custom-active" : string.Empty)" text-translate="true">This month</a>
+        <a href="@Model.DatePresetUrl("lastmonth")" class="dropdown-item @(Model.HasDatePreset("lastmonth") ? "custom-active" : string.Empty)" text-translate="true">Last month</a>
+        <a href="@Model.DatePresetUrl("last30d")" class="dropdown-item @(Model.HasDatePreset("last30d") ? "custom-active" : string.Empty)" text-translate="true">Last 30 days</a>
+        <a href="@Model.DatePresetUrl("thisquarter")" class="dropdown-item @(Model.HasDatePreset("thisquarter") ? "custom-active" : string.Empty)" text-translate="true">This quarter</a>
+        <a href="@Model.DatePresetUrl("yeartodate")" class="dropdown-item @(Model.HasDatePreset("yeartodate") ? "custom-active" : string.Empty)" text-translate="true">Year to date</a>
+        <button type="button" class="dropdown-item @(Model.HasCustomDateFilter ? "custom-active" : string.Empty)" data-bs-toggle="modal" data-bs-target="#customRangeModal" text-translate="true">Custom Range</button>
+    </div>
+</div>

@@ -35,41 +35,6 @@
 
     private bool HasBooleanFilter(string key) =>
         Model.Search.ContainsFilter(key) && Model.Search.GetFilterBool(key) is true;
-
-    private bool HasCustomDateFilter() =>
-        (Model.Search.ContainsFilter("startdate") || Model.Search.ContainsFilter("enddate")) &&
-        !HasDatePreset("thismonth") &&
-        !HasDatePreset("lastmonth") &&
-        !HasDatePreset("last30d") &&
-        !HasDatePreset("thisquarter") &&
-        !HasDatePreset("yeartodate");
-
-    private bool HasDatePreset(string value) =>
-        HasArrayFilter("startdate", value) && (value != "lastmonth" || HasArrayFilter("enddate", value));
-
-    private string DatePresetSearchFilter(string value)
-    {
-        var search = SetSearchFilter(SetSearchFilter(Model.Search.ToString(), "startdate"), "enddate");
-        search = SetSearchFilter(search, "startdate", value);
-        return value == "lastmonth" ? SetSearchFilter(search, "enddate", value) : search;
-    }
-
-    private string SetSearchFilter(string search, string key, params string[] values)
-    {
-        var filters = (search ?? string.Empty)
-            .Split(',', StringSplitOptions.RemoveEmptyEntries)
-            .Select(value => value.Trim())
-            .Where(value => !string.IsNullOrWhiteSpace(value))
-            .Where(value => !value.StartsWith($"{key}:", StringComparison.OrdinalIgnoreCase))
-            .ToList();
-
-        foreach (var value in values.Where(value => !string.IsNullOrWhiteSpace(value)))
-        {
-            filters.Add($"{key}:{value}");
-        }
-
-        return filters.Count > 0 ? string.Join(',', filters) : string.Empty;
-    }
 }
 
 <div class="sticky-header">
@@ -184,95 +149,17 @@
             <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.Search.Toggle("includearchived", "true")" class="dropdown-item @(HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived" text-translate="true">Include Archived</a>
         </div>
     </div>
-    <div class="dropdown">
-        <button id="DateOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            @if (hasDateFilter)
-            {
-                if (HasDatePreset("thismonth"))
-                {
-                    <span text-translate="true">This month</span>
-                }
-                else if (HasDatePreset("lastmonth"))
-                {
-                    <span text-translate="true">Last month</span>
-                }
-                else if (HasDatePreset("last30d"))
-                {
-                    <span text-translate="true">Last 30 days</span>
-                }
-                else if (HasDatePreset("thisquarter"))
-                {
-                    <span text-translate="true">This quarter</span>
-                }
-                else if (HasDatePreset("yeartodate"))
-                {
-                    <span text-translate="true">Year to date</span>
-                }
-                else
-                {
-                    <span text-translate="true">Custom</span>
-                }
-            }
-            else
-            {
-                <span text-translate="true">All Time</span>
-            }
-        </button>
-        <div class="dropdown-menu" aria-labelledby="DateOptionsToggle">
-            <a asp-action="GetPaymentRequests"
-               asp-route-storeId="@storeId"
-               asp-route-count="@Model.Count"
-               asp-route-searchText="@Model.SearchText"
-                asp-route-searchTerm="@DatePresetSearchFilter("thismonth")"
-                class="dropdown-item @(HasDatePreset("thismonth") ? "custom-active" : "")"
-                text-translate="true">
-                 This month
-            </a>
-            <a asp-action="GetPaymentRequests"
-               asp-route-storeId="@storeId"
-               asp-route-count="@Model.Count"
-               asp-route-searchText="@Model.SearchText"
-               asp-route-searchTerm="@DatePresetSearchFilter("lastmonth")"
-               class="dropdown-item @(HasDatePreset("lastmonth") ? "custom-active" : "")"
-               text-translate="true">
-                Last month
-            </a>
-            <a asp-action="GetPaymentRequests"
-               asp-route-storeId="@storeId"
-               asp-route-count="@Model.Count"
-               asp-route-searchText="@Model.SearchText"
-               asp-route-searchTerm="@DatePresetSearchFilter("last30d")"
-               class="dropdown-item @(HasDatePreset("last30d") ? "custom-active" : "")"
-               text-translate="true">
-                Last 30 days
-            </a>
-            <a asp-action="GetPaymentRequests"
-               asp-route-storeId="@storeId"
-               asp-route-count="@Model.Count"
-               asp-route-searchText="@Model.SearchText"
-               asp-route-searchTerm="@DatePresetSearchFilter("thisquarter")"
-               class="dropdown-item @(HasDatePreset("thisquarter") ? "custom-active" : "")"
-               text-translate="true">
-                This quarter
-            </a>
-            <a asp-action="GetPaymentRequests"
-               asp-route-storeId="@storeId"
-               asp-route-count="@Model.Count"
-               asp-route-searchText="@Model.SearchText"
-               asp-route-searchTerm="@DatePresetSearchFilter("yeartodate")"
-               class="dropdown-item @(HasDatePreset("yeartodate") ? "custom-active" : "")"
-               text-translate="true">
-                Year to date
-            </a>
-            <button type="button"
-                    class="dropdown-item @(HasCustomDateFilter() ? "custom-active" : "")"
-                    data-bs-toggle="modal"
-                    data-bs-target="#customRangeModal"
-                    text-translate="true">
-                Custom Range
-            </button>
-        </div>
-    </div>
+    @await Component.InvokeAsync("DateOptionsToggle", new
+    {
+        search = Model.Search,
+        action = "GetPaymentRequests",
+        routeValues = new Dictionary<string, string>
+        {
+            ["storeId"] = storeId ?? string.Empty,
+            ["count"] = Model.Count.ToString(),
+            ["searchText"] = Model.SearchText ?? string.Empty
+        }
+    })
     @if (Model.Labels.Any())
     {
         <div class="dropdown">

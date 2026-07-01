@@ -10,8 +10,6 @@ namespace BTCPayServer;
 /// </summary>
 public class DateFormatterOptions
 {
-    public const string DefaultTemplateName = "Default";
-
     public static IReadOnlyList<Template> DateTemplates { get; } =
     [
         new("Short", "6/12/26", Parse("""
@@ -37,11 +35,61 @@ public class DateFormatterOptions
                                            """))
     ];
 
+    public static IReadOnlyList<Template> TimeTemplates { get; } =
+    [
+        new("Short", "10:40 AM", Parse("""
+                                      {
+                                        "hour": "numeric",
+                                        "minute": "2-digit"
+                                      }
+                                      """)),
+        new("With seconds", "10:40:53 AM", Parse("""
+                                                 {
+                                                   "hour": "numeric",
+                                                   "minute": "2-digit",
+                                                   "second": "2-digit"
+                                                 }
+                                                 """)),
+        new("24-hour", "10:40", Parse("""
+                                      {
+                                        "hour": "2-digit",
+                                        "minute": "2-digit",
+                                        "hour12": false
+                                      }
+                                      """)),
+        new("24-hour with seconds", "10:40:53", Parse("""
+                                                       {
+                                                         "hour": "2-digit",
+                                                         "minute": "2-digit",
+                                                         "second": "2-digit",
+                                                         "hour12": false
+                                                       }
+                                                       """)),
+        new("12-hour", "10:40 AM", Parse("""
+                                        {
+                                          "hour": "numeric",
+                                          "minute": "2-digit",
+                                          "hour12": true
+                                        }
+                                        """)),
+        new("12-hour with seconds", "10:40:53 AM", Parse("""
+                                                         {
+                                                           "hour": "numeric",
+                                                           "minute": "2-digit",
+                                                           "second": "2-digit",
+                                                           "hour12": true
+                                                         }
+                                                         """))
+    ];
+
     public static DateFormatterOptions Parse(string json)
         => JsonConvert.DeserializeObject<DateFormatterOptions>(json);
 
     public static Template GetTemplate(string name) =>
         DateTemplates.FirstOrDefault(o => o.Name == name);
+
+    public static Template GetTimeTemplate(string name) =>
+        TimeTemplates.FirstOrDefault(o => o.Name == name);
 
     [JsonProperty("locales", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
     public string Locales { get; set; }

@@ -48,7 +48,16 @@
                 </select>
                 <span asp-validation-for="PreferredDateFormat" class="text-danger"></span>
             </div>
+            <div class="form-group mt-4">
+                <label asp-for="PreferredTimeFormat" class="form-label"></label>
+                <select asp-for="PreferredTimeFormat" class="form-select" id="PreferredTimeFormat">
+                    @foreach (var template in DateFormatterOptions.TimeTemplates)
+                    {
+                        <option value="@template.Name" data-preview="@template.Preview">@template.Name - @template.Preview</option>
+                    }
+                </select>
+                <span asp-validation-for="PreferredTimeFormat" class="text-danger"></span>
+            </div>
         </div>
     </div>
 </form>
-

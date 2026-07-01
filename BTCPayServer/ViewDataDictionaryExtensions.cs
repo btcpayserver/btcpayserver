@@ -15,6 +15,10 @@ public static class ViewDataDictionaryExtensions
         {
             dateFormatterOptions = dateFormatterOptions.Merge(template.DateFormatOptions);
         }
+        if (DateFormatterOptions.GetTimeTemplate(store.GetStoreBlob().PreferredTimeFormat) is { } timeTemplate)
+        {
+            dateFormatterOptions = dateFormatterOptions.Merge(timeTemplate.DateFormatOptions);
+        }
         SetDateFormatterOptions(viewData, dateFormatterOptions);
     }
 

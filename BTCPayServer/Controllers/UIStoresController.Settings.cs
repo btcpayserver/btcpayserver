@@ -30,7 +30,8 @@ public partial class UIStoresController
         {
             StoreTimeZone = store.TimeZone,
             ServerTimeZone = _policiesSettings.ServerTimeZone,
-            PreferredDateFormat = storeBlob.PreferredDateFormat ?? DateFormatterOptions.DefaultTemplateName
+            PreferredDateFormat = storeBlob.PreferredDateFormat ?? DateFormatterOptions.DateTemplates[0].Name,
+            PreferredTimeFormat = storeBlob.PreferredTimeFormat ?? DateFormatterOptions.TimeTemplates[0].Name
         });
     }
 
@@ -40,7 +41,8 @@ public partial class UIStoresController
     {
         model.ServerTimeZone = _policiesSettings.ServerTimeZone;
         model.StoreTimeZone = model.StoreTimeZone?.Trim();
-        model.PreferredDateFormat ??= DateFormatterOptions.DefaultTemplateName;
+        model.PreferredDateFormat ??= DateFormatterOptions.DateTemplates[0].Name;
+        model.PreferredTimeFormat ??= DateFormatterOptions.TimeTemplates[0].Name;
 
         if (!string.IsNullOrEmpty(model.StoreTimeZone) && !TimeZoneInfo.TryFindSystemTimeZoneById(model.StoreTimeZone, out _))
         {
@@ -50,21 +52,25 @@ public partial class UIStoresController
         {
             ModelState.AddModelError(nameof(model.PreferredDateFormat), StringLocalizer["Invalid date format"]);
         }
+        if (DateFormatterOptions.GetTimeTemplate(model.PreferredTimeFormat) is null)
+        {
+            ModelState.AddModelError(nameof(model.PreferredTimeFormat), StringLocalizer["Invalid time format"]);
+        }
         if (!ModelState.IsValid)
         {
             return View(model);
         }
 
         var needUpdate = false;
-        var timeZone = string.IsNullOrEmpty(model.StoreTimeZone) ? null : model.StoreTimeZone;
-        if (CurrentStore.TimeZone != timeZone)
+        if (CurrentStore.TimeZone != model.StoreTimeZone)
         {
-            CurrentStore.TimeZone = timeZone;
+            CurrentStore.TimeZone = model.StoreTimeZone;
             needUpdate = true;
         }
 
         var blob = CurrentStore.GetStoreBlob();
-        blob.PreferredDateFormat = model.PreferredDateFormat == DateFormatterOptions.DefaultTemplateName ? null : model.PreferredDateFormat;
+        blob.PreferredDateFormat = model.PreferredDateFormat;
+        blob.PreferredTimeFormat = model.PreferredTimeFormat;
         if (CurrentStore.SetStoreBlob(blob))
         {
             needUpdate = true;

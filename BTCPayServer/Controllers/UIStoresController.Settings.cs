@@ -30,8 +30,9 @@ public partial class UIStoresController
         {
             StoreTimeZone = store.TimeZone,
             ServerTimeZone = _policiesSettings.ServerTimeZone,
-            PreferredDateFormat = storeBlob.PreferredDateFormat ?? DateFormatterOptions.DateTemplates[0].Name,
-            PreferredTimeFormat = storeBlob.PreferredTimeFormat ?? DateFormatterOptions.TimeTemplates[0].Name
+            PreferredDateStyle = storeBlob.PreferredDateStyle ?? "short",
+            PreferredTimeStyle = storeBlob.PreferredTimeStyle ?? "short",
+            PreferredHour12 = storeBlob.PreferredHour12
         });
     }
 
@@ -41,20 +42,20 @@ public partial class UIStoresController
     {
         model.ServerTimeZone = _policiesSettings.ServerTimeZone;
         model.StoreTimeZone = model.StoreTimeZone?.Trim();
-        model.PreferredDateFormat ??= DateFormatterOptions.DateTemplates[0].Name;
-        model.PreferredTimeFormat ??= DateFormatterOptions.TimeTemplates[0].Name;
+        model.PreferredDateStyle ??= "short";
+        model.PreferredTimeStyle ??= "short";
 
         if (!string.IsNullOrEmpty(model.StoreTimeZone) && !TimeZoneInfo.TryFindSystemTimeZoneById(model.StoreTimeZone, out _))
         {
             ModelState.AddModelError(nameof(model.StoreTimeZone), $"Invalid Timezone: {model.StoreTimeZone}");
         }
-        if (DateFormatterOptions.GetTemplate(model.PreferredDateFormat) is null)
+        if (!DateFormatterOptions.Styles.Contains(model.PreferredDateStyle))
         {
-            ModelState.AddModelError(nameof(model.PreferredDateFormat), StringLocalizer["Invalid date format"]);
+            ModelState.AddModelError(nameof(model.PreferredDateStyle), StringLocalizer["Invalid date format"]);
         }
-        if (DateFormatterOptions.GetTimeTemplate(model.PreferredTimeFormat) is null)
+        if (!DateFormatterOptions.Styles.Contains(model.PreferredTimeStyle))
         {
-            ModelState.AddModelError(nameof(model.PreferredTimeFormat), StringLocalizer["Invalid time format"]);
+            ModelState.AddModelError(nameof(model.PreferredTimeStyle), StringLocalizer["Invalid time format"]);
         }
         if (!ModelState.IsValid)
         {
@@ -69,8 +70,9 @@ public partial class UIStoresController
         }
 
         var blob = CurrentStore.GetStoreBlob();
-        blob.PreferredDateFormat = model.PreferredDateFormat;
-        blob.PreferredTimeFormat = model.PreferredTimeFormat;
+        blob.PreferredDateStyle = model.PreferredDateStyle;
+        blob.PreferredTimeStyle = model.PreferredTimeStyle;
+        blob.PreferredHour12 = model.PreferredHour12;
         if (CurrentStore.SetStoreBlob(blob))
         {
             needUpdate = true;

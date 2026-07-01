@@ -77,9 +77,11 @@ namespace BTCPayServer.Data
 
         public string DefaultLang { get; set; }
 
-        public string PreferredDateFormat { get; set; }
+        public string PreferredDateStyle { get; set; }
 
-        public string PreferredTimeFormat { get; set; }
+        public string PreferredTimeStyle { get; set; }
+
+        public bool PreferredHour12 { get; set; }
 
         [DefaultValue(typeof(TimeSpan), "1.00:00:00")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]

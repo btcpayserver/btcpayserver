@@ -10,12 +10,11 @@ public class DateTimeSettingsViewModel
     public string ServerTimeZone { get; set; }
 
     [Display(Name = "Date format")]
-    public string PreferredDateFormat { get; set; }
+    public string PreferredDateStyle { get; set; }
 
     [Display(Name = "Time format")]
-    public string PreferredTimeFormat { get; set; }
+    public string PreferredTimeStyle { get; set; }
 
-    public DateFormatterOptions.Template SelectedTemplate => DateFormatterOptions.GetTemplate(PreferredDateFormat) ?? DateFormatterOptions.DateTemplates[0];
-
-    public DateFormatterOptions.Template SelectedTimeTemplate => DateFormatterOptions.GetTimeTemplate(PreferredTimeFormat) ?? DateFormatterOptions.TimeTemplates[0];
+    [Display(Name = "Use 12-hour time")]
+    public bool PreferredHour12 { get; set; }
 }

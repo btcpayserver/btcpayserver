@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -10,86 +8,10 @@ namespace BTCPayServer;
 /// </summary>
 public class DateFormatterOptions
 {
-    public static IReadOnlyList<Template> DateTemplates { get; } =
-    [
-        new("Short", "6/12/26", Parse("""
-                                      {
-                                        "year": "numeric",
-                                        "month": "numeric",
-                                        "day": "numeric"
-                                      }
-                                      """)),
-        new("Medium", "Jun 12, 2026", Parse("""
-                                            {
-                                              "year": "numeric",
-                                              "month": "short",
-                                              "day": "numeric"
-                                            }
-                                            """)),
-        new("Long", "June 12, 2026", Parse("""
-                                           {
-                                             "year": "numeric",
-                                             "month": "long",
-                                             "day": "numeric"
-                                           }
-                                           """))
-    ];
-
-    public static IReadOnlyList<Template> TimeTemplates { get; } =
-    [
-        new("Short", "10:40 AM", Parse("""
-                                      {
-                                        "hour": "numeric",
-                                        "minute": "2-digit"
-                                      }
-                                      """)),
-        new("With seconds", "10:40:53 AM", Parse("""
-                                                 {
-                                                   "hour": "numeric",
-                                                   "minute": "2-digit",
-                                                   "second": "2-digit"
-                                                 }
-                                                 """)),
-        new("24-hour", "10:40", Parse("""
-                                      {
-                                        "hour": "2-digit",
-                                        "minute": "2-digit",
-                                        "hour12": false
-                                      }
-                                      """)),
-        new("24-hour with seconds", "10:40:53", Parse("""
-                                                       {
-                                                         "hour": "2-digit",
-                                                         "minute": "2-digit",
-                                                         "second": "2-digit",
-                                                         "hour12": false
-                                                       }
-                                                       """)),
-        new("12-hour", "10:40 AM", Parse("""
-                                        {
-                                          "hour": "numeric",
-                                          "minute": "2-digit",
-                                          "hour12": true
-                                        }
-                                        """)),
-        new("12-hour with seconds", "10:40:53 AM", Parse("""
-                                                         {
-                                                           "hour": "numeric",
-                                                           "minute": "2-digit",
-                                                           "second": "2-digit",
-                                                           "hour12": true
-                                                         }
-                                                         """))
-    ];
+    public static string[] Styles { get; } = ["short", "medium", "long", "full"];
 
     public static DateFormatterOptions Parse(string json)
         => JsonConvert.DeserializeObject<DateFormatterOptions>(json);
-
-    public static Template GetTemplate(string name) =>
-        DateTemplates.FirstOrDefault(o => o.Name == name);
-
-    public static Template GetTimeTemplate(string name) =>
-        TimeTemplates.FirstOrDefault(o => o.Name == name);
 
     [JsonProperty("locales", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
     public string Locales { get; set; }
@@ -153,8 +75,6 @@ public class DateFormatterOptions
 
     [JsonProperty("formatMatcher", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
     public string FormatMatcher { get; set; }
-
-    public record Template(string Name, string Preview, DateFormatterOptions DateFormatOptions);
 
     public JObject ToJson()
         => JObject.FromObject(this);

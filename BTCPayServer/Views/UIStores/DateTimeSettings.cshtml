@@ -39,25 +39,51 @@
             </div>
 
             <div class="form-group mt-4">
-                <label asp-for="PreferredDateFormat" class="form-label"></label>
-                <select asp-for="PreferredDateFormat" class="form-select" id="PreferredDateFormat">
-                    @foreach (var template in DateFormatterOptions.DateTemplates)
-                    {
-                        <option value="@template.Name" data-preview="@template.Preview">@template.Name - @template.Preview</option>
-                    }
-                </select>
-                <span asp-validation-for="PreferredDateFormat" class="text-danger"></span>
-            </div>
-            <div class="form-group mt-4">
-                <label asp-for="PreferredTimeFormat" class="form-label"></label>
-                <select asp-for="PreferredTimeFormat" class="form-select" id="PreferredTimeFormat">
-                    @foreach (var template in DateFormatterOptions.TimeTemplates)
-                    {
-                        <option value="@template.Name" data-preview="@template.Preview">@template.Name - @template.Preview</option>
-                    }
-                </select>
-                <span asp-validation-for="PreferredTimeFormat" class="text-danger"></span>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="PreferredDateStyle" class="form-label"></label>
+                        <select asp-for="PreferredDateStyle" class="form-select" id="PreferredDateStyle">
+                            @foreach (var style in DateFormatterOptions.Styles)
+                            {
+                                <option value="@style">@style</option>
+                            }
+                        </select>
+                        <span asp-validation-for="PreferredDateStyle" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="PreferredTimeStyle" class="form-label"></label>
+                        <select asp-for="PreferredTimeStyle" class="form-select" id="PreferredTimeStyle">
+                            @foreach (var style in DateFormatterOptions.Styles)
+                            {
+                                <option value="@style">@style</option>
+                            }
+                        </select>
+                        <span asp-validation-for="PreferredTimeStyle" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="form-check mt-3">
+                    <input asp-for="PreferredHour12" type="checkbox" class="form-check-input" id="PreferredHour12" />
+                    <label asp-for="PreferredHour12" class="form-check-label"></label>
+                    <span asp-validation-for="PreferredHour12" class="text-danger"></span>
+                </div>
+                <div class="form-text text-muted mt-2">Example: <b id="DateTimeFormatPreview"></b></div>
             </div>
         </div>
     </div>
 </form>
+
+@section PageFootContent {
+    <script>
+        const updateDateTimeFormatPreview = () => {
+            const dateStyle = document.getElementById('PreferredDateStyle').value;
+            const timeStyle = document.getElementById('PreferredTimeStyle').value;
+            const hour12 = document.getElementById('PreferredHour12').checked;
+            const sampleDate = new Date(2026, 5, 16, 10, 40, 53);
+            document.getElementById('DateTimeFormatPreview').textContent = getDateFormater({ dateStyle, timeStyle, hour12 }).format(sampleDate);
+        }
+        delegate('change', '#PreferredDateStyle', updateDateTimeFormatPreview)
+        delegate('change', '#PreferredTimeStyle', updateDateTimeFormatPreview)
+        delegate('change', '#PreferredHour12', updateDateTimeFormatPreview)
+        updateDateTimeFormatPreview()
+    </script>
+}

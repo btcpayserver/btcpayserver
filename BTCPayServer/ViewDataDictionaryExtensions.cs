@@ -11,14 +11,10 @@ public static class ViewDataDictionaryExtensions
     {
         var dateFormatterOptions = new DateFormatterOptions();
         dateFormatterOptions.TimeZone = timeZoneProvider.GetStoreTimeZone(store).Id;
-        if (DateFormatterOptions.GetTemplate(store.GetStoreBlob().PreferredDateFormat) is { } template)
-        {
-            dateFormatterOptions = dateFormatterOptions.Merge(template.DateFormatOptions);
-        }
-        if (DateFormatterOptions.GetTimeTemplate(store.GetStoreBlob().PreferredTimeFormat) is { } timeTemplate)
-        {
-            dateFormatterOptions = dateFormatterOptions.Merge(timeTemplate.DateFormatOptions);
-        }
+        var storeBlob = store.GetStoreBlob();
+        dateFormatterOptions.DateStyle = storeBlob.PreferredDateStyle;
+        dateFormatterOptions.TimeStyle = storeBlob.PreferredTimeStyle;
+        dateFormatterOptions.Hour12 = storeBlob.PreferredHour12;
         SetDateFormatterOptions(viewData, dateFormatterOptions);
     }
 

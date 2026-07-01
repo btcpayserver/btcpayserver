@@ -49,13 +49,13 @@
                     }
                 </datalist>
                 <span asp-validation-for="PreferredDateTimeLocale" class="text-danger"></span>
-                <div class="form-text" text-translate="true">Leave empty to use the browser locale.</div>
+                <div id="StoreLocaleHelpBlock" class="form-text">
+                    <span text-translate="true">Leave empty to use the browser locale.</span>
+                    <button type="button" class="btn btn-link p-0 only-for-js" data-set-browser-locale data-locale-input="PreferredDateTimeLocale" data-label-template="@StringLocalizer["Set to browser's locale ({0})", "__locale__"]">
+                        <span data-browser-locale-label text-translate="true">Set to browser's locale</span>
+                    </button>
+                </div>
             </div>
-
-            <div class="mt-3 only-for-js">
-                <button type="button" class="btn btn-link p-0" id="SetBrowserDateTimeSettings" text-translate="true">Set to browser's date and time settings</button>
-            </div>
-
             <div class="form-group mt-4">
                 <div class="row g-3">
                     <div class="col-md-6">
@@ -100,23 +100,8 @@
             const sampleDate = new Date(2026, 5, 16, 17, 40, 53);
             document.getElementById('DateTimeFormatPreview').textContent = getDateFormater({ locale, dateStyle, timeStyle, hour12 }).format(sampleDate);
         }
-        delegate('click', '#SetBrowserDateTimeSettings', () => {
-            const options = Intl.DateTimeFormat().resolvedOptions();
-            const timeOptions = Intl.DateTimeFormat(undefined, { hour: 'numeric' }).resolvedOptions();
-            document.getElementById('StoreTimeZone').value = options.timeZone || '';
-            document.getElementById('PreferredDateTimeLocale').value = options.locale || '';
-            if (options.dateStyle && document.querySelector(`#PreferredDateStyle option[value="${options.dateStyle}"]`)) {
-                document.getElementById('PreferredDateStyle').value = options.dateStyle;
-            }
-            if (options.timeStyle && document.querySelector(`#PreferredTimeStyle option[value="${options.timeStyle}"]`)) {
-                document.getElementById('PreferredTimeStyle').value = options.timeStyle;
-            }
-            if (typeof timeOptions.hour12 === 'boolean') {
-                document.getElementById('PreferredHour12').checked = timeOptions.hour12;
-            }
-            updateDateTimeFormatPreview();
-        })
         delegate('input', '#PreferredDateTimeLocale', updateDateTimeFormatPreview)
+        delegate('change', '#PreferredDateTimeLocale', updateDateTimeFormatPreview)
         delegate('change', '#PreferredDateStyle', updateDateTimeFormatPreview)
         delegate('change', '#PreferredTimeStyle', updateDateTimeFormatPreview)
         delegate('change', '#PreferredHour12', updateDateTimeFormatPreview)

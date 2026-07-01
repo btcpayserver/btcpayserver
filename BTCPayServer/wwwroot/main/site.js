@@ -509,6 +509,30 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     })
 
+    // Locale Selection
+    document.querySelectorAll('[data-set-browser-locale]').forEach($btn => {
+        const locale = window.Intl && Intl.DateTimeFormat().resolvedOptions().locale
+        const $label = $btn.querySelector('[data-browser-locale-label]')
+        if (!locale) {
+            $btn.hidden = true
+            return
+        }
+        if ($label) {
+            $label.textContent = ($btn.dataset.labelTemplate || '').replace('__locale__', locale)
+        }
+        $btn.dataset.browserLocale = locale
+    })
+    delegate('click', '[data-set-browser-locale]', e => {
+        const $btn = e.target.closest('[data-set-browser-locale]')
+        const locale = $btn.dataset.browserLocale
+        const inputId = $btn.dataset.localeInput
+        const $input = inputId ? document.getElementById(inputId) : null
+        if ($input && locale) {
+            $input.value = locale
+            $input.dispatchEvent(new Event('change', { bubbles: true }))
+        }
+    })
+
     // Offcanvas navigation
     const mainMenuToggle = document.getElementById('mainMenuToggle')
     if (mainMenuToggle) {

@@ -175,7 +175,7 @@ const posCommon = {
             amounts: [null],
             recentTransactions: [],
             recentTransactionsLoading: false,
-            dateFormatter: new Intl.DateTimeFormat('default', { dateStyle: 'short', timeStyle: 'short' }),
+            dateFormatter: getDateFormater(),
         }
     },
     computed: {

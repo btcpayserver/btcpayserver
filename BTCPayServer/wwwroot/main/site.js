@@ -326,13 +326,9 @@ document.addEventListener("DOMContentLoaded", () => {
         setStickyHeaderHeight();
     }
 
-    // initialize timezone offset value if field is present in page
-    const $timezoneOffset = document.getElementById("TimezoneOffset");
-    const timezoneOffset = new Date().getTimezoneOffset();
-    if ($timezoneOffset) $timezoneOffset.value = timezoneOffset;
-
     // localize all elements that have localizeDate class
-    formatDateTimes();
+    if (formatDateTimes)
+        formatDateTimes();
 
     initLabelManagers();
 

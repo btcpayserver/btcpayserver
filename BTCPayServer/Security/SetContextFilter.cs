@@ -4,10 +4,12 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Stores;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace BTCPayServer.Security;
@@ -18,7 +20,8 @@ public class SetContextFilter(
     InvoiceRepository invoiceRepository,
     AppService appService,
     PullPaymentHostedService pullPaymentHostedService,
-    StoreRepository storeRepository) : IAsyncActionFilter
+    StoreRepository storeRepository,
+    TimeZoneProvider timeZoneProvider) : IAsyncActionFilter
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
@@ -79,6 +82,13 @@ public class SetContextFilter(
                 }
             }
         }
+
+        if (context.Controller is Controller controller &&
+            context.HttpContext.GetStoreDataOrNull() is {} s)
+        {
+            controller.ViewData.SetTimeZone(timeZoneProvider.GetStoreTimeZone(s));
+        }
+
 
         await next();
     }

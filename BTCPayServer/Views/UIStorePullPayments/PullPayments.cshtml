@@ -103,6 +103,11 @@
                         <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="@StringLocalizer["Switch date format"]">
                             <vc:icon symbol="time" />
                         </button>
+
+                        @if (ViewData.GetDateFormatterOptions()?.TimeZone is string tz)
+                        {
+                            <span>(@tz)</span>
+                        }
                     </div>
                 </th>
                 <th text-translate="true" scope="col">Name</th>

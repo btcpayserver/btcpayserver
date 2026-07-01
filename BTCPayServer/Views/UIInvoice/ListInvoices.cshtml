@@ -59,7 +59,6 @@
     @* Custom Range Modal *@
     <script>
         var invoicesUrl = @Safe.Json(Url.Action(nameof(UIInvoiceController.ListInvoices), new { storeId = Model.StoreId }));
-        const timezoneOffset = new Date().getTimezoneOffset();
 
         delegate('click', '.showInvoice', e => {
             e.preventDefault();
@@ -85,7 +84,6 @@
 
             if (filterString !== "") {
                 var redirectUri = invoicesUrl + "?Count=" + $("#Count").val() +
-                    "&timezoneoffset=" + $("#TimezoneOffset").val() +
                     "&SearchTerm=" + filterString;
 
                 window.location.href = redirectUri;
@@ -324,14 +322,7 @@
                         <th class="mass-action-select-col only-for-js">
                             <input type="checkbox" class="form-check-input mass-action-select-all" />
                         </th>
-                        <th class="date-col">
-                            <div class="d-flex align-items-center gap-3">
-                                <span text-translate="true">Date</span>
-                                <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="@StringLocalizer["Switch date format"]">
-                                    <vc:icon symbol="time" />
-                                </button>
-                            </div>
-                        </th>
+                        <vc:date-column></vc:date-column>
                         <th text-translate="true" class="text-nowrap">Invoice Id</th>
                         <th text-translate="true" class="text-nowrap">Order Id</th>
                         <th text-translate="true">Status</th>

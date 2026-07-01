@@ -202,10 +202,10 @@ namespace BTCPayServer.Controllers
             var store = await _StoreRepository.GetStoreByInvoiceId(i.Id);
             if (store is null)
                 return NotFound();
-
             if (!await ValidateAccessForArchivedInvoice(i))
                 return NotFound();
 
+            ViewData.SetTimeZone(_timeZoneProvider.GetStoreTimeZone(store));
             var receipt = InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, i.ReceiptOptions);
             if (receipt.Enabled is not true)
             {

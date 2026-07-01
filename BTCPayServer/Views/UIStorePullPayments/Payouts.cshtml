@@ -151,14 +151,7 @@
                                 <input type="checkbox" class="form-check-input mass-action-select-all" data-payout-state="@Model.PayoutState.ToString()" />
                             </th>
                         }
-                        <th class="date-col">
-                            <div class="d-flex align-items-center gap-3">
-                                <span text-translate="true">Date</span>
-                                <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
-                                    <vc:icon symbol="time" />
-                                </button>
-                            </div>
-                        </th>
+                        <vc:date-column></vc:date-column>
                         <th text-translate="true">Source</th>
                         <th text-translate="true">Destination</th>
                         <th text-translate="true" class="amount-col">Amount</th>

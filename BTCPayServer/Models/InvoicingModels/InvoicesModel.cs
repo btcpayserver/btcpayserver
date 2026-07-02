@@ -9,7 +9,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public List<InvoiceModel> Invoices { get; set; } = new ();
         public override int CurrentPageCount => Invoices.Count;
         public string StoreId { get; set; }
-        public SearchString Search { get; set; }
         public List<InvoiceAppModel> Apps { get; set; }
     }
 

@@ -30,6 +30,8 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction("Index", "UIHome");
 
             var fs = model.GetSearch(timezone);
+            if (model.FilterCommand is not null)
+                return model.Redirect(Request);
             var storeIds = fs.GetFilterArray("storeid");
             var stores = await storeRepo.GetStoresByUserId(userId);
             model.StoreFilterOptions = stores

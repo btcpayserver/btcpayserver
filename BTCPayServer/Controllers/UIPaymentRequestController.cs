@@ -99,12 +99,11 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> GetPaymentRequests(string storeId, ListPaymentRequestsViewModel model = null)
         {
-            model = this.ParseListQuery(model ?? new ListPaymentRequestsViewModel());
+            model ??= new ListPaymentRequestsViewModel();
 
             var fs = model.GetSearch(_dateFormatterOptionsProvider.GetStoreTimeZone(this.HttpContext.GetStoreData()));
-
-            var startDate = fs.GetFilterDate("startdate");
-            var endDate   = fs.GetFilterDate("enddate");
+            if (model.FilterCommand is not null)
+                return model.Redirect(Request);
 
             var result = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery
             {
@@ -115,12 +114,10 @@ namespace BTCPayServer.Controllers
                 Status = fs.GetFilterArray("status")?.Select(s => Enum.Parse<PaymentRequestStatus>(s, true)).ToArray(),
                 IncludeArchived = fs.GetFilterBool("includearchived") ?? false,
                 SearchText = model.SearchText,
-                StartDate = startDate,
-                EndDate = endDate,
+                StartDate = fs.GetFilterDate("startdate"),
+                EndDate = fs.GetFilterDate("enddate"),
                 LabelFilter = model.LabelFilter
             });
-
-            model.Search = fs;
 
             var items = result.Select(data => new ViewPaymentRequestViewModel(data)
             {

@@ -25,7 +25,7 @@ namespace BTCPayServer.Controllers
             UsersViewModel model,
             string sortOrder = null)
         {
-            model = this.ParseListQuery(model ?? new UsersViewModel());
+            model ??= new UsersViewModel();
 
             var usersQuery = _UserManager.Users;
             if (!string.IsNullOrWhiteSpace(model.SearchTerm))

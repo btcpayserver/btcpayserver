@@ -602,14 +602,9 @@ namespace BTCPayServer.Controllers
             public bool HasFilters => !string.IsNullOrWhiteSpace(SearchText) || StartDate is not null || EndDate is not null || HasLabelFilter || Positive is not null;
         }
 
-        internal static WalletTransactionsFilter BuildWalletTransactionsFilter(SearchString search, string? labelFilter)
+        internal static WalletTransactionsFilter BuildWalletTransactionsFilter(SearchString search)
         {
             var labelFilters = new List<string>(search.GetFilterArray("label") ?? Array.Empty<string>());
-            if (!string.IsNullOrWhiteSpace(labelFilter))
-            {
-                labelFilters.Add(labelFilter);
-            }
-
             var includeNoLabel = search.GetFilterBool("nolabel") is true;
             labelFilters = labelFilters
                 .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -716,13 +711,12 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> WalletTransactions(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId,
-            string? labelFilter = null,
             bool loadTransactions = false,
             ListTransactionsViewModel? model = null,
             CancellationToken cancellationToken = default
         )
         {
-            model = this.ParseListQuery(model ?? new ListTransactionsViewModel());
+            model ??= new();
             var paymentMethod = GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
                 return NotFound();
@@ -730,22 +724,21 @@ namespace BTCPayServer.Controllers
             var wallet = walletProvider.GetWallet(network);
 
             var fs = model.GetSearch(dateFormatterOptionsProvider.GetStoreTimeZone(this.HttpContext.GetStoreData()));
-            var filter = BuildWalletTransactionsFilter(fs, labelFilter);
+            if (model.FilterCommand is not null)
+                return model.Redirect(Request);
+            var filter = BuildWalletTransactionsFilter(fs);
 
             var filterAtSource = !filter.HasFilters;
             var requiresMetadataFiltering = RequiresWalletTransactionMetadataFiltering(filter);
-            model.Search = filter.Search;
             model.SearchText = filter.SearchText;
             model.SearchInputText = filter.SearchInputText;
             model.SearchTerm = filter.SearchTerm;
-            model.HasFilters = filter.HasFilters || !string.IsNullOrWhiteSpace(labelFilter);
+            model.HasFilters = filter.HasFilters;
             model.PaginationQuery = new Dictionary<string, object>
             {
                 { "searchTerm", filter.SearchTerm },
                 { "searchText", filter.SearchText }
             };
-            if (!string.IsNullOrEmpty(labelFilter))
-                model.PaginationQuery.Add("labelFilter", labelFilter);
 
             model.PendingTransactions = await pendingTransactionService.GetPendingTransactions(walletId.CryptoCode, walletId.StoreId);
             model.Rates = GetCurrentStore().GetStoreBlob().GetTrackedRates().ToList();
@@ -2087,7 +2080,6 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Export(
             [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
             string format,
-            string? labelFilter = null,
             string? searchTerm = null,
             string? searchText = null,
             CancellationToken cancellationToken = default)
@@ -2100,11 +2092,11 @@ namespace BTCPayServer.Controllers
             var wallet = walletProvider.GetWallet(network);
 
             var fs = SearchString.Combine([searchTerm, searchText], dateFormatterOptionsProvider.GetStoreTimeZone(this.HttpContext.GetStoreData()));
-            var filter = BuildWalletTransactionsFilter(fs, labelFilter);
+            var filter = BuildWalletTransactionsFilter(fs);
             var requiresMetadataFiltering = RequiresWalletTransactionMetadataFiltering(filter);
 
             var input = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, cancellationToken: cancellationToken);
-            if (filter.HasFilters || !string.IsNullOrWhiteSpace(labelFilter))
+            if (filter.HasFilters)
             {
                 input = input
                     .Where(tx => MatchesWalletTransactionBasicFilter(tx, filter, network))

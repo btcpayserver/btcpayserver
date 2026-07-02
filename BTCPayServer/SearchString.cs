@@ -62,6 +62,7 @@ namespace BTCPayServer
         public string TextCombined => ToString(SearchStringFormat.OnlyUIFilters);
 
         public MultiValueDictionary<string, string> Filters { get; }
+        public bool IsEmpty => string.IsNullOrWhiteSpace(TextSearch) && !Filters.Any();
 
         public override string ToString() => ToString(SearchStringFormat.All);
 
@@ -170,40 +171,29 @@ namespace BTCPayServer
                 _ => (DateTime?)null
             };
 
-            return localDate is null ? null : ToDateTimeOffset(localDate.Value);
-        }
-
-        private DateTimeOffset ToDateTimeOffset(DateTime localDate)
-        {
-            var local = DateTime.SpecifyKind(localDate, DateTimeKind.Unspecified);
+            if (localDate is null)
+                return null;
+            var local = DateTime.SpecifyKind(localDate.Value, DateTimeKind.Unspecified);
             return new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(local, _timeZone), TimeSpan.Zero);
         }
 
         public bool ContainsFilter(string key) => Filters.ContainsKey(NormalizeKey(key));
+        public int CountArrayFilter(string type) =>
+            ContainsFilter(type) ? GetFilterArray(type)!.Length : 0;
+
+        public bool HasArrayFilter(string type, string? key = null) =>
+            ContainsFilter(type) && (key is null || GetFilterArray(type).Contains(key));
+
+        public bool HasBooleanFilter(string key) =>
+            ContainsFilter(key) && GetFilterBool(key) is true;
 
         private string NormalizeKey(string key) => key.ToLowerInvariant().Trim();
 
-        public void RunFilterCommand(string? command)
+        public void SetFilter(string filter, string? value = null)
         {
-            if (string.IsNullOrWhiteSpace(command))
-                return;
-            if (command is "reset")
-            {
-                Filters.Clear();
-                TextSearch = "";
-                return;
-            }
-            if (command is "alltime" or "thismonth" or "lastmonth" or "last30d" or "thisquarter" or "yeartodate")
-            {
-                Filters.Remove("startdate");
-                Filters.Remove("enddate");
-                if (command != "alltime")
-                {
-                    Filters.Add("startdate", command);
-                    if (command == "lastmonth")
-                        Filters.Add("enddate", command);
-                }
-            }
+            Filters.Remove(filter);
+            if (value is not null)
+                Filters.Add(filter, value);
         }
     }
 }

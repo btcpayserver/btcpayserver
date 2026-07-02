@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using BTCPayServer;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Services.Invoices;
@@ -35,9 +34,39 @@ namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
         public string CryptoCode { get; set; }
         public PendingTransaction[] PendingTransactions { get; set; }
         public List<string> Rates { get; set; } = new();
-        public string SearchText { get; set; }
         public string SearchInputText { get; set; }
-        public SearchString Search { get; set; }
         public bool HasFilters { get; set; }
+
+        public override void RunFilterCommand(SearchString search)
+        {
+            base.RunFilterCommand(search);
+            if (FilterCommand is "alldirection")
+            {
+                search.Filters.Remove("direction");
+            }
+            else if (FilterCommand is "incoming")
+            {
+                search.SetFilter("direction", "in");
+            }
+            else if (FilterCommand is "outgoing")
+            {
+                search.SetFilter("direction", "out");
+            }
+            else if (FilterCommand is "alllabels")
+            {
+                search.Filters.Remove("label");
+                search.Filters.Remove("nolabel");
+            }
+            else if (FilterCommand is "nolabel")
+            {
+                search.SetFilter("nolabel", "true");
+                search.Filters.Remove("label");
+            }
+            else if (FilterCommand.StartsWith("addlabel:"))
+            {
+                search.Filters.Remove("nolabel");
+                search.SetFilter("label", FilterCommand.Substring("addlabel:".Length));
+            }
+        }
     }
 }

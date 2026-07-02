@@ -1538,10 +1538,9 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         public void BuildWalletTransactionsFilterSeparatesTextAndStructuredTerms()
         {
             var utc = TimeZoneInfo.Utc;
-            var result = UIWalletsController.BuildWalletTransactionsFilter(
+            var result = BuildWalletTransactionsFilter(
                 "direction:out,label:primary-label,nolabel:true,startdate:2026-03-01T12:34:56",
                 "abc123tx",
-                "secondary-label",
                 utc);
 
             Assert.Equal("abc123tx", result.SearchInputText);
@@ -1555,14 +1554,14 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.Contains("startdate:2026-03-01T12:34:56", structuredSearchTerm);
             Assert.DoesNotContain("abc123tx", structuredSearchTerm);
 
-            Assert.Equal(["primary-label", "secondary-label"], result.LabelFilters);
+            Assert.Equal(["primary-label"], result.LabelFilters);
             Assert.True(result.IncludeNoLabel);
             Assert.False(result.Positive);
             Assert.NotNull(result.StartDate);
             Assert.True(result.HasLabelFilter);
             Assert.True(result.HasFilters);
 
-            result = UIWalletsController.BuildWalletTransactionsFilter(null, "abc", null, utc);
+            result = BuildWalletTransactionsFilter(null, "abc", utc);
 
             Assert.Equal(string.Empty, result.SearchTerm);
             Assert.Equal("abc", result.SearchText);
@@ -1571,7 +1570,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.False(result.HasLabelFilter);
             Assert.True(result.HasFilters);
 
-            result = UIWalletsController.BuildWalletTransactionsFilter("foo:bar", null, null, utc);
+            result = BuildWalletTransactionsFilter("foo:bar", null, utc);
 
             Assert.Equal(string.Empty, result.SearchTerm);
             Assert.Equal(string.Empty, result.SearchText);
@@ -1580,7 +1579,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.False(result.HasLabelFilter);
             Assert.False(result.HasFilters);
 
-            result = UIWalletsController.BuildWalletTransactionsFilter(string.Empty, null, null, utc);
+            result = BuildWalletTransactionsFilter(string.Empty, null, utc);
 
             Assert.Equal(string.Empty, result.SearchTerm);
             Assert.Equal(string.Empty, result.SearchText);
@@ -1589,6 +1588,9 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.False(result.HasLabelFilter);
             Assert.False(result.HasFilters);
         }
+
+        internal static UIWalletsController.WalletTransactionsFilter BuildWalletTransactionsFilter(string filterA, string filterB, TimeZoneInfo tz)
+            => UIWalletsController.BuildWalletTransactionsFilter(SearchString.Combine([filterA, filterB], tz));
 
         [Fact]
         public void CanParseFingerprint()

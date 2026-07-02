@@ -5,21 +5,8 @@
 @model InvoicesModel
 @{
     ViewData.SetLayoutModel(new("Invoices", StringLocalizer["Invoices"]));
-    var statusFilterCount = CountArrayFilter("status") + CountArrayFilter("exceptionstatus") + (HasBooleanFilter("includearchived") ? 1 : 0) + (HasBooleanFilter("unusual") ? 1 : 0);
-    var hasDateFilter = HasArrayFilter("startdate") || HasArrayFilter("enddate");
-    var appFilterCount = Model.Apps.Count(app => HasArrayFilter("appid", app.Id));
-}
-
-@functions
-{
-    private int CountArrayFilter(string type) =>
-        Model.Search.ContainsFilter(type) ? Model.Search.GetFilterArray(type).Length : 0;
-
-    private bool HasArrayFilter(string type, string key = null) =>
-        Model.Search.ContainsFilter(type) && (key is null || Model.Search.GetFilterArray(type).Contains(key));
-
-    private bool HasBooleanFilter(string key) =>
-        Model.Search.ContainsFilter(key) && Model.Search.GetFilterBool(key) is true;
+    var statusFilterCount = Model.Search.CountArrayFilter("status") + Model.Search.CountArrayFilter("exceptionstatus") + (Model.Search.HasBooleanFilter("includearchived") ? 1 : 0) + (Model.Search.HasBooleanFilter("unusual") ? 1 : 0);
+    var appFilterCount = Model.Apps.Count(app => Model.Search.HasArrayFilter("appid", app.Id));
 }
 
 @section PageHeadContent
@@ -133,17 +120,17 @@
             }
         </button>
         <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "settled")" class="dropdown-item @(HasArrayFilter("status", "settled") ? "custom-active" : "")" text-translate="true">Settled</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "processing")" class="dropdown-item @(HasArrayFilter("status", "processing") ? "custom-active" : "")" text-translate="true">Processing</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "expired")" class="dropdown-item @(HasArrayFilter("status", "expired") ? "custom-active" : "")" text-translate="true">Expired</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "invalid")" class="dropdown-item @(HasArrayFilter("status", "invalid") ? "custom-active" : "")" text-translate="true">Invalid</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "settled")" class="dropdown-item @(Model.Search.HasArrayFilter("status", "settled") ? "custom-active" : "")" text-translate="true">Settled</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "processing")" class="dropdown-item @(Model.Search.HasArrayFilter("status", "processing") ? "custom-active" : "")" text-translate="true">Processing</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "expired")" class="dropdown-item @(Model.Search.HasArrayFilter("status", "expired") ? "custom-active" : "")" text-translate="true">Expired</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "invalid")" class="dropdown-item @(Model.Search.HasArrayFilter("status", "invalid") ? "custom-active" : "")" text-translate="true">Invalid</a>
             <hr class="dropdown-divider">
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidLate")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidLate") ? "custom-active" : "")" text-translate="true">Settled Late</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidPartial")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidPartial") ? "custom-active" : "")" text-translate="true">Settled Partial</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidOver")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidOver") ? "custom-active" : "")" text-translate="true">Settled Over</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("unusual", "true")" class="dropdown-item @(HasBooleanFilter("unusual") ? "custom-active" : "")" text-translate="true">Unusual</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidLate")" class="dropdown-item @(Model.Search.HasArrayFilter("exceptionstatus", "paidLate") ? "custom-active" : "")" text-translate="true">Settled Late</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidPartial")" class="dropdown-item @(Model.Search.HasArrayFilter("exceptionstatus", "paidPartial") ? "custom-active" : "")" text-translate="true">Settled Partial</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidOver")" class="dropdown-item @(Model.Search.HasArrayFilter("exceptionstatus", "paidOver") ? "custom-active" : "")" text-translate="true">Settled Over</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("unusual", "true")" class="dropdown-item @(Model.Search.HasBooleanFilter("unusual") ? "custom-active" : "")" text-translate="true">Unusual</a>
             <hr class="dropdown-divider">
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("includearchived", "true")" class="dropdown-item @(HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived" text-translate="true">Include archived</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("includearchived", "true")" class="dropdown-item @(Model.Search.HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived" text-translate="true">Include archived</a>
         </div>
     </div>
     @if (Model.Apps.Any())
@@ -162,7 +149,7 @@
             <div class="dropdown-menu" aria-labelledby="AppOptionsToggle">
                 @foreach (var app in Model.Apps)
                 {
-                    <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("appid", app.Id)" class="dropdown-item @(HasArrayFilter("appid", app.Id) ? "custom-active" : "")">@app.AppName</a>
+                    <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("appid", app.Id)" class="dropdown-item @(Model.Search.HasArrayFilter("appid", app.Id) ? "custom-active" : "")">@app.AppName</a>
                 }
             </div>
         </div>
@@ -172,12 +159,7 @@
         search = Model.Search,
         customRangeTitle = StringLocalizer["Filter invoices by Custom Range"].Value
     })
-    @if (statusFilterCount > 0 || appFilterCount > 0 || hasDateFilter || !string.IsNullOrEmpty(Model.SearchText))
-    {
-        <button id="clearAllFiltersBtn" type="button" class="btn btn-secondary" style="min-width: 7rem;" title="@StringLocalizer["Clear all filters"]">
-            <span class="align-middle" text-translate="true">Clear All</span>
-        </button>
-    }
+    <vc:clear-all-filters search="Model.Search"></vc:clear-all-filters>
 </form>
 
 @if (Model.Invoices.Any())
@@ -215,7 +197,7 @@
                                         <vc:icon symbol="actions-archive" />
                                         <span text-translate="true">Archive</span>
                                     </button>
-                                    @if (HasBooleanFilter("includearchived"))
+                                    @if (Model.Search.HasBooleanFilter("includearchived"))
                                     {
                                         <button type="submit" name="command" value="unarchive" id="UnarchiveSelected" class="btn btn-link">
                                             <vc:icon symbol="actions-archive" />

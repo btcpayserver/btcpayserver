@@ -109,7 +109,7 @@
             dateFilters.push(`enddate:${dtpEndDate}`);
         }
 
-        const cleanedSearchTerm = @Safe.Json(DateOptionsToggleModel.RemoveDatePreset(Model.Search?.ToString(SearchStringFormat.OnlyUIFilters)));
+        const cleanedSearchTerm = @Safe.Json(DateOptionsToggleModel.RemoveDatePreset(Model.Search.ToString(SearchStringFormat.OnlyUIFilters)));
         const combinedSearchTerm = [cleanedSearchTerm, dateFilters.join(',')].filter(Boolean).join(',');
 
         $("#SearchTerm").val(combinedSearchTerm).closest('form').submit();

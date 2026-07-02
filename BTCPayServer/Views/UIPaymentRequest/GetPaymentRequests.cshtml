@@ -7,34 +7,12 @@
     Layout = "_Layout";
     ViewData.SetLayoutModel(new("PaymentRequests", StringLocalizer["Payment Requests"]));
     var storeId = Context.GetStoreData().Id;
-    var statusFilterCount = CountArrayFilter("status") + (HasBooleanFilter("includearchived") ? 1 : 0);
-    var hasDateFilter = HasArrayFilter("startdate") || HasArrayFilter("enddate");
-    var hasTextSearch = !string.IsNullOrEmpty(Model.SearchText) || !string.IsNullOrEmpty(Model.Search?.TextSearch);
-    var hasAnyFilter =
-        statusFilterCount > 0 ||
-        hasDateFilter ||
-        hasTextSearch ||
-        !string.IsNullOrEmpty(Model.SearchTerm) ||
-        !string.IsNullOrEmpty(Model.LabelFilter);
-
-    var wallet = !string.IsNullOrEmpty(Model.WalletId) ? WalletId.Parse(Model.WalletId) : null;
+    var statusFilterCount = Model.Search.CountArrayFilter("status") + (Model.Search.HasBooleanFilter("includearchived") ? 1 : 0);
 }
 
 @section PageHeadContent {
     <script src="~/vendor/tom-select/tom-select.complete.min.js" asp-append-version="true"></script>
     <link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" asp-append-version="true" rel="stylesheet">
-}
-
-@functions
-{
-    private int CountArrayFilter(string type) =>
-        Model.Search.ContainsFilter(type) ? Model.Search.GetFilterArray(type).Length : 0;
-
-    private bool HasArrayFilter(string type, string key = null) =>
-        Model.Search.ContainsFilter(type) && (key is null || Model.Search.GetFilterArray(type).Contains(key));
-
-    private bool HasBooleanFilter(string key) =>
-        Model.Search.ContainsFilter(key) && Model.Search.GetFilterBool(key) is true;
 }
 
 <div class="sticky-header">
@@ -97,11 +75,11 @@
             }
         </button>
         <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
-            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.Search.Toggle("status", "pending")" class="dropdown-item @(HasArrayFilter("status", "pending") ? "custom-active" : "")" text-translate="true">Pending</a>
-            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.Search.Toggle("status", "completed")" class="dropdown-item @(HasArrayFilter("status", "completed") ? "custom-active" : "")" text-translate="true">Settled</a>
-            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.Search.Toggle("status", "expired")" class="dropdown-item @(HasArrayFilter("status", "expired") ? "custom-active" : "")" text-translate="true">Expired</a>
+            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.Search.Toggle("status", "pending")" class="dropdown-item @(Model.Search.HasArrayFilter("status", "pending") ? "custom-active" : "")" text-translate="true">Pending</a>
+            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.Search.Toggle("status", "completed")" class="dropdown-item @(Model.Search.HasArrayFilter("status", "completed") ? "custom-active" : "")" text-translate="true">Settled</a>
+            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.Search.Toggle("status", "expired")" class="dropdown-item @(Model.Search.HasArrayFilter("status", "expired") ? "custom-active" : "")" text-translate="true">Expired</a>
             <div role="separator" class="dropdown-divider"></div>
-            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.Search.Toggle("includearchived", "true")" class="dropdown-item @(HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived" text-translate="true">Include Archived</a>
+            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.Search.Toggle("includearchived", "true")" class="dropdown-item @(Model.Search.HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived" text-translate="true">Include Archived</a>
         </div>
     </div>
     @await Component.InvokeAsync("DateOptionsToggle", new
@@ -163,16 +141,7 @@
             </ul>
         </div>
     }
-    @if (hasAnyFilter)
-    {
-        <button id="clearAllFiltersBtn"
-                type="button"
-                class="btn btn-secondary ms-auto"
-                style="min-width: 7rem;"
-                title="@StringLocalizer["Clear all filters"]">
-            <span class="align-middle" text-translate="true">Clear All</span>
-        </button>
-    }
+    <vc:clear-all-filters search="Model.Search"></vc:clear-all-filters>
 </form>
 
 @if (Model.Items.Any())

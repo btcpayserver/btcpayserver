@@ -1,0 +1,11 @@
+@model SearchString
+
+@if (Model is not null && !Model.IsEmpty) {
+    <button id="clearAllFiltersBtn"
+            type="submit" name="FilterCommand" value="reset"
+            class="btn btn-secondary"
+            style="min-width: 7rem;"
+            title="@StringLocalizer["Clear all filters"]">
+        <span class="align-middle" text-translate="true">Clear All</span>
+    </button>
+}

@@ -27,7 +27,7 @@ namespace BTCPayServer
     {
         private const char FilterSeparator = ',';
         private const char ValueSeparator = ':';
-        public HashSet<string> UIFilters = new HashSet<string>(["status", "exceptionstatus", "unusual", "includearchived", "appid", "startdate", "enddate", "label", "nolabel", "direction"], StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> UIFilters = new HashSet<string>(["status", "exceptionstatus", "unusual", "includearchived", "appid", "startdate", "enddate", "period"], StringComparer.OrdinalIgnoreCase);
 
         private readonly TimeZoneInfo _timeZone;
 
@@ -115,11 +115,28 @@ namespace BTCPayServer
             return bool.TryParse(filter.First(), out var r) ? r : null;
         }
 
+        public (DateTimeOffset? StartData, DateTimeOffset? EndDate) GetPeriod()
+        {
+            DateTimeOffset? start = null;
+            DateTimeOffset? end = null;
+            if (Filters.TryGetValue("period", out var period) && IsValidPeriod(period.FirstOrDefault()))
+            {
+                start = GetPeriodDate("startdate", period.First());
+                end = GetPeriodDate("enddate", period.First());
+                return (start, end);
+            }
+            else
+            {
+                start = GetFilterDate("startdate");
+                if (start != null)
+                    end = GetFilterDate("enddate");
+                return (start, end);
+            }
+        }
+
         public DateTimeOffset? GetFilterDate(string key)
         {
             key = NormalizeKey(key);
-            if (Filters.TryGetValue("period", out var period) && IsValidPeriod(period.FirstOrDefault()))
-                return GetPeriodDate(key, period.First());
 
             if (!Filters.TryGetValue(key, out var filter))
                 return null;
@@ -186,19 +203,36 @@ namespace BTCPayServer
 
         public static bool IsValidPeriod(string? period) =>
             period is "alltime" or "thismonth" or "lastmonth" or "last30d" or "thisquarter" or "yeartodate";
-        public void SetFilter(string filter, string? value = null)
+
+        public void SetFilter(string filter, string? value = null, bool toggle = false)
         {
-            Filters.Remove(filter);
-            if (value is not null)
-                Filters.Add(filter, value);
+            filter = NormalizeKey(filter);
+            if (!toggle)
+            {
+                Filters.Remove(filter);
+                if (value is not null)
+                    Filters.Add(filter, value);
+            }
+            else
+            {
+                if (!Filters.ContainsKey(filter) || value is null)
+                    SetFilter(filter, value);
+                else if (Filters[filter].First() == value)
+                {
+                    SetFilter(filter);
+                }
+                else
+                {
+                    SetFilter(filter, value);
+                }
+            }
         }
 
-        public void SetPeriod(string? period = null)
+        public void SetPeriod(string? period = null, bool toggle = false)
         {
             Filters.Remove("startdate");
             Filters.Remove("enddate");
-            if (period is not null)
-                Filters.Add("period", period);
+            SetFilter("period", period, toggle);
         }
     }
 }

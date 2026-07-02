@@ -5,23 +5,23 @@
     <button id="DateOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
         @if (Model.HasDateFilter)
         {
-            if (Model.HasDatePreset("thismonth"))
+            if (Model.HasPeriod("thismonth"))
             {
                 <span text-translate="true">This month</span>
             }
-            else if (Model.HasDatePreset("lastmonth"))
+            else if (Model.HasPeriod("lastmonth"))
             {
                 <span text-translate="true">Last month</span>
             }
-            else if (Model.HasDatePreset("last30d"))
+            else if (Model.HasPeriod("last30d"))
             {
                 <span text-translate="true">Last 30 days</span>
             }
-            else if (Model.HasDatePreset("thisquarter"))
+            else if (Model.HasPeriod("thisquarter"))
             {
                 <span text-translate="true">This quarter</span>
             }
-            else if (Model.HasDatePreset("yeartodate"))
+            else if (Model.HasPeriod("yeartodate"))
             {
                 <span text-translate="true">Year to date</span>
             }
@@ -38,11 +38,11 @@
     <div class="dropdown-menu" aria-labelledby="DateOptionsToggle">
         <button type="submit" name="FilterCommand" value="alltime" class="dropdown-item @(!Model.HasDateFilter ? "custom-active" : string.Empty)" text-translate="true">All Time</button>
         <hr class="dropdown-divider" />
-        <button type="submit" name="FilterCommand" value="thismonth" class="dropdown-item @(Model.HasDatePreset("thismonth") ? "custom-active" : string.Empty)" text-translate="true">This month</button>
-        <button type="submit" name="FilterCommand" value="lastmonth" class="dropdown-item @(Model.HasDatePreset("lastmonth") ? "custom-active" : string.Empty)" text-translate="true">Last month</button>
-        <button type="submit" name="FilterCommand" value="last30d" class="dropdown-item @(Model.HasDatePreset("last30d") ? "custom-active" : string.Empty)" text-translate="true">Last 30 days</button>
-        <button type="submit" name="FilterCommand" value="thisquarter" class="dropdown-item @(Model.HasDatePreset("thisquarter") ? "custom-active" : string.Empty)" text-translate="true">This quarter</button>
-        <button type="submit" name="FilterCommand" value="yeartodate" class="dropdown-item @(Model.HasDatePreset("yeartodate") ? "custom-active" : string.Empty)" text-translate="true">Year to date</button>
+        <button type="submit" name="FilterCommand" value="set-period:thismonth" class="dropdown-item @(Model.HasPeriod("thismonth") ? "custom-active" : string.Empty)" text-translate="true">This month</button>
+        <button type="submit" name="FilterCommand" value="set-period:lastmonth" class="dropdown-item @(Model.HasPeriod("lastmonth") ? "custom-active" : string.Empty)" text-translate="true">Last month</button>
+        <button type="submit" name="FilterCommand" value="set-period:last30d" class="dropdown-item @(Model.HasPeriod("last30d") ? "custom-active" : string.Empty)" text-translate="true">Last 30 days</button>
+        <button type="submit" name="FilterCommand" value="set-period:thisquarter" class="dropdown-item @(Model.HasPeriod("thisquarter") ? "custom-active" : string.Empty)" text-translate="true">This quarter</button>
+        <button type="submit" name="FilterCommand" value="set-period:yeartodate" class="dropdown-item @(Model.HasPeriod("yeartodate") ? "custom-active" : string.Empty)" text-translate="true">Year to date</button>
         <button type="button" class="dropdown-item @(Model.HasCustomDateFilter ? "custom-active" : string.Empty)" data-bs-toggle="modal" data-bs-target="#customRangeModal" text-translate="true">Custom Range</button>
     </div>
 </div>

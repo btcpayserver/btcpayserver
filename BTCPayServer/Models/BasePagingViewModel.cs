@@ -51,7 +51,9 @@ namespace BTCPayServer.Models
             {
                 var kv = FilterCommand.Substring("set:".Length).Split('=');
                 if (kv.Length == 2)
-                    search.SetFilter(kv[0], kv[1]);
+                {
+                    search.SetFilter(kv[0], kv[1], true);
+                }
             }
             if (FilterCommand.StartsWith("unset:"))
             {
@@ -66,11 +68,18 @@ namespace BTCPayServer.Models
                 return;
             }
 
+            if (FilterCommand is "alltime")
+            {
+                search.Filters.Remove("period");
+                search.Filters.Remove("startdate");
+                search.Filters.Remove("enddate");
+            }
+
             if (FilterCommand.StartsWith("set-period:"))
             {
                 var period = FilterCommand.Substring("set-period:".Length);
                 if (SearchString.IsValidPeriod(period))
-                    search.SetPeriod(period);
+                    search.SetPeriod(period, true);
             }
         }
 
@@ -99,6 +108,8 @@ namespace BTCPayServer.Models
 
         public Dictionary<string, object> PaginationQuery { get; set; }
 
+        [ValidateNever]
+        [BindingBehavior(BindingBehavior.Never)]
         public abstract int CurrentPageCount { get; }
     }
 }

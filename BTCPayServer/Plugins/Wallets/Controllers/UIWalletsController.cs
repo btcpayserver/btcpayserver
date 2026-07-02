@@ -627,6 +627,7 @@ namespace BTCPayServer.Controllers
                 }
             }
 
+            var period = search.GetPeriod();
             return new WalletTransactionsFilter
             {
                 Search = search,
@@ -634,8 +635,8 @@ namespace BTCPayServer.Controllers
                 SearchText = textSearch,
                 SearchInputText = textSearch,
                 TextSearch = textSearch,
-                StartDate = search.GetFilterDate("startdate"),
-                EndDate = search.GetFilterDate("enddate"),
+                StartDate = period.StartData,
+                EndDate = period.EndDate,
                 LabelFilters = labelFilters,
                 IncludeNoLabel = includeNoLabel,
                 Positive = positive

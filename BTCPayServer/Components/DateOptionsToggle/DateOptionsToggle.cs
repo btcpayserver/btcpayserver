@@ -26,7 +26,7 @@ public class DateOptionsToggleModel
     public required string CustomRangeTitle { get; init; }
     public required IUrlHelper Url { get; init; }
 
-    public bool HasDateFilter => Search.HasArrayFilter("startdate") || Search.HasArrayFilter("enddate");
+    public bool HasDateFilter => Search.HasArrayFilter("startdate") || Search.HasArrayFilter("enddate") || Search.HasArrayFilter("period");
 
     public bool HasCustomDateFilter =>
         HasDateFilter &&
@@ -34,8 +34,7 @@ public class DateOptionsToggleModel
 
     private bool IsDate(string val) => DateTimeOffset.TryParse(val, null, DateTimeStyles.AssumeUniversal, out var r);
 
-    public bool HasDatePreset(string value) =>
-        Search.HasArrayFilter("startdate", value) && (value != "lastmonth" || Search.HasArrayFilter("enddate", value));
+    public bool HasPeriod(string value) => Search.HasArrayFilter("period", value);
 
     public static string RemoveDatePreset(string? search)
     {

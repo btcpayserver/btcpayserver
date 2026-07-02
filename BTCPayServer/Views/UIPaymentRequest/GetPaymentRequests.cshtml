@@ -75,11 +75,11 @@
             }
         </button>
         <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
-            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.Search.Toggle("status", "pending")" class="dropdown-item @(Model.Search.HasArrayFilter("status", "pending") ? "custom-active" : "")" text-translate="true">Pending</a>
-            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.Search.Toggle("status", "completed")" class="dropdown-item @(Model.Search.HasArrayFilter("status", "completed") ? "custom-active" : "")" text-translate="true">Settled</a>
-            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.Search.Toggle("status", "expired")" class="dropdown-item @(Model.Search.HasArrayFilter("status", "expired") ? "custom-active" : "")" text-translate="true">Expired</a>
+            <button type="submit" name="FilterCommand" value="set:status=pending" class="dropdown-item @(Model.Search.HasArrayFilter("status", "pending") ? "custom-active" : "")" text-translate="true">Pending</button>
+            <button type="submit" name="FilterCommand" value="set:status=completed" class="dropdown-item @(Model.Search.HasArrayFilter("status", "completed") ? "custom-active" : "")" text-translate="true">Settled</button>
+            <button type="submit" name="FilterCommand" value="set:status=expired" class="dropdown-item @(Model.Search.HasArrayFilter("status", "expired") ? "custom-active" : "")" text-translate="true">Expired</button>
             <div role="separator" class="dropdown-divider"></div>
-            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.Search.Toggle("includearchived", "true")" class="dropdown-item @(Model.Search.HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived" text-translate="true">Include Archived</a>
+            <button type="submit" name="FilterCommand" value="set:includearchived=true" class="dropdown-item @(Model.Search.HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived" text-translate="true">Include Archived</button>
         </div>
     </div>
     @await Component.InvokeAsync("DateOptionsToggle", new

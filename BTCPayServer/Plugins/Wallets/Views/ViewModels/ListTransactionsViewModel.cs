@@ -37,6 +37,13 @@ namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
         public string SearchInputText { get; set; }
         public bool HasFilters { get; set; }
 
+        protected override void AddUIFilters(SearchString search)
+        {
+            base.AddUIFilters(search);
+            foreach (var filter in new[]{"label", "nolabel", "direction"})
+                search.UIFilters.Add(filter);
+        }
+
         protected override void RunFilterCommand(SearchString search)
         {
             base.RunFilterCommand(search);

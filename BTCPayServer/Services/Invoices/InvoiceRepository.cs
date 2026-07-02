@@ -1066,6 +1066,7 @@ retry:
 
         public void FillFromSearchText(SearchString fs)
         {
+            var p = fs.GetPeriod();
             TextSearch = fs.TextSearch;
             Unusual = fs.GetFilterBool("unusual");
             IncludeArchived = fs.GetFilterBool("includearchived") ?? false;
@@ -1074,8 +1075,8 @@ retry:
             StoreId = fs.GetFilterArray("storeid");
             ItemCode = fs.GetFilterArray("itemcode");
             OrderId = fs.GetFilterArray("orderid");
-            StartDate = fs.GetFilterDate("startdate");
-            EndDate = fs.GetFilterDate("enddate");
+            StartDate = p.StartData;
+            EndDate = p.EndDate;
         }
     }
 

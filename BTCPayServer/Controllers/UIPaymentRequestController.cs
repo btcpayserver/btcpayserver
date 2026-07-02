@@ -105,6 +105,7 @@ namespace BTCPayServer.Controllers
             if (model.FilterCommand is not null)
                 return model.Redirect(Request);
 
+            var period = fs.GetPeriod();
             var result = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery
             {
                 UserId = GetUserId(),
@@ -114,8 +115,8 @@ namespace BTCPayServer.Controllers
                 Status = fs.GetFilterArray("status")?.Select(s => Enum.Parse<PaymentRequestStatus>(s, true)).ToArray(),
                 IncludeArchived = fs.GetFilterBool("includearchived") ?? false,
                 SearchText = model.SearchText,
-                StartDate = fs.GetFilterDate("startdate"),
-                EndDate = fs.GetFilterDate("enddate"),
+                StartDate = period.StartData,
+                EndDate = period.EndDate,
                 LabelFilter = model.LabelFilter
             });
 

@@ -1,80 +1,75 @@
 (function () {
-    const shell = document.getElementById("plugins-embed-shell");
-    const iframe = document.getElementById("plugins-directory-iframe");
-    const panel = document.getElementById("selected-plugin-panel");
-    const offcanvasElement = document.getElementById("selected-plugin-offcanvas");
-    const errorAlert = document.getElementById("plugins-embed-error-alert");
-    const retryButton = document.getElementById("plugins-embed-retry");
-    const availableSection = document.getElementById("available-plugins-section");
-    const hiddenPluginIdentifiersElement = document.getElementById("plugins-embed-hidden-plugin-identifiers");
+    const directoryShell = document.getElementById("plugins-embed-shell");
+    const directoryFrame = document.getElementById("plugins-directory-iframe");
+    const selectedPluginPanel = document.getElementById("selected-plugin-panel");
+    const selectedPluginOffcanvas = document.getElementById("selected-plugin-offcanvas");
+    const directoryErrorAlert = document.getElementById("plugins-embed-error-alert");
+    const directoryRetryButton = document.getElementById("plugins-embed-retry");
+    const hiddenPluginIdentifiersScript = document.getElementById("plugins-embed-hidden-plugin-identifiers");
     const darkThemeLink = document.getElementById("DarkThemeLinkTag");
 
-    if (!shell || !iframe || !panel || !offcanvasElement) {
+    if (!directoryShell || !directoryFrame || !selectedPluginPanel || !selectedPluginOffcanvas) {
         return;
     }
 
-    const origin = shell.dataset.origin;
-    const iframeUrl = shell.dataset.iframeUrl;
-    const panelUrl = shell.dataset.panelUrl;
-    const panelErrorMessage = shell.dataset.panelErrorMessage || "BTCPay Server could not load the plugin panel.";
-    const panelRetryLabel = shell.dataset.panelRetryLabel || "Retry";
+    const pluginBuilderOrigin = directoryShell.dataset.origin;
+    const pluginDirectoryUrl = directoryShell.dataset.iframeUrl;
+    const selectedPluginPanelUrl = directoryShell.dataset.panelUrl;
+    const selectedPluginPanelErrorMessage = directoryShell.dataset.panelErrorMessage || "BTCPay Server could not load the plugin panel.";
+    const selectedPluginPanelRetryLabel = directoryShell.dataset.panelRetryLabel || "Retry";
+    const directoryReadyTimeoutMs = 8000;
+    const directoryHandshakeIntervalMs = 250;
     let hiddenPluginIdentifiers = [];
-    let selectedIdentifier = "";
-    let selectedSlug = shell.dataset.selectedSlug || "";
-    let ready = false;
+    let selectedSlug = directoryShell.dataset.selectedSlug || "";
+    let directoryReady = false;
     let directoryFailed = false;
-    let pendingRequestId = 0;
-    let offcanvasInstance = null;
-    let readyTimeout = null;
-    let handshakeInterval = null;
+    let selectedPluginPanelRequestId = 0;
+    let selectedPluginOffcanvasInstance = null;
+    let directoryReadyTimeoutId = null;
+    let directoryHandshakeIntervalId = null;
 
-    if (!origin || !iframeUrl || !panelUrl) {
-        if (retryButton) {
-            retryButton.classList.add("d-none");
+    if (!pluginBuilderOrigin || !pluginDirectoryUrl || !selectedPluginPanelUrl) {
+        if (directoryRetryButton) {
+            directoryRetryButton.classList.add("d-none");
         }
         showDirectoryError();
         return;
     }
 
-    if (hiddenPluginIdentifiersElement && hiddenPluginIdentifiersElement.textContent) {
+    if (hiddenPluginIdentifiersScript && hiddenPluginIdentifiersScript.textContent) {
         try {
-            const parsedIdentifiers = JSON.parse(hiddenPluginIdentifiersElement.textContent);
+            const parsedIdentifiers = JSON.parse(hiddenPluginIdentifiersScript.textContent);
             if (Array.isArray(parsedIdentifiers)) {
                 hiddenPluginIdentifiers = parsedIdentifiers.filter(function (identifier) {
                     return typeof identifier === "string" && identifier.length > 0;
                 });
             }
-        } catch (error) {
+        } catch {
             hiddenPluginIdentifiers = [];
         }
     }
 
-    function startReadyTimeout() {
-        window.clearTimeout(readyTimeout);
-        readyTimeout = window.setTimeout(function () {
-            if (!ready) {
+    function startDirectory() {
+        directoryReady = false;
+        directoryFailed = false;
+        if (directoryErrorAlert) {
+            directoryErrorAlert.classList.add("d-none");
+        }
+        directoryShell.classList.remove("d-none");
+
+        window.clearTimeout(directoryReadyTimeoutId);
+        directoryReadyTimeoutId = window.setTimeout(function () {
+            if (!directoryReady) {
                 showDirectoryError();
             }
-        }, 8000);
-    }
+        }, directoryReadyTimeoutMs);
 
-    function startHandshake() {
-        window.clearInterval(handshakeInterval);
-        handshakeInterval = window.setInterval(function () {
-            postHostContextTo(iframe);
-        }, 250);
-    }
+        window.clearInterval(directoryHandshakeIntervalId);
+        directoryHandshakeIntervalId = window.setInterval(function () {
+            postHostContextTo(directoryFrame);
+        }, directoryHandshakeIntervalMs);
 
-    function startDirectory() {
-        ready = false;
-        directoryFailed = false;
-        if (errorAlert) {
-            errorAlert.classList.add("d-none");
-        }
-        shell.classList.remove("d-none");
-        startReadyTimeout();
-        startHandshake();
-        iframe.src = iframeUrl;
+        directoryFrame.src = pluginDirectoryUrl;
     }
 
     function showDirectoryError() {
@@ -83,19 +78,22 @@
         }
 
         directoryFailed = true;
-        window.clearTimeout(readyTimeout);
-        window.clearInterval(handshakeInterval);
-        hideOffcanvas();
-        shell.classList.add("d-none");
-        if (errorAlert) {
-            errorAlert.classList.remove("d-none");
+        window.clearTimeout(directoryReadyTimeoutId);
+        window.clearInterval(directoryHandshakeIntervalId);
+        const offcanvas = getOffcanvas();
+        if (offcanvas) {
+            offcanvas.hide();
+        }
+        directoryShell.classList.add("d-none");
+        if (directoryErrorAlert) {
+            directoryErrorAlert.classList.remove("d-none");
         }
     }
 
     function markReady() {
-        ready = true;
-        window.clearTimeout(readyTimeout);
-        window.clearInterval(handshakeInterval);
+        directoryReady = true;
+        window.clearTimeout(directoryReadyTimeoutId);
+        window.clearInterval(directoryHandshakeIntervalId);
     }
 
     function getOffcanvas() {
@@ -103,14 +101,11 @@
             return null;
         }
 
-        if (!offcanvasInstance) {
-            offcanvasInstance = window.bootstrap.Offcanvas.getOrCreateInstance(offcanvasElement, {
-                backdrop: true,
-                scroll: true
-            });
+        if (!selectedPluginOffcanvasInstance) {
+            selectedPluginOffcanvasInstance = window.bootstrap.Offcanvas.getOrCreateInstance(selectedPluginOffcanvas);
         }
 
-        return offcanvasInstance;
+        return selectedPluginOffcanvasInstance;
     }
 
     function showOffcanvas() {
@@ -118,31 +113,6 @@
         if (offcanvas) {
             offcanvas.show();
         }
-    }
-
-    function hideOffcanvas() {
-        const offcanvas = getOffcanvas();
-        if (offcanvas) {
-            offcanvas.hide();
-        }
-    }
-
-    function alignAvailableSection() {
-        if (!availableSection || window.innerWidth < 992) {
-            return;
-        }
-
-        const rect = availableSection.getBoundingClientRect();
-        const upperBound = 96;
-        const lowerBound = window.innerHeight * 0.35;
-        if (rect.top >= upperBound && rect.top <= lowerBound) {
-            return;
-        }
-
-        availableSection.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-        });
     }
 
     function isObject(value) {
@@ -182,10 +152,6 @@
                data.version.length > 0;
     }
 
-    function setIframeHeight(height) {
-        iframe.style.height = Math.max(Math.ceil(height), 360) + "px";
-    }
-
     function getHostColorMode() {
         if (darkThemeLink) {
             // theme-switch.js enables dark mode by setting this link's rel to "stylesheet".
@@ -195,22 +161,22 @@
         return document.documentElement.getAttribute("data-btcpay-theme") === "dark" ? "dark" : "light";
     }
 
-    function getDetailsIframes() {
-        return Array.prototype.slice.call(panel.querySelectorAll("iframe.plugin-manage-panel-details"));
+    function getPluginDetailsFrames() {
+        return Array.prototype.slice.call(selectedPluginPanel.querySelectorAll("iframe.plugin-manage-panel-details"));
     }
 
     function getFrameByWindow(sourceWindow) {
-        if (iframe.contentWindow === sourceWindow) {
-            return iframe;
+        if (directoryFrame.contentWindow === sourceWindow) {
+            return directoryFrame;
         }
 
-        return getDetailsIframes().find(function (detailsIframe) {
-            return detailsIframe.contentWindow === sourceWindow;
+        return getPluginDetailsFrames().find(function (detailsFrame) {
+            return detailsFrame.contentWindow === sourceWindow;
         }) || null;
     }
 
-    function buildPanelRequestUrl(identifier, slug) {
-        const url = new URL(panelUrl, window.location.origin);
+    function buildSelectedPluginPanelRequestUrl(identifier, slug) {
+        const url = new URL(selectedPluginPanelUrl, window.location.origin);
         if (identifier) {
             url.searchParams.set("identifier", identifier);
         }
@@ -222,7 +188,6 @@
 
     function updateHistory(slug) {
         const url = new URL(window.location.href);
-        url.searchParams.delete("selectedIdentifier");
         if (slug) {
             url.searchParams.set("selectedSlug", slug);
         } else {
@@ -230,35 +195,31 @@
         }
 
         window.history.replaceState(window.history.state, "", url);
-        shell.dataset.selectedSlug = slug || "";
+        directoryShell.dataset.selectedSlug = slug || "";
     }
 
-    function sameSelection(slug) {
-        return (slug || "") === (selectedSlug || "");
-    }
-
-    function renderPanelError(identifier, slug) {
-        panel.innerHTML = '<div class="plugin-manage-panel d-flex flex-column flex-grow-1"><div class="border rounded p-3" role="alert"><div class="d-flex flex-wrap align-items-center gap-2"><span class="small text-muted me-auto"></span><button type="button" class="btn btn-secondary btn-sm flex-shrink-0"></button></div></div></div>';
-        const alertMessage = panel.querySelector("span");
+    function renderSelectedPluginPanelError(identifier, slug) {
+        selectedPluginPanel.innerHTML = '<div class="plugin-manage-panel d-flex flex-column flex-grow-1"><div class="border rounded p-3" role="alert"><div class="d-flex flex-wrap align-items-center gap-2"><span class="small text-muted me-auto"></span><button type="button" class="btn btn-secondary btn-sm flex-shrink-0"></button></div></div></div>';
+        const alertMessage = selectedPluginPanel.querySelector("span");
         if (alertMessage) {
-            alertMessage.textContent = panelErrorMessage;
+            alertMessage.textContent = selectedPluginPanelErrorMessage;
         }
 
-        const retryPanelButton = panel.querySelector("button");
-        if (retryPanelButton) {
-            retryPanelButton.textContent = panelRetryLabel;
-            retryPanelButton.addEventListener("click", function () {
-                reloadPanel(identifier, slug);
+        const selectedPluginPanelRetryButton = selectedPluginPanel.querySelector("button");
+        if (selectedPluginPanelRetryButton) {
+            selectedPluginPanelRetryButton.textContent = selectedPluginPanelRetryLabel;
+            selectedPluginPanelRetryButton.addEventListener("click", function () {
+                reloadSelectedPluginPanel(identifier, slug);
             });
         }
     }
 
-    async function reloadPanel(identifier, slug) {
-        const requestId = ++pendingRequestId;
-        panel.setAttribute("aria-busy", "true");
+    async function reloadSelectedPluginPanel(identifier, slug) {
+        const requestId = ++selectedPluginPanelRequestId;
+        selectedPluginPanel.setAttribute("aria-busy", "true");
 
         try {
-            const response = await window.fetch(buildPanelRequestUrl(identifier, slug), {
+            const response = await window.fetch(buildSelectedPluginPanelRequestUrl(identifier, slug), {
                 headers: {
                     "X-Requested-With": "XMLHttpRequest"
                 }
@@ -268,28 +229,28 @@
             }
 
             const html = await response.text();
-            if (requestId !== pendingRequestId) {
+            if (requestId !== selectedPluginPanelRequestId) {
                 return;
             }
 
-            panel.innerHTML = html;
-            bindDetailsIframes();
-            postDetailsHostContext();
-        } catch (error) {
-            if (requestId !== pendingRequestId) {
+            selectedPluginPanel.innerHTML = html;
+            bindPluginDetailsFrames();
+            postPluginDetailsHostContext();
+        } catch {
+            if (requestId !== selectedPluginPanelRequestId) {
                 return;
             }
 
-            renderPanelError(identifier, slug);
+            renderSelectedPluginPanelError(identifier, slug);
         } finally {
-            if (requestId === pendingRequestId) {
-                panel.removeAttribute("aria-busy");
+            if (requestId === selectedPluginPanelRequestId) {
+                selectedPluginPanel.removeAttribute("aria-busy");
             }
         }
     }
 
     function buildHostContext(frame) {
-        const includeSelection = frame === iframe;
+        const includeSelection = frame === directoryFrame;
         return {
             type: "btcpay:host-context",
             hiddenPluginIdentifiers: hiddenPluginIdentifiers,
@@ -303,37 +264,37 @@
             return;
         }
 
-        frame.contentWindow.postMessage(buildHostContext(frame), origin);
+        frame.contentWindow.postMessage(buildHostContext(frame), pluginBuilderOrigin);
     }
 
-    function postDetailsHostContext() {
-        getDetailsIframes().forEach(postHostContextTo);
+    function postPluginDetailsHostContext() {
+        getPluginDetailsFrames().forEach(postHostContextTo);
     }
 
     function postHostContext() {
-        if (!ready || directoryFailed) {
+        if (!directoryReady || directoryFailed) {
             return;
         }
 
-        postHostContextTo(iframe);
-        postDetailsHostContext();
+        postHostContextTo(directoryFrame);
+        postPluginDetailsHostContext();
     }
 
-    function bindDetailsIframes() {
-        getDetailsIframes().forEach(function (detailsIframe) {
-            if (detailsIframe.dataset.hostContextBound === "true") {
+    function bindPluginDetailsFrames() {
+        getPluginDetailsFrames().forEach(function (detailsFrame) {
+            if (detailsFrame.dataset.hostContextBound === "true") {
                 return;
             }
 
-            detailsIframe.dataset.hostContextBound = "true";
-            detailsIframe.addEventListener("load", function () {
-                postHostContextTo(detailsIframe);
+            detailsFrame.dataset.hostContextBound = "true";
+            detailsFrame.addEventListener("load", function () {
+                postHostContextTo(detailsFrame);
             });
         });
     }
 
     function submitInstallFromEmbed(data) {
-        const form = panel.querySelector("[data-plugin-install-form='true']");
+        const form = selectedPluginPanel.querySelector("[data-plugin-install-form='true']");
         if (!form) {
             return;
         }
@@ -357,7 +318,7 @@
     }
 
     window.addEventListener("message", function (event) {
-        if (directoryFailed || event.origin !== origin) {
+        if (directoryFailed || event.origin !== pluginBuilderOrigin) {
             return;
         }
 
@@ -367,7 +328,7 @@
         }
 
         const data = event.data;
-        if (sourceFrame !== iframe) {
+        if (sourceFrame !== directoryFrame) {
             if (isReadyMessage(data)) {
                 postHostContextTo(sourceFrame);
                 return;
@@ -387,7 +348,7 @@
 
         if (isHeightMessage(data)) {
             markReady();
-            setIframeHeight(data.height);
+            directoryFrame.style.height = Math.max(Math.ceil(data.height), 360) + "px";
             return;
         }
 
@@ -396,31 +357,28 @@
         }
 
         markReady();
-        if (sameSelection(data.slug)) {
-            selectedIdentifier = data.identifier || "";
+        if (data.slug === selectedSlug) {
             showOffcanvas();
             return;
         }
 
-        selectedIdentifier = data.identifier || "";
         selectedSlug = data.slug;
         updateHistory(selectedSlug);
-        alignAvailableSection();
         showOffcanvas();
-        reloadPanel(selectedIdentifier, selectedSlug);
+        reloadSelectedPluginPanel(data.identifier || "", selectedSlug);
         postHostContext();
     });
 
-    iframe.addEventListener("load", function () {
+    directoryFrame.addEventListener("load", function () {
         if (directoryFailed) {
             return;
         }
 
-        postHostContextTo(iframe);
+        postHostContextTo(directoryFrame);
     });
 
-    if (retryButton) {
-        retryButton.addEventListener("click", function () {
+    if (directoryRetryButton) {
+        directoryRetryButton.addEventListener("click", function () {
             startDirectory();
         });
     }
@@ -433,12 +391,11 @@
         themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-btcpay-theme"] });
     }
 
-    offcanvasElement.addEventListener("hidden.bs.offcanvas", function () {
-        if (!selectedIdentifier && !selectedSlug) {
+    selectedPluginOffcanvas.addEventListener("hidden.bs.offcanvas", function () {
+        if (!selectedSlug) {
             return;
         }
 
-        selectedIdentifier = "";
         selectedSlug = "";
         updateHistory("");
         postHostContext();
@@ -448,6 +405,6 @@
         showOffcanvas();
     }
 
-    bindDetailsIframes();
+    bindPluginDetailsFrames();
     startDirectory();
 })();

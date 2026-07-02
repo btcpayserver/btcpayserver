@@ -591,7 +591,6 @@ namespace BTCPayServer.Controllers
             public required SearchString Search { get; init; }
             public string SearchTerm { get; init; } = string.Empty;
             public string SearchText { get; init; } = string.Empty;
-            public string SearchInputText { get; init; } = string.Empty;
             public string TextSearch { get; init; } = string.Empty;
             public DateTimeOffset? StartDate { get; init; }
             public DateTimeOffset? EndDate { get; init; }
@@ -633,7 +632,6 @@ namespace BTCPayServer.Controllers
                 Search = search,
                 SearchTerm = search.ToString(SearchStringFormat.OnlyUIFilters),
                 SearchText = textSearch,
-                SearchInputText = textSearch,
                 TextSearch = textSearch,
                 StartDate = period.StartData,
                 EndDate = period.EndDate,
@@ -732,7 +730,6 @@ namespace BTCPayServer.Controllers
             var filterAtSource = !filter.HasFilters;
             var requiresMetadataFiltering = RequiresWalletTransactionMetadataFiltering(filter);
             model.SearchText = filter.SearchText;
-            model.SearchInputText = filter.SearchInputText;
             model.SearchTerm = filter.SearchTerm;
             model.HasFilters = filter.HasFilters;
             model.PaginationQuery = new Dictionary<string, object>

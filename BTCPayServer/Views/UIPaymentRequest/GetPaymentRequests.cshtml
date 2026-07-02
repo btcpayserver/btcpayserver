@@ -62,6 +62,7 @@
     <input type="hidden" asp-for="Count" />
     <input asp-for="SearchTerm" type="hidden" value="@Model.Search.ToString(SearchStringFormat.OnlyUIFilters)"/>
     <input asp-for="SearchText" class="form-control" placeholder="@StringLocalizer["Search by Id, Title or Amount..."]" />
+    <button type="submit" class="d-none"></button>
 
     <div class="dropdown">
         <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">

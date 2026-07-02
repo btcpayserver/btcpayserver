@@ -19,6 +19,11 @@ namespace BTCPayServer.Models
         public int Count { get; set; } = CountDefault;
         public int? Total { get; set; }
 
+
+        /// <summary>
+        /// SearchTerm is the part of the SearchString that isn't shown explicitly
+        /// in the search text input.
+        /// </summary>
         [DisplayFormat(ConvertEmptyStringToNull = false)]
         public string SearchTerm { get; set; }
 
@@ -26,6 +31,9 @@ namespace BTCPayServer.Models
         [ValidateNever]
         public SearchString Search { get; set; }
 
+        /// <summary>
+        /// SearchText is the part of the SearchString that is shown explicitly in the search text input.
+        /// </summary>
         public string SearchText { get; set; }
         public string FilterCommand { get; set; }
 

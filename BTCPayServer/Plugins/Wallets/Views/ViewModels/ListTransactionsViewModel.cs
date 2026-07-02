@@ -34,7 +34,6 @@ namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
         public string CryptoCode { get; set; }
         public PendingTransaction[] PendingTransactions { get; set; }
         public List<string> Rates { get; set; } = new();
-        public string SearchInputText { get; set; }
         public bool HasFilters { get; set; }
 
         protected override void AddUIFilters(SearchString search)

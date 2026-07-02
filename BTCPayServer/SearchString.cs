@@ -89,16 +89,12 @@ namespace BTCPayServer
 
         public string Toggle(string key, string value)
         {
-            key = NormalizeKey(key);
-            var clone = Clone();
-            if (clone.ContainsFilter(key))
-                clone.Filters.Remove(key);
-            else
-                clone.Filters.Add(key, value);
-            return clone.ToString();
+            var s = Clone();
+            s.SetFilter(key, value, true);
+            return s.ToString();
         }
 
-        public SearchString Clone() => new SearchString(ToString(), _timeZone);
+        public SearchString Clone() => new(ToString(), _timeZone);
 
         public string[]? GetFilterArray(string key)
         {

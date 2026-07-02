@@ -21,6 +21,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -1434,15 +1435,14 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             var storeId = "6DehZnc9S7qC6TUTNWuzJ1pFsHTHvES6An21r3MjvLey";
             var filter = "storeid:abc, status:abed, blabhbalh ";
             var search = new SearchString(filter, utc);
-            Assert.Equal("storeid:abc, status:abed, blabhbalh", search.ToString());
+            Assert.Equal("storeid:abc,status:abed,blabhbalh", search.ToString());
             Assert.Equal("blabhbalh", search.TextSearch);
             Assert.Single(search.Filters["storeid"], "abc");
             Assert.Single(search.Filters["status"], "abed");
 
             filter = "status:abed, status:abed2";
             search = new SearchString(filter, utc);
-            Assert.Null(search.TextSearch);
-            Assert.Equal("status:abed, status:abed2", search.ToString());
+            Assert.Equal("status:abed,status:abed2", search.ToString());
             Assert.Throws<KeyNotFoundException>(() => search.Filters["test"]);
             Assert.Equal(2, search.Filters["status"].Count);
             Assert.Equal("abed", search.Filters["status"].First());
@@ -1452,22 +1452,23 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             search = new SearchString(filter, utc);
             Assert.Equal("2019-04-25 01:00 AM", search.Filters["startdate"].First());
             Assert.Equal("hekki", search.TextSearch);
-            Assert.Equal("orderid:MYORDERID,orderid:MYORDERID_2", search.ToString(SearchStringFormat.OnlyUIFilters));
-            Assert.Equal("orderid:MYORDERID,orderid:MYORDERID_2,hekki", search.TextCombined);
+            Assert.Equal("orderid:MYORDERID,orderid:MYORDERID_2,hekki", search.ToString(SearchStringFormat.ExceptUIFilters));
             Assert.Equal("startdate:2019-04-25 01:00 AM", search.ToString(SearchStringFormat.OnlyUIFilters));
-            Assert.Equal(filter, search.ToString());
+            Assert.Equal("startdate:2019-04-25 01:00 AM,orderid:MYORDERID,orderid:MYORDERID_2,hekki", search.ToString());
 
             filter = "label:test,nolabel:true,direction:in, hekki";
             search = new SearchString(filter, utc);
+            search.UIFilters.Add("label");
+            search.UIFilters.Add("nolabel");
+            search.UIFilters.Add("direction");
             Assert.Equal("hekki", search.TextSearch);
-            Assert.Equal("hekki", search.TextCombined);
-            Assert.Equal("label:test,nolabel:true,direction:in", search.ToString(SearchStringFormat.OnlyUIFilters));
+            Assert.Equal("hekki", search.ToString(SearchStringFormat.ExceptUIFilters));
             Assert.Single(search.Filters["label"], "test");
             Assert.Single(search.Filters["direction"], "in");
             Assert.True(search.GetFilterBool("nolabel"));
 
             // modify search
-            filter = $"status:settled,exceptionstatus:paidLate,unusual:true, fulltext searchterm, storeid:{storeId},startdate:2019-04-25 01:00:00";
+            filter = $"status:settled,exceptionstatus:paidLate,unusual:true,storeid:{storeId},startdate:2019-04-25 01:00:00,fulltext searchterm";
             search = new SearchString(filter, utc);
             Assert.Equal(filter, search.ToString());
             Assert.Equal("fulltext searchterm", search.TextSearch);
@@ -1483,14 +1484,13 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             // add to array
             modified = new SearchString(modified.Toggle("status", "processing"), utc);
             var statusArray = modified.GetFilterArray("status");
-            Assert.Equal(2, statusArray.Length);
+            Assert.Equal(1, statusArray.Length);
             Assert.Contains("processing", statusArray);
-            Assert.Contains("settled", statusArray);
 
             // toggle off array with same value
             modified = new SearchString(modified.Toggle("status", "settled"), utc);
             statusArray = modified.GetFilterArray("status");
-            Assert.Single(statusArray, "processing");
+            Assert.Single(statusArray, "settled");
 
             // toggle off array with null value
             modified = new SearchString(modified.Toggle("status", null), utc);
@@ -1543,7 +1543,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
                 "abc123tx",
                 utc);
 
-            Assert.Equal("abc123tx", result.SearchInputText);
             Assert.Equal("abc123tx", result.SearchText);
             Assert.Equal("abc123tx", result.TextSearch);
 
@@ -1565,7 +1564,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
 
             Assert.Equal(string.Empty, result.SearchTerm);
             Assert.Equal("abc", result.SearchText);
-            Assert.Equal("abc", result.SearchInputText);
             Assert.Equal("abc", result.TextSearch);
             Assert.False(result.HasLabelFilter);
             Assert.True(result.HasFilters);
@@ -1574,7 +1572,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
 
             Assert.Equal(string.Empty, result.SearchTerm);
             Assert.Equal(string.Empty, result.SearchText);
-            Assert.Equal(string.Empty, result.SearchInputText);
             Assert.Equal(string.Empty, result.TextSearch);
             Assert.False(result.HasLabelFilter);
             Assert.False(result.HasFilters);
@@ -1583,14 +1580,21 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
 
             Assert.Equal(string.Empty, result.SearchTerm);
             Assert.Equal(string.Empty, result.SearchText);
-            Assert.Equal(string.Empty, result.SearchInputText);
             Assert.Equal(string.Empty, result.TextSearch);
             Assert.False(result.HasLabelFilter);
             Assert.False(result.HasFilters);
         }
 
-        internal static UIWalletsController.WalletTransactionsFilter BuildWalletTransactionsFilter(string filterA, string filterB, TimeZoneInfo tz)
-            => UIWalletsController.BuildWalletTransactionsFilter(SearchString.Combine([filterA, filterB], tz));
+        internal static UIWalletsController.WalletTransactionsFilter BuildWalletTransactionsFilter(string searchText, string searchTerm, TimeZoneInfo tz)
+        {
+            var list = new ListTransactionsViewModel()
+            {
+                SearchText = searchText,
+                SearchTerm = searchTerm,
+            };
+            var search = list.GetSearch(tz);
+            return UIWalletsController.BuildWalletTransactionsFilter(search);
+        }
 
         [Fact]
         public void CanParseFingerprint()

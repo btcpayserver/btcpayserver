@@ -115,5 +115,40 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="plugin-install-confirm-modal" tabindex="-1" aria-labelledby="plugin-install-confirm-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="post" id="plugin-install-confirm-form" class="modal-content">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="plugin-install-confirm-title" text-translate="true">Install plugin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]"></button>
+                </div>
+                <div class="modal-body">
+                    <dl class="mb-0">
+                        <dt class="text-muted small fw-semibold text-uppercase" text-translate="true">Plugin</dt>
+                        <dd id="plugin-install-confirm-name" class="mb-2"></dd>
+                        <dt class="text-muted small fw-semibold text-uppercase" text-translate="true">Identifier</dt>
+                        <dd id="plugin-install-confirm-identifier" class="font-monospace small text-break mb-2"></dd>
+                        <dt class="text-muted small fw-semibold text-uppercase" text-translate="true">Version</dt>
+                        <dd id="plugin-install-confirm-version" class="fw-semibold mb-0"></dd>
+                    </dl>
+                    <p id="plugin-install-confirm-pending" class="alert alert-info mt-3 mb-0 d-none">
+                        <span text-translate="true">A plugin install is already queued. Confirming will update the queued install to this version.</span>
+                        <span class="d-block mt-1">
+                            <span id="plugin-install-confirm-pending-version"></span>
+                            <span aria-hidden="true">&rarr;</span>
+                            <span id="plugin-install-confirm-pending-requested-version"></span>
+                        </span>
+                    </p>
+                    <input type="hidden" name="plugin" />
+                    <input type="hidden" name="version" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" text-translate="true">Cancel</button>
+                    <button type="submit" class="btn btn-primary" text-translate="true">Install</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <script src="~/js/server/plugins-embed.js" asp-append-version="true"></script>
 </section>

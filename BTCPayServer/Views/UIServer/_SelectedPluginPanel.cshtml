@@ -205,7 +205,13 @@ else
         }
         @if (embedInstallAction is not null)
         {
-            <form method="post" asp-action="@embedInstallAction.FormAction" asp-all-route-data="pageRouteValues" class="d-none" data-plugin-install-form="true">
+            <form method="post"
+                  asp-action="@embedInstallAction.FormAction"
+                  asp-all-route-data="pageRouteValues"
+                  class="d-none"
+                  data-plugin-install-form="true"
+                  data-selected-slug="@Model.SelectedSlug"
+                  data-plugin-name="@Model.Plugin.Name">
                 <input type="hidden" name="plugin" value="@embedInstallAction.Plugin" />
                 @if (!string.IsNullOrEmpty(embedInstallAction.Version))
                 {
@@ -215,7 +221,15 @@ else
         }
         else if (allowPendingInstallVersionChange)
         {
-            <form method="post" asp-action="InstallPlugin" asp-all-route-data="pageRouteValues" class="d-none" data-plugin-install-form="true">
+            <form method="post"
+                  asp-action="InstallPlugin"
+                  asp-all-route-data="pageRouteValues"
+                  class="d-none"
+                  data-plugin-install-form="true"
+                  data-selected-slug="@Model.SelectedSlug"
+                  data-plugin-name="@Model.Plugin.Name"
+                  data-pending-install="true"
+                  data-pending-install-version="@Model.PendingVersion">
                 <input type="hidden" name="plugin" value="@Model.SelectedIdentifier" />
                 <input type="hidden" name="version" />
             </form>

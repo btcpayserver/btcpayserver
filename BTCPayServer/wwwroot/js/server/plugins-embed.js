@@ -7,6 +7,16 @@
     const directoryRetryButton = document.getElementById("plugins-embed-retry");
     const hiddenPluginIdentifiersScript = document.getElementById("plugins-embed-hidden-plugin-identifiers");
     const darkThemeLink = document.getElementById("DarkThemeLinkTag");
+    const installConfirmModal = document.getElementById("plugin-install-confirm-modal");
+    const installConfirmForm = document.getElementById("plugin-install-confirm-form");
+    const installConfirmPluginInput = installConfirmForm?.querySelector("input[name='plugin']");
+    const installConfirmVersionInput = installConfirmForm?.querySelector("input[name='version']");
+    const installConfirmName = document.getElementById("plugin-install-confirm-name");
+    const installConfirmIdentifier = document.getElementById("plugin-install-confirm-identifier");
+    const installConfirmVersion = document.getElementById("plugin-install-confirm-version");
+    const installConfirmPending = document.getElementById("plugin-install-confirm-pending");
+    const installConfirmPendingVersion = document.getElementById("plugin-install-confirm-pending-version");
+    const installConfirmPendingRequestedVersion = document.getElementById("plugin-install-confirm-pending-requested-version");
 
     if (!directoryShell || !directoryFrame || !selectedPluginPanel || !selectedPluginOffcanvas) {
         return;
@@ -27,6 +37,7 @@
     let selectedPluginOffcanvasInstance = null;
     let directoryReadyTimeoutId = null;
     let directoryHandshakeIntervalId = null;
+    let isInstallConfirmModalOpen = false;
 
     if (!pluginBuilderOrigin || !pluginDirectoryUrl || !selectedPluginPanelUrl) {
         if (directoryRetryButton) {
@@ -271,28 +282,85 @@
         });
     }
 
-    function submitInstallFromEmbed(data) {
+    function confirmInstallFromEmbed(data) {
         const form = selectedPluginPanel.querySelector("[data-plugin-install-form='true']");
-        if (!form) {
+        const Modal = window.bootstrap?.Modal;
+        if (!form || isInstallConfirmModalOpen || !Modal || !installConfirmModal || !installConfirmForm || !installConfirmPluginInput || !installConfirmVersionInput || !installConfirmName || !installConfirmIdentifier || !installConfirmVersion || !installConfirmPending || !installConfirmPendingVersion || !installConfirmPendingRequestedVersion) {
             return;
         }
 
-        const pluginInput = form.querySelector("input[name='plugin']");
-        if (!pluginInput || (pluginInput.value && pluginInput.value.toLowerCase() !== data.identifier.toLowerCase())) {
+        const formSelectedSlug = form.dataset.selectedSlug || "";
+        if (!selectedSlug || formSelectedSlug.toLowerCase() !== selectedSlug.toLowerCase()) {
             return;
         }
-        pluginInput.value = data.identifier;
 
-        let versionInput = form.querySelector("input[name='version']");
-        if (!versionInput) {
-            versionInput = document.createElement("input");
-            versionInput.type = "hidden";
-            versionInput.name = "version";
-            form.appendChild(versionInput);
+        const pluginIdentifier = form.querySelector("input[name='plugin']")?.value;
+        if (!pluginIdentifier || pluginIdentifier.toLowerCase() !== data.identifier.toLowerCase()) {
+            return;
         }
 
-        versionInput.value = data.version;
-        form.submit();
+        installConfirmForm.action = form.action;
+        installConfirmPluginInput.value = pluginIdentifier;
+        installConfirmVersionInput.value = data.version;
+
+        const pluginName = form.dataset.pluginName || pluginIdentifier;
+        const hasPendingInstall = form.dataset.pendingInstall === "true";
+        installConfirmName.textContent = pluginName;
+        installConfirmIdentifier.textContent = pluginIdentifier;
+        installConfirmVersion.textContent = data.version;
+        installConfirmPending.classList.toggle("d-none", !hasPendingInstall);
+        installConfirmPendingVersion.textContent = hasPendingInstall ? form.dataset.pendingInstallVersion || "" : "";
+        installConfirmPendingRequestedVersion.textContent = hasPendingInstall ? data.version : "";
+
+        isInstallConfirmModalOpen = true;
+        Modal.getOrCreateInstance(installConfirmModal).show();
+    }
+
+    if (installConfirmForm && installConfirmPluginInput && installConfirmVersionInput) {
+        installConfirmForm.addEventListener("submit", function (event) {
+            if (!isInstallConfirmModalOpen || !installConfirmPluginInput.value || !installConfirmVersionInput.value) {
+                event.preventDefault();
+            }
+        });
+    }
+
+    if (installConfirmModal && installConfirmForm) {
+        installConfirmModal.addEventListener("hidden.bs.modal", function () {
+            isInstallConfirmModalOpen = false;
+            installConfirmForm.removeAttribute("action");
+
+            if (installConfirmPluginInput) {
+                installConfirmPluginInput.value = "";
+            }
+
+            if (installConfirmVersionInput) {
+                installConfirmVersionInput.value = "";
+            }
+
+            if (installConfirmName) {
+                installConfirmName.textContent = "";
+            }
+
+            if (installConfirmIdentifier) {
+                installConfirmIdentifier.textContent = "";
+            }
+
+            if (installConfirmVersion) {
+                installConfirmVersion.textContent = "";
+            }
+
+            if (installConfirmPending) {
+                installConfirmPending.classList.add("d-none");
+            }
+
+            if (installConfirmPendingVersion) {
+                installConfirmPendingVersion.textContent = "";
+            }
+
+            if (installConfirmPendingRequestedVersion) {
+                installConfirmPendingRequestedVersion.textContent = "";
+            }
+        });
     }
 
     window.addEventListener("message", function (event) {
@@ -313,7 +381,7 @@
             }
 
             if (isInstallRequestMessage(data)) {
-                submitInstallFromEmbed(data);
+                confirmInstallFromEmbed(data);
             }
             return;
         }

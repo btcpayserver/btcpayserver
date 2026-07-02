@@ -36,7 +36,8 @@ public partial class UIServerController
         var source = await BuildPluginProjectionSource(
             pluginService,
             selectedSlug: selectedSlug,
-            setErrorStatusMessage: true);
+            setErrorStatusMessage: true,
+            loadRemotePlugins: !string.IsNullOrWhiteSpace(selectedSlug));
         var model = projectionService.CreatePluginDirectoryViewModel(source);
         var pluginSourceBaseUri = pluginService.GetPluginSourceBaseUri();
         // The embedded directory iframe trusts the admin-configured plugin source.
@@ -66,7 +67,8 @@ public partial class UIServerController
         var source = await BuildPluginProjectionSource(
             pluginService,
             slug,
-            setErrorStatusMessage: false);
+            setErrorStatusMessage: false,
+            loadRemotePlugins: !string.IsNullOrWhiteSpace(slug));
         var model = projectionService.CreateSelectedPluginPanelViewModel(source);
         model.EmbeddedDetailsUrl = BuildPluginDetailsEmbedUrl(
             pluginService.GetPluginSourceBaseUri(),
@@ -243,12 +245,16 @@ public partial class UIServerController
     private async Task<PluginManagementProjectionService.ProjectionSource> BuildPluginProjectionSource(
         PluginService pluginService,
         string selectedSlug,
-        bool setErrorStatusMessage)
+        bool setErrorStatusMessage,
+        bool loadRemotePlugins = true)
     {
-        AvailablePlugin[] allPlugins;
+        AvailablePlugin[] allPlugins = [];
         try
         {
-            allPlugins = await pluginService.GetRemotePlugins(null);
+            if (loadRemotePlugins)
+            {
+                allPlugins = await pluginService.GetRemotePlugins(null);
+            }
         }
         catch (Exception ex)
         {
@@ -260,8 +266,6 @@ public partial class UIServerController
                     Message = StringLocalizer["Remote plugins lookup failed. Try again later. Error: {0}", ex.Message].Value
                 });
             }
-
-            allPlugins = Array.Empty<AvailablePlugin>();
         }
         return new PluginManagementProjectionService.ProjectionSource
         {

@@ -9,7 +9,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public List<InvoiceModel> Invoices { get; set; } = new ();
         public override int CurrentPageCount => Invoices.Count;
         public string StoreId { get; set; }
-        public string SearchText { get; set; }
         public SearchString Search { get; set; }
         public List<InvoiceAppModel> Apps { get; set; }
     }
@@ -31,7 +30,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public InvoiceDetailsModel Details { get; set; }
         public bool HasRefund { get; set; }
     }
-    
+
     public class InvoiceAppModel
     {
         public string Id { get; set; }

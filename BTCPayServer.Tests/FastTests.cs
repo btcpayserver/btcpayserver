@@ -1442,7 +1442,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             filter = "status:abed, status:abed2";
             search = new SearchString(filter, utc);
             Assert.Null(search.TextSearch);
-            Assert.Null(search.TextFilters);
             Assert.Equal("status:abed, status:abed2", search.ToString());
             Assert.Throws<KeyNotFoundException>(() => search.Filters["test"]);
             Assert.Equal(2, search.Filters["status"].Count);
@@ -1453,17 +1452,16 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             search = new SearchString(filter, utc);
             Assert.Equal("2019-04-25 01:00 AM", search.Filters["startdate"].First());
             Assert.Equal("hekki", search.TextSearch);
-            Assert.Equal("orderid:MYORDERID,orderid:MYORDERID_2", search.TextFilters);
+            Assert.Equal("orderid:MYORDERID,orderid:MYORDERID_2", search.ToString(SearchStringFormat.OnlyUIFilters));
             Assert.Equal("orderid:MYORDERID,orderid:MYORDERID_2,hekki", search.TextCombined);
-            Assert.Equal("startdate:2019-04-25 01:00 AM", search.WithoutSearchText());
+            Assert.Equal("startdate:2019-04-25 01:00 AM", search.ToString(SearchStringFormat.OnlyUIFilters));
             Assert.Equal(filter, search.ToString());
 
             filter = "label:test,nolabel:true,direction:in, hekki";
             search = new SearchString(filter, utc);
             Assert.Equal("hekki", search.TextSearch);
-            Assert.Null(search.TextFilters);
             Assert.Equal("hekki", search.TextCombined);
-            Assert.Equal("label:test,nolabel:true,direction:in", search.WithoutSearchText());
+            Assert.Equal("label:test,nolabel:true,direction:in", search.ToString(SearchStringFormat.OnlyUIFilters));
             Assert.Single(search.Filters["label"], "test");
             Assert.Single(search.Filters["direction"], "in");
             Assert.True(search.GetFilterBool("nolabel"));
@@ -1511,7 +1509,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.Null(modified.GetFilterArray("enddate"));
 
             search = new SearchString("7,startdate:last30d", utc);
-            Assert.Equal("startdate:last30d", search.WithoutSearchText());
+            Assert.Equal("startdate:last30d", search.ToString(SearchStringFormat.OnlyUIFilters));
         }
 
         [Fact]

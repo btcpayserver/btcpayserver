@@ -20,7 +20,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public override int CurrentPageCount => Items.Count;
 
         public SearchString Search { get; set; }
-        public string SearchText { get; set; }
         public string WalletId { get; set; }
         public string LabelFilter { get; set; }
         public List<TransactionTagModel> Labels { get; set; } = new();

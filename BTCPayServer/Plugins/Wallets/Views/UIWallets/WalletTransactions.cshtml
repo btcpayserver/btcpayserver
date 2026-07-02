@@ -357,25 +357,6 @@
             window.location.href = url.toString();
         });
 
-        const clearBtn = document.getElementById('clearAllFiltersBtn');
-        if (clearBtn) {
-            clearBtn.addEventListener('click', function () {
-                const form = clearBtn.closest('form');
-                if (!form) return;
-
-                const searchTextInput = form.querySelector('[name="SearchText"]');
-                if (searchTextInput) searchTextInput.value = '';
-
-                const searchTermInput = form.querySelector('[name="SearchTerm"]');
-                if (searchTermInput) searchTermInput.value = '';
-
-                const labelFilterInput = form.querySelector('[name="labelFilter"]');
-                if (labelFilterInput) labelFilterInput.value = '';
-
-                form.submit();
-            });
-        }
-
         const observer = new IntersectionObserver(async entries => {
             const { isIntersecting } = entries[0];
             if (isIntersecting) {
@@ -523,16 +504,7 @@
         @await Component.InvokeAsync("DateOptionsToggle", new
         {
             search = Model.Search,
-            action = "WalletTransactions",
-            routeValues = new Dictionary<string, string>
-            {
-                ["walletId"] = walletId ?? string.Empty,
-                ["labelFilter"] = labelFilter ?? string.Empty,
-                ["count"] = Model.Count.ToString(),
-                ["searchText"] = Model.SearchText ?? string.Empty
-            },
-            customRangeTitle = StringLocalizer["Filter transactions by Custom Range"].Value,
-            showAllTime = true
+            customRangeTitle = StringLocalizer["Filter transactions by Custom Range"].Value
         })
         @if (Model.HasFilters || !string.IsNullOrEmpty(labelFilter))
         {

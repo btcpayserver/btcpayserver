@@ -53,7 +53,6 @@
     @*Script must be async to ensure proper page loading*@
     <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
 
-    @* Custom Range Modal *@
     <script>
         var invoicesUrl = @Safe.Json(Url.Action(nameof(UIInvoiceController.ListInvoices), new { storeId = Model.StoreId }));
 
@@ -62,39 +61,6 @@
             const { invoiceId } = e.target.dataset;
             btcpay.appendInvoiceFrame(invoiceId);
         })
-
-        $('#btnCustomRangeDate').on('click', function (sender) {
-            var filterString = "";
-
-            var dtpStartDate = $("#dtpStartDate").val();
-            if (dtpStartDate !== null && dtpStartDate !== "") {
-                filterString = "startdate%3A" + dtpStartDate;
-            }
-
-            var dtpEndDate = $("#dtpEndDate").val();
-            if (dtpEndDate !== null && dtpEndDate !== "") {
-                if (filterString !== "") {
-                    filterString += ",";
-                }
-                filterString += "enddate%3A" + dtpEndDate;
-            }
-
-            if (filterString !== "") {
-                var redirectUri = invoicesUrl + "?Count=" + $("#Count").val() +
-                    "&SearchTerm=" + filterString;
-
-                window.location.href = redirectUri;
-            } else {
-                $("#dtpStartDate").next().trigger("focus");
-            }
-        })
-
-        function getDateStringWithOffset(hoursDiff) {
-            var datenow = new Date();
-            var newDate = new Date(datenow.getTime() - (hoursDiff * 60 * 60 * 1000));
-            var str = newDate.toLocaleDateString() + " " + newDate.toLocaleTimeString();
-            return str;
-        }
     </script>
 }
 
@@ -153,7 +119,7 @@
 
 <form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
     <input asp-for="Count" type="hidden" />
-    <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
+    <input asp-for="SearchTerm" type="hidden" value="@Model.Search.ToString(SearchStringFormat.OnlyUIFilters)"/>
     <input asp-for="SearchText" class="form-control" placeholder="@StringLocalizer["Search…"]" />
     <div class="dropdown">
         <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -204,12 +170,6 @@
     @await Component.InvokeAsync("DateOptionsToggle", new
     {
         search = Model.Search,
-        action = nameof(UIInvoiceController.ListInvoices),
-        routeValues = new Dictionary<string, string>
-        {
-            ["storeId"] = Model.StoreId,
-            ["count"] = Model.Count.ToString()
-        },
         customRangeTitle = StringLocalizer["Filter invoices by Custom Range"].Value
     })
     @if (statusFilterCount > 0 || appFilterCount > 0 || hasDateFilter || !string.IsNullOrEmpty(Model.SearchText))
@@ -219,27 +179,6 @@
         </button>
     }
 </form>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const clearBtn = document.getElementById('clearAllFiltersBtn');
-        if (clearBtn) {
-            clearBtn.addEventListener('click', function () {
-                const form = clearBtn.closest('form');
-                if (!form) return;
-                // Reset search text
-                const searchText = form.querySelector('[name="SearchText"]');
-                if (searchText) searchText.value = '';
-                // Reset SearchTerm (filters)
-                const searchTerm = form.querySelector('[name="SearchTerm"]');
-                if (searchTerm) searchTerm.value = '';
-                // Optionally reset other hidden fields if needed
-                // Submit the form
-                form.submit();
-            });
-        }
-    });
-</script>
 
 @if (Model.Invoices.Any())
 {

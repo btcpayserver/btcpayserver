@@ -82,7 +82,7 @@
       method="get"
       class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8">
     <input type="hidden" asp-for="Count" />
-    <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
+    <input asp-for="SearchTerm" type="hidden" value="@Model.Search.ToString(SearchStringFormat.OnlyUIFilters)"/>
     <input asp-for="SearchText" class="form-control" placeholder="@StringLocalizer["Search by Id, Title or Amount..."]" />
 
     <div class="dropdown">
@@ -107,13 +107,6 @@
     @await Component.InvokeAsync("DateOptionsToggle", new
     {
         search = Model.Search,
-        action = "GetPaymentRequests",
-        routeValues = new Dictionary<string, string>
-        {
-            ["storeId"] = storeId ?? string.Empty,
-            ["count"] = Model.Count.ToString(),
-            ["searchText"] = Model.SearchText ?? string.Empty
-        },
         customRangeTitle = StringLocalizer["Filter payment requests by Custom Range"].Value
     })
     @if (Model.Labels.Any())
@@ -274,53 +267,4 @@ else
 
 @section PageFootContent {
     <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const clearBtn = document.getElementById('clearAllFiltersBtn');
-            if (clearBtn) {
-                clearBtn.addEventListener('click', function () {
-                    const form = clearBtn.closest('form');
-                    if (!form) return;
-
-                    const searchText = form.querySelector('[name="SearchText"]');
-                    if (searchText) searchText.value = '';
-
-                    const searchTerm = form.querySelector('[name="SearchTerm"]');
-                    if (searchTerm) searchTerm.value = '';
-
-                    form.submit();
-                });
-            }
-        });
-
-        $('#btnCustomRangeDate').on('click', function () {
-            var filterString = "";
-
-            var dtpStartDate = $("#dtpStartDate").val();
-            if (dtpStartDate) {
-                filterString = "startdate%3A" + encodeURIComponent(dtpStartDate);
-            }
-
-            var dtpEndDate = $("#dtpEndDate").val();
-            if (dtpEndDate) {
-                if (filterString !== "") {
-                    filterString += ",";
-                }
-                filterString += "enddate%3A" + encodeURIComponent(dtpEndDate);
-            }
-
-            if (filterString) {
-                var baseUrl = "@Url.Action("GetPaymentRequests", new { storeId = storeId })";
-                var redirectUri = baseUrl +
-                    "?Count=" + $("#Count").val() +
-                    "&timezoneoffset=" + $("#TimezoneOffset").val() +
-                    "&SearchTerm=" + filterString +
-                    "&SearchText=" + encodeURIComponent($('input[name="SearchText"]').val() || '');
-                window.location.href = redirectUri;
-            } else {
-                $("#dtpStartDate").next().trigger("focus");
-            }
-        });
-    </script>
 }

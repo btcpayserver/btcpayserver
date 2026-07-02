@@ -23,14 +23,13 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Index(NotificationIndexViewModel model = null)
         {
             model ??= new NotificationIndexViewModel { Skip = 0 };
-            var timezoneOffset = await dateFormatterOptionsProvider.GetUserTimeZone(User);
+            var timezone = await dateFormatterOptionsProvider.GetUserTimeZone(User);
             model.Status ??= "Unread";
             ViewBag.Status = model.Status;
             if (User.GetIdOrNull() is not string userId)
                 return RedirectToAction("Index", "UIHome");
 
-            var searchTerm = string.IsNullOrEmpty(model.SearchText) ? model.SearchTerm : $"{model.SearchText},{model.SearchTerm}";
-            var fs = new SearchString(searchTerm, timezoneOffset);
+            var fs = model.GetSearch(timezone);
             var storeIds = fs.GetFilterArray("storeid");
             var stores = await storeRepo.GetStoresByUserId(userId);
             model.StoreFilterOptions = stores

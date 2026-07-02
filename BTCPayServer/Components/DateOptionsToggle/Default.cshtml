@@ -1,3 +1,4 @@
+@using BTCPayServer.Components.DateOptionsToggle
 @model BTCPayServer.Components.DateOptionsToggle.DateOptionsToggleModel
 
 <div class="dropdown">
@@ -35,16 +36,13 @@
         }
     </button>
     <div class="dropdown-menu" aria-labelledby="DateOptionsToggle">
-        @if (Model.ShowAllTime)
-        {
-            <a href="@Model.AllTimeUrl()" class="dropdown-item @(!Model.HasDateFilter ? "custom-active" : string.Empty)" text-translate="true">All Time</a>
-            <hr class="dropdown-divider" />
-        }
-        <a href="@Model.DatePresetUrl("thismonth")" class="dropdown-item @(Model.HasDatePreset("thismonth") ? "custom-active" : string.Empty)" text-translate="true">This month</a>
-        <a href="@Model.DatePresetUrl("lastmonth")" class="dropdown-item @(Model.HasDatePreset("lastmonth") ? "custom-active" : string.Empty)" text-translate="true">Last month</a>
-        <a href="@Model.DatePresetUrl("last30d")" class="dropdown-item @(Model.HasDatePreset("last30d") ? "custom-active" : string.Empty)" text-translate="true">Last 30 days</a>
-        <a href="@Model.DatePresetUrl("thisquarter")" class="dropdown-item @(Model.HasDatePreset("thisquarter") ? "custom-active" : string.Empty)" text-translate="true">This quarter</a>
-        <a href="@Model.DatePresetUrl("yeartodate")" class="dropdown-item @(Model.HasDatePreset("yeartodate") ? "custom-active" : string.Empty)" text-translate="true">Year to date</a>
+        <button type="submit" name="FilterCommand" value="alltime" class="dropdown-item @(!Model.HasDateFilter ? "custom-active" : string.Empty)" text-translate="true">All Time</button>
+        <hr class="dropdown-divider" />
+        <button type="submit" name="FilterCommand" value="thismonth" class="dropdown-item @(Model.HasDatePreset("thismonth") ? "custom-active" : string.Empty)" text-translate="true">This month</button>
+        <button type="submit" name="FilterCommand" value="lastmonth" class="dropdown-item @(Model.HasDatePreset("lastmonth") ? "custom-active" : string.Empty)" text-translate="true">Last month</button>
+        <button type="submit" name="FilterCommand" value="last30d" class="dropdown-item @(Model.HasDatePreset("last30d") ? "custom-active" : string.Empty)" text-translate="true">Last 30 days</button>
+        <button type="submit" name="FilterCommand" value="thisquarter" class="dropdown-item @(Model.HasDatePreset("thisquarter") ? "custom-active" : string.Empty)" text-translate="true">This quarter</button>
+        <button type="submit" name="FilterCommand" value="yeartodate" class="dropdown-item @(Model.HasDatePreset("yeartodate") ? "custom-active" : string.Empty)" text-translate="true">Year to date</button>
         <button type="button" class="dropdown-item @(Model.HasCustomDateFilter ? "custom-active" : string.Empty)" data-bs-toggle="modal" data-bs-target="#customRangeModal" text-translate="true">Custom Range</button>
     </div>
 </div>
@@ -92,3 +90,28 @@
         </div>
     </div>
 </div>
+
+<script>
+    $('#btnCustomRangeDate').on('click', function () {
+        const dtpStartDate = $("#dtpStartDate").val();
+        const dtpEndDate = $("#dtpEndDate").val();
+
+        if (!dtpStartDate && !dtpEndDate) {
+            $("#dtpStartDate").next().trigger("focus");
+            return;
+        }
+
+        const dateFilters = [];
+        if (dtpStartDate) {
+            dateFilters.push(`startdate:${dtpStartDate}`);
+        }
+        if (dtpEndDate) {
+            dateFilters.push(`enddate:${dtpEndDate}`);
+        }
+
+        const cleanedSearchTerm = @Safe.Json(DateOptionsToggleModel.RemoveDatePreset(Model.Search?.ToString(SearchStringFormat.OnlyUIFilters)));
+        const combinedSearchTerm = [cleanedSearchTerm, dateFilters.join(',')].filter(Boolean).join(',');
+
+        $("#SearchTerm").val(combinedSearchTerm).closest('form').submit();
+    });
+</script>

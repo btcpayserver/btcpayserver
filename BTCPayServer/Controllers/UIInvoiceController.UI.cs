@@ -1060,8 +1060,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ListInvoices(InvoicesModel? model = null)
         {
             model = this.ParseListQuery(model ?? new InvoicesModel());
-            var searchTerm = string.IsNullOrEmpty(model.SearchText) ? model.SearchTerm : $"{model.SearchText},{model.SearchTerm}";
-            var fs = new SearchString(searchTerm, _dateFormatterOptionsProvider.GetStoreTimeZone(this.HttpContext.GetStoreData()));
+            var fs = model.GetSearch(_dateFormatterOptionsProvider.GetStoreTimeZone(this.HttpContext.GetStoreData()));
             string? storeId = model.StoreId;
             var storeIds = new HashSet<string>();
             if (storeId is not null)
@@ -1074,7 +1073,6 @@ namespace BTCPayServer.Controllers
                     storeIds.Add(i);
             }
             model.Search = fs;
-            model.SearchText = fs.TextCombined;
 
             var apps =  await _appService.GetAllApps(User.GetIdOrNull(), false, storeId);
             InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, apps);

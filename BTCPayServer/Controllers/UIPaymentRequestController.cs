@@ -101,8 +101,8 @@ namespace BTCPayServer.Controllers
         {
             model = this.ParseListQuery(model ?? new ListPaymentRequestsViewModel());
 
-            var fs = new SearchString(model.SearchTerm, _dateFormatterOptionsProvider.GetStoreTimeZone(this.HttpContext.GetStoreData()));
-            var textSearch = model.SearchText;
+            var fs = model.GetSearch(_dateFormatterOptionsProvider.GetStoreTimeZone(this.HttpContext.GetStoreData()));
+
             var startDate = fs.GetFilterDate("startdate");
             var endDate   = fs.GetFilterDate("enddate");
 
@@ -121,7 +121,6 @@ namespace BTCPayServer.Controllers
             });
 
             model.Search = fs;
-            model.SearchText = textSearch;
 
             var items = result.Select(data => new ViewPaymentRequestViewModel(data)
             {

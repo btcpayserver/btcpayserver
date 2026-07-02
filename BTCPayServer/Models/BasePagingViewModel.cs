@@ -34,14 +34,31 @@ namespace BTCPayServer.Models
             var search = SearchString.Combine([SearchTerm, SearchText], tz);
             if (FilterCommand is not null)
                 RunFilterCommand(search);
+            AddUIFilters(search);
             SearchTerm = search.ToString(SearchStringFormat.OnlyUIFilters);
             SearchText = search.ToString(SearchStringFormat.ExceptUIFilters);
             Search = search;
             return search;
         }
 
-        public virtual void RunFilterCommand(SearchString search)
+        protected virtual void AddUIFilters(SearchString search)
         {
+        }
+
+        protected virtual void RunFilterCommand(SearchString search)
+        {
+            if (FilterCommand.StartsWith("set:"))
+            {
+                var kv = FilterCommand.Substring("set:".Length).Split('=');
+                if (kv.Length == 2)
+                    search.SetFilter(kv[0], kv[1]);
+            }
+            if (FilterCommand.StartsWith("unset:"))
+            {
+                var k = FilterCommand.Substring("unset:".Length);
+                search.SetFilter(k);
+            }
+
             if (FilterCommand is "reset")
             {
                 search.Filters.Clear();

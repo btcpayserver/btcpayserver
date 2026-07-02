@@ -24,8 +24,6 @@ namespace BTCPayServer.Controllers
         {
             model ??= new NotificationIndexViewModel { Skip = 0 };
             var timezone = await dateFormatterOptionsProvider.GetUserTimeZone(User);
-            model.Status ??= "Unread";
-            ViewBag.Status = model.Status;
             if (User.GetIdOrNull() is not string userId)
                 return RedirectToAction("Index", "UIHome");
 
@@ -55,7 +53,7 @@ namespace BTCPayServer.Controllers
                 SearchText = model.SearchText,
                 Type = fs.GetFilterArray("type"),
                 StoreIds = storeIds,
-                Seen = model.Status == "Unread" ? false : null
+                Seen = fs.GetFilterBool("all") is true ? null : false
             });
             model.Items = res.Items;
 

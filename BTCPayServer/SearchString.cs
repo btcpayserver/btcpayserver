@@ -27,7 +27,7 @@ namespace BTCPayServer
     {
         private const char FilterSeparator = ',';
         private const char ValueSeparator = ':';
-        private static readonly string[] UIFilters = ["status", "exceptionstatus", "unusual", "includearchived", "appid", "startdate", "enddate", "label", "nolabel", "direction"];
+        public HashSet<string> UIFilters = new HashSet<string>(["status", "exceptionstatus", "unusual", "includearchived", "appid", "startdate", "enddate", "label", "nolabel", "direction"], StringComparer.OrdinalIgnoreCase);
 
         private readonly TimeZoneInfo _timeZone;
 

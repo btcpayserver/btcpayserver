@@ -1,18 +1,9 @@
 @model BTCPayServer.Models.NotificationViewModels.NotificationIndexViewModel
 @{
     ViewData["Title"] = ViewLocalizer["Notifications"];
-    string status = ViewBag.Status;
-    var statusFilterCount = CountArrayFilter("type");
-    var storesFilterCount = CountArrayFilter("storeid");
-}
-
-@functions
-{
-    private int CountArrayFilter(string type) =>
-        Model.Search.ContainsFilter(type) ? Model.Search.GetFilterArray(type).Length : 0;
-
-    private bool HasArrayFilter(string type, string key = null) =>
-        Model.Search.ContainsFilter(type) && (key is null || Model.Search.GetFilterArray(type).Contains(key));
+    var showAll = Model.Search.GetFilterBool("all") is true;
+    var statusFilterCount = Model.Search.CountArrayFilter("type");
+    var storesFilterCount = Model.Search.CountArrayFilter("storeid");
 }
 
 @section PageHeadContent
@@ -38,29 +29,23 @@
     </a>
 </div>
 <partial name="_StatusMessage" />
-<form asp-route-status="@Model.Status" class="d-flex flex-wrap align-items-center gap-md-4 gap-sm-0 mb-4 col-xxl-8" asp-action="Index" method="get">
+<form class="d-flex flex-wrap align-items-center gap-md-4 gap-sm-0 mb-4 col-xxl-8" asp-action="Index" method="get">
     <input asp-for="Count" type="hidden" />
-    <input type="hidden" asp-for="Status" value="@Model.Status" />
+    <input asp-for="SearchTerm" class="form-control" type="hidden" />
 
     <div class="col-12 col-md-6 col-lg-4 mb-3 mb-md-0">
         <input asp-for="SearchText" class="form-control" placeholder="@StringLocalizer["Search…"]" />
     </div>
 
     <div class="btn-group col-12 col-md-auto mb-3 mb-md-0" role="group" aria-label="View Notification">
-        <a class="btn @((status == "All") ? "btn-primary" : "btn-outline-secondary")"
-           asp-controller="UINotifications"
-           asp-action="Index"
-           asp-route-Status="All"
+        <button type="submit" name="FilterCommand" value="set:all=true" class="btn @(showAll ? "btn-primary" : "btn-outline-secondary")"
            text-translate="true">
             All
-        </a>
-        <a class="btn @((status == "Unread") ? "btn-primary" : "btn-outline-secondary")"
-           asp-controller="UINotifications"
-           asp-action="Index"
-           asp-route-Status="Unread"
+        </button>
+        <button type="submit" name="FilterCommand" value="unset:all" class="btn @(!showAll ? "btn-primary" : "btn-outline-secondary")"
            text-translate="true">
             Unread
-        </a>
+        </button>
     </div>
 
     <div class="dropdown col-12 col-md-auto mb-3 mb-md-0">
@@ -75,11 +60,13 @@
             }
         </button>
         <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
-            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "invoicestate")" class="dropdown-item @(HasArrayFilter("type", "invoicestate") ? "custom-active" : "")" text-translate="true">Invoice</a>
-            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "payout")" class="dropdown-item @(HasArrayFilter("type", "payout") ? "custom-active" : "")" text-translate="true">Payouts</a>
-            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "newversion")" class="dropdown-item @(HasArrayFilter("type", "newversion") ? "custom-active" : "")" text-translate="true">New Version</a>
-            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "pluginupdate")" class="dropdown-item @(HasArrayFilter("type", "pluginupdate") ? "custom-active" : "")" text-translate="true">Plugin Updates</a>
-            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "userupdate")" class="dropdown-item @(HasArrayFilter("type", "userupdate") ? "custom-active" : "")" text-translate="true">User Updates</a>
+            <button type="submit" name="FilterCommand" value="unset:type" class="dropdown-item @(!Model.Search.HasArrayFilter("type") ? "custom-active" : "")" text-translate="true">All Type</button>
+            <li><hr class="dropdown-divider"></li>
+            <button type="submit" name="FilterCommand" value="set:type=invoicestate" class="dropdown-item @(Model.Search.HasArrayFilter("type", "invoicestate") ? "custom-active" : "")" text-translate="true">Invoice</button>
+            <button type="submit" name="FilterCommand" value="set:type=payout" class="dropdown-item @(Model.Search.HasArrayFilter("type", "payout") ? "custom-active" : "")" text-translate="true">Payouts</button>
+            <button type="submit" name="FilterCommand" value="set:type=newversion" class="dropdown-item @(Model.Search.HasArrayFilter("type", "newversion") ? "custom-active" : "")" text-translate="true">New Version</button>
+            <button type="submit" name="FilterCommand" value="set:type=pluginupdate" class="dropdown-item @(Model.Search.HasArrayFilter("type", "pluginupdate") ? "custom-active" : "")" text-translate="true">Plugin Updates</button>
+            <button type="submit" name="FilterCommand" value="set:type=userupdate" class="dropdown-item @(Model.Search.HasArrayFilter("type", "userupdate") ? "custom-active" : "")" text-translate="true">User Updates</button>
         </div>
     </div>
 
@@ -97,13 +84,10 @@
         <div class="dropdown-menu" aria-labelledby="StoresOptionsToggle">
             @foreach (var store in Model.StoreFilterOptions)
             {
-                <a asp-action="Index"
-                   asp-route-count="@Model.Count"
-                   asp-route-status="@Model.Status"
-                   asp-route-searchTerm="@Model.Search.Toggle("storeid", store.Value)"
+                <button type="submit" name="FilterCommand" value="set:storeid=@store.Value"
                    class="dropdown-item @(store.Selected ? "custom-active" : "")">
                     @store.Text
-                </a>
+                </button>
             }
         </div>
     </div>
@@ -134,7 +118,7 @@
                             <th colspan="3">
                                 <div class="d-flex flex-wrap align-items-center justify-content-start gap-3">
                                     <div class="d-inline-flex align-items-center gap-3">
-                                        @if (Model.Status == "Unread")
+                                        @if (!showAll)
                                         {
                                             <button type="submit" name="command" value="mark-seen" class="btn btn-link gap-1">
                                                 <vc:icon symbol="actions-show" />
@@ -216,13 +200,21 @@ else
 
 @section PageFootContent {
     <script type="text/javascript">
-        delegate('click', '.btn-toggle-seen', e => {
+        delegate('click', '.btn-toggle-seen', async e => {
             const row = $(e.target).parents(".notification-row").toggleClass("loading");
             const guid = row.data("guid");
             const url = "@Url.Action("FlipRead", "UINotifications", new { id = "placeholder" })".replace("placeholder", guid);
-            $.post(url, function (data) {
-                row.toggleClass("seen loading");
+            const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            const headers = { 'Content-Type': 'application/json' };
+            headers['RequestVerificationToken'] = tokenInput.value;
+
+            await fetch(url, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(payload)
             });
+
+            row.toggleClass("seen loading");
             return false;
         })
     </script>

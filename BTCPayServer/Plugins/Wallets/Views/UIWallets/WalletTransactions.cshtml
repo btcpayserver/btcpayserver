@@ -319,9 +319,9 @@
                 }
             </button>
             <div class="dropdown-menu" aria-labelledby="DirectionOptionsToggle">
-                <button type="submit" name="FilterCommand" value="alldirection" class="dropdown-item @((!hasIncomingOnlyFilter && !hasOutgoingOnlyFilter) ? "custom-active" : string.Empty)" text-translate="true">All Directions</button>
-                <button type="submit" name="FilterCommand" value="incoming" class="dropdown-item @(hasIncomingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Incoming</button>
-                <button type="submit" name="FilterCommand" value="outgoing" class="dropdown-item @(hasOutgoingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Outgoing</button>
+                <button type="submit" name="FilterCommand" value="unset:direction" class="dropdown-item @((!hasIncomingOnlyFilter && !hasOutgoingOnlyFilter) ? "custom-active" : string.Empty)" text-translate="true">All Directions</button>
+                <button type="submit" name="FilterCommand" value="set:direction=in" class="dropdown-item @(hasIncomingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Incoming</button>
+                <button type="submit" name="FilterCommand" value="set:direction=out" class="dropdown-item @(hasOutgoingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Outgoing</button>
             </div>
         </div>
         @if (Model.Labels.Any())

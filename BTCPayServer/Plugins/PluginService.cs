@@ -192,12 +192,7 @@ namespace BTCPayServer.Plugins
             var selectedVersion = condition is null
                 ? potentialVersions.OrderDescending().First()
                 : potentialVersions.OrderDescending().FirstOrDefault(condition.IsFulfilled);
-            if (selectedVersion is null)
-            {
-                throw new InvalidOperationException($"No version of plugin {pluginIdentifier} can satisfy condition {condition}");
-            }
-
-            return selectedVersion;
+            return selectedVersion ?? throw new InvalidOperationException($"No version of plugin {pluginIdentifier} can satisfy condition {condition}");
         }
 
         public void InstallPlugin(string plugin)

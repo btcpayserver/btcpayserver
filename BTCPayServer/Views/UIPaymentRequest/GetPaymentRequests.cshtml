@@ -83,7 +83,7 @@
             <button type="submit" name="FilterCommand" value="set:includearchived=true" class="dropdown-item @(Model.Search.HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived" text-translate="true">Include Archived</button>
         </div>
     </div>
-    <vc:date-options-toggle search="Model.Search" custom-range-title='@StringLocalizer["Filter payment requests by Custom Range"].Value'></vc:date-options-toggle>
+    <vc:date-range-selector search="Model.Search" custom-range-title='@StringLocalizer["Filter payment requests by Custom Range"].Value'></vc:date-range-selector>
     @if (Model.Labels.Any())
     {
         <div class="dropdown">

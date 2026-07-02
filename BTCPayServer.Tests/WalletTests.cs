@@ -905,14 +905,14 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
             Assert.True(string.IsNullOrEmpty(qsAfterSearch["SearchTerm"]));
         });
 
-        await s.Page.ClickAsync("#DateOptionsToggle");
-        await s.Page.ClickAsync("#DateOptionsToggle + .dropdown-menu a:text-is('Last 30 days')");
+        await s.Page.ClickAsync("#DateRangeSelector");
+        await s.Page.ClickAsync("#DateRangeSelector + .dropdown-menu a:text-is('Last 30 days')");
         await s.Page.WaitForLoadStateAsync();
 
         await TestUtils.EventuallyAsync(async () =>
         {
             Assert.Equal(targetSearchText, await s.Page.InputValueAsync("#SearchText"));
-            Assert.Contains("Last 30 days", await s.Page.InnerTextAsync("#DateOptionsToggle"));
+            Assert.Contains("Last 30 days", await s.Page.InnerTextAsync("#DateRangeSelector"));
 
             var hiddenSearchTerm = await s.Page.InputValueAsync("input[name='SearchTerm']");
             Assert.Contains("startdate:last30d", hiddenSearchTerm);
@@ -1296,7 +1296,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Page.ClickAsync($"#LabelDropdownMenu .label-filter-item a:has-text('{targetLabel}')");
         await s.Page.WaitForLoadStateAsync();
 
-        await s.Page.ClickAsync("#DateOptionsToggle");
+        await s.Page.ClickAsync("#DateRangeSelector");
         await s.Page.ClickAsync("[data-bs-target='#customRangeModal']");
         await s.Page.EvaluateAsync("() => { document.getElementById('dtpStartDate').value = '2026-03-01T12:34:56'; }");
         await s.Page.ClickAsync("#btnCustomRangeDate");
@@ -1362,7 +1362,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
             Assert.Equal(timezoneOffset.ToString(CultureInfo.InvariantCulture), await s.Page.InputValueAsync("#TimezoneOffset"));
         });
 
-        await s.Page.ClickAsync("#DateOptionsToggle");
+        await s.Page.ClickAsync("#DateRangeSelector");
         await s.Page.ClickAsync("[data-bs-target='#customRangeModal']");
         await s.Page.EvaluateAsync("() => { document.getElementById('dtpStartDate').value = '2026-03-01T12:34:56'; }");
         await s.Page.ClickAsync("#btnCustomRangeDate");
@@ -1371,7 +1371,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         {
             Assert.Contains($"timezoneOffset={timezoneOffset}", s.Page.Url);
             Assert.Contains("startdate:2026-03-01T12:34:56", Uri.UnescapeDataString(s.Page.Url));
-            Assert.Contains("Custom", await s.Page.InnerTextAsync("#DateOptionsToggle"));
+            Assert.Contains("Custom", await s.Page.InnerTextAsync("#DateRangeSelector"));
             Assert.Contains($"timezoneOffset={timezoneOffset}", await s.Page.GetAttributeAsync("#ExportCSV", "href"));
         });
     }

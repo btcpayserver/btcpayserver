@@ -3,14 +3,14 @@ using System;
 using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BTCPayServer.Components.DateOptionsToggle;
+namespace BTCPayServer.Components.DateRangeSelector;
 
-public class DateOptionsToggle : ViewComponent
+public class DateRangeSelector : ViewComponent
 {
     public IViewComponentResult Invoke(
         SearchString search,
         string? customRangeTitle = null)
-    => View(new DateOptionsToggleModel
+    => View(new DateRangeSelectorModel
     {
         Search = search ?? throw new ArgumentNullException(nameof(search)),
         CustomRangeTitle = customRangeTitle ?? "Filter by Custom Range",
@@ -18,7 +18,7 @@ public class DateOptionsToggle : ViewComponent
     });
 }
 
-public class DateOptionsToggleModel
+public class DateRangeSelectorModel
 {
     private const string SearchTermRouteKey = "searchTerm";
 

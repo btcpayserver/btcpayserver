@@ -1,8 +1,8 @@
-@using BTCPayServer.Components.DateOptionsToggle
-@model BTCPayServer.Components.DateOptionsToggle.DateOptionsToggleModel
+@using BTCPayServer.Components.DateRangeSelector
+@model BTCPayServer.Components.DateRangeSelector.DateRangeSelectorModel
 
 <div class="dropdown">
-    <button id="DateOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <button id="DateRangeSelector" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
         @if (Model.HasDateFilter)
         {
             if (Model.HasPeriod("thismonth"))
@@ -35,7 +35,7 @@
             <span text-translate="true">All Time</span>
         }
     </button>
-    <div class="dropdown-menu" aria-labelledby="DateOptionsToggle">
+    <div class="dropdown-menu" aria-labelledby="DateRangeSelector">
         <button type="submit" name="FilterCommand" value="alltime" class="dropdown-item @(!Model.HasDateFilter ? "custom-active" : string.Empty)" text-translate="true">All Time</button>
         <hr class="dropdown-divider" />
         <button type="submit" name="FilterCommand" value="set-period:thismonth" class="dropdown-item @(Model.HasPeriod("thismonth") ? "custom-active" : string.Empty)" text-translate="true">This month</button>
@@ -109,7 +109,7 @@
             dateFilters.push(`enddate:${dtpEndDate}`);
         }
 
-        const cleanedSearchTerm = @Safe.Json(DateOptionsToggleModel.RemoveDatePreset(Model.Search.ToString(SearchStringFormat.OnlyUIFilters)));
+        const cleanedSearchTerm = @Safe.Json(DateRangeSelectorModel.RemoveDatePreset(Model.Search.ToString(SearchStringFormat.OnlyUIFilters)));
         const combinedSearchTerm = [cleanedSearchTerm, dateFilters.join(',')].filter(Boolean).join(',');
 
         const searchTermInput = document.getElementById("SearchTerm");

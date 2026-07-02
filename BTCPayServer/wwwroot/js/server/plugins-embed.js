@@ -124,15 +124,10 @@
     }
 
     function isSelectionMessage(data) {
-        if (!isObject(data) || data.type !== "pb:plugin-selected") {
-            return false;
-        }
-
-        if (typeof data.slug !== "string" || data.slug.length === 0) {
-            return false;
-        }
-
-        return data.identifier === undefined || data.identifier === null || typeof data.identifier === "string";
+        return isObject(data) &&
+               data.type === "pb:plugin-selected" &&
+               typeof data.slug === "string" &&
+               data.slug.length > 0;
     }
 
     function isHeightMessage(data) {
@@ -161,8 +156,8 @@
         return document.documentElement.getAttribute("data-btcpay-theme") === "dark" ? "dark" : "light";
     }
 
-    function getPluginDetailsFrames() {
-        return Array.prototype.slice.call(selectedPluginPanel.querySelectorAll("iframe.plugin-manage-panel-details"));
+    function getPluginDetailsFrame() {
+        return selectedPluginPanel.querySelector("iframe.plugin-manage-panel-details");
     }
 
     function getFrameByWindow(sourceWindow) {
@@ -170,23 +165,11 @@
             return directoryFrame;
         }
 
-        return getPluginDetailsFrames().find(function (detailsFrame) {
-            return detailsFrame.contentWindow === sourceWindow;
-        }) || null;
+        const detailsFrame = getPluginDetailsFrame();
+        return detailsFrame?.contentWindow === sourceWindow ? detailsFrame : null;
     }
 
-    function buildSelectedPluginPanelRequestUrl(identifier, slug) {
-        const url = new URL(selectedPluginPanelUrl, window.location.origin);
-        if (identifier) {
-            url.searchParams.set("identifier", identifier);
-        }
-        if (slug) {
-            url.searchParams.set("slug", slug);
-        }
-        return url.toString();
-    }
-
-    function updateHistory(slug) {
+    function syncSelectedSlugUrl(slug) {
         const url = new URL(window.location.href);
         if (slug) {
             url.searchParams.set("selectedSlug", slug);
@@ -198,7 +181,7 @@
         directoryShell.dataset.selectedSlug = slug || "";
     }
 
-    function renderSelectedPluginPanelError(identifier, slug) {
+    function renderSelectedPluginPanelError(slug) {
         selectedPluginPanel.innerHTML = '<div class="plugin-manage-panel d-flex flex-column flex-grow-1"><div class="border rounded p-3" role="alert"><div class="d-flex flex-wrap align-items-center gap-2"><span class="small text-muted me-auto"></span><button type="button" class="btn btn-secondary btn-sm flex-shrink-0"></button></div></div></div>';
         const alertMessage = selectedPluginPanel.querySelector("span");
         if (alertMessage) {
@@ -209,17 +192,21 @@
         if (selectedPluginPanelRetryButton) {
             selectedPluginPanelRetryButton.textContent = selectedPluginPanelRetryLabel;
             selectedPluginPanelRetryButton.addEventListener("click", function () {
-                reloadSelectedPluginPanel(identifier, slug);
+                reloadSelectedPluginPanel(slug);
             });
         }
     }
 
-    async function reloadSelectedPluginPanel(identifier, slug) {
+    async function reloadSelectedPluginPanel(slug) {
         const requestId = ++selectedPluginPanelRequestId;
-        selectedPluginPanel.setAttribute("aria-busy", "true");
 
         try {
-            const response = await window.fetch(buildSelectedPluginPanelRequestUrl(identifier, slug), {
+            const url = new URL(selectedPluginPanelUrl, window.location.origin);
+            if (slug) {
+                url.searchParams.set("slug", slug);
+            }
+
+            const response = await window.fetch(url.toString(), {
                 headers: {
                     "X-Requested-With": "XMLHttpRequest"
                 }
@@ -234,18 +221,14 @@
             }
 
             selectedPluginPanel.innerHTML = html;
-            bindPluginDetailsFrames();
-            postPluginDetailsHostContext();
+            bindPluginDetailsFrame();
+            postHostContextTo(getPluginDetailsFrame());
         } catch {
             if (requestId !== selectedPluginPanelRequestId) {
                 return;
             }
 
-            renderSelectedPluginPanelError(identifier, slug);
-        } finally {
-            if (requestId === selectedPluginPanelRequestId) {
-                selectedPluginPanel.removeAttribute("aria-busy");
-            }
+            renderSelectedPluginPanelError(slug);
         }
     }
 
@@ -267,29 +250,24 @@
         frame.contentWindow.postMessage(buildHostContext(frame), pluginBuilderOrigin);
     }
 
-    function postPluginDetailsHostContext() {
-        getPluginDetailsFrames().forEach(postHostContextTo);
-    }
-
     function postHostContext() {
         if (!directoryReady || directoryFailed) {
             return;
         }
 
         postHostContextTo(directoryFrame);
-        postPluginDetailsHostContext();
+        postHostContextTo(getPluginDetailsFrame());
     }
 
-    function bindPluginDetailsFrames() {
-        getPluginDetailsFrames().forEach(function (detailsFrame) {
-            if (detailsFrame.dataset.hostContextBound === "true") {
-                return;
-            }
+    function bindPluginDetailsFrame() {
+        const detailsFrame = getPluginDetailsFrame();
+        if (!detailsFrame || detailsFrame.dataset.hostContextBound === "true") {
+            return;
+        }
 
-            detailsFrame.dataset.hostContextBound = "true";
-            detailsFrame.addEventListener("load", function () {
-                postHostContextTo(detailsFrame);
-            });
+        detailsFrame.dataset.hostContextBound = "true";
+        detailsFrame.addEventListener("load", function () {
+            postHostContextTo(detailsFrame);
         });
     }
 
@@ -363,9 +341,9 @@
         }
 
         selectedSlug = data.slug;
-        updateHistory(selectedSlug);
+        syncSelectedSlugUrl(selectedSlug);
         showOffcanvas();
-        reloadSelectedPluginPanel(data.identifier || "", selectedSlug);
+        reloadSelectedPluginPanel(selectedSlug);
         postHostContext();
     });
 
@@ -397,7 +375,7 @@
         }
 
         selectedSlug = "";
-        updateHistory("");
+        syncSelectedSlugUrl("");
         postHostContext();
     });
 
@@ -405,6 +383,6 @@
         showOffcanvas();
     }
 
-    bindPluginDetailsFrames();
+    bindPluginDetailsFrame();
     startDirectory();
 })();

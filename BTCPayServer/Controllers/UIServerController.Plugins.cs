@@ -21,7 +21,6 @@ public partial class UIServerController
     {
         var source = await BuildPluginProjectionSource(
             pluginService,
-            selectedIdentifier: null,
             selectedSlug: null,
             setErrorStatusMessage: true);
         var model = projectionService.CreateInstalledPluginsViewModel(source);
@@ -36,7 +35,6 @@ public partial class UIServerController
     {
         var source = await BuildPluginProjectionSource(
             pluginService,
-            selectedIdentifier: null,
             selectedSlug: selectedSlug,
             setErrorStatusMessage: true);
         var model = projectionService.CreatePluginDirectoryViewModel(source);
@@ -63,12 +61,10 @@ public partial class UIServerController
     public async Task<IActionResult> SelectedPluginPanel(
         [FromServices] PluginService pluginService,
         [FromServices] PluginManagementProjectionService projectionService,
-        string identifier = null,
         string slug = null)
     {
         var source = await BuildPluginProjectionSource(
             pluginService,
-            identifier,
             slug,
             setErrorStatusMessage: false);
         var model = projectionService.CreateSelectedPluginPanelViewModel(source);
@@ -246,7 +242,6 @@ public partial class UIServerController
 
     private async Task<PluginManagementProjectionService.ProjectionSource> BuildPluginProjectionSource(
         PluginService pluginService,
-        string selectedIdentifier,
         string selectedSlug,
         bool setErrorStatusMessage)
     {
@@ -276,7 +271,6 @@ public partial class UIServerController
             Commands = pluginService.GetPendingCommands(),
             Disabled = pluginService.GetDisabledPlugins(),
             GetVersionOfPendingInstall = pluginService.GetVersionOfPendingInstall,
-            SelectedPluginIdentifier = selectedIdentifier,
             SelectedPluginSlug = selectedSlug
         };
     }

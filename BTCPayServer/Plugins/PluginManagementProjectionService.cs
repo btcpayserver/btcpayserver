@@ -16,7 +16,6 @@ namespace BTCPayServer.Plugins
             public (string command, string plugin)[] Commands { get; set; } = [];
             public Dictionary<string, Version> Disabled { get; set; } = new(StringComparer.OrdinalIgnoreCase);
             public Func<string, Version> GetVersionOfPendingInstall { get; set; }
-            public string SelectedPluginIdentifier { get; set; }
             public string SelectedPluginSlug { get; set; }
         }
 
@@ -109,29 +108,16 @@ namespace BTCPayServer.Plugins
 
         private (string SelectedSlug, PluginSelectedPanelViewModel Panel) CreateSelectedPanel(ProjectionSource source, ManagePluginsProjectionData data)
         {
-            var resolvedIdentifier = source.SelectedPluginIdentifier;
-            PluginService.AvailablePlugin selectedAvailable = null;
-            if (!string.IsNullOrEmpty(source.SelectedPluginSlug))
-            {
-                selectedAvailable = data.AvailablePlugins.FirstOrDefault(plugin =>
-                    plugin.CatalogSlug != null &&
-                    plugin.CatalogSlug.Equals(source.SelectedPluginSlug, StringComparison.OrdinalIgnoreCase));
-                if (selectedAvailable is not null)
-                    resolvedIdentifier = selectedAvailable.Identifier;
-            }
-
-            if (string.IsNullOrEmpty(resolvedIdentifier))
+            if (string.IsNullOrEmpty(source.SelectedPluginSlug))
                 return (null, new PluginSelectedPanelViewModel { HasSelection = false });
 
-            selectedAvailable ??= data.AvailablePlugins.FirstOrDefault(plugin =>
-                plugin.Identifier.Equals(resolvedIdentifier, StringComparison.OrdinalIgnoreCase));
-            if (selectedAvailable is null &&
-                !data.LoadedPlugins.Any(plugin => plugin.Identifier.Equals(resolvedIdentifier, StringComparison.OrdinalIgnoreCase)) &&
-                !data.DisabledVersions.ContainsKey(resolvedIdentifier))
-            {
+            var selectedAvailable = data.AvailablePlugins.FirstOrDefault(plugin =>
+                plugin.CatalogSlug != null &&
+                plugin.CatalogSlug.Equals(source.SelectedPluginSlug, StringComparison.OrdinalIgnoreCase));
+            if (selectedAvailable is null)
                 return (null, new PluginSelectedPanelViewModel { HasSelection = false });
-            }
 
+            var resolvedIdentifier = selectedAvailable.Identifier;
             var state = ComputePluginState(resolvedIdentifier, data);
             PluginInfoViewModel plugin;
             if (state.DisabledVersion is not null)

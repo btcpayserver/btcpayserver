@@ -3068,7 +3068,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             return new PluginManagementProjectionService().CreatePluginDirectoryViewModel(CreatePluginProjectionSource(
                 disabled: disabled,
                 allAvailable: allAvailable,
-                selectedIdentifier: null,
                 selectedSlug: selectedSlug,
                 loadedPlugins: loadedPlugins,
                 commands: commands));
@@ -3077,7 +3076,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         private static PluginManagementProjectionService.ProjectionSource CreatePluginProjectionSource(
             Dictionary<string, Version> disabled = null,
             IEnumerable<PluginService.AvailablePlugin> allAvailable = null,
-            string selectedIdentifier = null,
             string selectedSlug = null,
             IEnumerable<IBTCPayServerPlugin> loadedPlugins = null,
             (string command, string plugin)[] commands = null)
@@ -3090,7 +3088,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
                 Installed = loaded.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version, StringComparer.OrdinalIgnoreCase),
                 LoadedPlugins = loaded,
                 Commands = commands ?? [],
-                SelectedPluginIdentifier = selectedIdentifier,
                 SelectedPluginSlug = selectedSlug
             };
         }

@@ -154,11 +154,7 @@
             </div>
         </div>
     }
-    @await Component.InvokeAsync("DateOptionsToggle", new
-    {
-        search = Model.Search,
-        customRangeTitle = StringLocalizer["Filter invoices by Custom Range"].Value
-    })
+    <vc:date-options-toggle search="Model.Search" custom-range-title='@StringLocalizer["Filter invoices by Custom Range"].Value'></vc:date-options-toggle>
     <vc:clear-all-filters search="Model.Search"></vc:clear-all-filters>
 </form>
 

@@ -62,7 +62,7 @@
                     <div class="col-sm-9">
                         <div class="input-group">
                             <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
-                                   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
+                                   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "defaultHour": 0 }'
                                    placeholder="@StringLocalizer["Start Date"]" />
                             <button type="button" class="btn btn-secondary input-group-clear" title="@StringLocalizer["Clear"]">
                                 <vc:icon symbol="close" />
@@ -75,7 +75,7 @@
                     <div class="col-sm-9">
                         <div class="input-group">
                             <input id="dtpEndDate" class="form-control flatdtpicker" type="datetime-local"
-                                   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
+                                   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "defaultHour": 0 }'
                                    placeholder="@StringLocalizer["End Date"]" />
                             <button type="button" class="btn btn-secondary input-group-clear" title="@StringLocalizer["Clear"]">
                                 <vc:icon symbol="close" />
@@ -92,12 +92,12 @@
 </div>
 
 <script>
-    $('#btnCustomRangeDate').on('click', function () {
-        const dtpStartDate = $("#dtpStartDate").val();
-        const dtpEndDate = $("#dtpEndDate").val();
+    document.getElementById('btnCustomRangeDate').addEventListener('click', function () {
+        const dtpStartDate = document.getElementById("dtpStartDate").value;
+        const dtpEndDate = document.getElementById("dtpEndDate").value;
 
         if (!dtpStartDate && !dtpEndDate) {
-            $("#dtpStartDate").next().trigger("focus");
+            document.getElementById("dtpStartDate").nextElementSibling.focus();
             return;
         }
 
@@ -112,6 +112,8 @@
         const cleanedSearchTerm = @Safe.Json(DateOptionsToggleModel.RemoveDatePreset(Model.Search.ToString(SearchStringFormat.OnlyUIFilters)));
         const combinedSearchTerm = [cleanedSearchTerm, dateFilters.join(',')].filter(Boolean).join(',');
 
-        $("#SearchTerm").val(combinedSearchTerm).closest('form').submit();
+        const searchTermInput = document.getElementById("SearchTerm");
+        searchTermInput.value = combinedSearchTerm;
+        searchTermInput.closest('form').submit();
     });
 </script>

@@ -118,35 +118,26 @@ namespace BTCPayServer
         public DateTimeOffset? GetFilterDate(string key)
         {
             key = NormalizeKey(key);
+            if (Filters.TryGetValue("period", out var period) && IsValidPeriod(period.FirstOrDefault()))
+                return GetPeriodDate(key, period.First());
+
             if (!Filters.TryGetValue(key, out var filter))
                 return null;
 
             var val = filter.First();
-            var periodDate = GetPeriodDate(key, val);
+            var periodDate = GetPeriodDate("startdate", val);
             if (periodDate is not null)
                 return periodDate;
 
-            switch (val)
+            // Parsing the date
+            if (DateTime.TryParse(val, null, DateTimeStyles.None, out var localDateTime))
             {
-                // handle special string values
-                case "-24h":
-                case "-1d":
-                    var lastDay = DateTimeOffset.UtcNow.AddDays(-1);
-                    return lastDay - _timeZone.GetUtcOffset(lastDay);
-                case "-3d":
-                    var lastThreeDays = DateTimeOffset.UtcNow.AddDays(-3);
-                    return lastThreeDays - _timeZone.GetUtcOffset(lastThreeDays);
-                case "-7d":
-                    var lastSevenDays = DateTimeOffset.UtcNow.AddDays(-7);
-                    return lastSevenDays - _timeZone.GetUtcOffset(lastSevenDays);
-            }
+                localDateTime = DateTime.SpecifyKind(localDateTime, DateTimeKind.Unspecified);
 
-            // default parsing logic
-            var success = DateTimeOffset.TryParse(val, null, DateTimeStyles.AssumeUniversal, out var r);
-            if (success)
-            {
-                r = r - _timeZone.GetUtcOffset(r);
-                return r;
+                var offset = _timeZone.GetUtcOffset(localDateTime);
+                var localDateTimeOffset = new DateTimeOffset(localDateTime, offset);
+
+                return localDateTimeOffset.ToUniversalTime();
             }
 
             return null;
@@ -168,6 +159,9 @@ namespace BTCPayServer
                 ("startdate", "last30d") => today.AddDays(-29),
                 ("startdate", "thisquarter") => startOfThisQuarter,
                 ("startdate", "yeartodate") => startOfThisYear,
+                (_, "-24h" or "-1d") => today.AddDays(-1),
+                (_, "-3d") => today.AddDays(-3),
+                (_, "-7d") => today.AddDays(-7),
                 _ => (DateTime?)null
             };
 
@@ -189,11 +183,22 @@ namespace BTCPayServer
 
         private string NormalizeKey(string key) => key.ToLowerInvariant().Trim();
 
+
+        public static bool IsValidPeriod(string? period) =>
+            period is "alltime" or "thismonth" or "lastmonth" or "last30d" or "thisquarter" or "yeartodate";
         public void SetFilter(string filter, string? value = null)
         {
             Filters.Remove(filter);
             if (value is not null)
                 Filters.Add(filter, value);
+        }
+
+        public void SetPeriod(string? period = null)
+        {
+            Filters.Remove("startdate");
+            Filters.Remove("enddate");
+            if (period is not null)
+                Filters.Add("period", period);
         }
     }
 }

@@ -350,6 +350,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // support for initializing with special options per instance
         if (fdtp) {
             var parsed = Object.assign({}, JSON.parse(fdtp), { static: true });
+            parsed.time_24hr ??= window.defaultDateTimeFormat?.time_24hr ?? true;
             flatpickrInstances.push(element.flatpickr(parsed));
         } else {
             var min = element.attr("min");
@@ -364,7 +365,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 minDate: min,
                 maxDate: max,
                 defaultDate: defaultDate,
-                time_24hr: true,
+                time_24hr: window.defaultDateTimeFormat?.time_24hr ?? true,
                 defaultHour: 0,
                 static: true
             }));

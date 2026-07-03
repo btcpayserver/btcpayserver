@@ -27,7 +27,7 @@ namespace BTCPayServer
     {
         private const char FilterSeparator = ',';
         private const char ValueSeparator = ':';
-        public HashSet<string> UIFilters = new HashSet<string>(["status", "exceptionstatus", "unusual", "includearchived", "appid", "startdate", "enddate", "period"], StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> UIFilters = new HashSet<string>(["status", "exceptionstatus", "unusual", "includearchived", "appid", "startdate", "enddate", "daterange"], StringComparer.OrdinalIgnoreCase);
 
         private readonly TimeZoneInfo _timeZone;
 
@@ -115,10 +115,10 @@ namespace BTCPayServer
         {
             DateTimeOffset? start = null;
             DateTimeOffset? end = null;
-            if (Filters.TryGetValue("period", out var period) && IsValidPeriod(period.FirstOrDefault()))
+            if (Filters.TryGetValue("daterange", out var dateRange) && IsValidDateRange(dateRange.FirstOrDefault()))
             {
-                start = GetPeriodDate("startdate", period.First());
-                end = GetPeriodDate("enddate", period.First());
+                start = GetDateRangeDate("startdate", dateRange.First());
+                end = GetDateRangeDate("enddate", dateRange.First());
                 return (start, end);
             }
             else
@@ -138,9 +138,9 @@ namespace BTCPayServer
                 return null;
 
             var val = filter.First();
-            var periodDate = GetPeriodDate("startdate", val);
-            if (periodDate is not null)
-                return periodDate;
+            var dateRangeDate = GetDateRangeDate("startdate", val);
+            if (dateRangeDate is not null)
+                return dateRangeDate;
 
             // Parsing the date
             if (DateTime.TryParse(val, null, DateTimeStyles.None, out var localDateTime))
@@ -156,7 +156,7 @@ namespace BTCPayServer
             return null;
         }
 
-        private DateTimeOffset? GetPeriodDate(string key, string val)
+        private DateTimeOffset? GetDateRangeDate(string key, string val)
         {
             var now = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, _timeZone);
             var today = now.Date;
@@ -197,8 +197,8 @@ namespace BTCPayServer
         private string NormalizeKey(string key) => key.ToLowerInvariant().Trim();
 
 
-        public static bool IsValidPeriod(string? period) =>
-            period is "alltime" or "thismonth" or "lastmonth" or "last30d" or "thisquarter" or "yeartodate";
+        public static bool IsValidDateRange(string? dateRange) =>
+            dateRange is "alltime" or "thismonth" or "lastmonth" or "last30d" or "thisquarter" or "yeartodate";
 
         public void SetFilter(string filter, string? value = null, bool toggle = false)
         {
@@ -224,11 +224,11 @@ namespace BTCPayServer
             }
         }
 
-        public void SetPeriod(string? period = null, bool toggle = false)
+        public void SetDateRange(string? dateRange = null, bool toggle = false)
         {
             Filters.Remove("startdate");
             Filters.Remove("enddate");
-            SetFilter("period", period, toggle);
+            SetFilter("daterange", dateRange, toggle);
         }
     }
 }

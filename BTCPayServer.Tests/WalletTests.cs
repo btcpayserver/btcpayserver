@@ -915,14 +915,14 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
             Assert.Contains("Last 30 days", await s.Page.InnerTextAsync("#DateRangeSelector"));
 
             var hiddenSearchTerm = await s.Page.InputValueAsync("input[name='SearchTerm']");
-            Assert.Contains("startdate:last30d", hiddenSearchTerm);
+            Assert.Contains("daterange:last30d", hiddenSearchTerm);
             Assert.DoesNotContain(targetSearchText, hiddenSearchTerm);
 
             var urlAfterPreset = new Uri(s.Page.Url);
             var qsAfterPreset = HttpUtility.ParseQueryString(urlAfterPreset.Query);
             Assert.Equal(targetSearchText, qsAfterPreset["SearchText"]);
             Assert.Equal(timezoneOffset.ToString(CultureInfo.InvariantCulture), qsAfterPreset["timezoneOffset"] ?? qsAfterPreset["TimezoneOffset"]);
-            Assert.Contains("startdate:last30d", Uri.UnescapeDataString(qsAfterPreset["SearchTerm"] ?? string.Empty));
+            Assert.Contains("daterange:last30d", Uri.UnescapeDataString(qsAfterPreset["SearchTerm"] ?? string.Empty));
         });
     }
 

@@ -1508,8 +1508,8 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             modified = new SearchString(modified.Toggle("enddate", "lastmonth"), utc);
             Assert.Null(modified.GetFilterArray("enddate"));
 
-            search = new SearchString("7,startdate:last30d", utc);
-            Assert.Equal("startdate:last30d", search.ToString(SearchStringFormat.OnlyUIFilters));
+            search = new SearchString("7,daterange:last30d", utc);
+            Assert.Equal("daterange:last30d", search.ToString(SearchStringFormat.OnlyUIFilters));
         }
 
         [Fact]

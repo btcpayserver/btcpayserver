@@ -78,16 +78,16 @@ namespace BTCPayServer.Models
 
             if (FilterCommand is "alltime")
             {
-                search.Filters.Remove("period");
+                search.Filters.Remove("daterange");
                 search.Filters.Remove("startdate");
                 search.Filters.Remove("enddate");
             }
 
-            if (FilterCommand.StartsWith("set-period:"))
+            if (FilterCommand.StartsWith("set-daterange:"))
             {
-                var period = FilterCommand.Substring("set-period:".Length);
-                if (SearchString.IsValidPeriod(period))
-                    search.SetPeriod(period, true);
+                var dateRange = FilterCommand.Substring("set-daterange:".Length);
+                if (SearchString.IsValidDateRange(dateRange))
+                    search.SetDateRange(dateRange, true);
             }
         }
 

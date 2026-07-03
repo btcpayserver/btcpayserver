@@ -26,7 +26,7 @@ public class DateRangeSelectorModel
     public required string CustomRangeTitle { get; init; }
     public required IUrlHelper Url { get; init; }
 
-    public bool HasDateFilter => Search.HasArrayFilter("startdate") || Search.HasArrayFilter("enddate") || Search.HasArrayFilter("period");
+    public bool HasDateFilter => Search.HasArrayFilter("startdate") || Search.HasArrayFilter("enddate") || Search.HasArrayFilter("daterange");
 
     public bool HasCustomDateFilter =>
         HasDateFilter &&
@@ -34,11 +34,12 @@ public class DateRangeSelectorModel
 
     private bool IsDate(string val) => DateTimeOffset.TryParse(val, null, DateTimeStyles.AssumeUniversal, out var r);
 
-    public bool HasPeriod(string value) => Search.HasArrayFilter("period", value);
+    public bool HasDateRange(string value) => Search.HasArrayFilter("daterange", value);
 
     public static string RemoveDatePreset(string? search)
     {
         var s = new SearchString(search, TimeZoneInfo.Utc);
+        s.Filters.Remove("daterange");
         s.Filters.Remove("startdate");
         s.Filters.Remove("enddate");
         return s.ToString();

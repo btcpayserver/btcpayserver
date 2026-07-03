@@ -2,6 +2,7 @@
 @model BTCPayServer.Components.DateRangeSelector.DateRangeSelectorModel
 
 <div class="dropdown">
+    <input type="hidden" name="BrowserTimeZone" />
     <button id="DateRangeSelector" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
         @if (Model.HasDateFilter)
         {
@@ -92,6 +93,11 @@
 </div>
 
 <script>
+    const browserTimeZoneInput = document.querySelector('input[name="BrowserTimeZone"]');
+    if (browserTimeZoneInput) {
+        browserTimeZoneInput.value = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    }
+
     document.getElementById('btnCustomRangeDate').addEventListener('click', function () {
         const dtpStartDate = document.getElementById("dtpStartDate").value;
         const dtpEndDate = document.getElementById("dtpEndDate").value;

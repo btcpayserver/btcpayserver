@@ -36,9 +36,13 @@ namespace BTCPayServer.Models
         /// </summary>
         public string SearchText { get; set; }
         public string FilterCommand { get; set; }
+        [ModelBinder(BinderType = typeof(TimeZoneInfoModelBinder))]
+        [ValidateNever]
+        public TimeZoneInfo BrowserTimeZone { get; set; }
 
         public SearchString GetSearch(TimeZoneInfo tz)
         {
+            tz ??= BrowserTimeZone ?? TimeZoneInfo.Utc;
             var search = SearchString.Combine([SearchTerm, SearchText], tz);
             if (FilterCommand is not null)
                 RunFilterCommand(search);

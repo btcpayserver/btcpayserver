@@ -1484,7 +1484,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             // add to array
             modified = new SearchString(modified.Toggle("status", "processing"), utc);
             var statusArray = modified.GetFilterArray("status");
-            Assert.Equal(1, statusArray.Length);
+            Assert.Single(statusArray);
             Assert.Contains("processing", statusArray);
 
             // toggle off array with same value

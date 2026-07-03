@@ -29,11 +29,11 @@
     </a>
 </div>
 <partial name="_StatusMessage" />
-<form class="d-flex flex-wrap align-items-center gap-md-4 gap-sm-0 mb-4 col-xxl-8" asp-action="Index" method="get">
+<form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="Index" method="get">
     <input asp-for="Count" type="hidden" />
     <vc:search-string-input search-string="Model.Search"></vc:search-string-input>
 
-    <div class="btn-group col-12 col-md-auto mb-3 mb-md-0" role="group" aria-label="View Notification">
+    <div class="btn-group" role="group" aria-label="View Notification">
         <button type="submit" name="FilterCommand" value="set:all=true" class="btn @(showAll ? "btn-primary" : "btn-outline-secondary")"
            text-translate="true">
             All
@@ -44,8 +44,8 @@
         </button>
     </div>
 
-    <div class="dropdown col-12 col-md-auto mb-3 mb-md-0">
-        <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret w-100 w-md-auto" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <div class="dropdown">
+        <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             @if (statusFilterCount > 0)
             {
                 <span>@statusFilterCount Type</span>
@@ -66,8 +66,8 @@
         </div>
     </div>
 
-    <div class="dropdown col-12 col-md-auto">
-        <button id="StoresOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret w-100 w-md-auto" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <div class="dropdown">
+        <button id="StoresOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             @if (storesFilterCount > 0)
             {
                 <span>@(storesFilterCount == 1 ? StringLocalizer["{0} Store", storesFilterCount] : StringLocalizer["{0} Stores", storesFilterCount])</span>

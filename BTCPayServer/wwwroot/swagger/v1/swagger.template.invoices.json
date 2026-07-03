@@ -1428,19 +1428,9 @@
                         "type": "string",
                         "description": "Description of the pull payment"
                     },
-                    "payoutMethodId": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/PayoutMethodId"
-                            }
-                        ],
-                        "deprecated": true,
-                        "description": "Deprecated, use `payoutMethods` instead. The single payout method the refund can be claimed in.",
-                        "nullable": true
-                    },
                     "payoutMethods": {
                         "type": "array",
-                        "description": "The list of payout methods the refund can be claimed in. Available options can be queried from the `StorePaymentMethods_GetStorePaymentMethods` endpoint. If `null`, falls back to `payoutMethodId`, and if that is also `null`, to the default payout method of the original invoice.",
+                        "description": "The list of payout methods the refund can be claimed in. Available options can be queried from the `StorePaymentMethods_GetStorePaymentMethods` endpoint. If `null`, falls back to the deprecated single payout method, and if that is also `null`, to the default payout method of the original invoice.",
                         "items": {
                             "type": "string",
                             "example": "BTC-CHAIN"

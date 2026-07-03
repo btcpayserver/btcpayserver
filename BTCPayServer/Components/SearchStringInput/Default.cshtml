@@ -1,0 +1,6 @@
+@model BTCPayServer.Components.SearchStringInput.SearchStringInput.Model
+
+<input name="SearchTerm" type="hidden" value="@Model.SearchString.ToString(SearchStringFormat.OnlyUIFilters)"/>
+<input name="SearchText" class="form-control" placeholder="@Model.Placeholder" />
+@* So hitting enter will not submit another button in the page *@
+<button type="submit" class="d-none"></button>

@@ -45,19 +45,8 @@
             max-width: 320px;
         }
 
-        #TransactionsToolbar {
-            align-items: flex-start;
-        }
-
-        #WalletTransactionsSearch {
-            flex: 1 1 52rem;
-            min-width: 0;
-        }
-
         #Dropdowns {
             align-items: center;
-            justify-content: flex-start;
-            min-width: 0;
         }
 
         #Export {
@@ -127,31 +116,6 @@
             min-width: 7rem;
             padding-left: 1rem;
             text-align: left;
-        }
-
-        @@media (max-width: 1399.98px) {
-            #WalletTransactionsSearch,
-            #Dropdowns {
-                width: 100%;
-                flex-basis: 100%;
-            }
-
-            #SearchText {
-                width: 100%;
-                max-width: none;
-                flex-basis: 100%;
-            }
-        }
-
-        @@media (min-width: 1400px) {
-            #TransactionsToolbar {
-                align-items: center;
-            }
-
-            #Dropdowns {
-                margin-left: auto;
-                justify-content: flex-end;
-            }
         }
 
         #LoadingIndicator {
@@ -295,103 +259,6 @@
 
 <div class="sticky-header">
     <vc:wallet-nav wallet-id="wallet"/>
-</div>
-<partial name="_StatusMessage" />
-
-<div id="TransactionsToolbar" class="d-flex flex-wrap gap-3 mb-4">
-    <form id="WalletTransactionsSearch" class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="WalletTransactions" asp-route-walletId="@walletId" method="get">
-        <input id="Count" name="Count" type="hidden" value="@Model.Count" />
-        <vc:search-string-input search-string="Model.Search" placeholder="@StringLocalizer["Search transactions..."]"></vc:search-string-input>
-
-        <div class="dropdown">
-            <button id="DirectionOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                @if (hasIncomingOnlyFilter)
-                {
-                    <span text-translate="true">Incoming</span>
-                }
-                else if (hasOutgoingOnlyFilter)
-                {
-                    <span text-translate="true">Outgoing</span>
-                }
-                else
-                {
-                    <span text-translate="true">All Directions</span>
-                }
-            </button>
-            <div class="dropdown-menu" aria-labelledby="DirectionOptionsToggle">
-                <button type="submit" name="FilterCommand" value="unset:direction" class="dropdown-item @((!hasIncomingOnlyFilter && !hasOutgoingOnlyFilter) ? "custom-active" : string.Empty)" text-translate="true">All Directions</button>
-                <button type="submit" name="FilterCommand" value="set:direction=in" class="dropdown-item @(hasIncomingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Incoming</button>
-                <button type="submit" name="FilterCommand" value="set:direction=out" class="dropdown-item @(hasOutgoingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Outgoing</button>
-            </div>
-        </div>
-        @if (Model.Labels.Any())
-        {
-            <div class="dropdown">
-                <button id="LabelOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    @if (labelFilterCount > 1)
-                    {
-                        <span>@StringLocalizer["{0} Labels", labelFilterCount]</span>
-                    }
-                    else if (searchLabelFilters.Length == 1)
-                    {
-                        <span text-translate="true">Label:</span>
-                        <span>@searchLabelFilters[0]</span>
-                    }
-                    else if (hasNoLabelFilter)
-                    {
-                        <span text-translate="true">No Label</span>
-                    }
-                    else
-                    {
-                        <span text-translate="true">All Labels</span>
-                    }
-                </button>
-                @{
-                    var visibleLabels = initialLabels;
-                }
-                <ul class="dropdown-menu mt-1 py-0" id="LabelDropdownMenu" aria-labelledby="LabelOptionsToggle" style="min-width:280px">
-                    <li class="px-2 pt-2 pb-2@(sortedLabels.Count > maxVisibleLabels ? string.Empty : " d-none")" id="LabelSearchContainer">
-                        <div class="input-group border rounded">
-                            <span class="input-group-text border-0 text-muted px-2" style="background:transparent">
-                                <vc:icon symbol="actions-search" />
-                            </span>
-                            <input type="text" class="form-control border-0 shadow-none ps-0 bg-transparent" id="LabelSearch"
-                                   placeholder="@StringLocalizer["Search labels…"]" autocomplete="off" aria-label="@StringLocalizer["Search labels…"]" />
-                        </div>
-                    </li>
-                    <li>
-                        <button type="submit" name="FilterCommand" value="alllabels" class="dropdown-item @(labelFilterCount == 0 ? "custom-active" : string.Empty)" text-translate="true">All Labels</button>
-                    </li>
-                    <li>
-                        <button type="submit" name="FilterCommand" value="nolabel" class="dropdown-item @(hasNoLabelFilter ? "custom-active" : string.Empty)" text-translate="true">No Label</button>
-                    </li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li id="LabelFilterResultsAnchor" class="d-none"></li>
-                    @foreach (var label in visibleLabels)
-                    {
-                        <li class="label-filter-item">
-                            <button type="submit" name="FilterCommand" value="addlabel:@label.Text" class="dropdown-item transaction-label-text label-filter-link@(searchLabelFilters.Any(value => value.Equals(label.Text, StringComparison.OrdinalIgnoreCase)) ? " active" : string.Empty)" style="--btcpay-dropdown-link-active-bg:@label.Color;--btcpay-dropdown-link-active-color:@label.TextColor;">
-                                <span class="label-filter-text">@label.Text</span>
-                                <small class="label-filter-count@(label.UsageCount > 0 ? string.Empty : " d-none")">@label.UsageCount</small>
-                            </button>
-                        </li>
-                    }
-                </ul>
-                <template id="label-filter-item-template">
-                    <li class="label-filter-item">
-                        <button type="submit" name="FilterCommand" class="dropdown-item transaction-label-text label-filter-link">
-                            <span class="label-filter-text"></span>
-                            <small class="label-filter-count d-none"></small>
-                        </button>
-                    </li>
-                </template>
-            </div>
-        }
-        <vc:date-range-selector search="Model.Search" custom-range-title='@StringLocalizer["Filter transactions by Custom Range"].Value'></vc:date-range-selector>
-
-        <vc:clear-all-filters search="Model.Search"></vc:clear-all-filters>
-    </form>
-
     <div class="d-flex flex-wrap align-items-center gap-3" id="Dropdowns">
         <div class="dropdown d-flex flex-wrap gap-3" id="Export" permission="@WalletPolicies.CanViewWallet">
             <a
@@ -417,6 +284,100 @@
         </div>
     </div>
 </div>
+<partial name="_StatusMessage" />
+
+<form id="WalletTransactionsSearch" class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="WalletTransactions" asp-route-walletId="@walletId" method="get">
+    <input id="Count" name="Count" type="hidden" value="@Model.Count" />
+    <vc:search-string-input search-string="Model.Search" placeholder="@StringLocalizer["Search transactions..."]"></vc:search-string-input>
+
+    <div class="dropdown">
+        <button id="DirectionOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (hasIncomingOnlyFilter)
+            {
+                <span text-translate="true">Incoming</span>
+            }
+            else if (hasOutgoingOnlyFilter)
+            {
+                <span text-translate="true">Outgoing</span>
+            }
+            else
+            {
+                <span text-translate="true">All Directions</span>
+            }
+        </button>
+        <div class="dropdown-menu" aria-labelledby="DirectionOptionsToggle">
+            <button type="submit" name="FilterCommand" value="unset:direction" class="dropdown-item @((!hasIncomingOnlyFilter && !hasOutgoingOnlyFilter) ? "custom-active" : string.Empty)" text-translate="true">All Directions</button>
+            <button type="submit" name="FilterCommand" value="set:direction=in" class="dropdown-item @(hasIncomingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Incoming</button>
+            <button type="submit" name="FilterCommand" value="set:direction=out" class="dropdown-item @(hasOutgoingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Outgoing</button>
+        </div>
+    </div>
+    @if (Model.Labels.Any())
+    {
+        <div class="dropdown">
+            <button id="LabelOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                @if (labelFilterCount > 1)
+                {
+                    <span>@StringLocalizer["{0} Labels", labelFilterCount]</span>
+                }
+                else if (searchLabelFilters.Length == 1)
+                {
+                    <span text-translate="true">Label:</span>
+                    <span>@searchLabelFilters[0]</span>
+                }
+                else if (hasNoLabelFilter)
+                {
+                    <span text-translate="true">No Label</span>
+                }
+                else
+                {
+                    <span text-translate="true">All Labels</span>
+                }
+            </button>
+            @{
+                var visibleLabels = initialLabels;
+            }
+            <ul class="dropdown-menu mt-1 py-0" id="LabelDropdownMenu" aria-labelledby="LabelOptionsToggle" style="min-width:280px">
+                <li class="px-2 pt-2 pb-2@(sortedLabels.Count > maxVisibleLabels ? string.Empty : " d-none")" id="LabelSearchContainer">
+                    <div class="input-group border rounded">
+                        <span class="input-group-text border-0 text-muted px-2" style="background:transparent">
+                            <vc:icon symbol="actions-search" />
+                        </span>
+                        <input type="text" class="form-control border-0 shadow-none ps-0 bg-transparent" id="LabelSearch"
+                               placeholder="@StringLocalizer["Search labels…"]" autocomplete="off" aria-label="@StringLocalizer["Search labels…"]" />
+                    </div>
+                </li>
+                <li>
+                    <button type="submit" name="FilterCommand" value="alllabels" class="dropdown-item @(labelFilterCount == 0 ? "custom-active" : string.Empty)" text-translate="true">All Labels</button>
+                </li>
+                <li>
+                    <button type="submit" name="FilterCommand" value="nolabel" class="dropdown-item @(hasNoLabelFilter ? "custom-active" : string.Empty)" text-translate="true">No Label</button>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li id="LabelFilterResultsAnchor" class="d-none"></li>
+                @foreach (var label in visibleLabels)
+                {
+                    <li class="label-filter-item">
+                        <button type="submit" name="FilterCommand" value="addlabel:@label.Text" class="dropdown-item transaction-label-text label-filter-link@(searchLabelFilters.Any(value => value.Equals(label.Text, StringComparison.OrdinalIgnoreCase)) ? " active" : string.Empty)" style="--btcpay-dropdown-link-active-bg:@label.Color;--btcpay-dropdown-link-active-color:@label.TextColor;">
+                            <span class="label-filter-text">@label.Text</span>
+                            <small class="label-filter-count@(label.UsageCount > 0 ? string.Empty : " d-none")">@label.UsageCount</small>
+                        </button>
+                    </li>
+                }
+            </ul>
+            <template id="label-filter-item-template">
+                <li class="label-filter-item">
+                    <button type="submit" name="FilterCommand" class="dropdown-item transaction-label-text label-filter-link">
+                        <span class="label-filter-text"></span>
+                        <small class="label-filter-count d-none"></small>
+                    </button>
+                </li>
+            </template>
+        </div>
+    }
+    <vc:date-range-selector search="Model.Search" custom-range-title='@StringLocalizer["Filter transactions by Custom Range"].Value'></vc:date-range-selector>
+
+    <vc:clear-all-filters search="Model.Search"></vc:clear-all-filters>
+</form>
 
 @if (Model.PendingTransactions?.Any() == true)
 {

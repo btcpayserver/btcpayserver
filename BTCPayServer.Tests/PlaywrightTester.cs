@@ -428,7 +428,11 @@ namespace BTCPayServer.Tests
         public async Task ClickOnAllSectionLinks(string sectionSelector = "#menu-item")
         {
             List<string> links = [];
-            foreach (var locator in await Page.Locator($"{sectionSelector} .nav-link").AllAsync())
+            var linkLocator = Page.Locator($"{sectionSelector} a.nav-link");
+            if (await linkLocator.CountAsync() == 0)
+                linkLocator = Page.Locator($"{sectionSelector} a.dropdown-item");
+
+            foreach (var locator in await linkLocator.AllAsync())
             {
                 var link = await locator.GetAttributeAsync("href");
                 if (link is null or "/logout")

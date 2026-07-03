@@ -1,10 +1,11 @@
 @model BTCPayServer.Components.MainNav.MainNavViewModel
 
-<li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
+<li permission="@Policies.CanModifyServerSettings">
     <a
+        id="menu-item-@nameof(MonetizationPlugin)"
+        class="dropdown-item@(ViewData["ActivePage"]?.ToString() == nameof(MonetizationPlugin) ? " active" : "")"
         asp-area="@MonetizationPlugin.Area"
         asp-controller="UIServerMonetization"
         asp-action="Monetization"
-        layout-menu-item="@nameof(MonetizationPlugin)"
         text-translate="true">Monetization</a>
 </li>

@@ -1976,6 +1976,12 @@ namespace BTCPayServer.Tests
             Assert.NotNull(invoices.First().PaymentMethods);
             Assert.Equal(newInvoice.Id, invoices.First().Id);
 
+            //get single invoice, payment methods excluded by default and included on demand
+            var singleInvoice = await viewOnly.GetInvoice(newInvoice.Id);
+            Assert.Empty(singleInvoice.PaymentMethods);
+            singleInvoice = await viewOnly.GetInvoice(newInvoice.Id, includePaymentMethods: true);
+            Assert.NotEmpty(singleInvoice.PaymentMethods);
+
             invoices = await viewOnly.GetInvoices(user.StoreId, textSearch: "Banana");
             Assert.NotNull(invoices);
             Assert.Single(invoices);

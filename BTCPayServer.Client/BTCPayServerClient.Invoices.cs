@@ -41,10 +41,11 @@ public partial class BTCPayServerClient
         return await SendHttpRequest<IEnumerable<InvoiceData>>($"api/v1/stores/{storeId}/invoices", queryPayload, HttpMethod.Get, token);
     }
 
-    public virtual async Task<InvoiceData> GetInvoice(string invoiceId, CancellationToken token = default)
+    public virtual async Task<InvoiceData> GetInvoice(string invoiceId, bool includePaymentMethods = false, CancellationToken token = default)
     {
         if (invoiceId == null) throw new ArgumentNullException(nameof(invoiceId));
-        return await SendHttpRequest<InvoiceData>($"api/v1/invoices/{invoiceId}", null, HttpMethod.Get, token);
+        var queryPayload = new Dictionary<string, object> { { nameof(includePaymentMethods), includePaymentMethods } };
+        return await SendHttpRequest<InvoiceData>($"api/v1/invoices/{invoiceId}", queryPayload, HttpMethod.Get, token);
     }
 
     public virtual async Task<InvoicePaymentMethodDataModel[]> GetInvoicePaymentMethods(string invoiceId,

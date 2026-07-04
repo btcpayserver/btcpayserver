@@ -2,6 +2,7 @@
 @inject BTCPayServer.Services.BTCPayServerEnvironment _env
 @inject UserManager<ApplicationUser> _userManager
 @inject SignInManager<ApplicationUser> _signInManager
+@inject BTCPayServer.Plugins.Translations.LocalizerService _localizer
 
 @{
     var user = await _userManager.GetUserAsync(User);
@@ -11,7 +12,7 @@
 }
 
 <!DOCTYPE html>
-<html lang="en"@(_env.IsDeveloping ? " data-devenv" : "")>
+<html lang="en"@(_localizer.IsRtl ? " dir=\"rtl\"" : "")@(_env.IsDeveloping ? " data-devenv" : "")>
 <head>
     <partial name="LayoutHead" />
     @await RenderSectionAsync("PageHeadContent", false)

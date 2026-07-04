@@ -1,6 +1,8 @@
 @using BTCPayServer.Services
+@using BTCPayServer.Plugins.Translations
 @inject PoliciesSettings PoliciesSettings
 @inject UriResolver UriResolver
+@inject LocalizerService LocalizerService
 @{
     ViewData.TryGetValue("StoreBranding", out var storeBranding);
     var store = Context.GetStoreDataOrNull();
@@ -24,6 +26,10 @@
 <link href="~/main/fonts/OpenSans.css" asp-append-version="true"  rel="stylesheet" />
 <link href="~/main/layout.css" asp-append-version="true"  rel="stylesheet" />
 <link href="~/main/site.css" asp-append-version="true"  rel="stylesheet" />
+@if (LocalizerService.IsRtl)
+{
+    <link href="~/main/rtl.css" asp-append-version="true" rel="stylesheet" />
+}
 
 <partial name="LayoutHeadTheme" />
 @if (storeBranding != null)

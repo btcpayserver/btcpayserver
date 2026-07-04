@@ -25,9 +25,12 @@ namespace BTCPayServer.Plugins.Translations
         ISettingsAccessor<PoliciesSettings> settingsAccessor,
         IEnumerable<IDefaultTranslationProvider> defaultTranslationProviders)
     {
-        public record LoadedTranslations(Translations Translations, Translations Fallback, string LangName);
-        LoadedTranslations _LoadedTranslations = new(Translations.Default, Translations.Default, Translations.DefaultLanguage);
+        public record LoadedTranslations(Translations Translations, Translations Fallback, string LangName, bool Rtl);
+        LoadedTranslations _LoadedTranslations = new(Translations.Default, Translations.Default, Translations.DefaultLanguage, false);
         public Translations Translations => _LoadedTranslations.Translations;
+
+        // Whether the currently loaded server language is written right-to-left.
+        public bool IsRtl => _LoadedTranslations.Rtl;
 
         /// <summary>
         /// Load the translation of the server into memory
@@ -58,6 +61,8 @@ namespace BTCPayServer.Plugins.Translations
             {
                 dict_id = translationName,
             });
+            var metadata = await conn.QueryFirstOrDefaultAsync<string?>("SELECT metadata FROM lang_dictionaries WHERE dict_id=@dict_id", new { dict_id = translationName });
+            var rtl = metadata is not null && JObject.Parse(metadata)["rtl"]?.Value<bool>() == true;
             var defaultDict = Translations.Default;
             var loading = defaultTranslationProviders.Select(d => d.GetDefaultTranslations()).ToArray();
             Dictionary<string, string?> additionalDefault = new();
@@ -71,7 +76,7 @@ namespace BTCPayServer.Plugins.Translations
             defaultDict = new Translations(additionalDefault, defaultDict);
             var fallback = new Translations(all.Where(a => a.fallback).Select(o => KeyValuePair.Create(o.sentence, o.translation)), defaultDict);
             var translations = new Translations(all.Where(a => !a.fallback).Select(o => KeyValuePair.Create(o.sentence, o.translation)), fallback);
-            return new LoadedTranslations(translations, fallback, translationName);
+            return new LoadedTranslations(translations, fallback, translationName, rtl);
         }
 
         public async Task Save(Translation translation, Translations translations)
@@ -167,12 +172,13 @@ namespace BTCPayServer.Plugins.Translations
             await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id=@dict_id AND source IN ('Custom', 'LanguagePack')", new { dict_id = translationName });
         }
 
-        public async Task UpdateVersion(string translationName, string version)
+        public async Task UpdateMetadata(string translationName, string version, bool rtl)
         {
             await using var ctx = contextFactory.CreateContext();
             var db = ctx.Database.GetDbConnection();
-            await db.ExecuteAsync("UPDATE lang_dictionaries SET metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{version}', to_jsonb(@version::text)) WHERE dict_id = @dict_id",
-                new { dict_id = translationName, version });
+            await db.ExecuteAsync(
+                "UPDATE lang_dictionaries SET metadata = COALESCE(metadata, '{}'::jsonb) || jsonb_build_object('version', @version::text, 'rtl', @rtl::boolean) WHERE dict_id = @dict_id",
+                new { dict_id = translationName, version, rtl });
         }
     }
 }

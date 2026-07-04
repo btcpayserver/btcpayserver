@@ -1,0 +1,226 @@
+﻿body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+/* Directions */
+/* what must be RTLed */
+body,
+#NotificationsDropdown,
+#StoreSelectorToggle,
+.accordion-button,
+.navbar-nav,
+#globalNav .nav-link,
+#globalNav .globalSearch-shell
+{
+    direction: rtl;
+}
+/* what must not be RTLed like the pay button code box...*/
+#mainMenu,
+#mainMenuHead,
+#mainCode,
+#TemplateConfig,
+#PrimarySource_Script,
+#FormConfig,
+.note-codable,
+#HtmlMetaTags,
+#additional-embed-payment-button .p-3,
+#additional-notification .p-3,
+input[type= "number"], input[inputmode="numeric"], input[inputmode="decimal"]
+{
+    direction: ltr;
+    text-align: left;
+}
+
+/* top nav*/
+#globalNav .nav-link {
+    padding-top: 0 !important;
+    padding-bottom: 5px !important;
+}
+
+#globalNav .nav-link:hover {
+    color: rgb(199, 130, 0) !important;
+}
+
+#globalNav .text-danger:hover {
+    color: rgb(83, 181, 64) !important;
+}
+
+/* Right menu - Hide the scrollbar...*/
+#mainMenu {
+    margin-right: -17px; /* under the carpet ;) */
+    left: unset;
+    right: 0 !important;
+}
+
+#StoreSelectorHome {
+    position: relative;
+    float: left;
+    margin-bottom: 10px;
+}
+
+#mainMenu,
+.accordion-button,
+#globalNav .nav-link,
+#globalNav .globalSearch-shell,
+#globalNav .globalSearch-item-subtitle,
+.text-start,
+.dropdown-item
+{
+    text-align: right !important;
+}
+
+#Nav-Wallets-Header .accordion-button,
+#mainMenu .accordion-button span {
+    font-size: 1.5em;
+    text-transform: none;
+    color: rgba(var(--btcpay-body-link-rgb), var(--btcpay-link-opacity, 1)) !important;
+}
+
+#mainMenu .accordion-button svg{
+    position: absolute;
+    left: 0;
+}
+
+.navbar-nav {
+    padding-right: 10px !important;
+}
+
+#globalNav {
+    right: var(--sidebar-width);
+    left: 0;
+}
+
+#mainNav {
+    overflow-x: hidden;
+    padding-bottom: 20px;
+    height: 100%;
+}
+
+#StoreSelectorHome .badge,
+#mainNav .nav-item .icon,
+.btcpay-status,
+.icon-actions-add,
+.icon-nav-reporting,
+.btcpay-toggle,
+.breadcrumb-item,
+.form-check-input {
+    margin-left: 10px !important;
+}
+
+#mainNav .navbar-nav > li.nav-item-sub {
+    padding-right: calc(1.5rem + var(--btcpay-space-xs)) !important;
+}
+/* tabs nav*/
+#SectionNav {
+    padding-right: 0;
+}
+#SectionNav .nav-link {
+    margin-left: var(--btcpay-space-l) !important;
+    margin-right: 0;
+}
+
+/* notifications box */
+#NotificationsDropdown{
+    z-index: 3000 !important;
+}
+
+.notification-item__content {
+    margin-right: 20px;
+}
+
+/* main content and cosmetics*/
+#mainContent {
+    margin-left: 0;
+    margin-right: var(--sidebar-width);
+}
+
+.form-check-input {
+    float: right !important;
+}
+
+.modal-header .btn-close {
+    position: absolute;
+    left: 10px;
+}
+
+input[type="number"],
+input[inputmode="numeric"],
+input[inputmode="decimal"]
+{
+    padding-right: 5px;
+    padding-left: 10px;
+}
+
+#Spread {
+    flex: inherit;
+    width: 100px !important;
+}
+
+.fee-col .text-muted {
+    display: none;
+}
+
+.invoice-payments .w-75px{
+    width: 175px;
+}
+
+.btn-primary,
+.btn-success,
+.btn-danger,
+.btcpay-pill.active,
+.badge:not(.text-bg-warning){
+    text-shadow: 0 0 3px #000;
+}
+
+.flex-lg-row {
+    flex-direction: column-reverse !important;
+}
+
+/* crowdfund frontend */
+#app > div:nth-child(4), #app > div:nth-child(5){
+    direction: ltr;
+}
+
+#crowdfund-body-description-container,
+#crowdfund-body-contribution-container {
+    direction: rtl;
+}
+
+/* POS frontend */
+.posItem--last {
+    margin-left: auto;
+    margin-right: unset !important;
+}
+
+.btcpay-footer .gap-4 {
+    gap: 1rem !important;
+}
+
+@media (max-width: 1399.98px) {
+
+    #SearchText {
+        max-width: 42% !important;
+    }
+}
+
+@media (max-width: 991px) {
+
+    #mainMenu,
+    #mainContent {
+        margin-right: 0;
+    }
+
+    #mainMenu {
+        width: 100%;
+    }
+
+    #mainNav {
+        direction: rtl;
+        scrollbar-width: thin;
+        margin-left: -7px;
+    }
+
+    #SearchText {
+        max-width: none !important;
+    }
+}

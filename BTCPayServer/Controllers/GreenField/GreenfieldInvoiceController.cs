@@ -129,12 +129,12 @@ namespace BTCPayServer.Controllers.Greenfield
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/invoices/{invoiceId}")]
         [HttpGet("~/api/v1/invoices/{invoiceId}")]
-        public async Task<IActionResult> GetInvoice(string? storeId, string invoiceId)
+        public async Task<IActionResult> GetInvoice(string? storeId, string invoiceId, [FromQuery] bool includePaymentMethods = false)
         {
             var invoice = HttpContext.GetInvoiceDataOrNull();
             if (invoice is null)
                 return InvoiceNotFound();
-            return Ok(ToModel(invoice));
+            return Ok(ToModel(invoice, includePaymentMethods));
         }
 
         [Authorize(Policy = Policies.CanModifyInvoices,

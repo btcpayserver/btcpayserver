@@ -2805,39 +2805,39 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         public async Task DownloadRemotePlugin_RejectsManifestIdentifierMismatch()
         {
             var downloadRequested = false;
-            using var httpClient = new HttpClient(new StubHttpMessageHandler(request =>
+            using var httpClient = new HttpClient(new TestHttpMessageHandler(request =>
             {
                 var path = request.RequestUri!.AbsolutePath;
                 if (path == "/api/v1/plugins/TestPlugin")
                 {
-                    return JsonResponse("""
-                                        [{
-                                            "projectSlug": "test-plugin",
-                                            "buildId": 1,
-                                            "manifestInfo": {
-                                                "identifier": "TestPlugin",
-                                                "name": "Test Plugin",
-                                                "version": "1.5.0"
-                                            },
-                                            "buildInfo": {}
-                                        }]
-                                        """);
+                    return TestHttpMessageHandler.JsonResponse("""
+                                                               [{
+                                                                   "projectSlug": "test-plugin",
+                                                                   "buildId": 1,
+                                                                   "manifestInfo": {
+                                                                       "identifier": "TestPlugin",
+                                                                       "name": "Test Plugin",
+                                                                       "version": "1.5.0"
+                                                                   },
+                                                                   "buildInfo": {}
+                                                               }]
+                                                               """);
                 }
 
                 if (path.Contains("/versions/1.5.0", StringComparison.Ordinal) && !path.EndsWith("/download", StringComparison.Ordinal))
                 {
-                    return JsonResponse("""
-                                        {
-                                            "projectSlug": "test-plugin",
-                                            "buildId": 1,
-                                            "manifestInfo": {
-                                                "identifier": "OtherPlugin",
-                                                "name": "Other Plugin",
-                                                "version": "1.5.0"
-                                            },
-                                            "buildInfo": {}
-                                        }
-                                        """);
+                    return TestHttpMessageHandler.JsonResponse("""
+                                                               {
+                                                                   "projectSlug": "test-plugin",
+                                                                   "buildId": 1,
+                                                                   "manifestInfo": {
+                                                                       "identifier": "OtherPlugin",
+                                                                       "name": "Other Plugin",
+                                                                       "version": "1.5.0"
+                                                                   },
+                                                                   "buildInfo": {}
+                                                               }
+                                                               """);
                 }
 
                 if (path.EndsWith("/download", StringComparison.Ordinal))
@@ -2846,10 +2846,8 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
                 }
 
                 return new HttpResponseMessage(HttpStatusCode.NotFound);
-            }))
-            {
-                BaseAddress = new Uri("https://plugins.example/")
-            };
+            }));
+            httpClient.BaseAddress = new Uri("https://plugins.example/");
             var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-test-{Guid.NewGuid():N}");
             try
             {
@@ -3012,22 +3010,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
                     Condition = d.condition
                 }).ToArray()
             };
-        }
-
-        private static HttpResponseMessage JsonResponse(string json)
-        {
-            return new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(json, Encoding.UTF8, "application/json")
-            };
-        }
-
-        private sealed class StubHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> handle) : HttpMessageHandler
-        {
-            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-            {
-                return Task.FromResult(handle(request));
-            }
         }
 
         private static IBTCPayServerPlugin MakeLoadedPlugin(

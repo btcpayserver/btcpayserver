@@ -54,7 +54,6 @@ namespace BTCPayServer.Plugins
 
         public string GetShortBtcpayVersion() => Env.Version.TrimStart('v').Split('+')[0];
         public Uri GetPluginSourceBaseUri() => _pluginBuilderClient.HttpClient.BaseAddress;
-        public bool PluginPreReleasesEnabled => _policiesSettings.PluginPreReleases;
 
         public async Task<AvailablePlugin[]> GetRemotePlugins(string searchPluginName, CancellationToken cancellationToken = default)
         {
@@ -136,16 +135,16 @@ namespace BTCPayServer.Plugins
             var filedest = Path.Join(dest, pluginIdentifier + ".btcpay");
             var filemanifestdest = Path.Join(dest, pluginIdentifier + ".json");
             var pluginSelector = $"[{Uri.EscapeDataString(pluginIdentifier)}]";
-            version = Uri.EscapeDataString(selectedVersion.ToString());
+            var selectedVersionParameter = Uri.EscapeDataString(selectedVersion.ToString());
             Directory.CreateDirectory(Path.GetDirectoryName(filedest));
-            var url = $"api/v1/plugins/{pluginSelector}/versions/{version}/download";
-            var publishedVersion = await _pluginBuilderClient.GetPlugin(pluginSelector, version);
+            var url = $"api/v1/plugins/{pluginSelector}/versions/{selectedVersionParameter}/download";
+            var publishedVersion = await _pluginBuilderClient.GetPlugin(pluginSelector, selectedVersionParameter);
             if (publishedVersion is null)
-                throw new InvalidDataException($"Plugin version not found for {pluginIdentifier} {version}.");
+                throw new InvalidDataException($"Plugin version not found for {pluginIdentifier} {selectedVersion}.");
             if (publishedVersion.ManifestInfo is null)
-                throw new InvalidDataException($"Plugin manifest not found for {pluginIdentifier} {version}.");
+                throw new InvalidDataException($"Plugin manifest not found for {pluginIdentifier} {selectedVersion}.");
             var manifest = publishedVersion.ManifestInfo.ToObject<AvailablePlugin>() ??
-                           throw new InvalidDataException($"Plugin manifest deserialized to null for {pluginIdentifier} {version}.");
+                           throw new InvalidDataException($"Plugin manifest deserialized to null for {pluginIdentifier} {selectedVersion}.");
             if (!string.Equals(manifest.Identifier, pluginIdentifier, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidDataException($"Plugin manifest identifier {manifest.Identifier} does not match requested plugin {pluginIdentifier}.");
             if (!selectedVersion.Equals(manifest.Version))

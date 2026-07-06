@@ -47,7 +47,7 @@ namespace BTCPayServer.Plugins
         {
             source ??= new ProjectionSource();
             var data = GetManagePluginsProjectionData(source);
-            var selected = CreateSelectedPanel(source, data);
+            var selectedPanel = CreateSelectedPanel(source.SelectedPluginSlug, data);
             var hiddenPluginIdentifiers = data.LoadedPlugins
                 .Select(plugin => plugin.Identifier)
                 .Concat(data.DisabledVersions.Keys)
@@ -58,17 +58,17 @@ namespace BTCPayServer.Plugins
 
             return new PluginDirectoryViewModel
             {
-                SelectedPluginSlug = selected.SelectedSlug,
+                SelectedPluginSlug = selectedPanel.SelectedSlug,
                 HiddenPluginIdentifiers = hiddenPluginIdentifiers,
                 PendingActions = CreatePendingActions(data.PendingCommands),
-                SelectedPluginPanel = selected.Panel
+                SelectedPluginPanel = selectedPanel
             };
         }
 
         public PluginSelectedPanelViewModel CreateSelectedPluginPanelViewModel(ProjectionSource source)
         {
             source ??= new ProjectionSource();
-            return CreateSelectedPanel(source, GetManagePluginsProjectionData(source)).Panel;
+            return CreateSelectedPanel(source.SelectedPluginSlug, GetManagePluginsProjectionData(source));
         }
 
         private static ManagePluginsProjectionData GetManagePluginsProjectionData(ProjectionSource source)
@@ -106,19 +106,18 @@ namespace BTCPayServer.Plugins
             };
         }
 
-        private (string SelectedSlug, PluginSelectedPanelViewModel Panel) CreateSelectedPanel(ProjectionSource source, ManagePluginsProjectionData data)
+        private PluginSelectedPanelViewModel CreateSelectedPanel(string selectedSlug, ManagePluginsProjectionData data)
         {
-            if (string.IsNullOrEmpty(source.SelectedPluginSlug))
-                return (null, new PluginSelectedPanelViewModel { HasSelection = false });
+            if (string.IsNullOrEmpty(selectedSlug))
+                return new PluginSelectedPanelViewModel { HasSelection = false };
 
             var selectedAvailable = data.AvailablePlugins.FirstOrDefault(plugin =>
                 plugin.CatalogSlug != null &&
-                plugin.CatalogSlug.Equals(source.SelectedPluginSlug, StringComparison.OrdinalIgnoreCase));
+                plugin.CatalogSlug.Equals(selectedSlug, StringComparison.OrdinalIgnoreCase));
             if (selectedAvailable is null)
-                return (null, new PluginSelectedPanelViewModel { HasSelection = false });
+                return new PluginSelectedPanelViewModel { HasSelection = false };
 
-            var resolvedIdentifier = selectedAvailable.Identifier;
-            var state = ComputePluginState(resolvedIdentifier, data);
+            var state = ComputePluginState(selectedAvailable.Identifier, data);
             PluginInfoViewModel plugin;
             if (state.DisabledVersion is not null)
             {
@@ -157,7 +156,7 @@ namespace BTCPayServer.Plugins
                     dependenciesMet ? null : "Schedule install for when the dependencies have been met to ensure a smooth update"));
             }
 
-            var panel = new PluginSelectedPanelViewModel
+            return new PluginSelectedPanelViewModel
             {
                 HasSelection = true,
                 SelectedIdentifier = state.Identifier,
@@ -170,7 +169,6 @@ namespace BTCPayServer.Plugins
                 PendingVersion = state.PendingInstallVersion,
                 Actions = actions
             };
-            return (panel.SelectedSlug, panel);
         }
 
         private static List<PendingPluginActionViewModel> CreatePendingActions((string command, string plugin)[] commands)

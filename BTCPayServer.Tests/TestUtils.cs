@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -130,6 +133,44 @@ namespace BTCPayServer.Tests
             var services = new ServiceCollection();
             services.AddHttpClient();
             return services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>();
+        }
+    }
+
+    internal sealed class TestHttpClientFactory(HttpMessageHandler handler) : IHttpClientFactory
+    {
+        public HttpClient CreateClient(string name) => new(handler, false);
+    }
+
+    internal sealed class TestHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> handle = null) : HttpMessageHandler
+    {
+        private readonly Dictionary<string, Func<HttpResponseMessage>> _responses = new();
+        public Dictionary<string, int> Calls { get; } = new();
+
+        public void Register(string url, Func<HttpResponseMessage> responseFactory) => _responses[url] = responseFactory;
+
+        public static HttpResponseMessage JsonResponse(string json)
+        {
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var url = request.RequestUri!.ToString();
+            Calls[url] = Calls.TryGetValue(url, out var existing) ? existing + 1 : 1;
+
+            if (handle is not null)
+                return Task.FromResult(handle(request));
+
+            if (_responses.TryGetValue(url, out var responseFactory))
+                return Task.FromResult(responseFactory());
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound)
+            {
+                Content = new StringContent("Not Found", Encoding.UTF8, "text/plain")
+            });
         }
     }
 }

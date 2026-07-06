@@ -5,7 +5,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Abstractions.Models;
@@ -67,7 +66,7 @@ namespace BTCPayServer.Tests
         [Trait("Unit", "Unit")]
         public async Task LanguagePackUpdateService_ParsesManifestEntries()
         {
-            var handler = new StubHttpMessageHandler();
+            var handler = new TestHttpMessageHandler();
             var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
             handler.Register(manifestUrl, () => new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -98,7 +97,7 @@ namespace BTCPayServer.Tests
                     "application/json")
             });
 
-            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
+            var service = new LanguagePackUpdateService(new TestHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
             var languages = await service.GetManifestLanguages();
 
             Assert.Equal(2, languages.Length);
@@ -147,14 +146,14 @@ namespace BTCPayServer.Tests
         [Trait("Unit", "Unit")]
         public async Task LanguagePackUpdateService_PropagatesExceptionOnMalformedManifest()
         {
-            var handler = new StubHttpMessageHandler();
+            var handler = new TestHttpMessageHandler();
             var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
             handler.Register(manifestUrl, () => new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent("{ this is not: valid json", Encoding.UTF8, "application/json")
             });
 
-            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
+            var service = new LanguagePackUpdateService(new TestHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
             await Assert.ThrowsAnyAsync<Exception>(() => service.GetManifestLanguages());
         }
 
@@ -162,14 +161,14 @@ namespace BTCPayServer.Tests
         [Trait("Unit", "Unit")]
         public async Task LanguagePackUpdateService_ThrowsOnMissingLanguagesKey()
         {
-            var handler = new StubHttpMessageHandler();
+            var handler = new TestHttpMessageHandler();
             var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
             handler.Register(manifestUrl, () => new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent("{ \"OtherField\": [] }", Encoding.UTF8, "application/json")
             });
 
-            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
+            var service = new LanguagePackUpdateService(new TestHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
             await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetManifestLanguages());
         }
 
@@ -177,7 +176,7 @@ namespace BTCPayServer.Tests
         [Trait("Unit", "Unit")]
         public async Task LanguagePackUpdateService_ThrowsArgumentExceptionForUnknownLanguage()
         {
-            var handler = new StubHttpMessageHandler();
+            var handler = new TestHttpMessageHandler();
             var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
             handler.Register(manifestUrl, () => new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -186,7 +185,7 @@ namespace BTCPayServer.Tests
                     Encoding.UTF8, "application/json")
             });
 
-            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
+            var service = new LanguagePackUpdateService(new TestHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
             await Assert.ThrowsAsync<ArgumentException>(
                 () => service.FetchLanguagePackFromRepository("Klingon"));
         }
@@ -195,14 +194,14 @@ namespace BTCPayServer.Tests
         [Trait("Unit", "Unit")]
         public async Task LanguagePackUpdateService_ThrowsWhenManifestFails()
         {
-            var handler = new StubHttpMessageHandler();
+            var handler = new TestHttpMessageHandler();
             var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
             handler.Register(manifestUrl, () => new HttpResponseMessage(HttpStatusCode.InternalServerError)
             {
                 Content = new StringContent("error", Encoding.UTF8, "text/plain")
             });
 
-            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
+            var service = new LanguagePackUpdateService(new TestHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
             await Assert.ThrowsAnyAsync<HttpRequestException>(() => service.GetManifestLanguages());
         }
 
@@ -213,7 +212,7 @@ namespace BTCPayServer.Tests
             const string body = "{\"Hello\":\"Bonjour\"}";
             var expectedSha = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(body)));
 
-            var handler = new StubHttpMessageHandler();
+            var handler = new TestHttpMessageHandler();
             var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
             var translationUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/translations/french.json";
 
@@ -253,7 +252,7 @@ namespace BTCPayServer.Tests
         {
             const string body = "{\"Hello\":\"Bonjour\"}";
 
-            var handler = new StubHttpMessageHandler();
+            var handler = new TestHttpMessageHandler();
             var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
             var translationUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/translations/french.json";
 
@@ -279,7 +278,7 @@ namespace BTCPayServer.Tests
                 Content = new StringContent(body, Encoding.UTF8, "application/json")
             });
 
-            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
+            var service = new LanguagePackUpdateService(new TestHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
             var ex = await Assert.ThrowsAsync<InvalidOperationException>(
                 () => service.FetchLanguagePackFromRepository("French"));
             Assert.Contains("SHA-256 mismatch", ex.Message);
@@ -289,7 +288,7 @@ namespace BTCPayServer.Tests
         [Trait("Unit", "Unit")]
         public async Task LanguagePackUpdateService_UsesUpdateCacheUntilInvalidated()
         {
-            var handler = new StubHttpMessageHandler();
+            var handler = new TestHttpMessageHandler();
             var manifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
 
             handler.Register(manifestUrl, () => new HttpResponseMessage(HttpStatusCode.OK)
@@ -310,7 +309,7 @@ namespace BTCPayServer.Tests
                     "application/json")
             });
 
-            var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
+            var service = new LanguagePackUpdateService(new TestHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
             var outdatedMetadata = JObject.Parse("{ \"version\": \"sha-0\" }");
             var upToDateMetadata = JObject.Parse("{ \"version\": \"sha-1\" }");
 

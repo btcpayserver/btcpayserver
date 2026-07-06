@@ -243,22 +243,17 @@
         }
     }
 
-    function buildHostContext(frame) {
-        const includeSelection = frame === directoryFrame;
-        return {
-            type: "btcpay:host-context",
-            hiddenPluginIdentifiers: hiddenPluginIdentifiers,
-            selectedSlug: includeSelection ? selectedSlug : "",
-            colorMode: getHostColorMode()
-        };
-    }
-
     function postHostContextTo(frame) {
         if (directoryFailed || !frame || !frame.contentWindow) {
             return;
         }
 
-        frame.contentWindow.postMessage(buildHostContext(frame), pluginBuilderOrigin);
+        frame.contentWindow.postMessage({
+            type: "btcpay:host-context",
+            hiddenPluginIdentifiers: hiddenPluginIdentifiers,
+            selectedSlug: frame === directoryFrame ? selectedSlug : "",
+            colorMode: getHostColorMode()
+        }, pluginBuilderOrigin);
     }
 
     function postHostContext() {
@@ -329,36 +324,16 @@
             isInstallConfirmModalOpen = false;
             installConfirmForm.removeAttribute("action");
 
-            if (installConfirmPluginInput) {
-                installConfirmPluginInput.value = "";
-            }
+            [installConfirmPluginInput, installConfirmVersionInput].forEach(function (input) {
+                if (input) input.value = "";
+            });
 
-            if (installConfirmVersionInput) {
-                installConfirmVersionInput.value = "";
-            }
-
-            if (installConfirmName) {
-                installConfirmName.textContent = "";
-            }
-
-            if (installConfirmIdentifier) {
-                installConfirmIdentifier.textContent = "";
-            }
-
-            if (installConfirmVersion) {
-                installConfirmVersion.textContent = "";
-            }
+            [installConfirmName, installConfirmIdentifier, installConfirmVersion, installConfirmPendingVersion, installConfirmPendingRequestedVersion].forEach(function (element) {
+                if (element) element.textContent = "";
+            });
 
             if (installConfirmPending) {
                 installConfirmPending.classList.add("d-none");
-            }
-
-            if (installConfirmPendingVersion) {
-                installConfirmPendingVersion.textContent = "";
-            }
-
-            if (installConfirmPendingRequestedVersion) {
-                installConfirmPendingRequestedVersion.textContent = "";
             }
         });
     }

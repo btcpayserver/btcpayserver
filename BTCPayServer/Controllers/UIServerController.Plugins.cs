@@ -6,6 +6,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Plugins;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using static BTCPayServer.Plugins.PluginService;
@@ -31,6 +32,7 @@ public partial class UIServerController
     public async Task<IActionResult> PluginDirectory(
         [FromServices] PluginService pluginService,
         [FromServices] PluginManagementProjectionService projectionService,
+        [FromServices] PoliciesSettings policiesSettings,
         string selectedSlug = null)
     {
         var source = await BuildPluginProjectionSource(
@@ -44,7 +46,7 @@ public partial class UIServerController
         model.DirectoryOrigin = pluginSourceBaseUri is null ? null : $"{pluginSourceBaseUri.Scheme}://{pluginSourceBaseUri.Authority}";
         model.PanelUrl = Url.Action(nameof(SelectedPluginPanel));
         var btcpayVersion = pluginService.GetShortBtcpayVersion();
-        var preReleaseEnabled = pluginService.PluginPreReleasesEnabled;
+        var preReleaseEnabled = policiesSettings.PluginPreReleases;
         model.DirectoryIframeUrl = BuildDirectoryIframeUrl(
             pluginSourceBaseUri,
             btcpayVersion,
@@ -62,6 +64,7 @@ public partial class UIServerController
     public async Task<IActionResult> SelectedPluginPanel(
         [FromServices] PluginService pluginService,
         [FromServices] PluginManagementProjectionService projectionService,
+        [FromServices] PoliciesSettings policiesSettings,
         string slug = null)
     {
         var source = await BuildPluginProjectionSource(
@@ -75,7 +78,7 @@ public partial class UIServerController
             model.SelectedSlug,
             model.Actions.FirstOrDefault(action => action.FormAction == nameof(InstallPlugin))?.Version,
             pluginService.GetShortBtcpayVersion(),
-            pluginService.PluginPreReleasesEnabled);
+            policiesSettings.PluginPreReleases);
         return PartialView("_SelectedPluginPanel", model);
     }
 

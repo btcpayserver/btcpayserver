@@ -120,6 +120,7 @@ namespace BTCPayServer.Models.InvoicingModels
             get;
             set;
         }
+        public List<EmailRuleData> ResendableEmailRules { get; set; } = new();
         public InvoiceMetadata TypedMetadata { get; set; }
         public DateTimeOffset MonitoringDate { get; internal set; }
         public InvoiceEventData[] Events { get; internal set; }

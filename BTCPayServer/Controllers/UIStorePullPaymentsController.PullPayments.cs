@@ -547,8 +547,11 @@ namespace BTCPayServer.Controllers
                 ctx.Payouts.Where(p => p.StoreDataId == storeId && (p.PullPaymentDataId == null || !p.PullPaymentData.Archived));
             if (pullPaymentId != null)
             {
+                var pp = await ctx.PullPayments.FindAsync(pullPaymentId);
+                if (pp is null)
+                    return NotFound();
                 payoutRequest = payoutRequest.Where(p => p.PullPaymentDataId == vm.PullPaymentId);
-                vm.PullPaymentName = (await ctx.PullPayments.FindAsync(pullPaymentId)).GetBlob().Name;
+                vm.PullPaymentName = pp.GetBlob().Name;
             }
 
             vm.PayoutMethodCount = (await payoutRequest.GroupBy(data => data.PayoutMethodId)

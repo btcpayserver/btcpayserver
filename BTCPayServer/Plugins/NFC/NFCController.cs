@@ -46,12 +46,14 @@ namespace BTCPayServer.Plugins.NFC
             public string InvoiceId { get; set; }
             public long? Amount { get; set; }
 
-            // LUD-290 PIN-protected withdraw: set on the second (completion) call.
+            // LUD-290: set on the PIN completion call.
             public string Pin { get; set; }
             public string Token { get; set; }
         }
 
+        // Public checkout endpoint POSTed via fetch without a token, like the LNURL endpoints.
         [AllowAnonymous]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> SubmitLNURLWithdrawForInvoice([FromBody] SubmitRequest request)
         {
             var invoice = await _invoiceRepository.GetInvoice(request.InvoiceId);
@@ -60,8 +62,7 @@ namespace BTCPayServer.Plugins.NFC
                 return NotFound();
             }
 
-            // LUD-290: the customer has entered a PIN for a withdraw we already resolved and stashed.
-            // Complete it using the stored session (single fetch of the withdrawRequest, reused k1).
+            // LUD-290: complete a PIN-protected withdraw from the stashed session.
             if (!string.IsNullOrEmpty(request.Token))
             {
                 return await CompletePinProtectedWithdraw(request, invoice);
@@ -196,9 +197,8 @@ namespace BTCPayServer.Plugins.NFC
                 return BadRequest("Could not fetch BOLT11 invoice to pay to.");
             }
 
-            // LUD-290: if the withdraw service asks for a PIN at this amount, don't contact the callback
-            // yet. Stash the already-fetched request (so we reuse the same single-use k1) and ask the
-            // browser for the PIN; the callback is only hit once the customer submits it.
+            // LUD-290: PIN required - stash the fetched request (reusing its single-use k1) and ask
+            // the browser for a PIN instead of calling the callback now.
             if (info.PinLimit is not null && withdrawAmount is not null &&
                 withdrawAmount.MilliSatoshi >= info.PinLimit.MilliSatoshi)
             {
@@ -263,8 +263,7 @@ namespace BTCPayServer.Plugins.NFC
                     return Ok(result.Reason);
                 }
 
-                // Wrong PIN (or other failure): keep the session so the customer can retry against the
-                // same withdraw link/k1, until the service blocks the card or the attempts run out.
+                // Keep the session so the customer can retry, until blocked or out of attempts.
                 session.AttemptsLeft--;
                 var reason = result.Reason ?? "Unknown error";
                 if (session.AttemptsLeft <= 0 || reason.Contains("blocked", StringComparison.OrdinalIgnoreCase))
@@ -280,8 +279,7 @@ namespace BTCPayServer.Plugins.NFC
             }
         }
 
-        // LUD-290 sends the PIN as a plaintext query parameter, so it may only be forwarded over a
-        // secure transport: HTTPS, a Tor onion service (encrypted), or a loopback address (dev/tests).
+        // The PIN is a plaintext query param, so only forward it over https, onion, or loopback.
         internal static bool IsPinTransportSecure(Uri callback)
         {
             return callback.Scheme == Uri.UriSchemeHttps || callback.IsOnion() || callback.IsLoopback;
@@ -296,8 +294,7 @@ namespace BTCPayServer.Plugins.NFC
                 : LightningLikePayoutHandler.LightningLikePayoutHandlerClearnetNamedClient);
         }
 
-        // Server-side session for a PIN-protected (LUD-290) withdraw. Held only in IMemoryCache so the
-        // single-use withdrawRequest (and its k1) is fetched exactly once and reused across PIN attempts.
+        // Ephemeral session so the single-use withdrawRequest/k1 is fetched once, reused across attempts.
         private class PinWithdrawSession
         {
             public PinWithdrawSession(LNURLWithdrawRequest info, string bolt11, string invoiceId, int attemptsLeft)

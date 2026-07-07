@@ -132,7 +132,7 @@ Vue.component("lnurl-withdraw-checkout", {
             try {
                 const result = await response.text()
                 if (response.ok) {
-                    // LUD-290: the withdraw service requires a PIN before we can complete it
+                    // LUD-290: PIN required before completing
                     const parsed = this.tryParseJson(result)
                     if (parsed && typeof parsed === 'object' && parsed.requiresPin) {
                         this.startPinEntry(parsed)
@@ -181,7 +181,6 @@ Vue.component("lnurl-withdraw-checkout", {
             this.pinSubmitting = true
             this.pinError = null
 
-            // LUD-290: complete the withdraw the server stashed for us, now with the PIN
             const body = JSON.stringify({ invoiceId: this.model.invoiceId, token: this.pinToken, pin: this.pin })
             const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
             try {

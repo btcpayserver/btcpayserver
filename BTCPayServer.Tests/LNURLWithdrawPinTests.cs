@@ -21,8 +21,7 @@ namespace BTCPayServer.Tests;
 [Collection(nameof(NonParallelizableCollectionDefinition))]
 public class LNURLWithdrawPinTests(ITestOutputHelper helper) : UnitTestBase(helper)
 {
-    // LUD-290: when a customer pays a checkout invoice with an LNURL-Withdraw that advertises a
-    // `pinLimit`, BTCPay (acting as the wallet) must collect a PIN and forward it on the callback.
+    // LUD-290: paying a checkout invoice with a pinLimit LNURL-Withdraw prompts for a PIN and forwards it.
     [Fact]
     [Trait("Integration", "Integration")]
     [Trait("Lightning", "Lightning")]
@@ -45,8 +44,7 @@ public class LNURLWithdrawPinTests(ITestOutputHelper helper) : UnitTestBase(help
         var lnurl = LNURL.LNURL.EncodeBech32(withdrawService.ServerUri);
         var httpClient = tester.PayTester.HttpClient;
 
-        // The NFC controller is routed at [Route("plugins/NFC")] with a single (template-less) action,
-        // so the endpoint is "plugins/NFC" itself - the same URL the checkout gets from Url.Action.
+        // NFCController is routed at "plugins/NFC" (single template-less action).
         async Task<(HttpStatusCode Status, string Body)> Submit(object payload)
         {
             var response = await httpClient.PostAsync("plugins/NFC",
@@ -54,8 +52,7 @@ public class LNURLWithdrawPinTests(ITestOutputHelper helper) : UnitTestBase(help
             return (response.StatusCode, await response.Content.ReadAsStringAsync());
         }
 
-        // --- Amount (1000 sats) is at/above the pinLimit (500 sats): a PIN must be requested, and the
-        //     callback must NOT be contacted yet.
+        // Amount (1000 sats) >= pinLimit (500 sats): PIN required, callback not contacted yet.
         withdrawService.PinLimitMilliSats = 500_000;
         withdrawService.ExpectedPin = "1234";
         var initiate = await Submit(new { lnurl, invoiceId = invoice.Id });
@@ -66,7 +63,7 @@ public class LNURLWithdrawPinTests(ITestOutputHelper helper) : UnitTestBase(help
         Assert.False(string.IsNullOrEmpty(token));
         Assert.Empty(withdrawService.Callbacks);
 
-        // --- A wrong PIN is forwarded, rejected, and the session is kept so the customer can retry.
+        // Wrong PIN is forwarded, rejected, and the session kept for retry.
         var wrong = await Submit(new { invoiceId = invoice.Id, token, pin = "0000" });
         Assert.True(wrong.Status == HttpStatusCode.BadRequest, $"wrong pin: {wrong.Status} {wrong.Body}");
         Assert.Contains("Invalid PIN", wrong.Body);
@@ -74,14 +71,13 @@ public class LNURLWithdrawPinTests(ITestOutputHelper helper) : UnitTestBase(help
         Assert.Equal("0000", wrongCallback.Pin);
         Assert.False(string.IsNullOrEmpty(wrongCallback.Pr));
 
-        // --- Retrying with the correct PIN (same token/session, same k1) succeeds.
+        // Correct PIN on the same session/k1 succeeds.
         var right = await Submit(new { invoiceId = invoice.Id, token, pin = "1234" });
         Assert.True(right.Status == HttpStatusCode.OK, $"right pin: {right.Status} {right.Body}");
         Assert.True(withdrawService.Callbacks.TryDequeue(out var rightCallback));
         Assert.Equal("1234", rightCallback.Pin);
 
-        // --- When the amount is below the pinLimit, behaviour is unchanged: no PIN, the callback is
-        //     contacted straight away with no `pin` parameter.
+        // Amount below pinLimit: no PIN, callback contacted directly with no pin.
         withdrawService.PinLimitMilliSats = 100_000_000; // 100k sats, above the 1000 sat amount
         withdrawService.ExpectedPin = null;
         var noPin = await Submit(new { lnurl, invoiceId = invoice.Id });
@@ -90,8 +86,7 @@ public class LNURLWithdrawPinTests(ITestOutputHelper helper) : UnitTestBase(help
         Assert.True(string.IsNullOrEmpty(noPinCallback.Pin));
     }
 
-    // Minimal external LNURL-Withdraw service: serves a withdrawRequest (optionally advertising a
-    // pinLimit) and records the callback it receives so the test can assert the forwarded PIN.
+    // Minimal withdraw service: serves a withdrawRequest (optional pinLimit) and records callbacks.
     private class FakeWithdrawService : IDisposable
     {
         private readonly IHost _host;

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Models.NotificationViewModels;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -21,14 +22,12 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Index(NotificationIndexViewModel model = null)
         {
             model ??= new NotificationIndexViewModel { Skip = 0 };
-            var timezoneOffset = model.TimezoneOffset ?? 0;
-            model.Status ??= "Unread";
-            ViewBag.Status = model.Status;
             if (User.GetIdOrNull() is not string userId)
                 return RedirectToAction("Index", "UIHome");
 
-            var searchTerm = string.IsNullOrEmpty(model.SearchText) ? model.SearchTerm : $"{model.SearchText},{model.SearchTerm}";
-            var fs = new SearchString(searchTerm, timezoneOffset);
+            var fs = model.GetSearch();
+            if (model.FilterCommand is not null)
+                return model.Redirect(Request);
             var storeIds = fs.GetFilterArray("storeid");
             var stores = await storeRepo.GetStoresByUserId(userId);
             model.StoreFilterOptions = stores
@@ -52,10 +51,10 @@ namespace BTCPayServer.Controllers
                 SearchText = model.SearchText,
                 Type = fs.GetFilterArray("type"),
                 StoreIds = storeIds,
-                Seen = model.Status == "Unread" ? false : null
+                Seen = fs.GetFilterBool("all") is true ? null : false
             });
             model.Items = res.Items;
-
+            ViewData.SetPageTimeZone(fs);
             return View(model);
         }
 

@@ -326,13 +326,23 @@ document.addEventListener("DOMContentLoaded", () => {
         setStickyHeaderHeight();
     }
 
-    // initialize timezone offset value if field is present in page
-    const $timezoneOffset = document.getElementById("TimezoneOffset");
-    const timezoneOffset = new Date().getTimezoneOffset();
-    if ($timezoneOffset) $timezoneOffset.value = timezoneOffset;
-
     // localize all elements that have localizeDate class
-    formatDateTimes();
+    if (formatDateTimes)
+        formatDateTimes();
+
+    document.querySelectorAll("*[timezone], *[browser-timezone]").forEach($el => {
+        var formatter = $el.hasAttribute("timezone") ? getDateFormatter() : Intl.DateTimeFormat();
+        if (!formatter)
+            return;
+        if ($el.tagName === "INPUT") {
+            if (!$el.value)
+                $el.value = formatter.resolvedOptions().timeZone || '';
+        }
+        else if ($el.tagName === "SPAN") {
+            if (!$el.innerText)
+                $el.innerText = formatter.resolvedOptions().timeZone || '';
+        }
+    });
 
     initLabelManagers();
 
@@ -351,9 +361,11 @@ document.addEventListener("DOMContentLoaded", () => {
         var element = $(this);
         var fdtp = element.attr("data-fdtp");
 
+        var time24 = getDateFormatter().resolvedOptions().hourCycle === "h23";
         // support for initializing with special options per instance
         if (fdtp) {
             var parsed = Object.assign({}, JSON.parse(fdtp), { static: true });
+            parsed.time_24hr ??= time24;
             flatpickrInstances.push(element.flatpickr(parsed));
         } else {
             var min = element.attr("min");
@@ -368,7 +380,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 minDate: min,
                 maxDate: max,
                 defaultDate: defaultDate,
-                time_24hr: true,
+                time_24hr: time24,
                 defaultHour: 0,
                 static: true
             }));

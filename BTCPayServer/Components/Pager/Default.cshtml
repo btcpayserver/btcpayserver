@@ -77,10 +77,14 @@
         var query = new Dictionary<string, object>
         {
             { "searchTerm", Model.SearchTerm },
-            { "timezoneOffset", Model.TimezoneOffset },
             { "skip", skip },
             { "count", count }
         };
+        if (Model.TimeZone is not null)
+        {
+            if (TimeZones.TryGet(Model.TimeZone) is {} tz)
+                query.Add("timeZone", tz.Id);
+        }
 
         if (Model.PaginationQuery != null)
         {
@@ -93,7 +97,7 @@
 
         return ReplaceQueryParameters(query);
     }
-    
+
     string ReplaceQueryParameters(Dictionary<string, object> query)
     {
         var uri = new Uri(ViewContext.HttpContext.Request.GetCurrentUrlWithQueryString());

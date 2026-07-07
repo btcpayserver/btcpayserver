@@ -1379,7 +1379,7 @@ namespace BTCPayServer.Tests
 
             // Filter by Status
             await s.Page.ClickAsync("#StatusOptionsToggle");
-            await s.Page.ClickAsync("a:has-text('Settled')");
+            await s.Page.ClickAsync("*:has-text('Settled')");
             await s.Page.WaitForLoadStateAsync();
             await Expect(s.Page.Locator("input[name='SearchText']"))
                 .ToHaveValueAsync(paymentRequestTitle);
@@ -1431,8 +1431,8 @@ namespace BTCPayServer.Tests
             //Filter by Label
             await s.Page.ClickAsync("#menu-item-PaymentRequests");
             await s.Page.WaitForLoadStateAsync();
-            await s.Page.ClickAsync("#LabelOptionsToggle");
-            await s.Page.ClickAsync($".dropdown-menu a:has-text(\"{labelName}\")");
+            await s.Page.ClickAsync("#LabelSelectorToggle");
+            await s.Page.ClickAsync($"#LabelSelectorMenu button:has-text(\"{labelName}\")");
             await s.Page.WaitForLoadStateAsync();
             await TestUtils.EventuallyAsync(async () =>
             {
@@ -1508,9 +1508,9 @@ namespace BTCPayServer.Tests
 
             await s.Page.ReloadAsync();
             await s.Page.WaitForLoadStateAsync();
-            await s.Page.WaitForSelectorAsync("#LabelOptionsToggle");
-            await s.Page.ClickAsync("#LabelOptionsToggle");
-            var labelItems = await s.Page.Locator(".dropdown-menu a").AllInnerTextsAsync();
+            await s.Page.WaitForSelectorAsync("#LabelSelectorToggle");
+            await s.Page.ClickAsync("#LabelSelectorToggle");
+            var labelItems = await s.Page.Locator("#LabelSelectorMenu .label-filter-text").AllInnerTextsAsync();
             var matches = labelItems.Where(t => t.Equals(labelOriginal, StringComparison.OrdinalIgnoreCase)).ToArray();
             Assert.Single(matches);
             Assert.Equal(labelOriginal, matches[0]);
@@ -1623,10 +1623,8 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage(partialText: "User successfully updated");
 
             await s.GoToServer(ServerNavPages.Users);
-            Assert.Contains(unapproved.RegisterDetails.Email, await s.Page.GetAttributeAsync("#SearchTerm", "value"));
-            Assert.Equal(1, await rows.CountAsync());
-            Assert.Contains(unapproved.RegisterDetails.Email, await rows.First.TextContentAsync());
-            Assert.Contains("Active", await s.Page.Locator("#UsersList tr.user-overview-row:first-child .user-status").TextContentAsync());
+            var users = new PMO.UsersPMO(s);
+            await users.AssertActive(unapproved.RegisterDetails.Email);
 
             await s.Logout();
             await s.GoToLogin();

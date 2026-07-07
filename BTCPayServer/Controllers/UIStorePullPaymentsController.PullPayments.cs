@@ -200,12 +200,12 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(UIStoresController.Index), "UIStores", new { storeId });
             }
 
-            var vm = this.ParseListQuery(new PullPaymentsModel
+            var vm = new PullPaymentsModel
             {
                 Skip = skip,
                 Count = count,
                 ActiveState = pullPaymentState
-            });
+            };
 
             switch (pullPaymentState)
             {
@@ -531,7 +531,7 @@ namespace BTCPayServer.Controllers
             }
 
             payoutMethodId ??= paymentMethods.First().ToString();
-            var vm = this.ParseListQuery(new PayoutsModel
+            var vm = new PayoutsModel
             {
                 PayoutMethods = paymentMethods,
                 PayoutMethodId = payoutMethodId,
@@ -541,7 +541,7 @@ namespace BTCPayServer.Controllers
                 Count = count,
                 Payouts = new List<PayoutsModel.PayoutModel>(),
                 HasPayoutProcessor = await HasPayoutProcessor(storeId, payoutMethodId)
-            });
+            };
             await using var ctx = _dbContextFactory.CreateContext();
             var payoutRequest =
                 ctx.Payouts.Where(p => p.StoreDataId == storeId && (p.PullPaymentDataId == null || !p.PullPaymentData.Archived));

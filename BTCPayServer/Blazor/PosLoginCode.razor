@@ -3,14 +3,16 @@
 @using BTCPayServer.Plugins.PointOfSale.Controllers
 @using Microsoft.AspNetCore.Mvc
 @using Microsoft.AspNetCore.Routing
+@using Microsoft.Extensions.Localization
 @inject LinkGenerator LinkGenerator
+@inject IStringLocalizer StringLocalizer
 
 @if (UserEmails?.Any() is true)
 {
     <div @attributes="Attrs" class="@CssClass">
-        <label for="SignedInUser" class="form-label" text-translate="true">Signed in user</label>
+        <label for="SignedInUser" class="form-label">@StringLocalizer["Signed in user"]</label>
         <select id="SignedInUser" class="form-select" @onchange="@OnUserChanged">
-            <option value="" text-translate="true">None, just open the URL</option>
+            <option value="">@StringLocalizer["None, just open the URL"]</option>
             @foreach (var u in UserEmails)
             {
                 <option value="@u.Key">@u.Value</option>

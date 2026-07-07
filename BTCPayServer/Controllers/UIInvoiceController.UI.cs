@@ -216,19 +216,16 @@ namespace BTCPayServer.Controllers
             if (store is null)
                 return NotFound();
 
-            var details = InvoicePopulatePayments(invoice);
-            var occurredTriggers = GetOccurredEmailTriggers(invoice, details.Payments.Any());
-            if (!occurredTriggers.Contains(trigger))
-            {
-                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["This trigger doesn't apply to this invoice."].Value;
-                return RedirectToAction(nameof(Invoice), new { invoiceId });
-            }
 
+            var occurredTriggers = GetOccurredEmailTriggers(invoice, invoice.GetPayments(false).Any());
+            if (string.IsNullOrEmpty(trigger) || !occurredTriggers.Contains(trigger))
+                return NotFound();
+            
             await using var emailRuleCtx = _dbContextFactory.CreateContext();
             var ruleExists = await emailRuleCtx.EmailRules.AnyAsync(r => r.StoreId == invoice.StoreId && r.Trigger == trigger);
             if (!ruleExists)
             {
-                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["No matching email rule found for this store."].Value;
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["No matching email rule found for this trigger."].Value;
                 return RedirectToAction(nameof(Invoice), new { invoiceId });
             }
 
@@ -236,7 +233,7 @@ namespace BTCPayServer.Controllers
             InvoiceTriggerProvider.AddInvoiceToModel(model, invoice, _linkGenerator);
             _EventAggregator.Publish(new TriggerEvent(invoice.StoreId, trigger, model, new ResendTriggerOwner(invoice)));
 
-            TempData[WellKnownTempData.SuccessMessage] = "Email resent.";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email resent."].Value;
             return RedirectToAction(nameof(Invoice), new { invoiceId });
         }
 

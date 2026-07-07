@@ -45,9 +45,11 @@ public class LNURLWithdrawPinTests(ITestOutputHelper helper) : UnitTestBase(help
         var lnurl = LNURL.LNURL.EncodeBech32(withdrawService.ServerUri);
         var httpClient = tester.PayTester.HttpClient;
 
+        // The NFC controller is routed at [Route("plugins/NFC")] with a single (template-less) action,
+        // so the endpoint is "plugins/NFC" itself - the same URL the checkout gets from Url.Action.
         async Task<(HttpStatusCode Status, string Body)> Submit(object payload)
         {
-            var response = await httpClient.PostAsync("plugins/NFC/SubmitLNURLWithdrawForInvoice",
+            var response = await httpClient.PostAsync("plugins/NFC",
                 new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json"));
             return (response.StatusCode, await response.Content.ReadAsStringAsync());
         }

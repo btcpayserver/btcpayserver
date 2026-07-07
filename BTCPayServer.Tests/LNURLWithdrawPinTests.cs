@@ -84,6 +84,20 @@ public class LNURLWithdrawPinTests(ITestOutputHelper helper) : UnitTestBase(help
         Assert.True((int)noPin.Status is >= 200 and < 300, $"no pin: {noPin.Status} {noPin.Body}");
         Assert.True(withdrawService.Callbacks.TryDequeue(out var noPinCallback));
         Assert.True(string.IsNullOrEmpty(noPinCallback.Pin));
+
+        // Three wrong PINs exhaust the cap; the session is then dropped and no longer usable.
+        withdrawService.PinLimitMilliSats = 500_000;
+        withdrawService.ExpectedPin = "1234";
+        var blocked = await Submit(new { lnurl, invoiceId = invoice.Id });
+        var blockedToken = JObject.Parse(blocked.Body)["token"]?.Value<string>();
+        Assert.False(string.IsNullOrEmpty(blockedToken));
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            var bad = await Submit(new { invoiceId = invoice.Id, token = blockedToken, pin = "0000" });
+            Assert.Equal(HttpStatusCode.BadRequest, bad.Status);
+        }
+        var afterBlock = await Submit(new { invoiceId = invoice.Id, token = blockedToken, pin = "1234" });
+        Assert.Equal(HttpStatusCode.BadRequest, afterBlock.Status);
     }
 
     // Minimal withdraw service: serves a withdrawRequest (optional pinLimit) and records callbacks.

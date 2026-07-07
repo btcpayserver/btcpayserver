@@ -1,5 +1,6 @@
 using System;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
@@ -247,7 +248,8 @@ namespace BTCPayServer.Plugins.NFC
                 return BadRequest("A PIN is required to complete this withdraw.");
             }
 
-            if (session.AttemptsLeft <= 0)
+            // Consume one attempt atomically so concurrent submits can't exceed the cap.
+            if (Interlocked.Decrement(ref session.AttemptsLeft) < 0)
             {
                 _memoryCache.Remove(PinSessionCacheKey(request.Token));
                 return BadRequest("Card blocked: too many incorrect PIN attempts");
@@ -264,7 +266,6 @@ namespace BTCPayServer.Plugins.NFC
                 }
 
                 // Keep the session so the customer can retry, until blocked or out of attempts.
-                session.AttemptsLeft--;
                 var reason = result.Reason ?? "Unknown error";
                 if (session.AttemptsLeft <= 0 || reason.Contains("blocked", StringComparison.OrdinalIgnoreCase))
                 {
@@ -308,7 +309,7 @@ namespace BTCPayServer.Plugins.NFC
             public LNURLWithdrawRequest Info { get; }
             public string Bolt11 { get; }
             public string InvoiceId { get; }
-            public int AttemptsLeft { get; set; }
+            public int AttemptsLeft; // field (not property) for Interlocked
         }
     }
 }

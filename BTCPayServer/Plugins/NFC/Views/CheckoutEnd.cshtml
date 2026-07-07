@@ -141,7 +141,7 @@ Vue.component("lnurl-withdraw-checkout", {
                     }
                     this.$emit('handle-nfc-result', result)
                 } else {
-                    this.$emit('handle-nfc-error', result)
+                    this.$emit('handle-nfc-error', this.parseReason(result))
                 }
             } catch (error) {
                 this.$emit('handle-nfc-error', error)

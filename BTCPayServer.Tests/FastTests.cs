@@ -13,6 +13,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Controllers;
 using BTCPayServer.Plugins;
+using BTCPayServer.Plugins.NFC;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
@@ -51,6 +52,21 @@ namespace BTCPayServer.Tests
         public FastTests(ITestOutputHelper helper) : base(helper)
         {
         }
+
+        [Fact]
+        public void CanDetectSecurePinTransportForLNURLWithdraw()
+        {
+            // LUD-290: the withdraw PIN travels as a plaintext query parameter, so BTCPay may only
+            // forward it over a secure transport: HTTPS, a Tor onion service, or a loopback address
+            // (the latter for regtest/dev/tests).
+            Assert.True(NFCController.IsPinTransportSecure(new Uri("https://withdraw.example.com/callback")));
+            Assert.True(NFCController.IsPinTransportSecure(new Uri("http://127.0.0.1:1234/callback")));
+            Assert.True(NFCController.IsPinTransportSecure(new Uri("http://localhost/callback")));
+            Assert.True(NFCController.IsPinTransportSecure(new Uri("http://3g2upl4pq6kufc4m.onion/callback")));
+            // Plaintext clearnet HTTP would leak the PIN and must be refused.
+            Assert.False(NFCController.IsPinTransportSecure(new Uri("http://withdraw.example.com/callback")));
+        }
+
         class DockerImage
         {
             public string User { get; private set; }

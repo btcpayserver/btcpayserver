@@ -12,6 +12,7 @@ using BTCPayServer.Services.Stores;
 using LNURL;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using NBitcoin;
 using Newtonsoft.Json.Linq;
 
@@ -24,16 +25,19 @@ namespace BTCPayServer.Plugins.NFC
         private readonly InvoiceRepository _invoiceRepository;
         private readonly InvoiceActivator _invoiceActivator;
         private readonly StoreRepository _storeRepository;
+        private readonly IMemoryCache _memoryCache;
 
         public NFCController(IHttpClientFactory httpClientFactory,
             InvoiceRepository invoiceRepository,
             InvoiceActivator invoiceActivator,
-            StoreRepository storeRepository)
+            StoreRepository storeRepository,
+            IMemoryCache memoryCache)
         {
             _httpClientFactory = httpClientFactory;
             _invoiceRepository = invoiceRepository;
             _invoiceActivator = invoiceActivator;
             _storeRepository = storeRepository;
+            _memoryCache = memoryCache;
         }
 
         public class SubmitRequest
@@ -41,6 +45,10 @@ namespace BTCPayServer.Plugins.NFC
             public string Lnurl { get; set; }
             public string InvoiceId { get; set; }
             public long? Amount { get; set; }
+
+            // LUD-290 PIN-protected withdraw: set on the second (completion) call.
+            public string Pin { get; set; }
+            public string Token { get; set; }
         }
 
         [AllowAnonymous]
@@ -50,6 +58,13 @@ namespace BTCPayServer.Plugins.NFC
             if (invoice?.Status is not InvoiceStatus.New)
             {
                 return NotFound();
+            }
+
+            // LUD-290: the customer has entered a PIN for a withdraw we already resolved and stashed.
+            // Complete it using the stored session (single fetch of the withdrawRequest, reused k1).
+            if (!string.IsNullOrEmpty(request.Token))
+            {
+                return await CompletePinProtectedWithdraw(request, invoice);
             }
 
             var methods = invoice.GetPaymentPrompts();
@@ -98,6 +113,7 @@ namespace BTCPayServer.Plugins.NFC
             }
 
             string bolt11 = null;
+            LightMoney withdrawAmount = null;
             if (lnPaymentMethod is not null)
             {
                 if (!lnPaymentMethod.Activated)
@@ -123,6 +139,7 @@ namespace BTCPayServer.Plugins.NFC
                     return BadRequest("Invoice amount is not payable with the LNURL allowed amounts.");
                 }
 
+                withdrawAmount = due;
                 if (lnPaymentMethod.Activated)
                 {
                     bolt11 = lnPaymentMethod.Destination;
@@ -149,6 +166,7 @@ namespace BTCPayServer.Plugins.NFC
                 {
                     httpClient = CreateHttpClient(info.Callback);
                     var amount = LightMoney.Coins(due);
+                    withdrawAmount = amount;
                     var actionPath = Url.Action(nameof(UILNURLController.GetLNURLForInvoice), "UILNURL",
                         new { invoiceId = request.InvoiceId, cryptoCode = "BTC", amount = amount.MilliSatoshi });
                     var url = Request.GetAbsoluteUri(actionPath);
@@ -178,6 +196,24 @@ namespace BTCPayServer.Plugins.NFC
                 return BadRequest("Could not fetch BOLT11 invoice to pay to.");
             }
 
+            // LUD-290: if the withdraw service asks for a PIN at this amount, don't contact the callback
+            // yet. Stash the already-fetched request (so we reuse the same single-use k1) and ask the
+            // browser for the PIN; the callback is only hit once the customer submits it.
+            if (info.PinLimit is not null && withdrawAmount is not null &&
+                withdrawAmount.MilliSatoshi >= info.PinLimit.MilliSatoshi)
+            {
+                if (!IsPinTransportSecure(info.Callback))
+                {
+                    return BadRequest("This LNURL-Withdraw requires a PIN, but its callback does not use a secure (HTTPS) connection.");
+                }
+
+                var token = Convert.ToHexString(RandomUtils.GetBytes(32));
+                _memoryCache.Set(PinSessionCacheKey(token),
+                    new PinWithdrawSession(info, bolt11, invoice.Id, 3),
+                    new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2) });
+                return Ok(new { requiresPin = true, token, amountSats = withdrawAmount.MilliSatoshi / 1000m });
+            }
+
             try
             {
                 var result = await info.SendRequest(bolt11, httpClient, null, null);
@@ -194,11 +230,88 @@ namespace BTCPayServer.Plugins.NFC
             }
         }
 
+        private async Task<IActionResult> CompletePinProtectedWithdraw(SubmitRequest request, InvoiceEntity invoice)
+        {
+            if (!_memoryCache.TryGetValue(PinSessionCacheKey(request.Token), out PinWithdrawSession session) || session is null)
+            {
+                return BadRequest("The PIN session has expired. Please tap your card again.");
+            }
+
+            if (!string.Equals(session.InvoiceId, invoice.Id, StringComparison.Ordinal))
+            {
+                return BadRequest("The PIN session does not match this invoice.");
+            }
+
+            if (string.IsNullOrEmpty(request.Pin))
+            {
+                return BadRequest("A PIN is required to complete this withdraw.");
+            }
+
+            if (session.AttemptsLeft <= 0)
+            {
+                _memoryCache.Remove(PinSessionCacheKey(request.Token));
+                return BadRequest("Card blocked: too many incorrect PIN attempts");
+            }
+
+            try
+            {
+                var httpClient = CreateHttpClient(session.Info.Callback);
+                var result = await session.Info.SendRequest(session.Bolt11, httpClient, request.Pin, null);
+                if (!string.IsNullOrEmpty(result.Status) && result.Status.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    _memoryCache.Remove(PinSessionCacheKey(request.Token));
+                    return Ok(result.Reason);
+                }
+
+                // Wrong PIN (or other failure): keep the session so the customer can retry against the
+                // same withdraw link/k1, until the service blocks the card or the attempts run out.
+                session.AttemptsLeft--;
+                var reason = result.Reason ?? "Unknown error";
+                if (session.AttemptsLeft <= 0 || reason.Contains("blocked", StringComparison.OrdinalIgnoreCase))
+                {
+                    _memoryCache.Remove(PinSessionCacheKey(request.Token));
+                }
+
+                return BadRequest(reason);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // LUD-290 sends the PIN as a plaintext query parameter, so it may only be forwarded over a
+        // secure transport: HTTPS, a Tor onion service (encrypted), or a loopback address (dev/tests).
+        internal static bool IsPinTransportSecure(Uri callback)
+        {
+            return callback.Scheme == Uri.UriSchemeHttps || callback.IsOnion() || callback.IsLoopback;
+        }
+
+        private static string PinSessionCacheKey(string token) => $"NFC_LNURLW_PIN_{token}";
+
         private HttpClient CreateHttpClient(Uri uri)
         {
             return _httpClientFactory.CreateClient(uri.IsOnion()
                 ? LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient
                 : LightningLikePayoutHandler.LightningLikePayoutHandlerClearnetNamedClient);
+        }
+
+        // Server-side session for a PIN-protected (LUD-290) withdraw. Held only in IMemoryCache so the
+        // single-use withdrawRequest (and its k1) is fetched exactly once and reused across PIN attempts.
+        private class PinWithdrawSession
+        {
+            public PinWithdrawSession(LNURLWithdrawRequest info, string bolt11, string invoiceId, int attemptsLeft)
+            {
+                Info = info;
+                Bolt11 = bolt11;
+                InvoiceId = invoiceId;
+                AttemptsLeft = attemptsLeft;
+            }
+
+            public LNURLWithdrawRequest Info { get; }
+            public string Bolt11 { get; }
+            public string InvoiceId { get; }
+            public int AttemptsLeft { get; set; }
         }
     }
 }

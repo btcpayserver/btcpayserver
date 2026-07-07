@@ -71,9 +71,9 @@ public class LNURLWithdrawPinTests(ITestOutputHelper helper) : UnitTestBase(help
         Assert.Equal("0000", wrongCallback.Pin);
         Assert.False(string.IsNullOrEmpty(wrongCallback.Pr));
 
-        // Correct PIN on the same session/k1 succeeds.
+        // Correct PIN on the same session/k1 succeeds (2xx; a reasonless OK maps to 204).
         var right = await Submit(new { invoiceId = invoice.Id, token, pin = "1234" });
-        Assert.True(right.Status == HttpStatusCode.OK, $"right pin: {right.Status} {right.Body}");
+        Assert.True((int)right.Status is >= 200 and < 300, $"right pin: {right.Status} {right.Body}");
         Assert.True(withdrawService.Callbacks.TryDequeue(out var rightCallback));
         Assert.Equal("1234", rightCallback.Pin);
 
@@ -81,7 +81,7 @@ public class LNURLWithdrawPinTests(ITestOutputHelper helper) : UnitTestBase(help
         withdrawService.PinLimitMilliSats = 100_000_000; // 100k sats, above the 1000 sat amount
         withdrawService.ExpectedPin = null;
         var noPin = await Submit(new { lnurl, invoiceId = invoice.Id });
-        Assert.True(noPin.Status == HttpStatusCode.OK, $"no pin: {noPin.Status} {noPin.Body}");
+        Assert.True((int)noPin.Status is >= 200 and < 300, $"no pin: {noPin.Status} {noPin.Body}");
         Assert.True(withdrawService.Callbacks.TryDequeue(out var noPinCallback));
         Assert.True(string.IsNullOrEmpty(noPinCallback.Pin));
     }

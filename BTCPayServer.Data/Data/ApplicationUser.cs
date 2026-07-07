@@ -43,6 +43,8 @@ namespace BTCPayServer.Data
         public bool IsDisabledTemporarily =>
             IsDisabled && DateTimeOffset.MaxValue - LockoutEnd!.Value >= TimeSpan.FromSeconds(1);
 
+        public string TimeZone { get; set; }
+
         public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
             builder.Entity<ApplicationUser>()

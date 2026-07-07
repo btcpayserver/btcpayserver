@@ -1,0 +1,110 @@
+@using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Client
+@using System.Globalization
+@model DateTimeSettingsViewModel
+@{
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.DateTime), StringLocalizer["Date and Time"]).SetCategory(WellKnownCategories.Store));
+}
+
+<form method="post" permissioned="@Policies.CanModifyStoreSettings">
+    <div class="sticky-header">
+        <h2 text-translate="true">Date and Time</h2>
+        <button id="page-primary" type="submit" class="btn btn-primary" text-translate="true">Save</button>
+    </div>
+
+    <partial name="_StatusMessage" />
+
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
+            }
+
+            <div class="form-group">
+                <label asp-for="StoreTimeZone" class="form-label"></label>
+                <input asp-for="StoreTimeZone" class="form-control" list="timezone-selection-suggestion" autocomplete="off" placeholder="@StringLocalizer["Server default ({0})", Model.ServerTimeZone]" />
+                <datalist id="timezone-selection-suggestion">
+                    @foreach (var timeZone in TimeZoneInfo.GetSystemTimeZones())
+                    {
+                        <option value="@timeZone.Id">@timeZone.DisplayName</option>
+                    }
+                </datalist>
+                <span asp-validation-for="StoreTimeZone" class="text-danger"></span>
+                <div id="StoreTimeZoneHelpBlock" class="form-text">
+                    <span text-translate="true">Leave empty to use the server timezone:</span> @Model.ServerTimeZone.
+                    <button type="button" class="btn btn-link p-0 only-for-js" data-set-browser-timezone data-timezone-input="StoreTimeZone" data-label-template="@StringLocalizer["Set to browser's timezone ({0})", "__timezone__"]">
+                        <span data-browser-timezone-label text-translate="true">Set to browser's timezone</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group mt-4">
+                <label asp-for="PreferredDateTimeLocale" class="form-label"></label>
+                <input asp-for="PreferredDateTimeLocale" class="form-control" list="locale-selection-suggestion" autocomplete="off" placeholder="@StringLocalizer["Server default ({0})", Model.ServerLocale]" />
+                <datalist id="locale-selection-suggestion">
+                    @foreach (var culture in CultureInfo.GetCultures(CultureTypes.SpecificCultures).OrderBy(c => c.Name))
+                    {
+                        <option value="@culture.Name">@culture.EnglishName</option>
+                    }
+                </datalist>
+                <span asp-validation-for="PreferredDateTimeLocale" class="text-danger"></span>
+                <div id="StoreLocaleHelpBlock" class="form-text">
+                    <span text-translate="true">Leave empty to use the server locale:</span> @Model.ServerLocale.
+                    <button type="button" class="btn btn-link p-0 only-for-js" data-set-browser-locale data-locale-input="PreferredDateTimeLocale" data-label-template="@StringLocalizer["Set to browser's locale ({0})", "__locale__"]">
+                        <span data-browser-locale-label text-translate="true">Set to browser's locale</span>
+                    </button>
+                </div>
+            </div>
+            <div class="form-group mt-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="PreferredDateStyle" class="form-label"></label>
+                        <select asp-for="PreferredDateStyle" class="form-select" id="PreferredDateStyle">
+                            @foreach (var style in DateFormatterOptions.Styles)
+                            {
+                                <option value="@style">@style</option>
+                            }
+                        </select>
+                        <span asp-validation-for="PreferredDateStyle" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="PreferredTimeStyle" class="form-label"></label>
+                        <select asp-for="PreferredTimeStyle" class="form-select" id="PreferredTimeStyle">
+                            @foreach (var style in DateFormatterOptions.Styles)
+                            {
+                                <option value="@style">@style</option>
+                            }
+                        </select>
+                        <span asp-validation-for="PreferredTimeStyle" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="form-check mt-3">
+                    <input asp-for="PreferredHour12" type="checkbox" class="form-check-input" id="PreferredHour12" />
+                    <label asp-for="PreferredHour12" class="form-check-label"></label>
+                    <span asp-validation-for="PreferredHour12" class="text-danger"></span>
+                </div>
+                <div class="form-text text-muted mt-2">Example: <b id="DateTimeFormatPreview"></b></div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section PageFootContent {
+    <script>
+        const updateDateTimeFormatPreview = () => {
+            const locale = document.getElementById('PreferredDateTimeLocale').value || undefined;
+            const dateStyle = document.getElementById('PreferredDateStyle').value;
+            const timeStyle = document.getElementById('PreferredTimeStyle').value;
+            const hour12 = document.getElementById('PreferredHour12').checked;
+            const sampleDate = new Date(2026, 5, 16, 17, 40, 53);
+            document.getElementById('DateTimeFormatPreview').textContent = getDateFormater({ locale, dateStyle, timeStyle, hour12 }).format(sampleDate);
+        }
+        delegate('input', '#PreferredDateTimeLocale', updateDateTimeFormatPreview)
+        delegate('change', '#PreferredDateTimeLocale', updateDateTimeFormatPreview)
+        delegate('change', '#PreferredDateStyle', updateDateTimeFormatPreview)
+        delegate('change', '#PreferredTimeStyle', updateDateTimeFormatPreview)
+        delegate('change', '#PreferredHour12', updateDateTimeFormatPreview)
+        updateDateTimeFormatPreview()
+    </script>
+}

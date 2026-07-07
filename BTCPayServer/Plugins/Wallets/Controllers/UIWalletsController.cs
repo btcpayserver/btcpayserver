@@ -83,7 +83,8 @@ namespace BTCPayServer.Controllers
         TransactionLinkProviders transactionLinkProviders,
         InvoiceRepository invoiceRepository,
         DisplayFormatter displayFormatter,
-        HotwalletSafe hotwalletSafe)
+        HotwalletSafe hotwalletSafe,
+        DateFormatterOptionsProvider dateFormatterOptionsProvider)
         : Controller
     {
         private StoreRepository Repository { get; } = repo;
@@ -587,10 +588,9 @@ namespace BTCPayServer.Controllers
 
         internal sealed class WalletTransactionsFilter
         {
-            public SearchString Search { get; init; } = new(string.Empty);
+            public required SearchString Search { get; init; }
             public string SearchTerm { get; init; } = string.Empty;
             public string SearchText { get; init; } = string.Empty;
-            public string SearchInputText { get; init; } = string.Empty;
             public string TextSearch { get; init; } = string.Empty;
             public DateTimeOffset? StartDate { get; init; }
             public DateTimeOffset? EndDate { get; init; }
@@ -601,21 +601,9 @@ namespace BTCPayServer.Controllers
             public bool HasFilters => !string.IsNullOrWhiteSpace(SearchText) || StartDate is not null || EndDate is not null || HasLabelFilter || Positive is not null;
         }
 
-        internal static WalletTransactionsFilter BuildWalletTransactionsFilter(string? searchTerm, string? searchText, string? labelFilter, int timezoneOffset)
+        internal static WalletTransactionsFilter BuildWalletTransactionsFilter(SearchString search)
         {
-            var combinedSearchTerm = string.IsNullOrEmpty(searchText) ? searchTerm : $"{searchText},{searchTerm}";
-            var search = new SearchString(combinedSearchTerm, timezoneOffset);
-            var normalizedSearchTerm = search.ToString();
-            if (string.IsNullOrWhiteSpace(normalizedSearchTerm) || normalizedSearchTerm == " ")
-            {
-                search = new SearchString(string.Empty, timezoneOffset);
-            }
             var labelFilters = new List<string>(search.GetFilterArray("label") ?? Array.Empty<string>());
-            if (!string.IsNullOrWhiteSpace(labelFilter))
-            {
-                labelFilters.Add(labelFilter);
-            }
-
             var includeNoLabel = search.GetFilterBool("nolabel") is true;
             labelFilters = labelFilters
                 .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -638,15 +626,15 @@ namespace BTCPayServer.Controllers
                 }
             }
 
+            var period = search.GetPeriod();
             return new WalletTransactionsFilter
             {
                 Search = search,
-                SearchTerm = search.WithoutSearchText(),
+                SearchTerm = search.ToString(SearchStringFormat.OnlyUIFilters),
                 SearchText = textSearch,
-                SearchInputText = textSearch,
                 TextSearch = textSearch,
-                StartDate = search.GetFilterDate("startdate", timezoneOffset),
-                EndDate = search.GetFilterDate("enddate", timezoneOffset),
+                StartDate = period.StartData,
+                EndDate = period.EndDate,
                 LabelFilters = labelFilters,
                 IncludeNoLabel = includeNoLabel,
                 Positive = positive
@@ -722,37 +710,33 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> WalletTransactions(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId,
-            string? labelFilter = null,
             bool loadTransactions = false,
             ListTransactionsViewModel? model = null,
             CancellationToken cancellationToken = default
         )
         {
-            model = this.ParseListQuery(model ?? new ListTransactionsViewModel());
+            model ??= new();
             var paymentMethod = GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
                 return NotFound();
             var network = handlers.GetBitcoinHandler(walletId.CryptoCode).Network;
             var wallet = walletProvider.GetWallet(network);
-            var effectiveTimezoneOffset = model.TimezoneOffset ?? 0;
-            var filter = BuildWalletTransactionsFilter(model.SearchTerm, model.SearchText, labelFilter, effectiveTimezoneOffset);
+
+            var fs = model.GetSearch(dateFormatterOptionsProvider.GetStoreTimeZone(this.HttpContext.GetStoreData()));
+            if (model.FilterCommand is not null)
+                return model.Redirect(Request);
+            var filter = BuildWalletTransactionsFilter(fs);
 
             var filterAtSource = !filter.HasFilters;
             var requiresMetadataFiltering = RequiresWalletTransactionMetadataFiltering(filter);
-            model.Search = filter.Search;
             model.SearchText = filter.SearchText;
-            model.SearchInputText = filter.SearchInputText;
             model.SearchTerm = filter.SearchTerm;
-            model.TimezoneOffset = effectiveTimezoneOffset;
-            model.HasFilters = filter.HasFilters || !string.IsNullOrWhiteSpace(labelFilter);
+            model.HasFilters = filter.HasFilters;
             model.PaginationQuery = new Dictionary<string, object>
             {
                 { "searchTerm", filter.SearchTerm },
-                { "searchText", filter.SearchText },
-                { "timezoneOffset", effectiveTimezoneOffset }
+                { "searchText", filter.SearchText }
             };
-            if (!string.IsNullOrEmpty(labelFilter))
-                model.PaginationQuery.Add("labelFilter", labelFilter);
 
             model.PendingTransactions = await pendingTransactionService.GetPendingTransactions(walletId.CryptoCode, walletId.StoreId);
             model.Rates = GetCurrentStore().GetStoreBlob().GetTrackedRates().ToList();
@@ -2094,10 +2078,8 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Export(
             [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
             string format,
-            string? labelFilter = null,
             string? searchTerm = null,
             string? searchText = null,
-            int? timezoneOffset = null,
             CancellationToken cancellationToken = default)
         {
             var paymentMethod = GetDerivationSchemeSettings(walletId);
@@ -2106,12 +2088,13 @@ namespace BTCPayServer.Controllers
 
             var network = handlers.GetBitcoinHandler(walletId.CryptoCode).Network;
             var wallet = walletProvider.GetWallet(network);
-            var effectiveTimezoneOffset = timezoneOffset ?? 0;
-            var filter = BuildWalletTransactionsFilter(searchTerm, searchText, labelFilter, effectiveTimezoneOffset);
+
+            var fs = SearchString.Combine([searchTerm, searchText], dateFormatterOptionsProvider.GetStoreTimeZone(this.HttpContext.GetStoreData()));
+            var filter = BuildWalletTransactionsFilter(fs);
             var requiresMetadataFiltering = RequiresWalletTransactionMetadataFiltering(filter);
 
             var input = await wallet.FetchTransactionHistory(paymentMethod.AccountDerivation, cancellationToken: cancellationToken);
-            if (filter.HasFilters || !string.IsNullOrWhiteSpace(labelFilter))
+            if (filter.HasFilters)
             {
                 input = input
                     .Where(tx => MatchesWalletTransactionBasicFilter(tx, filter, network))

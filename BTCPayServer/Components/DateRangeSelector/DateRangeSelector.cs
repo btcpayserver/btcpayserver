@@ -1,0 +1,47 @@
+#nullable enable
+using System;
+using System.Globalization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace BTCPayServer.Components.DateRangeSelector;
+
+public class DateRangeSelector : ViewComponent
+{
+    public IViewComponentResult Invoke(
+        SearchString search,
+        string? customRangeTitle = null)
+    => View(new DateRangeSelectorModel
+    {
+        Search = search ?? throw new ArgumentNullException(nameof(search)),
+        CustomRangeTitle = customRangeTitle ?? "Filter by Custom Range",
+        Url = Url
+    });
+}
+
+public class DateRangeSelectorModel
+{
+    private const string SearchTermRouteKey = "searchTerm";
+
+    public required SearchString Search { get; init; }
+    public required string CustomRangeTitle { get; init; }
+    public required IUrlHelper Url { get; init; }
+
+    public bool HasDateFilter => Search.HasArrayFilter("startdate") || Search.HasArrayFilter("enddate") || Search.HasArrayFilter("daterange");
+
+    public bool HasCustomDateFilter =>
+        HasDateFilter &&
+        (IsDate("startdate") && (!Search.HasArrayFilter("enddate") || IsDate("enddate")));
+
+    private bool IsDate(string val) => DateTimeOffset.TryParse(val, null, DateTimeStyles.AssumeUniversal, out var r);
+
+    public bool HasDateRange(string value) => Search.HasArrayFilter("daterange", value);
+
+    public static string RemoveDatePreset(string? search)
+    {
+        var s = new SearchString(search, TimeZoneInfo.Utc);
+        s.Filters.Remove("daterange");
+        s.Filters.Remove("startdate");
+        s.Filters.Remove("enddate");
+        return s.ToString();
+    }
+}

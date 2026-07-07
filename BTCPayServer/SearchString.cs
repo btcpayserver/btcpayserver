@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -5,160 +6,229 @@ using System.Linq;
 
 namespace BTCPayServer
 {
+    public enum SearchStringFormat
+    {
+        /// <summary>
+        /// Include all filters.
+        /// </summary>
+        All,
+        /// <summary>
+        /// Exclude filters that are configured via other UI elements (those defined in UIFilters). This is meant to be a
+        /// string that we show in an input textbox.
+        /// </summary>
+        ExceptUIFilters,
+        /// <summary>
+        /// Only include filters that are configured via other UI elements (those defined in UIFilters).
+        /// </summary>
+        OnlyUIFilters
+    }
+
     public class SearchString
     {
         private const char FilterSeparator = ',';
         private const char ValueSeparator = ':';
-        private static readonly string[] StripFilters = ["status", "exceptionstatus", "unusual", "includearchived", "appid", "startdate", "enddate", "label", "nolabel", "direction"];
+        public HashSet<string> UIFilters = new HashSet<string>(["status", "exceptionstatus", "unusual", "includearchived", "appid", "startdate", "enddate", "daterange"], StringComparer.OrdinalIgnoreCase);
 
-        private readonly string _originalString;
-        private readonly int _timezoneOffset;
+        private readonly TimeZoneInfo _timeZone;
 
-        public SearchString(string str, int timezoneOffset = 0)
+        public static SearchString Combine(string?[] str, TimeZoneInfo timeZone)
+        => new SearchString(string.Join(",", str.Where(s => !string.IsNullOrWhiteSpace(s))), timeZone);
+
+        public SearchString(string? str, TimeZoneInfo timeZone)
         {
             str ??= string.Empty;
             str = str.Trim();
-            _originalString = str;
-            _timezoneOffset = timezoneOffset;
-            TextSearch = _originalString;
+            _timeZone = timeZone;
             var splitted = str.Split(new [] { FilterSeparator }, StringSplitOptions.RemoveEmptyEntries);
             Filters
                 = splitted
                     .Select(t => t.Split(new [] { ValueSeparator }, 2, StringSplitOptions.RemoveEmptyEntries))
                     .Where(kv => kv.Length == 2)
-                    .Select(kv => new KeyValuePair<string, string>(UnifyKey(kv[0]), kv[1]))
+                    .Select(kv => new KeyValuePair<string, string>(NormalizeKey(kv[0]), kv[1]))
                     .ToMultiValueDictionary(o => o.Key, o => o.Value);
-            // combine raw search term and filters which don't have a special UI (e.g. orderid)
-            var textFilters = Filters
-                .Where(f => !StripFilters.Contains(f.Key))
-                .Select(f => string.Join(FilterSeparator, f.Value.Select(v => $"{f.Key}{ValueSeparator}{v}"))).ToList();
-            TextFilters = textFilters.Any() ? string.Join(FilterSeparator, textFilters) : null;
-            TextSearch = splitted.FirstOrDefault(a => a.IndexOf(ValueSeparator, StringComparison.OrdinalIgnoreCase) == -1)?.Trim();
+            TextSearch = splitted.FirstOrDefault(a => a.IndexOf(ValueSeparator, StringComparison.OrdinalIgnoreCase) == -1)?.Trim() ?? "";
         }
 
-        public string TextSearch { get; private set; }
-        public string TextFilters { get; private set; }
+        /// <summary>
+        /// The part of the search string that is free form text (not a filter)
+        /// </summary>
+        public string TextSearch { get; set; }
 
-        public string TextCombined => string.Join(FilterSeparator, new []{ TextFilters, TextSearch }.Where(x => !string.IsNullOrEmpty(x)));
+        /// <summary>
+        /// The search string we should show in an input textbox.
+        /// Some filters are excluded from the string as they are configured via other UI elements
+        /// </summary>
+        [Obsolete("Use ToString(SearchStringFormat.OnlyUIFilters) instead")]
+        public string TextCombined => ToString(SearchStringFormat.OnlyUIFilters);
 
         public MultiValueDictionary<string, string> Filters { get; }
+        public bool IsEmpty => string.IsNullOrWhiteSpace(TextSearch) && !Filters.Any();
 
-        public override string ToString()
+        public override string ToString() => ToString(SearchStringFormat.All);
+
+        public string ToString(SearchStringFormat format)
         {
-            return _originalString;
+            var filters = Filters
+                .Where(kv => format switch
+                {
+                    SearchStringFormat.All => true,
+                    SearchStringFormat.ExceptUIFilters => !UIFilters.Contains(kv.Key),
+                    SearchStringFormat.OnlyUIFilters => UIFilters.Contains(kv.Key),
+                    _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
+                })
+                .Select(f => string.Join(FilterSeparator, f.Value.Select(v => $"{f.Key}{ValueSeparator}{v}"))).ToList();
+
+            if (format != SearchStringFormat.OnlyUIFilters)
+                filters.Add(TextSearch);
+            return string.Join(FilterSeparator, filters.Where(x => !string.IsNullOrEmpty(x)));
         }
+
+
+        [Obsolete("Use ToString(SearchStringFormat.OnlyUIFilters) instead")]
+        public string WithoutSearchText() => ToString(SearchStringFormat.OnlyUIFilters);
 
         public string Toggle(string key, string value)
         {
-            key = UnifyKey(key);
-            var keyValue = $"{key}{ValueSeparator}{value}";
-            var prependOnInsert = string.IsNullOrEmpty(ToString()) ? string.Empty : $"{ToString()}{FilterSeparator}";
-            if (!ContainsFilter(key)) return Finalize($"{prependOnInsert}{keyValue}");
-
-            var boolFilter = GetFilterBool(key);
-            if (boolFilter != null)
-            {
-                return Finalize(ToString().Replace(keyValue, string.Empty));
-            }
-
-            var dateFilter = GetFilterDate(key, _timezoneOffset);
-            if (dateFilter != null)
-            {
-                var current = GetFilterArray(key).First();
-                var oldValue = $"{key}{ValueSeparator}{current}";
-                var newValue = string.IsNullOrEmpty(value) || current == value ? string.Empty : keyValue;
-                return Finalize(_originalString.Replace(oldValue, newValue));
-            }
-
-            var arrayFilter = GetFilterArray(key);
-            if (arrayFilter != null)
-            {
-                if (string.IsNullOrEmpty(value))
-                {
-                    return Finalize(arrayFilter.Aggregate(ToString(), (current, filter) =>
-                        current.Replace($"{key}{ValueSeparator}{filter}", string.Empty)));
-                }
-                return Finalize(arrayFilter.Contains(value)
-                    ? ToString().Replace(keyValue, string.Empty)
-                    : $"{prependOnInsert}{keyValue}"
-                    );
-            }
-
-            return Finalize(ToString());
+            var s = Clone();
+            s.SetFilter(key, value, true);
+            return s.ToString();
         }
 
-        public string WithoutSearchText()
-        {
-            List<string> parts = new();
-            foreach (var kv in Filters.Where(f => StripFilters.Contains(f.Key)))
-            {
-                foreach (var value in kv.Value)
-                {
-                    parts.Add($"{kv.Key}{ValueSeparator}{value}");
-                }
-            }
-            return string.Join(FilterSeparator, parts);
-        }
+        public SearchString Clone() => new(ToString(), _timeZone);
 
-        public string[] GetFilterArray(string key)
+        public string[]? GetFilterArray(string key)
         {
-            key = UnifyKey(key);
-            return Filters.ContainsKey(key) ? Filters[key].ToArray() : null;
+            key = NormalizeKey(key);
+            return Filters.TryGetValue(key, out var filter) ? filter.ToArray() : null;
         }
 
         public bool? GetFilterBool(string key)
         {
-            key = UnifyKey(key);
-            if (!Filters.ContainsKey(key))
+            key = NormalizeKey(key);
+            if (!Filters.TryGetValue(key, out var filter))
                 return null;
 
-            return bool.TryParse(Filters[key].First(), out var r) ? r : null;
+            return bool.TryParse(filter.First(), out var r) ? r : null;
         }
 
-        public DateTimeOffset? GetFilterDate(string key, int timezoneOffset)
+        public (DateTimeOffset? StartData, DateTimeOffset? EndDate) GetPeriod()
         {
-            key = UnifyKey(key);
-            if (!Filters.ContainsKey(key))
+            DateTimeOffset? start = null;
+            DateTimeOffset? end = null;
+            if (Filters.TryGetValue("daterange", out var dateRange) && IsValidDateRange(dateRange.FirstOrDefault()))
+            {
+                start = GetDateRangeDate("startdate", dateRange.First());
+                end = GetDateRangeDate("enddate", dateRange.First());
+                return (start, end);
+            }
+            else
+            {
+                start = GetFilterDate("startdate");
+                if (start != null)
+                    end = GetFilterDate("enddate");
+                return (start, end);
+            }
+        }
+
+        public DateTimeOffset? GetFilterDate(string key)
+        {
+            key = NormalizeKey(key);
+
+            if (!Filters.TryGetValue(key, out var filter))
                 return null;
 
-            var val = Filters[key].First();
-            switch (val)
-            {
-                // handle special string values
-                case "-24h":
-                case "-1d":
-                    return DateTimeOffset.UtcNow.AddDays(-1).AddMinutes(timezoneOffset);
-                case "-3d":
-                    return DateTimeOffset.UtcNow.AddDays(-3).AddMinutes(timezoneOffset);
-                case "-7d":
-                    return DateTimeOffset.UtcNow.AddDays(-7).AddMinutes(timezoneOffset);
-            }
+            var val = filter.First();
+            var dateRangeDate = GetDateRangeDate("startdate", val);
+            if (dateRangeDate is not null)
+                return dateRangeDate;
 
-            // default parsing logic
-            var success = DateTimeOffset.TryParse(val, null, DateTimeStyles.AssumeUniversal, out var r);
-            if (success)
+            // Parsing the date
+            if (DateTime.TryParse(val, null, DateTimeStyles.None, out var localDateTime))
             {
-                r = r.AddMinutes(timezoneOffset);
-                return r;
+                localDateTime = DateTime.SpecifyKind(localDateTime, DateTimeKind.Unspecified);
+
+                var offset = _timeZone.GetUtcOffset(localDateTime);
+                var localDateTimeOffset = new DateTimeOffset(localDateTime, offset);
+
+                return localDateTimeOffset.ToUniversalTime();
             }
 
             return null;
         }
 
-        public bool ContainsFilter(string key)
+        private DateTimeOffset? GetDateRangeDate(string key, string val)
         {
-           return Filters.ContainsKey(UnifyKey(key));
+            var now = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, _timeZone);
+            var today = now.Date;
+            var startOfThisMonth = new DateTime(today.Year, today.Month, 1);
+            var startOfThisQuarter = new DateTime(today.Year, ((today.Month - 1) / 3) * 3 + 1, 1);
+            var startOfThisYear = new DateTime(today.Year, 1, 1);
+
+            var localDate = (key, val) switch
+            {
+                ("startdate", "thismonth") => startOfThisMonth,
+                ("startdate", "lastmonth") => startOfThisMonth.AddMonths(-1),
+                ("enddate", "lastmonth") => startOfThisMonth.AddTicks(-1),
+                ("startdate", "last30d") => today.AddDays(-29),
+                ("startdate", "thisquarter") => startOfThisQuarter,
+                ("startdate", "yeartodate") => startOfThisYear,
+                (_, "-24h" or "-1d") => today.AddDays(-1),
+                (_, "-3d") => today.AddDays(-3),
+                (_, "-7d") => today.AddDays(-7),
+                _ => (DateTime?)null
+            };
+
+            if (localDate is null)
+                return null;
+            var local = DateTime.SpecifyKind(localDate.Value, DateTimeKind.Unspecified);
+            return new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(local, _timeZone), TimeSpan.Zero);
         }
 
-        private string UnifyKey(string key)
+        public bool ContainsFilter(string key) => Filters.ContainsKey(NormalizeKey(key));
+        public int CountArrayFilter(string type) =>
+            ContainsFilter(type) ? GetFilterArray(type)!.Length : 0;
+
+        public bool HasArrayFilter(string type, string? key = null) =>
+            ContainsFilter(type) && (key is null || GetFilterArray(type).Contains(key));
+
+        public bool HasBooleanFilter(string key) =>
+            ContainsFilter(key) && GetFilterBool(key) is true;
+
+        private string NormalizeKey(string key) => key.ToLowerInvariant().Trim();
+
+
+        public static bool IsValidDateRange(string? dateRange) =>
+            dateRange is "alltime" or "thismonth" or "lastmonth" or "last30d" or "thisquarter" or "yeartodate";
+
+        public void SetFilter(string filter, string? value = null, bool toggle = false)
         {
-            return key.ToLowerInvariant().Trim();
+            filter = NormalizeKey(filter);
+            if (!toggle)
+            {
+                Filters.Remove(filter);
+                if (value is not null)
+                    Filters.Add(filter, value);
+            }
+            else
+            {
+                if (!Filters.ContainsKey(filter) || value is null)
+                    SetFilter(filter, value);
+                else if (Filters[filter].First() == value)
+                {
+                    SetFilter(filter);
+                }
+                else
+                {
+                    SetFilter(filter, value);
+                }
+            }
         }
 
-        private static string Finalize(string str)
+        public void SetDateRange(string? dateRange = null, bool toggle = false)
         {
-            var value = str.Trim().TrimStart(FilterSeparator).TrimEnd(FilterSeparator);
-            return string.IsNullOrEmpty(value) ? " " : value;
+            Filters.Remove("startdate");
+            Filters.Remove("enddate");
+            SetFilter("daterange", dateRange, toggle);
         }
     }
 }

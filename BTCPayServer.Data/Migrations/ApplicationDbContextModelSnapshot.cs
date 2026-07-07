@@ -18,7 +18,7 @@ namespace BTCPayServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.6")
+                .HasAnnotation("ProductVersion", "10.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -201,6 +201,9 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("SecurityStamp")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TimeZone")
                         .HasColumnType("text");
 
                     b.Property<bool>("TwoFactorEnabled")
@@ -848,11 +851,11 @@ namespace BTCPayServer.Migrations
                     b.Property<DateTimeOffset?>("Expiry")
                         .HasColumnType("timestamp with time zone");
 
-                    b.PrimitiveCollection<string[]>("OutpointsUsed")
-                        .HasColumnType("text[]");
-
                     b.Property<string>("NoSignatureTransactionId")
                         .HasColumnType("text");
+
+                    b.PrimitiveCollection<string[]>("OutpointsUsed")
+                        .HasColumnType("text[]");
 
                     b.Property<int>("State")
                         .HasColumnType("integer");
@@ -871,9 +874,9 @@ namespace BTCPayServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StoreId");
-
                     b.HasIndex("NoSignatureTransactionId");
+
+                    b.HasIndex("StoreId");
 
                     b.ToTable("PendingTransactions");
                 });
@@ -989,6 +992,9 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("StoreWebsite")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TimeZone")
                         .HasColumnType("text");
 
                     b.HasKey("Id");

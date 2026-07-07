@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -19,6 +20,83 @@ namespace BTCPayServer.Controllers;
 
 public partial class UIStoresController
 {
+    [HttpGet("{storeId}/date-time")]
+    public IActionResult DateTimeSettings(string storeId)
+    {
+        var store = HttpContext.GetStoreDataOrNull();
+        if (store == null) return NotFound();
+
+        var storeBlob = store.GetStoreBlob();
+        return View(new DateTimeSettingsViewModel
+        {
+            StoreTimeZone = store.TimeZone,
+            ServerTimeZone = _policiesSettings.ServerTimeZone,
+            ServerLocale = _policiesSettings.ServerLocale,
+            PreferredDateTimeLocale = storeBlob.PreferredDateTimeLocale,
+            PreferredDateStyle = storeBlob.PreferredDateStyle ?? "short",
+            PreferredTimeStyle = storeBlob.PreferredTimeStyle ?? "short",
+            PreferredHour12 = storeBlob.PreferredHour12
+        });
+    }
+
+    [HttpPost("{storeId}/date-time")]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    public async Task<IActionResult> DateTimeSettings(string storeId, DateTimeSettingsViewModel model)
+    {
+        model.ServerTimeZone = _policiesSettings.ServerTimeZone;
+        model.ServerLocale = _policiesSettings.ServerLocale;
+        model.StoreTimeZone = model.StoreTimeZone?.Trim();
+        model.PreferredDateTimeLocale = model.PreferredDateTimeLocale?.Trim();
+        model.PreferredDateStyle ??= "short";
+        model.PreferredTimeStyle ??= "short";
+
+        if (!string.IsNullOrEmpty(model.StoreTimeZone) && !TimeZoneInfo.TryFindSystemTimeZoneById(model.StoreTimeZone, out _))
+        {
+            ModelState.AddModelError(nameof(model.StoreTimeZone), $"Invalid Timezone: {model.StoreTimeZone}");
+        }
+        if (!string.IsNullOrEmpty(model.PreferredDateTimeLocale) && CultureInfo.GetCultures(CultureTypes.SpecificCultures).All(c => c.Name != model.PreferredDateTimeLocale))
+        {
+            ModelState.AddModelError(nameof(model.PreferredDateTimeLocale), StringLocalizer["Invalid locale"]);
+        }
+        if (!DateFormatterOptions.Styles.Contains(model.PreferredDateStyle))
+        {
+            ModelState.AddModelError(nameof(model.PreferredDateStyle), StringLocalizer["Invalid date format"]);
+        }
+        if (!DateFormatterOptions.Styles.Contains(model.PreferredTimeStyle))
+        {
+            ModelState.AddModelError(nameof(model.PreferredTimeStyle), StringLocalizer["Invalid time format"]);
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var needUpdate = false;
+        if (CurrentStore.TimeZone != model.StoreTimeZone)
+        {
+            CurrentStore.TimeZone = model.StoreTimeZone;
+            needUpdate = true;
+        }
+
+        var blob = CurrentStore.GetStoreBlob();
+        blob.PreferredDateTimeLocale = string.IsNullOrEmpty(model.PreferredDateTimeLocale) ? null : model.PreferredDateTimeLocale;
+        blob.PreferredDateStyle = model.PreferredDateStyle;
+        blob.PreferredTimeStyle = model.PreferredTimeStyle;
+        blob.PreferredHour12 = model.PreferredHour12;
+        if (CurrentStore.SetStoreBlob(blob))
+        {
+            needUpdate = true;
+        }
+
+        if (needUpdate)
+        {
+            await _storeRepo.UpdateStore(CurrentStore);
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Store successfully updated"].Value;
+        }
+
+        return RedirectToAction(nameof(DateTimeSettings), new { storeId = CurrentStore.Id });
+    }
+
     [HttpGet("{storeId}/settings")]
     public async Task<IActionResult> GeneralSettings(string storeId)
     {

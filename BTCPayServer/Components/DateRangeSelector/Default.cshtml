@@ -1,0 +1,125 @@
+@using BTCPayServer.Components.DateRangeSelector
+@model BTCPayServer.Components.DateRangeSelector.DateRangeSelectorModel
+
+<div class="dropdown">
+    <input type="hidden" name="BrowserTimeZone" />
+    <button id="DateRangeSelector" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        @if (Model.HasDateFilter)
+        {
+            if (Model.HasDateRange("thismonth"))
+            {
+                <span text-translate="true">This month</span>
+            }
+            else if (Model.HasDateRange("lastmonth"))
+            {
+                <span text-translate="true">Last month</span>
+            }
+            else if (Model.HasDateRange("last30d"))
+            {
+                <span text-translate="true">Last 30 days</span>
+            }
+            else if (Model.HasDateRange("thisquarter"))
+            {
+                <span text-translate="true">This quarter</span>
+            }
+            else if (Model.HasDateRange("yeartodate"))
+            {
+                <span text-translate="true">Year to date</span>
+            }
+            else
+            {
+                <span text-translate="true">Custom</span>
+            }
+        }
+        else
+        {
+            <span text-translate="true">All Time</span>
+        }
+    </button>
+    <div class="dropdown-menu" aria-labelledby="DateRangeSelector">
+        <button type="submit" name="FilterCommand" value="alltime" class="dropdown-item @(!Model.HasDateFilter ? "custom-active" : string.Empty)" text-translate="true">All Time</button>
+        <hr class="dropdown-divider" />
+        <button type="submit" name="FilterCommand" value="set-daterange:thismonth" class="dropdown-item @(Model.HasDateRange("thismonth") ? "custom-active" : string.Empty)" text-translate="true">This month</button>
+        <button type="submit" name="FilterCommand" value="set-daterange:lastmonth" class="dropdown-item @(Model.HasDateRange("lastmonth") ? "custom-active" : string.Empty)" text-translate="true">Last month</button>
+        <button type="submit" name="FilterCommand" value="set-daterange:last30d" class="dropdown-item @(Model.HasDateRange("last30d") ? "custom-active" : string.Empty)" text-translate="true">Last 30 days</button>
+        <button type="submit" name="FilterCommand" value="set-daterange:thisquarter" class="dropdown-item @(Model.HasDateRange("thisquarter") ? "custom-active" : string.Empty)" text-translate="true">This quarter</button>
+        <button type="submit" name="FilterCommand" value="set-daterange:yeartodate" class="dropdown-item @(Model.HasDateRange("yeartodate") ? "custom-active" : string.Empty)" text-translate="true">Year to date</button>
+        <button type="button" class="dropdown-item @(Model.HasCustomDateFilter ? "custom-active" : string.Empty)" data-bs-toggle="modal" data-bs-target="#customRangeModal" text-translate="true">Custom Range</button>
+    </div>
+</div>
+
+<div class="modal fade" id="customRangeModal" tabindex="-1" role="dialog" aria-labelledby="customRangeModalTitle" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 550px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="customRangeModalTitle">@Model.CustomRangeTitle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                    <vc:icon symbol="close" />
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row">
+                    <label for="dtpStartDate" class="col-sm-3 col-form-label" text-translate="true">Start Date</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
+                                   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "defaultHour": 0 }'
+                                   placeholder="@StringLocalizer["Start Date"]" />
+                            <button type="button" class="btn btn-secondary input-group-clear" title="@StringLocalizer["Clear"]">
+                                <vc:icon symbol="close" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="dtpEndDate" class="col-sm-3 col-form-label" text-translate="true">End Date</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input id="dtpEndDate" class="form-control flatdtpicker" type="datetime-local"
+                                   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "defaultHour": 0 }'
+                                   placeholder="@StringLocalizer["End Date"]" />
+                            <button type="button" class="btn btn-secondary input-group-clear" title="@StringLocalizer["Clear"]">
+                                <vc:icon symbol="close" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btnCustomRangeDate" type="button" class="btn btn-primary" text-translate="true">Filter</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const browserTimeZoneInput = document.querySelector('input[name="BrowserTimeZone"]');
+    if (browserTimeZoneInput) {
+        browserTimeZoneInput.value = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    }
+
+    document.getElementById('btnCustomRangeDate').addEventListener('click', function () {
+        const dtpStartDate = document.getElementById("dtpStartDate").value;
+        const dtpEndDate = document.getElementById("dtpEndDate").value;
+
+        if (!dtpStartDate && !dtpEndDate) {
+            document.getElementById("dtpStartDate").nextElementSibling.focus();
+            return;
+        }
+
+        const dateFilters = [];
+        if (dtpStartDate) {
+            dateFilters.push(`startdate:${dtpStartDate}`);
+        }
+        if (dtpEndDate) {
+            dateFilters.push(`enddate:${dtpEndDate}`);
+        }
+
+        const cleanedSearchTerm = @Safe.Json(DateRangeSelectorModel.RemoveDatePreset(Model.Search.ToString(SearchStringFormat.OnlyUIFilters)));
+        const combinedSearchTerm = [cleanedSearchTerm, dateFilters.join(',')].filter(Boolean).join(',');
+
+        const searchTermInput = document.getElementById("SearchTerm");
+        searchTermInput.value = combinedSearchTerm;
+        searchTermInput.closest('form').submit();
+    });
+</script>

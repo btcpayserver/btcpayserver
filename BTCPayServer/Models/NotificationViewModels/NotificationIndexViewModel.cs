@@ -3,18 +3,18 @@ using BTCPayServer.Abstractions.Contracts;
 
 namespace BTCPayServer.Models.NotificationViewModels
 {
-    public class IndexViewModel : BasePagingViewModel
+    public class NotificationIndexViewModel : BasePagingViewModel
     {
         public List<NotificationViewModel> Items { get; set; } = [];
-        public string SearchText { get; set; }
-        public string Status { get; set; }
-        public SearchString Search { get; set; }
         public override int CurrentPageCount => Items.Count;
-    }
-
-    public class NotificationIndexViewModel : IndexViewModel
-    {
         public List<StoreFilterOption> StoreFilterOptions { get; set; }
+        protected override void AddUIFilters(SearchString search)
+        {
+            base.AddUIFilters(search);
+            search.UIFilters.Add("type");
+            search.UIFilters.Add("storeid");
+            search.UIFilters.Add("all");
+        }
     }
 
     public class StoreFilterOption

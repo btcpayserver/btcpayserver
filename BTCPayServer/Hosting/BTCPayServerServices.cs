@@ -130,6 +130,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<TorServices>());
             services.AddSingleton<ISwaggerProvider, DefaultSwaggerProvider>();
             services.TryAddSingleton<SocketFactory>();
+            services.AddSingleton<DateFormatterOptionsProvider>();
 
             services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(_ =>
                 new CLightningConnectionStringHandler());

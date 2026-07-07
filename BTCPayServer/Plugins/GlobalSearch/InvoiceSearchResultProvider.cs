@@ -4,6 +4,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.GlobalSearch.Views;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
@@ -11,17 +12,18 @@ using Microsoft.Extensions.Localization;
 namespace BTCPayServer.Plugins.GlobalSearch;
 
 public class InvoiceSearchResultProvider(InvoiceRepository invoice,
-    IStringLocalizer stringLocalizer) : ISearchResultItemProvider
+    IStringLocalizer stringLocalizer,
+    DateFormatterOptionsProvider dateFormatterOptionsProvider) : ISearchResultItemProvider
 {
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
     const string Category = "Payments";
     public async Task ProvideAsync(SearchResultItemProviderContext context, CancellationToken cancellationToken)
     {
-        if (context is { UserQuery: string q, Store: not null })
+        if (context is { UserQuery: string q, Store: { } s })
         {
-            var search = new SearchString(q);
+            var search = new SearchString(q, dateFormatterOptionsProvider.GetStoreTimeZone(s));
             var invQuery = new InvoiceQuery();
-            invQuery.FillFromSearchText(search, 0);
+            invQuery.FillFromSearchText(search);
             invQuery.StoreId = [context.Store.Id];
             invQuery.UserId = context.UserId;
             invQuery.Take = (context.MaxResult ?? 10);

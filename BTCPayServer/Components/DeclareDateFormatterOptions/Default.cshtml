@@ -1,0 +1,9 @@
+@using Newtonsoft.Json
+@model DateFormatterOptions
+
+<script src="~/main/datetime.js" asp-append-version="true"></script>
+@if (Model is not null) {
+    <script>
+        window.defaultDateTimeFormat = @Safe.Json(Model)
+    </script>
+}

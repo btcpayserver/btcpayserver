@@ -326,13 +326,9 @@ document.addEventListener("DOMContentLoaded", () => {
         setStickyHeaderHeight();
     }
 
-    // initialize timezone offset value if field is present in page
-    const $timezoneOffset = document.getElementById("TimezoneOffset");
-    const timezoneOffset = new Date().getTimezoneOffset();
-    if ($timezoneOffset) $timezoneOffset.value = timezoneOffset;
-
     // localize all elements that have localizeDate class
-    formatDateTimes();
+    if (formatDateTimes)
+        formatDateTimes();
 
     initLabelManagers();
 
@@ -354,6 +350,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // support for initializing with special options per instance
         if (fdtp) {
             var parsed = Object.assign({}, JSON.parse(fdtp), { static: true });
+            parsed.time_24hr ??= window.defaultDateTimeFormat?.time_24hr ?? true;
             flatpickrInstances.push(element.flatpickr(parsed));
         } else {
             var min = element.attr("min");
@@ -368,7 +365,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 minDate: min,
                 maxDate: max,
                 defaultDate: defaultDate,
-                time_24hr: true,
+                time_24hr: window.defaultDateTimeFormat?.time_24hr ?? true,
                 defaultHour: 0,
                 static: true
             }));
@@ -487,6 +484,54 @@ document.addEventListener("DOMContentLoaded", () => {
     delegate('focusout', 'input[list="currency-selection-suggestion"]', e => {
         if (!e.target.value) e.target.value = e.target.getAttribute('placeholder')
         e.target.removeAttribute('placeholder')
+    })
+
+    // Timezone Selection
+    document.querySelectorAll('[data-set-browser-timezone]').forEach($btn => {
+        const timezone = window.Intl && Intl.DateTimeFormat().resolvedOptions().timeZone
+        const $label = $btn.querySelector('[data-browser-timezone-label]')
+        if (!timezone) {
+            $btn.hidden = true
+            return
+        }
+        if ($label) {
+            $label.textContent = ($btn.dataset.labelTemplate || '').replace('__timezone__', timezone)
+        }
+        $btn.dataset.browserTimezone = timezone
+    })
+    delegate('click', '[data-set-browser-timezone]', e => {
+        const $btn = e.target.closest('[data-set-browser-timezone]')
+        const timezone = $btn.dataset.browserTimezone
+        const inputId = $btn.dataset.timezoneInput
+        const $input = inputId ? document.getElementById(inputId) : null
+        if ($input && timezone) {
+            $input.value = timezone
+            $input.dispatchEvent(new Event('change', { bubbles: true }))
+        }
+    })
+
+    // Locale Selection
+    document.querySelectorAll('[data-set-browser-locale]').forEach($btn => {
+        const locale = window.Intl && Intl.DateTimeFormat().resolvedOptions().locale
+        const $label = $btn.querySelector('[data-browser-locale-label]')
+        if (!locale) {
+            $btn.hidden = true
+            return
+        }
+        if ($label) {
+            $label.textContent = ($btn.dataset.labelTemplate || '').replace('__locale__', locale)
+        }
+        $btn.dataset.browserLocale = locale
+    })
+    delegate('click', '[data-set-browser-locale]', e => {
+        const $btn = e.target.closest('[data-set-browser-locale]')
+        const locale = $btn.dataset.browserLocale
+        const inputId = $btn.dataset.localeInput
+        const $input = inputId ? document.getElementById(inputId) : null
+        if ($input && locale) {
+            $input.value = locale
+            $input.dispatchEvent(new Event('change', { bubbles: true }))
+        }
     })
 
     // Offcanvas navigation

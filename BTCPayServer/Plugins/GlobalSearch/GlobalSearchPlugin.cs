@@ -47,6 +47,16 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
             new ActionResultItemViewModel
             {
                 RequiredPolicy = Policies.CanViewStoreSettings,
+                Title = "Configure date and time settings",
+                Action = nameof(UIStoresController.DateTimeSettings),
+                Controller = "UIStores",
+                Values = ctx => new { storeId = ctx.Store!.Id },
+                Category = "Store",
+                Keywords = ["Date", "Time", "Timezone", "Locale", "Format", "Settings", "Configure"]
+            },
+            new ActionResultItemViewModel
+            {
+                RequiredPolicy = Policies.CanViewStoreSettings,
                 Title = "Configure exchange rates",
                 Action = nameof(UIStoresController.Rates),
                 Controller = "UIStores",

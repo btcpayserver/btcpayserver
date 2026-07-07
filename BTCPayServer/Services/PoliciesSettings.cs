@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -30,6 +31,16 @@ namespace BTCPayServer.Services
         [JsonProperty("LangDictionary", DefaultValueHandling = DefaultValueHandling.Populate)]
         [Display(Name = "Backend's language")]
         public string LangTranslation { get; set; } = "English";
+
+        [DefaultValue("UTC")]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
+        [Display(Name = "Server Time Zone")]
+        public string ServerTimeZone { get; set; } = TimeZoneInfo.Utc.Id;
+
+        [DefaultValue("en-US")]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
+        [Display(Name = "Server Locale")]
+        public string ServerLocale { get; set; } = "en-US";
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [Display(Name = "Admin must approve new users")]

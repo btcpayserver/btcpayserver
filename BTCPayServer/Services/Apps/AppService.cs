@@ -508,6 +508,7 @@ retry:
                     if (id == null)
                         continue;
                     var title = o.GetValue("title", StringComparison.InvariantCulture)?.ToString();
+                    var note = o.GetValue("note", StringComparison.InvariantCulture)?.ToString();
                     var countStr = o.GetValue("count", StringComparison.InvariantCulture)?.ToString() ?? string.Empty;
                     var price = o.GetValue("price") switch
                     {
@@ -518,7 +519,14 @@ retry:
                     };
                     if (int.TryParse(countStr, out var count))
                     {
-                        cartItems.Add(new AppCartItem { Id = id, Title = title, Count = count, Price = price });
+                        cartItems.Add(new AppCartItem
+                        {
+                            Id = id,
+                            Title = title,
+                            Note = PosAppCartItem.NormalizeNote(note),
+                            Count = count,
+                            Price = price
+                        });
                     }
                 }
                 return true;

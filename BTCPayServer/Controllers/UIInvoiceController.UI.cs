@@ -194,10 +194,13 @@ namespace BTCPayServer.Controllers
 
             model.AdditionalData = additionalData;
 
-            await using var emailRuleCtx = _dbContextFactory.CreateContext();
-            var occurredTriggers = GetOccurredEmailTriggers(invoice, details.Payments.Any());
-            model.ResendableEmailRules = await emailRuleCtx.EmailRules.Where(r => r.StoreId == invoice.StoreId && occurredTriggers.Contains(r.Trigger)).ToListAsync();
-
+            var canResendEmail = (await _authorizationService.AuthorizeAsync(User, invoice.StoreId, Policies.CanModifyStoreSettings)).Succeeded;
+            if (canResendEmail)
+            {
+                await using var emailRuleCtx = _dbContextFactory.CreateContext();
+                var occurredTriggers = GetOccurredEmailTriggers(invoice, details.Payments.Any());
+                model.ResendableEmailRules = await emailRuleCtx.EmailRules.Where(r => r.StoreId == invoice.StoreId && occurredTriggers.Contains(r.Trigger)).ToListAsync();
+            }
             return View(model);
         }
 
@@ -213,12 +216,24 @@ namespace BTCPayServer.Controllers
             if (store is null)
                 return NotFound();
 
-            var model = new JObject
+            var details = InvoicePopulatePayments(invoice);
+            var occurredTriggers = GetOccurredEmailTriggers(invoice, details.Payments.Any());
+            if (!occurredTriggers.Contains(trigger))
             {
-                ["Store"] = new JObject { ["Id"] = invoice.StoreId, ["Name"] = store.StoreName }
-            };
-            InvoiceTriggerProvider.AddInvoiceToModel(model, invoice, _linkGenerator);
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["This trigger doesn't apply to this invoice."].Value;
+                return RedirectToAction(nameof(Invoice), new { invoiceId });
+            }
 
+            await using var emailRuleCtx = _dbContextFactory.CreateContext();
+            var ruleExists = await emailRuleCtx.EmailRules.AnyAsync(r => r.StoreId == invoice.StoreId && r.Trigger == trigger);
+            if (!ruleExists)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["No matching email rule found for this store."].Value;
+                return RedirectToAction(nameof(Invoice), new { invoiceId });
+            }
+
+            var model = new JObject { ["Store"] = new JObject { ["Id"] = invoice.StoreId, ["Name"] = store.StoreName } };
+            InvoiceTriggerProvider.AddInvoiceToModel(model, invoice, _linkGenerator);
             _EventAggregator.Publish(new TriggerEvent(invoice.StoreId, trigger, model, new ResendTriggerOwner(invoice)));
 
             TempData[WellKnownTempData.SuccessMessage] = "Email resent.";

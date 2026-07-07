@@ -1185,6 +1185,75 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task Repro_MarkPayout_CrossStore_IDOR()
+        {
+            // POST /api/v1/stores/{storeId}/payouts/{payoutId}/mark[-paid] authorizes CanManagePayouts
+            // against the ROUTE store, but MarkPaid/HandleMarkPaid looks the payout up by Id ONLY
+            // (no store filter). So a key that can manage payouts on its OWN store can mutate the
+            // state (and proof) of ANY store's payout, given the payout id. ApprovePayout and
+            // CancelPayout both scope by store; only mark is missing the check.
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+
+            // --- Victim store with a real, approved (AwaitingPayment) on-chain payout ---
+            var victim = tester.NewAccount();
+            await victim.RegisterAsync();
+            await victim.CreateStoreAsync();
+            var victimStoreId = (await victim.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
+            var victimClient = await victim.CreateClient();
+            var address = await tester.ExplorerNode.GetNewAddressAsync();
+            var victimPayout = await victimClient.CreatePayout(victimStoreId, new CreatePayoutThroughStoreRequest()
+            {
+                Approved = true,
+                PayoutMethodId = "BTC",
+                Amount = 0.0001m,
+                Destination = address.ToString()
+            });
+            Assert.Equal(PayoutState.AwaitingPayment, victimPayout.State);
+
+            // --- Attacker: a separate, NON-admin account that owns only its own store. ---
+            // Its key genuinely has CanManagePayouts on the attacker store ONLY.
+            var attacker = tester.NewAccount();
+            await attacker.RegisterAsync();
+            await attacker.CreateStoreAsync();
+            var attackerClient = await attacker.CreateClient(Policies.CanManagePayouts);
+
+            // Sanity: the attacker has NO legitimate read access to the victim's payout.
+            Assert.DoesNotContain(victimPayout.Id,
+                (await attackerClient.GetStorePayouts(attacker.StoreId, true)).Select(p => p.Id));
+            await AssertHttpError(403, async () => await attackerClient.GetStorePayout(victimStoreId, victimPayout.Id));
+
+            // --- The attack: route store = attacker's OWN store; target payout = victim's. ---
+            // With the fix, the payout is resolved scoped to the route store, so this is rejected
+            // as not-found instead of mutating the victim's payout.
+            await AssertHttpError(404, async () => await attackerClient.MarkPayout(attacker.StoreId, victimPayout.Id,
+                new MarkPayoutRequest()
+                {
+                    State = PayoutState.InProgress,
+                    PaymentProof = JObject.FromObject(new { proofType = "external-proof", id = "attacker-was-here" })
+                }));
+            // The mark-paid variant (which routes through MarkPayout) is blocked too.
+            await AssertHttpError(404, async () => await attackerClient.MarkPayoutPaid(attacker.StoreId, victimPayout.Id));
+
+            // The victim's payout is untouched by the cross-store attempts.
+            var afterAttack = await victimClient.GetStorePayout(victimStoreId, victimPayout.Id);
+            Assert.Equal(PayoutState.AwaitingPayment, afterAttack.State);
+            Assert.Null(afterAttack.PaymentProof);
+
+            // No regression: the legitimate store owner can still mark its own payout.
+            await victimClient.MarkPayout(victimStoreId, victimPayout.Id, new MarkPayoutRequest()
+            {
+                State = PayoutState.InProgress,
+                PaymentProof = JObject.FromObject(new { proofType = "external-proof", id = "legit" })
+            });
+            var legit = await victimClient.GetStorePayout(victimStoreId, victimPayout.Id);
+            Assert.Equal(PayoutState.InProgress, legit.State);
+            Assert.True(legit.PaymentProof.TryGetValue("id", out var legitId));
+            Assert.Equal("legit", legitId);
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task CanProcessPayoutsExternally()
         {
             using var tester = CreateServerTester();

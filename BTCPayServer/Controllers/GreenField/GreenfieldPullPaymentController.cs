@@ -687,6 +687,15 @@ retry:
         {
             request ??= new();
 
+            // Ensure the payout belongs to the store in the route: the CanManagePayouts policy is
+            // checked against {storeId}, but MarkPaid resolves the payout by id only. Without this
+            // scope, a key authorized on its own store could mutate any other store's payout.
+            await using (var ctx = _dbContextFactory.CreateContext())
+            {
+                if (await ctx.Payouts.GetPayout(payoutId, storeId) is null)
+                    return PayoutNotFound();
+            }
+
             if (request.State == PayoutState.Cancelled)
             {
                 return await CancelPayout(storeId, payoutId);

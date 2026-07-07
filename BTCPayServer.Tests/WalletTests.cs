@@ -777,6 +777,16 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         });
 
         await s.InWalletTransactions().AssertHasLabels(targetLabel);
+
+// The label dropdown exposes a "Manage Labels" link that navigates to the wallet labels page (#7252)
+        await s.Page.ClickAsync("#LabelOptionsToggle");
+        await s.Page.Locator("#LabelDropdownMenu").WaitForAsync();
+        await s.Page.ClickAsync("#LabelDropdownMenu a:has-text('Manage Labels')");
+        await TestUtils.EventuallyAsync(() =>
+        {
+            Assert.EndsWith("/labels", new Uri(s.Page.Url).AbsolutePath);
+            return Task.CompletedTask;
+        });
     }
 
     [Fact]

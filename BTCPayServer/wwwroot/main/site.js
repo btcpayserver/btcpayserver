@@ -179,6 +179,7 @@ async function initLabelManager (elementId) {
         async onChange (values) {
             const labels = Array.isArray(values) ? values : values.split(',');
             element.dispatchEvent(new CustomEvent("labelmanager:changed", {
+                bubbles: true,
                 detail: {
                     id: objectId,
                     type: objectType,

@@ -136,10 +136,31 @@
                 $anchor.after(fragment);
             }
 
-            $labelSearch.addEventListener('click', e => e.stopPropagation());
-            $labelSearch.addEventListener('input', () => {
+            function renderCurrentLabelItems() {
                 const query = $labelSearch.value.toLowerCase().trim();
                 renderLabelItems(query ? allLabels.filter(label => label.text.toLowerCase().includes(query)) : initialLabels);
+            }
+
+            $labelSearch.addEventListener('click', e => e.stopPropagation());
+            $labelSearch.addEventListener('input', renderCurrentLabelItems);
+
+            // Keep the filter dropdown in sync when labels are added inline via a LabelManager
+            // (e.g. on a transaction or payment request row) without requiring a page reload.
+            document.addEventListener('labelmanager:changed', ({ detail }) => {
+                const changedLabels = Array.isArray(detail && detail.labels) ? detail.labels : [];
+                let added = false;
+                changedLabels.forEach(text => {
+                    if (!text || allLabels.some(label => label.text.toLowerCase() === text.toLowerCase())) return;
+                    const label = { text, color: '', textColor: '', usageCount: 0 };
+                    allLabels.push(label);
+                    initialLabels.push(label);
+                    added = true;
+                });
+                if (!added) return;
+                const byText = (a, b) => a.text.toLowerCase().localeCompare(b.text.toLowerCase());
+                allLabels.sort(byText);
+                initialLabels.sort(byText);
+                renderCurrentLabelItems();
             });
         })();
     </script>

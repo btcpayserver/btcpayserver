@@ -2663,9 +2663,9 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void PluginProjection_ReturnsDisabledPluginUpdateWhenNewerVersionAvailable()
+        public void PluginManagementViewModel_ReturnsDisabledPluginUpdateWhenNewerVersionAvailable()
         {
-            var model = CreateInstalledPluginProjection(
+            var model = CreateInstalledPluginsViewModel(
                 disabled: new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } },
                 allAvailable: [MakeAvailablePlugin("TestPlugin", "1.1.0")]);
 
@@ -2678,9 +2678,9 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void PluginProjection_DoesNotAddDisabledPluginUpdateWhenSameVersion()
+        public void PluginManagementViewModel_DoesNotAddDisabledPluginUpdateWhenSameVersion()
         {
-            var model = CreateInstalledPluginProjection(
+            var model = CreateInstalledPluginsViewModel(
                 disabled: new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } },
                 allAvailable: [MakeAvailablePlugin("TestPlugin", "1.0.0")]);
 
@@ -2689,9 +2689,9 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void PluginProjection_DoesNotAddDisabledPluginUpdateWhenNoRemotePlugins()
+        public void PluginManagementViewModel_DoesNotAddDisabledPluginUpdateWhenNoRemotePlugins()
         {
-            var model = CreateInstalledPluginProjection(
+            var model = CreateInstalledPluginsViewModel(
                 disabled: new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } },
                 allAvailable: []);
 
@@ -2700,9 +2700,9 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void PluginProjection_SkipsDisabledPluginUpdateWhenVersionIsUnknown()
+        public void PluginManagementViewModel_SkipsDisabledPluginUpdateWhenVersionIsUnknown()
         {
-            var model = CreateInstalledPluginProjection(
+            var model = CreateInstalledPluginsViewModel(
                 disabled: new Dictionary<string, Version> { { "TestPlugin", null } },
                 allAvailable: [MakeAvailablePlugin("TestPlugin", "1.1.0")]);
 
@@ -2711,9 +2711,9 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void PluginProjection_UsesCaseInsensitiveDisabledPluginIdentifierMatching()
+        public void PluginManagementViewModel_UsesCaseInsensitiveDisabledPluginIdentifierMatching()
         {
-            var model = CreateInstalledPluginProjection(
+            var model = CreateInstalledPluginsViewModel(
                 disabled: new Dictionary<string, Version> { { "MyPlugin", new Version(1, 0, 0, 0) } },
                 allAvailable: [MakeAvailablePlugin("myplugin", "1.1.0")]);
 
@@ -2726,9 +2726,9 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void PluginProjection_UsesNewestVersionFromMultipleEntries()
+        public void PluginManagementViewModel_UsesNewestVersionFromMultipleEntries()
         {
-            var model = CreateInstalledPluginProjection(
+            var model = CreateInstalledPluginsViewModel(
                 disabled: new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } },
                 allAvailable: [
                     MakeAvailablePlugin("TestPlugin", "1.1.0"),
@@ -2743,9 +2743,9 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void PluginProjection_PrefersHighestAvailableVersionWithSatisfiedDependencies()
+        public void PluginManagementViewModel_PrefersHighestAvailableVersionWithSatisfiedDependencies()
         {
-            var model = CreatePluginDirectoryProjection(
+            var model = CreatePluginDirectoryViewModel(
                 selectedSlug: "testplugin",
                 allAvailable: [
                     MakeAvailablePlugin("TestPlugin", "2.0.0", ("MissingDependency", ">=1.0.0")),
@@ -2871,7 +2871,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void PluginProjection_DropsUnsafeMetadataLinks()
+        public void PluginManagementViewModel_DropsUnsafeMetadataLinks()
         {
             var availablePlugin = MakeAvailablePlugin("TestPlugin", "1.0.0");
             availablePlugin.Author = "Author";
@@ -2879,7 +2879,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             availablePlugin.Source = "https://github.com/btcpayserver/test-plugin";
             availablePlugin.Documentation = "/relative-docs";
 
-            var model = CreatePluginDirectoryProjection(
+            var model = CreatePluginDirectoryViewModel(
                 selectedSlug: "testplugin",
                 allAvailable: [availablePlugin]);
 
@@ -2891,18 +2891,18 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void PluginProjection_IgnoresDirectorySelectionWhenSlugIsNotInCatalog()
+        public void PluginManagementViewModel_IgnoresDirectorySelectionWhenSlugIsNotInCatalog()
         {
-            var model = CreatePluginDirectoryProjection(selectedSlug: "unlisted-plugin");
+            var model = CreatePluginDirectoryViewModel(selectedSlug: "unlisted-plugin");
 
             Assert.Null(model.SelectedPluginSlug);
             Assert.False(model.SelectedPluginPanel.HasSelection);
         }
 
         [Fact]
-        public void PluginProjection_HidesInstalledAndDisabledIdentifiersForDirectoryEmbed()
+        public void PluginManagementViewModel_HidesInstalledAndDisabledIdentifiersForDirectoryEmbed()
         {
-            var model = CreatePluginDirectoryProjection(
+            var model = CreatePluginDirectoryViewModel(
                 disabled: new Dictionary<string, Version> { { "DisabledPlugin", new Version(1, 0, 0) } },
                 loadedPlugins: [MakeLoadedPlugin("InstalledPlugin")]);
 
@@ -2910,9 +2910,9 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void PluginProjection_DoesNotShowManagementActionsForInstalledPluginInDirectoryPanel()
+        public void PluginManagementViewModel_DoesNotShowManagementActionsForInstalledPluginInDirectoryPanel()
         {
-            var model = CreatePluginDirectoryProjection(
+            var model = CreatePluginDirectoryViewModel(
                 selectedSlug: "installedplugin",
                 loadedPlugins: [MakeLoadedPlugin("InstalledPlugin")],
                 allAvailable: [MakeAvailablePlugin("InstalledPlugin", "1.1.0")]);
@@ -2924,9 +2924,9 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void PluginProjection_DoesNotShowManagementActionsForDisabledPluginInDirectoryPanel()
+        public void PluginManagementViewModel_DoesNotShowManagementActionsForDisabledPluginInDirectoryPanel()
         {
-            var model = CreatePluginDirectoryProjection(
+            var model = CreatePluginDirectoryViewModel(
                 selectedSlug: "disabledplugin",
                 disabled: new Dictionary<string, Version> { { "DisabledPlugin", new Version(1, 0, 0) } },
                 allAvailable: [MakeAvailablePlugin("DisabledPlugin", "1.1.0")]);
@@ -2938,9 +2938,9 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void PluginProjection_ShowsOnlyCancelForPendingActionInDirectoryPanel()
+        public void PluginManagementViewModel_ShowsOnlyCancelForPendingActionInDirectoryPanel()
         {
-            var model = CreatePluginDirectoryProjection(
+            var model = CreatePluginDirectoryViewModel(
                 selectedSlug: "testplugin",
                 allAvailable: [MakeAvailablePlugin("TestPlugin", "1.0.0")],
                 commands: [("install", "TestPlugin")]);
@@ -2950,9 +2950,9 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void PluginProjection_BlocksUninstallWhenPendingInstallDependsOnInstalledPlugin()
+        public void PluginManagementViewModel_BlocksUninstallWhenPendingInstallDependsOnInstalledPlugin()
         {
-            var model = CreateInstalledPluginProjection(
+            var model = CreateInstalledPluginsViewModel(
                 loadedPlugins: [MakeLoadedPlugin("Dependency")],
                 allAvailable: [MakeAvailablePlugin("Dependent", "1.0.0", ("Dependency", ">=1.0.0"))],
                 commands: [("install", "Dependent")]);
@@ -2966,9 +2966,9 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void PluginProjection_DoesNotBlockUninstallWhenDependentPluginIsPendingDelete()
+        public void PluginManagementViewModel_DoesNotBlockUninstallWhenDependentPluginIsPendingDelete()
         {
-            var model = CreateInstalledPluginProjection(
+            var model = CreateInstalledPluginsViewModel(
                 loadedPlugins: [
                     MakeLoadedPlugin("Dependency"),
                     MakeLoadedPlugin("Dependent", ("Dependency", ">=1.0.0"))
@@ -2985,7 +2985,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         [Fact]
         public void PluginDirectoryIframeUrl_IncludesCompatibilityQuery()
         {
-            var url = UIServerController.BuildDirectoryIframeUrl(
+            var url = UIPluginManagerController.BuildDirectoryIframeUrl(
                 new Uri("https://plugins.example.com/catalog"),
                 "2.3.7",
                 true);
@@ -3027,35 +3027,23 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             };
         }
 
-        private static InstalledPluginsViewModel CreateInstalledPluginProjection(
+        private static InstalledPluginsViewModel CreateInstalledPluginsViewModel(
             Dictionary<string, Version> disabled = null,
             IEnumerable<PluginService.AvailablePlugin> allAvailable = null,
             IEnumerable<IBTCPayServerPlugin> loadedPlugins = null,
             (string command, string plugin)[] commands = null)
         {
-            return new PluginManagementProjectionService().CreateInstalledPluginsViewModel(CreatePluginProjectionSource(
-                disabled: disabled,
-                allAvailable: allAvailable,
-                loadedPlugins: loadedPlugins,
-                commands: commands));
+            var loaded = loadedPlugins?.ToArray() ?? [];
+            return UIPluginManagerController.CreateInstalledPluginsViewModel(
+                loaded,
+                loaded.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version, StringComparer.OrdinalIgnoreCase),
+                allAvailable ?? [],
+                commands ?? [],
+                disabled ?? new Dictionary<string, Version>(),
+                null);
         }
 
-        private static PluginDirectoryViewModel CreatePluginDirectoryProjection(
-            Dictionary<string, Version> disabled = null,
-            IEnumerable<PluginService.AvailablePlugin> allAvailable = null,
-            string selectedSlug = null,
-            IEnumerable<IBTCPayServerPlugin> loadedPlugins = null,
-            (string command, string plugin)[] commands = null)
-        {
-            return new PluginManagementProjectionService().CreatePluginDirectoryViewModel(CreatePluginProjectionSource(
-                disabled: disabled,
-                allAvailable: allAvailable,
-                selectedSlug: selectedSlug,
-                loadedPlugins: loadedPlugins,
-                commands: commands));
-        }
-
-        private static PluginManagementProjectionService.ProjectionSource CreatePluginProjectionSource(
+        private static PluginDirectoryViewModel CreatePluginDirectoryViewModel(
             Dictionary<string, Version> disabled = null,
             IEnumerable<PluginService.AvailablePlugin> allAvailable = null,
             string selectedSlug = null,
@@ -3063,15 +3051,14 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             (string command, string plugin)[] commands = null)
         {
             var loaded = loadedPlugins?.ToArray() ?? [];
-            return new PluginManagementProjectionService.ProjectionSource
-            {
-                Disabled = disabled ?? new Dictionary<string, Version>(),
-                AllAvailable = allAvailable ?? [],
-                Installed = loaded.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version, StringComparer.OrdinalIgnoreCase),
-                LoadedPlugins = loaded,
-                Commands = commands ?? [],
-                SelectedPluginSlug = selectedSlug
-            };
+            return UIPluginManagerController.CreatePluginDirectoryViewModel(
+                selectedSlug,
+                loaded,
+                loaded.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version, StringComparer.OrdinalIgnoreCase),
+                allAvailable ?? [],
+                commands ?? [],
+                disabled ?? new Dictionary<string, Version>(),
+                null);
         }
 
         private sealed class TestPlugin : IBTCPayServerPlugin

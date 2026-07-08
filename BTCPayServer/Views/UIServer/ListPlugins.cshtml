@@ -20,7 +20,7 @@
 {
     <div class="alert alert-info mb-4 d-flex align-items-center justify-content-between">
         <span text-translate="true">You need to restart BTCPay Server in order to update your active plugins.</span>
-        <form method="post" asp-action="Maintenance" class="mt-2">
+        <form method="post" asp-controller="UIServer" asp-action="Maintenance" class="mt-2">
             <button type="submit" name="command" value="soft-restart" class="btn btn-info" text-translate="true">Restart now</button>
         </form>
     </div>

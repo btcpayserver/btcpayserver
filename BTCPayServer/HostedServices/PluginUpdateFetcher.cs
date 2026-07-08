@@ -39,8 +39,8 @@ namespace BTCPayServer.HostedServices
                 vm.Type = notification.NotificationType;
                 vm.Body = StringLocalizer["New {0} plugin version {1} released!", notification.Name, notification.Version];
                 vm.ActionLink = linkGenerator.GetPathByAction(
-                    action: nameof(UIServerController.ListPlugins),
-                    controller: "UIServer",
+                    action: nameof(UIPluginManagerController.ListPlugins),
+                    controller: "UIPluginManager",
                     pathBase: options.RootPath,
                     fragment: new FragmentString($"#{Uri.EscapeDataString(notification.PluginIdentifier)}"));
             }

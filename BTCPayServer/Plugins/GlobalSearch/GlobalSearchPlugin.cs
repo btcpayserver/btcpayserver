@@ -209,8 +209,8 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
             {
                 RequiredPolicy = Policies.CanModifyServerSettings,
                 Title = "View installed plugins",
-                Action = nameof(UIServerController.ListPlugins),
-                Controller = "UIServer",
+                Action = nameof(UIPluginManagerController.ListPlugins),
+                Controller = "UIPluginManager",
                 Category = "Server",
                 Keywords = ["Plugins", "Installed", "Update", "Configure"]
             },
@@ -218,8 +218,8 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
             {
                 RequiredPolicy = Policies.CanModifyServerSettings,
                 Title = "Browse the plugin directory",
-                Action = nameof(UIServerController.PluginDirectory),
-                Controller = "UIServer",
+                Action = nameof(UIPluginManagerController.PluginDirectory),
+                Controller = "UIPluginManager",
                 Category = "Server",
                 Keywords = ["Plugins", "Directory", "Install"]
             },

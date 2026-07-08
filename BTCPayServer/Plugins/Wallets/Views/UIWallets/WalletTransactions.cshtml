@@ -1,6 +1,9 @@
 @using BTCPayServer.Client
-@using System
+@using BTCPayServer.Controllers
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Html
+@inject IAuthorizationService AuthorizationService
+
 @model ListTransactionsViewModel
 
 @{
@@ -16,6 +19,10 @@
     var hasOutgoingOnlyFilter = hasOutgoingFilter && !hasIncomingFilter;
     ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Transactions)}-{Model.CryptoCode}", StringLocalizer["{0} Transactions", Model.CryptoCode])
         .SetCategory(WellKnownCategories.ForWallet(Model.CryptoCode)));
+
+    var walletLabelsLink = @Url.Action(nameof(UIWalletsController.WalletLabels), new { walletId });
+    if (await AuthorizationService.AuthorizeAsync(User, WalletPolicies.CanManageWalletSettings) is not { Succeeded: true })
+        walletLabelsLink = null;
 }
 
 @section PageHeadContent {
@@ -219,7 +226,7 @@
             <button type="submit" name="FilterCommand" value="set:direction=out" class="dropdown-item @(hasOutgoingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Outgoing</button>
         </div>
     </div>
-    <vc:label-selector labels="Model.Labels" search="Model.Search" allow-no-label-filter="true"></vc:label-selector>
+    <vc:label-selector labels="Model.Labels" search="Model.Search" allow-no-label-filter="true" manage-label-link="@walletLabelsLink"></vc:label-selector>
     <vc:date-range-selector search="Model.Search" custom-range-title='@StringLocalizer["Filter transactions by Custom Range"].Value'></vc:date-range-selector>
 
     <vc:clear-all-filters search="Model.Search"></vc:clear-all-filters>

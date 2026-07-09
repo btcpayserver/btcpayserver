@@ -1,5 +1,6 @@
 @using BTCPayServer.Services.PaymentRequests
 @using BTCPayServer.Client
+@using BTCPayServer.Controllers
 @using BTCPayServer.Services
 @inject CallbackGenerator CallbackGenerator
 @model BTCPayServer.Models.PaymentRequestViewModels.ListPaymentRequestsViewModel
@@ -82,7 +83,7 @@
             <button type="submit" name="FilterCommand" value="set:includearchived=true" class="dropdown-item @(Model.Search.HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived" text-translate="true">Include Archived</button>
         </div>
     </div>
-    <vc:label-selector labels="Model.Labels" search="Model.Search"></vc:label-selector>
+    <vc:label-selector labels="Model.Labels" search="Model.Search" manage-label-link="@Url.Action(nameof(UIPaymentRequestController.PaymentRequestLabels), new { storeId })"></vc:label-selector>
     <vc:date-range-selector search="Model.Search" custom-range-title='@StringLocalizer["Filter payment requests by Custom Range"].Value'></vc:date-range-selector>
     <vc:clear-all-filters search="Model.Search"></vc:clear-all-filters>
 </form>

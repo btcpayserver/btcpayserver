@@ -16,6 +16,7 @@ public class LabelSelector : ViewComponent
     public IViewComponentResult Invoke(
         SearchString search,
         bool allowNoLabelFilter = false,
+        string? manageLabelLink = null,
         IEnumerable<LabelSelectorItemViewModel>? labels = null)
     {
         var allLabels = (labels ?? new List<LabelSelectorItemViewModel>())
@@ -40,7 +41,8 @@ public class LabelSelector : ViewComponent
             Search = search,
             Labels = allLabels,
             InitialLabels = popular,
-            AllowNoLabelFilter = allowNoLabelFilter
+            AllowNoLabelFilter = allowNoLabelFilter,
+            ManageLabelLink = manageLabelLink
         });
     }
     public class LabelSelectorModel
@@ -52,6 +54,7 @@ public class LabelSelector : ViewComponent
         public bool HasNoLabelFilter => Search.GetFilterBool("nolabel") is true;
         public int LabelFilterCount => ActiveLabels.Length + (HasNoLabelFilter ? 1 : 0);
         public bool AllowNoLabelFilter { get; init; }
+        public string? ManageLabelLink { get; init; }
     }
 
     public static void RunFilterCommand(SearchString search, string filterCommand)

@@ -56,8 +56,8 @@
                 <span text-translate="true">All Labels</span>
             }
         </button>
-        <ul class="dropdown-menu mt-1 py-0" id="LabelSelectorMenu" aria-labelledby="LabelSelectorToggle" style="min-width:280px">
-            <li class="px-2 pt-2 pb-2@(Model.Labels.Count > LabelSelector.MaxVisibleLabels ? string.Empty : " d-none")" id="LabelSearchContainer">
+        <ul class="dropdown-menu" id="LabelSelectorMenu" aria-labelledby="LabelSelectorToggle" style="min-width:280px">
+            <li class="px-3 py-2 pb-2@(Model.Labels.Count > LabelSelector.MaxVisibleLabels ? string.Empty : " d-none")" id="LabelSearchContainer">
                 <div class="input-group border rounded">
                     <span class="input-group-text border-0 text-muted px-2" style="background:transparent">
                         <vc:icon symbol="actions-search" />
@@ -84,6 +84,13 @@
                         <span class="label-filter-text">@label.Text</span>
                         <small class="label-filter-count@(label.UsageCount > 0 ? string.Empty : " d-none")">@label.UsageCount</small>
                     </button>
+                </li>
+            }
+            @if (!string.IsNullOrEmpty(Model.ManageLabelLink))
+            {
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <a href="@Model.ManageLabelLink" class="dropdown-item d-flex align-items-center gap-2"><vc:icon symbol="settings" /><span text-translate="true">Manage Labels</span></a>
                 </li>
             }
         </ul>

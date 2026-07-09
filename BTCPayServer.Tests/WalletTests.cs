@@ -778,6 +778,11 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         });
 
         await s.InWalletTransactions().AssertHasLabels(targetLabel);
+        // The label dropdown exposes a "Manage Labels" link that navigates to the wallet labels page (#7252)
+        await s.Page.ClickAsync("#LabelSelectorToggle");
+        await s.Page.ClickAsync("#LabelSelectorMenu a:has-text('Manage Labels')");
+        var walletId = new WalletId(s.StoreId , "BTC");
+        await s.Page.WaitForURLAsync(s.ServerUri + $"wallets/{walletId}/labels");
     }
 
     [Fact]

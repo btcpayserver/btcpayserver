@@ -1185,13 +1185,13 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public async Task Repro_MarkPayout_CrossStore_IDOR()
+        public async Task MarkPayoutIsScopedToStore()
         {
-            // POST /api/v1/stores/{storeId}/payouts/{payoutId}/mark[-paid] authorizes CanManagePayouts
-            // against the ROUTE store, but MarkPaid/HandleMarkPaid looks the payout up by Id ONLY
-            // (no store filter). So a key that can manage payouts on its OWN store can mutate the
-            // state (and proof) of ANY store's payout, given the payout id. ApprovePayout and
-            // CancelPayout both scope by store; only mark is missing the check.
+            // The payout mark/mark-paid endpoints used to authorize CanManagePayouts against the
+            // {storeId} in the route while resolving the payout by id alone, letting a key manage
+            // another store's payout. The payoutId route->store scope now makes the permission
+            // handler resolve (and authorize against) the payout's real store, so cross-store
+            // access is rejected on both the legacy and the flattened routes.
             using var tester = CreateServerTester();
             await tester.StartAsync();
 
@@ -1201,6 +1201,7 @@ namespace BTCPayServer.Tests
             await victim.CreateStoreAsync();
             var victimStoreId = (await victim.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
             var victimClient = await victim.CreateClient();
+            var victimKeyClient = await victim.CreateClient(Policies.CanManagePayouts);
             var address = await tester.ExplorerNode.GetNewAddressAsync();
             var victimPayout = await victimClient.CreatePayout(victimStoreId, new CreatePayoutThroughStoreRequest()
             {
@@ -1218,29 +1219,32 @@ namespace BTCPayServer.Tests
             await attacker.CreateStoreAsync();
             var attackerClient = await attacker.CreateClient(Policies.CanManagePayouts);
 
-            // Sanity: the attacker has NO legitimate read access to the victim's payout.
+            // Sanity: the attacker has NO legitimate access to the victim's payout.
             Assert.DoesNotContain(victimPayout.Id,
                 (await attackerClient.GetStorePayouts(attacker.StoreId, true)).Select(p => p.Id));
             await AssertHttpError(403, async () => await attackerClient.GetStorePayout(victimStoreId, victimPayout.Id));
 
             // --- The attack: route store = attacker's OWN store; target payout = victim's. ---
-            // With the fix, the payout is resolved scoped to the route store, so this is rejected
-            // as not-found instead of mutating the victim's payout.
-            await AssertHttpError(404, async () => await attackerClient.MarkPayout(attacker.StoreId, victimPayout.Id,
+            // The permission handler resolves the store from the payout id, sees it does not match
+            // the attacker's store, and forbids the request.
+            await AssertHttpError(403, async () => await attackerClient.MarkPayout(attacker.StoreId, victimPayout.Id,
                 new MarkPayoutRequest()
                 {
                     State = PayoutState.InProgress,
                     PaymentProof = JObject.FromObject(new { proofType = "external-proof", id = "attacker-was-here" })
                 }));
-            // The mark-paid variant (which routes through MarkPayout) is blocked too.
-            await AssertHttpError(404, async () => await attackerClient.MarkPayoutPaid(attacker.StoreId, victimPayout.Id));
+            await AssertHttpError(403, async () => await attackerClient.MarkPayoutPaid(attacker.StoreId, victimPayout.Id));
+            // The new flattened route (no storeId) resolves the scope from the payout itself, so
+            // the attacker is forbidden there too.
+            Assert.Equal(HttpStatusCode.Forbidden,
+                (await PostRaw(tester, attackerClient.APIKey, $"api/v1/payouts/{victimPayout.Id}/mark-paid")).StatusCode);
 
             // The victim's payout is untouched by the cross-store attempts.
             var afterAttack = await victimClient.GetStorePayout(victimStoreId, victimPayout.Id);
             Assert.Equal(PayoutState.AwaitingPayment, afterAttack.State);
             Assert.Null(afterAttack.PaymentProof);
 
-            // No regression: the legitimate store owner can still mark its own payout.
+            // No regression: the legitimate owner can still mark its own payout (legacy route)...
             await victimClient.MarkPayout(victimStoreId, victimPayout.Id, new MarkPayoutRequest()
             {
                 State = PayoutState.InProgress,
@@ -1250,6 +1254,19 @@ namespace BTCPayServer.Tests
             Assert.Equal(PayoutState.InProgress, legit.State);
             Assert.True(legit.PaymentProof.TryGetValue("id", out var legitId));
             Assert.Equal("legit", legitId);
+
+            // ...and via the new flattened route.
+            Assert.Equal(HttpStatusCode.OK,
+                (await PostRaw(tester, victimKeyClient.APIKey, $"api/v1/payouts/{victimPayout.Id}/mark-paid")).StatusCode);
+            Assert.Equal(PayoutState.Completed, (await victimClient.GetStorePayout(victimStoreId, victimPayout.Id)).State);
+        }
+
+        private static async Task<HttpResponseMessage> PostRaw(ServerTester tester, string apiKey, string path)
+        {
+            using var http = new HttpClient();
+            var req = new HttpRequestMessage(HttpMethod.Post, new Uri(tester.PayTester.ServerUri, path));
+            req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", apiKey);
+            return await http.SendAsync(req);
         }
 
         [Fact(Timeout = TestTimeout)]

@@ -169,7 +169,7 @@ namespace BTCPayServer
                 {
                     DateTimeKind.Local => new DateTimeOffset(localDateTime, TimeZoneInfo.Local.GetUtcOffset(localDateTime)),
                     DateTimeKind.Utc => new DateTimeOffset(localDateTime, TimeSpan.Zero),
-                    DateTimeKind.Unspecified when tz is not null => new DateTimeOffset(localDateTime, tz.GetUtcOffset(localDateTime)),
+                    DateTimeKind.Unspecified when tz is not null => new DateTimeOffset(localDateTime, tz.GetUtcOffset(localDateTime)).ToUniversalTime(),
                     DateTimeKind.Unspecified when tz is null => null,
                     _ => throw new ArgumentOutOfRangeException()
                 };
@@ -202,7 +202,6 @@ namespace BTCPayServer
             var localDate = (key, val) switch
             {
                 ("startdate", "today") => today,
-                ("enddate", "today") => today.AddDays(1).AddTicks(-1),
                 ("startdate", "yesterday") => today.AddDays(-1),
                 ("enddate", "yesterday") => today.AddTicks(-1),
                 ("startdate", "thisweek") => startOfThisWeek,

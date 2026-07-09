@@ -1556,19 +1556,27 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         {
             var utc = TimeZoneInfo.Utc;
             var search = new SearchString("startdate:2026-01-15 10:00:00");
-            Assert.Equal(
+
+            void AssertEqual(DateTimeOffset a, DateTimeOffset? b)
+            {
+                Assert.NotNull(b);
+                Assert.Equal(a, b);
+                Assert.Equal(a.Offset, b.Value.Offset);
+            }
+
+            AssertEqual(
                 new DateTimeOffset(2026, 1, 15, 10, 0, 0, TimeSpan.Zero),
                 search.GetFilterDate("startdate", utc));
 
             var paris = TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris");
             search = new SearchString("startdate:2026-01-15 10:00:00");
-            Assert.Equal(
+            AssertEqual(
                 new DateTimeOffset(2026, 1, 15, 9, 0, 0, TimeSpan.Zero),
                 search.GetFilterDate("startdate", paris));
 
             var tokyo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");
             search = new SearchString("startdate:2026-06-30 17:00:00");
-            Assert.Equal(
+            AssertEqual(
                 new DateTimeOffset(2026, 6, 30, 8, 0, 0, TimeSpan.Zero),
                 search.GetFilterDate("startdate", tokyo));
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Components.LabelSelector;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Services;
@@ -19,11 +20,20 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public List<ViewPaymentRequestViewModel> Items { get; set; }
         public override int CurrentPageCount => Items.Count;
 
-        public SearchString Search { get; set; }
-        public string SearchText { get; set; }
         public string WalletId { get; set; }
-        public string LabelFilter { get; set; }
-        public List<TransactionTagModel> Labels { get; set; } = new();
+        public List<LabelSelectorItemViewModel> Labels { get; set; } = new();
+
+        protected override void AddUIFilters(SearchString search)
+        {
+            base.AddUIFilters(search);
+            LabelSelector.AddUIFilters(search);
+        }
+
+        protected override void RunFilterCommand(SearchString search)
+        {
+            base.RunFilterCommand(search);
+            LabelSelector.RunFilterCommand(search, FilterCommand);
+        }
     }
 
     public class UpdatePaymentRequestViewModel

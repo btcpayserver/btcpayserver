@@ -229,15 +229,28 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     ? Json(new { error = StringLocalizer["App not found"].Value })
                     : NotFound();
 
-            // not allowing negative tips or discounts
-            if (tip < 0 || discount < 0)
-                return Error(StringLocalizer["Negative tip or discount is not allowed"].Value);
-
-            if (string.IsNullOrEmpty(choiceKey) && (amount < 0 || customAmount < 0))
-                return Error(StringLocalizer["Negative amount is not allowed"].Value);
+            // Clamp untrusted public inputs to the same bounds enforced by the UI.
+            if (tip < 0)
+                tip = 0;
+            if (discount < 0)
+                discount = 0;
+            if (amount < 0)
+                amount = 0;
+            if (customAmount < 0)
+                customAmount = 0;
 
             var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
+
+            if (!settings.ShowDiscount)
+                discount = 0;
+            if (!settings.EnableTips)
+                tip = 0;
+            if (!settings.ShowCustomAmount)
+                customAmount = 0;
+            if (discount > 100)
+                discount = 100;
+
             var currentView = viewType ?? settings.DefaultView;
             if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount &&
                 currentView != PosViewType.Cart && currentView != PosViewType.Light)
@@ -255,6 +268,15 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
 
             jposData.Cart ??= [];
+            if (jposData.Amounts is not null)
+                jposData.Amounts = jposData.Amounts.Select(a => Math.Max(0, a)).ToArray();
+            foreach (var cartItem in jposData.Cart)
+            {
+                cartItem.Count = Math.Max(1, cartItem.Count);
+            }
+            if (jposData.Cart.Any(cartItem => string.IsNullOrEmpty(cartItem.Id)))
+                return NotFound();
+            var requestedQuantities = jposData.Cart.GroupBy(item => item.Id).ToDictionary(group => group.Key, group => group.Sum(item => (long)item.Count));
 
             if (currentView is PosViewType.Print)
                 return NotFound();
@@ -277,10 +299,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 var itemChoice = choices.FirstOrDefault(item => item.Id == cartItem.Id);
                 if (itemChoice == null)
                     return NotFound();
-                selectedChoices.Add(itemChoice);
                 if (itemChoice.Inventory is <= 0 ||
-                    itemChoice.Inventory is { } inv && inv < cartItem.Count)
+                    itemChoice.Inventory is { } inv && inv < requestedQuantities[cartItem.Id])
                     return Error(StringLocalizer["Inventory for {0} exhausted: {1} available", itemChoice.Title, itemChoice.Inventory]);
+                selectedChoices.Add(itemChoice);
 
                 if (itemChoice.PriceType is not AppItemPriceType.Topup)
                 {
@@ -405,7 +427,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         entity.ExtendedNotifications = true;
                         if (formResponseJObject is not null)
                         {
-                            var meta = entity.Metadata.ToJObject(); 
+                            var meta = entity.Metadata.ToJObject();
                             meta.Merge(formResponseJObject);
                             entity.Metadata = InvoiceMetadata.FromJObject(meta);
                         }

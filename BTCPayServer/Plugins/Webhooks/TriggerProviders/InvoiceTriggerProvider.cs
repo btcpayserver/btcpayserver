@@ -1,19 +1,22 @@
-#nullable  enable
+#nullable enable
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers.Greenfield;
+using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Plugins.Emails.Views;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins.Webhooks.TriggerProviders;
 
-public class InvoiceTriggerProvider(LinkGenerator linkGenerator)
+public class InvoiceTriggerProvider(LinkGenerator linkGenerator, ApplicationDbContextFactory dbContextFactory)
     : WebhookTriggerProvider<InvoiceEvent>
 {
     protected override async Task<JObject> GetEmailModel(WebhookTriggerContext<InvoiceEvent> webhookTriggerContext)
@@ -22,7 +25,34 @@ public class InvoiceTriggerProvider(LinkGenerator linkGenerator)
         var model = await base.GetEmailModel(webhookTriggerContext);
         // Keep for backward compatibility
         AddInvoiceToModel(model, evt.Invoice, linkGenerator);
+        if (evt.EventCode == InvoiceEventCode.Refund && evt.PullPaymentId is not null)
+            model["PullPayment"] = await GetPullPaymentModel(evt.PullPaymentId, evt.Invoice);
         return model;
+    }
+
+    private async Task<JObject> GetPullPaymentModel(string pullPaymentId, InvoiceEntity invoice)
+    {
+        var trimmedId = !string.IsNullOrEmpty(pullPaymentId) && pullPaymentId.Length > 15
+            ? $"{pullPaymentId.Substring(0, 7)}...{pullPaymentId.Substring(pullPaymentId.Length - 7)}"
+            : pullPaymentId;
+        var baseUrl = invoice.GetRequestBaseUrl();
+        var o = new JObject
+        {
+            ["Id"] = pullPaymentId,
+            ["TrimmedId"] = trimmedId,
+            ["Link"] = baseUrl is null ? null : linkGenerator.PullPaymentLink(pullPaymentId, baseUrl)
+        };
+        await using var ctx = dbContextFactory.CreateContext();
+        var pp = await ctx.PullPayments.FindAsync(pullPaymentId);
+        if (pp is not null)
+        {
+            var blob = pp.GetBlob();
+            o["Name"] = blob.Name;
+            o["Description"] = blob.Description;
+            o["Amount"] = pp.Limit.ToString(CultureInfo.InvariantCulture);
+            o["Currency"] = pp.Currency;
+        }
+        return o;
     }
 
     public static void AddInvoiceToModel(JObject model, InvoiceEntity invoice, LinkGenerator linkGenerator)
@@ -64,6 +94,22 @@ public class InvoiceTriggerProvider(LinkGenerator linkGenerator)
         new("{Invoice.Buyer.MailboxAddress}", "The formatted mailbox address to use when sending an email to the buyer. (eg. \"John Doe\" <john.doe@example.com>)"),
         new("{Invoice.Metadata}*", "The metadata associated with the invoice")
     };
+
+    public static List<EmailTriggerViewModel.PlaceHolder> GetRefundPlaceholders()
+    {
+        var placeholders = GetInvoicePlaceholders();
+        placeholders.AddRange(new List<EmailTriggerViewModel.PlaceHolder>()
+        {
+            new("{PullPayment.Id}", "The id of the refund pull payment"),
+            new("{PullPayment.TrimmedId}", "The trimmed id of the refund pull payment"),
+            new("{PullPayment.Name}", "The name of the refund pull payment"),
+            new("{PullPayment.Description}", "The description of the refund pull payment"),
+            new("{PullPayment.Amount}", "The amount of the refund pull payment"),
+            new("{PullPayment.Currency}", "The currency of the refund pull payment"),
+            new("{PullPayment.Link}", "The link to the pull payment where the refund can be claimed"),
+        });
+        return placeholders;
+    }
 
     public static MimeKit.MailboxAddress? GetMailboxAddress(InvoiceMetadata? invoiceMetadata)
     {
@@ -130,6 +176,7 @@ public class InvoiceTriggerProvider(LinkGenerator linkGenerator)
             },
             InvoiceEventCode.ExpiredPaidPartial => new WebhookInvoiceEvent(WebhookEventType.InvoiceExpiredPaidPartial, storeId),
             InvoiceEventCode.PaidAfterExpiration => new WebhookInvoiceEvent(WebhookEventType.InvoicePaidAfterExpiration, storeId),
+            InvoiceEventCode.Refund => new WebhookInvoiceRefundEvent(storeId) { PullPaymentId = invoiceEvent.PullPaymentId },
             _ => null
         };
         if (evt is null)

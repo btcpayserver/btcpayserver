@@ -1,0 +1,11 @@
+@model BTCPayServer.Components.DateColumn.DateColumn
+
+<th class="date-col">
+    <div>
+        <span>@Model.ColumnName</span>
+        <button type="button" class="btn btn-link p-0 ms-2 switch-time-format only-for-js" title="@StringLocalizer["Switch date format"]">
+            <vc:icon symbol="time" />
+        </button>
+        <span>(<span timezone></span>)</span>
+    </div>
+</th>

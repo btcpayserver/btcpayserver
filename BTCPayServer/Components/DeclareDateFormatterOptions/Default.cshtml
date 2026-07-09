@@ -1,0 +1,38 @@
+<script src="~/main/datetime.js" asp-append-version="true"></script>
+<script>
+        window.defaultDateTimeFormat = {
+            "dateStyle": "short",
+            "timeStyle": "short",
+            "timeZone" : @Safe.Json(ViewData.GetPageTimeZone())
+        };
+
+        // Order of preference: browser < page time zone < user-preferred time zone
+        (function()
+        {
+            const storeId = @Safe.Json(Context.GetStoreDataOrNull()?.Id);
+            if (!storeId) {
+                return;
+            }
+            const timeZoneStorageKey = `${storeId}-preferredTimeZone`;
+            window.setPreferredTimeZone = (timeZone) => {
+                localStorage.setItem(timeZoneStorageKey, timeZone);
+            };
+            window.getPreferredTimeZone = () => {
+                return localStorage.getItem(timeZoneStorageKey);
+            };
+            window.clearPreferredTimeZone = () => {
+                localStorage.removeItem(timeZoneStorageKey);
+            };
+
+            var tz = window.getPreferredTimeZone();
+            if (tz)
+                defaultDateTimeFormat.timeZone = tz;
+        })();
+
+        // Make sure the time zone is valid, else things will break later.
+        try {
+            new Intl.DateTimeFormat("en-US", { timeZone: window.defaultDateTimeFormat.timeZone });
+        } catch {
+            window.defaultDateTimeFormat.timeZone = null;
+        }
+</script>

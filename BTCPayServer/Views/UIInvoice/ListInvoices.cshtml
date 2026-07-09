@@ -5,24 +5,8 @@
 @model InvoicesModel
 @{
     ViewData.SetLayoutModel(new("Invoices", StringLocalizer["Invoices"]));
-    var statusFilterCount = CountArrayFilter("status") + CountArrayFilter("exceptionstatus") + (HasBooleanFilter("includearchived") ? 1 : 0) + (HasBooleanFilter("unusual") ? 1 : 0);
-    var hasDateFilter = HasArrayFilter("startdate") || HasArrayFilter("enddate");
-    var appFilterCount = Model.Apps.Count(app => HasArrayFilter("appid", app.Id));
-}
-
-@functions
-{
-    private int CountArrayFilter(string type) =>
-        Model.Search.ContainsFilter(type) ? Model.Search.GetFilterArray(type).Length : 0;
-
-    private bool HasArrayFilter(string type, string key = null) =>
-        Model.Search.ContainsFilter(type) && (key is null || Model.Search.GetFilterArray(type).Contains(key));
-
-    private bool HasBooleanFilter(string key) =>
-        Model.Search.ContainsFilter(key) && Model.Search.GetFilterBool(key) is true;
-
-    private bool HasCustomDateFilter() =>
-        Model.Search.ContainsFilter("startdate") && Model.Search.ContainsFilter("enddate");
+    var statusFilterCount = Model.Search.CountArrayFilter("status") + Model.Search.CountArrayFilter("exceptionstatus") + (Model.Search.HasBooleanFilter("includearchived") ? 1 : 0) + (Model.Search.HasBooleanFilter("unusual") ? 1 : 0);
+    var appFilterCount = Model.Apps.Count(app => Model.Search.HasArrayFilter("appid", app.Id));
 }
 
 @section PageHeadContent
@@ -56,50 +40,14 @@
     @*Script must be async to ensure proper page loading*@
     <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
 
-    @* Custom Range Modal *@
     <script>
         var invoicesUrl = @Safe.Json(Url.Action(nameof(UIInvoiceController.ListInvoices), new { storeId = Model.StoreId }));
-        const timezoneOffset = new Date().getTimezoneOffset();
 
         delegate('click', '.showInvoice', e => {
             e.preventDefault();
             const { invoiceId } = e.target.dataset;
             btcpay.appendInvoiceFrame(invoiceId);
         })
-
-        $('#btnCustomRangeDate').on('click', function (sender) {
-            var filterString = "";
-
-            var dtpStartDate = $("#dtpStartDate").val();
-            if (dtpStartDate !== null && dtpStartDate !== "") {
-                filterString = "startdate%3A" + dtpStartDate;
-            }
-
-            var dtpEndDate = $("#dtpEndDate").val();
-            if (dtpEndDate !== null && dtpEndDate !== "") {
-                if (filterString !== "") {
-                    filterString += ",";
-                }
-                filterString += "enddate%3A" + dtpEndDate;
-            }
-
-            if (filterString !== "") {
-                var redirectUri = invoicesUrl + "?Count=" + $("#Count").val() +
-                    "&timezoneoffset=" + $("#TimezoneOffset").val() +
-                    "&SearchTerm=" + filterString;
-
-                window.location.href = redirectUri;
-            } else {
-                $("#dtpStartDate").next().trigger("focus");
-            }
-        })
-
-        function getDateStringWithOffset(hoursDiff) {
-            var datenow = new Date();
-            var newDate = new Date(datenow.getTime() - (hoursDiff * 60 * 60 * 1000));
-            var str = newDate.toLocaleDateString() + " " + newDate.toLocaleTimeString();
-            return str;
-        }
     </script>
 }
 
@@ -156,56 +104,10 @@
 
 <partial name="_StatusMessage" />
 
-@* Custom Range Modal *@
-<div class="modal fade" id="customRangeModal" tabindex="-1" role="dialog" aria-labelledby="customRangeModalTitle" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 550px;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="customRangeModalTitle" text-translate="true">Filter invoices by Custom Range</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
-                    <vc:icon symbol="close" />
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group row">
-                    <label for="dtpStartDate" class="col-sm-3 col-form-label" text-translate="true">Start Date</label>
-                    <div class="col-sm-9">
-                        <div class="input-group">
-                            <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
-                                   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-                                   placeholder="@StringLocalizer["Start Date"]" />
-                            <button type="button" class="btn btn-secondary input-group-clear" title="@StringLocalizer["Clear"]">
-                                <vc:icon symbol="close" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label class="col-sm-3 col-form-label" text-translate="true">End Date</label>
-                    <div class="col-sm-9">
-                        <div class="input-group">
-                            <input id="dtpEndDate" class="form-control flatdtpicker" type="datetime-local"
-                                   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-                                   placeholder="@StringLocalizer["End Date"]" />
-                            <button type="button" class="btn btn-secondary input-group-clear" title="@StringLocalizer["Clear"]">
-                                <vc:icon symbol="close" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="btnCustomRangeDate" type="button" class="btn btn-primary" text-translate="true">Filter</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
     <input asp-for="Count" type="hidden" />
-    <input asp-for="TimezoneOffset" type="hidden" />
-    <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
-    <input asp-for="SearchText" class="form-control" placeholder="@StringLocalizer["Search…"]" />
+
+    <vc:search-string-input search-string="Model.Search"></vc:search-string-input>
     <div class="dropdown">
         <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             @if (statusFilterCount > 0)
@@ -218,17 +120,17 @@
             }
         </button>
         <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "settled")" class="dropdown-item @(HasArrayFilter("status", "settled") ? "custom-active" : "")" text-translate="true">Settled</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "processing")" class="dropdown-item @(HasArrayFilter("status", "processing") ? "custom-active" : "")" text-translate="true">Processing</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "expired")" class="dropdown-item @(HasArrayFilter("status", "expired") ? "custom-active" : "")" text-translate="true">Expired</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "invalid")" class="dropdown-item @(HasArrayFilter("status", "invalid") ? "custom-active" : "")" text-translate="true">Invalid</a>
+            <button type="submit" name="FilterCommand" value="set-multi:status=settled" class="dropdown-item @(Model.Search.HasArrayFilter("status", "settled") ? "custom-active" : "")" text-translate="true">Settled</button>
+            <button type="submit" name="FilterCommand" value="set-multi:status=processing" class="dropdown-item @(Model.Search.HasArrayFilter("status", "processing") ? "custom-active" : "")" text-translate="true">Processing</button>
+            <button type="submit" name="FilterCommand" value="set-multi:status=expired" class="dropdown-item @(Model.Search.HasArrayFilter("status", "expired") ? "custom-active" : "")" text-translate="true">Expired</button>
+            <button type="submit" name="FilterCommand" value="set-multi:status=invalid" class="dropdown-item @(Model.Search.HasArrayFilter("status", "invalid") ? "custom-active" : "")" text-translate="true">Invalid</button>
             <hr class="dropdown-divider">
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidLate")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidLate") ? "custom-active" : "")" text-translate="true">Settled Late</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidPartial")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidPartial") ? "custom-active" : "")" text-translate="true">Settled Partial</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("exceptionstatus", "paidOver")" class="dropdown-item @(HasArrayFilter("exceptionstatus", "paidOver") ? "custom-active" : "")" text-translate="true">Settled Over</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("unusual", "true")" class="dropdown-item @(HasBooleanFilter("unusual") ? "custom-active" : "")" text-translate="true">Unusual</a>
+            <button type="submit" name="FilterCommand" value="set-multi:exceptionstatus=paidLate" class="dropdown-item @(Model.Search.HasArrayFilter("exceptionstatus", "paidLate") ? "custom-active" : "")" text-translate="true">Settled Late</button>
+            <button type="submit" name="FilterCommand" value="set-multi:exceptionstatus=paidPartial" class="dropdown-item @(Model.Search.HasArrayFilter("exceptionstatus", "paidPartial") ? "custom-active" : "")" text-translate="true">Settled Partial</button>
+            <button type="submit" name="FilterCommand" value="set-multi:exceptionstatus=paidOver" class="dropdown-item @(Model.Search.HasArrayFilter("exceptionstatus", "paidOver") ? "custom-active" : "")" text-translate="true">Settled Over</button>
+            <button type="submit" name="FilterCommand" value="set-multi:unusual=true" class="dropdown-item @(Model.Search.HasBooleanFilter("unusual") ? "custom-active" : "")" text-translate="true">Unusual</button>
             <hr class="dropdown-divider">
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("includearchived", "true")" class="dropdown-item @(HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived" text-translate="true">Include archived</a>
+            <button type="submit" name="FilterCommand" value="set:includearchived=true" class="dropdown-item @(Model.Search.HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived" text-translate="true">Include archived</button>
         </div>
     </div>
     @if (Model.Apps.Any())
@@ -247,72 +149,14 @@
             <div class="dropdown-menu" aria-labelledby="AppOptionsToggle">
                 @foreach (var app in Model.Apps)
                 {
-                    <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("appid", app.Id)" class="dropdown-item @(HasArrayFilter("appid", app.Id) ? "custom-active" : "")">@app.AppName</a>
+                    <button type="submit"  name="FilterCommand" value="set-multi:appid=@app.Id" class="dropdown-item @(Model.Search.HasArrayFilter("appid", app.Id) ? "custom-active" : "")">@app.AppName</button>
                 }
             </div>
         </div>
     }
-    <div class="dropdown">
-        <button id="DateOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            @if (hasDateFilter)
-            {
-                if (HasArrayFilter("startdate", "-1d"))
-                {
-                    <span text-translate="true">24 Hours</span>
-                }
-                else if (HasArrayFilter("startdate", "-3d"))
-                {
-                    <span text-translate="true">3 Days</span>
-                }
-                else if (HasArrayFilter("startdate", "-7d"))
-                {
-                    <span text-translate="true">7 Days</span>
-                }
-                else
-                {
-                    <span text-translate="true">Custom</span>
-                }
-            }
-            else
-            {
-                <span text-translate="true">All Time</span>
-            }
-        </button>
-        <div class="dropdown-menu" aria-labelledby="DateOptionsToggle">
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-1d")" class="dropdown-item @(HasArrayFilter("startdate", "-1d") ? "custom-active" : "")" text-translate="true">Last 24 hours</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-3d")" class="dropdown-item @(HasArrayFilter("startdate", "-3d") ? "custom-active" : "")" text-translate="true">Last 3 days</a>
-            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-7d")" class="dropdown-item @(HasArrayFilter("startdate", "-7d") ? "custom-active" : "")" text-translate="true">Last 7 days</a>
-            <button type="button" class="dropdown-item @(HasCustomDateFilter() ? "custom-active" : "")" data-bs-toggle="modal" data-bs-target="#customRangeModal" text-translate="true">Custom Range</button>
-        </div>
-    </div>
-    @if (statusFilterCount > 0 || appFilterCount > 0 || hasDateFilter || !string.IsNullOrEmpty(Model.SearchText))
-    {
-        <button id="clearAllFiltersBtn" type="button" class="btn btn-secondary" style="min-width: 7rem;" title="@StringLocalizer["Clear all filters"]">
-            <span class="align-middle" text-translate="true">Clear All</span>
-        </button>
-    }
+    <vc:date-range-selector search="Model.Search" custom-range-title='@StringLocalizer["Filter invoices by Custom Range"].Value'></vc:date-range-selector>
+    <vc:clear-all-filters search="Model.Search"></vc:clear-all-filters>
 </form>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const clearBtn = document.getElementById('clearAllFiltersBtn');
-        if (clearBtn) {
-            clearBtn.addEventListener('click', function () {
-                const form = clearBtn.closest('form');
-                if (!form) return;
-                // Reset search text
-                const searchText = form.querySelector('[name="SearchText"]');
-                if (searchText) searchText.value = '';
-                // Reset SearchTerm (filters)
-                const searchTerm = form.querySelector('[name="SearchTerm"]');
-                if (searchTerm) searchTerm.value = '';
-                // Optionally reset other hidden fields if needed
-                // Submit the form
-                form.submit();
-            });
-        }
-    });
-</script>
 
 @if (Model.Invoices.Any())
 {
@@ -325,14 +169,7 @@
                         <th class="mass-action-select-col only-for-js">
                             <input type="checkbox" class="form-check-input mass-action-select-all" />
                         </th>
-                        <th class="date-col">
-                            <div class="d-flex align-items-center gap-3">
-                                <span text-translate="true">Date</span>
-                                <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="@StringLocalizer["Switch date format"]">
-                                    <vc:icon symbol="time" />
-                                </button>
-                            </div>
-                        </th>
+                        <vc:date-column></vc:date-column>
                         <th text-translate="true" class="text-nowrap">Invoice Id</th>
                         <th text-translate="true" class="text-nowrap">Order Id</th>
                         <th text-translate="true">Status</th>
@@ -356,7 +193,7 @@
                                         <vc:icon symbol="actions-archive" />
                                         <span text-translate="true">Archive</span>
                                     </button>
-                                    @if (HasBooleanFilter("includearchived"))
+                                    @if (Model.Search.HasBooleanFilter("includearchived"))
                                     {
                                         <button type="submit" name="command" value="unarchive" id="UnarchiveSelected" class="btn btn-link">
                                             <vc:icon symbol="actions-archive" />

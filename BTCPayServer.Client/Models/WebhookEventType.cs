@@ -12,6 +12,7 @@ public static class WebhookEventType
     public const string InvoiceInvalid = nameof(InvoiceInvalid);
     public const string InvoiceExpiredPaidPartial = nameof(InvoiceExpiredPaidPartial);
     public const string InvoicePaidAfterExpiration = nameof(InvoicePaidAfterExpiration);
+    public const string InvoiceRefund = nameof(InvoiceRefund);
     public const string PayoutCreated = nameof(PayoutCreated);
     public const string PayoutApproved = nameof(PayoutApproved);
     public const string PayoutUpdated = nameof(PayoutUpdated);

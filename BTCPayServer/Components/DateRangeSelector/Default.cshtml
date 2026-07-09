@@ -72,8 +72,11 @@
             </datalist>
         </div>
         <hr class="dropdown-divider" />
-        <button type="submit" name="FilterCommand" value="alltime" class="dropdown-item @(!Model.HasDateFilter ? "custom-active" : string.Empty)" text-translate="true">All Time</button>
-        <hr class="dropdown-divider" />
+        @if (Model.ShowAllTime)
+        {
+            <button type="submit" name="FilterCommand" value="alltime" class="dropdown-item @(!Model.HasDateFilter ? "custom-active" : string.Empty)" text-translate="true">All Time</button>
+            <hr class="dropdown-divider" />
+        }
         @foreach (var filter in filters)
         {
             <button type="submit" name="FilterCommand" value="set-daterange:@filter.DateRange" class="dropdown-item @(Model.HasDateRange(@filter.DateRange) ? "custom-active" : string.Empty)" text-translate="true">@filter.Label</button>

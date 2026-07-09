@@ -18,6 +18,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
+using BTCPayServer.Controllers.GreenField;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Fido2;
@@ -2884,7 +2885,7 @@ namespace BTCPayServer.Tests
             await acc.CreateLNAddress();
             await acc.PayOnLNAddress();
 
-            var report = await GetReport(acc, new() { ViewName = "Payments" });
+            var report = await GetReport(acc, "Payments");
             // 1 payment on LN Address
             // 1 payment on LNURL
             // 1 payment on BOLT11
@@ -2900,7 +2901,7 @@ namespace BTCPayServer.Tests
             Assert.Single(paymentTypes["On-Chain"]);
 
             // 2 on-chain transactions: It received from the cashcow, then paid its own invoice
-            report = await GetReport(acc, new() { ViewName = "Wallets" });
+            report = await GetReport(acc, "Wallets");
             var txIdIndex = report.GetIndex("TransactionId");
             var balanceIndex = report.GetIndex("BalanceChange");
             Assert.Equal(2, report.Data.Count);
@@ -2908,7 +2909,7 @@ namespace BTCPayServer.Tests
             Assert.Contains(report.Data, d => d[balanceIndex]["v"].Value<decimal>() == 1.0m);
 
             // Items sold
-            report = await GetReport(acc, new() { ViewName = "Sales" });
+            report = await GetReport(acc, "Sales");
             var itemIndex = report.GetIndex("Product");
             var countIndex = report.GetIndex("Quantity");
             var itemsCount = report.Data.GroupBy(d => d[itemIndex].Value<string>())
@@ -2918,7 +2919,7 @@ namespace BTCPayServer.Tests
 
             await acc.ImportOldInvoices();
             var date2018 = new DateTimeOffset(2018, 1, 1, 0, 0, 0, TimeSpan.Zero);
-            report = await GetReport(acc, new() { ViewName = "Payments", TimePeriod = new TimePeriod() { From = date2018, To = date2018 + TimeSpan.FromDays(365) } });
+            report = await GetReport(acc, "Payments", date2018, date2018 + TimeSpan.FromDays(365));
             var invoiceIdIndex = report.GetIndex("InvoiceId");
             var invoiceCurrencyAmountIndex = report.GetIndex("InvoiceCurrencyAmount");
             var rateIndex = report.GetIndex("Rate");
@@ -2940,7 +2941,7 @@ namespace BTCPayServer.Tests
 
                 async Task AssertData(string currency, decimal awaiting, decimal limit, decimal completed, bool fullyPaid)
                 {
-                    report = await GetReport(acc, new() { ViewName = "Refunds" });
+                    report = await GetReport(acc, "Refunds");
                     var currencyIndex = report.GetIndex("Currency");
                     var awaitingIndex = report.GetIndex("Awaiting");
                     var fullyPaidIndex = report.GetIndex("FullyPaid");
@@ -2978,10 +2979,16 @@ namespace BTCPayServer.Tests
             return Math.Round(jobj["v"].Value<decimal>(), jobj["d"].Value<int>());
         }
 
-        private async Task<StoreReportResponse> GetReport(TestAccount acc, StoreReportRequest req)
+        private async Task<StoreReportResponse> GetReport(TestAccount acc, string viewName, DateTimeOffset? from = null, DateTimeOffset? to = null)
         {
-            var controller = acc.GetController<UIReportsController>();
-            return (await controller.StoreReportsJson(acc.StoreId, req)).AssertType<OkObjectResult>()
+            var search = new SearchString(null);
+            search.SetFilter("view", viewName);
+            if (from is not null)
+                search.SetFilter("startdate", from.Value.ToString("O", CultureInfo.InvariantCulture));
+            if (to is not null)
+                search.SetFilter("enddate", to.Value.ToString("O", CultureInfo.InvariantCulture));
+            var controller = acc.GetController<GreenfieldReportsController>();
+            return (await controller.StoreReports(acc.StoreId, search)).AssertType<OkObjectResult>()
                 .Value
                 .AssertType<StoreReportResponse>();
         }

@@ -11,11 +11,13 @@ public class DateRangeSelector : ViewComponent
 {
     public IViewComponentResult Invoke(
         SearchString search,
-        string? customRangeTitle = null)
+        string? customRangeTitle = null,
+        bool showAllTime = true)
     => View(new DateRangeSelectorModel
     {
         Search = search ?? throw new ArgumentNullException(nameof(search)),
         CustomRangeTitle = customRangeTitle ?? "Filter by Custom Range",
+        ShowAllTime = showAllTime
     });
 }
 
@@ -55,6 +57,7 @@ public class DateRangeSelectorModel
 
     public string? StartDateInputValue => FormatInputDate(LocalDate(DateRange.StartDate));
     public string? EndDateInputValue => FormatInputDate(LocalDate(DateRange.EndDate));
+    public bool ShowAllTime { get; set; }
 
     private DateTimeOffset? LocalDate(DateTimeOffset? d)
     {

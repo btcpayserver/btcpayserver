@@ -922,7 +922,7 @@ namespace BTCPayServer.Tests
         public async Task AssertPageAccess(bool shouldHaveAccess, string url)
         {
             await GoToUrl(url);
-            await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+            await Page.WaitForLoadStateAsync(LoadState.Load);
             var content = await Page.ContentAsync();
             Assert.DoesNotContain("404 - Page not found", content);
             if (shouldHaveAccess)

@@ -16,8 +16,10 @@ public static class TimeZones
         zones = TimeZoneInfo.GetSystemTimeZones().ToDictionary(t => t.Id, t => t, StringComparer.InvariantCultureIgnoreCase);
         abbreviations = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
         {
-            ["UTC"] = "Etc/UTC",
-            ["GMT"] = "Etc/UTC",
+            ["Etc/Unknown"] = "UTC",
+            ["Etc/UTC"] = "UTC",
+            ["Etc/GMT"] = "UTC",
+            ["GMT"] = "UTC",
             ["JST"] = "Asia/Tokyo",
             ["KST"] = "Asia/Seoul",
             ["HKT"] = "Asia/Hong_Kong",
@@ -42,6 +44,8 @@ public static class TimeZones
 
     public static bool TryGet(string id, [MaybeNullWhen(false)] out TimeZoneInfo zone)
     {
+        if (zones.TryGetValue(id, out zone))
+            return true;
         abbreviations.TryGetValue(id, out var fullName);
         return zones.TryGetValue(fullName ?? id, out zone);
     }

@@ -1078,7 +1078,7 @@ goodies:
             }
             catch
             {
-                await s.TakeScreenshot("Flaky-POSTests");
+                await s.TakeScreenshot("Flaky-POSTests.png");
                 throw;
             }
         }

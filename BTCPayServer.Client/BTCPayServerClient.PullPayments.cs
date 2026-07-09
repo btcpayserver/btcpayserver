@@ -57,9 +57,9 @@ public partial class BTCPayServerClient
         return await SendHttpRequest<PayoutData>($"api/v1/pull-payments/{HttpUtility.UrlEncode(pullPaymentId)}/payouts/{payoutId}", null, HttpMethod.Get, cancellationToken);
     }
 
-    public virtual async Task<PayoutData> GetStorePayout(string storeId, string payoutId, CancellationToken cancellationToken = default)
+    public virtual async Task<PayoutData> GetStorePayout(string payoutId, CancellationToken cancellationToken = default)
     {
-        return await SendHttpRequest<PayoutData>($"api/v1/stores/{storeId}/payouts/{payoutId}", null, HttpMethod.Get, cancellationToken);
+        return await SendHttpRequest<PayoutData>($"api/v1/payouts/{HttpUtility.UrlEncode(payoutId)}", null, HttpMethod.Get, cancellationToken);
     }
 
     public virtual async Task<PayoutData> CreatePayout(string storeId, CreatePayoutThroughStoreRequest payoutRequest, CancellationToken cancellationToken = default)
@@ -67,24 +67,24 @@ public partial class BTCPayServerClient
         return await SendHttpRequest<PayoutData>($"api/v1/stores/{storeId}/payouts", bodyPayload: payoutRequest, method: HttpMethod.Post, cancellationToken);
     }
 
-    public virtual async Task CancelPayout(string storeId, string payoutId, CancellationToken cancellationToken = default)
+    public virtual async Task CancelPayout(string payoutId, CancellationToken cancellationToken = default)
     {
-        await SendHttpRequest($"api/v1/stores/{HttpUtility.UrlEncode(storeId)}/payouts/{HttpUtility.UrlEncode(payoutId)}", null, HttpMethod.Delete, cancellationToken);
+        await SendHttpRequest($"api/v1/payouts/{HttpUtility.UrlEncode(payoutId)}", null, HttpMethod.Delete, cancellationToken);
     }
 
-    public virtual async Task<PayoutData> ApprovePayout(string storeId, string payoutId, ApprovePayoutRequest request, CancellationToken cancellationToken = default)
+    public virtual async Task<PayoutData> ApprovePayout(string payoutId, ApprovePayoutRequest request, CancellationToken cancellationToken = default)
     {
-        return await SendHttpRequest<PayoutData>($"api/v1/stores/{HttpUtility.UrlEncode(storeId)}/payouts/{HttpUtility.UrlEncode(payoutId)}", request, HttpMethod.Post, cancellationToken);
+        return await SendHttpRequest<PayoutData>($"api/v1/payouts/{HttpUtility.UrlEncode(payoutId)}", request, HttpMethod.Post, cancellationToken);
     }
 
-    public virtual async Task MarkPayoutPaid(string storeId, string payoutId, CancellationToken cancellationToken = default)
+    public virtual async Task MarkPayoutPaid(string payoutId, CancellationToken cancellationToken = default)
     {
-        await SendHttpRequest($"api/v1/stores/{HttpUtility.UrlEncode(storeId)}/payouts/{HttpUtility.UrlEncode(payoutId)}/mark-paid", null, HttpMethod.Post, cancellationToken);
+        await SendHttpRequest($"api/v1/payouts/{HttpUtility.UrlEncode(payoutId)}/mark-paid", null, HttpMethod.Post, cancellationToken);
     }
 
-    public virtual async Task MarkPayout(string storeId, string payoutId, MarkPayoutRequest request, CancellationToken cancellationToken = default)
+    public virtual async Task MarkPayout(string payoutId, MarkPayoutRequest request, CancellationToken cancellationToken = default)
     {
-        await SendHttpRequest($"api/v1/stores/{HttpUtility.UrlEncode(storeId)}/payouts/{HttpUtility.UrlEncode(payoutId)}/mark", request, HttpMethod.Post, cancellationToken);
+        await SendHttpRequest($"api/v1/payouts/{HttpUtility.UrlEncode(payoutId)}/mark", request, HttpMethod.Post, cancellationToken);
     }
 
     public virtual async Task<PullPaymentLNURL> GetPullPaymentLNURL(string pullPaymentId, CancellationToken cancellationToken = default)

@@ -1222,43 +1222,42 @@ namespace BTCPayServer.Tests
             // Sanity: the attacker has NO legitimate access to the victim's payout.
             Assert.DoesNotContain(victimPayout.Id,
                 (await attackerClient.GetStorePayouts(attacker.StoreId, true)).Select(p => p.Id));
-            await AssertHttpError(403, async () => await attackerClient.GetStorePayout(victimStoreId, victimPayout.Id));
+            await AssertHttpError(403, async () => await attackerClient.GetStorePayout(victimPayout.Id));
 
-            // --- The attack: route store = attacker's OWN store; target payout = victim's. ---
-            // The permission handler resolves the store from the payout id, sees it does not match
-            // the attacker's store, and forbids the request.
-            await AssertHttpError(403, async () => await attackerClient.MarkPayout(attacker.StoreId, victimPayout.Id,
+            // --- The attack via the flattened route: the permission handler resolves the store
+            // from the payout id, sees the attacker isn't authorized on it, and forbids it. ---
+            await AssertHttpError(403, async () => await attackerClient.MarkPayout(victimPayout.Id,
                 new MarkPayoutRequest()
                 {
                     State = PayoutState.InProgress,
                     PaymentProof = JObject.FromObject(new { proofType = "external-proof", id = "attacker-was-here" })
                 }));
-            await AssertHttpError(403, async () => await attackerClient.MarkPayoutPaid(attacker.StoreId, victimPayout.Id));
-            // The new flattened route (no storeId) resolves the scope from the payout itself, so
-            // the attacker is forbidden there too.
+            await AssertHttpError(403, async () => await attackerClient.MarkPayoutPaid(victimPayout.Id));
+            // The legacy /stores/{attackerStore}/... route is still protected: the payout's real
+            // store no longer matches the route store, so the handler forbids it there too.
             Assert.Equal(HttpStatusCode.Forbidden,
-                (await PostRaw(tester, attackerClient.APIKey, $"api/v1/payouts/{victimPayout.Id}/mark-paid")).StatusCode);
+                (await PostRaw(tester, attackerClient.APIKey, $"api/v1/stores/{attacker.StoreId}/payouts/{victimPayout.Id}/mark-paid")).StatusCode);
 
             // The victim's payout is untouched by the cross-store attempts.
-            var afterAttack = await victimClient.GetStorePayout(victimStoreId, victimPayout.Id);
+            var afterAttack = await victimKeyClient.GetStorePayout(victimPayout.Id);
             Assert.Equal(PayoutState.AwaitingPayment, afterAttack.State);
             Assert.Null(afterAttack.PaymentProof);
 
-            // No regression: the legitimate owner can still mark its own payout (legacy route)...
-            await victimClient.MarkPayout(victimStoreId, victimPayout.Id, new MarkPayoutRequest()
+            // No regression: the legitimate owner can still mark its own payout via the flattened route...
+            await victimKeyClient.MarkPayout(victimPayout.Id, new MarkPayoutRequest()
             {
                 State = PayoutState.InProgress,
                 PaymentProof = JObject.FromObject(new { proofType = "external-proof", id = "legit" })
             });
-            var legit = await victimClient.GetStorePayout(victimStoreId, victimPayout.Id);
+            var legit = await victimKeyClient.GetStorePayout(victimPayout.Id);
             Assert.Equal(PayoutState.InProgress, legit.State);
             Assert.True(legit.PaymentProof.TryGetValue("id", out var legitId));
             Assert.Equal("legit", legitId);
 
-            // ...and via the new flattened route.
+            // ...and the legacy /stores/{victimStore}/... route still works for its owner.
             Assert.Equal(HttpStatusCode.OK,
-                (await PostRaw(tester, victimKeyClient.APIKey, $"api/v1/payouts/{victimPayout.Id}/mark-paid")).StatusCode);
-            Assert.Equal(PayoutState.Completed, (await victimClient.GetStorePayout(victimStoreId, victimPayout.Id)).State);
+                (await PostRaw(tester, victimKeyClient.APIKey, $"api/v1/stores/{victimStoreId}/payouts/{victimPayout.Id}/mark-paid")).StatusCode);
+            Assert.Equal(PayoutState.Completed, (await victimKeyClient.GetStorePayout(victimPayout.Id)).State);
         }
 
         private static async Task<HttpResponseMessage> PostRaw(ServerTester tester, string apiKey, string path)
@@ -1291,13 +1290,13 @@ namespace BTCPayServer.Tests
             });
             await AssertAPIError("invalid-state", async () =>
             {
-                await client.MarkPayout(storeId, payout.Id, new MarkPayoutRequest() { State = PayoutState.Completed });
+                await client.MarkPayout(payout.Id, new MarkPayoutRequest() { State = PayoutState.Completed });
 
             });
 
-            await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest());
+            await client.ApprovePayout(payout.Id, new ApprovePayoutRequest());
 
-            await client.MarkPayout(storeId, payout.Id, new MarkPayoutRequest() { State = PayoutState.Completed });
+            await client.MarkPayout(payout.Id, new MarkPayoutRequest() { State = PayoutState.Completed });
             Assert.Equal(PayoutState.Completed, (await client.GetStorePayouts(storeId, false)).Single(data => data.Id == payout.Id).State);
             Assert.Null((await client.GetStorePayouts(storeId, false)).Single(data => data.Id == payout.Id).PaymentProof);
 
@@ -1305,7 +1304,7 @@ namespace BTCPayServer.Tests
             {
                 await AssertAPIError("invalid-state", async () =>
                 {
-                    await client.MarkPayout(storeId, payout.Id, new MarkPayoutRequest() { State = state });
+                    await client.MarkPayout(payout.Id, new MarkPayoutRequest() { State = state });
                 });
             }
             payout = await client.CreatePayout(storeId, new CreatePayoutThroughStoreRequest()
@@ -1316,12 +1315,12 @@ namespace BTCPayServer.Tests
                 Destination = address.ToString()
             });
 
-            payout = await client.GetStorePayout(storeId, payout.Id);
+            payout = await client.GetStorePayout(payout.Id);
             Assert.NotNull(payout);
             Assert.Equal(PayoutState.AwaitingPayment, payout.State);
             await AssertValidationError(new[] { "PaymentProof" }, async () =>
               {
-                  await client.MarkPayout(storeId, payout.Id, new MarkPayoutRequest()
+                  await client.MarkPayout(payout.Id, new MarkPayoutRequest()
                   {
                       State = PayoutState.Completed,
                       PaymentProof = JObject.FromObject(new
@@ -1330,7 +1329,7 @@ namespace BTCPayServer.Tests
                       })
                   });
               });
-            await client.MarkPayout(storeId, payout.Id, new MarkPayoutRequest()
+            await client.MarkPayout(payout.Id, new MarkPayoutRequest()
             {
                 State = PayoutState.InProgress,
                 PaymentProof = JObject.FromObject(new
@@ -1338,13 +1337,13 @@ namespace BTCPayServer.Tests
                     proofType = "external-proof"
                 })
             });
-            payout = await client.GetStorePayout(storeId, payout.Id);
+            payout = await client.GetStorePayout(payout.Id);
             Assert.NotNull(payout);
             Assert.Equal(PayoutState.InProgress, payout.State);
             Assert.True(payout.PaymentProof.TryGetValue("proofType", out var savedType));
             Assert.Equal("external-proof", savedType);
 
-            await client.MarkPayout(storeId, payout.Id, new MarkPayoutRequest()
+            await client.MarkPayout(payout.Id, new MarkPayoutRequest()
             {
                 State = PayoutState.AwaitingPayment,
                 PaymentProof = JObject.FromObject(new
@@ -1354,12 +1353,12 @@ namespace BTCPayServer.Tests
                     link = "proof.com"
                 })
             });
-            payout = await client.GetStorePayout(storeId, payout.Id);
+            payout = await client.GetStorePayout(payout.Id);
             Assert.NotNull(payout);
             Assert.Null(payout.PaymentProof);
             Assert.Equal(PayoutState.AwaitingPayment, payout.State);
 
-            await client.MarkPayout(storeId, payout.Id, new MarkPayoutRequest()
+            await client.MarkPayout(payout.Id, new MarkPayoutRequest()
             {
                 State = PayoutState.Completed,
                 PaymentProof = JObject.FromObject(new
@@ -1369,7 +1368,7 @@ namespace BTCPayServer.Tests
                     link = "proof.com"
                 })
             });
-            payout = await client.GetStorePayout(storeId, payout.Id);
+            payout = await client.GetStorePayout(payout.Id);
             Assert.NotNull(payout);
             Assert.Equal(PayoutState.Completed, payout.State);
             Assert.True(payout.PaymentProof.TryGetValue("proofType", out savedType));
@@ -3661,14 +3660,14 @@ namespace BTCPayServer.Tests
                 PayoutMethodId = "BTC",
                 Destination = (await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
             });
-            await adminClient.ApprovePayout(admin.StoreId, notapprovedPayoutWithPullPayment.Id,
+            await adminClient.ApprovePayout(notapprovedPayoutWithPullPayment.Id,
                 new ApprovePayoutRequest() { });
 
             var payouts = await adminClient.GetStorePayouts(admin.StoreId);
 
             Assert.Equal(3, payouts.Length);
             Assert.Single(payouts, data => data.State == PayoutState.AwaitingApproval);
-            await adminClient.ApprovePayout(admin.StoreId, notApprovedPayoutWithoutPullPayment.Id,
+            await adminClient.ApprovePayout(notApprovedPayoutWithoutPullPayment.Id,
                 new ApprovePayoutRequest() { });
 
 

@@ -2957,16 +2957,16 @@ namespace BTCPayServer.Tests
                 await AssertData("USD", awaiting: 0.0m, limit: 10.0m, completed: 0.0m, fullyPaid: false);
                 var payout = await client.CreatePayout(refund.Id, new CreatePayoutRequest() { Destination = addr.ToString(), PayoutMethodId = "BTC-CHAIN" });
                 await AssertData("USD", awaiting: 10.0m, limit: 10.0m, completed: 0.0m, fullyPaid: false);
-                await client.ApprovePayout(acc.StoreId, payout.Id, new ApprovePayoutRequest());
+                await client.ApprovePayout(payout.Id, new ApprovePayoutRequest());
                 await AssertData("USD", awaiting: 10.0m, limit: 10.0m, completed: 0.0m, fullyPaid: false);
                 if (i == 0)
                 {
-                    await client.MarkPayoutPaid(acc.StoreId, payout.Id);
+                    await client.MarkPayoutPaid(payout.Id);
                     await AssertData("USD", awaiting: 0.0m, limit: 10.0m, completed: 10.0m, fullyPaid: true);
                 }
                 if (i == 1)
                 {
-                    await client.CancelPayout(acc.StoreId, payout.Id);
+                    await client.CancelPayout(payout.Id);
                     await AssertData("USD", awaiting: 0.0m, limit: 10.0m, completed: 0.0m, fullyPaid: false);
                 }
             }

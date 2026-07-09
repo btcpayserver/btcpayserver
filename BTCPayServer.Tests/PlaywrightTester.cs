@@ -48,11 +48,13 @@ namespace BTCPayServer.Tests
             await Server.StartAsync();
             var builder = new ConfigurationBuilder();
             builder.AddUserSecrets("AB0AC1DD-9D26-485B-9416-56A33F268117");
+            builder.AddEnvironmentVariables();
             var conf = builder.Build();
             var playwright = await Playwright.CreateAsync();
+            var headless = conf["PLAYWRIGHT_HEADLESS"];
             Browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
-                Headless = Server.PayTester.InContainer || conf["PLAYWRIGHT_HEADLESS"] == "true",
+                Headless = string.IsNullOrEmpty(headless) || bool.Parse(headless),
                 ExecutablePath = conf["PLAYWRIGHT_EXECUTABLE"],
                 SlowMo = 0, // 50 if you want to slow down
                 Args = ["--disable-frame-rate-limit"] // Fix slowness on linux (https://github.com/microsoft/playwright/issues/34625#issuecomment-2822015672)

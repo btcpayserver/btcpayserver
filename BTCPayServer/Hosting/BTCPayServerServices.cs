@@ -412,6 +412,12 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, LightningListener>();
             services.AddSingleton<IHostedService, LightningPendingPayoutListener>();
 
+            var pmi = Payments.PaymentTypes.EXTERNAL.GetPaymentMethodId("MISC");
+            services.AddDefaultPrettyName(pmi, "External payment");
+            services.AddSingleton<IPaymentMethodHandler>(provider =>
+                (Payments.External.ExternalPaymentMethodHandler)ActivatorUtilities.CreateInstance(provider,
+                    typeof(Payments.External.ExternalPaymentMethodHandler), new object[] { pmi }));
+
             services.AddSingleton<PaymentMethodHandlerDictionary>();
 
             services.AddSingleton<PayoutMethodHandlerDictionary>();
@@ -540,6 +546,11 @@ namespace BTCPayServer.Hosting
                     new PermissionDisplay("Modify invoices", "Allows viewing and modifying invoices."),
                     new PermissionDisplay("Modify invoices", "Allows viewing and modifying invoices on the selected stores."),
                     new[] { Policies.CanViewInvoices, Policies.CanCreateInvoice, Policies.CanCreateLightningInvoiceInStore }),
+                new PolicyDefinition(
+                    Policies.CanRegisterExternalPayment,
+                    new PermissionDisplay("Register external payments", "Allows registering payments settled outside of BTCPay against invoices on all your stores."),
+                    new PermissionDisplay("Register external payments", "Allows registering payments settled outside of BTCPay against invoices on the selected stores."),
+                    includedByPermissions: new[] { Policies.CanModifyInvoices }),
                 new PolicyDefinition(
                     Policies.CanModifyWebhooks,
                     new PermissionDisplay("Modify stores webhooks", "Allows modifying the webhooks of all your stores."),

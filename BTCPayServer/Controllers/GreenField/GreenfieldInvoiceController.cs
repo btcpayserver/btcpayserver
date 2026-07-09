@@ -9,8 +9,11 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Logging;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.External;
 using BTCPayServer.Payouts;
 using BTCPayServer.Rating;
 using BTCPayServer.Security.Greenfield;
@@ -36,6 +39,8 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly UIInvoiceController _invoiceController;
         private readonly InvoiceRepository _invoiceRepository;
         private readonly LinkGenerator _linkGenerator;
+        private readonly PaymentService _paymentService;
+        private readonly EventAggregator _eventAggregator;
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly PullPaymentHostedService _pullPaymentService;
         private readonly RateFetcher _rateProvider;
@@ -61,13 +66,16 @@ namespace BTCPayServer.Controllers.Greenfield
             PayoutMethodHandlerDictionary payoutHandlers,
             PaymentMethodHandlerDictionary handlers,
             BTCPayNetworkProvider networkProvider,
-            DefaultRulesCollection defaultRules)
+            DefaultRulesCollection defaultRules,
+            EventAggregator eventAggregator,
+            PaymentService paymentService)
         {
             _invoiceController = invoiceController;
             _invoiceRepository = invoiceRepository;
             _linkGenerator = linkGenerator;
             _currencyNameTable = currencyNameTable;
             _rateProvider = rateProvider;
+            _eventAggregator = eventAggregator;
             _invoiceActivator = invoiceActivator;
             _pullPaymentService = pullPaymentService;
             _dbContextFactory = dbContextFactory;
@@ -75,6 +83,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _paymentLinkExtensions = paymentLinkExtensions;
             _payoutHandlers = payoutHandlers;
             _handlers = handlers;
+            _paymentService = paymentService;
             _networkProvider = networkProvider;
             _defaultRules = defaultRules;
             LanguageService = languageService;
@@ -255,6 +264,96 @@ namespace BTCPayServer.Controllers.Greenfield
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
+            return await GetInvoice(storeId, invoiceId);
+        }
+
+        [Authorize(Policy = Policies.CanRegisterExternalPayment, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/payments/external")]
+        [HttpPost("~/api/v1/invoices/{invoiceId}/payments/external")]
+        public async Task<IActionResult> RegisterExternalPayment(string? storeId, string invoiceId,
+            RegisterExternalPaymentRequest request, CancellationToken cancellationToken)
+        {
+            var invoice = HttpContext.GetInvoiceDataOrNull();
+            if (invoice is null)
+                return InvoiceNotFound();
+
+            var store = HttpContext.GetStoreData();
+
+            if (request.Amount <= 0.0m)
+                ModelState.AddModelError(nameof(request.Amount), "The amount should be greater than 0.");
+            if (string.IsNullOrWhiteSpace(request.Reference))
+                ModelState.AddModelError(nameof(request.Reference), "A reference is required so this payment can be traced back to its source.");
+            if (request.Rate is <= 0.0m)
+                ModelState.AddModelError(nameof(request.Rate), "The rate should be greater than 0.");
+            if (request.Rate is not null && request.SettlementCurrency is null)
+                ModelState.AddModelError(nameof(request.Rate), "A rate can only be provided together with a settlementCurrency.");
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+
+            if (!_handlers.TryGetValue(PaymentTypes.EXTERNAL.GetPaymentMethodId("MISC"), out var h) || h is not ExternalPaymentMethodHandler handler)
+            {
+                return this.CreateAPIError(404, "external-payment-method-disabled", "The external payment method is not available on this server.");
+            }
+
+            var cdCurrency = _currencyNameTable.GetCurrencyData(invoice.Currency, true);
+            decimal invoiceCurrencyAmount;
+            var rateWasProvidedByCaller = false;
+            if (request.SettlementCurrency is null || request.SettlementCurrency.Equals(invoice.Currency, StringComparison.OrdinalIgnoreCase))
+            {
+                invoiceCurrencyAmount = request.Amount;
+            }
+            else if (request.Rate is decimal rate)
+            {
+                invoiceCurrencyAmount = request.Amount * rate;
+                rateWasProvidedByCaller = true;
+            }
+            else
+            {
+                var rateResult = await _rateProvider.FetchRate(new CurrencyPair(request.SettlementCurrency, invoice.Currency),
+                    store.GetStoreBlob().GetRateRules(_defaultRules), new StoreIdRateContext(store.Id), cancellationToken);
+                if (rateResult.BidAsk is null)
+                {
+                    return this.CreateAPIError(422, "rate-unavailable", $"Could not fetch a rate for {request.SettlementCurrency} -> {invoice.Currency} ({rateResult.EvaluatedRule}). Pass `rate` explicitly instead.");
+                }
+                invoiceCurrencyAmount = request.Amount * rateResult.BidAsk.Bid;
+            }
+            invoiceCurrencyAmount = Math.Round(invoiceCurrencyAmount, cdCurrency.Divisibility);
+
+            if (!invoice.Support(handler.PaymentMethodId))
+            {
+                var storeBlob = store.GetStoreBlob();
+                var logs = new InvoiceLogs();
+                var promptContext = new PaymentMethodContext(store, storeBlob, new JObject(), handler, invoice, logs);
+                await handler.BeforeFetchingRates(promptContext);
+                await handler.ConfigurePrompt(promptContext);
+                await _invoiceRepository.NewPaymentPrompt(invoice.Id, promptContext);
+                await _invoiceRepository.AddInvoiceLogs(invoice.Id, logs);
+                invoice = await _invoiceRepository.GetInvoice(invoice.Id);
+            }
+
+            var paymentData = new Data.PaymentData
+            {
+                Id = Guid.NewGuid().ToString(),
+                Created = request.Date ?? DateTimeOffset.UtcNow,
+                Status = Data.PaymentStatus.Settled,
+                Amount = invoiceCurrencyAmount,
+                Currency = invoice.Currency
+            }.Set(invoice, handler, new ExternalPaymentData
+            {
+                Reference = request.Reference,
+                Label = request.Label,
+                Note = request.Note,
+                SettlementCurrency = request.SettlementCurrency,
+                SettlementAmount = request.SettlementCurrency is null ? null : request.Amount,
+                RateWasProvidedByCaller = rateWasProvidedByCaller,
+                RegisteredBy = User?.Identity?.Name
+            });
+
+            var payment = await _paymentService.AddPayment(paymentData, new HashSet<string> { request.Reference });
+            if (payment is null)
+                return this.CreateAPIError(409, "duplicate-payment", "This payment could not be registered. Invoice not found or already recorded.");
+
+            _eventAggregator.Publish(new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) { Payment = payment });
             return await GetInvoice(storeId, invoiceId);
         }
 

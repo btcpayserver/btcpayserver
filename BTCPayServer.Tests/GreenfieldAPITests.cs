@@ -1658,6 +1658,7 @@ namespace BTCPayServer.Tests
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.RegisterDerivationSchemeAsync("BTC");
+            await user.SetupWebhook();
             var client = await user.CreateClient();
             var store = await client.GetStore(user.StoreId);
             Assert.Equal(TimeSpan.FromDays(30.0), store.RefundBOLT11Expiration);
@@ -1883,6 +1884,13 @@ namespace BTCPayServer.Tests
             });
             Assert.Equal(1.0m, refund.Amount);
             Assert.Equal("BTC", refund.Currency);
+
+            // Verify that the InvoiceRefund webhook event is fired when a refund is created
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceRefund, (WebhookInvoiceRefundEvent x) =>
+            {
+                Assert.Equal(invoice.Id, x.InvoiceId);
+                Assert.Equal(refund.Id, x.PullPaymentId);
+            });
 #pragma warning restore CS0618 // Type or member is obsolete
 
             // The new `payoutMethods` array supersedes the deprecated single `payoutMethodId`.

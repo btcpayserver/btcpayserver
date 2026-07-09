@@ -100,6 +100,27 @@ namespace BTCPayServer.HostedServices
         }
         public async Task<string> CreatePullPayment(Data.StoreData store, CreatePullPaymentRequest create)
         {
+            return (await CreatePullPaymentCore(store, create)).Id;
+        }
+
+        public async Task<string> CreateRefundPullPayment(Data.StoreData store, CreatePullPaymentRequest create, string invoiceId)
+        {
+            var pullPayment = await CreatePullPaymentCore(store, create);
+            await using var ctx = _dbContextFactory.CreateContext();
+            ctx.Refunds.Add(new RefundData()
+            {
+                InvoiceDataId = invoiceId,
+                PullPaymentDataId = pullPayment.Id
+            });
+            await ctx.SaveChangesAsync();
+            var invoice = await _invoiceRepository.GetInvoice(invoiceId);
+            if (invoice is not null)
+                _eventAggregator.Publish(new Events.InvoiceEvent(invoice, Events.InvoiceEvent.Refund) { PullPaymentId = pullPayment.Id });
+            return pullPayment.Id;
+        }
+
+        private async Task<Data.PullPaymentData> CreatePullPaymentCore(Data.StoreData store, CreatePullPaymentRequest create)
+        {
             var supported = this._handlers.GetSupportedPayoutMethods(store);
             create.PayoutMethods ??= supported.Select(s => s.ToString()).ToArray();
             create.PayoutMethods = create.PayoutMethods.Where(pm => _handlers.Support(PayoutMethodId.Parse(pm))).ToArray();
@@ -136,7 +157,7 @@ namespace BTCPayServer.HostedServices
             });
             ctx.PullPayments.Add(o);
             await ctx.SaveChangesAsync();
-            return o.Id;
+            return o;
         }
 
         public class PayoutQuery
@@ -296,7 +317,8 @@ namespace BTCPayServer.HostedServices
             ILogger<PullPaymentHostedService> logger,
             Logs logs,
             DisplayFormatter displayFormatter,
-            CurrencyNameTable currencyNameTable) : base(logs)
+            CurrencyNameTable currencyNameTable,
+            Services.Invoices.InvoiceRepository invoiceRepository) : base(logs)
         {
             _dbContextFactory = dbContextFactory;
             _jsonSerializerSettings = jsonSerializerSettings;
@@ -309,6 +331,7 @@ namespace BTCPayServer.HostedServices
             _logger = logger;
             _currencyNameTable = currencyNameTable;
             _displayFormatter = displayFormatter;
+            _invoiceRepository = invoiceRepository;
         }
 
         Channel<object> _Channel;
@@ -323,6 +346,7 @@ namespace BTCPayServer.HostedServices
         private readonly ILogger<PullPaymentHostedService> _logger;
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly DisplayFormatter _displayFormatter;
+        private readonly Services.Invoices.InvoiceRepository _invoiceRepository;
         private readonly CompositeDisposable _subscriptions = new CompositeDisposable();
 
         internal override Task[] InitializeTasks()
@@ -781,11 +805,11 @@ namespace BTCPayServer.HostedServices
                             .Where(pp => cancel.PullPaymentIds.Contains(pp.Id) && cancel.StoreIds.Contains(pp.StoreId))
                             .Select(pp => pp.Id)
                             .ToListAsync()).ToArray();
-                    foreach (var ppId in ppIds)
-                    {
-                        ctx.PullPayments.Attach(new Data.PullPaymentData() { Id = ppId, Archived = true })
-                            .Property(o => o.Archived).IsModified = true;
-                    }
+                    var archivedPullPayments = await ctx.PullPayments
+                        .Where(pp => ppIds.Contains(pp.Id))
+                        .ToListAsync();
+                    foreach (var pp in archivedPullPayments)
+                        pp.Archived = true;
                     payouts = await ctx.Payouts
                         .Where(p => ppIds.Contains(p.PullPaymentDataId))
                         .ToListAsync();

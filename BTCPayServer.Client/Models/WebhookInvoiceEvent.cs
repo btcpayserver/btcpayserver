@@ -110,4 +110,13 @@ namespace BTCPayServer.Client.Models
 
         public bool PartiallyPaid { get; set; }
     }
+
+    public class WebhookInvoiceRefundEvent : WebhookInvoiceEvent
+    {
+        public WebhookInvoiceRefundEvent(string storeId) : base(WebhookEventType.InvoiceRefund, storeId)
+        {
+        }
+
+        public string PullPaymentId { get; set; }
+    }
 }

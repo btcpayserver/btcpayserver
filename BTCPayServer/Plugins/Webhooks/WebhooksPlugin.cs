@@ -278,6 +278,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
     {
         services.AddWebhookTriggerProvider<InvoiceTriggerProvider>();
         var invoicePlaceholders = InvoiceTriggerProvider.GetInvoicePlaceholders();
+        var refundPlaceholders = InvoiceTriggerProvider.GetRefundPlaceholders();
         var emailTriggers = new List<EmailTriggerViewModel>()
         {
             new()
@@ -388,6 +389,18 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
                     CanIncludeCustomerEmail = true
                 },
                 PlaceHolders = invoicePlaceholders
+            },
+            new()
+            {
+                Trigger = WebhookEventType.InvoiceRefund,
+                Description = "Invoice - Refund Created",
+                DefaultEmail = new()
+                {
+                    Subject = "Refund available for Invoice {Invoice.Id}",
+                    Body = "A refund has been created for Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}).\nClaim your refund here: {PullPayment.Link}",
+                    CanIncludeCustomerEmail = true
+                },
+                PlaceHolders = refundPlaceholders
             }
         };
         services.AddWebhookTriggerViewModels(emailTriggers);

@@ -39,15 +39,9 @@ namespace BTCPayServer.Models
         public string SearchText { get; set; }
         public string FilterCommand { get; set; }
 
-        public string TimeZone { get; set; }
-
         public SearchString GetSearch()
         {
             var search = SearchString.Combine([SearchTerm, SearchText]);
-            if (TimeZone is not null)
-            {
-                search.SetFilter("timezone", TimeZones.TryGet(TimeZone)?.Id);
-            }
             if (FilterCommand is not null)
                 RunFilterCommand(search);
             AddUIFilters(search);
@@ -72,6 +66,13 @@ namespace BTCPayServer.Models
                 }
             }
 
+            if (FilterCommand.StartsWith("set-timezone:"))
+            {
+                var tz = FilterCommand.Substring("set-timezone:".Length);
+                if (TimeZones.TryGet(tz) is { } tzo)
+                    search.SetFilter("timezone", tzo.Id);
+            }
+
             if (FilterCommand.StartsWith("unset:"))
             {
                 var k = FilterCommand.Substring("unset:".Length);
@@ -80,7 +81,10 @@ namespace BTCPayServer.Models
 
             if (FilterCommand is "reset")
             {
+                var tz = search.GetFilterString("timezone");
                 search.Filters.Clear();
+                if (tz != null)
+                    search.SetFilter("timezone", tz);
                 search.TextSearch = "";
                 return;
             }

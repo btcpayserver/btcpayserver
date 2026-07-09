@@ -78,13 +78,9 @@
         {
             { "searchTerm", Model.SearchTerm },
             { "skip", skip },
-            { "count", count }
+            { "count", count },
+            { "searchText", Model.SearchText }
         };
-        if (Model.TimeZone is not null)
-        {
-            if (TimeZones.TryGet(Model.TimeZone) is {} tz)
-                query.Add("timeZone", tz.Id);
-        }
 
         if (Model.PaginationQuery != null)
         {

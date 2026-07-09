@@ -1056,22 +1056,30 @@ goodies:
 
         private async Task AssertReceipt(PlaywrightTester s, AssertReceiptAssertion assertion, string itemSelector, string sumsSelector)
         {
-            var items = await s.Page.QuerySelectorAllAsync(itemSelector);
-            var sums = await s.Page.QuerySelectorAllAsync(sumsSelector);
-            Assert.Equal(assertion.Items.Length, items.Count);
-            Assert.Equal(assertion.Sums.Length, sums.Count);
-            for (int i = 0; i < assertion.Items.Length; i++)
+            try
             {
-                var txt = (await items[i].TextContentAsync()).NormalizeWhitespaces();
-                Assert.Contains(assertion.Items[i].Key.NormalizeWhitespaces(), txt);
-                Assert.Contains(assertion.Items[i].Value.NormalizeWhitespaces(), txt);
-            }
+                var items = await s.Page.QuerySelectorAllAsync(itemSelector);
+                var sums = await s.Page.QuerySelectorAllAsync(sumsSelector);
+                Assert.Equal(assertion.Items.Length, items.Count);
+                Assert.Equal(assertion.Sums.Length, sums.Count);
+                for (int i = 0; i < assertion.Items.Length; i++)
+                {
+                    var txt = (await items[i].TextContentAsync()).NormalizeWhitespaces();
+                    Assert.Contains(assertion.Items[i].Key.NormalizeWhitespaces(), txt);
+                    Assert.Contains(assertion.Items[i].Value.NormalizeWhitespaces(), txt);
+                }
 
-            for (int i = 0; i < assertion.Sums.Length; i++)
+                for (int i = 0; i < assertion.Sums.Length; i++)
+                {
+                    var txt = (await sums[i].TextContentAsync()).NormalizeWhitespaces();
+                    Assert.Contains(assertion.Sums[i].Key.NormalizeWhitespaces(), txt);
+                    Assert.Contains(assertion.Sums[i].Value.NormalizeWhitespaces(), txt);
+                }
+            }
+            catch
             {
-                var txt = (await sums[i].TextContentAsync()).NormalizeWhitespaces();
-                Assert.Contains(assertion.Sums[i].Key.NormalizeWhitespaces(), txt);
-                Assert.Contains(assertion.Sums[i].Value.NormalizeWhitespaces(), txt);
+                await s.TakeScreenshot("Flaky-POSTests");
+                throw;
             }
         }
 

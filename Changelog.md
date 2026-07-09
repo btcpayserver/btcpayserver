@@ -3221,7 +3221,7 @@ Those are low risk injection vulnerabilities.
   * Arabic (Ar) @kemoantemo
   * Bosnian (Bosnia and Herzegovina) (bs_BA) @Ruxiol
   * Danish (Denmark) (da_DK) @Berlelund
-  * German (Germany) (de_DE)[@andhans](https://twitter.com/andhans_jail)
+  * German (Germany) (de_DE)[@andhans](https://x.com/andhans_jail)
   * Greek (Greece) (el_GR) @kaloudis
   * Spanish (Spain) (es_ES) @RzeroD
   * Hindi(hi) @blockbitmedia

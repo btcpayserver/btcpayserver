@@ -17,8 +17,8 @@ public class MempoolSpaceFeeProvider(
 {
     private readonly string _explorerLink = testnet switch
     {
-        true => "https://mempool.space/testnet/api/v1/fees/recommended",
-        false => "https://mempool.space/api/v1/fees/recommended"
+        true => "https://mempool.space/testnet/api/v1/fees/precise",
+        false => "https://mempool.space/api/v1/fees/precise"
     };
 
     public async Task<FeeRate> GetFeeRateAsync(int blockTarget = 20)

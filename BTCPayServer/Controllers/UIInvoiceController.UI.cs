@@ -202,7 +202,6 @@ namespace BTCPayServer.Controllers
             var store = await _StoreRepository.GetStoreByInvoiceId(i.Id);
             if (store is null)
                 return NotFound();
-
             if (!await ValidateAccessForArchivedInvoice(i))
                 return NotFound();
 
@@ -1052,10 +1051,10 @@ namespace BTCPayServer.Controllers
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewInvoices)]
         public async Task<IActionResult> ListInvoices(InvoicesModel? model = null)
         {
-            model = this.ParseListQuery(model ?? new InvoicesModel());
-            var timezoneOffset = model.TimezoneOffset ?? 0;
-            var searchTerm = string.IsNullOrEmpty(model.SearchText) ? model.SearchTerm : $"{model.SearchText},{model.SearchTerm}";
-            var fs = new SearchString(searchTerm, timezoneOffset);
+            model ??= new InvoicesModel();
+            var fs = model.GetSearch();
+            if (model.FilterCommand is not null)
+                return model.Redirect(Request);
             string? storeId = model.StoreId;
             var storeIds = new HashSet<string>();
             if (storeId is not null)
@@ -1067,11 +1066,8 @@ namespace BTCPayServer.Controllers
                 foreach (var i in l)
                     storeIds.Add(i);
             }
-            model.Search = fs;
-            model.SearchText = fs.TextCombined;
-
             var apps =  await _appService.GetAllApps(User.GetIdOrNull(), false, storeId);
-            InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, apps, timezoneOffset);
+            InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, apps);
             invoiceQuery.StoreId = storeIds.ToArray();
             invoiceQuery.Take = model.Count;
             invoiceQuery.Skip = model.Skip;
@@ -1106,16 +1102,18 @@ namespace BTCPayServer.Controllers
                     HasRefund = invoice.Refunds.Any()
                 });
             }
+
+            ViewData.SetPageTimeZone(fs);
             return View(model);
         }
 
-        private InvoiceQuery GetInvoiceQuery(SearchString fs, ListAppsViewModel.ListAppViewModel[] apps, int timezoneOffset = 0)
+        private InvoiceQuery GetInvoiceQuery(SearchString fs, ListAppsViewModel.ListAppViewModel[] apps)
         {
             var query = new InvoiceQuery()
             {
                 UserId = GetUserIdForInvoiceQuery()
             };
-            query.FillFromSearchText(fs, timezoneOffset);
+            query.FillFromSearchText(fs);
             if (fs.GetFilterArray("appid") is { } appIds)
             {
                 var appsById = apps.ToDictionary(a => a.Id);

@@ -32,10 +32,10 @@
 	</button>
 	<div class="dropdown-menu text-center" id="NotificationsDropdown" aria-labelledby="NotificationsHandle">
 		<div class="d-flex gap-3 align-items-center justify-content-between py-3 px-4 border-bottom border-light">
-			<h5 class="m-0" text-translate="true">Notifications</h5>
+			<h5 class="m-0">@StringLocalizer["Notifications"]</h5>
 			@if (HasUnseenNotifications)
 			{
-				<a class="btn btn-link p-0" @onclick="MarkAllAsSeen" id="NotificationsMarkAllAsSeen" text-translate="true">Mark all as seen</a>
+				<a class="btn btn-link p-0" @onclick="MarkAllAsSeen" id="NotificationsMarkAllAsSeen">@StringLocalizer["Mark all as seen"]</a>
 			}
 		</div>
 		<div id="NotificationsList" v-pre>
@@ -60,11 +60,11 @@
 			}
 			else
 			{
-				<div class="px-4 py-4 text-start text-muted" text-translate="true">No new notifications</div>
+				<div class="px-4 py-4 text-start text-muted">@StringLocalizer["No new notifications"]</div>
 			}
 		</div>
 		<div class="p-3 border-top border-light">
-			<a href="@NotificationsUrl" text-translate="true">View all</a>
+			<a href="@NotificationsUrl">@StringLocalizer["View all"]</a>
 		</div>
 	</div>
 </div>

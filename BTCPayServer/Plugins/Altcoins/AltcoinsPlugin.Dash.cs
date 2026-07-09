@@ -19,7 +19,7 @@ public partial class AltcoinsPlugin
             DefaultRateRules = new[]
                 {
                         "DASH_X = DASH_BTC * BTC_X",
-                        "DASH_BTC = bitfinex(DSH_BTC)"
+                        "DASH_BTC = bitfinex(DSH_USD) * bitfinex(USD_BTC)"
                     },
             CryptoImagePath = "imlegacy/dash.png",
             DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(ChainName),

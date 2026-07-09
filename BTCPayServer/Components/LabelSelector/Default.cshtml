@@ -1,0 +1,146 @@
+@using BTCPayServer.Components.LabelSelector
+@model LabelSelector.LabelSelectorModel
+
+@if (Model.Labels.Any())
+{
+    <style>
+        #LabelSelectorMenu {
+            max-height: 480px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        #LabelSelectorMenu #LabelSearchContainer .input-group:focus-within {
+            border-color: var(--btcpay-form-border-focus) !important;
+        }
+
+        #LabelSelectorMenu #LabelSearchContainer {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: var(--btcpay-dropdown-bg);
+            border-bottom: var(--bs-border-width, 1px) solid var(--bs-border-color, rgba(0,0,0,.175));
+        }
+
+        #LabelSelectorMenu .label-filter-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        #LabelSelectorMenu .label-filter-count {
+            margin-left: auto;
+            text-align: right;
+            opacity: 0.75;
+        }
+    </style>
+
+    <div class="dropdown" id="LabelSelector">
+        <button id="LabelSelectorToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (Model.LabelFilterCount > 1)
+            {
+                <span>@StringLocalizer["{0} Labels", Model.LabelFilterCount]</span>
+            }
+            else if (Model.ActiveLabels.Length == 1)
+            {
+                <span text-translate="true">Label:</span>
+                <span>@Model.ActiveLabels[0]</span>
+            }
+            else if (Model.HasNoLabelFilter)
+            {
+                <span text-translate="true">No Label</span>
+            }
+            else
+            {
+                <span text-translate="true">All Labels</span>
+            }
+        </button>
+        <ul class="dropdown-menu mt-1 py-0" id="LabelSelectorMenu" aria-labelledby="LabelSelectorToggle" style="min-width:280px">
+            <li class="px-2 pt-2 pb-2@(Model.Labels.Count > LabelSelector.MaxVisibleLabels ? string.Empty : " d-none")" id="LabelSearchContainer">
+                <div class="input-group border rounded">
+                    <span class="input-group-text border-0 text-muted px-2" style="background:transparent">
+                        <vc:icon symbol="actions-search" />
+                    </span>
+                    <input type="text" class="form-control border-0 shadow-none ps-0 bg-transparent" id="LabelSearch"
+                           placeholder="@StringLocalizer["Search labels…"]" autocomplete="off" aria-label="@StringLocalizer["Search labels…"]" />
+                </div>
+            </li>
+            <li>
+                <button type="submit" name="FilterCommand" value="alllabels" class="dropdown-item @(Model.LabelFilterCount == 0 ? "custom-active" : string.Empty)" text-translate="true">All Labels</button>
+            </li>
+            @if (Model.AllowNoLabelFilter)
+            {
+                <li>
+                    <button type="submit" name="FilterCommand" value="nolabel" class="dropdown-item @(Model.HasNoLabelFilter ? "custom-active" : string.Empty)" text-translate="true">No Label</button>
+                </li>
+            }
+            <li><hr class="dropdown-divider"></li>
+            <li id="LabelFilterResultsAnchor" class="d-none"></li>
+            @foreach (var label in Model.InitialLabels)
+            {
+                <li class="label-filter-item">
+                    <button type="submit" name="FilterCommand" value="addlabel:@label.Text" class="dropdown-item transaction-label-text label-filter-link@(Model.ActiveLabels.Any(value => value.Equals(label.Text, StringComparison.OrdinalIgnoreCase)) ? " active" : string.Empty)" style="--btcpay-dropdown-link-active-bg:@label.Color;--btcpay-dropdown-link-active-color:@label.TextColor;">
+                        <span class="label-filter-text">@label.Text</span>
+                        <small class="label-filter-count@(label.UsageCount > 0 ? string.Empty : " d-none")">@label.UsageCount</small>
+                    </button>
+                </li>
+            }
+        </ul>
+        <template id="label-filter-item-template">
+            <li class="label-filter-item">
+                <button type="submit" name="FilterCommand" class="dropdown-item transaction-label-text label-filter-link">
+                    <span class="label-filter-text"></span>
+                    <small class="label-filter-count d-none"></small>
+                </button>
+            </li>
+        </template>
+    </div>
+
+    <script>
+        (() => {
+            const $labelSearch = document.getElementById('LabelSearch');
+            if (!$labelSearch) return;
+
+            const allLabels = @Safe.Json(Model.Labels.Select(label => new { text = label.Text, color = label.Color, textColor = label.TextColor, usageCount = label.UsageCount }));
+            const initialLabels = @Safe.Json(Model.InitialLabels.Select(label => new { text = label.Text, color = label.Color, textColor = label.TextColor, usageCount = label.UsageCount }));
+            const activeLabels = @Safe.Json(Model.ActiveLabels);
+            const $menu = document.getElementById('LabelSelectorMenu');
+            const $anchor = document.getElementById('LabelFilterResultsAnchor');
+
+            function renderLabelItems(labels) {
+                $menu.querySelectorAll('.label-filter-item').forEach(el => el.remove());
+                const fragment = document.createDocumentFragment();
+                const $template = document.getElementById('label-filter-item-template');
+
+                labels.forEach(label => {
+                    const labelFilterItem = $template.content.cloneNode(true);
+                    const button = labelFilterItem.querySelector('button');
+                    const labelText = button.querySelector('.label-filter-text');
+                    const labelCount = button.querySelector('.label-filter-count');
+                    button.value = 'addlabel:' + label.text;
+                    if (activeLabels.some(value => value.toLowerCase() === label.text.toLowerCase())) button.classList.add('active');
+                    button.style.setProperty('--btcpay-dropdown-link-active-bg', label.color);
+                    button.style.setProperty('--btcpay-dropdown-link-active-color', label.textColor);
+                    labelText.textContent = label.text;
+                    if (label.usageCount > 0) {
+                        labelCount.classList.remove('d-none');
+                        labelCount.textContent = label.usageCount;
+                    } else {
+                        labelCount.classList.add('d-none');
+                        labelCount.textContent = '';
+                    }
+                    fragment.appendChild(labelFilterItem);
+                });
+
+                $anchor.after(fragment);
+            }
+
+            $labelSearch.addEventListener('click', e => e.stopPropagation());
+            $labelSearch.addEventListener('input', () => {
+                const query = $labelSearch.value.toLowerCase().trim();
+                renderLabelItems(query ? allLabels.filter(label => label.text.toLowerCase().includes(query)) : initialLabels);
+            });
+        })();
+    </script>
+}

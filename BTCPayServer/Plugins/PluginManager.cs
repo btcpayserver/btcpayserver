@@ -557,7 +557,10 @@ namespace BTCPayServer.Plugins
 
         private static void AssertSafeName(string pluginDir, string plugin)
         {
-            var fullPluginDir = Path.GetFullPath(pluginDir).WithTrailingSlash();
+            // platform separator: WithTrailingSlash's '/' mismatches GetFullPath on Windows
+            var fullPluginDir = Path.GetFullPath(pluginDir);
+            if (!fullPluginDir.EndsWith(Path.DirectorySeparatorChar))
+                fullPluginDir += Path.DirectorySeparatorChar;
             var fullPath = Path.GetFullPath(Path.Combine(fullPluginDir, plugin));
             if (!fullPath.StartsWith(fullPluginDir, StringComparison.Ordinal))
                 throw new InvalidOperationException("File traversal detected");

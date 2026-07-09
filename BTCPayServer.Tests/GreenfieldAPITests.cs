@@ -1651,6 +1651,9 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanRefundInvoice()
         {
+            // RefundInvoiceRequest.PayoutMethodId is deprecated in favor of PayoutMethods, but is
+            // still exercised throughout this test to guarantee backward compatibility.
+#pragma warning disable CS0618 // Type or member is obsolete
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
@@ -1888,6 +1891,42 @@ namespace BTCPayServer.Tests
                 Assert.Equal(invoice.Id, x.InvoiceId);
                 Assert.Equal(refund.Id, x.PullPaymentId);
             });
+#pragma warning restore CS0618 // Type or member is obsolete
+
+            // The new `payoutMethods` array supersedes the deprecated single `payoutMethodId`.
+            invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest { Amount = 5000.0m, Currency = "USD" });
+            await client.MarkInvoiceStatus(invoice.Id, new MarkInvoiceStatusRequest { Status = InvoiceStatus.Settled });
+
+            refund = await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest
+            {
+                PayoutMethods = new[] { method.PaymentMethodId },
+                RefundVariant = RefundVariant.CurrentRate
+            });
+            Assert.Equal(1.0m, refund.Amount);
+            Assert.Equal("BTC", refund.Currency);
+
+            // Invalid entries in `payoutMethods` are reported under the `PayoutMethods` key.
+            validationError = await AssertValidationError(new[] { "PayoutMethods" }, async () =>
+            {
+                await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest
+                {
+                    PayoutMethods = new[] { "fake payment method" },
+                    RefundVariant = RefundVariant.CurrentRate
+                });
+            });
+            Assert.Contains("PayoutMethods: Please select one of the payment methods which were available for the original invoice", validationError.Message);
+
+            // A mix of valid and invalid entries is rejected: the invalid entry is reported and the
+            // request is not silently truncated to the valid subset.
+            validationError = await AssertValidationError(new[] { "PayoutMethods" }, async () =>
+            {
+                await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest
+                {
+                    PayoutMethods = new[] { method.PaymentMethodId, "fake payment method" },
+                    RefundVariant = RefundVariant.CurrentRate
+                });
+            });
+            Assert.Contains("Invalid or unsupported payout method: fake payment method", validationError.Message);
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -1944,6 +1983,12 @@ namespace BTCPayServer.Tests
             Assert.Single(invoices);
             Assert.NotNull(invoices.First().PaymentMethods);
             Assert.Equal(newInvoice.Id, invoices.First().Id);
+
+            //get single invoice, payment methods excluded by default and included on demand
+            var singleInvoice = await viewOnly.GetInvoice(newInvoice.Id);
+            Assert.Empty(singleInvoice.PaymentMethods);
+            singleInvoice = await viewOnly.GetInvoice(newInvoice.Id, includePaymentMethods: true);
+            Assert.NotEmpty(singleInvoice.PaymentMethods);
 
             invoices = await viewOnly.GetInvoices(user.StoreId, textSearch: "Banana");
             Assert.NotNull(invoices);

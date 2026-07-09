@@ -1110,13 +1110,18 @@ goodies:
             vmpos.Currency = "EUR";
             Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
 
-            // Failing requests
+            // Clamped requests
             var (invoiceId1, error1) = await PosJsonRequest(tester, app.Id, "amount=-21&discount=10&tip=2");
-            Assert.Null(invoiceId1);
-            Assert.Equal("Negative amount is not allowed", error1);
+            Assert.NotNull(invoiceId1);
+            Assert.Null(error1);
+            var invoice1 = await user.BitPay.GetInvoiceAsync(invoiceId1);
+            Assert.Equal(0.00m, invoice1.Price);
+
             var (invoiceId2, error2) = await PosJsonRequest(tester, app.Id, "amount=21&discount=-10&tip=-2");
-            Assert.Null(invoiceId2);
-            Assert.Equal("Negative tip or discount is not allowed", error2);
+            Assert.NotNull(invoiceId2);
+            Assert.Null(error2);
+            var invoice2 = await user.BitPay.GetInvoiceAsync(invoiceId2);
+            Assert.Equal(21.00m, invoice2.Price);
 
             // Successful request
             var (invoiceId3, error3) = await PosJsonRequest(tester, app.Id, "amount=21");
@@ -1124,8 +1129,7 @@ goodies:
             Assert.Null(error3);
 
             // Check generated invoice
-            var invoices = await user.BitPay.GetInvoicesAsync();
-            var invoice = invoices.First();
+            var invoice = await user.BitPay.GetInvoiceAsync(invoiceId3);
             Assert.Equal(invoiceId3, invoice.Id);
             Assert.Equal(21.00m, invoice.Price);
             Assert.Equal("EUR", invoice.Currency);

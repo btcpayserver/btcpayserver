@@ -2,17 +2,17 @@
     <div v-if="display" class="mt-4" id="NFC">
         <div v-if="nfcErrorMessage" class="alert alert-danger" v-text="nfcErrorMessage"></div>
         <div v-if="nfcWarningMessage" class="alert alert-warning" v-text="nfcWarningMessage"></div>
-        <div v-if="pinRequired" id="NFC-Pin">
-            <div v-if="pinError" class="alert alert-danger" v-text="pinError"></div>
+        <div v-if="pin.required" id="NFC-Pin">
+            <div v-if="pin.error" class="alert alert-danger" v-text="pin.error"></div>
             <label class="form-label" for="NFC-Pin-Input" v-text="pinPromptText"></label>
             <input id="NFC-Pin-Input" class="form-control form-control-lg text-center" type="text" inputmode="numeric"
-                   maxlength="4" pattern="[0-9]{4}" autocomplete="off" v-model="pin"
-                   :disabled="pinSubmitting" v-on:keyup.enter="submitPin" />
+                   maxlength="4" pattern="[0-9]{4}" autocomplete="off" v-model="pin.value"
+                   :disabled="pin.submitting" v-on:keyup.enter="submitPin" />
             <div class="d-flex gap-2 mt-3">
                 <button class="btn btn-secondary rounded-pill flex-grow-1" type="button" id="NFC-Pin-Cancel"
-                        :disabled="pinSubmitting" v-on:click="cancelPin">Cancel</button>
+                        :disabled="pin.submitting" v-on:click="cancelPin">Cancel</button>
                 <button class="btn btn-primary rounded-pill flex-grow-1" type="button" id="NFC-Pin-Submit"
-                        :disabled="pinSubmitting || !isPinValid" v-on:click="submitPin">Confirm PIN</button>
+                        :disabled="pin.submitting || !isPinValid" v-on:click="submitPin">Confirm PIN</button>
             </div>
         </div>
         <button v-else class="btn btn-secondary rounded-pill w-100" type="button" id="PayByNFC"
@@ -66,10 +66,10 @@ Vue.component("lnurl-withdraw-checkout", {
             }
         },
         isPinValid () {
-            return /^[0-9]{4}$/.test(this.pin)
+            return /^[0-9]{4}$/.test(this.pin.value)
         },
         pinPromptText () {
-            return `Enter the 4-digit PIN to withdraw ${this.pinAmountSats} sats`
+            return `Enter the 4-digit PIN to withdraw ${this.pin.amountSats} sats`
         }
     },
     data () {
@@ -77,12 +77,14 @@ Vue.component("lnurl-withdraw-checkout", {
 				url: @Safe.Json(Url.ActionAbsolute(Context.Request, "SubmitLNURLWithdrawForInvoice", "NFC").ToString()),
             amount: 0,
             submitting: false,
-            pinRequired: false,
-            pinToken: null,
-            pinAmountSats: 0,
-            pin: '',
-            pinError: null,
-            pinSubmitting: false
+            pin: {
+                required: false,
+                token: null,
+                amountSats: 0,
+                value: '',
+                error: null,
+                submitting: false
+            }
         }
     },
     beforeMount () {
@@ -162,42 +164,42 @@ Vue.component("lnurl-withdraw-checkout", {
             return text
         },
         startPinEntry (data) {
-            this.pinRequired = true
-            this.pinToken = data.token
-            this.pinAmountSats = data.amountSats
-            this.pin = ''
-            this.pinError = null
+            this.pin.required = true
+            this.pin.token = data.token
+            this.pin.amountSats = data.amountSats
+            this.pin.value = ''
+            this.pin.error = null
         },
         cancelPin () {
-            this.pinRequired = false
-            this.pinToken = null
-            this.pin = ''
-            this.pinError = null
+            this.pin.required = false
+            this.pin.token = null
+            this.pin.value = ''
+            this.pin.error = null
         },
         async submitPin () {
-            if (!this.isPinValid || this.pinSubmitting) {
+            if (!this.isPinValid || this.pin.submitting) {
                 return
             }
-            this.pinSubmitting = true
-            this.pinError = null
+            this.pin.submitting = true
+            this.pin.error = null
 
-            const body = JSON.stringify({ invoiceId: this.model.invoiceId, token: this.pinToken, pin: this.pin })
+            const body = JSON.stringify({ invoiceId: this.model.invoiceId, token: this.pin.token, pin: this.pin.value })
             const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
             try {
                 const response = await fetch(this.url, opts)
                 const result = await response.text()
                 if (response.ok) {
-                    this.pinRequired = false
-                    this.pin = ''
+                    this.pin.required = false
+                    this.pin.value = ''
                     this.$emit('handle-nfc-result', result)
                 } else {
-                    this.pin = ''
-                    this.pinError = this.parseReason(result) || 'Invalid PIN'
+                    this.pin.value = ''
+                    this.pin.error = this.parseReason(result) || 'Invalid PIN'
                 }
             } catch (error) {
-                this.pinError = `${error}`
+                this.pin.error = `${error}`
             }
-            this.pinSubmitting = false
+            this.pin.submitting = false
         }
     }
 });

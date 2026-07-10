@@ -56,12 +56,11 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanDetectSecurePinTransportForLNURLWithdraw()
         {
-            // LUD-290: the withdraw PIN travels as a plaintext query parameter, so BTCPay may only
-            // forward it over a secure transport: HTTPS, a Tor onion service, or a loopback address
-            // (the latter for regtest/dev/tests).
+            // LUD-290: the PIN is a plaintext query param, so only forward it over https, onion, or a local network.
             Assert.True(NFCController.IsPinTransportSecure(new Uri("https://withdraw.example.com/callback")));
             Assert.True(NFCController.IsPinTransportSecure(new Uri("http://127.0.0.1:1234/callback")));
             Assert.True(NFCController.IsPinTransportSecure(new Uri("http://localhost/callback")));
+            Assert.True(NFCController.IsPinTransportSecure(new Uri("http://192.168.1.5/callback")));
             Assert.True(NFCController.IsPinTransportSecure(new Uri("http://3g2upl4pq6kufc4m.onion/callback")));
             // Plaintext clearnet HTTP would leak the PIN and must be refused.
             Assert.False(NFCController.IsPinTransportSecure(new Uri("http://withdraw.example.com/callback")));

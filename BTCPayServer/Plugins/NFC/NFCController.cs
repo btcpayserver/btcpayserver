@@ -255,35 +255,37 @@ namespace BTCPayServer.Plugins.NFC
                 return BadRequest("Card blocked: too many incorrect PIN attempts");
             }
 
+            LNUrlStatusResponse result;
             try
             {
                 var httpClient = CreateHttpClient(session.Info.Callback);
-                var result = await session.Info.SendRequest(session.Bolt11, httpClient, request.Pin, null);
-                if (!string.IsNullOrEmpty(result.Status) && result.Status.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    _memoryCache.Remove(PinSessionCacheKey(request.Token));
-                    return Ok(result.Reason);
-                }
-
-                // Keep the session so the customer can retry, until blocked or out of attempts.
-                var reason = result.Reason ?? "Unknown error";
-                if (session.AttemptsLeft <= 0 || reason.Contains("blocked", StringComparison.OrdinalIgnoreCase))
-                {
-                    _memoryCache.Remove(PinSessionCacheKey(request.Token));
-                }
-
-                return BadRequest(reason);
+                result = await session.Info.SendRequest(session.Bolt11, httpClient, request.Pin, null);
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
+
+            if (!string.IsNullOrEmpty(result.Status) && result.Status.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
+            {
+                _memoryCache.Remove(PinSessionCacheKey(request.Token));
+                return Ok(result.Reason);
+            }
+
+            // Keep the session so the customer can retry, until blocked or out of attempts.
+            var reason = result.Reason ?? "Unknown error";
+            if (session.AttemptsLeft <= 0 || reason.Contains("blocked", StringComparison.OrdinalIgnoreCase))
+            {
+                _memoryCache.Remove(PinSessionCacheKey(request.Token));
+            }
+
+            return BadRequest(reason);
         }
 
-        // The PIN is a plaintext query param, so only forward it over https, onion, or loopback.
+        // The PIN is a plaintext query param, so only forward it over https, onion, or a local network.
         internal static bool IsPinTransportSecure(Uri callback)
         {
-            return callback.Scheme == Uri.UriSchemeHttps || callback.IsOnion() || callback.IsLoopback;
+            return callback.Scheme == Uri.UriSchemeHttps || callback.IsOnion() || Extensions.IsLocalNetwork(callback.DnsSafeHost);
         }
 
         private static string PinSessionCacheKey(string token) => $"NFC_LNURLW_PIN_{token}";

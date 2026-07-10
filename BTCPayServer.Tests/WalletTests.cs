@@ -1165,6 +1165,11 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Page.ClickAsync("#DateRangeSelector");
         var browserTimeZone = await s.Page.EvaluateAsync<string>("() => Intl.DateTimeFormat().resolvedOptions().timeZone");
         await Expect(s.Page.Locator("#DateRangeTimeZone")).ToHaveValueAsync(browserTimeZone + " (Default)");
+        await s.Page.ClickAsync("#DateRangeTimeZone");
+        await Expect(s.Page.Locator("#DateRangeTimeZone")).ToHaveValueAsync(string.Empty);
+        await Expect(s.Page.Locator("#DateRangeTimeZone")).ToHaveAttributeAsync("placeholder", browserTimeZone + " (Default)");
+        await s.Page.PressAsync("#DateRangeTimeZone", "Tab");
+        await Expect(s.Page.Locator("#DateRangeTimeZone")).ToHaveValueAsync(browserTimeZone + " (Default)");
 
         const string selectedTimeZone = "America/New_York";
         await s.Page.FillAsync("#DateRangeTimeZone", selectedTimeZone);

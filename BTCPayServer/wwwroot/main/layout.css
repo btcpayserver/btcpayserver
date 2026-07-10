@@ -170,6 +170,25 @@
     background: var(--btcpay-neutral-100);
 }
 
+.globalNav-tooltip {
+    --btcpay-tooltip-padding-x: .75rem;
+    --btcpay-tooltip-padding-y: .375rem;
+    --btcpay-tooltip-font-size: var(--btcpay-font-size-m);
+    --btcpay-tooltip-color: var(--btcpay-body-text);
+    --btcpay-tooltip-bg: var(--btcpay-neutral-200);
+    --btcpay-tooltip-border-radius: .125rem;
+    --btcpay-tooltip-opacity: 1;
+}
+
+.globalNav-tooltip .tooltip-arrow {
+    display: none;
+}
+
+.globalNav-tooltip .tooltip-inner {
+    border: 1px solid var(--btcpay-neutral-400);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .2);
+}
+
 #globalNav .globalNav-btn .globalNav-status {
     position: absolute;
     top: .25rem;

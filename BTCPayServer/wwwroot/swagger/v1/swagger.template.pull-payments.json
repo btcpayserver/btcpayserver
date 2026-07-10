@@ -631,11 +631,8 @@
                 "security": []
             }
         },
-        "/api/v1/stores/{storeId}/payouts/{payoutId}": {
+        "/api/v1/payouts/{payoutId}": {
             "parameters": [
-                {
-                    "$ref": "#/components/parameters/StoreId"
-                },
                 {
                     "name": "payoutId",
                     "in": "path",
@@ -774,11 +771,8 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payouts/{payoutId}/mark-paid": {
+        "/api/v1/payouts/{payoutId}/mark-paid": {
             "parameters": [
-                {
-                    "$ref": "#/components/parameters/StoreId"
-                },
                 {
                     "name": "payoutId",
                     "in": "path",
@@ -834,11 +828,8 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payouts/{payoutId}/mark": {
+        "/api/v1/payouts/{payoutId}/mark": {
             "parameters": [
-                {
-                    "$ref": "#/components/parameters/StoreId"
-                },
                 {
                     "name": "payoutId",
                     "in": "path",

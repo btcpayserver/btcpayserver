@@ -306,6 +306,16 @@
             </table>
         </div>
         <div class="d-flex flex-column gap-5">
+            <div>
+                <h3 class="mb-3">Comment</h3>
+                <form asp-action="Comment" asp-route-invoiceId="@Model.Id" method="post">
+                    <div class="form-group">
+                        <textarea name="comment" id="InvoiceComment" class="form-control" rows="3"
+                                  placeholder="@StringLocalizer["Add a note or comment for this invoice"]">@Model.Comment</textarea>
+                    </div>
+                    <button type="submit" id="SaveComment" class="btn btn-primary">Save Comment</button>
+                </form>
+            </div>
             @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode) ||
                     !string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc))
             {

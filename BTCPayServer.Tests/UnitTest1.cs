@@ -538,6 +538,23 @@ namespace BTCPayServer.Tests
             AssertSearchInvoice(acc, true, invoice.Id, "status:settled,exceptionstatus:paidPartial");
             AssertSearchInvoice(acc, true, invoice.Id, "status:settled,status:invalid,exceptionstatus:paidPartial,exceptionstatus:paidOver");
 
+            var invoiceController = acc.GetController<UIInvoiceController>();
+            var comment = "refunded manually from cashier wallet";
+            await invoiceController.Comment(invoice.Id, comment);
+
+            var listResult = await invoiceController.ListInvoices(new InvoicesModel { StoreId = acc.StoreId });
+            var listModel = (InvoicesModel)((ViewResult)listResult).Model;
+            var listedInvoice = Assert.Single(listModel.Invoices, i => i.InvoiceId == invoice.Id);
+            Assert.Equal(comment, listedInvoice.Comment);
+
+            // The comment should be included in the invoices export/report
+            var invoicesReport = await GetReport(acc, new() { ViewName = "Invoices" });
+            var reportInvoiceIdIndex = invoicesReport.GetIndex("InvoiceId");
+            var reportCommentIndex = invoicesReport.GetIndex("InvoiceComment");
+            Assert.Contains(invoicesReport.Data, d =>
+                d[reportInvoiceIdIndex].Value<string>() == invoice.Id &&
+                d[reportCommentIndex]?.Value<string>() == comment);
+
             var time = invoice.InvoiceTime;
             AssertSearchInvoice(acc, true, invoice.Id, $"startdate:{time.ToString("yyyy-MM-dd HH:mm:ss")}");
             AssertSearchInvoice(acc, true, invoice.Id, $"enddate:{time.ToString().ToLowerInvariant()}");

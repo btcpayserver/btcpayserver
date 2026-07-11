@@ -17,7 +17,7 @@
     gap: var(--btcpay-space-s);
     height: var(--button-height);
     padding: 0 var(--btcpay-space-m);
-    border: 1px solid var(--btcpay-body-border-light);
+    border: 1px solid var(--btcpay-body-border-medium);
     border-radius: var(--btcpay-border-radius-l);
     background: var(--btcpay-body-bg);
     transition: border-color var(--btcpay-transition-duration-fast), box-shadow var(--btcpay-transition-duration-fast);

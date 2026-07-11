@@ -582,6 +582,39 @@ retry:
                 return ToEntity(invoiceData);
             }
         }
+        public async Task<InvoiceEntity> UpdateInvoiceComment(string invoiceId, string storeId, string comment)
+        {
+retry:
+            using (var context = _applicationDbContextFactory.CreateContext())
+            {
+                var invoiceData = await GetInvoiceRaw(invoiceId, context);
+                if (invoiceData == null || (storeId != null &&
+                                            !invoiceData.StoreDataId.Equals(storeId,
+                                                StringComparison.InvariantCultureIgnoreCase)))
+                    return null;
+                var blob = invoiceData.GetBlob();
+                var oldComment = blob.Metadata.Comment;
+                var newComment = string.IsNullOrWhiteSpace(comment) ? null : comment.Trim();
+                if (newComment != oldComment)
+                {
+                    if (!string.IsNullOrEmpty(oldComment))
+                        RemoveFromTextSearch(context, invoiceData, oldComment);
+                    if (!string.IsNullOrEmpty(newComment))
+                        AddToTextSearch(context, invoiceData, new[] { newComment });
+                }
+                blob.Metadata.Comment = newComment;
+                invoiceData.SetBlob(blob);
+                try
+                {
+                    await context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    goto retry;
+                }
+                return ToEntity(invoiceData);
+            }
+        }
         public async Task<bool> MarkInvoiceStatus(string invoiceId, InvoiceStatus status)
         {
             using (var context = _applicationDbContextFactory.CreateContext())
